@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,39 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package cmd
 
-// TODO(retr0h): Implement
-// TODO(retr0h): Implement
-// TODO(retr0h): Implement
+import (
+	"github.com/spf13/cobra"
+)
 
-// import (
-// 	"log/slog"
+// jobCmd represents the job command.
+var jobCmd = &cobra.Command{
+	Use:   "job",
+	Short: "The job subcommand for job processing",
+	Long: `The job subcommand provides job processing capabilities using the modern
+NATS-based job infrastructure. This includes both worker and server operations
+for distributed job processing.`,
+}
 
-// 	"github.com/retr0h/osapi/internal/exec"
-// 	"github.com/spf13/afero"
-// )
-
-// // NewProviderForPlatform returns a DNS provider based on the system platform.
-// // It selects the appropriate DNS provider implementation depending on the OS platform
-// // detected (e.g., Ubuntu-specific vs. general Linux). This allows platform-specific
-// // DNS configurations to be handled in a unified manner.
-// func NewProviderForPlatform(
-// 	appFs afero.Fs,
-// 	logger *slog.Logger,
-// ) dns.Provider {
-// 	var dnsProvider dns.Provider
-// 	var execManager exec.Manager
-
-// 	info, _ := host.Info()
-
-// 	switch strings.ToLower(info.Platform) {
-// 	case "ubuntu":
-// 		execManager = exec.New(logger)
-// 		dnsProvider = dns.NewUbuntuProvider(appFs, logger, execManager)
-// 	default:
-// 		dnsProvider = dns.NewLinuxProvider()
-// 	}
-
-// 	return dnsProvider
-// }
+func init() {
+	rootCmd.AddCommand(jobCmd)
+}

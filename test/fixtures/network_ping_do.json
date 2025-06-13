@@ -1,0 +1,6 @@
+{
+  "type": "network.ping.do",
+  "data": {
+    "address": "8.8.8.8"
+  }
+}

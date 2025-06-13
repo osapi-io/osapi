@@ -1,0 +1,6 @@
+{
+  "type": "network.dns.get",
+  "data": {
+    "interface": "eth0"
+  }
+}

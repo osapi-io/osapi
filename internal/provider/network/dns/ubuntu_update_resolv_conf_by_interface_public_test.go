@@ -34,28 +34,28 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type UbuntuSetResolvConfByInterfacePublicTestSuite struct {
+type UbuntuUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 
 	logger *slog.Logger
 }
 
-func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) SetupTest() {
+func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) SetupSubTest() {
+func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TearDownTest() {
+func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByInterface() {
+func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name          string
 		setupMock     func() *mocks.MockManager
@@ -69,7 +69,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when SetResolvConf Ok",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManager(suite.ctrl)
+				mock := mocks.NewSetResolvConfMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -97,7 +97,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when SetResolvConf preserves existing servers Ok",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManagerPreserveDNSServers(suite.ctrl)
+				mock := mocks.NewSetResolvConfPreserveDNSServersMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -121,7 +121,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when SetResolvConf preserves existing search domains Ok",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManagerPreserveDNSDomain(suite.ctrl)
+				mock := mocks.NewSetResolvConfPreserveDNSDomainMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -146,7 +146,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when SetResolvConf filters root domain Ok",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManagerFiltersRootDNSDomain(suite.ctrl)
+				mock := mocks.NewSetResolvConfFiltersRootDNSDomainMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -170,7 +170,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 			name:    "when SetResolvConf missing args errors",
 			wantErr: true,
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewPlainManager(suite.ctrl)
+				mock := mocks.NewPlainMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -182,7 +182,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when GetResolvConfByInterface errors",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewPlainManager(suite.ctrl)
+				mock := mocks.NewPlainMockManager(suite.ctrl)
 
 				mock.EXPECT().
 					RunCmd(mocks.ResolveCommand, []string{"status", mocks.NetworkInterfaceName}).
@@ -206,7 +206,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when exec.RunCmd setting DNS Domain errors",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManagerSetDNSDomainError(suite.ctrl)
+				mock := mocks.NewSetResolvConfSetDNSDomainErrorMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -225,7 +225,7 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 		{
 			name: "when exec.RunCmd setting DNS Servers errors",
 			setupMock: func() *mocks.MockManager {
-				mock := mocks.NewSetResolvConfManagerSetDNSServersError(suite.ctrl)
+				mock := mocks.NewSetResolvConfSetDNSServersErrorMockManager(suite.ctrl)
 
 				return mock
 			},
@@ -249,7 +249,11 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 				mock := tc.setupMock()
 
 				net := dns.NewUbuntuProvider(suite.logger, mock)
-				err := net.SetResolvConfByInterface(tc.servers, tc.searchDomains, tc.interfaceName)
+				err := net.UpdateResolvConfByInterface(
+					tc.servers,
+					tc.searchDomains,
+					tc.interfaceName,
+				)
 
 				if tc.wantErr {
 					suite.Error(err)
@@ -268,6 +272,6 @@ func (suite *UbuntuSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByI
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuSetResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuSetResolvConfByInterfacePublicTestSuite))
+func TestUbuntuUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(UbuntuUpdateResolvConfByInterfacePublicTestSuite))
 }

@@ -22,12 +22,11 @@ package cmd
 
 import (
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/osapi-io/nats-client/pkg/client"
 	"github.com/osapi-io/nats-server/pkg/server"
 	"github.com/spf13/cobra"
@@ -46,7 +45,7 @@ type ServerManager interface {
 // ClientManager responsible for Client operations.
 type ClientManager interface {
 	// SetupJetStream configures JetStream streams and consumers.
-	SetupJetStream(js nats.JetStreamContext, streamConfigs ...*client.StreamConfig) error
+	SetupJetStream(js nats.JetStreamContext, streamConfigs ...*nats.StreamConfig) error
 }
 
 // taskServerStartCmd represents the taskServerStart command.
@@ -58,7 +57,9 @@ The NATS server is embedded, which means it is run as part of the application
 itself, removing the need for a separately deployed server. This setup ensures
 a seamless integration for managing real-time communication and message distribution.
 `,
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+
 		opts := &server.Options{
 			Options: &natsserver.Options{
 				Host:      appConfig.Task.Server.Host,
@@ -80,48 +81,43 @@ a seamless integration for managing real-time communication and message distribu
 			os.Exit(1)
 		}
 
-		jsOpts := &client.ClientOptions{
+		// Create NATS client using the nats-client package
+		natsClient := client.New(logger, &client.Options{
 			Host: appConfig.Task.Server.Host,
 			Port: appConfig.Task.Server.Port,
 			Auth: client.AuthOptions{
 				AuthType: client.NoAuth,
 			},
-		}
+			Name: "osapi-task-server",
+		})
 
-		js, err := client.NewJetStreamContext(jsOpts)
+		err = natsClient.Connect()
 		if err != nil {
 			logger.Error("failed to create jetstream context", "error", err)
 			os.Exit(1)
 		}
 
-		streamOpts := &client.StreamConfig{
-			StreamConfig: &nats.StreamConfig{
-				Name:     task.StreamName,
-				Subjects: []string{task.SubjectName},
-				Storage:  nats.FileStorage,
-				Replicas: 1,
-			},
-			Consumers: []*client.ConsumerConfig{
-				{
-					ConsumerConfig: &nats.ConsumerConfig{
-						Durable:    task.ConsumerName,
-						AckPolicy:  nats.AckExplicitPolicy,
-						MaxDeliver: 5,
-						AckWait:    30 * time.Second,
-					},
-				},
-			},
+		streamConfig := &nats.StreamConfig{
+			Name:     task.StreamName,
+			Subjects: []string{task.SubjectName},
+			Storage:  nats.FileStorage,
+			Replicas: 1,
 		}
 
-		var cm ClientManager = client.New(logger)
-		if err := cm.SetupJetStream(js, streamOpts); err != nil {
+		consumerConfig := jetstream.ConsumerConfig{
+			Durable:    task.ConsumerName,
+			AckPolicy:  jetstream.AckExplicitPolicy,
+			MaxDeliver: 5,
+			AckWait:    30 * time.Second,
+		}
+
+		// Set up JetStream with stream and consumer
+		if err := natsClient.CreateOrUpdateJetStreamWithConfig(ctx, streamConfig, consumerConfig); err != nil {
 			logger.Error("failed setting up jetstream", "error", err)
 			os.Exit(1)
 		}
 
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-		<-quit
+		<-ctx.Done()
 
 		sm.Stop()
 	},

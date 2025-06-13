@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,10 +38,11 @@ var clientTaskGetIDCmd = &cobra.Command{
 	Long: `Gets a task action for viewing.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		messageID, _ := cmd.Flags().GetUint64("message-id")
 
 		taskHandler := handler.(client.TaskHandler)
-		resp, err := taskHandler.GetTaskByID(context.TODO(), messageID)
+		resp, err := taskHandler.GetTaskByID(ctx, messageID)
 		if err != nil {
 			logFatal("failed to get task endpoint", err)
 		}

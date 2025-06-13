@@ -126,7 +126,7 @@ func (suite *UbuntuDoPublicTestSuite) TestDo() {
 
 			ubuntu := ping.NewUbuntuProvider()
 			if mock != nil {
-				ubuntu.NewPingerFn = func(address string) (ping.Pinger, error) {
+				ubuntu.NewPingerFn = func(_ string) (ping.Pinger, error) {
 					return mock, nil
 				}
 			}

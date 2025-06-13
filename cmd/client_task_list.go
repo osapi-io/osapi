@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,9 +38,10 @@ var clientTaskListCmd = &cobra.Command{
 	Short: "List all actions",
 	Long: `List all actions the task runner is processing.
 `,
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		taskHandler := handler.(client.TaskHandler)
-		resp, err := taskHandler.GetTaskList(context.TODO())
+		resp, err := taskHandler.GetTaskList(ctx)
 		if err != nil {
 			logFatal("failed to get task endpoint", err)
 		}
@@ -78,11 +78,11 @@ var clientTaskListCmd = &cobra.Command{
 					createdTime = message.Created.Format(time.RFC3339)
 				}
 
-				protoString := task.SafeMarshalTaskToString(message.Body)
+				actionSummary := task.SafeMarshalTaskToSummary(message.Body)
 				messageRows = append(messageRows, []string{
 					uint64ToSafeString(message.Id),
 					createdTime,
-					protoString,
+					actionSummary,
 				})
 			}
 

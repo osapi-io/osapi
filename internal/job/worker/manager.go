@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,6 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package proto
+package worker
 
-//go:generate protoc --proto_path=../../../../proto --go_out=../../../../internal/task/gen/proto/ --go_opt=paths=source_relative ../../../../proto/task/task.proto
+import (
+	"context"
+)
+
+// ServerManager defines the interface for job worker lifecycle management.
+type ServerManager interface {
+	// Start starts the worker in a non-blocking manner.
+	Start(ctx context.Context)
+	// Stop gracefully shuts down the worker with a timeout context.
+	Stop(ctx context.Context)
+}

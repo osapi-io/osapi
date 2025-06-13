@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -37,9 +36,10 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 	Short: "hostname of the server",
 	Long: `Obtain the server's hostname.
 `,
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		systemHandler := handler.(client.SystemHandler)
-		resp, err := systemHandler.GetSystemHostname(context.TODO())
+		resp, err := systemHandler.GetSystemHostname(ctx)
 		if err != nil {
 			logFatal("failed to get system status endpoint", err)
 		}

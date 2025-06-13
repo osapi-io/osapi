@@ -35,30 +35,30 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetResolvConfByInterface mocks base method.
-func (m *MockProvider) GetResolvConfByInterface(arg0 string) (*dns.Config, error) {
+func (m *MockProvider) GetResolvConfByInterface(interfaceName string) (*dns.Config, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResolvConfByInterface", arg0)
+	ret := m.ctrl.Call(m, "GetResolvConfByInterface", interfaceName)
 	ret0, _ := ret[0].(*dns.Config)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetResolvConfByInterface indicates an expected call of GetResolvConfByInterface.
-func (mr *MockProviderMockRecorder) GetResolvConfByInterface(arg0 interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) GetResolvConfByInterface(interfaceName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).GetResolvConfByInterface), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).GetResolvConfByInterface), interfaceName)
 }
 
-// SetResolvConfByInterface mocks base method.
-func (m *MockProvider) SetResolvConfByInterface(arg0, arg1 []string, arg2 string) error {
+// UpdateResolvConfByInterface mocks base method.
+func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetResolvConfByInterface", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "UpdateResolvConfByInterface", servers, searchDomains, interfaceName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetResolvConfByInterface indicates an expected call of SetResolvConfByInterface.
-func (mr *MockProviderMockRecorder) SetResolvConfByInterface(arg0, arg1, arg2 interface{}) *gomock.Call {
+// UpdateResolvConfByInterface indicates an expected call of UpdateResolvConfByInterface.
+func (mr *MockProviderMockRecorder) UpdateResolvConfByInterface(servers, searchDomains, interfaceName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).SetResolvConfByInterface), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolvConfByInterface", reflect.TypeOf((*MockProvider)(nil).UpdateResolvConfByInterface), servers, searchDomains, interfaceName)
 }

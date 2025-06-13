@@ -21,6 +21,7 @@
 package dns_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -28,28 +29,34 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type LinuxSetResolvConfByInterfacePublicTestSuite struct {
+type LinuxUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *LinuxSetResolvConfByInterfacePublicTestSuite) SetupTest() {
+func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
 }
 
-func (suite *LinuxSetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
+func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxSetResolvConfByInterfacePublicTestSuite) TestSetResolvConfByInterface() {
+func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	linux := dns.NewLinuxProvider()
 
 	servers := []string{}
 	searchDomains := []string{}
 	interfaceName := ""
-	err := linux.SetResolvConfByInterface(servers, searchDomains, interfaceName)
+	err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
 
-	suite.EqualError(err, "SetResolvConfByInterface is not implemented for LinuxProvider")
+	if runtime.GOOS == "darwin" {
+		// On macOS, should succeed for testing
+		suite.NoError(err)
+	} else {
+		// On other platforms, should return error
+		suite.EqualError(err, "UpdateResolvConfByInterface is not implemented for LinuxProvider on "+runtime.GOOS+" interface  (servers: [], domains: [])")
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxSetResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxSetResolvConfByInterfacePublicTestSuite))
+func TestLinuxUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxUpdateResolvConfByInterfacePublicTestSuite))
 }

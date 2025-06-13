@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package worker
 
 import (
-	"fmt"
+	"context"
+	"log/slog"
+	"sync"
+
+	"github.com/spf13/afero"
+
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/messaging"
 )
 
-// SetResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
-func (l *Linux) SetResolvConfByInterface(
-	_ []string,
-	_ []string,
-	_ string,
-) error {
-	return fmt.Errorf("SetResolvConfByInterface is not implemented for LinuxProvider")
+// Worker implements job processing with clean lifecycle management.
+type Worker struct {
+	logger     *slog.Logger
+	appConfig  config.Config
+	appFs      afero.Fs
+	natsClient messaging.NATSClient
+	jobClient  client.JobClient
+
+	// Lifecycle management
+	cancel context.CancelFunc
+	done   chan struct{}
+	wg     sync.WaitGroup
+}
+
+// JobContext contains the context and data for a single job execution.
+type JobContext struct {
+	// RequestID from the original job request
+	RequestID string
+	// WorkerHostname identifies which worker is processing this job
+	WorkerHostname string
+	// JobData contains the raw job request data
+	JobData []byte
+	// ResponseKV is the key-value bucket for storing responses
+	ResponseKV string
 }

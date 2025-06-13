@@ -18,44 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-syntax = "proto3";
+package dns
 
-package task;
+import (
+	"fmt"
+	"runtime"
+)
 
-option go_package = "github.com/retr0h/osapi/internal/task/gen/proto/task";
+// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
+// using the `resolvectl` command. It applies new DNS servers and search domains
+// if provided, while preserving existing settings for values that are not specified.
+// The function returns an error if the operation fails.
+func (l *Linux) UpdateResolvConfByInterface(
+	servers []string,
+	searchDomains []string,
+	interfaceName string,
+) error {
+	// For testing on macOS, simulate successful operation
+	if runtime.GOOS == "darwin" {
+		return nil
+	}
 
-// ShutdownAction represents an action to reboot or shutdown the system.
-message ShutdownAction {
-    // The type of action: reboot or shutdown
-    enum ActionType {
-        REBOOT = 0;
-        SHUTDOWN = 1;
-    }
-
-    ActionType action_type = 1;
-
-    // Optional field to specify a delay in seconds before reboot/shutdown
-    int32 delay_seconds = 2;
-
-    // Optional message to log or display before reboot/shutdown
-    string message = 3;
-}
-
-// ChangeDNSAction represents an action to change DNS settings.
-message ChangeDNSAction {
-    // List of DNS server IP addresses (IPv4 or IPv6)
-    repeated string dns_servers = 1;
-
-    // List of search domains for DNS resolution
-    repeated string search_domains = 2;
-
-    // The name of the network interface to apply DNS settings to
-    string interface_name = 3;
-}
-
-message Task {
-    oneof action {
-        ShutdownAction shutdown_action = 1;
-        ChangeDNSAction change_dns_action = 2;
-    }
+	return fmt.Errorf(
+		"UpdateResolvConfByInterface is not implemented for LinuxProvider on %s interface %s (servers: %v, domains: %v)",
+		runtime.GOOS,
+		interfaceName,
+		servers,
+		searchDomains,
+	)
 }

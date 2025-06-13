@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -38,13 +37,14 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 	Long: `Update the current DNS configuration with the supplied options.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
 		networkHandler := handler.(client.NetworkHandler)
 		resp, err := networkHandler.PutNetworkDNS(
-			context.TODO(),
+			ctx,
 			servers,
 			searchDomains,
 			interfaceName,

@@ -40,6 +40,7 @@ var (
 	gray      = lipgloss.Color("245")
 	lightGray = lipgloss.Color("241")
 	white     = lipgloss.Color("15")
+	teal      = lipgloss.Color("#06ffa5") // Soft teal for values/highlights
 )
 
 // section represents a header with its corresponding rows.
@@ -55,36 +56,39 @@ func printStyledTable(
 ) {
 	re := lipgloss.NewRenderer(os.Stdout)
 
-	// Measure terminal width dynamically
+	// Get terminal width to constrain table if needed
 	termWidth, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		termWidth = 80 // Default to 80 if unable to get terminal size
+		termWidth = 120 // Default to reasonable width if unable to get terminal size
 	}
 
-	// Set a maximum width for the table
-	maxWidth := 100 // Adjust this to your preferred maximum width
-
 	for _, section := range sections {
-		headerCount := len(section.Headers)
-		if headerCount == 0 {
-			headerCount = 1 // Default to 1 if there are no headers
+		// Calculate optimal width for each column
+		columnWidths := calculateColumnWidths(section.Headers, section.Rows, 1)
+
+		// Check if total table width exceeds terminal width
+		totalWidth := 0
+		for _, width := range columnWidths {
+			totalWidth += width
 		}
 
-		// Calculate the maximum header length for the current section
-		maxHeaderLength := getMaxHeaderLength(section.Headers)
+		// Add border/spacing overhead (rough estimate)
+		totalWidth += len(columnWidths) * 3 // borders and spacing
 
-		// Calculate the dynamic width per cell, ensuring it does not exceed the max width
-		dynamicWidth := (termWidth - 10) / headerCount
-		if dynamicWidth < maxHeaderLength {
-			dynamicWidth = maxHeaderLength
-		}
-		if dynamicWidth > maxWidth {
-			dynamicWidth = maxWidth
+		// If table is too wide, proportionally reduce column widths
+		if totalWidth > termWidth-4 { // leave some margin
+			scale := float64(termWidth-4) / float64(totalWidth)
+			for i := range columnWidths {
+				columnWidths[i] = int(float64(columnWidths[i]) * scale)
+				if columnWidths[i] < 8 { // minimum readable width
+					columnWidths[i] = 8
+				}
+			}
 		}
 
 		var (
 			HeaderStyle  = re.NewStyle().Foreground(white).Bold(true).Align(lipgloss.Center)
-			CellStyle    = re.NewStyle().Padding(0, 1).Width(dynamicWidth)
+			CellStyle    = re.NewStyle().PaddingLeft(1)
 			OddRowStyle  = CellStyle.Foreground(gray)
 			EvenRowStyle = CellStyle.Foreground(lightGray)
 			BorderStyle  = re.NewStyle().Foreground(purple)
@@ -102,15 +106,22 @@ func printStyledTable(
 		t := table.New().
 			Border(lipgloss.ThickBorder()).
 			BorderStyle(BorderStyle).
-			StyleFunc(func(row, _ int) lipgloss.Style {
+			StyleFunc(func(row, col int) lipgloss.Style {
+				// Determine base style based on row
+				var baseStyle lipgloss.Style
 				switch {
-				// case row == 0:
-				// 	return HeaderStyle
 				case row%2 == 0:
-					return EvenRowStyle
+					baseStyle = EvenRowStyle
 				default:
-					return OddRowStyle
+					baseStyle = OddRowStyle
 				}
+
+				// Apply column-specific width if available
+				if col < len(columnWidths) {
+					baseStyle = baseStyle.Width(columnWidths[col])
+				}
+
+				return baseStyle
 			})
 
 		styledHeaders := make([]string, len(section.Headers))
@@ -119,8 +130,6 @@ func printStyledTable(
 		}
 		t.Headers(styledHeaders...)
 
-		// Add headers and rows for the current section to the table.
-		// t.Headers(section.Headers...)
 		t.Rows(section.Rows...)
 
 		// Render the styled table.
@@ -172,6 +181,40 @@ func getMaxHeaderLength(
 		}
 	}
 	return maxLen
+}
+
+// calculateColumnWidths calculates the optimal width for each column based on content
+func calculateColumnWidths(
+	headers []string,
+	rows [][]string,
+	minPadding int,
+) []int {
+	if len(headers) == 0 {
+		return []int{}
+	}
+
+	widths := make([]int, len(headers))
+
+	// Start with header lengths
+	for i, header := range headers {
+		widths[i] = len(header)
+	}
+
+	// Check all row data to find max width per column
+	for _, row := range rows {
+		for i, cell := range row {
+			if i < len(widths) && len(cell) > widths[i] {
+				widths[i] = len(cell)
+			}
+		}
+	}
+
+	// Add padding to each column
+	for i := range widths {
+		widths[i] += minPadding * 2 // padding on both sides
+	}
+
+	return widths
 }
 
 // safeInt returns a default value when the input *int is nil.

@@ -22,9 +22,6 @@ package cmd
 
 import (
 	"context"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -39,7 +36,9 @@ var apiServerStartCmd = &cobra.Command{
 	Short: "Start the server",
 	Long: `Start the API server.
 `,
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+
 		var clientManager client.Manager = client.New(appConfig, logger)
 
 		err := clientManager.Connect()
@@ -53,14 +52,12 @@ var apiServerStartCmd = &cobra.Command{
 
 		sm.Start()
 
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-		<-quit
+		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		sm.Stop(ctx)
+		sm.Stop(shutdownCtx)
 	},
 }
 

@@ -26,7 +26,7 @@ import (
 	"strings"
 )
 
-// SetResolvConfByInterface updates the DNS configuration for a specific network interface
+// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
 // using the `resolvectl` command. It applies new DNS servers and search domains
 // if provided, while preserving existing settings for values that are not specified.
 // The function returns an error if the operation fails.
@@ -51,7 +51,7 @@ import (
 //     specified interface.
 //
 // See `systemd-resolved.service(8)` manual page for further information.
-func (u *Ubuntu) SetResolvConfByInterface(
+func (u *Ubuntu) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,

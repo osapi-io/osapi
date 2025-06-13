@@ -111,8 +111,9 @@ func (m model) View() string {
 }
 
 func fetchTaskStatus() string {
+	ctx := context.Background()
 	taskHandler := handler.(client.TaskHandler)
-	resp, err := taskHandler.GetTaskStatus(context.TODO())
+	resp, err := taskHandler.GetTaskStatus(ctx)
 	if err != nil {
 		logFatal("failed to get task status endpoint", err)
 	}

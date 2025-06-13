@@ -21,6 +21,7 @@
 package api
 
 import (
+	"runtime"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -44,15 +45,22 @@ func (s *Server) GetNetworkHandler(
 	var dnsProvider dns.Provider
 	var execManager exec.Manager
 
-	info, _ := host.Info()
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		execManager = exec.New(s.logger)
-		pingProvider = ping.NewUbuntuProvider()
-		dnsProvider = dns.NewUbuntuProvider(s.logger, execManager)
-	default:
+	// For macOS testing, use Linux provider with test data
+	if runtime.GOOS == "darwin" {
+		s.logger.Info("running on macOS, using Linux providers with test data")
 		pingProvider = ping.NewLinuxProvider()
 		dnsProvider = dns.NewLinuxProvider()
+	} else {
+		info, _ := host.Info()
+		switch strings.ToLower(info.Platform) {
+		case "ubuntu":
+			execManager = exec.New(s.logger)
+			pingProvider = ping.NewUbuntuProvider()
+			dnsProvider = dns.NewUbuntuProvider(s.logger, execManager)
+		default:
+			pingProvider = ping.NewLinuxProvider()
+			dnsProvider = dns.NewLinuxProvider()
+		}
 	}
 
 	return []func(e *echo.Echo){

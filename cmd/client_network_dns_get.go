@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,10 +37,11 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 	Long: `Get the servers current DNS configuration.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
 		networkHandler := handler.(client.NetworkHandler)
-		resp, err := networkHandler.GetNetworkDNSByInterface(context.TODO(), interfaceName)
+		resp, err := networkHandler.GetNetworkDNSByInterface(ctx, interfaceName)
 		if err != nil {
 			logFatal("failed to get network dns endpoint", err)
 		}

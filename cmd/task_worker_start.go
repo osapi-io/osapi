@@ -21,11 +21,6 @@
 package cmd
 
 import (
-	"context"
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/task/client"
@@ -39,9 +34,8 @@ var taskWorkerStartCmd = &cobra.Command{
 	Long: `Start the task worker.
 It processes tasks as they become available.
 `,
-	Run: func(_ *cobra.Command, _ []string) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 
 		var clientManager client.Manager = client.New(appConfig, logger)
 
@@ -53,15 +47,6 @@ It processes tasks as they become available.
 		// NOTE(retr0h): This worker doesn't follow the task server .Stop() pattern
 		// may change in the future
 		var sm worker.ServerManager = worker.New(appFs, appConfig, logger, clientManager)
-
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-
-		go func() {
-			<-signalChan
-			logger.Info("stopping worker")
-			cancel()
-		}()
 
 		sm.Start(ctx)
 	},

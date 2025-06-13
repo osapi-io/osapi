@@ -22,15 +22,15 @@ package dns
 
 // Provider implements the methods to interact with various DNS components.
 type Provider interface {
-	// GetResolvConf retrieves the DNS configuration.
+	// GetResolvConfByInterface retrieves the DNS configuration.
 	GetResolvConfByInterface(
-		_ string,
+		interfaceName string,
 	) (*Config, error)
-	// SetResolvConfByInterface sets the DNS configuration.
-	SetResolvConfByInterface(
-		_ []string,
-		_ []string,
-		_ string,
+	// UpdateResolvConfByInterface updates the DNS configuration.
+	UpdateResolvConfByInterface(
+		servers []string,
+		searchDomains []string,
+		interfaceName string,
 	) error
 }
 

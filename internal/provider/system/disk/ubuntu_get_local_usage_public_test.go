@@ -58,7 +58,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 		{
 			name: "when GetLocalUsageStats Ok",
 			setupMock: func(u *disk.Ubuntu) {
-				u.PartitionsFn = func(all bool) ([]sysDisk.PartitionStat, error) {
+				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return []sysDisk.PartitionStat{
 						{
 							Mountpoint: "/dev/disk1",
@@ -135,7 +135,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 		{
 			name: "when disk.Partitions errors",
 			setupMock: func(u *disk.Ubuntu) {
-				u.PartitionsFn = func(all bool) ([]sysDisk.PartitionStat, error) {
+				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return nil, assert.AnError
 				}
 			},
@@ -145,7 +145,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 		{
 			name: "when disk.Usage errors",
 			setupMock: func(u *disk.Ubuntu) {
-				u.PartitionsFn = func(all bool) ([]sysDisk.PartitionStat, error) {
+				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return []sysDisk.PartitionStat{
 						{
 							Mountpoint: "/dev/disk1",
@@ -154,7 +154,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 						},
 					}, nil
 				}
-				u.UsageFn = func(path string) (*sysDisk.UsageStat, error) {
+				u.UsageFn = func(_ string) (*sysDisk.UsageStat, error) {
 					return nil, assert.AnError
 				}
 			},

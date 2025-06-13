@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 
@@ -37,10 +36,11 @@ var clientTaskDeleteIDCmd = &cobra.Command{
 	Long: `Deletes an action from being processed by the task runner.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		messageID, _ := cmd.Flags().GetUint64("message-id")
 
 		taskHandler := handler.(client.TaskHandler)
-		resp, err := taskHandler.DeleteTaskByID(context.TODO(), messageID)
+		resp, err := taskHandler.DeleteTaskByID(ctx, messageID)
 		if err != nil {
 			logFatal("failed to delete task endpoint", err)
 		}

@@ -21,6 +21,7 @@
 package testing
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -28,6 +29,7 @@ import (
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/osapi-io/nats-server/pkg/server"
 
@@ -69,40 +71,41 @@ func NewServer() *server.Server {
 
 // SetupStream configures a NATS JetStream stream and consumers for testing.
 func SetupStream() error {
-	jsOpts := &natsclient.ClientOptions{
+	// Create client with current API
+	c := natsclient.New(logger, &natsclient.Options{
 		Host: appConfig.Task.Server.Host,
 		Port: appConfig.Task.Server.Port,
 		Auth: natsclient.AuthOptions{
 			AuthType: natsclient.NoAuth,
 		},
-	}
+	})
 
-	js, err := natsclient.NewJetStreamContext(jsOpts)
+	// Connect to NATS
+	err := c.Connect()
 	if err != nil {
 		return err
 	}
 
-	streamOpts := &natsclient.StreamConfig{
-		StreamConfig: &nats.StreamConfig{
-			Name:     task.StreamName,
-			Subjects: []string{task.SubjectName},
-			Storage:  nats.MemoryStorage,
-		},
-		Consumers: []*natsclient.ConsumerConfig{
-			{
-				ConsumerConfig: &nats.ConsumerConfig{
-					Durable:    task.ConsumerName,
-					AckPolicy:  nats.AckExplicitPolicy,
-					MaxDeliver: 5,
-					AckWait:    30 * time.Second,
-				},
-			},
-		},
+	// Stream configuration for task system
+	streamConfig := &nats.StreamConfig{
+		Name:     task.StreamName,
+		Subjects: []string{task.SubjectName},
+		Storage:  nats.MemoryStorage,
 	}
 
-	c := natsclient.New(logger)
-	if err := c.SetupJetStream(js, streamOpts); err != nil &&
-		!errors.Is(err, nats.ErrStreamNameAlreadyInUse) {
+	// Consumer configuration for task system
+	consumerConfig := jetstream.ConsumerConfig{
+		Name:       task.ConsumerName,
+		Durable:    task.ConsumerName,
+		AckPolicy:  jetstream.AckExplicitPolicy,
+		MaxDeliver: 5,
+		AckWait:    30 * time.Second,
+	}
+
+	// Setup JetStream with stream and consumer
+	ctx := context.Background()
+	err = c.CreateOrUpdateJetStreamWithConfig(ctx, streamConfig, consumerConfig)
+	if err != nil && !errors.Is(err, nats.ErrStreamNameAlreadyInUse) {
 		return err
 	}
 

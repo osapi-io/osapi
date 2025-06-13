@@ -1,0 +1,137 @@
+// Copyright (c) 2025 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package client
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
+)
+
+// ModifyNetworkDNS modifies the DNS configuration on a specific host.
+func (c *Client) ModifyNetworkDNS(
+	ctx context.Context,
+	hostname string,
+	servers []string,
+	searchDomains []string,
+	iface string,
+) error {
+	config := map[string]interface{}{
+		"interface":      iface,
+		"servers":        servers,
+		"search_domains": searchDomains,
+	}
+	subject := job.BuildModifySubject(
+		hostname,
+		job.SubjectCategoryNetwork,
+		job.NetworkOperationDNS,
+	)
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal DNS config: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  job.SubjectCategoryNetwork,
+		Operation: job.NetworkOperationDNS,
+		Data:      data,
+	}
+
+	resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return err
+	}
+
+	if resp.Status == job.StatusFailed {
+		return fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	return nil
+}
+
+// ModifyNetworkPing performs a ping operation from a specific host.
+func (c *Client) ModifyNetworkPing(
+	ctx context.Context,
+	hostname string,
+	address string,
+) (*ping.Result, error) {
+	subject := job.BuildModifySubject(
+		hostname,
+		job.SubjectCategoryNetwork,
+		job.NetworkOperationPing,
+	)
+
+	pingData := map[string]interface{}{
+		"address": address,
+	}
+
+	data, err := json.Marshal(pingData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal ping request: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  job.SubjectCategoryNetwork,
+		Operation: job.NetworkOperationPing,
+		Data:      data,
+	}
+
+	resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Status == job.StatusFailed {
+		return nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	// Unmarshal the response data
+	var pingResp ping.Result
+	if err := json.Unmarshal(resp.Data, &pingResp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ping response: %w", err)
+	}
+
+	return &pingResp, nil
+}
+
+// ModifyNetworkDNSAny modifies DNS configuration on any available host.
+func (c *Client) ModifyNetworkDNSAny(
+	ctx context.Context,
+	servers []string,
+	searchDomains []string,
+	iface string,
+) error {
+	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
+}
+
+// ModifyNetworkPingAny performs a ping from any available host.
+func (c *Client) ModifyNetworkPingAny(
+	ctx context.Context,
+	address string,
+) (*ping.Result, error) {
+	return c.ModifyNetworkPing(ctx, job.AnyHost, address)
+}
