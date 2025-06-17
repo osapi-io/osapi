@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -211,7 +212,7 @@ and operation types with live refresh.`,
 		if jsonOutput {
 			// Get status once and output as JSON
 			status := fetchJobsStatusJSON()
-			fmt.Println(status)
+			logger.Info("jobs status", slog.String("response", status))
 			return
 		}
 

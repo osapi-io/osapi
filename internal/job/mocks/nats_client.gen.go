@@ -98,3 +98,33 @@ func (mr *MockNATSConnectorMockRecorder) JetStream(arg0 ...interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JetStream", reflect.TypeOf((*MockNATSConnector)(nil).JetStream), arg0...)
 }
+
+// QueueSubscribe mocks base method.
+func (m *MockNATSConnector) QueueSubscribe(arg0, arg1 string, arg2 nats.MsgHandler) (*nats.Subscription, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueueSubscribe", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*nats.Subscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueueSubscribe indicates an expected call of QueueSubscribe.
+func (mr *MockNATSConnectorMockRecorder) QueueSubscribe(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueueSubscribe", reflect.TypeOf((*MockNATSConnector)(nil).QueueSubscribe), arg0, arg1, arg2)
+}
+
+// Subscribe mocks base method.
+func (m *MockNATSConnector) Subscribe(arg0 string, arg1 nats.MsgHandler) (*nats.Subscription, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Subscribe", arg0, arg1)
+	ret0, _ := ret[0].(*nats.Subscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Subscribe indicates an expected call of Subscribe.
+func (mr *MockNATSConnectorMockRecorder) Subscribe(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Subscribe", reflect.TypeOf((*MockNATSConnector)(nil).Subscribe), arg0, arg1)
+}

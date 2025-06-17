@@ -29,7 +29,7 @@ import (
 // using the `resolvectl` command. It returns a Config struct containing the DNS
 // servers and search domains for the interface, and an error if something goes wrong.
 func (l *Linux) GetResolvConfByInterface(
-	interfaceName string,
+	_ string,
 ) (*Config, error) {
 	// For testing on macOS, return dummy DNS configuration
 	if runtime.GOOS == "darwin" {

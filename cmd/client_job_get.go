@@ -61,66 +61,7 @@ and any results if completed.`,
 			return
 		}
 
-		if jsonOutput {
-			resultJSON, _ := json.Marshal(jobInfo)
-			logger.Info("job", slog.String("response", string(resultJSON)))
-			return
-		}
-
-		// Display job details
-		jobData := map[string]interface{}{
-			"Job ID":  jobInfo.ID,
-			"Status":  jobInfo.Status,
-			"Created": jobInfo.Created,
-		}
-
-		// Add error field if present
-		if jobInfo.Error != "" {
-			jobData["Error"] = jobInfo.Error
-		}
-
-		// Add subject if present
-		if jobInfo.Subject != "" {
-			jobData["Subject"] = jobInfo.Subject
-		}
-
-		printStyledMap(jobData)
-
-		// Collect content for both sections to ensure consistent table widths
-		var allContent []string
-		var sections []section
-
-		// Display the operation request
-		if jobInfo.Operation != nil {
-			jobOperationJSON, _ := json.MarshalIndent(jobInfo.Operation, "", "  ")
-			operationRows := [][]string{{string(jobOperationJSON)}}
-			sections = append(sections, section{
-				Title:   "Job Request",
-				Headers: []string{"DATA"},
-				Rows:    operationRows,
-			})
-			allContent = append(allContent, string(jobOperationJSON))
-		}
-
-		// Display results if completed and available
-		if jobInfo.Status == "completed" && len(jobInfo.Result) > 0 {
-			var result interface{}
-			if err := json.Unmarshal(jobInfo.Result, &result); err == nil {
-				resultJSON, _ := json.MarshalIndent(result, "", "  ")
-				resultRows := [][]string{{string(resultJSON)}}
-				sections = append(sections, section{
-					Title:   "Job Response",
-					Headers: []string{"DATA"},
-					Rows:    resultRows,
-				})
-				allContent = append(allContent, string(resultJSON))
-			}
-		}
-
-		// Print each section individually to ensure consistent formatting
-		for _, sec := range sections {
-			printStyledTable([]section{sec})
-		}
+		displayJobDetails(jobInfo)
 
 		logger.Info("job retrieved successfully",
 			slog.String("job_id", jobID),

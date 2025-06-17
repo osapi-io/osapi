@@ -1,10 +1,9 @@
-cobertura.xml
-cover.out
+coverage/
 database.db*
 dist/
 .nats/jetstream/
 result.xml
-.task/
+.just/remote/
 test/vendor/
 tmp/
 

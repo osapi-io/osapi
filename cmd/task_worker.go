@@ -31,7 +31,7 @@ var taskWorkerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "The worker subcommand",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		logger.Info(
+		logger.Debug(
 			"task worker configuration",
 			slog.Bool("debug", appConfig.Debug),
 		)

@@ -80,6 +80,8 @@ type Response struct {
 	Data json.RawMessage `json:"data,omitempty"`
 	// Error contains error information if the job failed.
 	Error string `json:"error,omitempty"`
+	// Hostname identifies which worker processed this job.
+	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
 	Timestamp time.Time `json:"timestamp"`
 }
@@ -141,8 +143,34 @@ type QueuedJob struct {
 	Result json.RawMessage `json:"result,omitempty"`
 	// Error contains error details if the job failed (optional)
 	Error string `json:"error,omitempty"`
+	// Hostname identifies which worker processed this job (optional)
+	Hostname string `json:"hostname,omitempty"`
 	// UpdatedAt is the timestamp when the job was last updated (optional)
 	UpdatedAt string `json:"updated_at,omitempty"`
+	// WorkerStates contains detailed state for each worker that processed this job
+	WorkerStates map[string]WorkerState `json:"worker_states,omitempty"`
+	// Timeline contains the chronological sequence of events for this job
+	Timeline []TimelineEvent `json:"timeline,omitempty"`
+	// Responses contains the actual response data from each worker
+	Responses map[string]Response `json:"responses,omitempty"`
+}
+
+// WorkerState represents the state of a specific worker processing a job
+type WorkerState struct {
+	Status    string    `json:"status"`
+	Error     string    `json:"error,omitempty"`
+	Duration  string    `json:"duration,omitempty"`
+	StartTime time.Time `json:"start_time,omitempty"`
+	EndTime   time.Time `json:"end_time,omitempty"`
+}
+
+// TimelineEvent represents a single event in the job timeline
+type TimelineEvent struct {
+	Timestamp time.Time `json:"timestamp"`
+	Event     string    `json:"event"`
+	Hostname  string    `json:"hostname"`
+	Message   string    `json:"message"`
+	Error     string    `json:"error,omitempty"`
 }
 
 // QueueStats represents statistics about the job queue.

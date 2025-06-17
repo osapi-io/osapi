@@ -49,7 +49,7 @@ to NATS using the nats-client library.`,
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		logger.Info(
+		logger.Debug(
 			"job client configuration",
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("client.host", appConfig.Job.Client.Host),

@@ -23,6 +23,9 @@ package client
 import (
 	"context"
 
+	"github.com/nats-io/nats.go/jetstream"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -69,6 +72,50 @@ type JobClient interface {
 		ctx context.Context,
 		address string,
 	) (*ping.Result, error)
+
+	// Worker operations - used by job workers for processing
+	WriteStatusEvent(
+		ctx context.Context,
+		jobID, event, hostname string,
+		data map[string]interface{},
+	) error
+	WriteJobResponse(
+		ctx context.Context,
+		jobID, hostname string,
+		responseData []byte,
+		status string,
+		errorMsg string,
+	) error
+	ConsumeJobs(
+		ctx context.Context,
+		streamName, consumerName string,
+		handler func(jetstream.Msg) error,
+		opts *natsclient.ConsumeOptions,
+	) error
+	GetJobData(ctx context.Context, jobKey string) ([]byte, error)
+	CreateOrUpdateConsumer(
+		ctx context.Context,
+		streamName string,
+		consumerConfig jetstream.ConsumerConfig,
+	) error
+}
+
+// CreateJobResult represents the result of creating a job.
+type CreateJobResult struct {
+	JobID     string `json:"job_id"`
+	Status    string `json:"status"`
+	Revision  uint64 `json:"revision"`
+	Timestamp string `json:"timestamp"`
+}
+
+// computedJobStatus represents the computed status from events
+type computedJobStatus struct {
+	Status       string
+	Error        string
+	Hostname     string
+	UpdatedAt    string
+	WorkerStates map[string]job.WorkerState
+	Timeline     []job.TimelineEvent
 }
 
 // Ensure Client implements JobClient interface

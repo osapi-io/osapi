@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -32,6 +33,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/retr0h/osapi/internal/client/gen"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // TODO(retr0h): consider moving out of global scope
@@ -203,8 +205,12 @@ func calculateColumnWidths(
 	// Check all row data to find max width per column
 	for _, row := range rows {
 		for i, cell := range row {
-			if i < len(widths) && len(cell) > widths[i] {
-				widths[i] = len(cell)
+			if i < len(widths) {
+				// For multi-line content, use the width of the longest line
+				maxLineWidth := getMaxLineWidth(cell)
+				if maxLineWidth > widths[i] {
+					widths[i] = maxLineWidth
+				}
 			}
 		}
 	}
@@ -215,6 +221,46 @@ func calculateColumnWidths(
 	}
 
 	return widths
+}
+
+// getMaxLineWidth returns the width of the longest line in a multi-line string
+func getMaxLineWidth(text string) int {
+	lines := strings.Split(text, "\n")
+	maxWidth := 0
+	for _, line := range lines {
+		if len(line) > maxWidth {
+			maxWidth = len(line)
+		}
+	}
+	return maxWidth
+}
+
+// formatKubectlTime formats a timestamp in kubectl-style relative time
+func formatKubectlTime(t time.Time) string {
+	now := time.Now()
+	duration := now.Sub(t)
+
+	// Handle future times (shouldn't happen but just in case)
+	if duration < 0 {
+		return "0s"
+	}
+
+	// Convert to different units based on magnitude
+	days := int(duration.Hours() / 24)
+	hours := int(duration.Hours())
+	minutes := int(duration.Minutes())
+	seconds := int(duration.Seconds())
+
+	switch {
+	case days > 0:
+		return fmt.Sprintf("%dd", days)
+	case hours > 0:
+		return fmt.Sprintf("%dh", hours)
+	case minutes > 0:
+		return fmt.Sprintf("%dm", minutes)
+	default:
+		return fmt.Sprintf("%ds", seconds)
+	}
 }
 
 // safeInt returns a default value when the input *int is nil.
@@ -313,4 +359,162 @@ func handleUnknownError(
 		slog.Int("code", statusCode),
 		slog.String("error", errorMsg),
 	)
+}
+
+// displayJobDetails displays detailed job information in a consistent format.
+// Used by both job get and job run commands.
+func displayJobDetails(jobInfo *job.QueuedJob) {
+	if jsonOutput {
+		resultJSON, _ := json.Marshal(jobInfo)
+		logger.Info("job", slog.String("response", string(resultJSON)))
+		return
+	}
+
+	// Display job details with enhanced status information
+	jobData := map[string]interface{}{
+		"Job ID":  jobInfo.ID,
+		"Status":  jobInfo.Status,
+		"Created": jobInfo.Created,
+	}
+
+	// Add error field if present
+	if jobInfo.Error != "" {
+		jobData["Error"] = jobInfo.Error
+	}
+
+	// Add subject if present
+	if jobInfo.Subject != "" {
+		jobData["Subject"] = jobInfo.Subject
+	}
+
+	// Add worker summary
+	if len(jobInfo.WorkerStates) > 0 {
+		completed := 0
+		failed := 0
+		processing := 0
+		acknowledged := 0
+
+		for _, state := range jobInfo.WorkerStates {
+			switch state.Status {
+			case "completed":
+				completed++
+			case "failed":
+				failed++
+			case "started":
+				processing++
+			case "acknowledged":
+				acknowledged++
+			}
+		}
+
+		total := len(jobInfo.WorkerStates)
+		if total > 1 {
+			jobData["Workers"] = fmt.Sprintf(
+				"%d total (%d completed, %d failed, %d processing)",
+				total,
+				completed,
+				failed,
+				processing,
+			)
+		}
+	}
+
+	printStyledMap(jobData)
+
+	// Collect content for sections to ensure consistent table widths
+	var sections []section
+
+	// Display the operation request
+	if jobInfo.Operation != nil {
+		jobOperationJSON, _ := json.MarshalIndent(jobInfo.Operation, "", "  ")
+		operationRows := [][]string{{string(jobOperationJSON)}}
+		sections = append(sections, section{
+			Title:   "Job Request",
+			Headers: []string{"DATA"},
+			Rows:    operationRows,
+		})
+	}
+
+	// Display timeline if available
+	if len(jobInfo.Timeline) > 0 {
+		timelineRows := [][]string{}
+		for _, event := range jobInfo.Timeline {
+			row := []string{
+				event.Timestamp.Format("15:04:05 MST"),
+				event.Event,
+				event.Hostname,
+				event.Message,
+			}
+			if event.Error != "" {
+				row = append(row, event.Error)
+			} else {
+				row = append(row, "")
+			}
+			timelineRows = append(timelineRows, row)
+		}
+		sections = append(sections, section{
+			Title:   "Timeline",
+			Headers: []string{"TIME", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+			Rows:    timelineRows,
+		})
+	}
+
+	// Display responses (the actual job results)
+	if len(jobInfo.Responses) > 0 {
+		responseRows := [][]string{}
+		for hostname, response := range jobInfo.Responses {
+			// Format the response data with nice indentation
+			var responseData string
+			if len(response.Data) > 0 {
+				var data interface{}
+				if err := json.Unmarshal(response.Data, &data); err == nil {
+					// Use pretty printing with 2-space indentation
+					dataJSON, _ := json.MarshalIndent(data, "", "  ")
+					responseData = string(dataJSON)
+				} else {
+					responseData = string(response.Data)
+				}
+			} else {
+				responseData = "(no data)"
+			}
+
+			row := []string{
+				hostname,
+				string(response.Status),
+				response.Timestamp.Format("15:04:05 MST"),
+				responseData,
+			}
+			if response.Error != "" {
+				row = append(row, response.Error)
+			} else {
+				row = append(row, "")
+			}
+			responseRows = append(responseRows, row)
+		}
+
+		sections = append(sections, section{
+			Title:   "Worker Responses",
+			Headers: []string{"HOSTNAME", "STATUS", "TIME", "DATA", "ERROR"},
+			Rows:    responseRows,
+		})
+	}
+
+	// Display results if completed and available (legacy support)
+	if jobInfo.Status == "completed" && len(jobInfo.Result) > 0 {
+		var result interface{}
+		if err := json.Unmarshal(jobInfo.Result, &result); err == nil {
+			resultJSON, _ := json.MarshalIndent(result, "", "  ")
+			resultRows := [][]string{{string(resultJSON)}}
+			sections = append(sections, section{
+				Title:   "Job Response (Legacy)",
+				Headers: []string{"DATA"},
+				Rows:    resultRows,
+			})
+		}
+	}
+
+	// Print each section individually to ensure consistent formatting
+	for _, sec := range sections {
+		printStyledTable([]section{sec})
+	}
 }

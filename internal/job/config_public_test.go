@@ -43,76 +43,252 @@ func (suite *ConfigPublicTestSuite) SetupSubTest() {}
 func (suite *ConfigPublicTestSuite) TearDownTest() {}
 
 func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
-	jobConfig := &config.Job{
-		StreamName:     "JOBS",
-		StreamSubjects: "job.>",
-		Stream: config.JobStream{
-			MaxAge:   "24h",
-			MaxMsgs:  10000,
-			Storage:  "file",
-			Replicas: 1,
-			Discard:  "old",
+	tests := []struct {
+		name      string
+		jobConfig *config.Job
+		wantCheck func(config *nats.StreamConfig)
+	}{
+		{
+			name: "when using file storage and old discard policy",
+			jobConfig: &config.Job{
+				StreamName:     "JOBS",
+				StreamSubjects: "job.>",
+				Stream: config.JobStream{
+					MaxAge:   "24h",
+					MaxMsgs:  10000,
+					Storage:  "file",
+					Replicas: 1,
+					Discard:  "old",
+				},
+			},
+			wantCheck: func(config *nats.StreamConfig) {
+				suite.Equal("JOBS", config.Name)
+				suite.Equal("Stream for job request and processing", config.Description)
+				suite.Equal([]string{"job.>"}, config.Subjects)
+				suite.Equal(nats.FileStorage, config.Storage)
+				suite.Equal(1, config.Replicas)
+				suite.Equal(24*time.Hour, config.MaxAge)
+				suite.Equal(int64(10000), config.MaxMsgs)
+				suite.Equal(nats.DiscardOld, config.Discard)
+			},
+		},
+		{
+			name: "when using memory storage and new discard policy",
+			jobConfig: &config.Job{
+				StreamName:     "JOBS_MEMORY",
+				StreamSubjects: "job.memory.>",
+				Stream: config.JobStream{
+					MaxAge:   "1h",
+					MaxMsgs:  5000,
+					Storage:  "memory",
+					Replicas: 3,
+					Discard:  "new",
+				},
+			},
+			wantCheck: func(config *nats.StreamConfig) {
+				suite.Equal("JOBS_MEMORY", config.Name)
+				suite.Equal("Stream for job request and processing", config.Description)
+				suite.Equal([]string{"job.memory.>"}, config.Subjects)
+				suite.Equal(nats.MemoryStorage, config.Storage)
+				suite.Equal(3, config.Replicas)
+				suite.Equal(1*time.Hour, config.MaxAge)
+				suite.Equal(int64(5000), config.MaxMsgs)
+				suite.Equal(nats.DiscardNew, config.Discard)
+			},
+		},
+		{
+			name: "when using unknown storage defaults to file",
+			jobConfig: &config.Job{
+				StreamName:     "JOBS_UNKNOWN",
+				StreamSubjects: "job.unknown.>",
+				Stream: config.JobStream{
+					MaxAge:   "12h",
+					MaxMsgs:  1000,
+					Storage:  "unknown",
+					Replicas: 1,
+					Discard:  "old",
+				},
+			},
+			wantCheck: func(config *nats.StreamConfig) {
+				suite.Equal(nats.FileStorage, config.Storage)
+			},
+		},
+		{
+			name: "when using unknown discard defaults to old",
+			jobConfig: &config.Job{
+				StreamName:     "JOBS_DISCARD",
+				StreamSubjects: "job.discard.>",
+				Stream: config.JobStream{
+					MaxAge:   "6h",
+					MaxMsgs:  2000,
+					Storage:  "file",
+					Replicas: 1,
+					Discard:  "unknown",
+				},
+			},
+			wantCheck: func(config *nats.StreamConfig) {
+				suite.Equal(nats.DiscardOld, config.Discard)
+			},
 		},
 	}
-	streamConfig := job.GetJobsStreamConfig(jobConfig)
 
-	// Verify stream configuration
-	suite.NotNil(streamConfig)
-	suite.Equal("JOBS", streamConfig.Name)
-	suite.Equal("Stream for job request and processing", streamConfig.Description)
-	suite.Equal([]string{"job.>"}, streamConfig.Subjects)
-	suite.Equal(nats.FileStorage, streamConfig.Storage)
-	suite.Equal(1, streamConfig.Replicas)
-	suite.Equal(24*time.Hour, streamConfig.MaxAge)
-	suite.Equal(int64(10000), streamConfig.MaxMsgs)
-	suite.Equal(nats.DiscardOld, streamConfig.Discard)
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			streamConfig := job.GetJobsStreamConfig(tt.jobConfig)
+			suite.NotNil(streamConfig)
+			tt.wantCheck(streamConfig)
+		})
+	}
 }
 
 func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
-	jobConfig := &config.Job{
-		StreamSubjects: "job.>",
-		ConsumerName:   "jobs-worker",
-		Consumer: config.JobConsumer{
-			MaxDeliver:    5,
-			AckWait:       "30s",
-			MaxAckPending: 100,
-			ReplayPolicy:  "instant",
+	tests := []struct {
+		name      string
+		jobConfig *config.Job
+		wantCheck func(config jetstream.ConsumerConfig)
+	}{
+		{
+			name: "when using instant replay policy",
+			jobConfig: &config.Job{
+				StreamSubjects: "job.>",
+				ConsumerName:   "jobs-worker",
+				Consumer: config.JobConsumer{
+					MaxDeliver:    5,
+					AckWait:       "30s",
+					MaxAckPending: 100,
+					ReplayPolicy:  "instant",
+				},
+			},
+			wantCheck: func(config jetstream.ConsumerConfig) {
+				suite.Equal("jobs-worker", config.Name)
+				suite.Equal("Consumer for processing job requests", config.Description)
+				suite.Equal("jobs-worker", config.Durable)
+				suite.Equal(jetstream.AckExplicitPolicy, config.AckPolicy)
+				suite.Equal(5, config.MaxDeliver)
+				suite.Equal(30*time.Second, config.AckWait)
+				suite.Equal(100, config.MaxAckPending)
+				suite.Equal("job.>", config.FilterSubject)
+				suite.Equal(jetstream.ReplayInstantPolicy, config.ReplayPolicy)
+			},
+		},
+		{
+			name: "when using original replay policy",
+			jobConfig: &config.Job{
+				StreamSubjects: "job.test.>",
+				ConsumerName:   "test-consumer",
+				Consumer: config.JobConsumer{
+					MaxDeliver:    3,
+					AckWait:       "60s",
+					MaxAckPending: 50,
+					ReplayPolicy:  "original",
+				},
+			},
+			wantCheck: func(config jetstream.ConsumerConfig) {
+				suite.Equal("test-consumer", config.Name)
+				suite.Equal("test-consumer", config.Durable)
+				suite.Equal(3, config.MaxDeliver)
+				suite.Equal(60*time.Second, config.AckWait)
+				suite.Equal(50, config.MaxAckPending)
+				suite.Equal("job.test.>", config.FilterSubject)
+				suite.Equal(jetstream.ReplayOriginalPolicy, config.ReplayPolicy)
+			},
+		},
+		{
+			name: "when using unknown replay policy defaults to instant",
+			jobConfig: &config.Job{
+				StreamSubjects: "job.unknown.>",
+				ConsumerName:   "unknown-consumer",
+				Consumer: config.JobConsumer{
+					MaxDeliver:    1,
+					AckWait:       "10s",
+					MaxAckPending: 10,
+					ReplayPolicy:  "unknown",
+				},
+			},
+			wantCheck: func(config jetstream.ConsumerConfig) {
+				suite.Equal(jetstream.ReplayInstantPolicy, config.ReplayPolicy)
+			},
 		},
 	}
-	consumerConfig := job.GetJobsConsumerConfig(jobConfig)
 
-	// Verify consumer configuration
-	suite.Equal("jobs-worker", consumerConfig.Name)
-	suite.Equal("Consumer for processing job requests", consumerConfig.Description)
-	suite.Equal("jobs-worker", consumerConfig.Durable)
-	suite.Equal(jetstream.AckExplicitPolicy, consumerConfig.AckPolicy)
-	suite.Equal(5, consumerConfig.MaxDeliver)
-	suite.Equal(30*time.Second, consumerConfig.AckWait)
-	suite.Equal(100, consumerConfig.MaxAckPending)
-	suite.Equal("job.>", consumerConfig.FilterSubject)
-	suite.Equal(jetstream.ReplayInstantPolicy, consumerConfig.ReplayPolicy)
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			consumerConfig := job.GetJobsConsumerConfig(tt.jobConfig)
+			tt.wantCheck(consumerConfig)
+		})
+	}
 }
 
 func (suite *ConfigPublicTestSuite) TestGetKVBucketConfig() {
-	jobConfig := &config.Job{
-		KVResponseBucket: "job-responses",
-		KV: config.JobKV{
-			TTL:      "1h",
-			MaxBytes: 104857600, // 100MB
-			Storage:  "file",
-			Replicas: 1,
+	tests := []struct {
+		name      string
+		jobConfig *config.Job
+		wantCheck func(config *nats.KeyValueConfig)
+	}{
+		{
+			name: "when using file storage",
+			jobConfig: &config.Job{
+				KVResponseBucket: "job-responses",
+				KV: config.JobKV{
+					TTL:      "1h",
+					MaxBytes: 104857600, // 100MB
+					Storage:  "file",
+					Replicas: 1,
+				},
+			},
+			wantCheck: func(config *nats.KeyValueConfig) {
+				suite.Equal("job-responses", config.Bucket)
+				suite.Equal("Storage for job responses indexed by request ID", config.Description)
+				suite.Equal(1*time.Hour, config.TTL)
+				suite.Equal(int64(100*1024*1024), config.MaxBytes)
+				suite.Equal(nats.FileStorage, config.Storage)
+				suite.Equal(1, config.Replicas)
+			},
+		},
+		{
+			name: "when using memory storage",
+			jobConfig: &config.Job{
+				KVResponseBucket: "job-memory",
+				KV: config.JobKV{
+					TTL:      "30m",
+					MaxBytes: 52428800, // 50MB
+					Storage:  "memory",
+					Replicas: 3,
+				},
+			},
+			wantCheck: func(config *nats.KeyValueConfig) {
+				suite.Equal("job-memory", config.Bucket)
+				suite.Equal("Storage for job responses indexed by request ID", config.Description)
+				suite.Equal(30*time.Minute, config.TTL)
+				suite.Equal(int64(50*1024*1024), config.MaxBytes)
+				suite.Equal(nats.MemoryStorage, config.Storage)
+				suite.Equal(3, config.Replicas)
+			},
+		},
+		{
+			name: "when using unknown storage defaults to file",
+			jobConfig: &config.Job{
+				KVResponseBucket: "job-unknown",
+				KV: config.JobKV{
+					TTL:      "2h",
+					MaxBytes: 1048576, // 1MB
+					Storage:  "unknown",
+					Replicas: 1,
+				},
+			},
+			wantCheck: func(config *nats.KeyValueConfig) {
+				suite.Equal(nats.FileStorage, config.Storage)
+			},
 		},
 	}
-	kvConfig := job.GetKVBucketConfig(jobConfig)
 
-	// Verify KV bucket configuration
-	suite.NotNil(kvConfig)
-	suite.Equal("job-responses", kvConfig.Bucket)
-	suite.Equal("Storage for job responses indexed by request ID", kvConfig.Description)
-	suite.Equal(1*time.Hour, kvConfig.TTL)
-	suite.Equal(int64(100*1024*1024), kvConfig.MaxBytes)
-	suite.Equal(nats.FileStorage, kvConfig.Storage)
-	suite.Equal(1, kvConfig.Replicas)
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			kvConfig := job.GetKVBucketConfig(tt.jobConfig)
+			suite.NotNil(kvConfig)
+			tt.wantCheck(kvConfig)
+		})
+	}
 }
 
 func TestConfigPublicTestSuite(t *testing.T) {

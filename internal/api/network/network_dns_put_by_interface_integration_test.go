@@ -246,7 +246,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSByIn
 				return mock
 			},
 			setuptaskClientMock: func() *taskClientMocks.MockManager {
-				network.CreateAndMarshalChangeDNSActionFunc = func(servers []string, searchDomains []string, interfaceName string) ([]byte, error) {
+				network.CreateAndMarshalChangeDNSActionFunc = func(_ []string, _ []string, _ string) ([]byte, error) {
 					return nil, assert.AnError
 				}
 				mock := taskClientMocks.NewDefaultMockManager(suite.ctrl)
@@ -271,7 +271,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSByIn
 				return mock
 			},
 			setuptaskClientMock: func() *taskClientMocks.MockManager {
-				network.CreateAndMarshalChangeDNSActionFunc = func(servers []string, searchDomains []string, interfaceName string) ([]byte, error) {
+				network.CreateAndMarshalChangeDNSActionFunc = func(_ []string, _ []string, _ string) ([]byte, error) {
 					return []byte("mocked-dns-action"), nil
 				}
 

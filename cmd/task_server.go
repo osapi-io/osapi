@@ -34,7 +34,7 @@ var taskServerCmd = &cobra.Command{
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		validateDistribution()
 
-		logger.Info(
+		logger.Debug(
 			"task server configuration",
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("server.host", appConfig.Task.Server.Host),

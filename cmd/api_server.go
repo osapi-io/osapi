@@ -49,7 +49,7 @@ var apiServerCmd = &cobra.Command{
 			logFatal("failed to type assert maskedConfig", nil)
 		}
 
-		logger.Info(
+		logger.Debug(
 			"api server configuration",
 			slog.Bool("debug", appConfig.Debug),
 			slog.Int("api.server.port", appConfig.API.Server.Port),

@@ -53,6 +53,9 @@ type NATSClient interface {
 	KVDelete(bucket, key string) error
 	KVKeys(bucket string) ([]string, error)
 
+	// Message publishing
+	Publish(ctx context.Context, subject string, data []byte) error
+
 	// Request-reply operations
 	PublishAndWaitKV(
 		ctx context.Context,

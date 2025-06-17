@@ -32,7 +32,7 @@ var jobWorkerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "The worker subcommand",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		logger.Info(
+		logger.Debug(
 			"job worker configuration",
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("worker.host", appConfig.Job.Worker.Host),

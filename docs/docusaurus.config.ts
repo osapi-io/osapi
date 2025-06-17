@@ -8,8 +8,8 @@ import type * as OpenApiPlugin from 'docusaurus-plugin-openapi-docs';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
-  title: 'Osapi',
-  tagline: 'Osapi is cool',
+  title: 'OSAPI',
+  tagline: 'OSAPI is cool',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -60,9 +60,9 @@ const config: Config = {
       }
     },
     navbar: {
-      title: 'Osapi',
+      title: 'OSAPI',
       logo: {
-        alt: 'Osapi Logo',
+        alt: 'OSAPI Logo',
         src: 'img/logo.png'
       },
       items: [
