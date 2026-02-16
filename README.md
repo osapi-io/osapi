@@ -24,9 +24,9 @@ them to be used as appliances.
 
 [Getting Started][] | [API][] | [Usage][]
 
-[Getting Started]: https://retr0h.github.io/osapi/
-[API]: https://retr0h.github.io/osapi/category/api
-[Usage]: https://retr0h.github.io/osapi/sidebar/usage/
+[Getting Started]: https://osapi-io.github.io/osapi/
+[API]: https://osapi-io.github.io/osapi/category/api
+[Usage]: https://osapi-io.github.io/osapi/sidebar/usage/
 
 ## License
 
