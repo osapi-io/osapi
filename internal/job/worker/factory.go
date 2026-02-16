@@ -35,6 +35,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider/system/mem"
 )
 
+// factoryHostInfoFn is the function used to get host info (injectable for testing).
+var factoryHostInfoFn = host.Info
+
 // ProviderFactory creates platform-specific providers for the worker.
 type ProviderFactory struct {
 	logger *slog.Logger
@@ -58,7 +61,7 @@ func (f *ProviderFactory) CreateProviders() (
 	dns.Provider,
 	ping.Provider,
 ) {
-	info, _ := host.Info()
+	info, _ := factoryHostInfoFn()
 	platform := strings.ToLower(info.Platform)
 
 	// Create system providers

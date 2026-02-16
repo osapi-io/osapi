@@ -200,6 +200,16 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 		},
 		{
+			name: "unmarshalable operation data",
+			operationData: map[string]interface{}{
+				"type": "system.hostname.get",
+				"data": make(chan int),
+			},
+			targetHost:  "server1",
+			expectedErr: "failed to marshal job with status",
+			setupMocks:  func() {},
+		},
+		{
 			name: "status event put error is logged not returned",
 			operationData: map[string]interface{}{
 				"type": "system.hostname.get",
@@ -529,6 +539,60 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			responseCount:  0,
 		},
 		{
+			name:  "out-of-order timestamps triggers sort",
+			jobID: "job-1",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-1.completed.worker1.300",
+					"status.job-1.started.worker1.100",
+				}, nil)
+
+				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				compEntry.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"completed","hostname":"worker1","timestamp":"2024-01-01T00:00:05Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.completed.worker1.300").Return(compEntry, nil)
+
+				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				startEntry.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"started","hostname":"worker1","timestamp":"2024-01-01T00:00:01Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.started.worker1.100").Return(startEntry, nil)
+			},
+			expectedStatus: "processing",
+			workerCount:    1,
+		},
+		{
+			name:  "acknowledged only worker shows processing",
+			jobID: "job-1",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-1.acknowledged.worker1.100",
+				}, nil)
+
+				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-1","event":"acknowledged","hostname":"worker1","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().Get("status.job-1.acknowledged.worker1.100").Return(ackEntry, nil)
+			},
+			expectedStatus: "processing",
+			workerCount:    1,
+		},
+		{
 			name:  "invalid timestamp skipped",
 			jobID: "job-1",
 			setupMocks: func() {
@@ -650,6 +714,56 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 			expectedDLQ:  5,
 		},
 		{
+			name: "operation without type field",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"jobs.job-1"}, nil)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"data":"some value"}}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
+				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
+
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			expectedJobs: 1,
+		},
+		{
+			name: "operation as non-map value",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"jobs.job-1"}, nil)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":"string-value"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
+				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
+
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			expectedJobs: 1,
+		},
+		{
+			name: "non-jobs prefix keys skipped",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-1.submitted._api.100",
+					"responses.job-1.worker1.200",
+				}, nil)
+
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			expectedJobs: 0,
+		},
+		{
 			name: "with jobs and DLQ error",
 			setupMocks: func() {
 				keys := []string{"jobs.job-1", "jobs.job-2"}
@@ -757,6 +871,28 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
+			},
+			expectedJobs: 0,
+		},
+		{
+			name:         "empty job ID after trim skipped",
+			statusFilter: "",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"jobs."}, nil)
+			},
+			expectedJobs: 0,
+		},
+		{
+			name:         "GetJobStatus error skipped",
+			statusFilter: "",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-bad"}, nil)
+
+				s.mockKV.EXPECT().
+					Get("jobs.job-bad").
+					Return(nil, errors.New("kv error"))
 			},
 			expectedJobs: 0,
 		},

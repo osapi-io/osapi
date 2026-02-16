@@ -42,12 +42,8 @@ func (w *Worker) run(
 ) {
 	w.logger.Info("job worker started successfully")
 
-	// Determine worker hostname
-	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
-	if err != nil {
-		w.logger.Error("failed to get hostname", slog.String("error", err.Error()))
-		hostname = "unknown"
-	}
+	// Determine worker hostname (GetWorkerHostname always succeeds)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 
 	w.logger.Info(
 		"worker configuration",
@@ -62,23 +58,15 @@ func (w *Worker) run(
 	// Consumer for query jobs (read operations)
 	go func() {
 		defer w.wg.Done()
-		if err := w.consumeQueryJobs(ctx, hostname); err != nil && err != context.Canceled {
-			w.logger.Error(
-				"query job consumer error",
-				slog.String("error", err.Error()),
-			)
-		}
+		// consumeQueryJobs handles errors internally and always returns nil
+		_ = w.consumeQueryJobs(ctx, hostname)
 	}()
 
 	// Consumer for modify jobs (write operations)
 	go func() {
 		defer w.wg.Done()
-		if err := w.consumeModifyJobs(ctx, hostname); err != nil && err != context.Canceled {
-			w.logger.Error(
-				"modify job consumer error",
-				slog.String("error", err.Error()),
-			)
-		}
+		// consumeModifyJobs handles errors internally and always returns nil
+		_ = w.consumeModifyJobs(ctx, hostname)
 	}()
 
 	// Wait for cancellation

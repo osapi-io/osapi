@@ -21,9 +21,12 @@
 package authtoken_test
 
 import (
+	"encoding/base64"
 	"log/slog"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/authtoken"
@@ -110,6 +113,41 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			signingKey:  s.signingKey,
 			expectError: true,
 			errContains: "invalid number of segments",
+		},
+		{
+			name: "unexpected signing method",
+			tokenFunc: func() string {
+				header := base64.RawURLEncoding.EncodeToString(
+					[]byte(`{"alg":"none","typ":"JWT"}`),
+				)
+				payload := base64.RawURLEncoding.EncodeToString(
+					[]byte(`{"roles":["admin"]}`),
+				)
+				return header + "." + payload + "."
+			},
+			signingKey:  s.signingKey,
+			expectError: true,
+			errContains: "unexpected signing method",
+		},
+		{
+			name: "claims fail struct validation",
+			tokenFunc: func() string {
+				claims := authtoken.CustomClaims{
+					Roles: []string{"invalid_role"},
+					RegisteredClaims: jwt.RegisteredClaims{
+						Issuer:    "osapi",
+						IssuedAt:  jwt.NewNumericDate(time.Now()),
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+						Subject:   "test",
+					},
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				t, _ := token.SignedString([]byte(s.signingKey))
+				return t
+			},
+			signingKey:  s.signingKey,
+			expectError: true,
+			errContains: "Roles",
 		},
 	}
 

@@ -21,8 +21,10 @@
 package job
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -93,6 +95,60 @@ func (s *HostnameTestSuite) TestHostnameProviderInterface() {
 		s.Run(tt.name, func() {
 			// Test that providers implement the interface
 			_ = tt.provider
+		})
+	}
+}
+
+func (s *HostnameTestSuite) TestGopsutilHostnameProviderError() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error when host.Info fails",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			original := hostInfoFn
+			defer func() { hostInfoFn = original }()
+
+			hostInfoFn = func() (*host.InfoStat, error) {
+				return nil, errors.New("host info failed")
+			}
+
+			provider := gopsutilHostnameProvider{}
+			hostname, err := provider.Hostname()
+
+			s.Error(err)
+			s.Empty(hostname)
+		})
+	}
+}
+
+func (s *HostnameTestSuite) TestGetWorkerHostnameProviderError() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "falls back to unknown when provider errors",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			original := defaultHostnameProvider
+			defer func() { defaultHostnameProvider = original }()
+
+			defaultHostnameProvider = &mockHostnameProvider{
+				hostname: "",
+				err:      errors.New("provider error"),
+			}
+
+			hostname, err := GetWorkerHostname("")
+
+			s.NoError(err)
+			s.Equal("unknown", hostname)
 		})
 	}
 }

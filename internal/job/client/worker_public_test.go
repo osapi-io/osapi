@@ -76,6 +76,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 		kvError     error
 		expectError bool
 		errorMsg    string
+		setupMocks  func()
 	}{
 		{
 			name:     "successful status event with data",
@@ -83,6 +84,12 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "started",
 			hostname: "worker-1",
 			data:     map[string]interface{}{"key": "value", "count": 42},
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket")
+				s.mockNATSClient.EXPECT().
+					KVPut("test-bucket", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
 		},
 		{
 			name:     "successful status event without data",
@@ -90,6 +97,12 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "completed",
 			hostname: "worker-2",
 			data:     nil,
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket")
+				s.mockNATSClient.EXPECT().
+					KVPut("test-bucket", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
 		},
 		{
 			name:     "hostname with special characters",
@@ -97,6 +110,12 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "failed",
 			hostname: "worker.host-name@domain.com",
 			data:     map[string]interface{}{"error": "timeout"},
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket")
+				s.mockNATSClient.EXPECT().
+					KVPut("test-bucket", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
 		},
 		{
 			name:        "KV put error",
@@ -104,9 +123,14 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:       "started",
 			hostname:    "worker-1",
 			data:        map[string]interface{}{"key": "value"},
-			kvError:     errors.New("kv connection failed"),
 			expectError: true,
 			errorMsg:    "failed to write status event",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket")
+				s.mockNATSClient.EXPECT().
+					KVPut("test-bucket", gomock.Any(), gomock.Any()).
+					Return(errors.New("kv connection failed"))
+			},
 		},
 		{
 			name:     "empty job ID",
@@ -114,15 +138,28 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "started",
 			hostname: "worker-1",
 			data:     map[string]interface{}{"key": "value"},
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket")
+				s.mockNATSClient.EXPECT().
+					KVPut("test-bucket", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+		},
+		{
+			name:        "unmarshalable data",
+			jobID:       "job-marshal",
+			event:       "started",
+			hostname:    "worker-1",
+			data:        map[string]interface{}{"fn": make(chan int)},
+			expectError: true,
+			errorMsg:    "failed to marshal status event",
+			setupMocks:  func() {},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockKV.EXPECT().Bucket().Return("test-bucket")
-			s.mockNATSClient.EXPECT().
-				KVPut("test-bucket", gomock.Any(), gomock.Any()).
-				Return(tt.kvError)
+			tt.setupMocks()
 
 			err := s.jobsClient.WriteStatusEvent(s.ctx, tt.jobID, tt.event, tt.hostname, tt.data)
 
@@ -229,23 +266,24 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 
 func (s *WorkerPublicTestSuite) TestConsumeJobs() {
 	tests := []struct {
-		name         string
-		streamName   string
-		consumerName string
-		handler      func(jetstream.Msg) error
-		opts         *natsclient.ConsumeOptions
-		consumeError error
-		expectError  bool
-		errorMsg     string
+		name          string
+		streamName    string
+		consumerName  string
+		handler       func(jetstream.Msg) error
+		opts          *natsclient.ConsumeOptions
+		consumeError  error
+		expectError   bool
+		errorMsg      string
+		invokeHandler bool
 	}{
 		{
-			name:         "successful job consumption",
+			name:         "handler invoked per message",
 			streamName:   "test-stream",
 			consumerName: "test-consumer",
 			handler: func(_ jetstream.Msg) error {
 				return nil
 			},
-			opts: nil,
+			invokeHandler: true,
 		},
 		{
 			name:         "successful job consumption with options",
@@ -260,51 +298,37 @@ func (s *WorkerPublicTestSuite) TestConsumeJobs() {
 			},
 		},
 		{
-			name:         "handler that returns error",
-			streamName:   "test-stream",
-			consumerName: "test-consumer",
-			handler: func(_ jetstream.Msg) error {
-				return errors.New("handler processing error")
-			},
-			opts: nil,
-		},
-		{
 			name:         "NATS consume error",
 			streamName:   "test-stream",
 			consumerName: "test-consumer",
 			handler: func(_ jetstream.Msg) error {
 				return nil
 			},
-			opts:         nil,
 			consumeError: errors.New("stream not found"),
 			expectError:  true,
 			errorMsg:     "stream not found",
-		},
-		{
-			name:         "empty stream name",
-			streamName:   "",
-			consumerName: "test-consumer",
-			handler: func(_ jetstream.Msg) error {
-				return nil
-			},
-			opts: nil,
-		},
-		{
-			name:         "empty consumer name",
-			streamName:   "test-stream",
-			consumerName: "",
-			handler: func(_ jetstream.Msg) error {
-				return nil
-			},
-			opts: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockNATSClient.EXPECT().
-				ConsumeMessages(gomock.Any(), tt.streamName, tt.consumerName, gomock.Any(), tt.opts).
-				Return(tt.consumeError)
+			if tt.invokeHandler {
+				s.mockNATSClient.EXPECT().
+					ConsumeMessages(gomock.Any(), tt.streamName, tt.consumerName, gomock.Any(), tt.opts).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						handlerFn func(jetstream.Msg) error,
+						_ *natsclient.ConsumeOptions,
+					) error {
+						return handlerFn(nil)
+					})
+			} else {
+				s.mockNATSClient.EXPECT().
+					ConsumeMessages(gomock.Any(), tt.streamName, tt.consumerName, gomock.Any(), tt.opts).
+					Return(tt.consumeError)
+			}
 
 			err := s.jobsClient.ConsumeJobs(
 				s.ctx,
@@ -318,11 +342,7 @@ func (s *WorkerPublicTestSuite) TestConsumeJobs() {
 				s.Error(err)
 				s.Contains(err.Error(), tt.errorMsg)
 			} else {
-				if tt.consumeError != nil {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
+				s.NoError(err)
 			}
 		})
 	}

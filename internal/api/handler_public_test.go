@@ -22,9 +22,12 @@ package api_test
 
 import (
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
@@ -63,10 +66,28 @@ func (s *HandlerPublicTestSuite) TearDownTest() {
 
 func (s *HandlerPublicTestSuite) TestGetSystemHandler() {
 	tests := []struct {
-		name string
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
 			name: "returns system handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/system/hostname", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
 
@@ -74,17 +95,35 @@ func (s *HandlerPublicTestSuite) TestGetSystemHandler() {
 		s.Run(tt.name, func() {
 			handlers := s.server.GetSystemHandler(s.mockJobClient)
 
-			s.NotEmpty(handlers)
+			tt.validate(handlers)
 		})
 	}
 }
 
 func (s *HandlerPublicTestSuite) TestGetNetworkHandler() {
 	tests := []struct {
-		name string
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
 			name: "returns network handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/network/dns/eth0", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
 
@@ -92,17 +131,35 @@ func (s *HandlerPublicTestSuite) TestGetNetworkHandler() {
 		s.Run(tt.name, func() {
 			handlers := s.server.GetNetworkHandler(s.mockJobClient)
 
-			s.NotEmpty(handlers)
+			tt.validate(handlers)
 		})
 	}
 }
 
 func (s *HandlerPublicTestSuite) TestGetJobHandler() {
 	tests := []struct {
-		name string
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
 			name: "returns job handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/job", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
 
@@ -110,7 +167,7 @@ func (s *HandlerPublicTestSuite) TestGetJobHandler() {
 		s.Run(tt.name, func() {
 			handlers := s.server.GetJobHandler(s.mockJobClient)
 
-			s.NotEmpty(handlers)
+			tt.validate(handlers)
 		})
 	}
 }

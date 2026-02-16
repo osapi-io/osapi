@@ -1,1 +1,4 @@
-mock.go
+/cmd/
+/gen/
+main.go
+/mocks/

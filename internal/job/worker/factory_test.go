@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,31 +18,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package worker
 
 import (
-	"fmt"
+	"log/slog"
+	"testing"
+
+	"github.com/shirou/gopsutil/v4/host"
+	"github.com/stretchr/testify/suite"
 )
 
-// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
-func (l *Linux) UpdateResolvConfByInterface(
-	servers []string,
-	searchDomains []string,
-	interfaceName string,
-) error {
-	// For testing on macOS, simulate successful operation
-	if runtimeGOOS == "darwin" {
-		return nil
+type FactoryTestSuite struct {
+	suite.Suite
+}
+
+func (s *FactoryTestSuite) TestCreateProvidersUbuntuPlatform() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates ubuntu providers when platform is ubuntu",
+		},
 	}
 
-	return fmt.Errorf(
-		"UpdateResolvConfByInterface is not implemented for LinuxProvider on %s interface %s (servers: %v, domains: %v)",
-		runtimeGOOS,
-		interfaceName,
-		servers,
-		searchDomains,
-	)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			original := factoryHostInfoFn
+			defer func() { factoryHostInfoFn = original }()
+
+			factoryHostInfoFn = func() (*host.InfoStat, error) {
+				return &host.InfoStat{
+					Platform: "Ubuntu",
+				}, nil
+			}
+
+			factory := NewProviderFactory(slog.Default())
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := factory.CreateProviders()
+
+			s.NotNil(hostProvider)
+			s.NotNil(diskProvider)
+			s.NotNil(memProvider)
+			s.NotNil(loadProvider)
+			s.NotNil(dnsProvider)
+			s.NotNil(pingProvider)
+		})
+	}
+}
+
+func TestFactoryTestSuite(t *testing.T) {
+	suite.Run(t, new(FactoryTestSuite))
 }

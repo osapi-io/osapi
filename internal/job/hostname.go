@@ -24,6 +24,9 @@ import (
 	"github.com/shirou/gopsutil/v4/host"
 )
 
+// hostInfoFn is the function used to get host info (injectable for testing).
+var hostInfoFn = host.Info
+
 // HostnameProvider defines the interface for getting hostname
 type HostnameProvider interface {
 	Hostname() (string, error)
@@ -33,7 +36,7 @@ type HostnameProvider interface {
 type gopsutilHostnameProvider struct{}
 
 func (p gopsutilHostnameProvider) Hostname() (string, error) {
-	info, err := host.Info()
+	info, err := hostInfoFn()
 	if err != nil {
 		return "", err
 	}

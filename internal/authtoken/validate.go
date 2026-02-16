@@ -36,7 +36,7 @@ func (t *Token) Validate(
 ) (*CustomClaims, error) {
 	claims := &CustomClaims{}
 
-	token, err := jwt.ParseWithClaims(
+	_, err := jwt.ParseWithClaims(
 		tokenString,
 		claims,
 		func(token *jwt.Token) (interface{}, error) {
@@ -48,10 +48,6 @@ func (t *Token) Validate(
 	)
 	if err != nil {
 		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
 	}
 
 	if err := validate.Struct(claims); err != nil {

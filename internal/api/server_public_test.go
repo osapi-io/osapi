@@ -22,10 +22,14 @@ package api_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
@@ -108,10 +112,96 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 			server := api.New(appConfig, slog.Default())
 			server.Start()
 
-			// Give server time to start
 			time.Sleep(50 * time.Millisecond)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			server.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStartErrorPath() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "logs error when port already in use",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ln, err := net.Listen("tcp", ":0")
+			s.Require().NoError(err)
+			defer func() { _ = ln.Close() }()
+
+			port := ln.Addr().(*net.TCPAddr).Port
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Port: port,
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, slog.Default())
+			server.Start()
+
+			time.Sleep(100 * time.Millisecond)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStopErrorPath() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "logs error when shutdown context expired with active connections",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ln, err := net.Listen("tcp", ":0")
+			s.Require().NoError(err)
+			port := ln.Addr().(*net.TCPAddr).Port
+			_ = ln.Close()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Port: port,
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, slog.Default())
+
+			server.Echo.GET("/slow", func(c echo.Context) error {
+				time.Sleep(10 * time.Second)
+				return c.String(http.StatusOK, "done")
+			})
+
+			server.Start()
+			time.Sleep(50 * time.Millisecond)
+
+			go http.Get(fmt.Sprintf("http://localhost:%d/slow", port)) //nolint:errcheck
+			time.Sleep(50 * time.Millisecond)
+
+			ctx, cancel := context.WithDeadline(
+				context.Background(),
+				time.Now().Add(-time.Second),
+			)
 			defer cancel()
 
 			server.Stop(ctx)

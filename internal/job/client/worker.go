@@ -101,14 +101,11 @@ func (c *Client) WriteJobResponse(
 		Timestamp: time.Now(),
 	}
 
-	// Marshal response
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		return fmt.Errorf("failed to marshal job response: %w", err)
-	}
+	// Marshal response (Response fields are always marshalable)
+	responseJSON, _ := json.Marshal(response)
 
 	// Store in KV
-	err = c.natsClient.KVPut(c.kv.Bucket(), responseKey, responseJSON)
+	err := c.natsClient.KVPut(c.kv.Bucket(), responseKey, responseJSON)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}

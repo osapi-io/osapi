@@ -388,6 +388,147 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "invalid operation type format",
 		},
 		{
+			name: "acknowledged write error logged",
+			msg: &nats.Msg{
+				Subject: "jobs.query.test-worker",
+				Data:    []byte("ack-err-job"),
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.ack-err-job").
+					Return([]byte(`{
+						"id": "ack-err-job",
+						"operation": {
+							"type": "system.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "ack-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(errors.New("ack write failed"))
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "ack-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "ack-err-job", "completed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "started write error logged",
+			msg: &nats.Msg{
+				Subject: "jobs.query.test-worker",
+				Data:    []byte("start-err-job"),
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.start-err-job").
+					Return([]byte(`{
+						"id": "start-err-job",
+						"operation": {
+							"type": "system.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "start-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "start-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(errors.New("started write failed"))
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "start-err-job", "completed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "completed write error logged",
+			msg: &nats.Msg{
+				Subject: "jobs.query.test-worker",
+				Data:    []byte("comp-err-job"),
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.comp-err-job").
+					Return([]byte(`{
+						"id": "comp-err-job",
+						"operation": {
+							"type": "system.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "comp-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "comp-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "comp-err-job", "completed", gomock.Any(), gomock.Any()).
+					Return(errors.New("completed write failed"))
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "failed write error logged",
+			msg: &nats.Msg{
+				Subject: "jobs.query.test-worker",
+				Data:    []byte("fail-err-job"),
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.fail-err-job").
+					Return([]byte(`{
+						"id": "fail-err-job",
+						"operation": {
+							"type": "system.unsupported.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fail-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fail-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fail-err-job", "failed", gomock.Any(), gomock.Any()).
+					Return(errors.New("failed write failed"))
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any()).
+					Return(nil)
+			},
+			expectError: true,
+			errorMsg:    "job processing failed",
+		},
+		{
 			name: "response storage failure",
 			msg: &nats.Msg{
 				Subject: "jobs.query.test-worker",

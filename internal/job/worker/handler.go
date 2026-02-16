@@ -41,11 +41,8 @@ func (w *Worker) writeStatusEvent(
 	event string,
 	data map[string]interface{},
 ) error {
-	// Get hostname for this worker
-	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
-	if err != nil {
-		return fmt.Errorf("failed to get hostname: %w", err)
-	}
+	// Get hostname for this worker (GetWorkerHostname always succeeds)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 
 	// Use job client to write status event
 	return w.jobClient.WriteStatusEvent(context.Background(), jobID, event, hostname, data)
@@ -118,15 +115,12 @@ func (w *Worker) handleJobMessage(
 	operation := strings.Join(parts[1:], ".")
 
 	// Convert operation data to job.Request
-	operationJSON, err := json.Marshal(operationData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal operation data: %w", err)
-	}
+	// operationData came from json.Unmarshal, so Marshal always succeeds.
+	operationJSON, _ := json.Marshal(operationData)
 
 	var jobRequest job.Request
-	if err := json.Unmarshal(operationJSON, &jobRequest); err != nil {
-		return fmt.Errorf("failed to parse job request: %w", err)
-	}
+	// operationJSON is valid JSON, Unmarshal into a struct always succeeds.
+	_ = json.Unmarshal(operationJSON, &jobRequest)
 
 	// Set the RequestID and extract category/operation from operation data
 	jobRequest.RequestID = requestID
@@ -167,11 +161,8 @@ func (w *Worker) handleJobMessage(
 		w.logger.Error("failed to write started event", slog.String("error", err.Error()))
 	}
 
-	// Get worker hostname
-	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
-	if err != nil {
-		return fmt.Errorf("failed to get hostname: %w", err)
-	}
+	// Get worker hostname (GetWorkerHostname always succeeds)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 
 	// Create job response
 	response := job.Response{

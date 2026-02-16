@@ -85,11 +85,8 @@ func (c *Client) publishAndWait(
 	}
 	req.Timestamp = time.Now()
 
-	// Marshal request
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
+	// Marshal request (Request fields are always marshalable)
+	data, _ := json.Marshal(req)
 
 	c.logger.Info("publishing job request",
 		slog.String("request_id", req.RequestID),

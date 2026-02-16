@@ -1,0 +1,90 @@
+// Copyright (c) 2024 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package dns
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+)
+
+type LinuxTestSuite struct {
+	suite.Suite
+}
+
+func (s *LinuxTestSuite) TestGetResolvConfByInterfaceNonDarwin() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error on non-darwin platform",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			original := runtimeGOOS
+			defer func() { runtimeGOOS = original }()
+
+			runtimeGOOS = "linux"
+
+			l := &Linux{}
+			result, err := l.GetResolvConfByInterface("eth0")
+
+			s.Error(err)
+			s.Nil(result)
+			s.Contains(err.Error(), "not implemented for LinuxProvider")
+		})
+	}
+}
+
+func (s *LinuxTestSuite) TestUpdateResolvConfByInterfaceNonDarwin() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error on non-darwin platform",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			original := runtimeGOOS
+			defer func() { runtimeGOOS = original }()
+
+			runtimeGOOS = "linux"
+
+			l := &Linux{}
+			err := l.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"eth0",
+			)
+
+			s.Error(err)
+			s.Contains(err.Error(), "not implemented for LinuxProvider")
+		})
+	}
+}
+
+func TestLinuxTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxTestSuite))
+}
