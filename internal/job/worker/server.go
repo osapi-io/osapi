@@ -43,13 +43,13 @@ func (w *Worker) run(
 	w.logger.Info("job worker started successfully")
 
 	// Determine worker hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
 
 	w.logger.Info(
 		"worker configuration",
 		slog.String("hostname", hostname),
-		slog.String("queue_group", w.appConfig.Worker.QueueGroup),
-		slog.Int("max_jobs", w.appConfig.Worker.MaxJobs),
+		slog.String("queue_group", w.appConfig.Job.Worker.QueueGroup),
+		slog.Int("max_jobs", w.appConfig.Job.Worker.MaxJobs),
 	)
 
 	// Start consuming messages for different job types

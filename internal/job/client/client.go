@@ -30,7 +30,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -73,7 +72,7 @@ func New(
 	}, nil
 }
 
-// publishAndWait publishes a job request and waits for the response.
+// publishAndWait stores a job in KV, publishes a notification, and waits for the worker response.
 func (c *Client) publishAndWait(
 	ctx context.Context,
 	subject string,
@@ -85,36 +84,76 @@ func (c *Client) publishAndWait(
 	}
 	req.Timestamp = time.Now()
 
-	// Marshal request (Request fields are always marshalable)
-	data, _ := json.Marshal(req)
+	jobID := req.RequestID
+	createdTime := req.Timestamp.Format(time.RFC3339)
+
+	// Build operation type from category and operation
+	operationType := req.Category + "." + req.Operation
+	operationData := map[string]interface{}{
+		"type": operationType,
+		"data": req.Data,
+	}
+
+	// Store immutable job data in KV (same structure as CreateJob)
+	jobData := map[string]interface{}{
+		"id":        jobID,
+		"status":    "unprocessed",
+		"created":   createdTime,
+		"subject":   subject,
+		"operation": operationData,
+	}
+
+	jobJSON, _ := json.Marshal(jobData)
+	kvKey := "jobs." + jobID
+
+	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
+		return nil, fmt.Errorf("failed to store job in KV: %w", err)
+	}
 
 	c.logger.Info("publishing job request",
-		slog.String("request_id", req.RequestID),
+		slog.String("request_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
 	)
 
-	// Use nats-client's PublishAndWaitKV
-	opts := &natsclient.RequestReplyOptions{
-		RequestID: req.RequestID,
-		Timeout:   c.timeout,
+	// Publish just the job ID to the stream as a notification
+	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
+		return nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
 
-	responseData, err := c.natsClient.PublishAndWaitKV(ctx, subject, data, c.kv, opts)
+	// Watch for worker response in KV
+	responsePattern := "responses." + jobID + ".>"
+	watcher, err := c.kv.Watch(responsePattern)
 	if err != nil {
-		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+		return nil, fmt.Errorf("failed to create response watcher: %w", err)
 	}
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
-	// Unmarshal response
-	var response job.Response
-	if err := json.Unmarshal(responseData, &response); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			return nil, fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err())
+		case entry := <-watcher.Updates():
+			if entry == nil {
+				continue
+			}
+
+			var response job.Response
+			if err := json.Unmarshal(entry.Value(), &response); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+			}
+
+			c.logger.Info("received job response",
+				slog.String("request_id", jobID),
+				slog.String("status", string(response.Status)),
+			)
+
+			return &response, nil
+		}
 	}
-
-	c.logger.Info("received job response",
-		slog.String("request_id", req.RequestID),
-		slog.String("status", string(response.Status)),
-	)
-
-	return &response, nil
 }

@@ -43,12 +43,12 @@ It processes jobs as they become available.
 
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Worker.Host,
-			Port: appConfig.Worker.Port,
+			Host: appConfig.Job.Worker.Host,
+			Port: appConfig.Job.Worker.Port,
 			Auth: natsclient.AuthOptions{
 				AuthType: natsclient.NoAuth,
 			},
-			Name: appConfig.Worker.ClientName,
+			Name: appConfig.Job.Worker.ClientName,
 		})
 
 		err := nc.Connect()
@@ -57,7 +57,7 @@ It processes jobs as they become available.
 		}
 
 		// Create/get the jobs KV bucket
-		jobsKV, err := nc.CreateKVBucket(appConfig.KVBucket)
+		jobsKV, err := nc.CreateKVBucket(appConfig.Job.KVBucket)
 		if err != nil {
 			logFatal("failed to create KV bucket", err)
 		}

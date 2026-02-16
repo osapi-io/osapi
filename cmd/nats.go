@@ -1,4 +1,4 @@
-// Copyright (c) 2025 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,9 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package mocks provides mock implementations for testing.
-package mocks
+package cmd
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=./messaging.gen.go -package=mocks github.com/retr0h/osapi/internal/messaging NATSClient
-//go:generate go tool github.com/golang/mock/mockgen -destination=./kv.gen.go -package=mocks github.com/nats-io/nats.go KeyValue,KeyValueEntry,KeyWatcher
-//go:generate go tool github.com/golang/mock/mockgen -destination=./job_client.gen.go -package=mocks github.com/retr0h/osapi/internal/job/client JobClient
+import (
+	"github.com/spf13/cobra"
+)
+
+// natsCmd represents the nats command.
+var natsCmd = &cobra.Command{
+	Use:   "nats",
+	Short: "The nats subcommand",
+}
+
+func init() {
+	rootCmd.AddCommand(natsCmd)
+}

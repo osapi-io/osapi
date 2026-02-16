@@ -115,15 +115,14 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNS() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.modify.server1", gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.modify.server1", gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.server1",
+				tt.responseData,
+				tt.mockError,
+			)
 
 			err := s.jobsClient.ModifyNetworkDNS(
 				s.ctx,
@@ -180,15 +179,14 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.modify._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.modify._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._any",
+				tt.responseData,
+				tt.mockError,
+			)
 
 			err := s.jobsClient.ModifyNetworkDNSAny(s.ctx, tt.servers, tt.searchDomains, tt.iface)
 

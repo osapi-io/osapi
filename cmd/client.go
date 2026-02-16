@@ -41,7 +41,7 @@ var clientCmd = &cobra.Command{
 		logger.Debug(
 			"client configuration",
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("api.client.url", appConfig.URL),
+			slog.String("api.client.url", appConfig.API.URL),
 		)
 
 		cwr, err := client.NewClientWithResponses(appConfig)

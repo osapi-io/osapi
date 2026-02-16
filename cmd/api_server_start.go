@@ -70,7 +70,7 @@ var apiServerStartCmd = &cobra.Command{
 			logFatal("failed to connect to NATS for job client", err)
 		}
 
-		jobsKV, err := nc.CreateKVBucket(appConfig.KVBucket)
+		jobsKV, err := nc.CreateKVBucket(appConfig.Job.KVBucket)
 		if err != nil {
 			logFatal("failed to create KV bucket", err)
 		}

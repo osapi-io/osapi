@@ -38,7 +38,7 @@ func (w *Worker) consumeQueryJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.appConfig.StreamName
+	streamName := w.appConfig.Job.StreamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -52,7 +52,7 @@ func (w *Worker) consumeQueryJobs(
 		{
 			name:       "query_any_" + sanitizedHostname,
 			filter:     "jobs.query._any",
-			queueGroup: w.appConfig.Worker.QueueGroup,
+			queueGroup: w.appConfig.Job.Worker.QueueGroup,
 		},
 		{
 			name:   "query_all_" + sanitizedHostname,
@@ -86,7 +86,7 @@ func (w *Worker) consumeQueryJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Worker.MaxJobs,
+				MaxInFlight: w.appConfig.Job.Worker.MaxJobs,
 			}
 
 			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
@@ -108,7 +108,7 @@ func (w *Worker) consumeModifyJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.appConfig.StreamName
+	streamName := w.appConfig.Job.StreamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -122,7 +122,7 @@ func (w *Worker) consumeModifyJobs(
 		{
 			name:       "modify_any_" + sanitizedHostname,
 			filter:     "jobs.modify._any",
-			queueGroup: w.appConfig.Worker.QueueGroup,
+			queueGroup: w.appConfig.Job.Worker.QueueGroup,
 		},
 		{
 			name:   "modify_all_" + sanitizedHostname,
@@ -156,7 +156,7 @@ func (w *Worker) consumeModifyJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Worker.MaxJobs,
+				MaxInFlight: w.appConfig.Job.Worker.MaxJobs,
 			}
 
 			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
@@ -200,11 +200,11 @@ func (w *Worker) createConsumer(
 	streamName, consumerName, filterSubject string,
 ) error {
 	// Parse AckWait duration from config
-	ackWait, _ := time.ParseDuration(w.appConfig.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(w.appConfig.Job.Consumer.AckWait)
 
 	// Parse BackOff durations from config
 	var backOff []time.Duration
-	for _, duration := range w.appConfig.Consumer.BackOff {
+	for _, duration := range w.appConfig.Job.Consumer.BackOff {
 		if d, err := time.ParseDuration(duration); err == nil {
 			backOff = append(backOff, d)
 		}
@@ -212,7 +212,7 @@ func (w *Worker) createConsumer(
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if w.appConfig.Consumer.ReplayPolicy == "original" {
+	if w.appConfig.Job.Consumer.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
@@ -223,10 +223,10 @@ func (w *Worker) createConsumer(
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    w.appConfig.Consumer.MaxDeliver,
+		MaxDeliver:    w.appConfig.Job.Consumer.MaxDeliver,
 		AckWait:       ackWait,
 		BackOff:       backOff,
-		MaxAckPending: w.appConfig.Consumer.MaxAckPending,
+		MaxAckPending: w.appConfig.Job.Consumer.MaxAckPending,
 		ReplayPolicy:  replayPolicy,
 	}
 

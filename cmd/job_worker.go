@@ -37,12 +37,12 @@ var jobWorkerCmd = &cobra.Command{
 		logger.Debug(
 			"job worker configuration",
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("worker.host", appConfig.Worker.Host),
-			slog.Int("worker.port", appConfig.Worker.Port),
-			slog.String("worker.client_name", appConfig.Worker.ClientName),
-			slog.String("worker.queue_group", appConfig.Worker.QueueGroup),
-			slog.String("worker.hostname", appConfig.Worker.Hostname),
-			slog.Int("worker.max_jobs", appConfig.Worker.MaxJobs),
+			slog.String("worker.host", appConfig.Job.Worker.Host),
+			slog.Int("worker.port", appConfig.Job.Worker.Port),
+			slog.String("worker.client_name", appConfig.Job.Worker.ClientName),
+			slog.String("worker.queue_group", appConfig.Job.Worker.QueueGroup),
+			slog.String("worker.hostname", appConfig.Job.Worker.Hostname),
+			slog.Int("worker.max_jobs", appConfig.Job.Worker.MaxJobs),
 		)
 	},
 }

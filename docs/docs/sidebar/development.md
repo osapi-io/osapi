@@ -21,6 +21,8 @@ mise install
   installing tooling.
 - **[just][]** - Task runner used for building, testing, formatting, and other
   development workflows. Install with `brew install just`.
+- **[NATS CLI][]** - Command-line tools for interacting with NATS. Useful for debugging
+  and monitoring during development. Install with `brew install nats-io/nats-tools/nats`.
 
 ### Claude Code
 
@@ -89,6 +91,21 @@ Unit tests should follow the Go convention of being located in a file named
 `*_test.go` in the same package as the code being tested. Integration tests are
 located in the `test` directory and executed by [Bats][].
 
+## Branching
+
+All changes should be developed on feature branches. Create a branch from `main`
+using the naming convention `type/short-description`, where `type` matches the
+[Conventional Commits][] type:
+
+- `feat/add-retry-logic`
+- `fix/null-pointer-crash`
+- `docs/update-api-reference`
+- `refactor/simplify-handler`
+- `chore/update-dependencies`
+
+When using Claude Code's `/commit` command, a branch will be created
+automatically if you are on `main`.
+
 ## Commit messages
 
 Follow [Conventional Commits][] with the 50/72 rule:
@@ -117,4 +134,5 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 [Docusaurus]: https://docusaurus.io
 [Conventional Commits]: https://www.conventionalcommits.org
 [Bats]: https://github.com/bats-core/bats-core
+[NATS CLI]: https://github.com/nats-io/natscli
 <!-- prettier-ignore-end -->

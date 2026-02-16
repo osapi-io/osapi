@@ -56,7 +56,7 @@ func NewClientWithResponses(
 		Transport: transport,
 	}
 
-	return gen.NewClientWithResponses(appConfig.URL, gen.WithHTTPClient(&hc))
+	return gen.NewClientWithResponses(appConfig.API.URL, gen.WithHTTPClient(&hc))
 }
 
 // RoundTrip implements the http.RoundTripper interface.

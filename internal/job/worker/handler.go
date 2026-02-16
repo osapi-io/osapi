@@ -42,7 +42,7 @@ func (w *Worker) writeStatusEvent(
 	data map[string]interface{},
 ) error {
 	// Get hostname for this worker (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
 
 	// Use job client to write status event
 	return w.jobClient.WriteStatusEvent(context.Background(), jobID, event, hostname, data)
@@ -162,7 +162,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Get worker hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
 
 	// Create job response
 	response := job.Response{

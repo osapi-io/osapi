@@ -68,6 +68,14 @@ func FunctionName(
 
 golangci-lint with: errcheck, errname, goimports, govet, prealloc, predeclared, revive, staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded from formatting.
 
+### Branching
+
+See @docs/docs/sidebar/development.md#branching for full conventions.
+
+When committing changes via `/commit`, create a feature branch first if
+currently on `main`. Branch names use the pattern `type/short-description`
+(e.g., `feat/add-dns-retry`, `fix/memory-leak`, `docs/update-readme`).
+
 ### Commit Messages
 
 See @docs/docs/sidebar/development.md#commit-messages for full conventions.

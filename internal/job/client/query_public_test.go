@@ -150,15 +150,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 		s.Run(tt.name, func() {
 			subject := "jobs.query." + tt.hostname
 
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QuerySystemStatus(s.ctx, tt.hostname)
 
@@ -235,15 +234,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 		s.Run(tt.name, func() {
 			subject := "jobs.query." + tt.hostname
 
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
 
@@ -355,15 +353,14 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNS() {
 		s.Run(tt.name, func() {
 			subject := "jobs.query." + tt.hostname
 
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QueryNetworkDNS(s.ctx, tt.hostname, tt.iface)
 
@@ -444,15 +441,14 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPing() {
 		s.Run(tt.name, func() {
 			subject := "jobs.query." + tt.hostname
 
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), subject, gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
 
@@ -502,15 +498,14 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._any",
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
 
@@ -556,15 +551,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.mockError != nil {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return(nil, tt.mockError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
-					Return([]byte(tt.responseData), nil)
-			}
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._any",
+				tt.responseData,
+				tt.mockError,
+			)
 
 			result, err := s.jobsClient.QuerySystemStatusAny(s.ctx)
 
@@ -577,6 +571,91 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 			} else {
 				s.NoError(err)
 				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
+	tests := []struct {
+		name          string
+		opts          *publishAndWaitMockOpts
+		timeout       time.Duration
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "publish notification error",
+			opts: &publishAndWaitMockOpts{
+				mockError: errors.New("stream unavailable"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to publish notification",
+		},
+		{
+			name: "watch error",
+			opts: &publishAndWaitMockOpts{
+				mockError: errors.New("watch not supported"),
+				errorMode: errorOnWatch,
+			},
+			expectError:   true,
+			errorContains: "failed to create response watcher",
+		},
+		{
+			name:    "timeout waiting for response",
+			timeout: 10 * time.Millisecond,
+			opts: &publishAndWaitMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "timeout waiting for job response",
+		},
+		{
+			name: "nil entry skipped before real entry",
+			opts: &publishAndWaitMockOpts{
+				responseData: `{
+					"status": "completed",
+					"data": {"hostname": "server1.example.com"}
+				}`,
+				sendNilFirst: true,
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			jobsClient := s.jobsClient
+			if tt.timeout > 0 {
+				opts := &client.Options{
+					Timeout:  tt.timeout,
+					KVBucket: s.mockKV,
+				}
+				var err error
+				jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+			}
+
+			setupPublishAndWaitMocksWithOpts(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query.server1",
+				tt.opts,
+			)
+
+			result, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Empty(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
 			}
 		})
 	}

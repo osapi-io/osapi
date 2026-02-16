@@ -19,18 +19,37 @@
 # DEALINGS IN THE SOFTWARE.
 
 PROGRAM="../main.go"
-BATS_TEST_TIMEOUT=10
+BATS_TEST_TIMEOUT=60
+CONFIG="osapi.yaml"
 
 # Function to start the server
 start_server() {
-  nats-server -js -sd .nats/jetstream/ &
-  sleep 1
-  run go run ${PROGRAM} api server start &
+  # Start embedded NATS server (replaces external nats-server binary)
+  go run ${PROGRAM} -f "${CONFIG}" nats server start &
   sleep 2
+
+  # Generate fresh admin token and update config
+  TOKEN=$(go run ${PROGRAM} -j -f "${CONFIG}" token generate \
+    -r admin -u test@ci 2>/dev/null \
+    | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+  if [ -n "${TOKEN}" ]; then
+    sed -i.bak "s|bearer_token:.*|bearer_token: ${TOKEN}|" "${CONFIG}"
+    rm -f "${CONFIG}.bak"
+  fi
+
+  # Start API server
+  go run ${PROGRAM} -f "${CONFIG}" api server start &
+  sleep 2
+
+  # Start job worker
+  go run ${PROGRAM} -f "${CONFIG}" job worker start &
+  sleep 3
 }
 
 # Function to stop the server
 stop_server() {
-  pkill -f "api server start"
-  pkill -f "nats-server"
+  pkill -f "api server start" || true
+  pkill -f "job worker start" || true
+  pkill -f "nats server start" || true
+  rm -rf .nats/
 }
