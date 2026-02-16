@@ -19,7 +19,7 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v3
       - name: Install shfmt
-        uses: mfinelli/setup-shfmt@v3
+        uses: mfinelli/setup-shfmt@v4
       - name: Fetch justfiles
         run: just fetch
       - name: Deps
