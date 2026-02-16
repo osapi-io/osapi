@@ -23,9 +23,8 @@ package job
 import (
 	"context"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostJob creates a new job in the queue.
@@ -33,10 +32,7 @@ func (j *Job) PostJob(
 	ctx context.Context,
 	request gen.PostJobRequestObject,
 ) (gen.PostJobResponseObject, error) {
-	validate := validator.New()
-	if err := validate.Struct(request.Body); err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		errMsg := validationErrors.Error()
+	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PostJob400JSONResponse{
 			Error: &errMsg,
 		}, nil

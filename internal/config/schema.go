@@ -23,6 +23,8 @@ package config
 
 import (
 	"github.com/go-playground/validator/v10"
+
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // regsiterValidatorsFn function to switch when testing
@@ -40,12 +42,12 @@ func registerValidators(
 func Validate(
 	c *Config,
 ) error {
-	validate := validator.New()
+	v := validation.Instance()
 
-	err := registerValidatorsFn(validate)
+	err := registerValidatorsFn(v)
 	if err != nil {
 		return err
 	}
 
-	return validate.Struct(c)
+	return v.Struct(c)
 }
