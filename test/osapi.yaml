@@ -5,7 +5,7 @@ api:
   client:
     url: http://0.0.0.0:8080
     security:
-      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6InRlc3RAY2kiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2NDIxMCwiaWF0IjoxNzcxMjc4MjEwfQ.02gNBGyKWA4wYF-f0-HGaLB54QOagu_Z55IKGoQ6PL0
+      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6InRlc3RAY2kiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2NDQ0NiwiaWF0IjoxNzcxMjc4NDQ2fQ.d9Rh86HUON7eXCL5l3LKiFhakkXXK6kGHnU8ZXIgQ-c
   server:
     port: 8080
     security:
