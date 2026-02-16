@@ -31,7 +31,9 @@ import (
 
 // GetJobsStreamConfig returns the stream configuration for job processing.
 // This creates a stream that accepts all job-related subjects (job.>).
-func GetJobsStreamConfig(jobConfig *config.Job) *nats.StreamConfig {
+func GetJobsStreamConfig(
+	jobConfig *config.Job,
+) *nats.StreamConfig {
 	// Parse duration string to time.Duration
 	maxAge, _ := time.ParseDuration(jobConfig.Stream.MaxAge)
 
@@ -64,7 +66,9 @@ func GetJobsStreamConfig(jobConfig *config.Job) *nats.StreamConfig {
 }
 
 // GetJobsConsumerConfig returns the consumer configuration for processing job requests.
-func GetJobsConsumerConfig(jobConfig *config.Job) jetstream.ConsumerConfig {
+func GetJobsConsumerConfig(
+	jobConfig *config.Job,
+) jetstream.ConsumerConfig {
 	// Parse duration string to time.Duration
 	ackWait, _ := time.ParseDuration(jobConfig.Consumer.AckWait)
 
@@ -90,7 +94,9 @@ func GetJobsConsumerConfig(jobConfig *config.Job) jetstream.ConsumerConfig {
 }
 
 // GetKVBucketConfig returns the KeyValue bucket configuration for storing job responses.
-func GetKVBucketConfig(jobConfig *config.Job) *nats.KeyValueConfig {
+func GetKVBucketConfig(
+	jobConfig *config.Job,
+) *nats.KeyValueConfig {
 	// Parse duration string to time.Duration
 	ttl, _ := time.ParseDuration(jobConfig.KV.TTL)
 

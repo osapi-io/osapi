@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package client provides the HTTP client for the OSAPI REST API.
 package client
 
 import (
@@ -55,11 +56,13 @@ func NewClientWithResponses(
 		Transport: transport,
 	}
 
-	return gen.NewClientWithResponses(appConfig.API.Client.URL, gen.WithHTTPClient(&hc))
+	return gen.NewClientWithResponses(appConfig.API.URL, gen.WithHTTPClient(&hc))
 }
 
 // RoundTrip implements the http.RoundTripper interface.
-func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *authTransport) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
 	req.Header.Set("Authorization", t.authHeader)
 	return t.base.RoundTrip(req)
 }

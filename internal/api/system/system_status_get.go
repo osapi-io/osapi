@@ -30,10 +30,10 @@ import (
 
 // GetSystemStatus get the system status API endpoint.
 func (s *System) GetSystemStatus(
-	_ context.Context,
+	ctx context.Context,
 	_ gen.GetSystemStatusRequestObject,
 ) (gen.GetSystemStatusResponseObject, error) {
-	hostname, err := s.HostProvider.GetHostname()
+	status, err := s.JobClient.QuerySystemStatusAny(ctx)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{
@@ -41,49 +41,8 @@ func (s *System) GetSystemStatus(
 		}, nil
 	}
 
-	uptime, err := s.HostProvider.GetUptime()
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetSystemStatus500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	loadAvgStats, err := s.LoadProvider.GetAverageStats()
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetSystemStatus500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	memStats, err := s.MemProvider.GetStats()
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetSystemStatus500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	osInfo, err := s.HostProvider.GetOSInfo()
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetSystemStatus500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	diskStats, err := s.DiskProvider.GetLocalUsageStats()
-	if err != nil {
-		errMsg := err.Error()
-		return gen.GetSystemStatus500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	// Convert []systemDiskUsageStats to []gen.Disks
-	disks := make([]gen.DiskResponse, 0, len(diskStats))
-	for _, d := range diskStats {
+	disks := make([]gen.DiskResponse, 0, len(status.DiskUsage))
+	for _, d := range status.DiskUsage {
 		disk := gen.DiskResponse{
 			Name:  d.Name,
 			Total: uint64ToInt(d.Total),
@@ -93,31 +52,41 @@ func (s *System) GetSystemStatus(
 		disks = append(disks, disk)
 	}
 
-	return gen.GetSystemStatus200JSONResponse{
-		Hostname: hostname,
-		Uptime:   formatDuration(uptime),
-		LoadAverage: gen.LoadAverageResponse{
-			N1min:  loadAvgStats.Load1,
-			N5min:  loadAvgStats.Load5,
-			N15min: loadAvgStats.Load15,
-		},
-		OsInfo: gen.OSInfoResponse{
-			Distribution: osInfo.Distribution,
-			Version:      osInfo.Version,
-		},
-		// Memory: When float64 values are encoded into JSON, large numbers can
-		// automatically be formatted in scientific notation, which is typical
-		// behavior for JSON encoders to save space and maintain precision.
-		Memory: gen.MemoryResponse{
-			Total: uint64ToInt(memStats.Total),
-			Free:  uint64ToInt(memStats.Free),
-			Used:  uint64ToInt(memStats.Cached),
-		},
-		Disks: disks,
-	}, nil
+	resp := gen.GetSystemStatus200JSONResponse{
+		Hostname: status.Hostname,
+		Uptime:   formatDuration(status.Uptime),
+		Disks:    disks,
+	}
+
+	if status.LoadAverages != nil {
+		resp.LoadAverage = gen.LoadAverageResponse{
+			N1min:  status.LoadAverages.Load1,
+			N5min:  status.LoadAverages.Load5,
+			N15min: status.LoadAverages.Load15,
+		}
+	}
+
+	if status.OSInfo != nil {
+		resp.OsInfo = gen.OSInfoResponse{
+			Distribution: status.OSInfo.Distribution,
+			Version:      status.OSInfo.Version,
+		}
+	}
+
+	if status.MemoryStats != nil {
+		resp.Memory = gen.MemoryResponse{
+			Total: uint64ToInt(status.MemoryStats.Total),
+			Free:  uint64ToInt(status.MemoryStats.Free),
+			Used:  uint64ToInt(status.MemoryStats.Cached),
+		}
+	}
+
+	return resp, nil
 }
 
-func formatDuration(d time.Duration) string {
+func formatDuration(
+	d time.Duration,
+) string {
 	totalMinutes := int(d.Minutes())
 	days := totalMinutes / (24 * 60)
 	hours := (totalMinutes % (24 * 60)) / 60
@@ -144,7 +113,9 @@ func formatDuration(d time.Duration) string {
 }
 
 // uint64ToInt convert uint64 to int, with overflow protection.
-func uint64ToInt(value uint64) int {
+func uint64ToInt(
+	value uint64,
+) int {
 	maxInt := int(^uint(0) >> 1) // maximum value of int based on the architecture
 	if value > uint64(maxInt) {  // check for overflow
 		return maxInt // return max int to prevent overflow

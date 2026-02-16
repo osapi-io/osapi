@@ -21,70 +21,46 @@
 package network
 
 import (
-	"net/http"
+	"context"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
-	"github.com/retr0h/osapi/internal/task"
 )
-
-// CreateAndMarshalChangeDNSActionFunc is a function variable that allows swapping the actual
-// task.CreateAndMarshalChangeDNSAction function for a mock function during testing.
-//
-// This is a temporary solution to facilitate testing by allowing the function to be
-// replaced with a mock implementation. In the future, this may be replaced by a
-// better solution using dependency injection or test mocks.
-var CreateAndMarshalChangeDNSActionFunc = task.CreateAndMarshalChangeDNSAction
 
 // PutNetworkDNS put the network dns API endpoint.
 func (n Network) PutNetworkDNS(
-	ctx echo.Context,
-) error {
-	var newDNSConfig gen.PutNetworkDNSJSONRequestBody
-
-	if err := ctx.Bind(&newDNSConfig); err != nil {
-		return ctx.JSON(http.StatusBadRequest, gen.NetworkErrorResponse{
-			Error: err.Error(),
-		})
-	}
-
-	if err := validate.Struct(newDNSConfig); err != nil {
+	ctx context.Context,
+	request gen.PutNetworkDNSRequestObject,
+) (gen.PutNetworkDNSResponseObject, error) {
+	validate := validator.New()
+	if err := validate.Struct(request.Body); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return ctx.JSON(http.StatusBadRequest, gen.NetworkErrorResponse{
-			Error: validationErrors.Error(),
-		})
+		errMsg := validationErrors.Error()
+		return gen.PutNetworkDNS400JSONResponse{
+			Error: &errMsg,
+		}, nil
 	}
 
 	var servers []string
-	if newDNSConfig.Servers != nil {
-		servers = *newDNSConfig.Servers
+	if request.Body.Servers != nil {
+		servers = *request.Body.Servers
 	}
 
 	var searchDomains []string
-	if newDNSConfig.SearchDomains != nil {
-		searchDomains = *newDNSConfig.SearchDomains
+	if request.Body.SearchDomains != nil {
+		searchDomains = *request.Body.SearchDomains
 	}
 
-	var interfaceName string
-	if newDNSConfig.InterfaceName != nil {
-		interfaceName = *newDNSConfig.InterfaceName
-	}
+	interfaceName := request.Body.InterfaceName
 
-	data, err := CreateAndMarshalChangeDNSActionFunc(servers, searchDomains, interfaceName)
+	err := n.JobClient.ModifyNetworkDNSAny(ctx, servers, searchDomains, interfaceName)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, gen.NetworkErrorResponse{
-			Error: err.Error(),
-		})
+		errMsg := err.Error()
+		return gen.PutNetworkDNS500JSONResponse{
+			Error: &errMsg,
+		}, nil
 	}
 
-	_, err = n.TaskClientManager.PublishToStream(ctx.Request().Context(), data)
-	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, gen.NetworkErrorResponse{
-			Error: err.Error(),
-		})
-	}
-
-	return ctx.NoContent(http.StatusAccepted)
+	return gen.PutNetworkDNS202Response{}, nil
 }

@@ -39,7 +39,9 @@ import (
 //  1. Run the binary as root, or
 //  2. Set capabilities on the binary to allow raw socket usage:
 //     sudo setcap cap_net_raw=+ep /path/to/your/compiled/binary
-func (u *Ubuntu) Do(address string) (*Result, error) {
+func (u *Ubuntu) Do(
+	address string,
+) (*Result, error) {
 	pinger, err := u.NewPingerFn(address)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize pinger: %w", err)

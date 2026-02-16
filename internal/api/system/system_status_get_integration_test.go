@@ -36,10 +36,12 @@ import (
 	"github.com/retr0h/osapi/internal/api/system"
 	systemGen "github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/config"
-	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/system/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/system/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
+	"github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/system/disk"
+	"github.com/retr0h/osapi/internal/provider/system/host"
+	"github.com/retr0h/osapi/internal/provider/system/load"
+	"github.com/retr0h/osapi/internal/provider/system/mem"
 )
 
 type SystemStatusGetIntegrationTestSuite struct {
@@ -63,36 +65,45 @@ func (suite *SystemStatusGetIntegrationTestSuite) TearDownTest() {
 
 func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 	tests := []struct {
-		name          string
-		path          string
-		setupMemMock  func() *memMocks.MockProvider
-		setupLoadMock func() *loadMocks.MockProvider
-		setupHostMock func() *hostMocks.MockProvider
-		setupDiskMock func() *diskMocks.MockProvider
-		wantCode      int
-		wantBody      string
+		name         string
+		path         string
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantBody     string
 	}{
 		{
 			name: "when get Ok",
 			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemStatusAny(gomock.Any()).
+					Return(&job.SystemStatusResponse{
+						Hostname: "default-hostname",
+						Uptime:   5 * time.Hour,
+						OSInfo: &host.OSInfo{
+							Distribution: "Ubuntu",
+							Version:      "24.04",
+						},
+						LoadAverages: &load.AverageStats{
+							Load1:  1,
+							Load5:  0.5,
+							Load15: 0.2,
+						},
+						MemoryStats: &mem.Stats{
+							Total:  8388608,
+							Free:   4194304,
+							Cached: 2097152,
+						},
+						DiskUsage: []disk.UsageStats{
+							{
+								Name:  "/dev/disk1",
+								Total: 500000000000,
+								Used:  250000000000,
+								Free:  250000000000,
+							},
+						},
+					}, nil)
 				return mock
 			},
 			wantCode: http.StatusOK,
@@ -126,166 +137,13 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 `,
 		},
 		{
-			name: "when host.GetHostname errors",
+			name: "when job client errors",
 			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetHostname().Return("", assert.AnError)
-				mock.EXPECT().GetUptime().Return(time.Hour*5, nil).AnyTimes()
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"assert.AnError general error for testing"}`,
-		},
-		{
-			name: "when host.GetUptime errors",
-			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetHostname().Return("default-hostname", nil).AnyTimes()
-				mock.EXPECT().GetUptime().Return(0*time.Second, assert.AnError)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"assert.AnError general error for testing"}`,
-		},
-		{
-			name: "when load.GetAverageStats errors",
-			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetAverageStats().Return(nil, assert.AnError)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"assert.AnError general error for testing"}`,
-		},
-		{
-			name: "when mem.GetStats errors",
-			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetStats().Return(nil, assert.AnError)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"assert.AnError general error for testing"}`,
-		},
-		{
-			name: "when host.GetOSInfo errors",
-			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetHostname().Return("default-hostname", nil).AnyTimes()
-				mock.EXPECT().GetUptime().Return(time.Hour*5, nil).AnyTimes()
-				mock.EXPECT().GetOSInfo().Return(nil, assert.AnError)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"assert.AnError general error for testing"}`,
-		},
-		{
-			name: "when disk.GetLocalUsageStats errors",
-			path: "/system/status",
-			setupMemMock: func() *memMocks.MockProvider {
-				mock := memMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupLoadMock: func() *loadMocks.MockProvider {
-				mock := loadMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewDefaultMockProvider(suite.ctrl)
-
-				return mock
-			},
-			setupDiskMock: func() *diskMocks.MockProvider {
-				mock := diskMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetLocalUsageStats().Return(nil, assert.AnError)
-
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemStatusAny(gomock.Any()).
+					Return(nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -295,12 +153,9 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			memMock := tc.setupMemMock()
-			loadMock := tc.setupLoadMock()
-			hostMock := tc.setupHostMock()
-			diskMock := tc.setupDiskMock()
+			jobMock := tc.setupJobMock()
 
-			systemHandler := system.New(memMock, loadMock, hostMock, diskMock)
+			systemHandler := system.New(jobMock)
 			strictHandler := systemGen.NewStrictHandler(systemHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)

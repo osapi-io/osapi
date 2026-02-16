@@ -66,7 +66,7 @@ func New(
 func (s *Server) Start() {
 	go func() {
 		s.logger.Info("starting server")
-		listenAddr := fmt.Sprintf(":%d", s.appConfig.API.Server.Port)
+		listenAddr := fmt.Sprintf(":%d", s.appConfig.API.Port)
 		if err := s.Echo.Start(listenAddr); err != nil && err != http.ErrServerClosed {
 			s.logger.Error(
 				"failed to start server",
@@ -77,7 +77,9 @@ func (s *Server) Start() {
 }
 
 // Stop gracefully shuts down the Echo server.
-func (s *Server) Stop(ctx context.Context) {
+func (s *Server) Stop(
+	ctx context.Context,
+) {
 	s.logger.Info("stopping server")
 
 	if err := s.Echo.Shutdown(ctx); err != nil {

@@ -22,11 +22,9 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 )
 
@@ -38,20 +36,11 @@ var clientJobDeleteCmd = &cobra.Command{
 This removes the job permanently from storage.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		jobID, _ := cmd.Flags().GetString("job-id")
+		ctx := cmd.Context()
 
-		// Check if job exists first
-		_, err := jobsKV.Get(jobID)
+		err := jobClient.DeleteJob(ctx, jobID)
 		if err != nil {
-			if err == nats.ErrKeyNotFound {
-				logFatal("job not found", fmt.Errorf("job with ID '%s' does not exist", jobID))
-			}
-			logFatal("failed to check job", fmt.Errorf("error checking job '%s': %w", jobID, err))
-		}
-
-		// Delete the job from KV store
-		err = jobsKV.Delete(jobID)
-		if err != nil {
-			logFatal("failed to delete job", fmt.Errorf("error deleting job '%s': %w", jobID, err))
+			logFatal("failed to delete job", err)
 		}
 
 		if jsonOutput {

@@ -47,9 +47,11 @@ var clientJobCmd = &cobra.Command{
 for testing and debugging purposes. This bypasses the API and talks directly
 to NATS using the nats-client library.`,
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+		validateDistribution()
+
 		ctx := cmd.Context()
 
-		logger.Info(
+		logger.Debug(
 			"job client configuration",
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("client.host", appConfig.Job.Client.Host),
@@ -200,12 +202,6 @@ func init() {
 	clientJobCmd.PersistentFlags().
 		IntP("dlq-replicas", "", 1, "DLQ stream replicas")
 
-	// Server configuration
-	clientJobCmd.PersistentFlags().
-		StringP("server-host", "", "localhost", "Job server hostname")
-	clientJobCmd.PersistentFlags().
-		IntP("server-port", "", 4222, "Job server port")
-
 	// Bind flags to viper config
 	_ = viper.BindPFlag("job.client.host", clientJobCmd.PersistentFlags().Lookup("nats-host"))
 	_ = viper.BindPFlag("job.client.port", clientJobCmd.PersistentFlags().Lookup("nats-port"))
@@ -279,8 +275,4 @@ func init() {
 	_ = viper.BindPFlag("job.dlq.max_msgs", clientJobCmd.PersistentFlags().Lookup("dlq-max-msgs"))
 	_ = viper.BindPFlag("job.dlq.storage", clientJobCmd.PersistentFlags().Lookup("dlq-storage"))
 	_ = viper.BindPFlag("job.dlq.replicas", clientJobCmd.PersistentFlags().Lookup("dlq-replicas"))
-
-	// Server configuration bindings
-	_ = viper.BindPFlag("job.server.host", clientJobCmd.PersistentFlags().Lookup("server-host"))
-	_ = viper.BindPFlag("job.server.port", clientJobCmd.PersistentFlags().Lookup("server-port"))
 }

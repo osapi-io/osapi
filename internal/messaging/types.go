@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package messaging provides message types for NATS communication.
 package messaging
 
 import (
@@ -34,7 +35,10 @@ type NATSClient interface {
 	Connect() error
 
 	// JetStream setup and configuration
-	CreateOrUpdateStreamWithConfig(ctx context.Context, streamConfig *nats.StreamConfig) error
+	CreateOrUpdateStreamWithConfig(
+		ctx context.Context,
+		streamConfig *nats.StreamConfig,
+	) error
 	CreateOrUpdateJetStreamWithConfig(
 		ctx context.Context,
 		streamConfig *nats.StreamConfig,
@@ -47,11 +51,32 @@ type NATSClient interface {
 	) error
 
 	// Key-Value operations
-	CreateKVBucket(bucketName string) (nats.KeyValue, error)
-	KVPut(bucket, key string, value []byte) error
-	KVGet(bucket, key string) ([]byte, error)
-	KVDelete(bucket, key string) error
-	KVKeys(bucket string) ([]string, error)
+	CreateKVBucket(
+		bucketName string,
+	) (nats.KeyValue, error)
+	KVPut(
+		bucket string,
+		key string,
+		value []byte,
+	) error
+	KVGet(
+		bucket string,
+		key string,
+	) ([]byte, error)
+	KVDelete(
+		bucket string,
+		key string,
+	) error
+	KVKeys(
+		bucket string,
+	) ([]string, error)
+
+	// Message publishing
+	Publish(
+		ctx context.Context,
+		subject string,
+		data []byte,
+	) error
 
 	// Request-reply operations
 	PublishAndWaitKV(
@@ -65,13 +90,17 @@ type NATSClient interface {
 	// Message consumption
 	ConsumeMessages(
 		ctx context.Context,
-		streamName, consumerName string,
+		streamName string,
+		consumerName string,
 		handler natsclient.JetStreamMessageHandler,
 		opts *natsclient.ConsumeOptions,
 	) error
 
 	// Stream operations
-	GetStreamInfo(ctx context.Context, streamName string) (*nats.StreamInfo, error)
+	GetStreamInfo(
+		ctx context.Context,
+		streamName string,
+	) (*nats.StreamInfo, error)
 }
 
 // Ensure natsclient.Client implements NATSClient interface

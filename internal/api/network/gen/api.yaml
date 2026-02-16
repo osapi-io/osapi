@@ -38,6 +38,9 @@ paths:
       description: Send a ping to a remote server to verify network connectivity.
       tags:
         - network_operations
+      security:
+        - BearerAuth:
+            - write
       requestBody:
         description: The server to ping.
         required: true
@@ -66,13 +69,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error performing the ping operation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /network/dns/{interfaceName}:
     get:
@@ -81,6 +96,9 @@ paths:
       tags:
         - dns_operations
       operationId: GetNetworkDNSByInterface
+      security:
+        - BearerAuth:
+            - read
       parameters:
         - name: interfaceName
           in: path
@@ -105,13 +123,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving DNS servers.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /network/dns:
     put:
@@ -120,6 +150,9 @@ paths:
       tags:
         - dns_operations
       operationId: PutNetworkDNS
+      security:
+        - BearerAuth:
+            - write
       requestBody:
         required: true
         content:
@@ -134,13 +167,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating DNS servers.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/network.ErrorResponse'
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # /network/dns/{serverId}:
   #   delete:
@@ -173,6 +218,12 @@ paths:
   #               $ref: '#/components/schemas/network.ErrorResponse'
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     PingResponse:
       type: object
@@ -243,22 +294,8 @@ components:
           description: >
             The name of the network interface to apply DNS configuration to.
             Must only contain letters and numbers.
-
-    network.ErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: A description of the error that occurred.
-          example: Failed to retrieve network status.
-        details:
-          type: string
-          description: Additional details about the error, specifying which component failed.
-          example: "Failed to get DNS servers due to network timeout."
-        code:
-          type: integer
-          description: The error code.
-          example: 500
       required:
-        - error
-        - code
+        - interface_name
+
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'

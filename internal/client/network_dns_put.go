@@ -35,7 +35,7 @@ func (c *Client) PutNetworkDNS(
 ) (*gen.PutNetworkDNSResponse, error) {
 	body := gen.DNSConfigUpdateRequest{}
 
-	body.InterfaceName = stringPtr(interfaceName)
+	body.InterfaceName = interfaceName
 
 	if len(servers) > 0 {
 		body.Servers = &servers
@@ -46,8 +46,4 @@ func (c *Client) PutNetworkDNS(
 	}
 
 	return c.Client.PutNetworkDNSWithResponse(ctx, body)
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

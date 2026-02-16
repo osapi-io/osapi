@@ -18,9 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package mocks provides mock implementations for testing.
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=./nats_client.gen.go -package=mocks github.com/osapi-io/nats-client/pkg/client NATSConnector
-//go:generate go tool github.com/golang/mock/mockgen -destination=./jetstream_native.gen.go -package=mocks github.com/nats-io/nats.go JetStreamContext
-//go:generate go tool github.com/golang/mock/mockgen -destination=./jetstream_ext.gen.go -package=mocks github.com/nats-io/nats.go/jetstream JetStream
-//go:generate go tool github.com/golang/mock/mockgen -destination=./kv.gen.go -package=mocks github.com/nats-io/nats.go KeyValue
+//go:generate go tool github.com/golang/mock/mockgen -destination=./messaging.gen.go -package=mocks github.com/retr0h/osapi/internal/messaging NATSClient
+//go:generate go tool github.com/golang/mock/mockgen -destination=./kv.gen.go -package=mocks github.com/nats-io/nats.go KeyValue,KeyValueEntry,KeyWatcher
+//go:generate go tool github.com/golang/mock/mockgen -destination=./job_client.gen.go -package=mocks github.com/retr0h/osapi/internal/job/client JobClient

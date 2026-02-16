@@ -27,125 +27,103 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-// QuerySystemStatus queries the system status of a specific host.
+// QuerySystemStatus queries system status from a specific hostname.
 func (c *Client) QuerySystemStatus(
 	ctx context.Context,
 	hostname string,
 ) (*job.SystemStatusResponse, error) {
-	subject := job.BuildQuerySubject(
-		hostname,
-		job.SubjectCategorySystem,
-		job.SystemOperationStatus,
-	)
-
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  job.SubjectCategorySystem,
-		Operation: job.SystemOperationStatus,
-		Data:      json.RawMessage(`{}`), // No parameters needed for status
+		Category:  "system",
+		Operation: "status.get",
+		Data:      json.RawMessage(`{}`),
 	}
 
+	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	// Unmarshal the response data
-	var statusResp job.SystemStatusResponse
-	if err := json.Unmarshal(resp.Data, &statusResp); err != nil {
+	var result job.SystemStatusResponse
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal status response: %w", err)
 	}
 
-	return &statusResp, nil
+	return &result, nil
 }
 
-// QuerySystemHostname queries the hostname of a specific host.
+// QuerySystemHostname queries hostname from a specific hostname.
 func (c *Client) QuerySystemHostname(
 	ctx context.Context,
 	hostname string,
 ) (string, error) {
-	subject := job.BuildQuerySubject(
-		hostname,
-		job.SubjectCategorySystem,
-		job.SystemOperationHostname,
-	)
-
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  job.SubjectCategorySystem,
-		Operation: job.SystemOperationHostname,
+		Category:  "system",
+		Operation: "hostname.get",
 		Data:      json.RawMessage(`{}`),
 	}
 
+	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == "failed" {
 		return "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	// For hostname, we expect a simple string response
-	var hostnameResp struct {
+	var result struct {
 		Hostname string `json:"hostname"`
 	}
-	if err := json.Unmarshal(resp.Data, &hostnameResp); err != nil {
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	return hostnameResp.Hostname, nil
+	return result.Hostname, nil
 }
 
-// QueryNetworkDNS queries the DNS configuration of a specific host and interface.
+// QueryNetworkDNS queries DNS configuration from a specific hostname.
 func (c *Client) QueryNetworkDNS(
 	ctx context.Context,
 	hostname string,
 	iface string,
 ) (*dns.Config, error) {
-	subject := job.BuildQuerySubject(
-		hostname,
-		job.SubjectCategoryNetwork,
-		job.NetworkOperationDNS,
-	)
-
-	reqData := map[string]interface{}{
+	data, _ := json.Marshal(map[string]interface{}{
 		"interface": iface,
-	}
-	data, err := json.Marshal(reqData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal DNS request: %w", err)
-	}
-
+	})
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  job.SubjectCategoryNetwork,
-		Operation: job.NetworkOperationDNS,
-		Data:      data,
+		Category:  "network",
+		Operation: "dns.get",
+		Data:      json.RawMessage(data),
 	}
 
+	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	// Unmarshal the response data
-	var dnsResp dns.Config
-	if err := json.Unmarshal(resp.Data, &dnsResp); err != nil {
+	var result dns.Config
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal DNS response: %w", err)
 	}
 
-	return &dnsResp, nil
+	return &result, nil
 }
 
 // QuerySystemStatusAny queries system status from any available host.
@@ -156,11 +134,50 @@ func (c *Client) QuerySystemStatusAny(
 }
 
 // QuerySystemStatusAll queries system status from all hosts.
-// Returns a map of hostname to status response.
 func (c *Client) QuerySystemStatusAll(
 	_ context.Context,
-) (map[string]interface{}, error) {
-	// This would require a different implementation that collects multiple responses
-	// For now, return an error indicating it's not implemented
+) ([]*job.SystemStatusResponse, error) {
 	return nil, fmt.Errorf("broadcast queries not yet implemented")
+}
+
+// QueryNetworkPing pings a host from a specific hostname.
+func (c *Client) QueryNetworkPing(
+	ctx context.Context,
+	hostname string,
+	address string,
+) (*ping.Result, error) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"address": address,
+	})
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "network",
+		Operation: "ping.do",
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildQuerySubject(hostname)
+	resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == "failed" {
+		return nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	var result ping.Result
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ping response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// QueryNetworkPingAny pings a host from any available hostname.
+func (c *Client) QueryNetworkPingAny(
+	ctx context.Context,
+	address string,
+) (*ping.Result, error) {
+	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }

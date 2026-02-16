@@ -21,17 +21,18 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"golang.org/x/term"
 
 	"github.com/retr0h/osapi/internal/client/gen"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // TODO(retr0h): consider moving out of global scope
@@ -106,11 +107,14 @@ func printStyledTable(
 		t := table.New().
 			Border(lipgloss.ThickBorder()).
 			BorderStyle(BorderStyle).
-			StyleFunc(func(row, col int) lipgloss.Style {
+			StyleFunc(func(
+				row int,
+				col int,
+			) lipgloss.Style {
 				// Determine base style based on row
 				var baseStyle lipgloss.Style
-				switch {
-				case row%2 == 0:
+				switch row % 2 {
+				case 0:
 					baseStyle = EvenRowStyle
 				default:
 					baseStyle = OddRowStyle
@@ -170,19 +174,6 @@ func formatList(
 	return strings.Join(list, ", ")
 }
 
-// getMaxHeaderLength calculates the maximum length of the given headers.
-func getMaxHeaderLength(
-	headers []string,
-) int {
-	maxLen := 0
-	for _, header := range headers {
-		if len(header) > maxLen {
-			maxLen = len(header)
-		}
-	}
-	return maxLen
-}
-
 // calculateColumnWidths calculates the optimal width for each column based on content
 func calculateColumnWidths(
 	headers []string,
@@ -203,8 +194,12 @@ func calculateColumnWidths(
 	// Check all row data to find max width per column
 	for _, row := range rows {
 		for i, cell := range row {
-			if i < len(widths) && len(cell) > widths[i] {
-				widths[i] = len(cell)
+			if i < len(widths) {
+				// For multi-line content, use the width of the longest line
+				maxLineWidth := getMaxLineWidth(cell)
+				if maxLineWidth > widths[i] {
+					widths[i] = maxLineWidth
+				}
 			}
 		}
 	}
@@ -217,14 +212,18 @@ func calculateColumnWidths(
 	return widths
 }
 
-// safeInt returns a default value when the input *int is nil.
-func safeInt(
-	i *int,
+// getMaxLineWidth returns the width of the longest line in a multi-line string
+func getMaxLineWidth(
+	text string,
 ) int {
-	if i != nil {
-		return *i
+	lines := strings.Split(text, "\n")
+	maxWidth := 0
+	for _, line := range lines {
+		if len(line) > maxWidth {
+			maxWidth = len(line)
+		}
 	}
-	return 0
+	return maxWidth
 }
 
 // safeString function to safely dereference string pointers
@@ -233,16 +232,6 @@ func safeString(
 ) string {
 	if s != nil {
 		return *s
-	}
-	return ""
-}
-
-// safeTime function to safely dereference time.Time pointers
-func safeTime(
-	t *time.Time,
-) string {
-	if t != nil {
-		return t.Format(time.RFC3339)
 	}
 	return ""
 }
@@ -260,16 +249,6 @@ func float64ToSafeString(
 // intToSafeString converts a *int to a string. Returns "N/A" if nil.
 func intToSafeString(
 	i *int,
-) string {
-	if i != nil {
-		return fmt.Sprintf("%d", *i)
-	}
-	return "N/A"
-}
-
-// uint64ToSafeString converts a *uint64 to a string, returning "N/A" if nil.
-func uint64ToSafeString(
-	i *uint64,
 ) string {
 	if i != nil {
 		return fmt.Sprintf("%d", *i)
@@ -313,4 +292,164 @@ func handleUnknownError(
 		slog.Int("code", statusCode),
 		slog.String("error", errorMsg),
 	)
+}
+
+// displayJobDetails displays detailed job information in a consistent format.
+// Used by both job get and job run commands.
+func displayJobDetails(
+	jobInfo *job.QueuedJob,
+) {
+	if jsonOutput {
+		resultJSON, _ := json.Marshal(jobInfo)
+		logger.Info("job", slog.String("response", string(resultJSON)))
+		return
+	}
+
+	// Display job details with enhanced status information
+	jobData := map[string]interface{}{
+		"Job ID":  jobInfo.ID,
+		"Status":  jobInfo.Status,
+		"Created": jobInfo.Created,
+	}
+
+	// Add error field if present
+	if jobInfo.Error != "" {
+		jobData["Error"] = jobInfo.Error
+	}
+
+	// Add subject if present
+	if jobInfo.Subject != "" {
+		jobData["Subject"] = jobInfo.Subject
+	}
+
+	// Add worker summary
+	if len(jobInfo.WorkerStates) > 0 {
+		completed := 0
+		failed := 0
+		processing := 0
+		acknowledged := 0
+
+		for _, state := range jobInfo.WorkerStates {
+			switch state.Status {
+			case "completed":
+				completed++
+			case "failed":
+				failed++
+			case "started":
+				processing++
+			case "acknowledged":
+				acknowledged++
+			}
+		}
+
+		total := len(jobInfo.WorkerStates)
+		if total > 1 {
+			jobData["Workers"] = fmt.Sprintf(
+				"%d total (%d completed, %d failed, %d processing)",
+				total,
+				completed,
+				failed,
+				processing,
+			)
+		}
+	}
+
+	printStyledMap(jobData)
+
+	// Collect content for sections to ensure consistent table widths
+	var sections []section
+
+	// Display the operation request
+	if jobInfo.Operation != nil {
+		jobOperationJSON, _ := json.MarshalIndent(jobInfo.Operation, "", "  ")
+		operationRows := [][]string{{string(jobOperationJSON)}}
+		sections = append(sections, section{
+			Title:   "Job Request",
+			Headers: []string{"DATA"},
+			Rows:    operationRows,
+		})
+	}
+
+	// Display timeline if available
+	if len(jobInfo.Timeline) > 0 {
+		timelineRows := [][]string{}
+		for _, event := range jobInfo.Timeline {
+			row := []string{
+				event.Timestamp.Format("15:04:05 MST"),
+				event.Event,
+				event.Hostname,
+				event.Message,
+			}
+			if event.Error != "" {
+				row = append(row, event.Error)
+			} else {
+				row = append(row, "")
+			}
+			timelineRows = append(timelineRows, row)
+		}
+		sections = append(sections, section{
+			Title:   "Timeline",
+			Headers: []string{"TIME", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+			Rows:    timelineRows,
+		})
+	}
+
+	// Display responses (the actual job results)
+	if len(jobInfo.Responses) > 0 {
+		responseRows := [][]string{}
+		for hostname, response := range jobInfo.Responses {
+			// Format the response data with nice indentation
+			var responseData string
+			if len(response.Data) > 0 {
+				var data interface{}
+				if err := json.Unmarshal(response.Data, &data); err == nil {
+					// Use pretty printing with 2-space indentation
+					dataJSON, _ := json.MarshalIndent(data, "", "  ")
+					responseData = string(dataJSON)
+				} else {
+					responseData = string(response.Data)
+				}
+			} else {
+				responseData = "(no data)"
+			}
+
+			row := []string{
+				hostname,
+				string(response.Status),
+				response.Timestamp.Format("15:04:05 MST"),
+				responseData,
+			}
+			if response.Error != "" {
+				row = append(row, response.Error)
+			} else {
+				row = append(row, "")
+			}
+			responseRows = append(responseRows, row)
+		}
+
+		sections = append(sections, section{
+			Title:   "Worker Responses",
+			Headers: []string{"HOSTNAME", "STATUS", "TIME", "DATA", "ERROR"},
+			Rows:    responseRows,
+		})
+	}
+
+	// Display results if completed and available (legacy support)
+	if jobInfo.Status == "completed" && len(jobInfo.Result) > 0 {
+		var result interface{}
+		if err := json.Unmarshal(jobInfo.Result, &result); err == nil {
+			resultJSON, _ := json.MarshalIndent(result, "", "  ")
+			resultRows := [][]string{{string(resultJSON)}}
+			sections = append(sections, section{
+				Title:   "Job Response (Legacy)",
+				Headers: []string{"DATA"},
+				Rows:    resultRows,
+			})
+		}
+	}
+
+	// Print each section individually to ensure consistent formatting
+	for _, sec := range sections {
+		printStyledTable([]section{sec})
+	}
 }

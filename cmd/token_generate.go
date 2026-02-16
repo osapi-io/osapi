@@ -27,8 +27,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/token"
+	"github.com/retr0h/osapi/internal/authtoken"
 )
+
+// TokenGenerator generates signed JWT tokens.
+type TokenGenerator interface {
+	Generate(
+		signingKey string,
+		roles []string,
+		subject string,
+	) (string, error)
+}
 
 // tokenGenerateCmd represents the tokenGenerate command.
 var tokenGenerateCmd = &cobra.Command{
@@ -42,7 +51,7 @@ This command allows you to customize the token properties for various use cases.
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 		subject, _ := cmd.Flags().GetString("subject")
 
-		var tm token.Manager = token.New(logger)
+		var tm TokenGenerator = authtoken.New(logger)
 		tokin, err := tm.Generate(signingKey, roles, subject)
 		if err != nil {
 			logFatal("failed to generate token", err)
@@ -59,7 +68,7 @@ This command allows you to customize the token properties for various use cases.
 
 func init() {
 	tokenCmd.AddCommand(tokenGenerateCmd)
-	allowedRoles := token.GenerateAllowedRoles(token.RoleHierarchy)
+	allowedRoles := authtoken.GenerateAllowedRoles(authtoken.RoleHierarchy)
 	usage := fmt.Sprintf("Roles for the token (allowed: %s)", strings.Join(allowedRoles, ", "))
 
 	tokenGenerateCmd.PersistentFlags().
@@ -79,8 +88,10 @@ func init() {
 	}
 }
 
-func validateRoles(roles []string) error {
-	allowedRoles := token.GenerateAllowedRoles(token.RoleHierarchy)
+func validateRoles(
+	roles []string,
+) error {
+	allowedRoles := authtoken.GenerateAllowedRoles(authtoken.RoleHierarchy)
 	allowedRolesMap := make(map[string]struct{}, len(allowedRoles))
 	for _, role := range allowedRoles {
 		allowedRolesMap[role] = struct{}{}

@@ -19,9 +19,10 @@ sidebar_position: 5
    Design the system with pluggability in mind, allowing for easy extension and
    customization through well-defined interfaces and modules.
 
-4. **Task Worker for Privileged Operations**
+4. **Job System for Privileged Operations**
 
-   Implement privileged system changes asynchronously through a task worker.
+   Implement privileged system changes asynchronously through the NATS JetStream
+   job system.
 
 5. **RESTful API Design**
 

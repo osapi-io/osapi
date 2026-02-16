@@ -24,5 +24,8 @@ package exec
 type Manager interface {
 	// RunCmd executes the provided command with arguments, using the current
 	// working directory.
-	RunCmd(name string, args []string) (string, error)
+	RunCmd(
+		name string,
+		args []string,
+	) (string, error)
 }

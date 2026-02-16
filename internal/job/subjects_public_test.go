@@ -40,38 +40,35 @@ func (suite *SubjectsPublicTestSuite) TearDownTest() {}
 
 func (suite *SubjectsPublicTestSuite) TestBuildQuerySubject() {
 	tests := []struct {
-		name      string
-		hostname  string
-		category  string
-		operation string
-		want      string
+		name     string
+		hostname string
+		want     string
 	}{
 		{
-			name:      "when building system status query subject",
-			hostname:  "server-01",
-			category:  job.SubjectCategorySystem,
-			operation: job.SystemOperationStatus,
-			want:      "jobs.query.server-01.system.status",
+			name:     "when building query subject for specific server",
+			hostname: "server-01",
+			want:     "jobs.query.server-01",
 		},
 		{
-			name:      "when building network DNS query subject",
-			hostname:  "web-server",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationDNS,
-			want:      "jobs.query.web-server.network.dns",
+			name:     "when building query subject for web server",
+			hostname: "web-server",
+			want:     "jobs.query.web-server",
 		},
 		{
-			name:      "when building with wildcard hostname",
-			hostname:  job.AllHosts,
-			category:  job.SubjectCategorySystem,
-			operation: job.SystemOperationHostname,
-			want:      "jobs.query.*.system.hostname",
+			name:     "when building with wildcard hostname",
+			hostname: job.AllHosts,
+			want:     "jobs.query.*",
+		},
+		{
+			name:     "when building with any hostname",
+			hostname: job.AnyHost,
+			want:     "jobs.query._any",
 		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildQuerySubject(tt.hostname, tt.category, tt.operation)
+			got := job.BuildQuerySubject(tt.hostname)
 			suite.Equal(tt.want, got)
 		})
 	}
@@ -79,151 +76,99 @@ func (suite *SubjectsPublicTestSuite) TestBuildQuerySubject() {
 
 func (suite *SubjectsPublicTestSuite) TestBuildModifySubject() {
 	tests := []struct {
-		name      string
-		hostname  string
-		category  string
-		operation string
-		want      string
+		name     string
+		hostname string
+		want     string
 	}{
 		{
-			name:      "when building network DNS modify subject",
-			hostname:  "server-01",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationDNS,
-			want:      "jobs.modify.server-01.network.dns",
+			name:     "when building modify subject for specific server",
+			hostname: "server-01",
+			want:     "jobs.modify.server-01",
 		},
 		{
-			name:      "when building network ping modify subject",
-			hostname:  "db-server",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationPing,
-			want:      "jobs.modify.db-server.network.ping",
+			name:     "when building modify subject for db server",
+			hostname: "db-server",
+			want:     "jobs.modify.db-server",
 		},
 		{
-			name:      "when building with wildcard hostname",
-			hostname:  job.AllHosts,
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationDNS,
-			want:      "jobs.modify.*.network.dns",
+			name:     "when building with wildcard hostname",
+			hostname: job.AllHosts,
+			want:     "jobs.modify.*",
+		},
+		{
+			name:     "when building with any hostname",
+			hostname: job.AnyHost,
+			want:     "jobs.modify._any",
 		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildModifySubject(tt.hostname, tt.category, tt.operation)
+			got := job.BuildModifySubject(tt.hostname)
 			suite.Equal(tt.want, got)
 		})
 	}
 }
 
 func (suite *SubjectsPublicTestSuite) TestBuildQuerySubjectForAllHosts() {
-	tests := []struct {
-		name      string
-		category  string
-		operation string
-		want      string
-	}{
-		{
-			name:      "when building system status query for all hosts",
-			category:  job.SubjectCategorySystem,
-			operation: job.SystemOperationStatus,
-			want:      "jobs.query.*.system.status",
-		},
-		{
-			name:      "when building network DNS query for all hosts",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationDNS,
-			want:      "jobs.query.*.network.dns",
-		},
-	}
-
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			got := job.BuildQuerySubjectForAllHosts(tt.category, tt.operation)
-			suite.Equal(tt.want, got)
-		})
-	}
+	suite.Run("when building query subject for all hosts", func() {
+		got := job.BuildQuerySubjectForAllHosts()
+		suite.Equal("jobs.query.*", got)
+	})
 }
 
 func (suite *SubjectsPublicTestSuite) TestBuildModifySubjectForAllHosts() {
-	tests := []struct {
-		name      string
-		category  string
-		operation string
-		want      string
-	}{
-		{
-			name:      "when building network DNS modify for all hosts",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationDNS,
-			want:      "jobs.modify.*.network.dns",
-		},
-		{
-			name:      "when building network ping modify for all hosts",
-			category:  job.SubjectCategoryNetwork,
-			operation: job.NetworkOperationPing,
-			want:      "jobs.modify.*.network.ping",
-		},
-	}
-
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			got := job.BuildModifySubjectForAllHosts(tt.category, tt.operation)
-			suite.Equal(tt.want, got)
-		})
-	}
+	suite.Run("when building modify subject for all hosts", func() {
+		got := job.BuildModifySubjectForAllHosts()
+		suite.Equal("jobs.modify.*", got)
+	})
 }
 
 func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 	tests := []struct {
-		name          string
-		subject       string
-		wantPrefix    string
-		wantHostname  string
-		wantCategory  string
-		wantOperation string
-		wantErr       bool
+		name         string
+		subject      string
+		wantPrefix   string
+		wantHostname string
+		wantErr      bool
 	}{
 		{
-			name:          "when parsing valid query subject",
-			subject:       "jobs.query.server-01.system.status",
-			wantPrefix:    "jobs.query",
-			wantHostname:  "server-01",
-			wantCategory:  "system",
-			wantOperation: "status",
-			wantErr:       false,
+			name:         "when parsing valid query subject",
+			subject:      "jobs.query.server-01",
+			wantPrefix:   "jobs.query",
+			wantHostname: "server-01",
+			wantErr:      false,
 		},
 		{
-			name:          "when parsing valid modify subject",
-			subject:       "jobs.modify.web-01.network.dns",
-			wantPrefix:    "jobs.modify",
-			wantHostname:  "web-01",
-			wantCategory:  "network",
-			wantOperation: "dns",
-			wantErr:       false,
+			name:         "when parsing valid modify subject",
+			subject:      "jobs.modify.web-01",
+			wantPrefix:   "jobs.modify",
+			wantHostname: "web-01",
+			wantErr:      false,
 		},
 		{
-			name:          "when parsing subject with wildcard hostname",
-			subject:       "jobs.query.*.system.hostname",
-			wantPrefix:    "jobs.query",
-			wantHostname:  "*",
-			wantCategory:  "system",
-			wantOperation: "hostname",
-			wantErr:       false,
+			name:         "when parsing subject with wildcard hostname",
+			subject:      "jobs.query.*",
+			wantPrefix:   "jobs.query",
+			wantHostname: "*",
+			wantErr:      false,
+		},
+		{
+			name:         "when parsing subject with any hostname",
+			subject:      "jobs.modify._any",
+			wantPrefix:   "jobs.modify",
+			wantHostname: "_any",
+			wantErr:      false,
 		},
 		{
 			name:    "when parsing invalid subject with too few parts",
-			subject: "jobs.query.server-01",
+			subject: "jobs.query",
 			wantErr: true,
 		},
 		{
-			name:          "when parsing valid dotted operation subject",
-			subject:       "jobs.query.server-01.system.hostname.get",
-			wantPrefix:    "jobs.query",
-			wantHostname:  "server-01",
-			wantCategory:  "system",
-			wantOperation: "hostname.get",
-			wantErr:       false,
+			name:    "when parsing invalid subject with too many parts",
+			subject: "jobs.query.server-01.extra.part",
+			wantErr: true,
 		},
 		{
 			name:    "when parsing empty subject",
@@ -234,7 +179,7 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			gotPrefix, gotHostname, gotCategory, gotOperation, err := job.ParseSubject(tt.subject)
+			gotPrefix, gotHostname, err := job.ParseSubject(tt.subject)
 
 			if tt.wantErr {
 				suite.Error(err)
@@ -244,17 +189,17 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 			suite.NoError(err)
 			suite.Equal(tt.wantPrefix, gotPrefix)
 			suite.Equal(tt.wantHostname, gotHostname)
-			suite.Equal(tt.wantCategory, gotCategory)
-			suite.Equal(tt.wantOperation, gotOperation)
 		})
 	}
 }
 
 func (suite *SubjectsPublicTestSuite) TestGetLocalHostname() {
-	// This test just ensures the function doesn't error
-	hostname, err := job.GetLocalHostname()
-	suite.NoError(err)
-	suite.NotEmpty(hostname)
+	suite.Run("when using default provider", func() {
+		// This test uses the real system hostname
+		hostname, err := job.GetLocalHostname()
+		suite.NoError(err)
+		suite.NotEmpty(hostname)
+	})
 }
 
 func (suite *SubjectsPublicTestSuite) TestSanitizeHostname() {
@@ -313,6 +258,151 @@ func (suite *SubjectsPublicTestSuite) TestSanitizeHostname() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			got := job.SanitizeHostname(tt.hostname)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
+	tests := []struct {
+		name     string
+		hostname string
+		want     []string
+	}{
+		{
+			name:     "when building subscription pattern for specific hostname",
+			hostname: "web-server-01",
+			want: []string{
+				"jobs.*.web-server-01",
+				"jobs.*._any",
+				"jobs.*._all",
+			},
+		},
+		{
+			name:     "when building subscription pattern for localhost",
+			hostname: "localhost",
+			want: []string{
+				"jobs.*.localhost",
+				"jobs.*._any",
+				"jobs.*._all",
+			},
+		},
+		{
+			name:     "when building subscription pattern with complex hostname",
+			hostname: "api.example.com",
+			want: []string{
+				"jobs.*.api.example.com",
+				"jobs.*._any",
+				"jobs.*._all",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.BuildWorkerSubscriptionPattern(tt.hostname)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestBuildWorkerQueueGroup() {
+	tests := []struct {
+		name     string
+		category string
+		want     string
+	}{
+		{
+			name:     "when building queue group for system category",
+			category: "system",
+			want:     "workers.system",
+		},
+		{
+			name:     "when building queue group for network category",
+			category: "network",
+			want:     "workers.network",
+		},
+		{
+			name:     "when building queue group for jobs category",
+			category: "jobs",
+			want:     "workers.jobs",
+		},
+		{
+			name:     "when building queue group with empty category",
+			category: "",
+			want:     "workers.",
+		},
+		{
+			name:     "when building queue group with complex category",
+			category: "custom-service",
+			want:     "workers.custom-service",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.BuildWorkerQueueGroup(tt.category)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestIsSpecialHostname() {
+	tests := []struct {
+		name     string
+		hostname string
+		want     bool
+	}{
+		{
+			name:     "when hostname is AllHosts wildcard",
+			hostname: job.AllHosts,
+			want:     true,
+		},
+		{
+			name:     "when hostname is AnyHost",
+			hostname: job.AnyHost,
+			want:     true,
+		},
+		{
+			name:     "when hostname is LocalHost",
+			hostname: job.LocalHost,
+			want:     true,
+		},
+		{
+			name:     "when hostname is BroadcastHost",
+			hostname: job.BroadcastHost,
+			want:     true,
+		},
+		{
+			name:     "when hostname is regular server name",
+			hostname: "web-server-01",
+			want:     false,
+		},
+		{
+			name:     "when hostname is localhost",
+			hostname: "localhost",
+			want:     false,
+		},
+		{
+			name:     "when hostname is FQDN",
+			hostname: "api.example.com",
+			want:     false,
+		},
+		{
+			name:     "when hostname is empty",
+			hostname: "",
+			want:     false,
+		},
+		{
+			name:     "when hostname looks like special but isn't exact",
+			hostname: "_any_server",
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.IsSpecialHostname(tt.hostname)
 			suite.Equal(tt.want, got)
 		})
 	}

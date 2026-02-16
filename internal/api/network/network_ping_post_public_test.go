@@ -1,0 +1,137 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package network_test
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	apinetwork "github.com/retr0h/osapi/internal/api/network"
+	"github.com/retr0h/osapi/internal/api/network/gen"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
+)
+
+type NetworkPingPostPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *jobmocks.MockJobClient
+	handler       *apinetwork.Network
+	ctx           context.Context
+}
+
+func (s *NetworkPingPostPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
+	s.handler = apinetwork.New(s.mockJobClient)
+	s.ctx = context.Background()
+}
+
+func (s *NetworkPingPostPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
+	tests := []struct {
+		name         string
+		request      gen.PostNetworkPingRequestObject
+		mockResult   *ping.Result
+		mockError    error
+		expectMock   bool
+		validateFunc func(resp gen.PostNetworkPingResponseObject)
+	}{
+		{
+			name: "success",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+			},
+			mockResult: &ping.Result{
+				PacketsSent:     3,
+				PacketsReceived: 3,
+				PacketLoss:      0,
+				MinRTT:          10 * time.Millisecond,
+				AvgRTT:          15 * time.Millisecond,
+				MaxRTT:          20 * time.Millisecond,
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				r, ok := resp.(gen.PostNetworkPing200JSONResponse)
+				s.True(ok)
+				s.Equal(3, *r.PacketsSent)
+				s.Equal(3, *r.PacketsReceived)
+				s.Equal(0.0, *r.PacketLoss)
+			},
+		},
+		{
+			name: "validation error invalid address",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "not-an-ip",
+				},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				_, ok := resp.(gen.PostNetworkPing400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "job client error",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+			},
+			mockError:  assert.AnError,
+			expectMock: true,
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				_, ok := resp.(gen.PostNetworkPing500JSONResponse)
+				s.True(ok)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.expectMock {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPingAny(gomock.Any(), tt.request.Body.Address).
+					Return(tt.mockResult, tt.mockError)
+			}
+
+			resp, err := s.handler.PostNetworkPing(s.ctx, tt.request)
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func TestNetworkPingPostPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(NetworkPingPostPublicTestSuite))
+}

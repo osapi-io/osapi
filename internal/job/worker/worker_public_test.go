@@ -1,0 +1,172 @@
+// Copyright (c) 2025 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package worker_test
+
+import (
+	"context"
+	"log/slog"
+	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/job/worker"
+	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
+	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
+	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
+	hostMocks "github.com/retr0h/osapi/internal/provider/system/host/mocks"
+	loadMocks "github.com/retr0h/osapi/internal/provider/system/load/mocks"
+	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
+)
+
+type WorkerPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *mocks.MockJobClient
+	appFs         afero.Fs
+	appConfig     config.Config
+	logger        *slog.Logger
+}
+
+func (s *WorkerPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	s.appFs = afero.NewMemMapFs()
+	s.logger = slog.Default()
+
+	s.appConfig = config.Config{
+		Job: config.Job{
+			StreamName: "test-stream",
+			Worker: config.JobWorker{
+				Hostname:   "test-worker",
+				QueueGroup: "test-queue",
+				MaxJobs:    5,
+			},
+			Consumer: config.JobConsumer{
+				AckWait:       "30s",
+				BackOff:       []string{"1s", "2s", "5s"},
+				MaxDeliver:    3,
+				MaxAckPending: 10,
+				ReplayPolicy:  "instant",
+			},
+		},
+	}
+}
+
+func (s *WorkerPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *WorkerPublicTestSuite) TestNew() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates worker with all providers",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			w := worker.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+			)
+
+			s.NotNil(w)
+		})
+	}
+}
+
+func (s *WorkerPublicTestSuite) TestStart() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "starts and stops with context cancellation",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Mock consumer creation for 3 query + 3 modify consumers
+			s.mockJobClient.EXPECT().
+				CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+				Return(nil).
+				Times(6)
+
+			// Mock job consumption returning context.Canceled
+			s.mockJobClient.EXPECT().
+				ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(context.Canceled).
+				Times(6)
+
+			w := worker.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+			)
+
+			ctx, cancel := context.WithCancel(context.Background())
+
+			done := make(chan struct{})
+			go func() {
+				w.Start(ctx)
+				close(done)
+			}()
+
+			// Give goroutines time to start then cancel
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+
+			select {
+			case <-done:
+				// Start returned successfully
+			case <-time.After(5 * time.Second):
+				s.Fail("Start did not return after context cancellation")
+			}
+		})
+	}
+}
+
+func TestWorkerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(WorkerPublicTestSuite))
+}
