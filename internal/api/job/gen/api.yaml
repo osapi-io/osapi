@@ -254,10 +254,14 @@ components:
           type: object
           description: The operation to perform, as a JSON object.
           additionalProperties: true
+          x-oapi-codegen-extra-tags:
+            validate: required
         target_hostname:
           type: string
           description: The target hostname for routing (_any, _all, or specific hostname).
           example: "_any"
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
       required:
         - operation
         - target_hostname

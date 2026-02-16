@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,45 +18,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package network
+// Package validation provides a shared validator instance.
+package validation
 
 import (
-	"context"
-
-	"github.com/retr0h/osapi/internal/api/network/gen"
-	"github.com/retr0h/osapi/internal/validation"
+	"github.com/go-playground/validator/v10"
 )
 
-// PutNetworkDNS put the network dns API endpoint.
-func (n Network) PutNetworkDNS(
-	ctx context.Context,
-	request gen.PutNetworkDNSRequestObject,
-) (gen.PutNetworkDNSResponseObject, error) {
-	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PutNetworkDNS400JSONResponse{
-			Error: &errMsg,
-		}, nil
+var instance = validator.New()
+
+// Struct validates a struct and returns the error message and false if invalid.
+func Struct(
+	v any,
+) (string, bool) {
+	if err := instance.Struct(v); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return validationErrors.Error(), false
 	}
 
-	var servers []string
-	if request.Body.Servers != nil {
-		servers = *request.Body.Servers
-	}
+	return "", true
+}
 
-	var searchDomains []string
-	if request.Body.SearchDomains != nil {
-		searchDomains = *request.Body.SearchDomains
-	}
-
-	interfaceName := request.Body.InterfaceName
-
-	err := n.JobClient.ModifyNetworkDNSAny(ctx, servers, searchDomains, interfaceName)
-	if err != nil {
-		errMsg := err.Error()
-		return gen.PutNetworkDNS500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	return gen.PutNetworkDNS202Response{}, nil
+// Instance returns the shared validator for registering custom validators.
+func Instance() *validator.Validate {
+	return instance
 }

@@ -60,6 +60,7 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 		request      gen.PostJobRequestObject
 		mockResult   *client.CreateJobResult
 		mockError    error
+		expectMock   bool
 		validateFunc func(resp gen.PostJobResponseObject)
 	}{
 		{
@@ -76,11 +77,44 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 				Revision:  1,
 				Timestamp: "2025-06-14T10:00:00Z",
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.PostJobResponseObject) {
 				r, ok := resp.(gen.PostJob201JSONResponse)
 				s.True(ok)
 				s.Equal("test-job-id", r.JobId)
 				s.Equal("created", r.Status)
+			},
+		},
+		{
+			name: "validation error missing operation",
+			request: gen.PostJobRequestObject{
+				Body: &gen.PostJobJSONRequestBody{
+					TargetHostname: "_any",
+				},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PostJobResponseObject) {
+				r, ok := resp.(gen.PostJob400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "Operation")
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "validation error empty target hostname",
+			request: gen.PostJobRequestObject{
+				Body: &gen.PostJobJSONRequestBody{
+					Operation: map[string]interface{}{"type": "test"},
+				},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PostJobResponseObject) {
+				r, ok := resp.(gen.PostJob400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "TargetHostname")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{
@@ -91,7 +125,8 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 					TargetHostname: "_any",
 				},
 			},
-			mockError: assert.AnError,
+			mockError:  assert.AnError,
+			expectMock: true,
 			validateFunc: func(resp gen.PostJobResponseObject) {
 				_, ok := resp.(gen.PostJob500JSONResponse)
 				s.True(ok)
@@ -101,9 +136,11 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				CreateJob(gomock.Any(), tt.request.Body.Operation, tt.request.Body.TargetHostname).
-				Return(tt.mockResult, tt.mockError)
+			if tt.expectMock {
+				s.mockJobClient.EXPECT().
+					CreateJob(gomock.Any(), tt.request.Body.Operation, tt.request.Body.TargetHostname).
+					Return(tt.mockResult, tt.mockError)
+			}
 
 			resp, err := s.handler.PostJob(s.ctx, tt.request)
 			s.NoError(err)

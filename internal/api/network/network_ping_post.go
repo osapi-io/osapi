@@ -25,9 +25,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/retr0h/osapi/internal/api/network/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNetworkPing post the network ping API endpoint.
@@ -35,10 +34,7 @@ func (n Network) PostNetworkPing(
 	ctx context.Context,
 	request gen.PostNetworkPingRequestObject,
 ) (gen.PostNetworkPingResponseObject, error) {
-	validate := validator.New()
-	if err := validate.Struct(request.Body); err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		errMsg := validationErrors.Error()
+	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PostNetworkPing400JSONResponse{
 			Error: &errMsg,
 		}, nil

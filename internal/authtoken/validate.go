@@ -23,11 +23,10 @@ package authtoken
 import (
 	"fmt"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
-)
 
-var validate = validator.New()
+	"github.com/retr0h/osapi/internal/validation"
+)
 
 // Validate parses and validates the JWT.
 func (t *Token) Validate(
@@ -50,7 +49,7 @@ func (t *Token) Validate(
 		return nil, err
 	}
 
-	if err := validate.Struct(claims); err != nil {
+	if err := validation.Instance().Struct(claims); err != nil {
 		return nil, err
 	}
 
