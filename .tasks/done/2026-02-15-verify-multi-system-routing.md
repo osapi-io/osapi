@@ -1,8 +1,8 @@
 ---
 title: Verify multi-system routing and per-system response aggregation
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-16
 ---
 
 ## Objective
@@ -56,3 +56,21 @@ already describes:
 - If gaps exist, create follow-up tasks to fix them
 - Ensure integration tests or manual testing cover single-host, any-host,
   and all-host routing scenarios
+
+## Outcome
+
+Architecture verification confirmed routing is **correct**:
+
+- `_any` → queue groups (load balanced via NATS consumer)
+- `_all` → no queue groups (broadcast to all workers)
+- Direct hostname → filtered consumer on specific host
+- Append-only events with nanosecond timestamps eliminate race conditions
+- `partial_failure` status aggregation works correctly
+
+**Gaps identified** (follow-up task created):
+- `QuerySystemStatusAll` is a stub — `_all` broadcast response collection
+  is not yet implemented
+- `publishAndWait` only collects the first response
+- REST API `GET /job/{id}` returns a single result, not per-worker results
+
+See: `.tasks/backlog/2026-02-16-broadcast-response-collection.md`
