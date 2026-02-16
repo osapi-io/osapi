@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package dns provides DNS configuration management.
 package dns
 
 // Linux implements the DNS interface for Linux.

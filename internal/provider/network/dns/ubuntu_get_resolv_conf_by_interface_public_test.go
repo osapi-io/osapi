@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/exec/mocks"
+	"github.com/retr0h/osapi/internal/cmdexec/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 

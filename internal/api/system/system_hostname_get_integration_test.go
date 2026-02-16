@@ -26,7 +26,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -36,10 +35,8 @@ import (
 	"github.com/retr0h/osapi/internal/api/system"
 	systemGen "github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/config"
-	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/system/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/system/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
+	"github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
 type SystemHostnameGetIntegrationTestSuite struct {
@@ -63,31 +60,33 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TearDownTest() {
 
 func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 	tests := []struct {
-		name          string
-		path          string
-		setupHostMock func() *hostMocks.MockProvider
-		wantCode      int
-		wantBody      string
+		name         string
+		path         string
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantBody     string
 	}{
 		{
 			name: "when get Ok",
 			path: "/system/hostname",
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewDefaultMockProvider(suite.ctrl)
-
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemHostname(gomock.Any(), job.AnyHost).
+					Return("default-hostname", nil)
 				return mock
 			},
 			wantCode: http.StatusOK,
 			wantBody: `{"hostname":"default-hostname"}`,
 		},
 		{
-			name: "when host.GetHostname errors",
+			name: "when job client errors",
 			path: "/system/hostname",
-			setupHostMock: func() *hostMocks.MockProvider {
-				mock := hostMocks.NewPlainMockProvider(suite.ctrl)
-				mock.EXPECT().GetHostname().Return("", assert.AnError)
-				mock.EXPECT().GetUptime().Return(time.Hour*5, nil).AnyTimes()
-
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemHostname(gomock.Any(), job.AnyHost).
+					Return("", assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -97,12 +96,9 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			memMock := memMocks.NewPlainMockProvider(suite.ctrl)
-			loadMock := loadMocks.NewPlainMockProvider(suite.ctrl)
-			hostMock := tc.setupHostMock()
-			diskMock := diskMocks.NewPlainMockProvider(suite.ctrl)
+			jobMock := tc.setupJobMock()
 
-			systemHandler := system.New(memMock, loadMock, hostMock, diskMock)
+			systemHandler := system.New(jobMock)
 			strictHandler := systemGen.NewStrictHandler(systemHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)

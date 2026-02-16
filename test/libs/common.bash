@@ -23,8 +23,8 @@ BATS_TEST_TIMEOUT=10
 
 # Function to start the server
 start_server() {
-  run go run ${PROGRAM} task server start &
-  sleep 2
+  nats-server -js -sd .nats/jetstream/ &
+  sleep 1
   run go run ${PROGRAM} api server start &
   sleep 2
 }
@@ -32,5 +32,5 @@ start_server() {
 # Function to stop the server
 stop_server() {
   pkill -f "api server start"
-  pkill -f "task server start"
+  pkill -f "nats-server"
 }

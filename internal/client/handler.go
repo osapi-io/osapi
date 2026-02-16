@@ -24,13 +24,11 @@ import (
 	"context"
 
 	"github.com/retr0h/osapi/internal/client/gen"
-	"github.com/retr0h/osapi/internal/task"
 )
 
 // CombinedHandler is a superset of all smaller handler interfaces.
 type CombinedHandler interface {
 	NetworkHandler
-	TaskHandler
 	SystemHandler
 }
 
@@ -54,31 +52,6 @@ type NetworkHandler interface {
 		ctx context.Context,
 		address string,
 	) (*gen.PostNetworkPingResponse, error)
-}
-
-// TaskHandler defines an interface for interacting with Task client operations.
-type TaskHandler interface {
-	// DeleteTaskByID deletes a single item through the task API endpoint.
-	DeleteTaskByID(
-		ctx context.Context,
-		messageID uint64,
-	) (*gen.DeleteTaskIDResponse, error)
-	// GetTaskID fetches a single item through the task API endpoint.
-	GetTaskByID(
-		ctx context.Context,
-		messageID uint64,
-	) (*gen.GetTaskIDResponse, error)
-	// GetTaskList get all items through the task API endpoint.
-	GetTaskList(
-		ctx context.Context,
-	) (*gen.GetTaskResponse, error)
-	// PostTask inserts a single item into the task API endpoint.
-	PostTask(
-		ctx context.Context,
-		taskData task.Task,
-	) (*gen.PostTaskResponse, error)
-	// GetTaskStatus gets status through the task API endpoint.
-	GetTaskStatus(ctx context.Context) (*gen.GetTaskStatusResponse, error)
 }
 
 // SystemHandler defines an interface for interacting with System client operations.

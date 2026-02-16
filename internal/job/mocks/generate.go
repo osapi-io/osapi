@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package mocks provides mock implementations for testing.
 package mocks
 
 //go:generate go tool github.com/golang/mock/mockgen -destination=./messaging.gen.go -package=mocks github.com/retr0h/osapi/internal/messaging NATSClient

@@ -83,6 +83,20 @@ func (mr *MockJobClientMockRecorder) CreateOrUpdateConsumer(arg0, arg1, arg2 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateConsumer", reflect.TypeOf((*MockJobClient)(nil).CreateOrUpdateConsumer), arg0, arg1, arg2)
 }
 
+// DeleteJob mocks base method.
+func (m *MockJobClient) DeleteJob(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteJob", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteJob indicates an expected call of DeleteJob.
+func (mr *MockJobClientMockRecorder) DeleteJob(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJob", reflect.TypeOf((*MockJobClient)(nil).DeleteJob), arg0, arg1)
+}
+
 // GetJobData mocks base method.
 func (m *MockJobClient) GetJobData(arg0 context.Context, arg1 string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -171,36 +185,6 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAny(arg0, arg1, arg2, arg3 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyNetworkDNSAny", reflect.TypeOf((*MockJobClient)(nil).ModifyNetworkDNSAny), arg0, arg1, arg2, arg3)
 }
 
-// ModifyNetworkPing mocks base method.
-func (m *MockJobClient) ModifyNetworkPing(arg0 context.Context, arg1, arg2 string) (*ping.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ModifyNetworkPing", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ModifyNetworkPing indicates an expected call of ModifyNetworkPing.
-func (mr *MockJobClientMockRecorder) ModifyNetworkPing(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyNetworkPing", reflect.TypeOf((*MockJobClient)(nil).ModifyNetworkPing), arg0, arg1, arg2)
-}
-
-// ModifyNetworkPingAny mocks base method.
-func (m *MockJobClient) ModifyNetworkPingAny(arg0 context.Context, arg1 string) (*ping.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ModifyNetworkPingAny", arg0, arg1)
-	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ModifyNetworkPingAny indicates an expected call of ModifyNetworkPingAny.
-func (mr *MockJobClientMockRecorder) ModifyNetworkPingAny(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyNetworkPingAny", reflect.TypeOf((*MockJobClient)(nil).ModifyNetworkPingAny), arg0, arg1)
-}
-
 // QueryNetworkDNS mocks base method.
 func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (*dns.Config, error) {
 	m.ctrl.T.Helper()
@@ -214,6 +198,36 @@ func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string)
 func (mr *MockJobClientMockRecorder) QueryNetworkDNS(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNetworkDNS", reflect.TypeOf((*MockJobClient)(nil).QueryNetworkDNS), arg0, arg1, arg2)
+}
+
+// QueryNetworkPing mocks base method.
+func (m *MockJobClient) QueryNetworkPing(arg0 context.Context, arg1, arg2 string) (*ping.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryNetworkPing", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*ping.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryNetworkPing indicates an expected call of QueryNetworkPing.
+func (mr *MockJobClientMockRecorder) QueryNetworkPing(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNetworkPing", reflect.TypeOf((*MockJobClient)(nil).QueryNetworkPing), arg0, arg1, arg2)
+}
+
+// QueryNetworkPingAny mocks base method.
+func (m *MockJobClient) QueryNetworkPingAny(arg0 context.Context, arg1 string) (*ping.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryNetworkPingAny", arg0, arg1)
+	ret0, _ := ret[0].(*ping.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryNetworkPingAny indicates an expected call of QueryNetworkPingAny.
+func (mr *MockJobClientMockRecorder) QueryNetworkPingAny(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNetworkPingAny", reflect.TypeOf((*MockJobClient)(nil).QueryNetworkPingAny), arg0, arg1)
 }
 
 // QuerySystemHostname mocks base method.

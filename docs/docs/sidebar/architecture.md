@@ -681,10 +681,10 @@ Key metrics to track:
 
 1. **Phase 1**: Deploy job system alongside existing task system _(Complete)_
 2. **Phase 2**: Implement job client abstraction layer _(Complete)_
-3. **Phase 3**: Integrate job client into REST API _(In Progress)_
-4. **Phase 4**: Migrate GET endpoints to use job system
-5. **Phase 5**: Deprecate legacy task system
-6. **Phase 6**: Full transition to jobs-based architecture
+3. **Phase 3**: Integrate job client into REST API _(Complete)_
+4. **Phase 4**: Migrate all endpoints to strict-server + job client _(Complete)_
+5. **Phase 5**: Delete legacy task system _(Complete)_
+6. **Phase 6**: Consistency pass and test coverage audit _(Complete)_
 
 ## Future Enhancements
 

@@ -47,6 +47,8 @@ var clientJobCmd = &cobra.Command{
 for testing and debugging purposes. This bypasses the API and talks directly
 to NATS using the nats-client library.`,
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+		validateDistribution()
+
 		ctx := cmd.Context()
 
 		logger.Debug(
@@ -55,9 +57,9 @@ to NATS using the nats-client library.`,
 			slog.String("client.host", appConfig.Job.Client.Host),
 			slog.Int("client.port", appConfig.Job.Client.Port),
 			slog.String("client.client_name", appConfig.Job.Client.ClientName),
-			slog.String("stream_name", appConfig.Job.StreamName),
-			slog.String("stream_subjects", appConfig.Job.StreamSubjects),
-			slog.String("kv_bucket", appConfig.Job.KVBucket),
+			slog.String("stream_name", appConfig.StreamName),
+			slog.String("stream_subjects", appConfig.StreamSubjects),
+			slog.String("kv_bucket", appConfig.KVBucket),
 		)
 
 		// Create NATS client
@@ -77,8 +79,8 @@ to NATS using the nats-client library.`,
 
 		// Setup JOBS stream for subject routing
 		streamConfig := &nats.StreamConfig{
-			Name:     appConfig.Job.StreamName,
-			Subjects: []string{appConfig.Job.StreamSubjects},
+			Name:     appConfig.StreamName,
+			Subjects: []string{appConfig.StreamSubjects},
 		}
 
 		if err := natsClient.CreateOrUpdateStreamWithConfig(ctx, streamConfig); err != nil {
@@ -86,9 +88,9 @@ to NATS using the nats-client library.`,
 		}
 
 		// Setup DLQ stream for failed jobs using advisory messages
-		dlqMaxAge, _ := time.ParseDuration(appConfig.Job.DLQ.MaxAge)
+		dlqMaxAge, _ := time.ParseDuration(appConfig.DLQ.MaxAge)
 		var dlqStorage nats.StorageType
-		if appConfig.Job.DLQ.Storage == "memory" {
+		if appConfig.DLQ.Storage == "memory" {
 			dlqStorage = nats.MemoryStorage
 		} else {
 			dlqStorage = nats.FileStorage
@@ -97,12 +99,12 @@ to NATS using the nats-client library.`,
 		dlqStreamConfig := &nats.StreamConfig{
 			Name: "JOBS-DLQ",
 			Subjects: []string{
-				"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + appConfig.Job.StreamName + ".*",
+				"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + appConfig.StreamName + ".*",
 			},
 			Storage:  dlqStorage,
 			MaxAge:   dlqMaxAge,
-			MaxMsgs:  appConfig.Job.DLQ.MaxMsgs,
-			Replicas: appConfig.Job.DLQ.Replicas,
+			MaxMsgs:  appConfig.DLQ.MaxMsgs,
+			Replicas: appConfig.DLQ.Replicas,
 			Metadata: map[string]string{
 				"dead_letter_queue": "true",
 			},
@@ -113,7 +115,7 @@ to NATS using the nats-client library.`,
 
 		// Create/get the jobs KV bucket
 		var err error
-		jobsKV, err = natsClient.CreateKVBucket(appConfig.Job.KVBucket)
+		jobsKV, err = natsClient.CreateKVBucket(appConfig.KVBucket)
 		if err != nil {
 			logFatal("failed to create KV bucket", err)
 		}

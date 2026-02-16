@@ -26,7 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/token"
+	"github.com/retr0h/osapi/internal/authtoken"
 )
 
 // tokenValidateCmd represents the tokenValidate command.
@@ -40,7 +40,7 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		signingKey := appConfig.API.Server.Security.SigningKey
 		tokenString, _ := cmd.Flags().GetString("token")
 
-		var tm token.Manager = token.New(logger)
+		var tm authtoken.Manager = authtoken.New(logger)
 		claims, err := tm.Validate(tokenString, signingKey)
 		if err != nil {
 			logFatal("failed to validate token", err)
@@ -49,9 +49,9 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		claimsData := map[string]interface{}{
 			"Roles":    strings.Join(claims.Roles, ","),
 			"Subject":  claims.Subject,
-			"Audience": strings.Join(claims.RegisteredClaims.Audience, ","),
-			"Expires":  claims.RegisteredClaims.ExpiresAt.Format(time.RFC3339),
-			"Issued":   claims.RegisteredClaims.IssuedAt.Format(time.RFC3339),
+			"Audience": strings.Join(claims.Audience, ","),
+			"Expires":  claims.ExpiresAt.Format(time.RFC3339),
+			"Issued":   claims.IssuedAt.Format(time.RFC3339),
 		}
 		printStyledMap(claimsData)
 	},

@@ -39,7 +39,7 @@ func (w *Worker) run(ctx context.Context) {
 	w.logger.Info("job worker started successfully")
 
 	// Determine worker hostname
-	hostname, err := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
+	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 	if err != nil {
 		w.logger.Error("failed to get hostname", slog.String("error", err.Error()))
 		hostname = "unknown"
@@ -48,8 +48,8 @@ func (w *Worker) run(ctx context.Context) {
 	w.logger.Info(
 		"worker configuration",
 		slog.String("hostname", hostname),
-		slog.String("queue_group", w.appConfig.Job.Worker.QueueGroup),
-		slog.Int("max_jobs", w.appConfig.Job.Worker.MaxJobs),
+		slog.String("queue_group", w.appConfig.Worker.QueueGroup),
+		slog.Int("max_jobs", w.appConfig.Worker.MaxJobs),
 	)
 
 	// Start consuming messages for different job types

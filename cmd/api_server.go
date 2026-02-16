@@ -52,7 +52,7 @@ var apiServerCmd = &cobra.Command{
 		logger.Debug(
 			"api server configuration",
 			slog.Bool("debug", appConfig.Debug),
-			slog.Int("api.server.port", appConfig.API.Server.Port),
+			slog.Int("api.server.port", appConfig.Port),
 			slog.String(
 				"api.server.security.cors.allow_origins",
 				strings.Join(appConfig.API.Server.Security.CORS.AllowOrigins, ","),

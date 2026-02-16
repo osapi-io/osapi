@@ -46,7 +46,6 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 			logFatal("failed to get network dns endpoint", err)
 		}
 
-		errorMsg := "unknown error"
 		switch resp.StatusCode() {
 		case http.StatusOK:
 			if jsonOutput {
@@ -75,27 +74,12 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 			}
 			printStyledMap(dnsData)
 
-		case http.StatusBadRequest:
-			if resp.JSON400 != nil {
-				errorMsg = resp.JSON400.Error
-			}
-
-			logger.Error(
-				"bad request",
-				slog.Int("code", resp.StatusCode()),
-				slog.String("response", errorMsg),
-			)
-
+		case http.StatusUnauthorized:
+			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+		case http.StatusForbidden:
+			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			if resp.JSON500 != nil {
-				errorMsg = resp.JSON500.Error
-			}
-
-			logger.Error(
-				"error in response",
-				slog.Int("code", resp.StatusCode()),
-				slog.String("response", errorMsg),
-			)
+			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

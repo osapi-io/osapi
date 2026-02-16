@@ -105,9 +105,9 @@ const (
 
 // Network operations - operations that can modify network configuration
 const (
-	OperationNetworkDNSGet      = "network.dns.get"
-	OperationNetworkDNSUpdate   = "network.dns.update"
-	OperationNetworkPingExecute = "network.ping.execute"
+	OperationNetworkDNSGet    = "network.dns.get"
+	OperationNetworkDNSUpdate = "network.dns.update"
+	OperationNetworkPingDo    = "network.ping.do"
 )
 
 // System operations - operations that can modify system state

@@ -63,15 +63,18 @@ type JobClient interface {
 		searchDomains []string,
 		iface string,
 	) error
-	ModifyNetworkPing(
+	QueryNetworkPing(
 		ctx context.Context,
 		hostname string,
 		address string,
 	) (*ping.Result, error)
-	ModifyNetworkPingAny(
+	QueryNetworkPingAny(
 		ctx context.Context,
 		address string,
 	) (*ping.Result, error)
+
+	// Job deletion
+	DeleteJob(ctx context.Context, jobID string) error
 
 	// Worker operations - used by job workers for processing
 	WriteStatusEvent(

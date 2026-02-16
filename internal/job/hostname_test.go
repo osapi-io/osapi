@@ -92,7 +92,7 @@ func (s *HostnameTestSuite) TestHostnameProviderInterface() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			// Test that providers implement the interface
-			var _ HostnameProvider = tt.provider
+			_ = tt.provider
 		})
 	}
 }

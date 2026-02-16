@@ -29,13 +29,13 @@ import (
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 	"github.com/retr0h/osapi/internal/api/common/gen"
 
-	"github.com/retr0h/osapi/internal/token"
+	"github.com/retr0h/osapi/internal/authtoken"
 )
 
 // scopeMiddleware validates JWT tokens and checks for required scopes.
 func scopeMiddleware(
 	handler strictecho.StrictEchoHandlerFunc,
-	tokenManager token.Manager,
+	tokenManager authtoken.Manager,
 	signingKey string,
 	contextKey string,
 ) strictecho.StrictEchoHandlerFunc {
@@ -87,7 +87,7 @@ func hasScope(
 	requiredScope string,
 ) bool {
 	for _, role := range roles {
-		if impliedScopes, ok := token.RoleHierarchy[role]; ok {
+		if impliedScopes, ok := authtoken.RoleHierarchy[role]; ok {
 			for _, scope := range impliedScopes {
 				if scope == requiredScope {
 					return true

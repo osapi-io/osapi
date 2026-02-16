@@ -244,7 +244,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "worker-2",
 			responseData: []byte(`{"error": "processing failed"}`),
 			status:       "failed",
-			errorMsg:     "task execution failed",
+			errorMsg:     "job execution failed",
 			bucket:       "test-bucket",
 			validateKey: func(key string) bool {
 				return len(key) > 0 && key[:9] == "responses"
@@ -256,7 +256,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 					return false
 				}
 				return string(response.Status) == "failed" &&
-					response.Error == "task execution failed"
+					response.Error == "job execution failed"
 			},
 		},
 		{

@@ -27,6 +27,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
 // QuerySystemStatus queries system status from a specific hostname.
@@ -137,4 +138,46 @@ func (c *Client) QuerySystemStatusAll(
 	_ context.Context,
 ) ([]*job.SystemStatusResponse, error) {
 	return nil, fmt.Errorf("broadcast queries not yet implemented")
+}
+
+// QueryNetworkPing pings a host from a specific hostname.
+func (c *Client) QueryNetworkPing(
+	ctx context.Context,
+	hostname string,
+	address string,
+) (*ping.Result, error) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"address": address,
+	})
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "network",
+		Operation: "ping.do",
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildQuerySubject(hostname)
+	resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == "failed" {
+		return nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	var result ping.Result
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ping response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// QueryNetworkPingAny pings a host from any available hostname.
+func (c *Client) QueryNetworkPingAny(
+	ctx context.Context,
+	address string,
+) (*ping.Result, error) {
+	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }

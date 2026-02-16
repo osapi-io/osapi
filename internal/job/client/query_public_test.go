@@ -633,6 +633,183 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 	s.Contains(err.Error(), "broadcast queries not yet implemented")
 }
 
+func (s *QueryPublicTestSuite) TestQueryNetworkPing() {
+	tests := []struct {
+		name          string
+		hostname      string
+		address       string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+		validateFunc  func(result interface{}, err error)
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			address:  "google.com",
+			responseData: `{
+				"status": "completed",
+				"data": {
+					"PacketsSent": 4,
+					"PacketsReceived": 4,
+					"PacketLoss": 0.0,
+					"MinRTT": 10500000,
+					"AvgRTT": 12800000,
+					"MaxRTT": 15200000
+				}
+			}`,
+			expectError: false,
+			validateFunc: func(result interface{}, err error) {
+				s.NoError(err)
+				s.NotNil(result)
+			},
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			address:  "unreachable.host",
+			responseData: `{
+				"status": "failed",
+				"error": "host unreachable",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: host unreachable",
+			validateFunc: func(result interface{}, err error) {
+				s.Error(err)
+				s.Nil(result)
+			},
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			address:       "google.com",
+			mockError:     errors.New("timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+			validateFunc: func(result interface{}, err error) {
+				s.Error(err)
+				s.Nil(result)
+			},
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			address:  "google.com",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_ping_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal ping response",
+			validateFunc: func(result interface{}, err error) {
+				s.Error(err)
+				s.Nil(result)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.mockError != nil {
+				s.mockNATSClient.EXPECT().
+					PublishAndWaitKV(gomock.Any(), "jobs.query.server1", gomock.Any(), s.mockKV, gomock.Any()).
+					Return(nil, tt.mockError)
+			} else {
+				s.mockNATSClient.EXPECT().
+					PublishAndWaitKV(gomock.Any(), "jobs.query.server1", gomock.Any(), s.mockKV, gomock.Any()).
+					Return([]byte(tt.responseData), nil)
+			}
+
+			result, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
+
+			if tt.validateFunc != nil {
+				tt.validateFunc(result, err)
+			}
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
+	tests := []struct {
+		name          string
+		address       string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+		validateFunc  func(result interface{}, err error)
+	}{
+		{
+			name:    "success",
+			address: "google.com",
+			responseData: `{
+				"status": "completed",
+				"data": {
+					"PacketsSent": 4,
+					"PacketsReceived": 4,
+					"PacketLoss": 0.0
+				}
+			}`,
+			expectError: false,
+			validateFunc: func(result interface{}, err error) {
+				s.NoError(err)
+				s.NotNil(result)
+			},
+		},
+		{
+			name:          "error",
+			address:       "unreachable.host",
+			mockError:     errors.New("no workers available"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+			validateFunc: func(result interface{}, err error) {
+				s.Error(err)
+				s.Nil(result)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.mockError != nil {
+				s.mockNATSClient.EXPECT().
+					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
+					Return(nil, tt.mockError)
+			} else {
+				s.mockNATSClient.EXPECT().
+					PublishAndWaitKV(gomock.Any(), "jobs.query._any", gomock.Any(), s.mockKV, gomock.Any()).
+					Return([]byte(tt.responseData), nil)
+			}
+
+			result, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
+
+			if tt.validateFunc != nil {
+				tt.validateFunc(result, err)
+			}
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
 func TestQueryPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(QueryPublicTestSuite))
 }

@@ -42,7 +42,7 @@ func (w *Worker) writeStatusEvent(
 	data map[string]interface{},
 ) error {
 	// Get hostname for this worker
-	hostname, err := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
+	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 	if err != nil {
 		return fmt.Errorf("failed to get hostname: %w", err)
 	}
@@ -168,7 +168,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Get worker hostname
-	hostname, err := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
+	hostname, err := job.GetWorkerHostname(w.appConfig.Worker.Hostname)
 	if err != nil {
 		return fmt.Errorf("failed to get hostname: %w", err)
 	}

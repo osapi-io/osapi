@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package mem provides memory usage statistics.
 package mem
 
 // Linux implements the Mem interface for Linux.

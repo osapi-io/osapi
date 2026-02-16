@@ -66,7 +66,7 @@ func New(
 func (s *Server) Start() {
 	go func() {
 		s.logger.Info("starting server")
-		listenAddr := fmt.Sprintf(":%d", s.appConfig.API.Server.Port)
+		listenAddr := fmt.Sprintf(":%d", s.appConfig.Port)
 		if err := s.Echo.Start(listenAddr); err != nil && err != http.ErrServerClosed {
 			s.logger.Error(
 				"failed to start server",

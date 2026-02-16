@@ -276,7 +276,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "network",
-				Operation: "ping.execute",
+				Operation: "ping.do",
 				Data:      json.RawMessage(`{"address": "8.8.8.8"}`),
 			},
 			expectError: false,
@@ -325,7 +325,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "network",
-				Operation: "ping.execute",
+				Operation: "ping.do",
 				Data:      json.RawMessage(`{}`),
 			},
 			expectError: true,
@@ -336,7 +336,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "network",
-				Operation: "ping.execute",
+				Operation: "ping.do",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			expectError: true,
@@ -470,7 +470,7 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 		},
 		{
 			name:      "ping with valid address",
-			operation: "ping.execute",
+			operation: "ping.do",
 			data:      `{"address": "127.0.0.1"}`,
 			validate: func(result json.RawMessage) {
 				// Should return valid ping result

@@ -15,10 +15,3 @@ api:
           - http://localhost:3001
           - https://retr0h.github.io
 
-task:
-  server:
-    host: localhost
-    port: 4222
-    trace: true
-    no_log: true
-    file_store_dir: .nats/jetstream/

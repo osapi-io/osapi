@@ -111,8 +111,8 @@ func printStyledTable(
 			StyleFunc(func(row, col int) lipgloss.Style {
 				// Determine base style based on row
 				var baseStyle lipgloss.Style
-				switch {
-				case row%2 == 0:
+				switch row % 2 {
+				case 0:
 					baseStyle = EvenRowStyle
 				default:
 					baseStyle = OddRowStyle
@@ -172,19 +172,6 @@ func formatList(
 	return strings.Join(list, ", ")
 }
 
-// getMaxHeaderLength calculates the maximum length of the given headers.
-func getMaxHeaderLength(
-	headers []string,
-) int {
-	maxLen := 0
-	for _, header := range headers {
-		if len(header) > maxLen {
-			maxLen = len(header)
-		}
-	}
-	return maxLen
-}
-
 // calculateColumnWidths calculates the optimal width for each column based on content
 func calculateColumnWidths(
 	headers []string,
@@ -233,34 +220,6 @@ func getMaxLineWidth(text string) int {
 		}
 	}
 	return maxWidth
-}
-
-// formatKubectlTime formats a timestamp in kubectl-style relative time
-func formatKubectlTime(t time.Time) string {
-	now := time.Now()
-	duration := now.Sub(t)
-
-	// Handle future times (shouldn't happen but just in case)
-	if duration < 0 {
-		return "0s"
-	}
-
-	// Convert to different units based on magnitude
-	days := int(duration.Hours() / 24)
-	hours := int(duration.Hours())
-	minutes := int(duration.Minutes())
-	seconds := int(duration.Seconds())
-
-	switch {
-	case days > 0:
-		return fmt.Sprintf("%dd", days)
-	case hours > 0:
-		return fmt.Sprintf("%dh", hours)
-	case minutes > 0:
-		return fmt.Sprintf("%dm", minutes)
-	default:
-		return fmt.Sprintf("%ds", seconds)
-	}
 }
 
 // safeInt returns a default value when the input *int is nil.

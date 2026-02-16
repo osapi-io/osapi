@@ -23,19 +23,19 @@ package dns
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/cmdexec"
 )
 
 // Ubuntu implements the DNS interface for Ubuntu.
 type Ubuntu struct {
 	logger      *slog.Logger
-	execManager exec.Manager
+	execManager cmdexec.Manager
 }
 
 // NewUbuntuProvider factory to create a new Ubuntu instance.
 func NewUbuntuProvider(
 	logger *slog.Logger,
-	em exec.Manager,
+	em cmdexec.Manager,
 ) *Ubuntu {
 	return &Ubuntu{
 		logger:      logger,

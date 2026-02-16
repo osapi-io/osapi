@@ -21,52 +21,40 @@
 package api
 
 import (
-	"runtime"
-	"strings"
-
 	"github.com/labstack/echo/v4"
-	"github.com/shirou/gopsutil/v4/host"
-	"github.com/spf13/afero"
+	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/api/network"
 	networkGen "github.com/retr0h/osapi/internal/api/network/gen"
-	"github.com/retr0h/osapi/internal/exec"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/task/client"
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
 // GetNetworkHandler returns network handler for registration.
 func (s *Server) GetNetworkHandler(
-	_ afero.Fs,
-	clientManager client.Manager,
+	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
-	var pingProvider ping.Provider
-	var dnsProvider dns.Provider
-	var execManager exec.Manager
+	var tokenManager authtoken.Manager = authtoken.New(s.logger)
 
-	// For macOS testing, use Linux provider with test data
-	if runtime.GOOS == "darwin" {
-		s.logger.Info("running on macOS, using Linux providers with test data")
-		pingProvider = ping.NewLinuxProvider()
-		dnsProvider = dns.NewLinuxProvider()
-	} else {
-		info, _ := host.Info()
-		switch strings.ToLower(info.Platform) {
-		case "ubuntu":
-			execManager = exec.New(s.logger)
-			pingProvider = ping.NewUbuntuProvider()
-			dnsProvider = dns.NewUbuntuProvider(s.logger, execManager)
-		default:
-			pingProvider = ping.NewLinuxProvider()
-			dnsProvider = dns.NewLinuxProvider()
-		}
-	}
+	networkHandler := network.New(jobClient)
+
+	strictHandler := networkGen.NewStrictHandler(
+		networkHandler,
+		[]networkGen.StrictMiddlewareFunc{
+			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
+				return scopeMiddleware(
+					handler,
+					tokenManager,
+					s.appConfig.API.Server.Security.SigningKey,
+					networkGen.BearerAuthScopes,
+				)
+			},
+		},
+	)
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			networkHandler := network.New(pingProvider, dnsProvider, clientManager)
-			networkGen.RegisterHandlers(e, networkHandler)
+			networkGen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

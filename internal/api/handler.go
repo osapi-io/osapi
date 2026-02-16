@@ -18,34 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package api provides the REST API server and handler registration.
 package api
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/afero"
 
-	"github.com/retr0h/osapi/internal/api/task"
-	taskGen "github.com/retr0h/osapi/internal/api/task/gen"
-	"github.com/retr0h/osapi/internal/task/client"
+	jobclient "github.com/retr0h/osapi/internal/job/client"
 )
 
 // CreateHandlers initializes handlers and returns a slice of functions to register them.
 func (s *Server) CreateHandlers(
-	appFs afero.Fs,
-	clientManager client.Manager,
+	jobClient jobclient.JobClient,
 ) []func(e *echo.Echo) {
-	handlers := []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			taskHandler := task.New(clientManager)
-			taskGen.RegisterHandlers(e, taskHandler)
-		},
-	}
+	systemHandler := s.GetSystemHandler(jobClient)
+	networkHandler := s.GetNetworkHandler(jobClient)
+	jobHandler := s.GetJobHandler(jobClient)
 
-	systemHandler := s.GetSystemHandler()
-	networkHandler := s.GetNetworkHandler(appFs, clientManager)
+	handlers := make(
+		[]func(e *echo.Echo),
+		0,
+		len(systemHandler)+len(networkHandler)+len(jobHandler),
+	)
 
 	handlers = append(handlers, systemHandler...)
 	handlers = append(handlers, networkHandler...)
+	handlers = append(handlers, jobHandler...)
 
 	return handlers
 }

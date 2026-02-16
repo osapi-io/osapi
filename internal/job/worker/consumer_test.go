@@ -397,7 +397,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			// Update worker config for this test
-			s.worker.appConfig.Job.Consumer = tt.config
+			s.worker.appConfig.Consumer = tt.config
 
 			tt.setupMocks()
 

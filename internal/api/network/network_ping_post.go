@@ -21,50 +21,45 @@
 package network
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 )
 
 // PostNetworkPing post the network ping API endpoint.
 func (n Network) PostNetworkPing(
-	ctx echo.Context,
-) error {
-	var newPingAddress gen.PostNetworkPingJSONBody
-
-	if err := ctx.Bind(&newPingAddress); err != nil {
-		return ctx.JSON(http.StatusBadRequest, gen.NetworkErrorResponse{
-			Error: err.Error(),
-		})
-	}
-
-	if err := validate.Struct(newPingAddress); err != nil {
+	ctx context.Context,
+	request gen.PostNetworkPingRequestObject,
+) (gen.PostNetworkPingResponseObject, error) {
+	validate := validator.New()
+	if err := validate.Struct(request.Body); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return ctx.JSON(http.StatusBadRequest, gen.NetworkErrorResponse{
-			Error: validationErrors.Error(),
-		})
+		errMsg := validationErrors.Error()
+		return gen.PostNetworkPing400JSONResponse{
+			Error: &errMsg,
+		}, nil
 	}
 
-	pingResult, err := n.PingProvider.Do(newPingAddress.Address)
+	pingResult, err := n.JobClient.QueryNetworkPingAny(ctx, request.Body.Address)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, gen.NetworkErrorResponse{
-			Error: err.Error(),
-		})
+		errMsg := err.Error()
+		return gen.PostNetworkPing500JSONResponse{
+			Error: &errMsg,
+		}, nil
 	}
 
-	return ctx.JSON(http.StatusOK, gen.PingResponse{
+	return gen.PostNetworkPing200JSONResponse{
 		AvgRtt:          durationToString(&pingResult.AvgRTT),
 		MaxRtt:          durationToString(&pingResult.MaxRTT),
 		MinRtt:          durationToString(&pingResult.MinRTT),
 		PacketLoss:      &pingResult.PacketLoss,
 		PacketsReceived: &pingResult.PacketsReceived,
 		PacketsSent:     &pingResult.PacketsSent,
-	})
+	}, nil
 }
 
 // durationToString convert *time.Duration to *string.

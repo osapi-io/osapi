@@ -24,10 +24,12 @@ import (
 	"context"
 	"time"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/api"
-	"github.com/retr0h/osapi/internal/task/client"
+	jobclient "github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/messaging"
 )
 
 // apiServerStartCmd represents the apiServerStart command.
@@ -39,15 +41,35 @@ var apiServerStartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		var clientManager client.Manager = client.New(appConfig, logger)
+		// Create NATS client for job system
+		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
+			Host: appConfig.Job.Client.Host,
+			Port: appConfig.Job.Client.Port,
+			Auth: natsclient.AuthOptions{
+				AuthType: natsclient.NoAuth,
+			},
+			Name: appConfig.Job.Client.ClientName,
+		})
 
-		err := clientManager.Connect()
+		if err := nc.Connect(); err != nil {
+			logFatal("failed to connect to NATS for job client", err)
+		}
+
+		jobsKV, err := nc.CreateKVBucket(appConfig.KVBucket)
 		if err != nil {
-			logFatal("failed to set up client", err)
+			logFatal("failed to create KV bucket", err)
+		}
+
+		jc, err := jobclient.New(logger, nc, &jobclient.Options{
+			Timeout:  30 * time.Second,
+			KVBucket: jobsKV,
+		})
+		if err != nil {
+			logFatal("failed to create job client", err)
 		}
 
 		var sm api.ServerManager = api.New(appConfig, logger)
-		handlers := sm.CreateHandlers(appFs, clientManager)
+		handlers := sm.CreateHandlers(jc)
 		sm.RegisterHandlers(handlers)
 
 		sm.Start()
@@ -58,6 +80,10 @@ var apiServerStartCmd = &cobra.Command{
 		defer cancel()
 
 		sm.Stop(shutdownCtx)
+
+		if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
+			natsConn.NC.Close()
+		}
 	},
 }
 

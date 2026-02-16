@@ -101,6 +101,12 @@ paths:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     ErrorResponse:
       $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'

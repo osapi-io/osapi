@@ -523,6 +523,24 @@ func (c *Client) computeStatusFromEvents(
 	return result
 }
 
+// DeleteJob deletes a job from the KV store by its ID.
+func (c *Client) DeleteJob(
+	_ context.Context,
+	jobID string,
+) error {
+	jobKey := "jobs." + jobID
+	_, err := c.kv.Get(jobKey)
+	if err != nil {
+		return fmt.Errorf("job not found: %s", jobID)
+	}
+
+	if err := c.kv.Delete(jobKey); err != nil {
+		return fmt.Errorf("failed to delete job: %w", err)
+	}
+
+	return nil
+}
+
 // getJobResponses retrieves response data for a specific job
 func (c *Client) getJobResponses(
 	allKeys []string,

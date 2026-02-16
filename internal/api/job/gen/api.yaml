@@ -1,0 +1,354 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Job Management API
+  version: 1.0.0
+tags:
+  - name: job_operations
+    x-displayName: Job
+    description: Operations related to the job queue.
+paths:
+  /job:
+    post:
+      summary: Create a new job
+      description: Submit a new job to the queue for processing.
+      tags:
+        - job_operations
+      security:
+        - BearerAuth:
+            - write
+      requestBody:
+        description: The job to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201':
+          description: The job was created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateJobResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating job.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    get:
+      summary: List jobs
+      description: Retrieve jobs, optionally filtered by status.
+      tags:
+        - job_operations
+      security:
+        - BearerAuth:
+            - read
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter jobs by status (e.g., unprocessed, processing, completed, failed).
+      responses:
+        '200':
+          description: A list of jobs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListJobsResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing jobs.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /job/status:
+    get:
+      summary: Get queue statistics
+      description: Retrieve statistics about the job queue.
+      tags:
+        - job_operations
+      security:
+        - BearerAuth:
+            - read
+      responses:
+        '200':
+          description: Queue statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatsResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving queue statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /job/{id}:
+    get:
+      summary: Get job detail
+      description: Retrieve details of a specific job by its ID.
+      tags:
+        - job_operations
+      operationId: GetJobByID
+      security:
+        - BearerAuth:
+            - read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetailResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving job.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a job
+      description: Delete a specific job by its ID.
+      tags:
+        - job_operations
+      operationId: DeleteJobByID
+      security:
+        - BearerAuth:
+            - write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Job deleted successfully. No content returned.
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting job.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    CreateJobRequest:
+      type: object
+      properties:
+        operation:
+          type: object
+          description: The operation to perform, as a JSON object.
+          additionalProperties: true
+        target_hostname:
+          type: string
+          description: The target hostname for routing (_any, _all, or specific hostname).
+          example: "_any"
+      required:
+        - operation
+        - target_hostname
+
+    CreateJobResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: Unique identifier for the created job.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          description: Initial status of the job.
+          example: "unprocessed"
+        revision:
+          type: integer
+          format: int64
+          description: The KV revision number.
+          example: 1
+        timestamp:
+          type: string
+          description: Creation timestamp.
+          example: "2025-06-14T10:00:00Z"
+      required:
+        - job_id
+        - status
+
+    ListJobsResponse:
+      type: object
+      properties:
+        total_items:
+          type: integer
+          description: Total number of jobs matching the filter.
+          example: 42
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobDetailResponse'
+
+    JobDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the job.
+        status:
+          type: string
+          description: Current status of the job.
+        created:
+          type: string
+          description: Creation timestamp.
+        operation:
+          type: object
+          description: The operation data.
+          additionalProperties: true
+        result:
+          description: The result data if completed.
+        error:
+          type: string
+          description: Error message if failed.
+        hostname:
+          type: string
+          description: Worker hostname that processed the job.
+        updated_at:
+          type: string
+          description: Last update timestamp.
+
+    QueueStatsResponse:
+      type: object
+      properties:
+        total_jobs:
+          type: integer
+          description: Total number of jobs in the queue.
+          example: 42
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of jobs by status.
+        operation_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of jobs by operation type.
+        dlq_count:
+          type: integer
+          description: Number of jobs in the dead letter queue.
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

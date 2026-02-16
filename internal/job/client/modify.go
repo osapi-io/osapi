@@ -26,7 +26,6 @@ import (
 	"fmt"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
 // ModifyNetworkDNS modifies DNS configuration on a specific hostname.
@@ -45,7 +44,7 @@ func (c *Client) ModifyNetworkDNS(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "network",
-		Operation: "dns.set",
+		Operation: "dns.update",
 		Data:      json.RawMessage(data),
 	}
 
@@ -70,46 +69,4 @@ func (c *Client) ModifyNetworkDNSAny(
 	iface string,
 ) error {
 	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
-}
-
-// ModifyNetworkPing pings a host from a specific hostname.
-func (c *Client) ModifyNetworkPing(
-	ctx context.Context,
-	hostname string,
-	address string,
-) (*ping.Result, error) {
-	data, _ := json.Marshal(map[string]interface{}{
-		"address": address,
-	})
-	req := &job.Request{
-		Type:      job.TypeModify,
-		Category:  "network",
-		Operation: "ping.do",
-		Data:      json.RawMessage(data),
-	}
-
-	subject := job.BuildModifySubject(hostname)
-	resp, err := c.publishAndWait(ctx, subject, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to publish and wait: %w", err)
-	}
-
-	if resp.Status == "failed" {
-		return nil, fmt.Errorf("job failed: %s", resp.Error)
-	}
-
-	var result ping.Result
-	if err := json.Unmarshal(resp.Data, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal ping response: %w", err)
-	}
-
-	return &result, nil
-}
-
-// ModifyNetworkPingAny pings a host from any available hostname.
-func (c *Client) ModifyNetworkPingAny(
-	ctx context.Context,
-	address string,
-) (*ping.Result, error) {
-	return c.ModifyNetworkPing(ctx, job.AnyHost, address)
 }

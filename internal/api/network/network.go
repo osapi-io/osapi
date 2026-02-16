@@ -18,32 +18,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package network provides network-related API handlers.
 package network
 
 import (
-	"github.com/go-playground/validator/v10"
-
 	"github.com/retr0h/osapi/internal/api/network/gen"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/task/client"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// ensure that we've conformed to the `ServerInterface` with a compile-time check
-var (
-	_        gen.ServerInterface = (*Network)(nil)
-	validate                     = validator.New()
-)
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check.
+var _ gen.StrictServerInterface = (*Network)(nil)
 
 // New factory to create a new instance.
 func New(
-	pp ping.Provider,
-	dnsp dns.Provider,
-	cm client.Manager,
+	jobClient client.JobClient,
 ) *Network {
 	return &Network{
-		PingProvider:      pp,
-		DNSProvider:       dnsp,
-		TaskClientManager: cm,
+		JobClient: jobClient,
 	}
 }

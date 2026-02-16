@@ -164,7 +164,7 @@ func fetchJobsStatus() string {
 	}
 
 	// Build status display
-	statusDisplay := fmt.Sprintf("Jobs Queue Status:\n")
+	statusDisplay := "Jobs Queue Status:\n"
 	statusDisplay += fmt.Sprintf("  Total Jobs: %d\n", stats.TotalJobs)
 	statusDisplay += fmt.Sprintf("  Unprocessed: %d\n", stats.StatusCounts["unprocessed"])
 	statusDisplay += fmt.Sprintf("  Processing: %d\n", stats.StatusCounts["processing"])
@@ -175,7 +175,7 @@ func fetchJobsStatus() string {
 	}
 
 	if len(stats.OperationCounts) > 0 {
-		statusDisplay += fmt.Sprintf("\nOperation Types:\n")
+		statusDisplay += "\nOperation Types:\n"
 		for opType, count := range stats.OperationCounts {
 			statusDisplay += fmt.Sprintf("  %s: %d\n", opType, count)
 		}

@@ -28,12 +28,11 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 
 ## Architecture (Quick Reference)
 
-- **`cmd/`** - Cobra CLI commands (`client`, `job`, `task`, `api server`, `job worker`)
-- **`internal/api/`** - Echo REST API by domain (`system/`, `network/`, `task/`, `common/`). Types are OpenAPI-generated (`*.gen.go`)
+- **`cmd/`** - Cobra CLI commands (`client`, `job`, `api server`, `job worker`)
+- **`internal/api/`** - Echo REST API by domain (`system/`, `network/`, `job/`, `common/`). Types are OpenAPI-generated (`*.gen.go`)
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops, `worker/` for consumer/handler/processor pipeline
 - **`internal/provider/`** - Operation implementations: `system/{host,disk,mem,load}`, `network/{dns,ping}`
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`internal/task/`** - Legacy task system (being migrated to job system)
 - **`internal/client/`** - Generated REST API client
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 

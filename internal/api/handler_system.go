@@ -21,50 +21,22 @@
 package api
 
 import (
-	"strings"
-
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-	sysHost "github.com/shirou/gopsutil/v4/host"
 
 	"github.com/retr0h/osapi/internal/api/system"
 	systemGen "github.com/retr0h/osapi/internal/api/system/gen"
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	"github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
-	"github.com/retr0h/osapi/internal/token"
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
 // GetSystemHandler returns system handler for registration.
-func (s *Server) GetSystemHandler() []func(e *echo.Echo) {
-	var memProvider mem.Provider
-	var loadProvider load.Provider
-	var hostProvider host.Provider
-	var diskProvider disk.Provider
+func (s *Server) GetSystemHandler(
+	jobClient client.JobClient,
+) []func(e *echo.Echo) {
+	var tokenManager authtoken.Manager = authtoken.New(s.logger)
 
-	info, _ := sysHost.Info()
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		memProvider = mem.NewUbuntuProvider()
-		loadProvider = load.NewUbuntuProvider()
-		hostProvider = host.NewUbuntuProvider()
-		diskProvider = disk.NewUbuntuProvider(s.logger)
-	default:
-		memProvider = mem.NewLinuxProvider()
-		loadProvider = load.NewLinuxProvider()
-		hostProvider = host.NewLinuxProvider()
-		diskProvider = disk.NewLinuxProvider()
-	}
-
-	var tokenManager token.Manager = token.New(s.logger)
-
-	systemHandler := system.New(
-		memProvider,
-		loadProvider,
-		hostProvider,
-		diskProvider,
-	)
+	systemHandler := system.New(jobClient)
 
 	strictHandler := systemGen.NewStrictHandler(
 		systemHandler,
