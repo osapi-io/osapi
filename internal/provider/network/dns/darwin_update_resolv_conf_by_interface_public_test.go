@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -28,27 +28,40 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type LinuxGetResolvConfByInterfacePublicTestSuite struct {
+type DarwinUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) SetupTest() {
-}
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {}
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByInterface() {
-	linux := dns.NewLinuxProvider()
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "when UpdateResolvConfByInterface is a no-op",
+		},
+	}
 
-	interfaceName := ""
-	got, err := linux.GetResolvConfByInterface(interfaceName)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			darwin := dns.NewDarwinProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetResolvConfByInterface is not implemented for LinuxProvider")
+			err := darwin.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"en0",
+			)
+
+			suite.NoError(err)
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxGetResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxGetResolvConfByInterfacePublicTestSuite))
+func TestDarwinUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinUpdateResolvConfByInterfacePublicTestSuite))
 }

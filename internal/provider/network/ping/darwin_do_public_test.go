@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,37 +18,58 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns_test
+package ping_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-type LinuxGetResolvConfByInterfacePublicTestSuite struct {
+type DarwinDoPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) SetupTest() {
-}
+func (suite *DarwinDoPublicTestSuite) SetupTest() {}
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
+func (suite *DarwinDoPublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByInterface() {
-	linux := dns.NewLinuxProvider()
+func (suite *DarwinDoPublicTestSuite) TestDo() {
+	tests := []struct {
+		name string
+		want *ping.Result
+	}{
+		{
+			name: "when Do returns mock data",
+			want: &ping.Result{
+				PacketsSent:     3,
+				PacketsReceived: 3,
+				PacketLoss:      0,
+				MinRTT:          10 * time.Millisecond,
+				AvgRTT:          15 * time.Millisecond,
+				MaxRTT:          20 * time.Millisecond,
+			},
+		},
+	}
 
-	interfaceName := ""
-	got, err := linux.GetResolvConfByInterface(interfaceName)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			darwin := ping.NewDarwinProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetResolvConfByInterface is not implemented for LinuxProvider")
+			got, err := darwin.Do("8.8.8.8")
+
+			suite.NoError(err)
+			suite.NotNil(got)
+			suite.Equal(tc.want, got)
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxGetResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxGetResolvConfByInterfacePublicTestSuite))
+func TestDarwinDoPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinDoPublicTestSuite))
 }

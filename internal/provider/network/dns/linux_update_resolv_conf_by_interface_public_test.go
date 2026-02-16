@@ -21,7 +21,6 @@
 package dns_test
 
 import (
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -46,13 +45,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 	interfaceName := ""
 	err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
 
-	if runtime.GOOS == "darwin" {
-		// On macOS, should succeed for testing
-		suite.NoError(err)
-	} else {
-		// On other platforms, should return error
-		suite.EqualError(err, "UpdateResolvConfByInterface is not implemented for LinuxProvider on "+runtime.GOOS+" interface  (servers: [], domains: [])")
-	}
+	suite.EqualError(err, "UpdateResolvConfByInterface is not implemented for LinuxProvider")
 }
 
 // In order for `go test` to run this suite, we need to create
