@@ -18,43 +18,64 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package worker_test
 
 import (
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	"log/slog"
+	"testing"
 
-	apijob "github.com/retr0h/osapi/internal/api/job"
-	jobGen "github.com/retr0h/osapi/internal/api/job/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/job/worker"
 )
 
-// GetJobHandler returns job handler for registration.
-func (s *Server) GetJobHandler(
-	jobClient client.JobClient,
-) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+type FactoryPublicTestSuite struct {
+	suite.Suite
+}
 
-	jobHandler := apijob.New(jobClient)
-
-	strictHandler := jobGen.NewStrictHandler(
-		jobHandler,
-		[]jobGen.StrictMiddlewareFunc{
-			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
-					handler,
-					tokenManager,
-					s.appConfig.API.Server.Security.SigningKey,
-					jobGen.BearerAuthScopes,
-				)
-			},
-		},
-	)
-
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			jobGen.RegisterHandlers(e, strictHandler)
+func (s *FactoryPublicTestSuite) TestNewProviderFactory() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates factory with logger",
 		},
 	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			factory := worker.NewProviderFactory(slog.Default())
+
+			s.NotNil(factory)
+		})
+	}
+}
+
+func (s *FactoryPublicTestSuite) TestCreateProviders() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates all providers",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			factory := worker.NewProviderFactory(slog.Default())
+
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := factory.CreateProviders()
+
+			s.NotNil(hostProvider)
+			s.NotNil(diskProvider)
+			s.NotNil(memProvider)
+			s.NotNil(loadProvider)
+			s.NotNil(dnsProvider)
+			s.NotNil(pingProvider)
+		})
+	}
+}
+
+func TestFactoryPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(FactoryPublicTestSuite))
 }

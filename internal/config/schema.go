@@ -29,7 +29,9 @@ import (
 var registerValidatorsFn = registerValidators
 
 // registerValidators register customer validators.
-func registerValidators(_ *validator.Validate) error {
+func registerValidators(
+	_ *validator.Validate,
+) error {
 	// NOTE(retr0h): hook for future validators
 	return nil
 }

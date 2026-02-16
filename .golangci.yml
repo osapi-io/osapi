@@ -17,6 +17,16 @@ linters:
     - revive
     - staticcheck
     - unused
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        path: internal/api/
+        text: "var-naming: avoid meaningless package names"
+      - linters:
+          - revive
+        path: internal/exec/
+        text: "var-naming: avoid package names that conflict with Go standard library package names"
 
 formatters:
   enable:

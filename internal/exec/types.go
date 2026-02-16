@@ -18,26 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package exec
 
 import (
-	"context"
-
-	"github.com/labstack/echo/v4"
-
-	jobclient "github.com/retr0h/osapi/internal/job/client"
+	"log/slog"
 )
 
-// ServerManager responsible for Server operations.
-type ServerManager interface {
-	// Start starts the Echo server with the configured port.
-	Start()
-	// Stop gracefully shuts down the Echo server.
-	Stop(ctx context.Context)
-	// CreateHandlers initializes handlers and returns a slice of functions to register them.
-	CreateHandlers(
-		jobClient jobclient.JobClient,
-	) []func(e *echo.Echo)
-	// RegisterHandlers registers a list of handlers with the Echo instance.
-	RegisterHandlers(handlers []func(e *echo.Echo))
+// Exec disk implementation.
+type Exec struct {
+	logger *slog.Logger
 }

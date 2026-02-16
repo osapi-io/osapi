@@ -26,7 +26,7 @@ import (
 
 	"github.com/shirou/gopsutil/v4/host"
 
-	"github.com/retr0h/osapi/internal/cmdexec"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/system/disk"
@@ -96,7 +96,7 @@ func (f *ProviderFactory) CreateProviders() (
 
 	// Create network providers
 	var dnsProvider dns.Provider
-	execManager := cmdexec.New(f.logger)
+	execManager := exec.New(f.logger)
 	switch platform {
 	case "ubuntu":
 		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)

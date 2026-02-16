@@ -63,7 +63,9 @@ func (n Network) PostNetworkPing(
 }
 
 // durationToString convert *time.Duration to *string.
-func durationToString(d *time.Duration) *string {
+func durationToString(
+	d *time.Duration,
+) *string {
 	if d == nil {
 		return nil
 	}

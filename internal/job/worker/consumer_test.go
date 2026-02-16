@@ -49,14 +49,11 @@ type ConsumerTestSuite struct {
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 	worker        *Worker
-	ctx           context.Context
-	cancel        context.CancelFunc
 }
 
 func (s *ConsumerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
-	s.ctx, s.cancel = context.WithCancel(context.Background())
 
 	appFs := afero.NewMemMapFs()
 	appConfig := config.Config{
@@ -100,7 +97,6 @@ func (s *ConsumerTestSuite) SetupTest() {
 }
 
 func (s *ConsumerTestSuite) TearDownTest() {
-	s.cancel()
 	s.mockCtrl.Finish()
 }
 
@@ -183,13 +179,32 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 			},
 			expectErr: false,
 		},
+		{
+			name:     "consume error logged",
+			hostname: "test-worker",
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(3)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("connection lost")).
+					Times(3)
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			tt.setupMocks()
 
-			err := s.worker.consumeQueryJobs(s.ctx, tt.hostname)
+			err := s.worker.consumeQueryJobs(ctx, tt.hostname)
 
 			if tt.expectErr {
 				s.Error(err)
@@ -197,9 +212,8 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 				s.NoError(err)
 			}
 
-			// Allow goroutines to start and then cancel
+			// Allow goroutines to execute before cleanup
 			time.Sleep(10 * time.Millisecond)
-			s.cancel()
 		})
 	}
 }
@@ -257,13 +271,32 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 			},
 			expectErr: false,
 		},
+		{
+			name:     "consume error logged",
+			hostname: "test-worker",
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(3)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("connection lost")).
+					Times(3)
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			tt.setupMocks()
 
-			err := s.worker.consumeModifyJobs(s.ctx, tt.hostname)
+			err := s.worker.consumeModifyJobs(ctx, tt.hostname)
 
 			if tt.expectErr {
 				s.Error(err)
@@ -271,24 +304,22 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 				s.NoError(err)
 			}
 
-			// Allow goroutines to start and then cancel
+			// Allow goroutines to execute before cleanup
 			time.Sleep(10 * time.Millisecond)
-			s.cancel()
 		})
 	}
 }
 
 func (s *ConsumerTestSuite) TestCreateConsumer() {
 	tests := []struct {
-		name           string
-		streamName     string
-		consumerName   string
-		filterSubject  string
-		config         config.JobConsumer
-		setupMocks     func()
-		expectErr      bool
-		errorMsg       string
-		validateConfig func(jetstream.ConsumerConfig)
+		name          string
+		streamName    string
+		consumerName  string
+		filterSubject string
+		config        config.JobConsumer
+		setupMocks    func()
+		expectErr     bool
+		errorMsg      string
 	}{
 		{
 			name:          "successful consumer creation with instant replay",
@@ -401,7 +432,12 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 
 			tt.setupMocks()
 
-			err := s.worker.createConsumer(s.ctx, tt.streamName, tt.consumerName, tt.filterSubject)
+			err := s.worker.createConsumer(
+				context.Background(),
+				tt.streamName,
+				tt.consumerName,
+				tt.filterSubject,
+			)
 
 			if tt.expectErr {
 				s.Error(err)

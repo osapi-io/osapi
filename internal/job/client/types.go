@@ -39,15 +39,35 @@ type JobClient interface {
 		operationData map[string]interface{},
 		targetHostname string,
 	) (*CreateJobResult, error)
-	GetQueueStats(ctx context.Context) (*job.QueueStats, error)
-	GetJobStatus(ctx context.Context, jobID string) (*job.QueuedJob, error)
-	ListJobs(ctx context.Context, statusFilter string) ([]*job.QueuedJob, error)
+	GetQueueStats(
+		ctx context.Context,
+	) (*job.QueueStats, error)
+	GetJobStatus(
+		ctx context.Context,
+		jobID string,
+	) (*job.QueuedJob, error)
+	ListJobs(
+		ctx context.Context,
+		statusFilter string,
+	) ([]*job.QueuedJob, error)
 
 	// Query operations
-	QuerySystemStatus(ctx context.Context, hostname string) (*job.SystemStatusResponse, error)
-	QuerySystemStatusAny(ctx context.Context) (*job.SystemStatusResponse, error)
-	QuerySystemHostname(ctx context.Context, hostname string) (string, error)
-	QueryNetworkDNS(ctx context.Context, hostname, iface string) (*dns.Config, error)
+	QuerySystemStatus(
+		ctx context.Context,
+		hostname string,
+	) (*job.SystemStatusResponse, error)
+	QuerySystemStatusAny(
+		ctx context.Context,
+	) (*job.SystemStatusResponse, error)
+	QuerySystemHostname(
+		ctx context.Context,
+		hostname string,
+	) (string, error)
+	QueryNetworkDNS(
+		ctx context.Context,
+		hostname string,
+		iface string,
+	) (*dns.Config, error)
 
 	// Modify operations
 	ModifyNetworkDNS(
@@ -74,28 +94,38 @@ type JobClient interface {
 	) (*ping.Result, error)
 
 	// Job deletion
-	DeleteJob(ctx context.Context, jobID string) error
+	DeleteJob(
+		ctx context.Context,
+		jobID string,
+	) error
 
 	// Worker operations - used by job workers for processing
 	WriteStatusEvent(
 		ctx context.Context,
-		jobID, event, hostname string,
+		jobID string,
+		event string,
+		hostname string,
 		data map[string]interface{},
 	) error
 	WriteJobResponse(
 		ctx context.Context,
-		jobID, hostname string,
+		jobID string,
+		hostname string,
 		responseData []byte,
 		status string,
 		errorMsg string,
 	) error
 	ConsumeJobs(
 		ctx context.Context,
-		streamName, consumerName string,
+		streamName string,
+		consumerName string,
 		handler func(jetstream.Msg) error,
 		opts *natsclient.ConsumeOptions,
 	) error
-	GetJobData(ctx context.Context, jobKey string) ([]byte, error)
+	GetJobData(
+		ctx context.Context,
+		jobKey string,
+	) ([]byte, error)
 	CreateOrUpdateConsumer(
 		ctx context.Context,
 		streamName string,

@@ -84,7 +84,9 @@ func (s *System) GetSystemStatus(
 	return resp, nil
 }
 
-func formatDuration(d time.Duration) string {
+func formatDuration(
+	d time.Duration,
+) string {
 	totalMinutes := int(d.Minutes())
 	days := totalMinutes / (24 * 60)
 	hours := (totalMinutes % (24 * 60)) / 60
@@ -111,7 +113,9 @@ func formatDuration(d time.Duration) string {
 }
 
 // uint64ToInt convert uint64 to int, with overflow protection.
-func uint64ToInt(value uint64) int {
+func uint64ToInt(
+	value uint64,
+) int {
 	maxInt := int(^uint(0) >> 1) // maximum value of int based on the architecture
 	if value > uint64(maxInt) {  // check for overflow
 		return maxInt // return max int to prevent overflow

@@ -60,7 +60,9 @@ func NewClientWithResponses(
 }
 
 // RoundTrip implements the http.RoundTripper interface.
-func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *authTransport) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
 	req.Header.Set("Authorization", t.authHeader)
 	return t.base.RoundTrip(req)
 }

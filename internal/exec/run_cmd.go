@@ -18,9 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package apierrors
+package exec
 
-// NotFoundError represents an error when an item is not found.
-type NotFoundError struct {
-	Message string
+// RunCmd executes the provided command with arguments, using the current
+// working directory.
+func (e *Exec) RunCmd(
+	name string,
+	args []string,
+) (string, error) {
+	return e.RunCmdImpl(name, args, "")
 }

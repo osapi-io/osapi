@@ -28,14 +28,18 @@ import (
 )
 
 // Start starts the worker and runs until the context is canceled.
-func (w *Worker) Start(ctx context.Context) {
+func (w *Worker) Start(
+	ctx context.Context,
+) {
 	w.logger.Info("starting job worker")
 	w.run(ctx)
 	w.logger.Info("job worker stopped")
 }
 
 // run contains the main worker loop.
-func (w *Worker) run(ctx context.Context) {
+func (w *Worker) run(
+	ctx context.Context,
+) {
 	w.logger.Info("job worker started successfully")
 
 	// Determine worker hostname

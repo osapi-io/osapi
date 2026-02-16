@@ -1,0 +1,124 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package api_test
+
+import (
+	"context"
+	"log/slog"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/api"
+	"github.com/retr0h/osapi/internal/config"
+)
+
+type ServerPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *ServerPublicTestSuite) TestNew() {
+	tests := []struct {
+		name      string
+		appConfig config.Config
+	}{
+		{
+			name: "creates server with default config",
+			appConfig: config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creates server with CORS origins",
+			appConfig: config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+							CORS: config.CORS{
+								AllowOrigins: []string{
+									"http://localhost:3000",
+									"https://example.com",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			server := api.New(tt.appConfig, slog.Default())
+
+			s.NotNil(server)
+			s.NotNil(server.Echo)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStartAndStop() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "starts and stops gracefully",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Port: 0,
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, slog.Default())
+			server.Start()
+
+			// Give server time to start
+			time.Sleep(50 * time.Millisecond)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			server.Stop(ctx)
+		})
+	}
+}
+
+func TestServerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(ServerPublicTestSuite))
+}

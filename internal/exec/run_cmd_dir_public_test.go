@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmdexec_test
+package exec_test
 
 import (
 	"log/slog"
@@ -27,26 +27,27 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/cmdexec"
+	"github.com/retr0h/osapi/internal/exec"
 )
 
-type RunCmdPublicTestSuite struct {
+type RunCmdDirPublicTestSuite struct {
 	suite.Suite
 
 	logger *slog.Logger
 }
 
-func (suite *RunCmdPublicTestSuite) SetupTest() {
+func (suite *RunCmdDirPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *RunCmdPublicTestSuite) TearDownTest() {}
+func (suite *RunCmdDirPublicTestSuite) TearDownTest() {}
 
-func (suite *RunCmdPublicTestSuite) TestRunCmd() {
+func (suite *RunCmdDirPublicTestSuite) TestRunCmd() {
 	tests := []struct {
 		name          string
 		command       string
 		args          []string
+		cwd           string
 		expectError   bool
 		errorContains string
 	}{
@@ -60,18 +61,21 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 			name:        "Valid command with no arguments and working dir",
 			command:     "ls",
 			args:        []string{},
+			cwd:         "/tmp",
 			expectError: false,
 		},
 		{
 			name:        "Valid command with output",
 			command:     "echo",
 			args:        []string{"-n", "foo"},
+			cwd:         "/tmp",
 			expectError: false,
 		},
 		{
 			name:          "Invalid command",
 			command:       "invalid",
 			args:          []string{"foo"},
+			cwd:           "/tmp",
 			expectError:   true,
 			errorContains: "not found",
 		},
@@ -79,9 +83,9 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			em := cmdexec.New(suite.logger)
+			em := exec.New(suite.logger)
 
-			output, err := em.RunCmd(tc.command, tc.args)
+			output, err := em.RunCmdInDir(tc.command, tc.args, tc.cwd)
 
 			if tc.expectError {
 				suite.Require().Error(err)
@@ -96,6 +100,6 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestRunCmdPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(RunCmdPublicTestSuite))
+func TestRunCmdDirPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(RunCmdDirPublicTestSuite))
 }

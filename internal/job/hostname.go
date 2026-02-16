@@ -32,10 +32,7 @@ type HostnameProvider interface {
 // gopsutilHostnameProvider implements HostnameProvider using gopsutil/host
 type gopsutilHostnameProvider struct{}
 
-func (p gopsutilHostnameProvider) Hostname() (
-	string,
-	error,
-) {
+func (p gopsutilHostnameProvider) Hostname() (string, error) {
 	info, err := host.Info()
 	if err != nil {
 		return "", err
@@ -88,10 +85,7 @@ func GetWorkerHostnameWithProvider(
 
 // GetLocalHostname returns the current system hostname using gopsutil.
 // This is for backward compatibility with existing code.
-func GetLocalHostname() (
-	string,
-	error,
-) {
+func GetLocalHostname() (string, error) {
 	return GetLocalHostnameWithProvider(defaultHostnameProvider)
 }
 

@@ -18,19 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package authtoken
+package exec
 
-// Manager responsible for Token operations.
-type Manager interface {
-	// Generate generates a signed JWT with the given roles.
-	Generate(
-		signingKey string,
-		roles []string,
-		subject string,
-	) (string, error)
-	// Validate parses and validates the JWT.
-	Validate(
-		tokenString string,
-		signingKey string,
-	) (*CustomClaims, error)
+// RunCmdInDir executes the provided command with arguments, using the current
+// provided directory.
+func (e *Exec) RunCmdInDir(
+	name string,
+	args []string,
+	cwd string,
+) (string, error) {
+	return e.RunCmdImpl(name, args, cwd)
 }

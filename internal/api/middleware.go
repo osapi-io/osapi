@@ -32,10 +32,18 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 )
 
+// TokenValidator parses and validates JWT tokens.
+type TokenValidator interface {
+	Validate(
+		tokenString string,
+		signingKey string,
+	) (*authtoken.CustomClaims, error)
+}
+
 // scopeMiddleware validates JWT tokens and checks for required scopes.
 func scopeMiddleware(
 	handler strictecho.StrictEchoHandlerFunc,
-	tokenManager authtoken.Manager,
+	tokenManager TokenValidator,
 	signingKey string,
 	contextKey string,
 ) strictecho.StrictEchoHandlerFunc {

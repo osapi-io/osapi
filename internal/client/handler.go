@@ -57,7 +57,11 @@ type NetworkHandler interface {
 // SystemHandler defines an interface for interacting with System client operations.
 type SystemHandler interface {
 	// GetSystemStatus get the system status API endpoint.
-	GetSystemStatus(ctx context.Context) (*gen.GetSystemStatusResponse, error)
+	GetSystemStatus(
+		ctx context.Context,
+	) (*gen.GetSystemStatusResponse, error)
 	// GetSystemHostname get the system hostname API endpoint.
-	GetSystemHostname(ctx context.Context) (*gen.GetSystemHostnameResponse, error)
+	GetSystemHostname(
+		ctx context.Context,
+	) (*gen.GetSystemHostnameResponse, error)
 }

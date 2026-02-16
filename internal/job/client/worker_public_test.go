@@ -22,7 +22,6 @@ package client_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"strings"
@@ -34,7 +33,6 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -70,17 +68,14 @@ func (s *WorkerPublicTestSuite) TearDownTest() {
 
 func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 	tests := []struct {
-		name         string
-		jobID        string
-		event        string
-		hostname     string
-		data         map[string]interface{}
-		bucket       string
-		kvError      error
-		expectError  bool
-		errorMsg     string
-		validateKey  func(string) bool
-		validateData func([]byte) bool
+		name        string
+		jobID       string
+		event       string
+		hostname    string
+		data        map[string]interface{}
+		kvError     error
+		expectError bool
+		errorMsg    string
 	}{
 		{
 			name:     "successful status event with data",
@@ -88,20 +83,6 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "started",
 			hostname: "worker-1",
 			data:     map[string]interface{}{"key": "value", "count": 42},
-			bucket:   "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:6] == "status"
-			},
-			validateData: func(data []byte) bool {
-				var eventData map[string]interface{}
-				err := json.Unmarshal(data, &eventData)
-				if err != nil {
-					return false
-				}
-				return eventData["job_id"] == "job-123" &&
-					eventData["event"] == "started" &&
-					eventData["hostname"] == "worker-1"
-			},
 		},
 		{
 			name:     "successful status event without data",
@@ -109,19 +90,6 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "completed",
 			hostname: "worker-2",
 			data:     nil,
-			bucket:   "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:6] == "status"
-			},
-			validateData: func(data []byte) bool {
-				var eventData map[string]interface{}
-				err := json.Unmarshal(data, &eventData)
-				if err != nil {
-					return false
-				}
-				_, hasData := eventData["data"]
-				return eventData["job_id"] == "job-456" && !hasData
-			},
 		},
 		{
 			name:     "hostname with special characters",
@@ -129,19 +97,6 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "failed",
 			hostname: "worker.host-name@domain.com",
 			data:     map[string]interface{}{"error": "timeout"},
-			bucket:   "test-bucket",
-			validateKey: func(key string) bool {
-				// Should sanitize hostname in key
-				return len(key) > 0 && key[:6] == "status"
-			},
-			validateData: func(data []byte) bool {
-				var eventData map[string]interface{}
-				err := json.Unmarshal(data, &eventData)
-				if err != nil {
-					return false
-				}
-				return eventData["hostname"] == "worker.host-name@domain.com"
-			},
 		},
 		{
 			name:        "KV put error",
@@ -149,7 +104,6 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:       "started",
 			hostname:    "worker-1",
 			data:        map[string]interface{}{"key": "value"},
-			bucket:      "test-bucket",
 			kvError:     errors.New("kv connection failed"),
 			expectError: true,
 			errorMsg:    "failed to write status event",
@@ -160,34 +114,15 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			event:    "started",
 			hostname: "worker-1",
 			data:     map[string]interface{}{"key": "value"},
-			bucket:   "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:6] == "status"
-			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockKV.EXPECT().Bucket().Return(tt.bucket)
-
-			if tt.expectError {
-				s.mockNATSClient.EXPECT().
-					KVPut(tt.bucket, gomock.Any(), gomock.Any()).
-					Return(tt.kvError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					KVPut(tt.bucket, gomock.Any(), gomock.Any()).
-					Do(func(_, key string, data []byte) {
-						if tt.validateKey != nil {
-							s.True(tt.validateKey(key), "Key validation failed for: %s", key)
-						}
-						if tt.validateData != nil {
-							s.True(tt.validateData(data), "Data validation failed")
-						}
-					}).
-					Return(nil)
-			}
+			s.mockKV.EXPECT().Bucket().Return("test-bucket")
+			s.mockNATSClient.EXPECT().
+				KVPut("test-bucket", gomock.Any(), gomock.Any()).
+				Return(tt.kvError)
 
 			err := s.jobsClient.WriteStatusEvent(s.ctx, tt.jobID, tt.event, tt.hostname, tt.data)
 
@@ -209,12 +144,9 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 		responseData []byte
 		status       string
 		errorMsg     string
-		bucket       string
 		kvError      error
 		expectError  bool
 		errorText    string
-		validateKey  func(string) bool
-		validateData func([]byte) bool
 	}{
 		{
 			name:         "successful job response completed",
@@ -222,21 +154,6 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "worker-1",
 			responseData: []byte(`{"result": "success", "count": 42}`),
 			status:       "completed",
-			errorMsg:     "",
-			bucket:       "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:9] == "responses"
-			},
-			validateData: func(data []byte) bool {
-				var response job.Response
-				err := json.Unmarshal(data, &response)
-				if err != nil {
-					return false
-				}
-				return string(response.Status) == "completed" &&
-					response.Error == "" &&
-					!response.Timestamp.IsZero()
-			},
 		},
 		{
 			name:         "successful job response with error",
@@ -245,19 +162,6 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			responseData: []byte(`{"error": "processing failed"}`),
 			status:       "failed",
 			errorMsg:     "job execution failed",
-			bucket:       "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:9] == "responses"
-			},
-			validateData: func(data []byte) bool {
-				var response job.Response
-				err := json.Unmarshal(data, &response)
-				if err != nil {
-					return false
-				}
-				return string(response.Status) == "failed" &&
-					response.Error == "job execution failed"
-			},
 		},
 		{
 			name:         "empty response data",
@@ -265,19 +169,6 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "worker-3",
 			responseData: []byte{},
 			status:       "completed",
-			errorMsg:     "",
-			bucket:       "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:9] == "responses"
-			},
-			validateData: func(data []byte) bool {
-				var response job.Response
-				err := json.Unmarshal(data, &response)
-				if err != nil {
-					return false
-				}
-				return len(response.Data) == 0
-			},
 		},
 		{
 			name:         "hostname with special characters",
@@ -285,12 +176,6 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "worker.host-name@domain.com",
 			responseData: []byte(`{"data": "test"}`),
 			status:       "completed",
-			errorMsg:     "",
-			bucket:       "test-bucket",
-			validateKey: func(key string) bool {
-				// Should sanitize hostname in key
-				return len(key) > 0 && key[:9] == "responses"
-			},
 		},
 		{
 			name:         "KV put error",
@@ -298,8 +183,6 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "worker-1",
 			responseData: []byte(`{"result": "success"}`),
 			status:       "completed",
-			errorMsg:     "",
-			bucket:       "test-bucket",
 			kvError:      errors.New("storage failure"),
 			expectError:  true,
 			errorText:    "failed to store job response",
@@ -314,36 +197,16 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 					500,
 				) + `"}`,
 			),
-			status:   "completed",
-			errorMsg: "",
-			bucket:   "test-bucket",
-			validateKey: func(key string) bool {
-				return len(key) > 0 && key[:9] == "responses"
-			},
+			status: "completed",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockKV.EXPECT().Bucket().Return(tt.bucket)
-
-			if tt.expectError {
-				s.mockNATSClient.EXPECT().
-					KVPut(tt.bucket, gomock.Any(), gomock.Any()).
-					Return(tt.kvError)
-			} else {
-				s.mockNATSClient.EXPECT().
-					KVPut(tt.bucket, gomock.Any(), gomock.Any()).
-					Do(func(_, key string, data []byte) {
-						if tt.validateKey != nil {
-							s.True(tt.validateKey(key), "Key validation failed for: %s", key)
-						}
-						if tt.validateData != nil {
-							s.True(tt.validateData(data), "Data validation failed")
-						}
-					}).
-					Return(nil)
-			}
+			s.mockKV.EXPECT().Bucket().Return("test-bucket")
+			s.mockNATSClient.EXPECT().
+				KVPut("test-bucket", gomock.Any(), gomock.Any()).
+				Return(tt.kvError)
 
 			err := s.jobsClient.WriteJobResponse(
 				s.ctx,

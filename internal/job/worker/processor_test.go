@@ -22,8 +22,10 @@ package worker
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
@@ -522,74 +524,298 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 
 func (s *ProcessorTestSuite) TestProviderFactoryMethods() {
 	tests := []struct {
-		name     string
-		method   string
-		validate func(interface{})
+		name        string
+		getProvider func() interface{}
 	}{
 		{
-			name:   "getHostProvider",
-			method: "host",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:        "getHostProvider",
+			getProvider: func() interface{} { return s.worker.getHostProvider() },
+		},
+		{
+			name:        "getDiskProvider",
+			getProvider: func() interface{} { return s.worker.getDiskProvider() },
+		},
+		{
+			name:        "getMemProvider",
+			getProvider: func() interface{} { return s.worker.getMemProvider() },
+		},
+		{
+			name:        "getLoadProvider",
+			getProvider: func() interface{} { return s.worker.getLoadProvider() },
+		},
+		{
+			name:        "getDNSProvider",
+			getProvider: func() interface{} { return s.worker.getDNSProvider() },
+		},
+		{
+			name:        "getPingProvider",
+			getProvider: func() interface{} { return s.worker.getPingProvider() },
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			provider := tt.getProvider()
+			s.NotNil(provider)
+		})
+	}
+}
+
+func (s *ProcessorTestSuite) TestSystemOperationErrors() {
+	tests := []struct {
+		name         string
+		operation    string
+		errorMsg     string
+		createWorker func() *Worker
+	}{
+		{
+			name:      "hostname provider error",
+			operation: "hostname.get",
+			errorMsg:  "failed to get hostname",
+			createWorker: func() *Worker {
+				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
+				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMock,
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 		{
-			name:   "getDiskProvider",
-			method: "disk",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:      "uptime provider error",
+			operation: "uptime.get",
+			errorMsg:  "failed to get uptime",
+			createWorker: func() *Worker {
+				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
+				hostMock.EXPECT().
+					GetUptime().
+					Return(time.Duration(0), errors.New("uptime unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMock,
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 		{
-			name:   "getMemProvider",
-			method: "mem",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:      "OS info provider error",
+			operation: "os.get",
+			errorMsg:  "failed to get OS info",
+			createWorker: func() *Worker {
+				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
+				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMock,
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 		{
-			name:   "getLoadProvider",
-			method: "load",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:      "disk provider error",
+			operation: "disk.get",
+			errorMsg:  "failed to get disk usage",
+			createWorker: func() *Worker {
+				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
+				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMock,
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 		{
-			name:   "getDNSProvider",
-			method: "dns",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:      "memory provider error",
+			operation: "memory.get",
+			errorMsg:  "failed to get memory stats",
+			createWorker: func() *Worker {
+				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
+				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMock,
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 		{
-			name:   "getPingProvider",
-			method: "ping",
-			validate: func(provider interface{}) {
-				s.NotNil(provider)
+			name:      "load provider error",
+			operation: "load.get",
+			errorMsg:  "failed to get load averages",
+			createWorker: func() *Worker {
+				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
+				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMock,
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var provider interface{}
-
-			switch tt.method {
-			case "host":
-				provider = s.worker.getHostProvider()
-			case "disk":
-				provider = s.worker.getDiskProvider()
-			case "mem":
-				provider = s.worker.getMemProvider()
-			case "load":
-				provider = s.worker.getLoadProvider()
-			case "dns":
-				provider = s.worker.getDNSProvider()
-			case "ping":
-				provider = s.worker.getPingProvider()
+			w := tt.createWorker()
+			request := job.Request{
+				Type:      job.TypeQuery,
+				Category:  "system",
+				Operation: tt.operation,
+				Data:      json.RawMessage(`{}`),
 			}
 
-			tt.validate(provider)
+			result, err := w.processSystemOperation(request)
+
+			s.Error(err)
+			s.Contains(err.Error(), tt.errorMsg)
+			s.Nil(result)
+		})
+	}
+}
+
+func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
+	tests := []struct {
+		name         string
+		operation    string
+		jobType      job.Type
+		data         string
+		errorMsg     string
+		createWorker func() *Worker
+	}{
+		{
+			name:      "DNS get error",
+			operation: "dns.get",
+			jobType:   job.TypeQuery,
+			data:      `{"interface": "eth0"}`,
+			errorMsg:  "failed to get DNS config",
+			createWorker: func() *Worker {
+				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
+				dnsMock.EXPECT().
+					GetResolvConfByInterface("eth0").
+					Return(nil, errors.New("DNS lookup failed"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMock,
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
+			},
+		},
+		{
+			name:      "DNS update error",
+			operation: "dns.update",
+			jobType:   job.TypeModify,
+			data:      `{"servers": ["8.8.8.8"], "search_domains": ["example.com"], "interface": "eth0"}`,
+			errorMsg:  "failed to set DNS config",
+			createWorker: func() *Worker {
+				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
+				dnsMock.EXPECT().
+					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("DNS update failed"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMock,
+					pingMocks.NewPlainMockProvider(s.mockCtrl),
+				)
+			},
+		},
+		{
+			name:      "ping provider error",
+			operation: "ping.do",
+			jobType:   job.TypeQuery,
+			data:      `{"address": "8.8.8.8"}`,
+			errorMsg:  "ping failed",
+			createWorker: func() *Worker {
+				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
+				pingMock.EXPECT().Do("8.8.8.8").Return(nil, errors.New("ping timeout"))
+				return New(
+					afero.NewMemMapFs(),
+					config.Config{},
+					slog.Default(),
+					s.mockJobClient,
+					hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingMock,
+				)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			w := tt.createWorker()
+			request := job.Request{
+				Type:      tt.jobType,
+				Category:  "network",
+				Operation: tt.operation,
+				Data:      json.RawMessage(tt.data),
+			}
+
+			result, err := w.processNetworkOperation(request)
+
+			s.Error(err)
+			s.Contains(err.Error(), tt.errorMsg)
+			s.Nil(result)
 		})
 	}
 }

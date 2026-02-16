@@ -77,7 +77,9 @@ func (s *Server) Start() {
 }
 
 // Stop gracefully shuts down the Echo server.
-func (s *Server) Stop(ctx context.Context) {
+func (s *Server) Stop(
+	ctx context.Context,
+) {
 	s.logger.Info("stopping server")
 
 	if err := s.Echo.Shutdown(ctx); err != nil {

@@ -29,6 +29,14 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 )
 
+// TokenValidator parses and validates JWT tokens.
+type TokenValidator interface {
+	Validate(
+		tokenString string,
+		signingKey string,
+	) (*authtoken.CustomClaims, error)
+}
+
 // tokenValidateCmd represents the tokenValidate command.
 var tokenValidateCmd = &cobra.Command{
 	Use:   "validate",
@@ -40,7 +48,7 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		signingKey := appConfig.API.Server.Security.SigningKey
 		tokenString, _ := cmd.Flags().GetString("token")
 
-		var tm authtoken.Manager = authtoken.New(logger)
+		var tm TokenValidator = authtoken.New(logger)
 		claims, err := tm.Validate(tokenString, signingKey)
 		if err != nil {
 			logFatal("failed to validate token", err)

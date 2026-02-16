@@ -93,10 +93,7 @@ func (w *Worker) processNetworkOperation(
 }
 
 // getSystemHostname retrieves the system hostname.
-func (w *Worker) getSystemHostname() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemHostname() (json.RawMessage, error) {
 	hostProvider := w.getHostProvider()
 	hostname, err := hostProvider.GetHostname()
 	if err != nil {
@@ -111,10 +108,7 @@ func (w *Worker) getSystemHostname() (
 }
 
 // getSystemStatus retrieves comprehensive system status.
-func (w *Worker) getSystemStatus() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemStatus() (json.RawMessage, error) {
 	hostProvider := w.getHostProvider()
 	diskProvider := w.getDiskProvider()
 	memProvider := w.getMemProvider()
@@ -141,10 +135,7 @@ func (w *Worker) getSystemStatus() (
 }
 
 // getSystemUptime retrieves the system uptime.
-func (w *Worker) getSystemUptime() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemUptime() (json.RawMessage, error) {
 	hostProvider := w.getHostProvider()
 	uptime, err := hostProvider.GetUptime()
 	if err != nil {
@@ -160,10 +151,7 @@ func (w *Worker) getSystemUptime() (
 }
 
 // getSystemOSInfo retrieves the operating system information.
-func (w *Worker) getSystemOSInfo() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemOSInfo() (json.RawMessage, error) {
 	hostProvider := w.getHostProvider()
 	osInfo, err := hostProvider.GetOSInfo()
 	if err != nil {
@@ -174,10 +162,7 @@ func (w *Worker) getSystemOSInfo() (
 }
 
 // getSystemDisk retrieves disk usage statistics.
-func (w *Worker) getSystemDisk() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemDisk() (json.RawMessage, error) {
 	diskProvider := w.getDiskProvider()
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	if err != nil {
@@ -192,10 +177,7 @@ func (w *Worker) getSystemDisk() (
 }
 
 // getSystemMemory retrieves memory statistics.
-func (w *Worker) getSystemMemory() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemMemory() (json.RawMessage, error) {
 	memProvider := w.getMemProvider()
 	memInfo, err := memProvider.GetStats()
 	if err != nil {
@@ -206,10 +188,7 @@ func (w *Worker) getSystemMemory() (
 }
 
 // getSystemLoad retrieves load average statistics.
-func (w *Worker) getSystemLoad() (
-	json.RawMessage,
-	error,
-) {
+func (w *Worker) getSystemLoad() (json.RawMessage, error) {
 	loadProvider := w.getLoadProvider()
 	loadAvg, err := loadProvider.GetAverageStats()
 	if err != nil {

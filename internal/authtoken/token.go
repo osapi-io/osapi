@@ -48,7 +48,9 @@ func New(
 }
 
 // GenerateAllowedRoles extracts the keys from RoleHierarchy to create a list of allowed roles.
-func GenerateAllowedRoles(roleHierarchy map[string][]string) []string {
+func GenerateAllowedRoles(
+	roleHierarchy map[string][]string,
+) []string {
 	roles := make([]string, 0, len(roleHierarchy))
 	for role := range roleHierarchy {
 		roles = append(roles, role)

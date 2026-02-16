@@ -40,7 +40,9 @@ type jobsModel struct {
 	pollIntervalSecs int
 }
 
-func initialJobsModel(pollIntervalSecs int) jobsModel {
+func initialJobsModel(
+	pollIntervalSecs int,
+) jobsModel {
 	return jobsModel{
 		jobsStatus:       "Fetching jobs status...",
 		lastUpdate:       time.Now(),
@@ -67,7 +69,9 @@ func (m jobsModel) Init() tea.Cmd {
 	return tea.Batch(fetchJobsCmd(), m.tickCmd())
 }
 
-func (m jobsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m jobsModel) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "q" {
@@ -111,7 +115,9 @@ func (m jobsModel) View() string {
 	)
 }
 
-func styleStatusText(statusText string) string {
+func styleStatusText(
+	statusText string,
+) string {
 	var (
 		keyStyle     = lipgloss.NewStyle().Foreground(gray) // Gray for all keys
 		valueStyle   = lipgloss.NewStyle().Foreground(teal) // Soft teal for values

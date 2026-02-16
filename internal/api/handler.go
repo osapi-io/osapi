@@ -49,7 +49,9 @@ func (s *Server) CreateHandlers(
 }
 
 // RegisterHandlers registers a list of handlers with the Echo instance.
-func (s *Server) RegisterHandlers(handlers []func(e *echo.Echo)) {
+func (s *Server) RegisterHandlers(
+	handlers []func(e *echo.Echo),
+) {
 	for _, handler := range handlers {
 		handler(s.Echo)
 	}

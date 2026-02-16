@@ -43,6 +43,8 @@ func NewUbuntuProvider() *Ubuntu {
 }
 
 // SetCount sets the count of pings to be sent.
-func (p *PingerWrapper) SetCount(count int) {
+func (p *PingerWrapper) SetCount(
+	count int,
+) {
 	p.Count = count
 }

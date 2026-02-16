@@ -18,11 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmdexec
+package exec
 
 // Manager manager responsible for exec operations.
 type Manager interface {
 	// RunCmd executes the provided command with arguments, using the current
 	// working directory.
-	RunCmd(name string, args []string) (string, error)
+	RunCmd(
+		name string,
+		args []string,
+	) (string, error)
 }

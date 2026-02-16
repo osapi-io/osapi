@@ -108,7 +108,10 @@ This combines job submission and retrieval into a single command for convenience
 	},
 }
 
-func checkJobComplete(ctx context.Context, jobID string) bool {
+func checkJobComplete(
+	ctx context.Context,
+	jobID string,
+) bool {
 	jobInfo, err := jobClient.GetJobStatus(ctx, jobID)
 	if err != nil {
 		logger.Error("failed to get job status",

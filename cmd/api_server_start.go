@@ -24,6 +24,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
@@ -31,6 +32,20 @@ import (
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
 )
+
+// ServerManager responsible for Server operations.
+type ServerManager interface {
+	// Start starts the Echo server with the configured port.
+	Start()
+	// Stop gracefully shuts down the Echo server.
+	Stop(ctx context.Context)
+	// CreateHandlers initializes handlers and returns a slice of functions to register them.
+	CreateHandlers(
+		jobClient jobclient.JobClient,
+	) []func(e *echo.Echo)
+	// RegisterHandlers registers a list of handlers with the Echo instance.
+	RegisterHandlers(handlers []func(e *echo.Echo))
+}
 
 // apiServerStartCmd represents the apiServerStart command.
 var apiServerStartCmd = &cobra.Command{
@@ -68,7 +83,7 @@ var apiServerStartCmd = &cobra.Command{
 			logFatal("failed to create job client", err)
 		}
 
-		var sm api.ServerManager = api.New(appConfig, logger)
+		var sm ServerManager = api.New(appConfig, logger)
 		handlers := sm.CreateHandlers(jc)
 		sm.RegisterHandlers(handlers)
 

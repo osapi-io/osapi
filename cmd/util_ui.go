@@ -26,7 +26,6 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -108,7 +107,10 @@ func printStyledTable(
 		t := table.New().
 			Border(lipgloss.ThickBorder()).
 			BorderStyle(BorderStyle).
-			StyleFunc(func(row, col int) lipgloss.Style {
+			StyleFunc(func(
+				row int,
+				col int,
+			) lipgloss.Style {
 				// Determine base style based on row
 				var baseStyle lipgloss.Style
 				switch row % 2 {
@@ -211,7 +213,9 @@ func calculateColumnWidths(
 }
 
 // getMaxLineWidth returns the width of the longest line in a multi-line string
-func getMaxLineWidth(text string) int {
+func getMaxLineWidth(
+	text string,
+) int {
 	lines := strings.Split(text, "\n")
 	maxWidth := 0
 	for _, line := range lines {
@@ -222,32 +226,12 @@ func getMaxLineWidth(text string) int {
 	return maxWidth
 }
 
-// safeInt returns a default value when the input *int is nil.
-func safeInt(
-	i *int,
-) int {
-	if i != nil {
-		return *i
-	}
-	return 0
-}
-
 // safeString function to safely dereference string pointers
 func safeString(
 	s *string,
 ) string {
 	if s != nil {
 		return *s
-	}
-	return ""
-}
-
-// safeTime function to safely dereference time.Time pointers
-func safeTime(
-	t *time.Time,
-) string {
-	if t != nil {
-		return t.Format(time.RFC3339)
 	}
 	return ""
 }
@@ -265,16 +249,6 @@ func float64ToSafeString(
 // intToSafeString converts a *int to a string. Returns "N/A" if nil.
 func intToSafeString(
 	i *int,
-) string {
-	if i != nil {
-		return fmt.Sprintf("%d", *i)
-	}
-	return "N/A"
-}
-
-// uint64ToSafeString converts a *uint64 to a string, returning "N/A" if nil.
-func uint64ToSafeString(
-	i *uint64,
 ) string {
 	if i != nil {
 		return fmt.Sprintf("%d", *i)
@@ -322,7 +296,9 @@ func handleUnknownError(
 
 // displayJobDetails displays detailed job information in a consistent format.
 // Used by both job get and job run commands.
-func displayJobDetails(jobInfo *job.QueuedJob) {
+func displayJobDetails(
+	jobInfo *job.QueuedJob,
+) {
 	if jsonOutput {
 		resultJSON, _ := json.Marshal(jobInfo)
 		logger.Info("job", slog.String("response", string(resultJSON)))

@@ -28,7 +28,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/authtoken"
@@ -36,25 +35,25 @@ import (
 
 const testSigningKey = "test-signing-key-for-middleware"
 
-type MiddlewareSuite struct {
+type MiddlewareTestSuite struct {
 	suite.Suite
 
-	tokenManager authtoken.Manager
+	tokenManager *authtoken.Token
 }
 
-func (suite *MiddlewareSuite) SetupSuite() {
+func (s *MiddlewareTestSuite) SetupSuite() {
 	logger := slog.Default()
-	suite.tokenManager = authtoken.New(logger)
+	s.tokenManager = authtoken.New(logger)
 }
 
-func (suite *MiddlewareSuite) generateToken(roles []string) string {
-	token, err := suite.tokenManager.Generate(testSigningKey, roles, "test-subject")
-	suite.Require().NoError(err)
+func (s *MiddlewareTestSuite) generateToken(roles []string) string {
+	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject")
+	s.Require().NoError(err)
 
 	return token
 }
 
-func (suite *MiddlewareSuite) TestHasScope() {
+func (s *MiddlewareTestSuite) TestHasScope() {
 	tests := []struct {
 		name          string
 		roles         []string
@@ -129,15 +128,15 @@ func (suite *MiddlewareSuite) TestHasScope() {
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			result := hasScope(tc.roles, tc.requiredScope)
-			assert.Equal(suite.T(), tc.expected, result)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result := hasScope(tt.roles, tt.requiredScope)
+			s.Equal(tt.expected, result)
 		})
 	}
 }
 
-func (suite *MiddlewareSuite) TestScopeMiddleware() {
+func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 	handlerCalled := false
 	testHandler := strictecho.StrictEchoHandlerFunc(
 		func(_ echo.Context, _ interface{}) (interface{}, error) {
@@ -206,8 +205,8 @@ func (suite *MiddlewareSuite) TestScopeMiddleware() {
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
 			handlerCalled = false
 
 			e := echo.New()
@@ -215,10 +214,10 @@ func (suite *MiddlewareSuite) TestScopeMiddleware() {
 			rec := httptest.NewRecorder()
 
 			// Set auth header
-			authHeader := tc.authHeader
-			if authHeader == "" && tc.expectedStatus != http.StatusUnauthorized {
+			authHeader := tt.authHeader
+			if authHeader == "" && tt.expectedStatus != http.StatusUnauthorized {
 				// Generate a valid token with "read" role
-				token := suite.generateToken([]string{"read"})
+				token := s.generateToken([]string{"read"})
 				authHeader = "Bearer " + token
 			}
 			if authHeader != "" {
@@ -227,21 +226,21 @@ func (suite *MiddlewareSuite) TestScopeMiddleware() {
 
 			ctx := e.NewContext(req, rec)
 
-			if tc.setupContextKey && tc.requiredScopes != nil {
-				ctx.Set(contextKey, tc.requiredScopes)
+			if tt.setupContextKey && tt.requiredScopes != nil {
+				ctx.Set(contextKey, tt.requiredScopes)
 			}
 
-			wrapped := scopeMiddleware(testHandler, suite.tokenManager, testSigningKey, contextKey)
+			wrapped := scopeMiddleware(testHandler, s.tokenManager, testSigningKey, contextKey)
 			_, _ = wrapped(ctx, nil)
 
-			assert.Equal(suite.T(), tc.expectCalled, handlerCalled)
-			if !tc.expectCalled {
-				assert.Equal(suite.T(), tc.expectedStatus, rec.Code)
+			s.Equal(tt.expectCalled, handlerCalled)
+			if !tt.expectCalled {
+				s.Equal(tt.expectedStatus, rec.Code)
 			}
 		})
 	}
 }
 
-func TestMiddlewareSuite(t *testing.T) {
-	suite.Run(t, new(MiddlewareSuite))
+func TestMiddlewareTestSuite(t *testing.T) {
+	suite.Run(t, new(MiddlewareTestSuite))
 }

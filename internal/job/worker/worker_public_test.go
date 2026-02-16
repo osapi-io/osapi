@@ -21,8 +21,10 @@
 package worker_test
 
 import (
+	"context"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
@@ -30,6 +32,13 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/job/worker"
+	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
+	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
+	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
+	hostMocks "github.com/retr0h/osapi/internal/provider/system/host/mocks"
+	loadMocks "github.com/retr0h/osapi/internal/provider/system/load/mocks"
+	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
 )
 
 type WorkerPublicTestSuite struct {
@@ -48,7 +57,6 @@ func (s *WorkerPublicTestSuite) SetupTest() {
 	s.appFs = afero.NewMemMapFs()
 	s.logger = slog.Default()
 
-	// Setup test config
 	s.appConfig = config.Config{
 		Job: config.Job{
 			StreamName: "test-stream",
@@ -72,8 +80,92 @@ func (s *WorkerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-// Since you don't want New, Start, Stop tests, this test suite is empty
-// but demonstrates the proper structure for public tests
+func (s *WorkerPublicTestSuite) TestNew() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates worker with all providers",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			w := worker.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+			)
+
+			s.NotNil(w)
+		})
+	}
+}
+
+func (s *WorkerPublicTestSuite) TestStart() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "starts and stops with context cancellation",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Mock consumer creation for 3 query + 3 modify consumers
+			s.mockJobClient.EXPECT().
+				CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+				Return(nil).
+				Times(6)
+
+			// Mock job consumption returning context.Canceled
+			s.mockJobClient.EXPECT().
+				ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(context.Canceled).
+				Times(6)
+
+			w := worker.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+			)
+
+			ctx, cancel := context.WithCancel(context.Background())
+
+			done := make(chan struct{})
+			go func() {
+				w.Start(ctx)
+				close(done)
+			}()
+
+			// Give goroutines time to start then cancel
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+
+			select {
+			case <-done:
+				// Start returned successfully
+			case <-time.After(5 * time.Second):
+				s.Fail("Start did not return after context cancellation")
+			}
+		})
+	}
+}
 
 func TestWorkerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(WorkerPublicTestSuite))

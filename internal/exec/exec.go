@@ -18,13 +18,47 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmdexec
+// Package exec provides command execution utilities.
+package exec
 
-// RunCmd executes the provided command with arguments, using the current
-// working directory.
-func (e *Exec) RunCmd(
+import (
+	"log/slog"
+	"os/exec"
+	"strings"
+)
+
+// New factory to create a new Exec instance.
+func New(
+	logger *slog.Logger,
+) *Exec {
+	return &Exec{
+		logger: logger,
+	}
+}
+
+// RunCmdImpl executes the provided command with the specified arguments and
+// an optional working directory. It captures and logs the combined output
+// (stdout and stderr) of the command.
+func (e *Exec) RunCmdImpl(
 	name string,
 	args []string,
+	cwd string,
 ) (string, error) {
-	return e.RunCmdImpl(name, args, "")
+	cmd := exec.Command(name, args...)
+	if cwd != "" {
+		cmd.Dir = cwd
+	}
+	out, err := cmd.CombinedOutput()
+	e.logger.Debug(
+		"exec",
+		slog.String("command", strings.Join(cmd.Args, " ")),
+		slog.String("cwd", cwd),
+		slog.String("output", string(out)),
+		slog.Any("error", err),
+	)
+	if err != nil {
+		return string(out), err
+	}
+
+	return string(out), nil
 }

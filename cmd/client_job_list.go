@@ -34,7 +34,9 @@ import (
 
 // extractTargetFromSubject extracts the target hostname from a job subject
 // Expected format: job.{type}.{hostname}.{category}.{operation}
-func extractTargetFromSubject(subject string) string {
+func extractTargetFromSubject(
+	subject string,
+) string {
 	if subject == "" {
 		return "unknown"
 	}

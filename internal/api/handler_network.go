@@ -34,7 +34,7 @@ import (
 func (s *Server) GetNetworkHandler(
 	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
-	var tokenManager authtoken.Manager = authtoken.New(s.logger)
+	var tokenManager TokenValidator = authtoken.New(s.logger)
 
 	networkHandler := network.New(jobClient)
 

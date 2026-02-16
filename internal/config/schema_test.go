@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,47 +18,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package cmdexec provides command execution utilities.
-package cmdexec
+package config
 
 import (
-	"log/slog"
-	"os/exec"
-	"strings"
+	"errors"
+	"testing"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/suite"
 )
 
-// New factory to create a new Exec instance.
-func New(
-	logger *slog.Logger,
-) *Exec {
-	return &Exec{
-		logger: logger,
-	}
+type ConfigTestSuite struct {
+	suite.Suite
 }
 
-// RunCmdImpl executes the provided command with the specified arguments and
-// an optional working directory. It captures and logs the combined output
-// (stdout and stderr) of the command.
-func (e *Exec) RunCmdImpl(
-	name string,
-	args []string,
-	cwd string,
-) (string, error) {
-	cmd := exec.Command(name, args...)
-	if cwd != "" {
-		cmd.Dir = cwd
-	}
-	out, err := cmd.CombinedOutput()
-	e.logger.Debug(
-		"exec",
-		slog.String("command", strings.Join(cmd.Args, " ")),
-		slog.String("cwd", cwd),
-		slog.String("output", string(out)),
-		slog.Any("error", err),
-	)
-	if err != nil {
-		return string(out), err
+func (s *ConfigTestSuite) TestValidateRegisterValidatorsError() {
+	original := registerValidatorsFn
+	defer func() { registerValidatorsFn = original }()
+
+	registerValidatorsFn = func(_ *validator.Validate) error {
+		return errors.New("validator registration failed")
 	}
 
-	return string(out), nil
+	c := &Config{
+		API: API{
+			Client: Client{
+				Security: ClientSecurity{
+					BearerToken: "test-token",
+				},
+			},
+			Server: Server{
+				Security: ServerSecurity{
+					SigningKey: "test-key",
+				},
+			},
+		},
+	}
+
+	err := Validate(c)
+	s.Error(err)
+	s.Contains(err.Error(), "validator registration failed")
+}
+
+func TestConfigTestSuite(t *testing.T) {
+	suite.Run(t, new(ConfigTestSuite))
 }
