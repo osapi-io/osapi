@@ -11,15 +11,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
       - name: Install just
         uses: extractions/setup-just@v3
-      - name: Install shfmt
-        uses: mfinelli/setup-shfmt@v3
       - name: Fetch justfiles
         run: just fetch
       - name: Deps
