@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package main is the entry point for the OSAPI binary.
 package main
 
 import "github.com/retr0h/osapi/cmd"

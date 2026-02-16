@@ -21,17 +21,11 @@
 package network
 
 import (
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/task/client"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// Network implementation of the System APIs operations.
+// Network implementation of the Network APIs operations.
 type Network struct {
-	// Provider implements the methods to interact with various ping components.
-	PingProvider ping.Provider
-	// Provider implements the methods to interact with various dns components.
-	DNSProvider dns.Provider
-	// TaskClientManager responsible for managing task operations.
-	TaskClientManager client.Manager
+	// JobClient provides the interface for interacting with the jobs system.
+	JobClient client.JobClient
 }

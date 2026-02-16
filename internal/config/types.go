@@ -23,11 +23,26 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API `     mask:"struct"`
-	Task
-	Job
+	API  API  `mapstructure:"api"   mask:"struct"`
+	Job  Job  `mapstructure:"job"`
+	NATS NATS `mapstructure:"nats"`
 	// Debug enable or disable debug option set from CLI.
-	Debug bool `              mapstruture:"debug"`
+	Debug bool `mapstructure:"debug"`
+}
+
+// NATS configuration settings.
+type NATS struct {
+	Server NATSServer `mapstructure:"server,omitempty"`
+}
+
+// NATSServer configuration settings for the embedded NATS server.
+type NATSServer struct {
+	// Host the server will bind to.
+	Host string `mapstructure:"host"`
+	// Port the server will bind to.
+	Port int `mapstructure:"port"`
+	// StoreDir the directory for JetStream file storage.
+	StoreDir string `mapstructure:"store_dir"`
 }
 
 // API configuration settings.
@@ -72,27 +87,6 @@ type CORS struct {
 	AllowOrigins []string `mapstructure:"allow_origins,omitempty"`
 }
 
-// Task configuration settings.
-type Task struct {
-	Server TaskServer `mapstructure:"server,omitempty"`
-}
-
-// TaskServer configuration settings.
-type TaskServer struct {
-	// Host bind the server to localhost.
-	Host string `mapstructure:"host"`
-	// Port the server will bind to.
-	Port int `mapstructure:"port"`
-	// Trace enable detailed tracing for debugging.
-	Trace bool `mapstructure:"trace"`
-	// Debug enable debug-level logging.
-	Debug bool `mapstructure:"debug"`
-	// NoLog enable logging for server events.
-	NoLog bool `mapstructure:"no_log"`
-	// FileStoreDir JetStream data will be persisted here.
-	FileStoreDir string `mapstructure:"file_store_dir"`
-}
-
 // Job configuration settings.
 type Job struct {
 	// Shared infrastructure settings
@@ -109,7 +103,6 @@ type Job struct {
 	DLQ      JobDLQ      `mapstructure:"dlq,omitempty"`
 
 	Client JobClient `mapstructure:"client,omitempty"`
-	Server JobServer `mapstructure:"server,omitempty"`
 	Worker JobWorker `mapstructure:"worker,omitempty"`
 }
 
@@ -155,14 +148,6 @@ type JobClient struct {
 	Port int `mapstructure:"port"`
 	// ClientName the NATS client name for identification.
 	ClientName string `mapstructure:"client_name"`
-}
-
-// JobServer configuration settings.
-type JobServer struct {
-	// Host bind the server to localhost.
-	Host string `mapstructure:"host"`
-	// Port the server will bind to.
-	Port int `mapstructure:"port"`
 }
 
 // JobWorker configuration settings.

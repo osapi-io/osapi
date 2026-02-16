@@ -33,7 +33,7 @@ const sidebars: SidebarsConfig = {
         type: "generated-index",
         title: "API",
         description:
-          "This is the API documentation for osapi.",
+          "This is the API documentation for OSAPI.",
         slug: "/category/api"
       },
       // @ts-ignore
@@ -73,7 +73,7 @@ const sidebars: SidebarsConfig = {
   //       type: "generated-index",
   //       title: "API",
   //       description:
-  //         "This is the API documentation for osapi.",
+  //         "This is the API documentation for OSAPI.",
   //       slug: "/category/api"
   //     },
   //     // @ts-ignore

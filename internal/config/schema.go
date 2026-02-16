@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package config provides configuration types and validation for OSAPI.
 package config
 
 import (
@@ -28,7 +29,9 @@ import (
 var registerValidatorsFn = registerValidators
 
 // registerValidators register customer validators.
-func registerValidators(_ *validator.Validate) error {
+func registerValidators(
+	_ *validator.Validate,
+) error {
 	// NOTE(retr0h): hook for future validators
 	return nil
 }

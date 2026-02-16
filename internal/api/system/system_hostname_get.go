@@ -24,14 +24,15 @@ import (
 	"context"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // GetSystemHostname get the system hostname API endpoint.
 func (s *System) GetSystemHostname(
-	_ context.Context,
+	ctx context.Context,
 	_ gen.GetSystemHostnameRequestObject,
 ) (gen.GetSystemHostnameResponseObject, error) {
-	hostname, err := s.HostProvider.GetHostname()
+	hostname, err := s.JobClient.QuerySystemHostname(ctx, job.AnyHost)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{

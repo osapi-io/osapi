@@ -72,9 +72,24 @@ It processes jobs as they become available.
 			logFatal("failed to create job client", err)
 		}
 
-		var sm worker.ServerManager = worker.New(appFs, appConfig, logger, nc, jc)
+		// Create provider factory and providers
+		providerFactory := worker.NewProviderFactory(logger)
+		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := providerFactory.CreateProviders()
 
-		sm.Start(ctx)
+		w := worker.New(
+			appFs,
+			appConfig,
+			logger,
+			jc,
+			hostProvider,
+			diskProvider,
+			memProvider,
+			loadProvider,
+			dnsProvider,
+			pingProvider,
+		)
+
+		w.Start(ctx)
 	},
 }
 

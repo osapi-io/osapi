@@ -23,15 +23,8 @@ package worker
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"regexp"
 	"strings"
-	"time"
 
-	"github.com/nats-io/nats.go"
-	"github.com/shirou/gopsutil/v4/host"
-
-	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -41,292 +34,10 @@ import (
 	"github.com/retr0h/osapi/internal/provider/system/mem"
 )
 
-// handleJobMessage processes incoming job messages from NATS.
-func (w *Worker) handleJobMessage(msg *nats.Msg) error {
-	// Extract the key (job ID) from the message data
-	jobKey := string(msg.Data)
-
-	w.logger.Info(
-		"received job notification",
-		slog.String("subject", msg.Subject),
-		slog.String("job_key", jobKey),
-	)
-
-	w.logger.Debug(
-		"processing job message",
-		slog.String("subject", msg.Subject),
-		slog.String("job_key", jobKey),
-		slog.String("raw_data", string(msg.Data)),
-	)
-
-	// Parse subject to extract category and operation
-	prefix, _, category, operation, err := job.ParseSubject(msg.Subject)
-	if err != nil {
-		return fmt.Errorf("failed to parse subject %s: %w", msg.Subject, err)
-	}
-
-	// Try to find the job with different status prefixes using nats-client KV methods
-	statuses := []string{"unprocessed", "processing", "completed", "failed"}
-	var jobDataBytes []byte
-	var currentStatus string
-	var fullKey string
-
-	for _, status := range statuses {
-		key := status + "." + jobKey
-		data, err := w.natsClient.KVGet(w.appConfig.Job.KVBucket, key)
-		if err == nil {
-			jobDataBytes = data
-			currentStatus = status
-			fullKey = key
-			break
-		}
-		// Continue to next status if key not found
-	}
-
-	if jobDataBytes == nil {
-		return fmt.Errorf("job not found: %s", jobKey)
-	}
-
-	// Parse the job data
-	var jobData map[string]interface{}
-	if err := json.Unmarshal(jobDataBytes, &jobData); err != nil {
-		return fmt.Errorf("failed to parse job data: %w", err)
-	}
-
-	// Extract the RequestID from top-level job data
-	requestID, ok := jobData["id"].(string)
-	if !ok {
-		return fmt.Errorf("invalid job format: missing id")
-	}
-
-	// Extract the operation data
-	operationData, ok := jobData["operation"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("invalid job format: missing operation")
-	}
-
-	// Convert operation data to job.Request and override category/operation from subject
-	operationJSON, err := json.Marshal(operationData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal operation data: %w", err)
-	}
-
-	var jobRequest job.Request
-	if err := json.Unmarshal(operationJSON, &jobRequest); err != nil {
-		return fmt.Errorf("failed to parse job request: %w", err)
-	}
-
-	// Set the RequestID and override category/operation from subject (subject is source of truth)
-	jobRequest.RequestID = requestID
-	jobRequest.Category = category
-	jobRequest.Operation = operation
-
-	// Determine Type from subject prefix (jobs.query vs jobs.modify)
-	if strings.HasPrefix(prefix, "jobs.query") {
-		jobRequest.Type = job.TypeQuery
-	} else if strings.HasPrefix(prefix, "jobs.modify") {
-		jobRequest.Type = job.TypeModify
-	}
-
-	// Process the job
-	w.logger.Info(
-		"processing job",
-		slog.String("job_id", jobKey),
-		slog.String("type", string(jobRequest.Type)),
-		slog.String("category", jobRequest.Category),
-		slog.String("operation", jobRequest.Operation),
-	)
-
-	// Create job response
-	response := job.Response{
-		RequestID: jobRequest.RequestID,
-		Status:    job.StatusProcessing,
-		Timestamp: time.Now(),
-	}
-
-	// Mark job as processing in KV store immediately
-	if currentStatus == "unprocessed" {
-		jobData["status"] = "processing"
-		jobData["updated_at"] = time.Now().Format(time.RFC3339)
-
-		// Add status transition tracking
-		if statusHistory, ok := jobData["status_history"].([]interface{}); ok {
-			jobData["status_history"] = append(statusHistory, map[string]interface{}{
-				"status":    "processing",
-				"timestamp": time.Now().Format(time.RFC3339),
-			})
-		} else {
-			// Initialize status history if not present
-			jobData["status_history"] = []interface{}{
-				map[string]interface{}{
-					"status":    "unprocessed",
-					"timestamp": jobData["created"], // Original creation time
-				},
-				map[string]interface{}{
-					"status":    "processing",
-					"timestamp": time.Now().Format(time.RFC3339),
-				},
-			}
-		}
-
-		processingJSON, err := json.Marshal(jobData)
-		if err != nil {
-			return fmt.Errorf("failed to marshal processing status: %w", err)
-		}
-
-		// Create new key FIRST for safety
-		processingKey := "processing." + jobKey
-		err = w.natsClient.KVPut(w.appConfig.Job.KVBucket, processingKey, processingJSON)
-		if err != nil {
-			return fmt.Errorf("failed to create processing key: %w", err)
-		}
-
-		// Only delete old key after successful creation
-		err = w.natsClient.KVDelete(w.appConfig.Job.KVBucket, fullKey)
-		if err != nil {
-			// Log error but continue - we have the new key
-			w.logger.Error("failed to delete old unprocessed key",
-				slog.String("old_key", fullKey),
-				slog.String("error", err.Error()),
-			)
-		}
-
-		// Update tracking variables
-		currentStatus = "processing"
-		fullKey = processingKey
-
-		w.logger.Debug("marked job as processing",
-			slog.String("job_id", jobKey),
-			slog.String("created", jobData["created"].(string)), // Show we preserved original
-		)
-	}
-
-	// Process based on category and operation
-	result, err := w.processJobOperation(jobRequest)
-	if err != nil {
-		w.logger.Error(
-			"job processing failed",
-			slog.String("job_id", jobKey),
-			slog.String("category", jobRequest.Category),
-			slog.String("operation", jobRequest.Operation),
-			slog.String("error", err.Error()),
-		)
-		response.Status = job.StatusFailed
-		response.Error = err.Error()
-	} else {
-		response.Status = job.StatusCompleted
-		response.Data = result
-	}
-
-	response.Timestamp = time.Now()
-
-	// Store response in KV bucket
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		return fmt.Errorf("failed to marshal response: %w", err)
-	}
-
-	// NATS KV keys must be valid NATS subject tokens (alphanumeric + underscores only)
-	responseKey := sanitizeKeyForNATS(jobRequest.RequestID)
-	w.logger.Debug(
-		"storing response",
-		slog.String("original_request_id", jobRequest.RequestID),
-		slog.String("sanitized_key", responseKey),
-	)
-	err = w.natsClient.KVPut(w.appConfig.Job.KVResponseBucket, responseKey, responseJSON)
-	if err != nil {
-		return fmt.Errorf("failed to store response with key %s: %w", responseKey, err)
-	}
-
-	// Update job status in original KV bucket
-	jobData["status"] = string(response.Status)
-	if response.Error != "" {
-		jobData["error"] = response.Error
-	}
-	jobData["updated_at"] = time.Now().Format(time.RFC3339)
-
-	// Include result data in the original job entry for retrieval by UUID
-	if response.Data != nil {
-		jobData["result"] = response.Data
-	}
-
-	updatedJobJSON, err := json.Marshal(jobData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal updated job: %w", err)
-	}
-
-	// Add status transition to history
-	if statusHistory, ok := jobData["status_history"].([]interface{}); ok {
-		jobData["status_history"] = append(statusHistory, map[string]interface{}{
-			"status":    string(response.Status),
-			"timestamp": time.Now().Format(time.RFC3339),
-		})
-	} else {
-		// This shouldn't happen if processing was tracked, but handle it
-		jobData["status_history"] = []interface{}{
-			map[string]interface{}{
-				"status":    string(response.Status),
-				"timestamp": time.Now().Format(time.RFC3339),
-			},
-		}
-	}
-
-	// Re-marshal with status history
-	updatedJobJSON, err = json.Marshal(jobData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal job with history: %w", err)
-	}
-
-	// Move job to new status prefix if status changed
-	newStatus := string(response.Status)
-	if currentStatus != newStatus {
-		// Create new key FIRST for safety
-		newKey := newStatus + "." + jobKey
-		err = w.natsClient.KVPut(w.appConfig.Job.KVBucket, newKey, updatedJobJSON)
-		if err != nil {
-			return fmt.Errorf("failed to create new status key: %w", err)
-		}
-
-		// Only delete old key after successful creation
-		err = w.natsClient.KVDelete(w.appConfig.Job.KVBucket, fullKey)
-		if err != nil {
-			// Log error but continue - we have the new key
-			w.logger.Error("failed to delete old status key",
-				slog.String("old_key", fullKey),
-				slog.String("error", err.Error()),
-			)
-		}
-
-		w.logger.Debug("moved job to new status prefix",
-			slog.String("job_id", jobKey),
-			slog.String("old_status", currentStatus),
-			slog.String("new_status", newStatus),
-			slog.String("original_created", jobData["created"].(string)),
-		)
-	} else {
-		// Status unchanged, just update in place
-		err = w.natsClient.KVPut(w.appConfig.Job.KVBucket, fullKey, updatedJobJSON)
-		if err != nil {
-			return fmt.Errorf("failed to update job: %w", err)
-		}
-	}
-
-	w.logger.Info(
-		"job processing completed",
-		slog.String("job_id", jobKey),
-		slog.String("status", string(response.Status)),
-	)
-
-	// Return error if job failed so message won't be acknowledged and will retry
-	if response.Status == job.StatusFailed {
-		return fmt.Errorf("job processing failed: %s", response.Error)
-	}
-
-	return nil
-}
-
 // processJobOperation handles the actual job processing based on category and operation.
-func (w *Worker) processJobOperation(jobRequest job.Request) (json.RawMessage, error) {
+func (w *Worker) processJobOperation(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
 	switch jobRequest.Category {
 	case "system":
 		return w.processSystemOperation(jobRequest)
@@ -338,7 +49,9 @@ func (w *Worker) processJobOperation(jobRequest job.Request) (json.RawMessage, e
 }
 
 // processSystemOperation handles system-related operations.
-func (w *Worker) processSystemOperation(jobRequest job.Request) (json.RawMessage, error) {
+func (w *Worker) processSystemOperation(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
 	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
 
@@ -363,7 +76,9 @@ func (w *Worker) processSystemOperation(jobRequest job.Request) (json.RawMessage
 }
 
 // processNetworkOperation handles network-related operations.
-func (w *Worker) processNetworkOperation(jobRequest job.Request) (json.RawMessage, error) {
+func (w *Worker) processNetworkOperation(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
 	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
 
@@ -484,7 +199,9 @@ func (w *Worker) getSystemLoad() (json.RawMessage, error) {
 }
 
 // processNetworkDNS handles DNS configuration operations.
-func (w *Worker) processNetworkDNS(jobRequest job.Request) (json.RawMessage, error) {
+func (w *Worker) processNetworkDNS(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
 	var dnsData map[string]interface{}
 	if err := json.Unmarshal(jobRequest.Data, &dnsData); err != nil {
 		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
@@ -504,43 +221,45 @@ func (w *Worker) processNetworkDNS(jobRequest job.Request) (json.RawMessage, err
 		}
 
 		return json.Marshal(config)
-	} else {
-		// Set DNS configuration
-		servers, _ := dnsData["servers"].([]interface{})
-		searchDomains, _ := dnsData["search_domains"].([]interface{})
-		interfaceName, _ := dnsData["interface"].(string)
-
-		var serverStrings []string
-		for _, s := range servers {
-			if str, ok := s.(string); ok {
-				serverStrings = append(serverStrings, str)
-			}
-		}
-
-		var searchStrings []string
-		for _, s := range searchDomains {
-			if str, ok := s.(string); ok {
-				searchStrings = append(searchStrings, str)
-			}
-		}
-
-		dnsProvider := w.getDNSProvider()
-		err := dnsProvider.UpdateResolvConfByInterface(serverStrings, searchStrings, interfaceName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to set DNS config: %w", err)
-		}
-
-		result := map[string]interface{}{
-			"success": true,
-			"message": "DNS configuration updated successfully",
-		}
-
-		return json.Marshal(result)
 	}
+
+	// Set DNS configuration
+	servers, _ := dnsData["servers"].([]interface{})
+	searchDomains, _ := dnsData["search_domains"].([]interface{})
+	interfaceName, _ := dnsData["interface"].(string)
+
+	var serverStrings []string
+	for _, s := range servers {
+		if str, ok := s.(string); ok {
+			serverStrings = append(serverStrings, str)
+		}
+	}
+
+	var searchStrings []string
+	for _, s := range searchDomains {
+		if str, ok := s.(string); ok {
+			searchStrings = append(searchStrings, str)
+		}
+	}
+
+	dnsProvider := w.getDNSProvider()
+	err := dnsProvider.UpdateResolvConfByInterface(serverStrings, searchStrings, interfaceName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set DNS config: %w", err)
+	}
+
+	result := map[string]interface{}{
+		"success": true,
+		"message": "DNS configuration updated successfully",
+	}
+
+	return json.Marshal(result)
 }
 
 // processNetworkPing handles ping operations.
-func (w *Worker) processNetworkPing(jobRequest job.Request) (json.RawMessage, error) {
+func (w *Worker) processNetworkPing(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
 	var pingData map[string]interface{}
 	if err := json.Unmarshal(jobRequest.Data, &pingData); err != nil {
 		return nil, fmt.Errorf("failed to parse ping data: %w", err)
@@ -560,103 +279,27 @@ func (w *Worker) processNetworkPing(jobRequest job.Request) (json.RawMessage, er
 	return json.Marshal(result)
 }
 
-// Provider factory methods following the existing pattern
+// Provider accessor methods that return the injected providers
 func (w *Worker) getHostProvider() systemHost.Provider {
-	var hostProvider systemHost.Provider
-
-	info, _ := host.Info()
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		hostProvider = systemHost.NewUbuntuProvider()
-	default:
-		hostProvider = systemHost.NewLinuxProvider()
-	}
-
-	return hostProvider
+	return w.hostProvider
 }
 
 func (w *Worker) getDiskProvider() disk.Provider {
-	var diskProvider disk.Provider
-
-	info, _ := host.Info()
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		diskProvider = disk.NewUbuntuProvider(w.logger)
-	default:
-		diskProvider = disk.NewLinuxProvider()
-	}
-
-	return diskProvider
+	return w.diskProvider
 }
 
 func (w *Worker) getMemProvider() mem.Provider {
-	var memProvider mem.Provider
-
-	info, _ := host.Info()
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		memProvider = mem.NewUbuntuProvider()
-	default:
-		memProvider = mem.NewLinuxProvider()
-	}
-
-	return memProvider
+	return w.memProvider
 }
 
 func (w *Worker) getLoadProvider() load.Provider {
-	var loadProvider load.Provider
-
-	info, _ := host.Info()
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		loadProvider = load.NewUbuntuProvider()
-	default:
-		loadProvider = load.NewLinuxProvider()
-	}
-
-	return loadProvider
+	return w.loadProvider
 }
 
 func (w *Worker) getDNSProvider() dns.Provider {
-	var dnsProvider dns.Provider
-	var execManager exec.Manager
-
-	info, _ := host.Info()
-	execManager = exec.New(w.logger)
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		dnsProvider = dns.NewUbuntuProvider(w.logger, execManager)
-	default:
-		dnsProvider = dns.NewLinuxProvider()
-	}
-
-	return dnsProvider
+	return w.dnsProvider
 }
 
 func (w *Worker) getPingProvider() ping.Provider {
-	var pingProvider ping.Provider
-
-	info, _ := host.Info()
-
-	switch strings.ToLower(info.Platform) {
-	case "ubuntu":
-		pingProvider = ping.NewUbuntuProvider()
-	default:
-		pingProvider = ping.NewLinuxProvider()
-	}
-
-	return pingProvider
-}
-
-// sanitizeKeyForNATS converts a string to a valid NATS KV key.
-// NATS KV keys must be valid NATS subject tokens (alphanumeric and underscores only).
-func sanitizeKeyForNATS(key string) string {
-	// Replace any non-alphanumeric characters (except underscores) with underscores
-	reg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
-	return reg.ReplaceAllString(key, "_")
+	return w.pingProvider
 }

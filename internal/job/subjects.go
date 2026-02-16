@@ -18,25 +18,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package jobs provides NATS subject hierarchy for distributed job routing.
+// Package job provides NATS subject hierarchy for distributed job routing.
 //
-// Subject Format: job.{type}.{hostname}.{category}.{operation}
+// Subject Format: jobs.{type}.{hostname}
 //
 // Routing Patterns:
-//   - Direct: job.query.server1.system.status (specific host)
-//   - Any: job.query._any.system.status (load-balanced across available workers)
-//   - Broadcast: job.query._all.system.status (all workers receive)
-//   - Wildcard: job.query.*.system.status (matches any hostname)
+//   - Direct: jobs.query.server1 (specific host)
+//   - Any: jobs.query._any (load-balanced across available workers)
+//   - Broadcast: jobs.modify._all (all workers receive)
 //
 // Workers subscribe to:
-//   - Their specific hostname: job.*.server1.>
-//   - Load-balanced work: job.*._any.> (with queue group)
-//   - Broadcast messages: job.*._all.>
+//   - Their specific hostname: jobs.*.server1
+//   - Load-balanced work: jobs.*._any (with queue group)
+//   - Broadcast messages: jobs.*._all
 package job
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -76,70 +74,47 @@ const (
 )
 
 // BuildQuerySubject creates a subject for query operations.
-// Example: job.query.hostname.system.status
+// Example: jobs.query.hostname
 func BuildQuerySubject(
 	hostname string,
-	category string,
-	operation string,
 ) string {
-	return fmt.Sprintf("%s.%s.%s.%s", JobsQueryPrefix, hostname, category, operation)
+	return fmt.Sprintf("%s.%s", JobsQueryPrefix, hostname)
 }
 
 // BuildModifySubject creates a subject for modify operations.
-// Example: job.modify.hostname.network.dns
+// Example: jobs.modify.hostname
 func BuildModifySubject(
 	hostname string,
-	category string,
-	operation string,
 ) string {
-	return fmt.Sprintf("%s.%s.%s.%s", JobsModifyPrefix, hostname, category, operation)
+	return fmt.Sprintf("%s.%s", JobsModifyPrefix, hostname)
 }
 
 // BuildQuerySubjectForAllHosts creates a query subject targeting all hosts.
-// Example: job.query.*.system.status
-func BuildQuerySubjectForAllHosts(
-	category string,
-	operation string,
-) string {
-	return BuildQuerySubject(AllHosts, category, operation)
+// Example: jobs.query.*
+func BuildQuerySubjectForAllHosts() string {
+	return BuildQuerySubject(AllHosts)
 }
 
 // BuildModifySubjectForAllHosts creates a modify subject targeting all hosts.
-// Example: job.modify.*.network.dns
-func BuildModifySubjectForAllHosts(
-	category string,
-	operation string,
-) string {
-	return BuildModifySubject(AllHosts, category, operation)
-}
-
-// GetLocalHostname returns the current system hostname.
-func GetLocalHostname() (string, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-	return hostname, nil
+// Example: jobs.modify.*
+func BuildModifySubjectForAllHosts() string {
+	return BuildModifySubject(AllHosts)
 }
 
 // ParseSubject extracts components from a job subject.
-// Supports both legacy format (5 parts) and new dotted operations (6+ parts).
+// Expected format: jobs.{type}.{hostname}
 func ParseSubject(
 	subject string,
-) (prefix, hostname, category, operation string, err error) {
+) (prefix, hostname string, err error) {
 	parts := strings.Split(subject, ".")
-	if len(parts) < 5 {
-		return "", "", "", "", fmt.Errorf("invalid subject format: %s", subject)
+	if len(parts) != 3 {
+		return "", "", fmt.Errorf("invalid subject format: %s", subject)
 	}
 
 	prefix = fmt.Sprintf("%s.%s", parts[0], parts[1])
 	hostname = parts[2]
-	category = parts[3]
 
-	// Operation may be dotted (e.g., "hostname.get"), so join remaining parts
-	operation = strings.Join(parts[4:], ".")
-
-	return prefix, hostname, category, operation, nil
+	return prefix, hostname, nil
 }
 
 // BuildWorkerSubscriptionPattern creates subscription patterns for workers.
@@ -148,9 +123,9 @@ func BuildWorkerSubscriptionPattern(
 	hostname string,
 ) []string {
 	return []string{
-		fmt.Sprintf("job.*.%s.>", hostname),      // Direct messages to this host
-		fmt.Sprintf("job.*.%s.>", AnyHost),       // Load-balanced messages
-		fmt.Sprintf("job.*.%s.>", BroadcastHost), // Broadcast messages
+		fmt.Sprintf("jobs.*.%s", hostname),      // Direct messages to this host
+		fmt.Sprintf("jobs.*.%s", AnyHost),       // Load-balanced messages
+		fmt.Sprintf("jobs.*.%s", BroadcastHost), // Broadcast messages
 	}
 }
 
@@ -172,7 +147,9 @@ func IsSpecialHostname(
 
 // SanitizeHostname converts a hostname to a valid NATS consumer/routing name.
 // NATS consumer names and routing must be alphanumeric with underscores only.
-func SanitizeHostname(hostname string) string {
+func SanitizeHostname(
+	hostname string,
+) string {
 	// Replace any non-alphanumeric characters (except underscores) with underscores
 	reg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
 	return reg.ReplaceAllString(hostname, "_")

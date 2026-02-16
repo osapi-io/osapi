@@ -8,7 +8,7 @@ api:
       # admin
       # bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc0MDg2NDIxNywiaWF0IjoxNzMyOTE1NDE3fQ.0YBwFSKXs2G16TACO-uDsIklPhaYNw63-q95IeNuneU
       # read
-      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJyZWFkIl0sImlzcyI6Im9zYXBpIiwic3ViIjoiam9obkBkZXdleS53cyIsImF1ZCI6WyJodHRwczovL2xvY2FsaG9zdCIsImh0dHA6Ly9sb2NhbGhvc3QiXSwiZXhwIjoxNzQwODY1NzcwLCJpYXQiOjE3MzI5MTY5NzB9.fHERakKxHGDrcYKAQ8uZDVe7PipUQgJ7ciZRd_oQSGw
+      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
   server:
     port: 8080
     security:
@@ -19,13 +19,11 @@ api:
           - http://localhost:3001
           - https://retr0h.github.io
 
-task:
+nats:
   server:
     host: localhost
     port: 4222
-    trace: true
-    no_log: true
-    file_store_dir: .nats/jetstream/
+    store_dir: .nats/jetstream/
 
 job:
   stream_name: JOBS
@@ -69,10 +67,6 @@ job:
     host: localhost
     port: 4222
     client_name: osapi-jobs-cli
-
-  server:
-    host: localhost
-    port: 4222
 
   worker:
     host: localhost

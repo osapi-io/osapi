@@ -1,0 +1,159 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package job_test
+
+import (
+	"context"
+	"encoding/json"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	apijob "github.com/retr0h/osapi/internal/api/job"
+	"github.com/retr0h/osapi/internal/api/job/gen"
+	jobtypes "github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+)
+
+type JobListPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *jobmocks.MockJobClient
+	handler       *apijob.Job
+	ctx           context.Context
+}
+
+func (s *JobListPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
+	s.handler = apijob.New(s.mockJobClient)
+	s.ctx = context.Background()
+}
+
+func (s *JobListPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *JobListPublicTestSuite) TestGetJob() {
+	completedStatus := "completed"
+
+	tests := []struct {
+		name         string
+		request      gen.GetJobRequestObject
+		mockJobs     []*jobtypes.QueuedJob
+		mockError    error
+		validateFunc func(resp gen.GetJobResponseObject)
+	}{
+		{
+			name: "success with filter",
+			request: gen.GetJobRequestObject{
+				Params: gen.GetJobParams{Status: &completedStatus},
+			},
+			mockJobs: []*jobtypes.QueuedJob{
+				{
+					ID:     "job-1",
+					Status: "completed",
+				},
+			},
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob200JSONResponse)
+				s.True(ok)
+				s.Equal(1, *r.TotalItems)
+				s.Len(*r.Items, 1)
+			},
+		},
+		{
+			name:    "success without filter",
+			request: gen.GetJobRequestObject{},
+			mockJobs: []*jobtypes.QueuedJob{
+				{ID: "job-1", Status: "completed"},
+				{ID: "job-2", Status: "processing"},
+			},
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob200JSONResponse)
+				s.True(ok)
+				s.Equal(2, *r.TotalItems)
+			},
+		},
+		{
+			name:    "success with all optional fields",
+			request: gen.GetJobRequestObject{},
+			mockJobs: []*jobtypes.QueuedJob{
+				{
+					ID:        "job-1",
+					Status:    "failed",
+					Created:   "2025-06-14T10:00:00Z",
+					Operation: map[string]interface{}{"type": "network.dns.get"},
+					Error:     "timeout",
+					Hostname:  "worker-2",
+					UpdatedAt: "2025-06-14T10:05:00Z",
+					Result:    json.RawMessage(`{"servers":["8.8.8.8"]}`),
+				},
+			},
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob200JSONResponse)
+				s.True(ok)
+				s.Equal(1, *r.TotalItems)
+				item := (*r.Items)[0]
+				s.Equal("job-1", *item.Id)
+				s.NotNil(item.Operation)
+				s.NotNil(item.Error)
+				s.Equal("timeout", *item.Error)
+				s.NotNil(item.Hostname)
+				s.Equal("worker-2", *item.Hostname)
+				s.NotNil(item.UpdatedAt)
+				s.NotNil(item.Result)
+			},
+		},
+		{
+			name:      "job client error",
+			request:   gen.GetJobRequestObject{},
+			mockError: assert.AnError,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				_, ok := resp.(gen.GetJob500JSONResponse)
+				s.True(ok)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var statusFilter string
+			if tt.request.Params.Status != nil {
+				statusFilter = *tt.request.Params.Status
+			}
+			s.mockJobClient.EXPECT().
+				ListJobs(gomock.Any(), statusFilter).
+				Return(tt.mockJobs, tt.mockError)
+
+			resp, err := s.handler.GetJob(s.ctx, tt.request)
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func TestJobListPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(JobListPublicTestSuite))
+}

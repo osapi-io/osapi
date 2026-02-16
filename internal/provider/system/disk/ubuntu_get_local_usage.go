@@ -81,7 +81,9 @@ func (u *Ubuntu) GetLocalUsageStats() ([]UsageStats, error) {
 // This is not an ideal approach. We resort to this due to limitations in the
 // gopsutil library, which does not provide a more explicit way of classifying
 // permission-related errors.
-func isPermissionError(err error) bool {
+func isPermissionError(
+	err error,
+) bool {
 	if err == nil {
 		return false
 	}
@@ -102,7 +104,9 @@ func isPermissionError(err error) bool {
 }
 
 // isLocalPartition determines if a partition is a local disk (not network or special filesystems).
-func isLocalPartition(partition disk.PartitionStat) bool {
+func isLocalPartition(
+	partition disk.PartitionStat,
+) bool {
 	// Add conditions to filter only local filesystems, e.g., ext4, xfs, etc.
 	localFileSystems := map[string]bool{
 		"ext4":  true,

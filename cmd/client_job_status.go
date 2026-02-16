@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -39,7 +40,9 @@ type jobsModel struct {
 	pollIntervalSecs int
 }
 
-func initialJobsModel(pollIntervalSecs int) jobsModel {
+func initialJobsModel(
+	pollIntervalSecs int,
+) jobsModel {
 	return jobsModel{
 		jobsStatus:       "Fetching jobs status...",
 		lastUpdate:       time.Now(),
@@ -66,7 +69,9 @@ func (m jobsModel) Init() tea.Cmd {
 	return tea.Batch(fetchJobsCmd(), m.tickCmd())
 }
 
-func (m jobsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m jobsModel) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "q" {
@@ -110,7 +115,9 @@ func (m jobsModel) View() string {
 	)
 }
 
-func styleStatusText(statusText string) string {
+func styleStatusText(
+	statusText string,
+) string {
 	var (
 		keyStyle     = lipgloss.NewStyle().Foreground(gray) // Gray for all keys
 		valueStyle   = lipgloss.NewStyle().Foreground(teal) // Soft teal for values
@@ -163,7 +170,7 @@ func fetchJobsStatus() string {
 	}
 
 	// Build status display
-	statusDisplay := fmt.Sprintf("Jobs Queue Status:\n")
+	statusDisplay := "Jobs Queue Status:\n"
 	statusDisplay += fmt.Sprintf("  Total Jobs: %d\n", stats.TotalJobs)
 	statusDisplay += fmt.Sprintf("  Unprocessed: %d\n", stats.StatusCounts["unprocessed"])
 	statusDisplay += fmt.Sprintf("  Processing: %d\n", stats.StatusCounts["processing"])
@@ -174,7 +181,7 @@ func fetchJobsStatus() string {
 	}
 
 	if len(stats.OperationCounts) > 0 {
-		statusDisplay += fmt.Sprintf("\nOperation Types:\n")
+		statusDisplay += "\nOperation Types:\n"
 		for opType, count := range stats.OperationCounts {
 			statusDisplay += fmt.Sprintf("  %s: %d\n", opType, count)
 		}
@@ -211,7 +218,7 @@ and operation types with live refresh.`,
 		if jsonOutput {
 			// Get status once and output as JSON
 			status := fetchJobsStatusJSON()
-			fmt.Println(status)
+			logger.Info("jobs status", slog.String("response", status))
 			return
 		}
 

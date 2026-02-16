@@ -29,8 +29,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/job"
 )
 
 // clientJobRunCmd represents the clientJobRun command.
@@ -80,7 +78,7 @@ This combines job submission and retrieval into a single command for convenience
 		}
 
 		jobID := result.JobID
-		logger.Info("job submitted", slog.String("job_id", jobID))
+		logger.Debug("job submitted", slog.String("job_id", jobID))
 
 		// Poll for completion
 		pollInterval := time.Duration(pollSeconds) * time.Second
@@ -110,7 +108,10 @@ This combines job submission and retrieval into a single command for convenience
 	},
 }
 
-func checkJobComplete(ctx context.Context, jobID string) bool {
+func checkJobComplete(
+	ctx context.Context,
+	jobID string,
+) bool {
 	jobInfo, err := jobClient.GetJobStatus(ctx, jobID)
 	if err != nil {
 		logger.Error("failed to get job status",
@@ -125,82 +126,20 @@ func checkJobComplete(ctx context.Context, jobID string) bool {
 		slog.String("status", jobInfo.Status),
 	)
 
-	// Check if job is complete
-	if jobInfo.Status == "completed" || jobInfo.Status == "failed" {
-		logger.Info("job finished",
+	// Check if job is complete (including partial_failure)
+	if jobInfo.Status == "completed" || jobInfo.Status == "failed" ||
+		jobInfo.Status == "partial_failure" {
+		logger.Debug("job finished",
 			slog.String("job_id", jobID),
 			slog.String("status", jobInfo.Status),
 		)
 
 		// Display results
-		displayJobResults(jobInfo)
+		displayJobDetails(jobInfo)
 		return true
 	}
 
 	return false
-}
-
-func displayJobResults(jobInfo *job.QueuedJob) {
-	if jsonOutput {
-		resultJSON, _ := json.Marshal(jobInfo)
-		logger.Info("job", slog.String("response", string(resultJSON)))
-		return
-	}
-
-	// Display job details
-	jobData := map[string]interface{}{
-		"Job ID":  jobInfo.ID,
-		"Status":  jobInfo.Status,
-		"Created": jobInfo.Created,
-	}
-
-	// Add error field if present
-	if jobInfo.Error != "" {
-		jobData["Error"] = jobInfo.Error
-	}
-
-	// Add subject if present
-	if jobInfo.Subject != "" {
-		jobData["Subject"] = jobInfo.Subject
-	}
-
-	printStyledMap(jobData)
-
-	// Collect content for both sections
-	var allContent []string
-	var sections []section
-
-	// Display the operation request
-	if jobInfo.Operation != nil {
-		jobOperationJSON, _ := json.MarshalIndent(jobInfo.Operation, "", "  ")
-		operationRows := [][]string{{string(jobOperationJSON)}}
-		sections = append(sections, section{
-			Title:   "Job Request",
-			Headers: []string{"DATA"},
-			Rows:    operationRows,
-		})
-		allContent = append(allContent, string(jobOperationJSON))
-	}
-
-	// Display results if completed and available
-	if jobInfo.Status == "completed" && len(jobInfo.Result) > 0 {
-		var result interface{}
-		if err := json.Unmarshal(jobInfo.Result, &result); err == nil {
-			resultJSON, _ := json.MarshalIndent(result, "", "  ")
-			resultRows := [][]string{{string(resultJSON)}}
-			sections = append(sections, section{
-				Title:   "Job Response",
-				Headers: []string{"DATA"},
-				Rows:    resultRows,
-			})
-			allContent = append(allContent, string(resultJSON))
-		}
-	}
-
-	// Print each section individually
-	for _, sec := range sections {
-		printStyledTable([]section{sec})
-	}
 }
 
 func init() {

@@ -18,14 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package system provides system-related API handlers.
 package system
 
 import (
 	"github.com/retr0h/osapi/internal/api/system/gen"
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	"github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
 // ensure that we've conformed to the `StrictServerInterface` with a compile-time check
@@ -33,15 +31,9 @@ var _ gen.StrictServerInterface = (*System)(nil)
 
 // New factory to create a new instance.
 func New(
-	mp mem.Provider,
-	lp load.Provider,
-	hp host.Provider,
-	dp disk.Provider,
+	jobClient client.JobClient,
 ) *System {
 	return &System{
-		MemProvider:  mp,
-		LoadProvider: lp,
-		HostProvider: hp,
-		DiskProvider: dp,
+		JobClient: jobClient,
 	}
 }

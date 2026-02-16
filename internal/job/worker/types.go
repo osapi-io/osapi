@@ -21,7 +21,6 @@
 package worker
 
 import (
-	"context"
 	"log/slog"
 	"sync"
 
@@ -29,21 +28,33 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider/system/disk"
+	"github.com/retr0h/osapi/internal/provider/system/host"
+	"github.com/retr0h/osapi/internal/provider/system/load"
+	"github.com/retr0h/osapi/internal/provider/system/mem"
 )
 
 // Worker implements job processing with clean lifecycle management.
 type Worker struct {
-	logger     *slog.Logger
-	appConfig  config.Config
-	appFs      afero.Fs
-	natsClient messaging.NATSClient
-	jobClient  client.JobClient
+	logger    *slog.Logger
+	appConfig config.Config
+	appFs     afero.Fs
+	jobClient client.JobClient
+
+	// System providers
+	hostProvider host.Provider
+	diskProvider disk.Provider
+	memProvider  mem.Provider
+	loadProvider load.Provider
+
+	// Network providers
+	dnsProvider  dns.Provider
+	pingProvider ping.Provider
 
 	// Lifecycle management
-	cancel context.CancelFunc
-	done   chan struct{}
-	wg     sync.WaitGroup
+	wg sync.WaitGroup
 }
 
 // JobContext contains the context and data for a single job execution.

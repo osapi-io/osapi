@@ -22,7 +22,6 @@ package dns
 
 import (
 	"fmt"
-	"runtime"
 )
 
 // UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
@@ -35,13 +34,13 @@ func (l *Linux) UpdateResolvConfByInterface(
 	interfaceName string,
 ) error {
 	// For testing on macOS, simulate successful operation
-	if runtime.GOOS == "darwin" {
+	if runtimeGOOS == "darwin" {
 		return nil
 	}
 
 	return fmt.Errorf(
 		"UpdateResolvConfByInterface is not implemented for LinuxProvider on %s interface %s (servers: %v, domains: %v)",
-		runtime.GOOS,
+		runtimeGOOS,
 		interfaceName,
 		servers,
 		searchDomains,
