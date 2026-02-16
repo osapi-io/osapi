@@ -97,8 +97,11 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			},
 			expectMock: false,
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
-				_, ok := resp.(gen.PostNetworkPing400JSONResponse)
+				r, ok := resp.(gen.PostNetworkPing400JSONResponse)
 				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "Address")
+				s.Contains(*r.Error, "ip")
 			},
 		},
 		{

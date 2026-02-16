@@ -89,8 +89,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			},
 			expectMock: false,
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
-				_, ok := resp.(gen.PutNetworkDNS400JSONResponse)
+				r, ok := resp.(gen.PutNetworkDNS400JSONResponse)
 				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "InterfaceName")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{

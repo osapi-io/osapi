@@ -23,6 +23,8 @@ package job
 import (
 	"context"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/retr0h/osapi/internal/api/job/gen"
 )
 
@@ -31,6 +33,15 @@ func (j *Job) PostJob(
 	ctx context.Context,
 	request gen.PostJobRequestObject,
 ) (gen.PostJobResponseObject, error) {
+	validate := validator.New()
+	if err := validate.Struct(request.Body); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		errMsg := validationErrors.Error()
+		return gen.PostJob400JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
 	result, err := j.JobClient.CreateJob(ctx, request.Body.Operation, request.Body.TargetHostname)
 	if err != nil {
 		errMsg := err.Error()

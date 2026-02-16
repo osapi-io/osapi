@@ -22,10 +22,10 @@ const (
 // CreateJobRequest defines model for CreateJobRequest.
 type CreateJobRequest struct {
 	// Operation The operation to perform, as a JSON object.
-	Operation map[string]interface{} `json:"operation"`
+	Operation map[string]interface{} `json:"operation" validate:"required"`
 
 	// TargetHostname The target hostname for routing (_any, _all, or specific hostname).
-	TargetHostname string `json:"target_hostname"`
+	TargetHostname string `json:"target_hostname" validate:"required,min=1"`
 }
 
 // CreateJobResponse defines model for CreateJobResponse.

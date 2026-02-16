@@ -1,8 +1,8 @@
 ---
 title: "Audit and ensure validation on all API endpoints"
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-16
 ---
 
 ## Objective
@@ -41,6 +41,23 @@ verified in the new strict-server handler implementations.
 - Tests cover validation error cases
 - `x-oapi-codegen-extra-tags` with `validate:` tags are present in OpenAPI
   specs where applicable
+
+## Outcome
+
+All endpoints with user input now have validation with comprehensive test
+coverage at both handler and HTTP integration levels:
+
+- **POST /job**: Added `validate` tags to OpenAPI spec, added
+  `validator.New()` + `validate.Struct()` in handler, added handler-level
+  and HTTP integration tests for each validation point (operation required,
+  target_hostname required)
+- **POST /network/ping**: Already had validation; strengthened test
+  assertions to check error reason (Address/required, Address/ip); added
+  HTTP integration tests
+- **PUT /network/dns**: Already had validation; strengthened test
+  assertions to check error reason (InterfaceName/required); added HTTP
+  integration tests covering all validation points (InterfaceName/required,
+  InterfaceName/alphanum, Servers/ip, SearchDomains/hostname)
 
 ## Notes
 
