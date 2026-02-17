@@ -32,12 +32,41 @@ type FactoryTestSuite struct {
 	suite.Suite
 }
 
-func (s *FactoryTestSuite) TestCreateProvidersUbuntuPlatform() {
+func (s *FactoryTestSuite) TestCreateProviders() {
 	tests := []struct {
-		name string
+		name      string
+		setupMock func() func() (*host.InfoStat, error)
 	}{
 		{
 			name: "creates ubuntu providers when platform is ubuntu",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{
+						Platform: "Ubuntu",
+					}, nil
+				}
+			},
+		},
+		{
+			name: "creates darwin providers when platform is empty and OS is darwin",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{
+						Platform: "",
+						OS:       "darwin",
+					}, nil
+				}
+			},
+		},
+		{
+			name: "creates linux providers for unknown platform",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{
+						Platform: "centos",
+					}, nil
+				}
+			},
 		},
 	}
 
@@ -46,11 +75,7 @@ func (s *FactoryTestSuite) TestCreateProvidersUbuntuPlatform() {
 			original := factoryHostInfoFn
 			defer func() { factoryHostInfoFn = original }()
 
-			factoryHostInfoFn = func() (*host.InfoStat, error) {
-				return &host.InfoStat{
-					Platform: "Ubuntu",
-				}, nil
-			}
+			factoryHostInfoFn = tt.setupMock()
 
 			factory := NewProviderFactory(slog.Default())
 			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := factory.CreateProviders()

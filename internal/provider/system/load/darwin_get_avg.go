@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package load
 
-import (
-	"fmt"
-)
-
-// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
-func (l *Linux) UpdateResolvConfByInterface(
-	_ []string,
-	_ []string,
-	_ string,
-) error {
-	return fmt.Errorf("UpdateResolvConfByInterface is not implemented for LinuxProvider")
+// GetAverageStats returns the system's load averages over 1, 5, and 15 minutes.
+// It returns a AverageStats struct with load over 1, 5, and 15 minutes,
+// and an error if something goes wrong.
+func (d *Darwin) GetAverageStats() (*AverageStats, error) {
+	avg, err := d.AvgFn()
+	if err != nil {
+		return nil, err
+	}
+	return &AverageStats{
+		Load1:  float32(avg.Load1),
+		Load5:  float32(avg.Load5),
+		Load15: float32(avg.Load15),
+	}, nil
 }

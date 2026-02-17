@@ -38,12 +38,24 @@ func (suite *LinuxGetLocalUsageStatsPublicTestSuite) SetupTest() {
 func (suite *LinuxGetLocalUsageStatsPublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
-	linux := disk.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetLocalUsageStats()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := disk.NewLinuxProvider()
 
-	suite.Empty(got)
-	suite.EqualError(err, "GetLocalUsageStats is not implemented for LinuxProvider")
+			got, err := linux.GetLocalUsageStats()
+
+			suite.Empty(got)
+			suite.EqualError(err, "GetLocalUsageStats is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
