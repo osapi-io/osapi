@@ -15,9 +15,9 @@ $ osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
 
 ## Flags
 
-| Flag       | Description        |
-| ---------- | ------------------ |
-| `--job-id` | Job ID to retrieve |
+| Flag       | Description        | Default  |
+| ---------- | ------------------ | -------- |
+| `--job-id` | Job ID to retrieve | required |
 
 Job status is computed in real-time from append-only status events in the KV
 store.

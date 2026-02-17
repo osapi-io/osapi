@@ -8,6 +8,12 @@ $ osapi server start
 ⇨ http server started on [::]:8080
 ```
 
+## Flags
+
+| Flag         | Description                  | Default |
+| ------------ | ---------------------------- | ------- |
+| `-p, --port` | Port the server will bind to | `8080`  |
+
 ## Least Privilege Mode
 
 We aim to run this API service with the **least privilege mode** to maximize

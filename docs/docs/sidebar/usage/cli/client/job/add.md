@@ -14,10 +14,10 @@ $ osapi client job add \
 
 ## Flags
 
-| Flag                | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| `--json-file`       | Path to the JSON file containing operation data    |
-| `--target-hostname` | Target hostname (`_any`, `_all`, or specific host) |
+| Flag                | Description                                        | Default  |
+| ------------------- | -------------------------------------------------- | -------- |
+| `--json-file`       | Path to the JSON file containing operation data    | required |
+| `--target-hostname` | Target hostname (`_any`, `_all`, or specific host) | required |
 
 ## Example Operation File
 
