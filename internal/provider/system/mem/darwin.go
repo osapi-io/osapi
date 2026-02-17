@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns
+package mem
 
 import (
-	"fmt"
+	"github.com/shirou/gopsutil/v4/mem"
 )
 
-// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
-func (l *Linux) UpdateResolvConfByInterface(
-	_ []string,
-	_ []string,
-	_ string,
-) error {
-	return fmt.Errorf("UpdateResolvConfByInterface is not implemented for LinuxProvider")
+// Darwin implements the Mem interface for Darwin (macOS).
+type Darwin struct {
+	VirtualMemoryFn func() (*mem.VirtualMemoryStat, error)
+}
+
+// NewDarwinProvider factory to create a new Darwin instance.
+func NewDarwinProvider() *Darwin {
+	return &Darwin{
+		VirtualMemoryFn: mem.VirtualMemory,
+	}
 }

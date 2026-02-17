@@ -38,12 +38,24 @@ func (suite *LinuxGetUptimePublicTestSuite) SetupTest() {}
 func (suite *LinuxGetUptimePublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetUptimePublicTestSuite) TestGetUptime() {
-	linux := host.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetUptime()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := host.NewLinuxProvider()
 
-	suite.Equal(time.Duration(0), got)
-	suite.EqualError(err, "GetUptime is not implemented for LinuxProvider")
+			got, err := linux.GetUptime()
+
+			suite.Equal(time.Duration(0), got)
+			suite.EqualError(err, "GetUptime is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

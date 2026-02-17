@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,18 +20,11 @@
 
 package dns
 
-import (
-	"fmt"
-)
-
-// UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
-// using the `resolvectl` command. It applies new DNS servers and search domains
-// if provided, while preserving existing settings for values that are not specified.
-// The function returns an error if the operation fails.
-func (l *Linux) UpdateResolvConfByInterface(
+// UpdateResolvConfByInterface is a no-op on macOS for development purposes.
+func (d *Darwin) UpdateResolvConfByInterface(
 	_ []string,
 	_ []string,
 	_ string,
 ) error {
-	return fmt.Errorf("UpdateResolvConfByInterface is not implemented for LinuxProvider")
+	return nil
 }

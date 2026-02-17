@@ -37,12 +37,24 @@ func (suite *LinuxGetOSInfoPublicTestSuite) SetupTest() {}
 func (suite *LinuxGetOSInfoPublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetOSInfoPublicTestSuite) TestGetOSInfo() {
-	linux := host.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetOSInfo()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := host.NewLinuxProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetOSInfo is not implemented for LinuxProvider")
+			got, err := linux.GetOSInfo()
+
+			suite.Nil(got)
+			suite.EqualError(err, "GetOSInfo is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
