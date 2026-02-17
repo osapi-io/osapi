@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,53 +18,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package ping_test
+package dns_test
 
 import (
-	"log/slog"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type LinuxDoStatsPublicTestSuite struct {
+type DarwinUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
-
-	logger *slog.Logger
 }
 
-func (suite *LinuxDoStatsPublicTestSuite) SetupTest() {
-	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-}
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {}
 
-func (suite *LinuxDoStatsPublicTestSuite) TearDownTest() {}
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
+func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns not implemented error",
+			name: "when UpdateResolvConfByInterface is a no-op",
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			linux := ping.NewLinuxProvider()
+			darwin := dns.NewDarwinProvider()
 
-			got, err := linux.Do("1.1.1.1")
+			err := darwin.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"en0",
+			)
 
-			suite.Empty(got)
-			suite.EqualError(err, "Do is not implemented for LinuxProvider")
+			suite.NoError(err)
 		})
 	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxDoStatsPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxDoStatsPublicTestSuite))
+func TestDarwinUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinUpdateResolvConfByInterfacePublicTestSuite))
 }

@@ -22,11 +22,7 @@ package dns
 
 import (
 	"fmt"
-	"runtime"
 )
-
-// runtimeGOOS is the current OS (injectable for testing).
-var runtimeGOOS = runtime.GOOS
 
 // GetResolvConfByInterface retrieves the DNS configuration for a specific network interface
 // using the `resolvectl` command. It returns a Config struct containing the DNS
@@ -34,16 +30,5 @@ var runtimeGOOS = runtime.GOOS
 func (l *Linux) GetResolvConfByInterface(
 	_ string,
 ) (*Config, error) {
-	// For testing on macOS, return dummy DNS configuration
-	if runtimeGOOS == "darwin" {
-		return &Config{
-			DNSServers:    []string{"8.8.8.8", "1.1.1.1"},
-			SearchDomains: []string{"local", "example.com"},
-		}, nil
-	}
-
-	return nil, fmt.Errorf(
-		"GetResolvConfByInterface is not implemented for LinuxProvider on %s",
-		runtimeGOOS,
-	)
+	return nil, fmt.Errorf("GetResolvConfByInterface is not implemented for LinuxProvider")
 }

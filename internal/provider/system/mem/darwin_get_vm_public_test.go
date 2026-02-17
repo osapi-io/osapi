@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,57 +18,60 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host_test
+package mem_test
 
 import (
 	"testing"
 
-	sysHost "github.com/shirou/gopsutil/v4/host"
+	sysMem "github.com/shirou/gopsutil/v4/mem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/system/host"
+	"github.com/retr0h/osapi/internal/provider/system/mem"
 )
 
-type UbuntuGetOSInfoPublicTestSuite struct {
+type DarwinGetStatsPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) SetupTest() {}
+func (suite *DarwinGetStatsPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TearDownTest() {}
+func (suite *DarwinGetStatsPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
+func (suite *DarwinGetStatsPublicTestSuite) TestGetStats() {
 	tests := []struct {
 		name        string
-		setupMock   func() func() (*sysHost.InfoStat, error)
-		want        interface{}
+		setupMock   func() func() (*sysMem.VirtualMemoryStat, error)
+		want        *mem.Stats
 		wantErr     bool
 		wantErrType error
 	}{
 		{
-			name: "when GetOSInfo Ok",
-			setupMock: func() func() (*sysHost.InfoStat, error) {
-				return func() (*sysHost.InfoStat, error) {
-					return &sysHost.InfoStat{
-						Platform:        "Ubuntu",
-						PlatformVersion: "24.04",
+			name: "when GetStats Ok",
+			setupMock: func() func() (*sysMem.VirtualMemoryStat, error) {
+				return func() (*sysMem.VirtualMemoryStat, error) {
+					return &sysMem.VirtualMemoryStat{
+						Total:  1024,
+						Free:   512,
+						Cached: 256,
 					}, nil
 				}
 			},
-			want: &host.OSInfo{
-				Distribution: "Ubuntu",
-				Version:      "24.04",
+			want: &mem.Stats{
+				Total:  1024,
+				Free:   512,
+				Cached: 256,
 			},
 			wantErr: false,
 		},
 		{
-			name: "when host.Info errors",
-			setupMock: func() func() (*sysHost.InfoStat, error) {
-				return func() (*sysHost.InfoStat, error) {
+			name: "when mem.VirtualMemory errors",
+			setupMock: func() func() (*sysMem.VirtualMemoryStat, error) {
+				return func() (*sysMem.VirtualMemoryStat, error) {
 					return nil, assert.AnError
 				}
 			},
+			want:        nil,
 			wantErr:     true,
 			wantErrType: assert.AnError,
 		},
@@ -76,13 +79,13 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			darwin := mem.NewDarwinProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				darwin.VirtualMemoryFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetOSInfo()
+			got, err := darwin.GetStats()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -99,6 +102,6 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetOSInfoPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetOSInfoPublicTestSuite))
+func TestDarwinGetStatsPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinGetStatsPublicTestSuite))
 }
