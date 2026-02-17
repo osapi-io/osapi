@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/system/host"
 )
 
-type UbuntuGetOSInfoPublicTestSuite struct {
+type DarwinGetOSInfoPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) SetupTest() {}
+func (suite *DarwinGetOSInfoPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TearDownTest() {}
+func (suite *DarwinGetOSInfoPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
+func (suite *DarwinGetOSInfoPublicTestSuite) TestGetOSInfo() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -51,14 +51,14 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 			setupMock: func() func() (*sysHost.InfoStat, error) {
 				return func() (*sysHost.InfoStat, error) {
 					return &sysHost.InfoStat{
-						Platform:        "Ubuntu",
-						PlatformVersion: "24.04",
+						Platform:        "darwin",
+						PlatformVersion: "15.3",
 					}, nil
 				}
 			},
 			want: &host.OSInfo{
-				Distribution: "Ubuntu",
-				Version:      "24.04",
+				Distribution: "darwin",
+				Version:      "15.3",
 			},
 			wantErr: false,
 		},
@@ -76,13 +76,13 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			darwin := host.NewDarwinProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				darwin.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetOSInfo()
+			got, err := darwin.GetOSInfo()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -99,6 +99,6 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetOSInfoPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetOSInfoPublicTestSuite))
+func TestDarwinGetOSInfoPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinGetOSInfoPublicTestSuite))
 }

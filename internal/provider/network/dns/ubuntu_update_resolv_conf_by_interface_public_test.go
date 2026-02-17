@@ -245,27 +245,25 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			suite.Run(tc.name, func() {
-				mock := tc.setupMock()
+			mock := tc.setupMock()
 
-				net := dns.NewUbuntuProvider(suite.logger, mock)
-				err := net.UpdateResolvConfByInterface(
-					tc.servers,
-					tc.searchDomains,
-					tc.interfaceName,
-				)
+			net := dns.NewUbuntuProvider(suite.logger, mock)
+			err := net.UpdateResolvConfByInterface(
+				tc.servers,
+				tc.searchDomains,
+				tc.interfaceName,
+			)
 
-				if tc.wantErr {
-					suite.Error(err)
-					suite.Contains(err.Error(), tc.wantErrType.Error())
-				} else {
-					suite.NoError(err)
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.wantErrType.Error())
+			} else {
+				suite.NoError(err)
 
-					got, err := net.GetResolvConfByInterface(tc.interfaceName)
-					suite.Equal(tc.want, got)
-					suite.NoError(err)
-				}
-			})
+				got, err := net.GetResolvConfByInterface(tc.interfaceName)
+				suite.Equal(tc.want, got)
+				suite.NoError(err)
+			}
 		})
 	}
 }

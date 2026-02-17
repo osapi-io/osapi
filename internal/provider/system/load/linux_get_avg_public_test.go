@@ -37,12 +37,24 @@ func (suite *LinuxGetAverageStatsPublicTestSuite) SetupTest() {}
 func (suite *LinuxGetAverageStatsPublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetAverageStatsPublicTestSuite) TestGetAverageStats() {
-	linux := load.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetAverageStats()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := load.NewLinuxProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetAverageStats is not implemented for LinuxProvider")
+			got, err := linux.GetAverageStats()
+
+			suite.Nil(got)
+			suite.EqualError(err, "GetAverageStats is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create
