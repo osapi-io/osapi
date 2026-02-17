@@ -145,49 +145,21 @@ func (suite *UbuntuDoPublicTestSuite) TestDo() {
 }
 
 func (suite *UbuntuDoPublicTestSuite) TestNewUbuntuProviderDefaultPingerFn() {
-	tests := []struct {
-		name    string
-		address string
-	}{
-		{
-			name:    "default NewPingerFn creates PingerWrapper",
-			address: "127.0.0.1",
-		},
-	}
+	ubuntu := ping.NewUbuntuProvider()
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			ubuntu := ping.NewUbuntuProvider()
+	pinger, err := ubuntu.NewPingerFn("127.0.0.1")
 
-			pinger, err := ubuntu.NewPingerFn(tc.address)
-
-			suite.NoError(err)
-			suite.NotNil(pinger)
-		})
-	}
+	suite.NoError(err)
+	suite.NotNil(pinger)
 }
 
 func (suite *UbuntuDoPublicTestSuite) TestSetCount() {
-	tests := []struct {
-		name  string
-		count int
-	}{
-		{
-			name:  "sets count on pinger wrapper",
-			count: 5,
-		},
-	}
+	ubuntu := ping.NewUbuntuProvider()
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			ubuntu := ping.NewUbuntuProvider()
+	pinger, err := ubuntu.NewPingerFn("127.0.0.1")
+	suite.Require().NoError(err)
 
-			pinger, err := ubuntu.NewPingerFn("127.0.0.1")
-			suite.Require().NoError(err)
-
-			pinger.SetCount(tc.count)
-		})
-	}
+	pinger.SetCount(5)
 }
 
 // In order for `go test` to run this suite, we need to create

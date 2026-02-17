@@ -30,22 +30,17 @@ type LinuxTestSuite struct {
 	suite.Suite
 }
 
-func (s *LinuxTestSuite) TestGetResolvConfByInterfaceNonDarwin() {
+func (s *LinuxTestSuite) TestGetResolvConfByInterface() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns error on non-darwin platform",
+			name: "returns error for linux stub",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			original := runtimeGOOS
-			defer func() { runtimeGOOS = original }()
-
-			runtimeGOOS = "linux"
-
 			l := &Linux{}
 			result, err := l.GetResolvConfByInterface("eth0")
 
@@ -56,22 +51,17 @@ func (s *LinuxTestSuite) TestGetResolvConfByInterfaceNonDarwin() {
 	}
 }
 
-func (s *LinuxTestSuite) TestUpdateResolvConfByInterfaceNonDarwin() {
+func (s *LinuxTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns error on non-darwin platform",
+			name: "returns error for linux stub",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			original := runtimeGOOS
-			defer func() { runtimeGOOS = original }()
-
-			runtimeGOOS = "linux"
-
 			l := &Linux{}
 			err := l.UpdateResolvConfByInterface(
 				[]string{"8.8.8.8"},

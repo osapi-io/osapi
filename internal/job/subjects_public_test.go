@@ -64,11 +64,21 @@ func (suite *SubjectsPublicTestSuite) TestBuildQuerySubject() {
 			hostname: job.AnyHost,
 			want:     "jobs.query._any",
 		},
+		{
+			name:     "when building query subject for all hosts",
+			hostname: "",
+			want:     "jobs.query.*",
+		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildQuerySubject(tt.hostname)
+			var got string
+			if tt.hostname == "" {
+				got = job.BuildQuerySubjectForAllHosts()
+			} else {
+				got = job.BuildQuerySubject(tt.hostname)
+			}
 			suite.Equal(tt.want, got)
 		})
 	}
@@ -100,28 +110,24 @@ func (suite *SubjectsPublicTestSuite) TestBuildModifySubject() {
 			hostname: job.AnyHost,
 			want:     "jobs.modify._any",
 		},
+		{
+			name:     "when building modify subject for all hosts",
+			hostname: "",
+			want:     "jobs.modify.*",
+		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildModifySubject(tt.hostname)
+			var got string
+			if tt.hostname == "" {
+				got = job.BuildModifySubjectForAllHosts()
+			} else {
+				got = job.BuildModifySubject(tt.hostname)
+			}
 			suite.Equal(tt.want, got)
 		})
 	}
-}
-
-func (suite *SubjectsPublicTestSuite) TestBuildQuerySubjectForAllHosts() {
-	suite.Run("when building query subject for all hosts", func() {
-		got := job.BuildQuerySubjectForAllHosts()
-		suite.Equal("jobs.query.*", got)
-	})
-}
-
-func (suite *SubjectsPublicTestSuite) TestBuildModifySubjectForAllHosts() {
-	suite.Run("when building modify subject for all hosts", func() {
-		got := job.BuildModifySubjectForAllHosts()
-		suite.Equal("jobs.modify.*", got)
-	})
 }
 
 func (suite *SubjectsPublicTestSuite) TestParseSubject() {
@@ -194,12 +200,10 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 }
 
 func (suite *SubjectsPublicTestSuite) TestGetLocalHostname() {
-	suite.Run("when using default provider", func() {
-		// This test uses the real system hostname
-		hostname, err := job.GetLocalHostname()
-		suite.NoError(err)
-		suite.NotEmpty(hostname)
-	})
+	// This test uses the real system hostname
+	hostname, err := job.GetLocalHostname()
+	suite.NoError(err)
+	suite.NotEmpty(hostname)
 }
 
 func (suite *SubjectsPublicTestSuite) TestSanitizeHostname() {

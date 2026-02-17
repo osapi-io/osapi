@@ -21,7 +21,6 @@
 package dns_test
 
 import (
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -39,19 +38,28 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
 func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
-	linux := dns.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	servers := []string{}
-	searchDomains := []string{}
-	interfaceName := ""
-	err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := dns.NewLinuxProvider()
 
-	if runtime.GOOS == "darwin" {
-		// On macOS, should succeed for testing
-		suite.NoError(err)
-	} else {
-		// On other platforms, should return error
-		suite.EqualError(err, "UpdateResolvConfByInterface is not implemented for LinuxProvider on "+runtime.GOOS+" interface  (servers: [], domains: [])")
+			servers := []string{}
+			searchDomains := []string{}
+			interfaceName := ""
+			err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+
+			suite.EqualError(
+				err,
+				"UpdateResolvConfByInterface is not implemented for LinuxProvider",
+			)
+		})
 	}
 }
 

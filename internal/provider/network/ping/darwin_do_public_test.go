@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,50 +21,55 @@
 package ping_test
 
 import (
-	"log/slog"
-	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-type LinuxDoStatsPublicTestSuite struct {
+type DarwinDoPublicTestSuite struct {
 	suite.Suite
-
-	logger *slog.Logger
 }
 
-func (suite *LinuxDoStatsPublicTestSuite) SetupTest() {
-	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-}
+func (suite *DarwinDoPublicTestSuite) SetupTest() {}
 
-func (suite *LinuxDoStatsPublicTestSuite) TearDownTest() {}
+func (suite *DarwinDoPublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
+func (suite *DarwinDoPublicTestSuite) TestDo() {
 	tests := []struct {
 		name string
+		want *ping.Result
 	}{
 		{
-			name: "returns not implemented error",
+			name: "when Do returns mock data",
+			want: &ping.Result{
+				PacketsSent:     3,
+				PacketsReceived: 3,
+				PacketLoss:      0,
+				MinRTT:          10 * time.Millisecond,
+				AvgRTT:          15 * time.Millisecond,
+				MaxRTT:          20 * time.Millisecond,
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			linux := ping.NewLinuxProvider()
+			darwin := ping.NewDarwinProvider()
 
-			got, err := linux.Do("1.1.1.1")
+			got, err := darwin.Do("8.8.8.8")
 
-			suite.Empty(got)
-			suite.EqualError(err, "Do is not implemented for LinuxProvider")
+			suite.NoError(err)
+			suite.NotNil(got)
+			suite.Equal(tc.want, got)
 		})
 	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxDoStatsPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxDoStatsPublicTestSuite))
+func TestDarwinDoPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinDoPublicTestSuite))
 }

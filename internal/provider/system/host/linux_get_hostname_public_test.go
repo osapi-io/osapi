@@ -37,12 +37,24 @@ func (suite *LinuxGetHostnamePublicTestSuite) SetupTest() {}
 func (suite *LinuxGetHostnamePublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetHostnamePublicTestSuite) TestGetHostname() {
-	linux := host.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetHostname()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := host.NewLinuxProvider()
 
-	suite.Empty(got)
-	suite.EqualError(err, "GetHostname is not implemented for LinuxProvider")
+			got, err := linux.GetHostname()
+
+			suite.Empty(got)
+			suite.EqualError(err, "GetHostname is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

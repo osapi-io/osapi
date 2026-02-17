@@ -63,12 +63,23 @@ func (f *ProviderFactory) CreateProviders() (
 ) {
 	info, _ := factoryHostInfoFn()
 	platform := strings.ToLower(info.Platform)
+	if platform == "" && strings.ToLower(info.OS) == "darwin" {
+		platform = "darwin"
+	}
+
+	if platform == "darwin" {
+		f.logger.Warn("running on darwin with development providers",
+			slog.String("note", "DNS and ping return mock data"),
+		)
+	}
 
 	// Create system providers
 	var hostProvider systemHost.Provider
 	switch platform {
 	case "ubuntu":
 		hostProvider = systemHost.NewUbuntuProvider()
+	case "darwin":
+		hostProvider = systemHost.NewDarwinProvider()
 	default:
 		hostProvider = systemHost.NewLinuxProvider()
 	}
@@ -77,6 +88,8 @@ func (f *ProviderFactory) CreateProviders() (
 	switch platform {
 	case "ubuntu":
 		diskProvider = disk.NewUbuntuProvider(f.logger)
+	case "darwin":
+		diskProvider = disk.NewDarwinProvider(f.logger)
 	default:
 		diskProvider = disk.NewLinuxProvider()
 	}
@@ -85,6 +98,8 @@ func (f *ProviderFactory) CreateProviders() (
 	switch platform {
 	case "ubuntu":
 		memProvider = mem.NewUbuntuProvider()
+	case "darwin":
+		memProvider = mem.NewDarwinProvider()
 	default:
 		memProvider = mem.NewLinuxProvider()
 	}
@@ -93,6 +108,8 @@ func (f *ProviderFactory) CreateProviders() (
 	switch platform {
 	case "ubuntu":
 		loadProvider = load.NewUbuntuProvider()
+	case "darwin":
+		loadProvider = load.NewDarwinProvider()
 	default:
 		loadProvider = load.NewLinuxProvider()
 	}
@@ -103,6 +120,8 @@ func (f *ProviderFactory) CreateProviders() (
 	switch platform {
 	case "ubuntu":
 		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)
+	case "darwin":
+		dnsProvider = dns.NewDarwinProvider()
 	default:
 		dnsProvider = dns.NewLinuxProvider()
 	}
@@ -111,6 +130,8 @@ func (f *ProviderFactory) CreateProviders() (
 	switch platform {
 	case "ubuntu":
 		pingProvider = ping.NewUbuntuProvider()
+	case "darwin":
+		pingProvider = ping.NewDarwinProvider()
 	default:
 		pingProvider = ping.NewLinuxProvider()
 	}

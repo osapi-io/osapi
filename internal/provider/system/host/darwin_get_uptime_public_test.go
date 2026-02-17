@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -22,6 +22,7 @@ package host_test
 
 import (
 	"testing"
+	"time"
 
 	sysHost "github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/assert"
@@ -30,15 +31,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/system/host"
 )
 
-type UbuntuGetOSInfoPublicTestSuite struct {
+type DarwinGetUptimePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) SetupTest() {}
+func (suite *DarwinGetUptimePublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TearDownTest() {}
+func (suite *DarwinGetUptimePublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
+func (suite *DarwinGetUptimePublicTestSuite) TestGetUptime() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -47,19 +48,13 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 		wantErrType error
 	}{
 		{
-			name: "when GetOSInfo Ok",
+			name: "when GetUptime Ok",
 			setupMock: func() func() (*sysHost.InfoStat, error) {
 				return func() (*sysHost.InfoStat, error) {
-					return &sysHost.InfoStat{
-						Platform:        "Ubuntu",
-						PlatformVersion: "24.04",
-					}, nil
+					return &sysHost.InfoStat{Uptime: 5 * 3600}, nil
 				}
 			},
-			want: &host.OSInfo{
-				Distribution: "Ubuntu",
-				Version:      "24.04",
-			},
+			want:    time.Hour * 5,
 			wantErr: false,
 		},
 		{
@@ -76,18 +71,18 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			darwin := host.NewDarwinProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				darwin.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetOSInfo()
+			got, err := darwin.GetUptime()
 
 			if tc.wantErr {
 				suite.Error(err)
 				suite.ErrorContains(err, tc.wantErrType.Error())
-				suite.Nil(got)
+				suite.Equal(time.Duration(0), got)
 			} else {
 				suite.NoError(err)
 				suite.NotNil(got)
@@ -99,6 +94,6 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetOSInfoPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetOSInfoPublicTestSuite))
+func TestDarwinGetUptimePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinGetUptimePublicTestSuite))
 }
