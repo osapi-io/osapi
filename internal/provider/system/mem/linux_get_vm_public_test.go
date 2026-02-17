@@ -37,12 +37,24 @@ func (suite *LinuxGetStatsPublicTestSuite) SetupTest() {}
 func (suite *LinuxGetStatsPublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetStatsPublicTestSuite) TestGetStats() {
-	linux := mem.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.GetStats()
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := mem.NewLinuxProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetStats is not implemented for LinuxProvider")
+			got, err := linux.GetStats()
+
+			suite.Nil(got)
+			suite.EqualError(err, "GetStats is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

@@ -123,12 +123,12 @@ func (w *Worker) getSystemStatus() (json.RawMessage, error) {
 	loadAvg, _ := loadProvider.GetAverageStats()
 
 	result := map[string]interface{}{
-		"hostname": hostname,
-		"os":       osInfo,
-		"uptime":   uptime,
-		"disk":     diskUsage,
-		"memory":   memInfo,
-		"load":     loadAvg,
+		"hostname":      hostname,
+		"os_info":       osInfo,
+		"uptime":        uptime,
+		"disk_usage":    diskUsage,
+		"memory_stats":  memInfo,
+		"load_averages": loadAvg,
 	}
 
 	return json.Marshal(result)
