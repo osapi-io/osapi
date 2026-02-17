@@ -12,8 +12,8 @@ $ osapi client job delete --job-id 550e8400-e29b-41d4-a716-446655440000
 
 ## Flags
 
-| Flag       | Description      |
-| ---------- | ---------------- |
-| `--job-id` | Job ID to delete |
+| Flag       | Description      | Default  |
+| ---------- | ---------------- | -------- |
+| `--job-id` | Job ID to delete | required |
 
 This permanently removes the job from storage.

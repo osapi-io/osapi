@@ -1,8 +1,8 @@
 ---
 title: Audit and standardize CLI documentation formatting
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-17
 ---
 
 ## Objective
