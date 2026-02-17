@@ -664,19 +664,150 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 	tests := []struct {
 		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
 		expectError   bool
 		errorContains string
+		expectedCount int
 	}{
 		{
-			name:          "not implemented",
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"server1","uptime":3600000000000}}`,
+					`{"status":"completed","hostname":"server2","data":{"hostname":"server2","uptime":7200000000000}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"server1","uptime":3600000000000}}`,
+					`{"status":"failed","hostname":"server2","error":"disk full"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "no workers respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
 			expectError:   true,
-			errorContains: "broadcast queries not yet implemented",
+			errorContains: "no workers responded",
+		},
+		{
+			name: "KV put fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("kv unavailable"),
+				errorMode: errorOnKVPut,
+			},
+			expectError:   true,
+			errorContains: "failed to store job in KV",
+		},
+		{
+			name: "watch fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("watch error"),
+				errorMode: errorOnWatch,
+			},
+			expectError:   true,
+			errorContains: "failed to create response watcher",
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to publish notification",
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"server1","uptime":3600000000000}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_not_object"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "nil watcher entry skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					"",
+					`{"status":"completed","hostname":"server1","data":{"hostname":"server1","uptime":3600000000000}}`,
+				},
+				sendNilFirst: true,
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "bad JSON from watcher skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{invalid json}`,
+					`{"status":"completed","hostname":"server1","data":{"hostname":"server1","uptime":3600000000000}}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "empty hostname falls back to unknown",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"","data":{"hostname":"","uptime":3600000000000}}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "response hostname empty uses map key",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"uptime":3600000000000}}`,
+				},
+			},
+			expectedCount: 1,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result, err := s.jobsClient.QuerySystemStatusAll(s.ctx)
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.QuerySystemStatusAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -686,7 +817,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 				}
 			} else {
 				s.NoError(err)
-				s.NotNil(result)
+				s.Len(result, tt.expectedCount)
 			}
 		})
 	}

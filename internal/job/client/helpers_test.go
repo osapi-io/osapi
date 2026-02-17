@@ -69,6 +69,100 @@ func setupPublishAndWaitMocks(
 	})
 }
 
+// publishAndCollectMockOpts configures mock behavior for publishAndCollect tests.
+type publishAndCollectMockOpts struct {
+	// responseEntries is a list of JSON response strings to send on the watcher.
+	responseEntries []string
+	// mockError is the error to inject (used with errorMode).
+	mockError error
+	// errorMode controls which step fails when mockError is set.
+	errorMode publishAndWaitErrorMode
+	// sendNilFirst sends a nil entry before the response entries on the watcher channel.
+	sendNilFirst bool
+}
+
+// setupPublishAndCollectMocks configures mocks for the publishAndCollect flow.
+func setupPublishAndCollectMocks(
+	ctrl *gomock.Controller,
+	mockKV *jobmocks.MockKeyValue,
+	mockNATSClient *jobmocks.MockNATSClient,
+	subject string,
+	opts *publishAndCollectMockOpts,
+) {
+	if opts.mockError != nil && opts.errorMode == errorOnKVPut {
+		mockKV.EXPECT().
+			Put(gomock.Any(), gomock.Any()).
+			Return(uint64(0), opts.mockError)
+		return
+	}
+
+	// kv.Put succeeds
+	mockKV.EXPECT().
+		Put(gomock.Any(), gomock.Any()).
+		Return(uint64(1), nil)
+
+	if opts.mockError != nil && opts.errorMode == errorOnPublish {
+		mockNATSClient.EXPECT().
+			Publish(gomock.Any(), subject, gomock.Any()).
+			Return(opts.mockError)
+		return
+	}
+
+	// natsClient.Publish succeeds
+	mockNATSClient.EXPECT().
+		Publish(gomock.Any(), subject, gomock.Any()).
+		Return(nil)
+
+	if opts.mockError != nil && opts.errorMode == errorOnWatch {
+		mockKV.EXPECT().
+			Watch(gomock.Any()).
+			Return(nil, opts.mockError)
+		return
+	}
+
+	if opts.mockError != nil && opts.errorMode == errorOnTimeout {
+		// Return a channel that never sends anything, causing timeout with 0 responses
+		ch := make(chan nats.KeyValueEntry)
+
+		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
+		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+		mockWatcher.EXPECT().Stop().Return(nil)
+
+		mockKV.EXPECT().
+			Watch(gomock.Any()).
+			Return(mockWatcher, nil)
+		return
+	}
+
+	// Create buffered channel with all response entries
+	bufSize := len(opts.responseEntries)
+	if opts.sendNilFirst {
+		bufSize++
+	}
+	ch := make(chan nats.KeyValueEntry, bufSize)
+	if opts.sendNilFirst {
+		ch <- nil
+	}
+	for _, data := range opts.responseEntries {
+		if data == "" {
+			continue
+		}
+		mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+		mockEntry.EXPECT().Value().Return([]byte(data))
+		ch <- mockEntry
+	}
+
+	// Create mock watcher
+	mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
+	mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+	mockWatcher.EXPECT().Stop().Return(nil)
+
+	// kv.Watch returns the mock watcher
+	mockKV.EXPECT().
+		Watch(gomock.Any()).
+		Return(mockWatcher, nil)
+}
+
 // setupPublishAndWaitMocksWithOpts configures mocks with fine-grained control.
 func setupPublishAndWaitMocksWithOpts(
 	ctrl *gomock.Controller,

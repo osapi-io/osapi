@@ -135,9 +135,40 @@ func (c *Client) QuerySystemStatusAny(
 
 // QuerySystemStatusAll queries system status from all hosts.
 func (c *Client) QuerySystemStatusAll(
-	_ context.Context,
+	ctx context.Context,
 ) ([]*job.SystemStatusResponse, error) {
-	return nil, fmt.Errorf("broadcast queries not yet implemented")
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "system",
+		Operation: "status.get",
+		Data:      json.RawMessage(`{}`),
+	}
+
+	subject := job.BuildQuerySubject(job.BroadcastHost)
+	responses, err := c.publishAndCollect(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	var results []*job.SystemStatusResponse
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			continue
+		}
+
+		var result job.SystemStatusResponse
+		if err := json.Unmarshal(resp.Data, &result); err != nil {
+			continue
+		}
+
+		if result.Hostname == "" {
+			result.Hostname = hostname
+		}
+
+		results = append(results, &result)
+	}
+
+	return results, nil
 }
 
 // QueryNetworkPing pings a host from a specific hostname.
