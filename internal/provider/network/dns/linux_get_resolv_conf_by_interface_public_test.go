@@ -38,13 +38,25 @@ func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) SetupTest() {
 func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByInterface() {
-	linux := dns.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	interfaceName := ""
-	got, err := linux.GetResolvConfByInterface(interfaceName)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := dns.NewLinuxProvider()
 
-	suite.Nil(got)
-	suite.EqualError(err, "GetResolvConfByInterface is not implemented for LinuxProvider")
+			interfaceName := ""
+			got, err := linux.GetResolvConfByInterface(interfaceName)
+
+			suite.Nil(got)
+			suite.EqualError(err, "GetResolvConfByInterface is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

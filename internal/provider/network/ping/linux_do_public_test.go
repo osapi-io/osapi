@@ -43,12 +43,24 @@ func (suite *LinuxDoStatsPublicTestSuite) SetupTest() {
 func (suite *LinuxDoStatsPublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
-	linux := ping.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	got, err := linux.Do("1.1.1.1")
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := ping.NewLinuxProvider()
 
-	suite.Empty(got)
-	suite.EqualError(err, "Do is not implemented for LinuxProvider")
+			got, err := linux.Do("1.1.1.1")
+
+			suite.Empty(got)
+			suite.EqualError(err, "Do is not implemented for LinuxProvider")
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

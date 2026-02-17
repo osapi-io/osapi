@@ -38,14 +38,29 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
 func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {}
 
 func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
-	linux := dns.NewLinuxProvider()
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
 
-	servers := []string{}
-	searchDomains := []string{}
-	interfaceName := ""
-	err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			linux := dns.NewLinuxProvider()
 
-	suite.EqualError(err, "UpdateResolvConfByInterface is not implemented for LinuxProvider")
+			servers := []string{}
+			searchDomains := []string{}
+			interfaceName := ""
+			err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+
+			suite.EqualError(
+				err,
+				"UpdateResolvConfByInterface is not implemented for LinuxProvider",
+			)
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

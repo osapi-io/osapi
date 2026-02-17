@@ -38,7 +38,7 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) SetupTest() {}
 
 func (suite *UbuntuGetOSInfoPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetHostname() {
+func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
