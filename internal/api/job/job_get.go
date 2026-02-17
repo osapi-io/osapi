@@ -70,5 +70,68 @@ func (j *Job) GetJobByID(
 		resp.Result = result
 	}
 
+	// Expose per-worker responses for broadcast jobs
+	if len(qj.Responses) > 1 {
+		respMap := make(map[string]struct {
+			Data     interface{} `json:"data,omitempty"`
+			Error    *string     `json:"error,omitempty"`
+			Hostname *string     `json:"hostname,omitempty"`
+			Status   *string     `json:"status,omitempty"`
+		})
+		for hostname, r := range qj.Responses {
+			entry := struct {
+				Data     interface{} `json:"data,omitempty"`
+				Error    *string     `json:"error,omitempty"`
+				Hostname *string     `json:"hostname,omitempty"`
+				Status   *string     `json:"status,omitempty"`
+			}{
+				Status:   strPtr(string(r.Status)),
+				Hostname: strPtr(r.Hostname),
+			}
+			if r.Data != nil {
+				var data interface{}
+				_ = json.Unmarshal(r.Data, &data)
+				entry.Data = data
+			}
+			if r.Error != "" {
+				entry.Error = strPtr(r.Error)
+			}
+			respMap[hostname] = entry
+		}
+		resp.Responses = &respMap
+	}
+
+	// Expose worker states
+	if len(qj.WorkerStates) > 0 {
+		wsMap := make(map[string]struct {
+			Duration *string `json:"duration,omitempty"`
+			Error    *string `json:"error,omitempty"`
+			Status   *string `json:"status,omitempty"`
+		})
+		for hostname, ws := range qj.WorkerStates {
+			entry := struct {
+				Duration *string `json:"duration,omitempty"`
+				Error    *string `json:"error,omitempty"`
+				Status   *string `json:"status,omitempty"`
+			}{
+				Status: strPtr(ws.Status),
+			}
+			if ws.Error != "" {
+				entry.Error = strPtr(ws.Error)
+			}
+			if ws.Duration != "" {
+				entry.Duration = strPtr(ws.Duration)
+			}
+			wsMap[hostname] = entry
+		}
+		resp.WorkerStates = &wsMap
+	}
+
 	return resp, nil
+}
+
+func strPtr(
+	s string,
+) *string {
+	return &s
 }

@@ -260,6 +260,21 @@ func (mr *MockJobClientMockRecorder) QuerySystemStatus(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatus", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatus), arg0, arg1)
 }
 
+// QuerySystemStatusAll mocks base method.
+func (m *MockJobClient) QuerySystemStatusAll(arg0 context.Context) ([]*job.SystemStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySystemStatusAll", arg0)
+	ret0, _ := ret[0].([]*job.SystemStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySystemStatusAll indicates an expected call of QuerySystemStatusAll.
+func (mr *MockJobClientMockRecorder) QuerySystemStatusAll(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatusAll", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatusAll), arg0)
+}
+
 // QuerySystemStatusAny mocks base method.
 func (m *MockJobClient) QuerySystemStatusAny(arg0 context.Context) (*job.SystemStatusResponse, error) {
 	m.ctrl.T.Helper()

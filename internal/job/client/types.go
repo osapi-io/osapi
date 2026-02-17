@@ -59,6 +59,9 @@ type JobClient interface {
 	QuerySystemStatusAny(
 		ctx context.Context,
 	) (*job.SystemStatusResponse, error)
+	QuerySystemStatusAll(
+		ctx context.Context,
+	) ([]*job.SystemStatusResponse, error)
 	QuerySystemHostname(
 		ctx context.Context,
 		hostname string,

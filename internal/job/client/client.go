@@ -157,3 +157,106 @@ func (c *Client) publishAndWait(
 		}
 	}
 }
+
+// publishAndCollect stores a job in KV, publishes a notification, and collects
+// all worker responses within the timeout window. Used for broadcast (_all) jobs.
+func (c *Client) publishAndCollect(
+	ctx context.Context,
+	subject string,
+	req *job.Request,
+) (map[string]*job.Response, error) {
+	// Generate request ID if not provided
+	if req.RequestID == "" {
+		req.RequestID = uuid.New().String()
+	}
+	req.Timestamp = time.Now()
+
+	jobID := req.RequestID
+	createdTime := req.Timestamp.Format(time.RFC3339)
+
+	// Build operation type from category and operation
+	operationType := req.Category + "." + req.Operation
+	operationData := map[string]interface{}{
+		"type": operationType,
+		"data": req.Data,
+	}
+
+	// Store immutable job data in KV
+	jobData := map[string]interface{}{
+		"id":        jobID,
+		"status":    "unprocessed",
+		"created":   createdTime,
+		"subject":   subject,
+		"operation": operationData,
+	}
+
+	jobJSON, _ := json.Marshal(jobData)
+	kvKey := "jobs." + jobID
+
+	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
+		return nil, fmt.Errorf("failed to store job in KV: %w", err)
+	}
+
+	c.logger.Info("publishing broadcast job request",
+		slog.String("request_id", jobID),
+		slog.String("subject", subject),
+		slog.String("type", string(req.Type)),
+	)
+
+	// Publish just the job ID to the stream as a notification
+	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
+		return nil, fmt.Errorf("failed to publish notification: %w", err)
+	}
+
+	// Watch for worker responses in KV
+	responsePattern := "responses." + jobID + ".>"
+	watcher, err := c.kv.Watch(responsePattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create response watcher: %w", err)
+	}
+	defer func() {
+		_ = watcher.Stop()
+	}()
+
+	responses := make(map[string]*job.Response)
+	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			if len(responses) == 0 {
+				return nil, fmt.Errorf(
+					"timeout waiting for broadcast responses: no workers responded",
+				)
+			}
+			return responses, nil
+		case entry := <-watcher.Updates():
+			if entry == nil {
+				continue
+			}
+
+			var response job.Response
+			if err := json.Unmarshal(entry.Value(), &response); err != nil {
+				c.logger.Warn("failed to unmarshal broadcast response",
+					slog.String("request_id", jobID),
+					slog.String("error", err.Error()),
+				)
+				continue
+			}
+
+			hostname := response.Hostname
+			if hostname == "" {
+				hostname = "unknown"
+			}
+
+			c.logger.Info("received broadcast response",
+				slog.String("request_id", jobID),
+				slog.String("hostname", hostname),
+				slog.String("status", string(response.Status)),
+			)
+
+			responses[hostname] = &response
+		}
+	}
+}

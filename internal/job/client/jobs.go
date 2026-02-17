@@ -263,6 +263,7 @@ func (c *Client) GetJobStatus(
 		Status:       computedStatus.Status,
 		Created:      getStringField(jobData, "created"),
 		Subject:      getStringField(jobData, "subject"),
+		Hostname:     computedStatus.Hostname,
 		Error:        computedStatus.Error,
 		UpdatedAt:    computedStatus.UpdatedAt,
 		WorkerStates: computedStatus.WorkerStates,
@@ -272,6 +273,14 @@ func (c *Client) GetJobStatus(
 
 	if operation, ok := jobData["operation"].(map[string]interface{}); ok {
 		queuedJob.Operation = operation
+	}
+
+	// Populate Result from single-worker response
+	if len(responses) == 1 {
+		for _, resp := range responses {
+			queuedJob.Result = resp.Data
+			break
+		}
 	}
 
 	return queuedJob, nil

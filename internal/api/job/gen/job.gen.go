@@ -63,6 +63,15 @@ type JobDetailResponse struct {
 	// Operation The operation data.
 	Operation *map[string]interface{} `json:"operation,omitempty"`
 
+	// Responses Per-worker response data for broadcast jobs.
+	Responses *map[string]struct {
+		// Data Worker result data.
+		Data     interface{} `json:"data,omitempty"`
+		Error    *string     `json:"error,omitempty"`
+		Hostname *string     `json:"hostname,omitempty"`
+		Status   *string     `json:"status,omitempty"`
+	} `json:"responses,omitempty"`
+
 	// Result The result data if completed.
 	Result interface{} `json:"result,omitempty"`
 
@@ -71,6 +80,13 @@ type JobDetailResponse struct {
 
 	// UpdatedAt Last update timestamp.
 	UpdatedAt *string `json:"updated_at,omitempty"`
+
+	// WorkerStates Per-worker processing state for broadcast jobs.
+	WorkerStates *map[string]struct {
+		Duration *string `json:"duration,omitempty"`
+		Error    *string `json:"error,omitempty"`
+		Status   *string `json:"status,omitempty"`
+	} `json:"worker_states,omitempty"`
 }
 
 // ListJobsResponse defines model for ListJobsResponse.
