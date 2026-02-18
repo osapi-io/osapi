@@ -1,0 +1,215 @@
+---
+sidebar_position: 7
+---
+
+# System Architecture
+
+OSAPI is a Linux system management platform that exposes a REST API for querying
+and modifying host configuration and uses NATS JetStream for distributed,
+asynchronous job processing. Operators interact with the system through a CLI
+that can either hit the REST API directly or manage the job queue.
+
+## Component Map
+
+The system is organized into six layers, top to bottom:
+
+| Layer                           | Package                                      | Role                                              |
+| ------------------------------- | -------------------------------------------- | ------------------------------------------------- |
+| **CLI**                         | `cmd/`                                       | Cobra command tree (thin wiring)                  |
+| **Generated HTTP Client**       | `internal/client/`                           | OpenAPI-generated client used by CLI              |
+| **REST API**                    | `internal/api/`                              | Echo server with JWT middleware                   |
+| **Job Client**                  | `internal/job/client/`                       | Business logic for job CRUD and status            |
+| **NATS JetStream**              | (external)                                   | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
+| **Job Worker / Provider Layer** | `internal/job/worker/`, `internal/provider/` | Consumes jobs from NATS and executes providers    |
+
+The CLI talks to the REST API through the generated HTTP client. The REST API
+delegates state-changing operations to the job client, which stores jobs in NATS
+KV and publishes notifications to the JOBS stream. Workers pick up
+notifications, execute the matching provider, and write results back to KV.
+
+## Entry Points
+
+The `osapi` binary exposes four top-level command groups:
+
+- **`osapi api server start`** — starts the REST API server (Echo + JWT
+  middleware)
+- **`osapi job worker start`** — starts a job worker that subscribes to NATS
+  subjects and processes operations
+- **`osapi nats server start`** — starts an embedded NATS server with JetStream
+  enabled
+- **`osapi client`** — CLI client that talks to the REST API (system, network,
+  and job subcommands)
+
+## Layers
+
+### CLI (`cmd/`)
+
+The CLI is a [Cobra][] command tree. Each file maps to a single command (e.g.,
+`client_job_add.go` implements `osapi client job add`). The CLI layer is thin
+wiring: it parses flags, reads config via Viper, and delegates to the
+appropriate internal package.
+
+### REST API (`internal/api/`)
+
+The API server is built on [Echo][] with handlers generated from an OpenAPI spec
+via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
+subpackages:
+
+| Package                 | Responsibility                                                   |
+| ----------------------- | ---------------------------------------------------------------- |
+| `internal/api/system/`  | System endpoints (hostname, status, uptime, disk, memory, load)  |
+| `internal/api/network/` | Network endpoints (DNS, ping)                                    |
+| `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
+| `internal/api/common/`  | Shared middleware, error handling, collection responses          |
+
+All state-changing operations are dispatched as jobs through the job client
+layer rather than executed inline. Responses follow a uniform collection
+envelope documented in the [API Design Guidelines](api-guidelines.md).
+
+### Job System (`internal/job/`)
+
+The job system implements a **KV-first, stream-notification architecture** on
+NATS JetStream. Core types live in `internal/job/`, with two subpackages:
+
+| Package                | Purpose                                        |
+| ---------------------- | ---------------------------------------------- |
+| `internal/job/client/` | High-level operations (create, status, query)  |
+| `internal/job/worker/` | Consumer pipeline (subscribe, handle, process) |
+
+Subject routing uses dot-notation hierarchies (`jobs.query.*`, `jobs.modify.*`)
+with support for load-balanced (`_any`), broadcast (`_all`), direct-host, and
+label-based targeting.
+
+For the full deep dive see [Job System Architecture](job-architecture.md).
+
+### Provider Layer (`internal/provider/`)
+
+Providers implement the actual system operations behind a common interface. Each
+provider is selected at runtime through a platform-aware factory pattern.
+
+| Domain         | Providers                      |
+| -------------- | ------------------------------ |
+| `system/host`  | Hostname, uptime, OS info      |
+| `system/disk`  | Disk usage statistics          |
+| `system/mem`   | Memory usage statistics        |
+| `system/load`  | Load average statistics        |
+| `network/dns`  | DNS configuration (get/update) |
+| `network/ping` | Ping execution and statistics  |
+
+Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
+generic Linux DNS provider). Adding a new operation means implementing the
+provider interface and registering it in the worker's processor dispatch.
+
+### Configuration (`internal/config/`)
+
+Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
+Environment variables override file values using the `OSAPI_` prefix with
+underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
+
+Minimal configuration skeleton:
+
+```yaml
+api:
+  url: 'http://localhost:8080' # Client target
+  server:
+    port: 8080
+    security:
+      signing_key: '<secret>'
+      cors:
+        allow_origins: []
+  security:
+    bearer_token: '<jwt>'
+
+nats:
+  server:
+    host: '0.0.0.0'
+    port: 4222
+    store_dir: '/tmp/nats-store'
+
+job:
+  stream_name: 'JOBS'
+  kv_bucket: 'job-queue'
+  kv_response_bucket: 'job-responses'
+  consumer_name: 'jobs-worker'
+  worker:
+    hostname: 'worker-01'
+    labels:
+      group: 'web.dev'
+```
+
+## Request Flow
+
+A typical operation (e.g., `system.hostname.get`) follows these steps:
+
+1. **CLI** sends `POST /api/v1/jobs` to the REST API.
+2. **REST API** calls `CreateJob()` on the job client.
+3. **Job Client** stores the immutable job definition in NATS KV (`job-queue`)
+   and publishes a notification to the `JOBS` stream.
+4. The API returns `201` with the `job_id` to the CLI.
+5. A **Worker** receives the stream notification, fetches the immutable job from
+   KV, and executes the matching provider.
+6. The **Worker** writes status events and the result back to KV
+   (`job-responses`).
+7. **CLI** polls `GET /api/v1/jobs/{id}`. The API reads computed status from KV
+   events and returns the result.
+
+## Security
+
+### Authentication
+
+The API uses **JWT HS256** tokens signed with a shared secret
+(`security.signing_key`). Tokens carry a `role` claim that determines the
+caller's access level. The `osapi token generate` command creates tokens for a
+given role.
+
+### Authorization
+
+Access control is scope-based with a three-tier role hierarchy:
+
+| Role    | Scopes                   |
+| ------- | ------------------------ |
+| `admin` | `read`, `write`, `admin` |
+| `write` | `read`, `write`          |
+| `read`  | `read`                   |
+
+Each API endpoint declares a required scope. The JWT middleware checks that the
+caller's role includes that scope before allowing the request.
+
+### CORS
+
+Cross-Origin Resource Sharing is configured per-server via
+`api.server.security.cors.allow_origins` in `osapi.yaml`. An empty list disables
+CORS headers entirely.
+
+## External Dependencies
+
+| Dependency                    | Purpose                                     |
+| ----------------------------- | ------------------------------------------- |
+| [Echo][]                      | HTTP framework for the REST API             |
+| [Cobra][] / [Viper][]         | CLI framework and configuration             |
+| [NATS][] / JetStream          | Messaging, KV store, stream processing      |
+| [oapi-codegen][]              | OpenAPI strict-server code generation       |
+| [gopsutil][]                  | Cross-platform system metrics               |
+| [pro-bing][]                  | ICMP ping implementation                    |
+| [golang-jwt][]                | JWT creation and validation                 |
+| `nats-client` / `nats-server` | Sibling repos (linked via `go.mod` replace) |
+
+## Further Reading
+
+- [Job System Architecture](job-architecture.md) — deep dive into the KV-first
+  job system, subject routing, and worker pipeline
+- [API Design Guidelines](api-guidelines.md) — REST conventions, collection
+  envelopes, and endpoint patterns
+- [Guiding Principles](principles.md) — design philosophy and project values
+- [Development](development.md) — setup, building, testing, and contributing
+
+<!-- prettier-ignore-start -->
+[Cobra]: https://github.com/spf13/cobra
+[Echo]: https://echo.labstack.com
+[Viper]: https://github.com/spf13/viper
+[NATS]: https://nats.io
+[oapi-codegen]: https://github.com/oapi-codegen/oapi-codegen
+[gopsutil]: https://github.com/shirou/gopsutil
+[pro-bing]: https://github.com/prometheus-community/pro-bing
+[golang-jwt]: https://github.com/golang-jwt/jwt
+<!-- prettier-ignore-end -->

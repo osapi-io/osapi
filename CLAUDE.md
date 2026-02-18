@@ -13,7 +13,7 @@ For setup, building, testing, and contributing, see the Docusaurus docs:
 - @docs/docs/sidebar/development.md - Prerequisites, setup, code style, testing, commit conventions
 - @docs/docs/sidebar/contributing.md - PR workflow and contribution guidelines
 - @docs/docs/sidebar/testing.md - How to run tests and list just recipes
-- @docs/docs/sidebar/architecture.md - Job system architecture (KV-first, subject routing, worker pipeline)
+- @docs/docs/sidebar/job-architecture.md - Job system architecture (KV-first, subject routing, worker pipeline)
 
 Quick reference for common commands:
 
