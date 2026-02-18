@@ -106,19 +106,21 @@ Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
 Environment variables override file values using the `OSAPI_` prefix with
 underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
 
-Minimal configuration skeleton:
+Minimal configuration skeleton (see [Configuration](configuration.md) for the
+full reference):
 
 ```yaml
 api:
-  url: 'http://localhost:8080' # Client target
+  client:
+    url: 'http://localhost:8080'
+    security:
+      bearer_token: '<jwt>'
   server:
     port: 8080
     security:
       signing_key: '<secret>'
       cors:
         allow_origins: []
-  security:
-    bearer_token: '<jwt>'
 
 nats:
   server:
