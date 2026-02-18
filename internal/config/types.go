@@ -164,4 +164,6 @@ type JobWorker struct {
 	Hostname string `mapstructure:"hostname"`
 	// MaxJobs maximum number of concurrent jobs to process.
 	MaxJobs int `mapstructure:"max_jobs"`
+	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
+	Labels map[string]string `mapstructure:"labels"`
 }

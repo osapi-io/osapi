@@ -22,9 +22,7 @@ package network
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
@@ -32,20 +30,6 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/validation"
 )
-
-// pingMultiResponse wraps multiple ping results for _all broadcast.
-type pingMultiResponse struct {
-	Results []gen.PingResponse `json:"results"`
-}
-
-func (r pingMultiResponse) VisitPostNetworkPingResponse(
-	w http.ResponseWriter,
-) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(w).Encode(r)
-}
 
 // PostNetworkPing post the network ping API endpoint.
 func (n Network) PostNetworkPing(
@@ -72,11 +56,15 @@ func (n Network) PostNetworkPing(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return n.postNetworkPingAll(ctx, request.Body.Address)
+	if job.IsBroadcastTarget(hostname) {
+		return n.postNetworkPingBroadcast(ctx, hostname, request.Body.Address)
 	}
 
-	pingResult, err := n.JobClient.QueryNetworkPing(ctx, hostname, request.Body.Address)
+	pingResult, workerHostname, err := n.JobClient.QueryNetworkPing(
+		ctx,
+		hostname,
+		request.Body.Address,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{
@@ -84,15 +72,20 @@ func (n Network) PostNetworkPing(
 		}, nil
 	}
 
-	return buildPingResponse(pingResult), nil
+	return gen.PostNetworkPing200JSONResponse{
+		Results: []gen.PingResponse{
+			buildPingResponse(workerHostname, pingResult),
+		},
+	}, nil
 }
 
-// postNetworkPingAll handles _all broadcast for ping.
-func (n Network) postNetworkPingAll(
+// postNetworkPingBroadcast handles broadcast targets (_all or label) for ping.
+func (n Network) postNetworkPingBroadcast(
 	ctx context.Context,
+	target string,
 	address string,
 ) (gen.PostNetworkPingResponseObject, error) {
-	results, err := n.JobClient.QueryNetworkPingAll(ctx, address)
+	results, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{
@@ -101,18 +94,22 @@ func (n Network) postNetworkPingAll(
 	}
 
 	var responses []gen.PingResponse
-	for _, r := range results {
-		responses = append(responses, gen.PingResponse(buildPingResponse(r)))
+	for host, r := range results {
+		responses = append(responses, buildPingResponse(host, r))
 	}
 
-	return pingMultiResponse{Results: responses}, nil
+	return gen.PostNetworkPing200JSONResponse{
+		Results: responses,
+	}, nil
 }
 
 // buildPingResponse converts a ping.Result to the API response.
 func buildPingResponse(
+	hostname string,
 	r *ping.Result,
-) gen.PostNetworkPing200JSONResponse {
-	return gen.PostNetworkPing200JSONResponse{
+) gen.PingResponse {
+	return gen.PingResponse{
+		Hostname:        hostname,
 		AvgRtt:          durationToString(&r.AvgRTT),
 		MaxRtt:          durationToString(&r.MaxRTT),
 		MinRtt:          durationToString(&r.MinRTT),

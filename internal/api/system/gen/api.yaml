@@ -48,14 +48,15 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's status information.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemStatusResponse'
+                $ref: '#/components/schemas/SystemStatusCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -97,14 +98,15 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's hostname.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HostnameResponse'
+                $ref: '#/components/schemas/HostnameCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -252,6 +254,26 @@ components:
           example: "my-linux-server"
       required:
         - hostname
+
+    SystemStatusCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemStatusResponse'
+      required:
+        - results
+
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
 
     OSInfoResponse:
       type: object

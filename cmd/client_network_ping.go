@@ -57,20 +57,24 @@ var clientNetworkPingCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("post network ping was nil"))
 			}
 
-			respRows := make([][]string, 0, 1)
-			respRows = append(respRows, []string{
-				safeString(resp.JSON200.AvgRtt),
-				safeString(resp.JSON200.MaxRtt),
-				safeString(resp.JSON200.MinRtt),
-				float64ToSafeString(resp.JSON200.PacketLoss),
-				intToSafeString(resp.JSON200.PacketsReceived),
-				intToSafeString(resp.JSON200.PacketsSent),
-			})
+			respRows := make([][]string, 0, len(resp.JSON200.Results))
+			for _, r := range resp.JSON200.Results {
+				respRows = append(respRows, []string{
+					r.Hostname,
+					safeString(r.AvgRtt),
+					safeString(r.MaxRtt),
+					safeString(r.MinRtt),
+					float64ToSafeString(r.PacketLoss),
+					intToSafeString(r.PacketsReceived),
+					intToSafeString(r.PacketsSent),
+				})
+			}
 
 			sections := []section{
 				{
 					Title: "Ping Response",
 					Headers: []string{
+						"HOSTNAME",
 						"AVG RTT",
 						"MAX RTT",
 						"MIN RTT",

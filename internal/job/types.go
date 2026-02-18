@@ -222,6 +222,8 @@ type SystemShutdownData struct {
 type WorkerInfo struct {
 	// Hostname is the hostname of the worker.
 	Hostname string `json:"hostname"`
+	// Labels are the key-value labels configured on the worker.
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // SystemStatusResponse aggregates system status information from multiple providers.

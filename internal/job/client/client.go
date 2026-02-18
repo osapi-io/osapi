@@ -37,16 +37,20 @@ import (
 
 // Client provides methods for publishing job requests and retrieving responses.
 type Client struct {
-	logger     *slog.Logger
-	natsClient messaging.NATSClient
-	kv         nats.KeyValue
-	timeout    time.Duration
+	logger             *slog.Logger
+	natsClient         messaging.NATSClient
+	kv                 nats.KeyValue
+	timeout            time.Duration
+	broadcastQuietTime time.Duration
 }
 
 // Options configures the jobs client.
 type Options struct {
 	// Timeout for waiting for job responses (default: 30s)
 	Timeout time.Duration
+	// BroadcastQuietPeriod is the silence window after the last broadcast
+	// response before collection stops (default: 3s)
+	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
 	KVBucket nats.KeyValue
 }
@@ -64,11 +68,17 @@ func New(
 		return nil, fmt.Errorf("KVBucket cannot be nil")
 	}
 
+	quietPeriod := opts.BroadcastQuietPeriod
+	if quietPeriod == 0 {
+		quietPeriod = broadcastQuietPeriod
+	}
+
 	return &Client{
-		logger:     logger,
-		natsClient: natsClient,
-		kv:         opts.KVBucket,
-		timeout:    opts.Timeout,
+		logger:             logger,
+		natsClient:         natsClient,
+		kv:                 opts.KVBucket,
+		timeout:            opts.Timeout,
+		broadcastQuietTime: quietPeriod,
 	}, nil
 }
 
@@ -239,19 +249,7 @@ func (c *Client) publishAndCollect(
 	for {
 		select {
 		case <-timeoutCtx.Done():
-			if len(responses) == 0 {
-				return nil, fmt.Errorf(
-					"timeout waiting for broadcast responses: no workers responded",
-				)
-			}
-			return responses, nil
 		case <-quietTimer.C:
-			if len(responses) == 0 {
-				return nil, fmt.Errorf(
-					"timeout waiting for broadcast responses: no workers responded",
-				)
-			}
-			return responses, nil
 		case entry := <-watcher.Updates():
 			if entry == nil {
 				continue
@@ -281,7 +279,16 @@ func (c *Client) publishAndCollect(
 
 			// Reset quiet period — if no more responses arrive within
 			// this window, we're done collecting.
-			quietTimer.Reset(broadcastQuietPeriod)
+			quietTimer.Reset(c.broadcastQuietTime)
+			continue
 		}
+
+		// Reached from either timeoutCtx.Done() or quietTimer.C
+		if len(responses) == 0 {
+			return nil, fmt.Errorf(
+				"timeout waiting for broadcast responses: no workers responded",
+			)
+		}
+		return responses, nil
 	}
 }

@@ -55,10 +55,17 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("system data response was nil"))
 			}
 
-			hostnameData := map[string]interface{}{
-				"Hostname": resp.JSON200.Hostname,
+			rows := make([][]string, 0, len(resp.JSON200.Results))
+			for _, h := range resp.JSON200.Results {
+				rows = append(rows, []string{h.Hostname})
 			}
-			printStyledMap(hostnameData)
+			sections := []section{
+				{
+					Headers: []string{"HOSTNAME"},
+					Rows:    rows,
+				},
+			}
+			printStyledTable(sections)
 
 		case http.StatusUnauthorized:
 			handleAuthError(resp.JSON401, resp.StatusCode(), logger)

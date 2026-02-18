@@ -75,3 +75,5 @@ job:
     queue_group: job-workers
     hostname: ""  # defaults to system hostname
     max_jobs: 10
+    labels:
+      group: web.dev.us-east  # hierarchical: --target group:web, group:web.dev, etc.

@@ -119,12 +119,12 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNS() {
 				s.mockCtrl,
 				s.mockKV,
 				s.mockNATSClient,
-				"jobs.modify.server1",
+				"jobs.modify.host.server1",
 				tt.responseData,
 				tt.mockError,
 			)
 
-			err := s.jobsClient.ModifyNetworkDNS(
+			_, err := s.jobsClient.ModifyNetworkDNS(
 				s.ctx,
 				tt.hostname,
 				tt.servers,
@@ -188,7 +188,12 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 				tt.mockError,
 			)
 
-			err := s.jobsClient.ModifyNetworkDNSAny(s.ctx, tt.servers, tt.searchDomains, tt.iface)
+			_, err := s.jobsClient.ModifyNetworkDNSAny(
+				s.ctx,
+				tt.servers,
+				tt.searchDomains,
+				tt.iface,
+			)
 
 			if tt.expectError {
 				s.Error(err)

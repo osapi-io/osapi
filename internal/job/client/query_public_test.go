@@ -30,6 +30,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -148,7 +149,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			subject := "jobs.query." + tt.hostname
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
 
 			setupPublishAndWaitMocks(
 				s.mockCtrl,
@@ -232,7 +233,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			subject := "jobs.query." + tt.hostname
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
 
 			setupPublishAndWaitMocks(
 				s.mockCtrl,
@@ -243,7 +244,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
+			result, _, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -351,7 +352,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNS() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			subject := "jobs.query." + tt.hostname
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
 
 			setupPublishAndWaitMocks(
 				s.mockCtrl,
@@ -362,7 +363,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNS() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QueryNetworkDNS(s.ctx, tt.hostname, tt.iface)
+			result, _, err := s.jobsClient.QueryNetworkDNS(s.ctx, tt.hostname, tt.iface)
 
 			if tt.expectError {
 				s.Error(err)
@@ -439,7 +440,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPing() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			subject := "jobs.query." + tt.hostname
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
 
 			setupPublishAndWaitMocks(
 				s.mockCtrl,
@@ -450,7 +451,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPing() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
+			result, _, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
 
 			if tt.expectError {
 				s.Error(err)
@@ -507,7 +508,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
+			result, _, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
 
 			if tt.expectError {
 				s.Error(err)
@@ -642,11 +643,11 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				s.mockCtrl,
 				s.mockKV,
 				s.mockNATSClient,
-				"jobs.query.server1",
+				"jobs.query.host.server1",
 				tt.opts,
 			)
 
-			result, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+			result, _, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
@@ -1134,6 +1135,28 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			},
 			expectError:   true,
 			errorContains: "failed to discover workers",
+		},
+		{
+			name:    "failed workers skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
+					`{"status":"failed","hostname":"server2","error":"crash"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error in worker data skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
+					`{"status":"completed","hostname":"server2","data":"not_an_object"}`,
+				},
+			},
+			expectedCount: 1,
 		},
 	}
 

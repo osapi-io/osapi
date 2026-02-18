@@ -112,7 +112,7 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QuerySystemStatusAll(gomock.Any()).
+					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
 					Return([]*jobtypes.SystemStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 						{Hostname: "server2", Uptime: 2 * time.Hour},
@@ -129,7 +129,7 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QuerySystemStatusAll(gomock.Any()).
+					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {

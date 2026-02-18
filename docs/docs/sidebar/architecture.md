@@ -29,54 +29,33 @@ routing, and comprehensive job lifecycle management.
 
 ### Core Components
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   REST API      │    │   Jobs CLI      │    │   Job Workers   │
-│                 │    │                 │    │                 │
-│ • Create Jobs   │    │ • Add Jobs      │    │ • Process Jobs  │
-│ • Query Status  │    │ • List Jobs     │    │ • Update Status │
-│ • Return Results│    │ • Get Details   │    │ • Store Results │
-└─────────────────┘    │ • Status View   │    └─────────────────┘
-         │              └─────────────────┘                │
-         │                       │                         │
-         └───────────────────────┼─────────────────────────┘
-                                 │
-                                 v
-                    ┌─────────────────────────┐
-                    │     Job Client Layer    │
-                    │                         │
-                    │ • CreateJob()           │ <--- Business Logic
-                    │ • GetQueueStats()       │ <--- Abstraction
-                    │ • GetJobStatus()        │ <--- Type Safety
-                    │ • ListJobs()            │
-                    └─────────────────────────┘
-                                 │
-                                 v
-                    ┌─────────────────────────┐
-                    │     NATS JetStream      │
-                    │                         │
-                    │  KV Store (job-queue)   │ <--- Job Persistence
-                    │  Stream (JOBS)          │ <--- Worker Notifications
-                    │  KV Store (job-results) │ <--- Result Storage
-                    └─────────────────────────┘
-```
+The system has three entry points that all funnel through a shared client layer
+into NATS JetStream:
 
-### Job Flow Diagram
+- **REST API** — Creates jobs, queries status, returns results
+- **Jobs CLI** — Adds jobs, lists/inspects queue, monitors status
+- **Job Workers** — Processes jobs, updates status, stores results
 
-```
-1. Job Creation
-   API/CLI → Job Client → KV Store → Stream Notification
+All three use the **Job Client Layer** (`internal/job/client/`), which provides
+type-safe business logic operations (`CreateJob`, `GetQueueStats`,
+`GetJobStatus`, `ListJobs`) on top of NATS JetStream.
 
-2. Job Processing
-   Worker ← Stream Notification
-   Worker → Get Job from KV
-   Worker → Update Status in KV
-   Worker → Process Operation
-   Worker → Store Result in KV
+**NATS JetStream** provides three storage backends:
 
-3. Status Query
-   API/CLI → Job Client → Read from KV
-```
+| Store              | Purpose                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| KV `job-queue`     | Job persistence (immutable job definitions + status events) |
+| Stream `JOBS`      | Worker notifications (subject-routed job IDs)               |
+| KV `job-responses` | Result storage (worker responses keyed by request ID)       |
+
+### Job Flow
+
+1. **Job Creation** — API/CLI calls Job Client, which stores the job in KV and
+   publishes a notification to the stream
+2. **Job Processing** — Worker receives notification from the stream, fetches
+   the immutable job from KV, writes status events, executes the operation, and
+   stores the result in KV
+3. **Status Query** — API/CLI reads computed status from KV events
 
 ## NATS Configuration
 
@@ -111,16 +90,19 @@ AckWait: 30s
 
 ## Subject Hierarchy
 
-The system uses simplified subjects for efficient routing:
+The system uses structured subjects for efficient routing:
 
 ```
-jobs.{type}.{hostname}
+jobs.{type}.{routing_type}.{value...}
 
 Examples:
-- jobs.query._any
-- jobs.query.server1
-- jobs.modify._all
-- jobs.modify._any
+- jobs.query._any                  — load-balanced
+- jobs.query._all                  — broadcast all
+- jobs.query.host.server1          — direct to host
+- jobs.query.label.group.web       — label group (role level)
+- jobs.query.label.group.web.dev   — label group (role+env level)
+- jobs.modify._all                 — broadcast modify
+- jobs.modify.label.group.web      — label group modify
 ```
 
 ### Semantic Routing Rules
@@ -128,7 +110,7 @@ Examples:
 Operations are automatically routed to query or modify subjects based on their
 type suffix:
 
-- **Query operations** (read-only) → `jobs.query.{hostname}`:
+- **Query operations** (read-only) → `jobs.query.{target}`:
 
   - `.get` - Retrieve current state
   - `.query` - Query information
@@ -137,7 +119,7 @@ type suffix:
   - `.do` - Perform read-only actions (e.g., ping)
   - `system.*` - All system operations are read-only
 
-- **Modify operations** (state-changing) → `jobs.modify.{hostname}`:
+- **Modify operations** (state-changing) → `jobs.modify.{target}`:
   - `.update` - Update configuration
   - `.set` - Set new values
   - `.create` - Create resources
@@ -147,11 +129,55 @@ type suffix:
 The operation details (category, operation, data) are specified in the JSON
 payload, not the subject.
 
-### Special Hostnames
+### Target Types
 
-- `_any`: Route to any available worker
+- `_any`: Route to any available worker (load-balanced via queue group)
 - `_all`: Route to all workers (broadcast)
-- `{hostname}`: Route to specific worker
+- `{hostname}`: Route to a specific worker (e.g., `server1`)
+- `{key}:{value}`: Route to all workers with a matching label (e.g.,
+  `group:web`). Label targets use broadcast semantics — all matching workers
+  receive the message. Values can be hierarchical with dot separators for prefix
+  matching (e.g., `group:web.dev`).
+
+### Label-Based Routing
+
+Workers can be configured with hierarchical labels for group targeting. Label
+values use dot-separated segments, and workers automatically subscribe to every
+prefix level:
+
+```yaml
+job:
+  worker:
+    hostname: web-01
+    labels:
+      group: web.dev.us-east
+```
+
+A worker with the above config subscribes to these NATS subjects:
+
+```
+jobs.*.host.web-01                     — direct
+jobs.*._any                            — load-balanced (queue group)
+jobs.*._all                            — broadcast
+jobs.*.label.group.web                 — prefix: role level
+jobs.*.label.group.web.dev             — prefix: role+env level
+jobs.*.label.group.web.dev.us-east     — prefix: exact match
+```
+
+Targeting examples:
+
+```bash
+--target group:web                  # all web servers
+--target group:web.dev              # all web servers in dev
+--target group:web.dev.us-east      # exact match
+```
+
+The dimension order in the label value determines the targeting hierarchy. Place
+the most commonly targeted broad dimension first (e.g., role before env before
+region). Label subscriptions have **no queue group** — all matching workers
+receive the message (broadcast within the label group). Label keys must match
+`[a-zA-Z0-9_-]+`, and each dot-separated segment of the value must match the
+same pattern.
 
 ## Supported Operations
 
@@ -235,11 +261,8 @@ osapi client job add --json-file dns-query.json --target-hostname _any
 
 ### 2. Job States
 
-```
-submitted → acknowledged → started → completed
-                              ↓
-                           failed
-```
+**State flow:** `submitted` → `acknowledged` → `started` → `completed` (or
+`failed`)
 
 **State Transitions via Events:**
 
@@ -373,32 +396,17 @@ The append-only architecture enables true broadcast job processing:
 
 ### Worker Subscription Patterns
 
-**Load-Balanced Workers (Queue Groups):**
+Each worker creates JetStream consumers with these filter subjects:
 
-```go
-// DNS specialist workers
-consumer.Subscribe("jobs.*._any.network.dns.>",
-                  nats.Queue("dns-workers"))
-
-// System monitoring workers
-consumer.Subscribe("jobs.*._any.system.>",
-                  nats.Queue("system-workers"))
-```
-
-**Direct Host Workers:**
-
-```go
-// Worker on specific host
-hostname, _ := os.Hostname()
-consumer.Subscribe(fmt.Sprintf("jobs.*.%s.>", hostname))
-```
-
-**Broadcast Workers (No Queue Groups):**
-
-```go
-// All workers receive urgent notifications
-consumer.Subscribe("jobs.*._all.>")
-```
+- **Load-balanced** (queue group): `jobs.query._any`, `jobs.modify._any` — only
+  one worker in the queue group processes each message
+- **Direct**: `jobs.query.host.{hostname}`, `jobs.modify.host.{hostname}` —
+  messages addressed to this specific worker
+- **Broadcast**: `jobs.query._all`, `jobs.modify._all` — all workers receive the
+  message (no queue group)
+- **Label** (per prefix level, no queue group):
+  `jobs.query.label.{key}.{prefix}`, `jobs.modify.label.{key}.{prefix}` — all
+  workers matching the label prefix receive the message
 
 ### Provider Pattern
 
@@ -557,17 +565,20 @@ osapi client job delete --job-id uuid-12345
 internal/job/
 ├── types.go              # Core domain types (Request, Response, QueuedJob,
 │                         #   QueueStats, WorkerState, TimelineEvent)
-├── subjects.go           # Subject routing and pattern generation
+├── subjects.go           # Subject routing, target parsing, label validation
+├── hostname.go           # Local hostname resolution and caching
 ├── config.go             # Configuration structures
 ├── client/               # High-level job operations for API embedding
-│   ├── client.go         # Job client with CreateJob, GetQueueStats, etc.
+│   ├── client.go         # Publish-and-wait/collect with KV + stream
 │   ├── query.go          # Query operations (system status, hostname, etc.)
-│   ├── modify.go         # Modify operations (DNS updates, ping, etc.)
+│   ├── modify.go         # Modify operations (DNS updates)
+│   ├── jobs.go           # CreateJob, GetJobStatus, GetQueueStats
 │   ├── worker.go         # WriteStatusEvent, WriteJobResponse
 │   └── types.go          # Client-specific types and interfaces
 └── worker/               # Job processing and worker lifecycle
     ├── worker.go         # Worker implementation and lifecycle management
-    ├── consumer.go       # NATS message consumption
+    ├── server.go         # Worker server (NATS connect, stream setup, run)
+    ├── consumer.go       # JetStream consumer creation and subscription
     ├── handler.go        # Job lifecycle handling with status events
     ├── processor.go      # Provider dispatch and execution
     ├── factory.go        # Worker creation

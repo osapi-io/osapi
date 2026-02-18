@@ -66,12 +66,28 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("my-hostname", nil)
+					Return("my-hostname", "worker1", nil)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
 				s.True(ok)
-				s.Equal("my-hostname", r.Hostname)
+				s.Require().Len(r.Results, 1)
+				s.Equal("my-hostname", r.Results[0].Hostname)
+			},
+		},
+		{
+			name:    "empty hostname falls back to worker hostname",
+			request: gen.GetSystemHostnameRequestObject{},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostname(gomock.Any(), gomock.Any()).
+					Return("", "worker1", nil)
+			},
+			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
+				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("worker1", r.Results[0].Hostname)
 			},
 		},
 		{
@@ -94,7 +110,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("", assert.AnError)
+					Return("", "", assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)
@@ -108,7 +124,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QuerySystemHostnameAll(gomock.Any()).
+					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
 					Return(map[string]string{
 						"server1": "host1",
 						"server2": "host2",
@@ -125,7 +141,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QuerySystemHostnameAll(gomock.Any()).
+					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {

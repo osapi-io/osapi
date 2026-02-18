@@ -75,11 +75,17 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 					Return(&dns.Config{
 						DNSServers:    []string{"8.8.8.8"},
 						SearchDomains: []string{"example.com"},
-					}, nil)
+					}, "worker1", nil)
 				return mock
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"servers"`, `"8.8.8.8"`, `"search_domains"`, `"example.com"`},
+			wantCode: http.StatusOK,
+			wantContains: []string{
+				`"results"`,
+				`"servers"`,
+				`"8.8.8.8"`,
+				`"search_domains"`,
+				`"example.com"`,
+			},
 		},
 		{
 			name: "when non-alphanum interface name",
@@ -96,7 +102,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
 					Return(map[string]*dns.Config{
 						"server1": {
 							DNSServers:    []string{"8.8.8.8"},

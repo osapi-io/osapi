@@ -23,7 +23,9 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -60,8 +62,34 @@ func (w *Worker) consumeQueryJobs(
 		},
 		{
 			name:   "query_direct_" + sanitizedHostname,
-			filter: "jobs.query." + hostname,
+			filter: "jobs.query.host." + hostname,
 		},
+	}
+
+	// Add label-based consumers with hierarchical prefix subscriptions.
+	// For "group: web.dev.us-east", creates consumers for each prefix level:
+	//   jobs.query.label.group.web
+	//   jobs.query.label.group.web.dev
+	//   jobs.query.label.group.web.dev.us-east
+	for key, value := range w.appConfig.Job.Worker.Labels {
+		segments := strings.Split(value, ".")
+		for i := range segments {
+			prefix := strings.Join(segments[:i+1], ".")
+			sanitizedPrefix := job.SanitizeHostname(prefix)
+			consumers = append(consumers, struct {
+				name       string
+				filter     string
+				queueGroup string
+			}{
+				name: fmt.Sprintf(
+					"query_label_%s_%s_%s",
+					key,
+					sanitizedPrefix,
+					sanitizedHostname,
+				),
+				filter: fmt.Sprintf("jobs.query.label.%s.%s", key, prefix),
+			})
+		}
 	}
 
 	for _, consumer := range consumers {
@@ -130,8 +158,30 @@ func (w *Worker) consumeModifyJobs(
 		},
 		{
 			name:   "modify_direct_" + sanitizedHostname,
-			filter: "jobs.modify." + hostname,
+			filter: "jobs.modify.host." + hostname,
 		},
+	}
+
+	// Add label-based consumers with hierarchical prefix subscriptions.
+	for key, value := range w.appConfig.Job.Worker.Labels {
+		segments := strings.Split(value, ".")
+		for i := range segments {
+			prefix := strings.Join(segments[:i+1], ".")
+			sanitizedPrefix := job.SanitizeHostname(prefix)
+			consumers = append(consumers, struct {
+				name       string
+				filter     string
+				queueGroup string
+			}{
+				name: fmt.Sprintf(
+					"modify_label_%s_%s_%s",
+					key,
+					sanitizedPrefix,
+					sanitizedHostname,
+				),
+				filter: fmt.Sprintf("jobs.modify.label.%s.%s", key, prefix),
+			})
+		}
 	}
 
 	for _, consumer := range consumers {

@@ -79,14 +79,16 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 						MinRTT:          10 * time.Millisecond,
 						AvgRTT:          15 * time.Millisecond,
 						MaxRTT:          20 * time.Millisecond,
-					}, nil)
+					}, "worker1", nil)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				r, ok := resp.(gen.PostNetworkPing200JSONResponse)
 				s.True(ok)
-				s.Equal(3, *r.PacketsSent)
-				s.Equal(3, *r.PacketsReceived)
-				s.Equal(0.0, *r.PacketLoss)
+				s.Require().Len(r.Results, 1)
+				s.Equal(3, *r.Results[0].PacketsSent)
+				s.Equal(3, *r.Results[0].PacketsReceived)
+				s.Equal(0.0, *r.Results[0].PacketLoss)
+				s.Equal("worker1", r.Results[0].Hostname)
 			},
 		},
 		{
@@ -132,7 +134,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(nil, assert.AnError)
+					Return(nil, "", assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNetworkPing500JSONResponse)
@@ -149,7 +151,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
 					Return(map[string]*ping.Result{
 						"server1": {
 							PacketsSent:     3,
@@ -175,7 +177,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {

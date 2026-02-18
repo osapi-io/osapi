@@ -83,11 +83,11 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 						MinRTT:          10 * time.Millisecond,
 						AvgRTT:          15 * time.Millisecond,
 						MaxRTT:          20 * time.Millisecond,
-					}, nil)
+					}, "worker1", nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"packets_sent":3`, `"packets_received":3`},
+			wantContains: []string{`"results"`, `"packets_sent":3`, `"packets_received":3`},
 		},
 		{
 			name: "when missing address",
@@ -116,7 +116,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
 					Return(map[string]*ping.Result{
 						"server1": {
 							PacketsSent:     3,

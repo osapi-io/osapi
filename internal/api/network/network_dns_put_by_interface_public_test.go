@@ -77,11 +77,14 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
+					Return("worker1", nil)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
-				_, ok := resp.(gen.PutNetworkDNS202Response)
+				r, ok := resp.(gen.PutNetworkDNS202JSONResponse)
 				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal(gen.Ok, r.Results[0].Status)
 			},
 		},
 		{
@@ -131,7 +134,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(assert.AnError)
+					Return("", assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNetworkDNS500JSONResponse)
@@ -150,7 +153,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(map[string]error{
 						"server1": nil,
 						"server2": nil,
@@ -172,7 +175,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(map[string]error{
 						"server1": nil,
 						"server2": fmt.Errorf("disk full"),
@@ -194,7 +197,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {

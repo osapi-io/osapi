@@ -74,10 +74,11 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
+					Return("worker1", nil)
 				return mock
 			},
-			wantCode: http.StatusAccepted,
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"worker1"`, `"ok"`},
 		},
 		{
 			name: "when missing interface name",
@@ -126,7 +127,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(map[string]error{
 						"server1": nil,
 					}, nil)

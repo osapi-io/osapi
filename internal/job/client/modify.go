@@ -35,7 +35,7 @@ func (c *Client) ModifyNetworkDNS(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) error {
+) (string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"servers":        servers,
 		"search_domains": searchDomains,
@@ -48,17 +48,17 @@ func (c *Client) ModifyNetworkDNS(
 		Data:      json.RawMessage(data),
 	}
 
-	subject := job.BuildModifySubject(hostname)
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return fmt.Errorf("failed to publish and wait: %w", err)
+		return "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return fmt.Errorf("job failed: %s", resp.Error)
+		return "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	return nil
+	return resp.Hostname, nil
 }
 
 // ModifyNetworkDNSAny modifies DNS configuration on any available host.
@@ -67,13 +67,15 @@ func (c *Client) ModifyNetworkDNSAny(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) error {
+) (string, error) {
 	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
 }
 
-// ModifyNetworkDNSAll modifies DNS configuration on all hosts.
-func (c *Client) ModifyNetworkDNSAll(
+// ModifyNetworkDNSBroadcast modifies DNS configuration on a broadcast target
+// (_all or a label target like role:web).
+func (c *Client) ModifyNetworkDNSBroadcast(
 	ctx context.Context,
+	target string,
 	servers []string,
 	searchDomains []string,
 	iface string,
@@ -90,7 +92,7 @@ func (c *Client) ModifyNetworkDNSAll(
 		Data:      json.RawMessage(data),
 	}
 
-	subject := job.BuildModifySubject(job.BroadcastHost)
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
 	responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
@@ -106,4 +108,14 @@ func (c *Client) ModifyNetworkDNSAll(
 	}
 
 	return results, nil
+}
+
+// ModifyNetworkDNSAll modifies DNS configuration on all hosts.
+func (c *Client) ModifyNetworkDNSAll(
+	ctx context.Context,
+	servers []string,
+	searchDomains []string,
+	iface string,
+) (map[string]error, error) {
+	return c.ModifyNetworkDNSBroadcast(ctx, job.BroadcastHost, servers, searchDomains, iface)
 }
