@@ -62,7 +62,7 @@ func (w *Worker) consumeQueryJobs(
 		},
 		{
 			name:   "query_direct_" + sanitizedHostname,
-			filter: "jobs.query.host." + hostname,
+			filter: "jobs.query.host." + sanitizedHostname,
 		},
 	}
 
@@ -158,7 +158,7 @@ func (w *Worker) consumeModifyJobs(
 		},
 		{
 			name:   "modify_direct_" + sanitizedHostname,
-			filter: "jobs.modify.host." + hostname,
+			filter: "jobs.modify.host." + sanitizedHostname,
 		},
 	}
 
