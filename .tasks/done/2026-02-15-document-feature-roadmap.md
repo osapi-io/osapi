@@ -1,8 +1,8 @@
 ---
 title: "Document feature roadmap with tiered priorities"
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-18
 ---
 
 ## Objective
@@ -102,3 +102,9 @@ the roadmap.
 - Reference individual `.tasks/backlog/` files for detailed specs
 - This page should be the canonical "what can OSAPI do and where is it
   going" resource
+
+## Outcome
+
+Created `docs/docs/sidebar/roadmap.md` at sidebar position 9 with all four
+priority tiers, current capabilities summary, implementation pattern, and
+contributing section.
