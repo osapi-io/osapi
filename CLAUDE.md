@@ -13,6 +13,10 @@ For setup, building, testing, and contributing, see the Docusaurus docs:
 - @docs/docs/sidebar/development.md - Prerequisites, setup, code style, testing, commit conventions
 - @docs/docs/sidebar/contributing.md - PR workflow and contribution guidelines
 - @docs/docs/sidebar/testing.md - How to run tests and list just recipes
+- @docs/docs/sidebar/principles.md - Guiding principles (simplicity, minimalism, design philosophy)
+- @docs/docs/sidebar/api-guidelines.md - API design guidelines (REST conventions, endpoint structure)
+- @docs/docs/sidebar/configuration.md - Configuration reference (osapi.yaml, env overrides)
+- @docs/docs/sidebar/system-architecture.md - System architecture (components, REST API, NATS, CLI)
 - @docs/docs/sidebar/job-architecture.md - Job system architecture (KV-first, subject routing, worker pipeline)
 
 Quick reference for common commands:
@@ -58,7 +62,7 @@ func FunctionName(
 
 ### Go Patterns
 
-- Context-based lifecycle: `Start(ctx)` blocks until `ctx.Done()`, no explicit `Stop()` methods
+- Non-blocking lifecycle: `Start()` returns immediately, `Stop(ctx)` shuts down with deadline
 - Error wrapping: `fmt.Errorf("context: %w", err)`
 - Early returns over nested if-else
 - Unused parameters: rename to `_`

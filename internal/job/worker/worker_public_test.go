@@ -145,24 +145,12 @@ func (s *WorkerPublicTestSuite) TestStart() {
 				pingMocks.NewDefaultMockProvider(s.mockCtrl),
 			)
 
-			ctx, cancel := context.WithCancel(context.Background())
+			w.Start()
 
-			done := make(chan struct{})
-			go func() {
-				w.Start(ctx)
-				close(done)
-			}()
+			stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
 
-			// Give goroutines time to start then cancel
-			time.Sleep(50 * time.Millisecond)
-			cancel()
-
-			select {
-			case <-done:
-				// Start returned successfully
-			case <-time.After(5 * time.Second):
-				s.Fail("Start did not return after context cancellation")
-			}
+			w.Stop(stopCtx)
 		})
 	}
 }

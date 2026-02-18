@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"context"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -35,10 +34,7 @@ import (
 
 // ServerManager responsible for Server operations.
 type ServerManager interface {
-	// Start starts the Echo server with the configured port.
-	Start()
-	// Stop gracefully shuts down the Echo server.
-	Stop(ctx context.Context)
+	Lifecycle
 	// CreateHandlers initializes handlers and returns a slice of functions to register them.
 	CreateHandlers(
 		jobClient jobclient.JobClient,
@@ -88,17 +84,11 @@ var apiServerStartCmd = &cobra.Command{
 		sm.RegisterHandlers(handlers)
 
 		sm.Start()
-
-		<-ctx.Done()
-
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		sm.Stop(shutdownCtx)
-
-		if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
-			natsConn.NC.Close()
-		}
+		runServer(ctx, sm, func() {
+			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
+				natsConn.NC.Close()
+			}
+		})
 	},
 }
 
