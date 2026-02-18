@@ -22,29 +22,13 @@ package system
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
-
-// systemStatusMultiResponse wraps multiple status results for _all broadcast.
-type systemStatusMultiResponse struct {
-	Results []gen.SystemStatusResponse `json:"results"`
-}
-
-func (r systemStatusMultiResponse) VisitGetSystemStatusResponse(
-	w http.ResponseWriter,
-) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(w).Encode(r)
-}
 
 // GetSystemStatus get the system status API endpoint.
 func (s *System) GetSystemStatus(
@@ -79,7 +63,9 @@ func (s *System) GetSystemStatus(
 
 	resp := buildSystemStatusResponse(status)
 
-	return gen.GetSystemStatus200JSONResponse(*resp), nil
+	return gen.GetSystemStatus200JSONResponse{
+		Results: []gen.SystemStatusResponse{*resp},
+	}, nil
 }
 
 // getSystemStatusAll handles _all broadcast for system status.
@@ -99,7 +85,9 @@ func (s *System) getSystemStatusAll(
 		responses = append(responses, *buildSystemStatusResponse(status))
 	}
 
-	return systemStatusMultiResponse{Results: responses}, nil
+	return gen.GetSystemStatus200JSONResponse{
+		Results: responses,
+	}, nil
 }
 
 // buildSystemStatusResponse converts a job.SystemStatusResponse to the API response.

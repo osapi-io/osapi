@@ -40,6 +40,11 @@ type DisksResponse = []DiskResponse
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
+// HostnameCollectionResponse defines model for HostnameCollectionResponse.
+type HostnameCollectionResponse struct {
+	Results []HostnameResponse `json:"results"`
+}
+
 // HostnameResponse The hostname of the system.
 type HostnameResponse struct {
 	// Hostname The system's hostname.
@@ -77,6 +82,11 @@ type OSInfoResponse struct {
 
 	// Version The version of the Linux distribution.
 	Version string `json:"version"`
+}
+
+// SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
+type SystemStatusCollectionResponse struct {
+	Results []SystemStatusResponse `json:"results"`
 }
 
 // SystemStatusResponse defines model for SystemStatusResponse.
@@ -208,7 +218,7 @@ type GetSystemHostnameResponseObject interface {
 	VisitGetSystemHostnameResponse(w http.ResponseWriter) error
 }
 
-type GetSystemHostname200JSONResponse HostnameResponse
+type GetSystemHostname200JSONResponse HostnameCollectionResponse
 
 func (response GetSystemHostname200JSONResponse) VisitGetSystemHostnameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -261,7 +271,7 @@ type GetSystemStatusResponseObject interface {
 	VisitGetSystemStatusResponse(w http.ResponseWriter) error
 }
 
-type GetSystemStatus200JSONResponse SystemStatusResponse
+type GetSystemStatus200JSONResponse SystemStatusCollectionResponse
 
 func (response GetSystemStatus200JSONResponse) VisitGetSystemStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

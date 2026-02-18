@@ -55,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemStatusResponse'
+                $ref: '#/components/schemas/SystemStatusCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -104,7 +104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HostnameResponse'
+                $ref: '#/components/schemas/HostnameCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -252,6 +252,26 @@ components:
           example: "my-linux-server"
       required:
         - hostname
+
+    SystemStatusCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemStatusResponse'
+      required:
+        - results
+
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
 
     OSInfoResponse:
       type: object

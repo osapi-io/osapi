@@ -57,19 +57,28 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("get dns response was nil"))
 			}
 
-			var searchDomainsList, serversList []string
-			if resp.JSON200.SearchDomains != nil {
-				searchDomainsList = *resp.JSON200.SearchDomains
+			rows := make([][]string, 0, len(resp.JSON200.Results))
+			for _, cfg := range resp.JSON200.Results {
+				var serversList, searchDomainsList []string
+				if cfg.Servers != nil {
+					serversList = *cfg.Servers
+				}
+				if cfg.SearchDomains != nil {
+					searchDomainsList = *cfg.SearchDomains
+				}
+				rows = append(rows, []string{
+					cfg.Hostname,
+					formatList(serversList),
+					formatList(searchDomainsList),
+				})
 			}
-			if resp.JSON200.Servers != nil {
-				serversList = *resp.JSON200.Servers
+			sections := []section{
+				{
+					Headers: []string{"HOSTNAME", "SERVERS", "SEARCH DOMAINS"},
+					Rows:    rows,
+				},
 			}
-
-			dnsData := map[string]interface{}{
-				"Search Domains": formatList(searchDomainsList),
-				"Servers":        formatList(serversList),
-			}
-			printStyledMap(dnsData)
+			printStyledTable(sections)
 
 		case http.StatusUnauthorized:
 			handleAuthError(resp.JSON401, resp.StatusCode(), logger)

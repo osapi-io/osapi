@@ -5,8 +5,24 @@ Get the systems DNS config:
 ```bash
 $ osapi client network dns get --interface-name eth0
 
-  Search Domains: .
-  Servers: 192.168.0.247, 2607:f428:ffff:ffff::1, 2607:f428:ffff:ffff::2
+  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+  ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃
+  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┫
+  ┃ server1  ┃ 192.168.0.247, 2607:f428::1, 2607:f42::2 ┃ example.com    ┃
+  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━┛
+```
+
+When targeting all hosts:
+
+```bash
+$ osapi client network dns get --interface-name eth0 --target _all
+
+  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+  ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃
+  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┫
+  ┃ server1  ┃ 192.168.0.247, 2607:f428::1              ┃ example.com    ┃
+  ┃ server2  ┃ 8.8.8.8, 1.1.1.1                         ┃ local          ┃
+  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━┛
 ```
 
 ## Flags

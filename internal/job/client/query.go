@@ -64,7 +64,7 @@ func (c *Client) QuerySystemStatus(
 func (c *Client) QuerySystemHostname(
 	ctx context.Context,
 	hostname string,
-) (string, error) {
+) (string, string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "system",
@@ -75,21 +75,21 @@ func (c *Client) QuerySystemHostname(
 	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return "", fmt.Errorf("failed to publish and wait: %w", err)
+		return "", "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return "", fmt.Errorf("job failed: %s", resp.Error)
+		return "", "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
 	var result struct {
 		Hostname string `json:"hostname"`
 	}
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
-		return "", fmt.Errorf("failed to unmarshal hostname response: %w", err)
+		return "", "", fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	return result.Hostname, nil
+	return result.Hostname, resp.Hostname, nil
 }
 
 // QueryNetworkDNS queries DNS configuration from a specific hostname.
@@ -97,7 +97,7 @@ func (c *Client) QueryNetworkDNS(
 	ctx context.Context,
 	hostname string,
 	iface string,
-) (*dns.Config, error) {
+) (*dns.Config, string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"interface": iface,
 	})
@@ -111,19 +111,19 @@ func (c *Client) QueryNetworkDNS(
 	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+		return nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("job failed: %s", resp.Error)
+		return nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
 	var result dns.Config
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal DNS response: %w", err)
+		return nil, "", fmt.Errorf("failed to unmarshal DNS response: %w", err)
 	}
 
-	return &result, nil
+	return &result, resp.Hostname, nil
 }
 
 // QuerySystemStatusAny queries system status from any available host.
@@ -176,7 +176,7 @@ func (c *Client) QueryNetworkPing(
 	ctx context.Context,
 	hostname string,
 	address string,
-) (*ping.Result, error) {
+) (*ping.Result, string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"address": address,
 	})
@@ -190,26 +190,26 @@ func (c *Client) QueryNetworkPing(
 	subject := job.BuildQuerySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+		return nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("job failed: %s", resp.Error)
+		return nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
 	var result ping.Result
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal ping response: %w", err)
+		return nil, "", fmt.Errorf("failed to unmarshal ping response: %w", err)
 	}
 
-	return &result, nil
+	return &result, resp.Hostname, nil
 }
 
 // QueryNetworkPingAny pings a host from any available hostname.
 func (c *Client) QueryNetworkPingAny(
 	ctx context.Context,
 	address string,
-) (*ping.Result, error) {
+) (*ping.Result, string, error) {
 	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }
 

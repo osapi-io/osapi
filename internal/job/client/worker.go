@@ -98,6 +98,7 @@ func (c *Client) WriteJobResponse(
 		Status:    job.Status(status),
 		Data:      responseData,
 		Error:     errorMsg,
+		Hostname:  hostname,
 		Timestamp: time.Now(),
 	}
 

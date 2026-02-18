@@ -65,7 +65,7 @@ type JobClient interface {
 	QuerySystemHostname(
 		ctx context.Context,
 		hostname string,
-	) (string, error)
+	) (string, string, error)
 	QuerySystemHostnameAll(
 		ctx context.Context,
 	) (map[string]string, error)
@@ -73,7 +73,7 @@ type JobClient interface {
 		ctx context.Context,
 		hostname string,
 		iface string,
-	) (*dns.Config, error)
+	) (*dns.Config, string, error)
 	QueryNetworkDNSAll(
 		ctx context.Context,
 		iface string,
@@ -86,13 +86,13 @@ type JobClient interface {
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) error
+	) (string, error)
 	ModifyNetworkDNSAny(
 		ctx context.Context,
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) error
+	) (string, error)
 	ModifyNetworkDNSAll(
 		ctx context.Context,
 		servers []string,
@@ -103,11 +103,11 @@ type JobClient interface {
 		ctx context.Context,
 		hostname string,
 		address string,
-	) (*ping.Result, error)
+	) (*ping.Result, string, error)
 	QueryNetworkPingAny(
 		ctx context.Context,
 		address string,
-	) (*ping.Result, error)
+	) (*ping.Result, string, error)
 	QueryNetworkPingAll(
 		ctx context.Context,
 		address string,

@@ -67,14 +67,40 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 
 		switch resp.StatusCode() {
 		case http.StatusAccepted:
-			logger.Info(
-				"network dns put",
-				slog.String("search_domains", strings.Join(searchDomains, ",")),
-				slog.String("servers", strings.Join(servers, ",")),
-				slog.Int("code", resp.StatusCode()),
-				slog.String("response", string(resp.Body)),
-				slog.String("status", "ok"),
-			)
+			if jsonOutput {
+				fmt.Println(string(resp.Body))
+				return
+			}
+
+			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
+				rows := make([][]string, 0, len(resp.JSON202.Results))
+				for _, r := range resp.JSON202.Results {
+					errStr := ""
+					if r.Error != nil {
+						errStr = *r.Error
+					}
+					rows = append(rows, []string{
+						r.Hostname,
+						string(r.Status),
+						errStr,
+					})
+				}
+				sections := []section{
+					{
+						Headers: []string{"HOSTNAME", "STATUS", "ERROR"},
+						Rows:    rows,
+					},
+				}
+				printStyledTable(sections)
+			} else {
+				logger.Info(
+					"network dns put",
+					slog.String("search_domains", strings.Join(searchDomains, ",")),
+					slog.String("servers", strings.Join(servers, ",")),
+					slog.Int("code", resp.StatusCode()),
+					slog.String("status", "ok"),
+				)
+			}
 
 		case http.StatusUnauthorized:
 			handleAuthError(resp.JSON401, resp.StatusCode(), logger)

@@ -3,8 +3,34 @@
 Update the systems DNS config:
 
 ```bash
-$ osapi client network dns update --search-domains "foo,bar,baz" --servers "1.1.1.1,2.2.2.2" --interface-name eth1
-10:56AM INF network dns put search_domains=foo,bar,baz servers=1.1.1.1,2.2.2.2 response="" status=ok
+$ osapi client network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --search-domains "foo.bar,baz.qux" \
+    --interface-name eth0
+
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃ HOSTNAME ┃ STATUS ┃ ERROR ┃
+  ┣━━━━━━━━━━╋━━━━━━━━╋━━━━━━━┫
+  ┃ server1  ┃ ok     ┃       ┃
+  ┗━━━━━━━━━━┻━━━━━━━━┻━━━━━━━┛
+```
+
+When targeting all hosts, a confirmation prompt is shown first:
+
+```bash
+$ osapi client network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --search-domains "foo.bar" \
+    --interface-name eth0 \
+    --target _all
+This will modify DNS on ALL hosts. Continue? [y/N] y
+
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┓
+  ┃ HOSTNAME ┃ STATUS ┃ ERROR     ┃
+  ┣━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━┫
+  ┃ server1  ┃ ok     ┃           ┃
+  ┃ server2  ┃ failed ┃ disk full ┃
+  ┗━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┛
 ```
 
 ## Flags

@@ -71,13 +71,15 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 					Return(&dns.Config{
 						DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
 						SearchDomains: []string{"example.com", "local.lan"},
-					}, nil)
+					}, "worker1", nil)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				r, ok := resp.(gen.GetNetworkDNSByInterface200JSONResponse)
 				s.True(ok)
-				s.Equal([]string{"192.168.1.1", "8.8.8.8"}, *r.Servers)
-				s.Equal([]string{"example.com", "local.lan"}, *r.SearchDomains)
+				s.Require().Len(r.Results, 1)
+				s.Equal([]string{"192.168.1.1", "8.8.8.8"}, *r.Results[0].Servers)
+				s.Equal([]string{"example.com", "local.lan"}, *r.Results[0].SearchDomains)
+				s.Equal("worker1", r.Results[0].Hostname)
 			},
 		},
 		{
@@ -125,7 +127,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkDNS(gomock.Any(), gomock.Any(), "eth0").
-					Return(nil, assert.AnError)
+					Return(nil, "", assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				_, ok := resp.(gen.GetNetworkDNSByInterface500JSONResponse)

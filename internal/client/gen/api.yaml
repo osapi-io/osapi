@@ -366,7 +366,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/PingCollectionResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -429,7 +429,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DNSConfigResponse'
+                $ref: '#/components/schemas/DNSConfigCollectionResponse'
         '400':
           description: Invalid interface name provided.
           content:
@@ -483,6 +483,10 @@ paths:
       responses:
         '202':
           description: DNS servers update successfully accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSUpdateCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -534,7 +538,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemStatusResponse'
+                $ref: '#/components/schemas/SystemStatusCollectionResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -578,7 +582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HostnameResponse'
+                $ref: '#/components/schemas/HostnameCollectionResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -759,6 +763,9 @@ components:
     PingResponse:
       type: object
       properties:
+        hostname:
+          type: string
+          description: The hostname of the worker that executed the ping.
         packets_sent:
           type: integer
           description: Number of packets sent.
@@ -784,9 +791,23 @@ components:
           type: string
           description: Maximum round-trip time as a string in Go's time.Duration format.
           example: 24.309240ms
+      required:
+        - hostname
+    PingCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PingResponse'
+      required:
+        - results
     DNSConfigResponse:
       type: object
       properties:
+        hostname:
+          type: string
+          description: The hostname of the worker that served this DNS config.
         servers:
           type: array
           description: List of configured DNS servers.
@@ -798,6 +819,41 @@ components:
           description: List of search domains.
           items:
             type: string
+      required:
+        - hostname
+    DNSConfigCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DNSConfigResponse'
+      required:
+        - results
+    DNSUpdateResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+        error:
+          type: string
+      required:
+        - hostname
+        - status
+    DNSUpdateCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DNSUpdateResultItem'
+      required:
+        - results
     DNSConfigUpdateRequest:
       type: object
       properties:
@@ -895,6 +951,24 @@ components:
       description: List of local disk usage information.
       items:
         $ref: '#/components/schemas/DiskResponse'
+    SystemStatusCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemStatusResponse'
+      required:
+        - results
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
     SystemStatusResponse:
       type: object
       properties:

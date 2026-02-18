@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -53,16 +52,11 @@ var clientSystemStatusGetCmd = &cobra.Command{
 				return
 			}
 
-			if host == "_all" {
-				displayMultiSystemStatus(resp.Body)
-				return
-			}
-
 			if resp.JSON200 == nil {
 				logFatal("failed response", fmt.Errorf("system data response was nil"))
 			}
 
-			displaySingleSystemStatus(resp.JSON200)
+			displaySystemStatusCollection(host, resp.JSON200)
 
 		case http.StatusUnauthorized:
 			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
@@ -74,11 +68,46 @@ var clientSystemStatusGetCmd = &cobra.Command{
 	},
 }
 
-// displaySingleSystemStatus renders a single system status response.
-func displaySingleSystemStatus(
+// displaySystemStatusCollection renders system status results.
+// For a single non-broadcast result, shows detailed output; otherwise shows a summary table.
+func displaySystemStatusCollection(
+	target string,
+	data *gen.SystemStatusCollectionResponse,
+) {
+	if len(data.Results) == 1 && target != "_all" {
+		displaySystemStatusDetail(&data.Results[0])
+		return
+	}
+
+	rows := make([][]string, 0, len(data.Results))
+	for _, s := range data.Results {
+		rows = append(rows, []string{
+			s.Hostname,
+			s.Uptime,
+			fmt.Sprintf("%.2f", s.LoadAverage.N1min),
+			fmt.Sprintf(
+				"%d GB / %d GB",
+				s.Memory.Used/1024/1024/1024,
+				s.Memory.Total/1024/1024/1024,
+			),
+		})
+	}
+
+	sections := []section{
+		{
+			Headers: []string{"HOSTNAME", "UPTIME", "LOAD (1m)", "MEMORY USED"},
+			Rows:    rows,
+		},
+	}
+	printStyledTable(sections)
+}
+
+// displaySystemStatusDetail renders a single system status response with full details.
+func displaySystemStatusDetail(
 	data *gen.SystemStatusResponse,
 ) {
 	systemData := map[string]interface{}{
+		"Hostname": data.Hostname,
 		"Load Average (1m, 5m, 15m)": fmt.Sprintf(
 			"%.2f, %.2f, %.2f",
 			data.LoadAverage.N1min,
@@ -117,40 +146,6 @@ func displaySingleSystemStatus(
 			Title:   "Disks",
 			Headers: []string{"DISK NAME", "TOTAL", "USED", "FREE"},
 			Rows:    diskRows,
-		},
-	}
-	printStyledTable(sections)
-}
-
-// displayMultiSystemStatus renders multiple system status responses from _all broadcast.
-func displayMultiSystemStatus(
-	body []byte,
-) {
-	var multiResp struct {
-		Results []gen.SystemStatusResponse `json:"results"`
-	}
-	if err := json.Unmarshal(body, &multiResp); err != nil {
-		logFatal("failed to parse multi-host response", err)
-	}
-
-	rows := make([][]string, 0, len(multiResp.Results))
-	for _, s := range multiResp.Results {
-		rows = append(rows, []string{
-			s.Hostname,
-			s.Uptime,
-			fmt.Sprintf("%.2f", s.LoadAverage.N1min),
-			fmt.Sprintf(
-				"%d GB / %d GB",
-				s.Memory.Used/1024/1024/1024,
-				s.Memory.Total/1024/1024/1024,
-			),
-		})
-	}
-
-	sections := []section{
-		{
-			Headers: []string{"HOSTNAME", "UPTIME", "LOAD (1m)", "MEMORY USED"},
-			Rows:    rows,
 		},
 	}
 	printStyledTable(sections)

@@ -22,34 +22,12 @@ package network
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
-
-// dnsPutMultiResponse wraps multiple DNS modify results for _all broadcast.
-type dnsPutMultiResponse struct {
-	Results []dnsPutResult `json:"results"`
-}
-
-type dnsPutResult struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status"`
-	Error    string `json:"error,omitempty"`
-}
-
-func (r dnsPutMultiResponse) VisitPutNetworkDNSResponse(
-	w http.ResponseWriter,
-) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusAccepted)
-
-	return json.NewEncoder(w).Encode(r)
-}
 
 // PutNetworkDNS put the network dns API endpoint.
 func (n Network) PutNetworkDNS(
@@ -92,7 +70,13 @@ func (n Network) PutNetworkDNS(
 		return n.putNetworkDNSAll(ctx, servers, searchDomains, interfaceName)
 	}
 
-	err := n.JobClient.ModifyNetworkDNS(ctx, hostname, servers, searchDomains, interfaceName)
+	workerHostname, err := n.JobClient.ModifyNetworkDNS(
+		ctx,
+		hostname,
+		servers,
+		searchDomains,
+		interfaceName,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNetworkDNS500JSONResponse{
@@ -100,7 +84,14 @@ func (n Network) PutNetworkDNS(
 		}, nil
 	}
 
-	return gen.PutNetworkDNS202Response{}, nil
+	return gen.PutNetworkDNS202JSONResponse{
+		Results: []gen.DNSUpdateResultItem{
+			{
+				Hostname: workerHostname,
+				Status:   gen.Ok,
+			},
+		},
+	}, nil
 }
 
 // putNetworkDNSAll handles _all broadcast for DNS modification.
@@ -118,18 +109,21 @@ func (n Network) putNetworkDNSAll(
 		}, nil
 	}
 
-	var responses []dnsPutResult
+	var responses []gen.DNSUpdateResultItem
 	for host, hostErr := range results {
-		r := dnsPutResult{
+		item := gen.DNSUpdateResultItem{
 			Hostname: host,
-			Status:   "ok",
+			Status:   gen.Ok,
 		}
 		if hostErr != nil {
-			r.Status = "failed"
-			r.Error = fmt.Sprintf("%v", hostErr)
+			item.Status = gen.Failed
+			errStr := fmt.Sprintf("%v", hostErr)
+			item.Error = &errStr
 		}
-		responses = append(responses, r)
+		responses = append(responses, item)
 	}
 
-	return dnsPutMultiResponse{Results: responses}, nil
+	return gen.PutNetworkDNS202JSONResponse{
+		Results: responses,
+	}, nil
 }

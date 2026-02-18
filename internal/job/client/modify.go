@@ -35,7 +35,7 @@ func (c *Client) ModifyNetworkDNS(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) error {
+) (string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"servers":        servers,
 		"search_domains": searchDomains,
@@ -51,14 +51,14 @@ func (c *Client) ModifyNetworkDNS(
 	subject := job.BuildModifySubject(hostname)
 	resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return fmt.Errorf("failed to publish and wait: %w", err)
+		return "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return fmt.Errorf("job failed: %s", resp.Error)
+		return "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	return nil
+	return resp.Hostname, nil
 }
 
 // ModifyNetworkDNSAny modifies DNS configuration on any available host.
@@ -67,7 +67,7 @@ func (c *Client) ModifyNetworkDNSAny(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) error {
+) (string, error) {
 	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
 }
 

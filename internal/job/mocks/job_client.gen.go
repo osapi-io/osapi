@@ -173,11 +173,12 @@ func (mr *MockJobClientMockRecorder) ListWorkers(arg0 interface{}) *gomock.Call 
 }
 
 // ModifyNetworkDNS mocks base method.
-func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) error {
+func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNS", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ModifyNetworkDNS indicates an expected call of ModifyNetworkDNS.
@@ -202,11 +203,12 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAll(arg0, arg1, arg2, arg3 
 }
 
 // ModifyNetworkDNSAny mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) error {
+func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSAny", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ModifyNetworkDNSAny indicates an expected call of ModifyNetworkDNSAny.
@@ -216,12 +218,13 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAny(arg0, arg1, arg2, arg3 
 }
 
 // QueryNetworkDNS mocks base method.
-func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (*dns.Config, error) {
+func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (*dns.Config, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*dns.Config)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkDNS indicates an expected call of QueryNetworkDNS.
@@ -246,12 +249,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNSAll(arg0, arg1 interface{}) 
 }
 
 // QueryNetworkPing mocks base method.
-func (m *MockJobClient) QueryNetworkPing(arg0 context.Context, arg1, arg2 string) (*ping.Result, error) {
+func (m *MockJobClient) QueryNetworkPing(arg0 context.Context, arg1, arg2 string) (*ping.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPing", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkPing indicates an expected call of QueryNetworkPing.
@@ -276,12 +280,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingAll(arg0, arg1 interface{})
 }
 
 // QueryNetworkPingAny mocks base method.
-func (m *MockJobClient) QueryNetworkPingAny(arg0 context.Context, arg1 string) (*ping.Result, error) {
+func (m *MockJobClient) QueryNetworkPingAny(arg0 context.Context, arg1 string) (*ping.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPingAny", arg0, arg1)
 	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkPingAny indicates an expected call of QueryNetworkPingAny.
@@ -291,12 +296,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingAny(arg0, arg1 interface{})
 }
 
 // QuerySystemHostname mocks base method.
-func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, error) {
+func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostname", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemHostname indicates an expected call of QuerySystemHostname.

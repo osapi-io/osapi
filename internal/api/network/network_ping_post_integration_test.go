@@ -83,11 +83,11 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 						MinRTT:          10 * time.Millisecond,
 						AvgRTT:          15 * time.Millisecond,
 						MaxRTT:          20 * time.Millisecond,
-					}, nil)
+					}, "worker1", nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"packets_sent":3`, `"packets_received":3`},
+			wantContains: []string{`"results"`, `"packets_sent":3`, `"packets_received":3`},
 		},
 		{
 			name: "when missing address",

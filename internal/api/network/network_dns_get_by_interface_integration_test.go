@@ -75,11 +75,17 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 					Return(&dns.Config{
 						DNSServers:    []string{"8.8.8.8"},
 						SearchDomains: []string{"example.com"},
-					}, nil)
+					}, "worker1", nil)
 				return mock
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"servers"`, `"8.8.8.8"`, `"search_domains"`, `"example.com"`},
+			wantCode: http.StatusOK,
+			wantContains: []string{
+				`"results"`,
+				`"servers"`,
+				`"8.8.8.8"`,
+				`"search_domains"`,
+				`"example.com"`,
+			},
 		},
 		{
 			name: "when non-alphanum interface name",

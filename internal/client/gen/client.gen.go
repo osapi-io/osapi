@@ -20,6 +20,12 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for DNSUpdateResultItemStatus.
+const (
+	Failed DNSUpdateResultItemStatus = "failed"
+	Ok     DNSUpdateResultItemStatus = "ok"
+)
+
 // CreateJobRequest defines model for CreateJobRequest.
 type CreateJobRequest struct {
 	// Operation The operation to perform, as a JSON object.
@@ -44,8 +50,16 @@ type CreateJobResponse struct {
 	Timestamp *string `json:"timestamp,omitempty"`
 }
 
+// DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
+type DNSConfigCollectionResponse struct {
+	Results []DNSConfigResponse `json:"results"`
+}
+
 // DNSConfigResponse defines model for DNSConfigResponse.
 type DNSConfigResponse struct {
+	// Hostname The hostname of the worker that served this DNS config.
+	Hostname string `json:"hostname"`
+
 	// SearchDomains List of search domains.
 	SearchDomains *[]string `json:"search_domains,omitempty"`
 
@@ -64,6 +78,21 @@ type DNSConfigUpdateRequest struct {
 	// Servers New list of DNS servers to configure.
 	Servers *[]string `json:"servers,omitempty" validate:"required_without=SearchDomains,omitempty,dive,ip,min=1"`
 }
+
+// DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
+type DNSUpdateCollectionResponse struct {
+	Results []DNSUpdateResultItem `json:"results"`
+}
+
+// DNSUpdateResultItem defines model for DNSUpdateResultItem.
+type DNSUpdateResultItem struct {
+	Error    *string                   `json:"error,omitempty"`
+	Hostname string                    `json:"hostname"`
+	Status   DNSUpdateResultItemStatus `json:"status"`
+}
+
+// DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
+type DNSUpdateResultItemStatus string
 
 // DiskResponse Local disk usage information.
 type DiskResponse struct {
@@ -93,6 +122,11 @@ type ErrorResponse struct {
 
 	// Error A description of the error that occurred.
 	Error *string `json:"error,omitempty"`
+}
+
+// HostnameCollectionResponse defines model for HostnameCollectionResponse.
+type HostnameCollectionResponse struct {
+	Results []HostnameResponse `json:"results"`
 }
 
 // HostnameResponse The hostname of the system.
@@ -192,10 +226,18 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
+// PingCollectionResponse defines model for PingCollectionResponse.
+type PingCollectionResponse struct {
+	Results []PingResponse `json:"results"`
+}
+
 // PingResponse defines model for PingResponse.
 type PingResponse struct {
 	// AvgRtt Average round-trip time as a string in Go's time.Duration format.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Hostname The hostname of the worker that executed the ping.
+	Hostname string `json:"hostname"`
 
 	// MaxRtt Maximum round-trip time as a string in Go's time.Duration format.
 	MaxRtt *string `json:"max_rtt,omitempty"`
@@ -226,6 +268,11 @@ type QueueStatsResponse struct {
 
 	// TotalJobs Total number of jobs in the queue.
 	TotalJobs *int `json:"total_jobs,omitempty"`
+}
+
+// SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
+type SystemStatusCollectionResponse struct {
+	Results []SystemStatusResponse `json:"results"`
 }
 
 // SystemStatusResponse defines model for SystemStatusResponse.
@@ -1359,6 +1406,7 @@ func (r GetJobByIDResponse) StatusCode() int {
 type PutNetworkDNSResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON202      *DNSUpdateCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -1384,7 +1432,7 @@ func (r PutNetworkDNSResponse) StatusCode() int {
 type GetNetworkDNSByInterfaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *DNSConfigResponse
+	JSON200      *DNSConfigCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -1410,7 +1458,7 @@ func (r GetNetworkDNSByInterfaceResponse) StatusCode() int {
 type PostNetworkPingResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *PingResponse
+	JSON200      *PingCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -1436,7 +1484,7 @@ func (r PostNetworkPingResponse) StatusCode() int {
 type GetSystemHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *HostnameResponse
+	JSON200      *HostnameCollectionResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -1461,7 +1509,7 @@ func (r GetSystemHostnameResponse) StatusCode() int {
 type GetSystemStatusResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *SystemStatusResponse
+	JSON200      *SystemStatusCollectionResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON500      *ErrorResponse
@@ -1947,6 +1995,13 @@ func ParsePutNetworkDNSResponse(rsp *http.Response) (*PutNetworkDNSResponse, err
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DNSUpdateCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1995,7 +2050,7 @@ func ParseGetNetworkDNSByInterfaceResponse(rsp *http.Response) (*GetNetworkDNSBy
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DNSConfigResponse
+		var dest DNSConfigCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2049,7 +2104,7 @@ func ParsePostNetworkPingResponse(rsp *http.Response) (*PostNetworkPingResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PingResponse
+		var dest PingCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2103,7 +2158,7 @@ func ParseGetSystemHostnameResponse(rsp *http.Response) (*GetSystemHostnameRespo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest HostnameResponse
+		var dest HostnameCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2150,7 +2205,7 @@ func ParseGetSystemStatusResponse(rsp *http.Response) (*GetSystemStatusResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SystemStatusResponse
+		var dest SystemStatusCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

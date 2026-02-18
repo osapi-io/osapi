@@ -22,27 +22,11 @@ package system
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
-
-// hostnameMultiResponse wraps multiple hostname results for _all broadcast.
-type hostnameMultiResponse struct {
-	Results []gen.HostnameResponse `json:"results"`
-}
-
-func (r hostnameMultiResponse) VisitGetSystemHostnameResponse(
-	w http.ResponseWriter,
-) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(w).Encode(r)
-}
 
 // GetSystemHostname get the system hostname API endpoint.
 func (s *System) GetSystemHostname(
@@ -67,7 +51,7 @@ func (s *System) GetSystemHostname(
 		return s.getSystemHostnameAll(ctx)
 	}
 
-	result, err := s.JobClient.QuerySystemHostname(ctx, hostname)
+	result, workerHostname, err := s.JobClient.QuerySystemHostname(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -75,8 +59,15 @@ func (s *System) GetSystemHostname(
 		}, nil
 	}
 
+	displayHostname := result
+	if displayHostname == "" {
+		displayHostname = workerHostname
+	}
+
 	return gen.GetSystemHostname200JSONResponse{
-		Hostname: result,
+		Results: []gen.HostnameResponse{
+			{Hostname: displayHostname},
+		},
 	}, nil
 }
 
@@ -97,5 +88,7 @@ func (s *System) getSystemHostnameAll(
 		responses = append(responses, gen.HostnameResponse{Hostname: h})
 	}
 
-	return hostnameMultiResponse{Results: responses}, nil
+	return gen.GetSystemHostname200JSONResponse{
+		Results: responses,
+	}, nil
 }

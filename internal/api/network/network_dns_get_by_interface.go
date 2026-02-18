@@ -22,27 +22,11 @@ package network
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
-
-// dnsMultiResponse wraps multiple DNS results for _all broadcast.
-type dnsMultiResponse struct {
-	Results []gen.DNSConfigResponse `json:"results"`
-}
-
-func (r dnsMultiResponse) VisitGetNetworkDNSByInterfaceResponse(
-	w http.ResponseWriter,
-) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(w).Encode(r)
-}
 
 // GetNetworkDNSByInterface get the network dns get API endpoint.
 func (n Network) GetNetworkDNSByInterface(
@@ -74,7 +58,11 @@ func (n Network) GetNetworkDNSByInterface(
 		return n.getNetworkDNSAll(ctx, request.InterfaceName)
 	}
 
-	dnsConfig, err := n.JobClient.QueryNetworkDNS(ctx, hostname, request.InterfaceName)
+	dnsConfig, workerHostname, err := n.JobClient.QueryNetworkDNS(
+		ctx,
+		hostname,
+		request.InterfaceName,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNetworkDNSByInterface500JSONResponse{
@@ -86,8 +74,13 @@ func (n Network) GetNetworkDNSByInterface(
 	servers := dnsConfig.DNSServers
 
 	return gen.GetNetworkDNSByInterface200JSONResponse{
-		SearchDomains: &searchDomains,
-		Servers:       &servers,
+		Results: []gen.DNSConfigResponse{
+			{
+				Hostname:      workerHostname,
+				Servers:       &servers,
+				SearchDomains: &searchDomains,
+			},
+		},
 	}, nil
 }
 
@@ -105,14 +98,17 @@ func (n Network) getNetworkDNSAll(
 	}
 
 	var responses []gen.DNSConfigResponse
-	for _, cfg := range results {
+	for host, cfg := range results {
 		servers := cfg.DNSServers
 		searchDomains := cfg.SearchDomains
 		responses = append(responses, gen.DNSConfigResponse{
+			Hostname:      host,
 			Servers:       &servers,
 			SearchDomains: &searchDomains,
 		})
 	}
 
-	return dnsMultiResponse{Results: responses}, nil
+	return gen.GetNetworkDNSByInterface200JSONResponse{
+		Results: responses,
+	}, nil
 }

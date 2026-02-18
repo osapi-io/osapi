@@ -19,8 +19,22 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for DNSUpdateResultItemStatus.
+const (
+	Failed DNSUpdateResultItemStatus = "failed"
+	Ok     DNSUpdateResultItemStatus = "ok"
+)
+
+// DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
+type DNSConfigCollectionResponse struct {
+	Results []DNSConfigResponse `json:"results"`
+}
+
 // DNSConfigResponse defines model for DNSConfigResponse.
 type DNSConfigResponse struct {
+	// Hostname The hostname of the worker that served this DNS config.
+	Hostname string `json:"hostname"`
+
 	// SearchDomains List of search domains.
 	SearchDomains *[]string `json:"search_domains,omitempty"`
 
@@ -40,13 +54,36 @@ type DNSConfigUpdateRequest struct {
 	Servers *[]string `json:"servers,omitempty" validate:"required_without=SearchDomains,omitempty,dive,ip,min=1"`
 }
 
+// DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
+type DNSUpdateCollectionResponse struct {
+	Results []DNSUpdateResultItem `json:"results"`
+}
+
+// DNSUpdateResultItem defines model for DNSUpdateResultItem.
+type DNSUpdateResultItem struct {
+	Error    *string                   `json:"error,omitempty"`
+	Hostname string                    `json:"hostname"`
+	Status   DNSUpdateResultItemStatus `json:"status"`
+}
+
+// DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
+type DNSUpdateResultItemStatus string
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
+
+// PingCollectionResponse defines model for PingCollectionResponse.
+type PingCollectionResponse struct {
+	Results []PingResponse `json:"results"`
+}
 
 // PingResponse defines model for PingResponse.
 type PingResponse struct {
 	// AvgRtt Average round-trip time as a string in Go's time.Duration format.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Hostname The hostname of the worker that executed the ping.
+	Hostname string `json:"hostname"`
 
 	// MaxRtt Maximum round-trip time as a string in Go's time.Duration format.
 	MaxRtt *string `json:"max_rtt,omitempty"`
@@ -222,12 +259,13 @@ type PutNetworkDNSResponseObject interface {
 	VisitPutNetworkDNSResponse(w http.ResponseWriter) error
 }
 
-type PutNetworkDNS202Response struct {
-}
+type PutNetworkDNS202JSONResponse DNSUpdateCollectionResponse
 
-func (response PutNetworkDNS202Response) VisitPutNetworkDNSResponse(w http.ResponseWriter) error {
+func (response PutNetworkDNS202JSONResponse) VisitPutNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(202)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type PutNetworkDNS400JSONResponse externalRef0.ErrorResponse
@@ -275,7 +313,7 @@ type GetNetworkDNSByInterfaceResponseObject interface {
 	VisitGetNetworkDNSByInterfaceResponse(w http.ResponseWriter) error
 }
 
-type GetNetworkDNSByInterface200JSONResponse DNSConfigResponse
+type GetNetworkDNSByInterface200JSONResponse DNSConfigCollectionResponse
 
 func (response GetNetworkDNSByInterface200JSONResponse) VisitGetNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -329,7 +367,7 @@ type PostNetworkPingResponseObject interface {
 	VisitPostNetworkPingResponse(w http.ResponseWriter) error
 }
 
-type PostNetworkPing200JSONResponse PingResponse
+type PostNetworkPing200JSONResponse PingCollectionResponse
 
 func (response PostNetworkPing200JSONResponse) VisitPostNetworkPingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

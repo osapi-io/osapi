@@ -66,12 +66,13 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("my-hostname", nil)
+					Return("my-hostname", "worker1", nil)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
 				s.True(ok)
-				s.Equal("my-hostname", r.Hostname)
+				s.Require().Len(r.Results, 1)
+				s.Equal("my-hostname", r.Results[0].Hostname)
 			},
 		},
 		{
@@ -94,7 +95,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("", assert.AnError)
+					Return("", "", assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)

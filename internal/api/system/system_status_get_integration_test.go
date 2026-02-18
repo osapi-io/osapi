@@ -110,30 +110,34 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			wantCode: http.StatusOK,
 			wantBody: `
 {
-  "disks": [
+  "results": [
     {
-      "free": 250000000000,
-      "name": "/dev/disk1",
-      "total": 500000000000,
-      "used": 250000000000
+      "disks": [
+        {
+          "free": 250000000000,
+          "name": "/dev/disk1",
+          "total": 500000000000,
+          "used": 250000000000
+        }
+      ],
+      "hostname": "default-hostname",
+      "load_average": {
+        "1min": 1,
+        "5min": 0.5,
+        "15min": 0.2
+      },
+      "memory": {
+        "free": 4194304,
+        "total": 8388608,
+        "used": 2097152
+      },
+      "os_info": {
+        "distribution": "Ubuntu",
+        "version": "24.04"
+      },
+      "uptime": "0 days, 5 hours, 0 minutes"
     }
-  ],
-  "hostname": "default-hostname",
-  "load_average": {
-    "1min": 1,
-    "5min": 0.5,
-    "15min": 0.2
-  },
-  "memory": {
-    "free": 4194304,
-    "total": 8388608,
-    "used": 2097152
-  },
-  "os_info": {
-    "distribution": "Ubuntu",
-    "version": "24.04"
-  },
-  "uptime": "0 days, 5 hours, 0 minutes"
+  ]
 }
 `,
 		},
