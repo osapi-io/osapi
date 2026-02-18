@@ -22,6 +22,7 @@ package network_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -61,8 +62,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 	tests := []struct {
 		name         string
 		request      gen.PutNetworkDNSRequestObject
-		mockError    error
-		expectMock   bool
+		setupMock    func()
 		validateFunc func(resp gen.PutNetworkDNSResponseObject)
 	}{
 		{
@@ -74,7 +74,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 					InterfaceName: interfaceName,
 				},
 			},
-			expectMock: true,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNetworkDNS202Response)
 				s.True(ok)
@@ -87,7 +91,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 					Servers: &servers,
 				},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				r, ok := resp.(gen.PutNetworkDNS400JSONResponse)
 				s.True(ok)
@@ -106,7 +110,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 				},
 				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("")},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				r, ok := resp.(gen.PutNetworkDNS400JSONResponse)
 				s.True(ok)
@@ -124,8 +128,75 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 					InterfaceName: interfaceName,
 				},
 			},
-			mockError:  assert.AnError,
-			expectMock: true,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(assert.AnError)
+			},
+			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
+				_, ok := resp.(gen.PutNetworkDNS500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "broadcast all success",
+			request: gen.PutNetworkDNSRequestObject{
+				Body: &gen.PutNetworkDNSJSONRequestBody{
+					Servers:       &servers,
+					SearchDomains: &searchDomains,
+					InterfaceName: interfaceName,
+				},
+				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(map[string]error{
+						"server1": nil,
+						"server2": nil,
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all with partial failure",
+			request: gen.PutNetworkDNSRequestObject{
+				Body: &gen.PutNetworkDNSJSONRequestBody{
+					Servers:       &servers,
+					SearchDomains: &searchDomains,
+					InterfaceName: interfaceName,
+				},
+				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(map[string]error{
+						"server1": nil,
+						"server2": fmt.Errorf("disk full"),
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all error",
+			request: gen.PutNetworkDNSRequestObject{
+				Body: &gen.PutNetworkDNSJSONRequestBody{
+					Servers:       &servers,
+					SearchDomains: &searchDomains,
+					InterfaceName: interfaceName,
+				},
+				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNetworkDNS500JSONResponse)
 				s.True(ok)
@@ -135,11 +206,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.expectMock {
-				s.mockJobClient.EXPECT().
-					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(tt.mockError)
-			}
+			tt.setupMock()
 
 			resp, err := s.handler.PutNetworkDNS(s.ctx, tt.request)
 			s.NoError(err)

@@ -57,16 +57,17 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 	tests := []struct {
 		name         string
 		request      gen.GetSystemHostnameRequestObject
-		mockResult   string
-		mockError    error
-		expectMock   bool
+		setupMock    func()
 		validateFunc func(resp gen.GetSystemHostnameResponseObject)
 	}{
 		{
-			name:       "success",
-			request:    gen.GetSystemHostnameRequestObject{},
-			mockResult: "my-hostname",
-			expectMock: true,
+			name:    "success",
+			request: gen.GetSystemHostnameRequestObject{},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostname(gomock.Any(), gomock.Any()).
+					Return("my-hostname", nil)
+			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
 				s.True(ok)
@@ -78,7 +79,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			request: gen.GetSystemHostnameRequestObject{
 				Params: gen.GetSystemHostnameParams{TargetHostname: strPtr("")},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname400JSONResponse)
 				s.True(ok)
@@ -88,10 +89,45 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			},
 		},
 		{
-			name:       "job client error",
-			request:    gen.GetSystemHostnameRequestObject{},
-			mockError:  assert.AnError,
-			expectMock: true,
+			name:    "job client error",
+			request: gen.GetSystemHostnameRequestObject{},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostname(gomock.Any(), gomock.Any()).
+					Return("", assert.AnError)
+			},
+			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
+				_, ok := resp.(gen.GetSystemHostname500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "broadcast all success",
+			request: gen.GetSystemHostnameRequestObject{
+				Params: gen.GetSystemHostnameParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostnameAll(gomock.Any()).
+					Return(map[string]string{
+						"server1": "host1",
+						"server2": "host2",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all error",
+			request: gen.GetSystemHostnameRequestObject{
+				Params: gen.GetSystemHostnameParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostnameAll(gomock.Any()).
+					Return(nil, assert.AnError)
+			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)
 				s.True(ok)
@@ -101,11 +137,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.expectMock {
-				s.mockJobClient.EXPECT().
-					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return(tt.mockResult, tt.mockError)
-			}
+			tt.setupMock()
 
 			resp, err := s.handler.GetSystemHostname(s.ctx, tt.request)
 			s.NoError(err)

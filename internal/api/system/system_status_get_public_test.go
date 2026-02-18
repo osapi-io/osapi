@@ -59,19 +59,20 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 	tests := []struct {
 		name         string
 		request      gen.GetSystemStatusRequestObject
-		mockResult   *jobtypes.SystemStatusResponse
-		mockError    error
-		expectMock   bool
+		setupMock    func()
 		validateFunc func(resp gen.GetSystemStatusResponseObject)
 	}{
 		{
 			name:    "success",
 			request: gen.GetSystemStatusRequestObject{},
-			mockResult: &jobtypes.SystemStatusResponse{
-				Hostname: "test-host",
-				Uptime:   time.Hour,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemStatus(gomock.Any(), gomock.Any()).
+					Return(&jobtypes.SystemStatusResponse{
+						Hostname: "test-host",
+						Uptime:   time.Hour,
+					}, nil)
 			},
-			expectMock: true,
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
 				_, ok := resp.(gen.GetSystemStatus200JSONResponse)
 				s.True(ok)
@@ -82,7 +83,7 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 			request: gen.GetSystemStatusRequestObject{
 				Params: gen.GetSystemStatusParams{TargetHostname: strPtr("")},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
 				r, ok := resp.(gen.GetSystemStatus400JSONResponse)
 				s.True(ok)
@@ -92,10 +93,45 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 			},
 		},
 		{
-			name:       "job client error",
-			request:    gen.GetSystemStatusRequestObject{},
-			mockError:  assert.AnError,
-			expectMock: true,
+			name:    "job client error",
+			request: gen.GetSystemStatusRequestObject{},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemStatus(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
+				_, ok := resp.(gen.GetSystemStatus500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "broadcast all success",
+			request: gen.GetSystemStatusRequestObject{
+				Params: gen.GetSystemStatusParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemStatusAll(gomock.Any()).
+					Return([]*jobtypes.SystemStatusResponse{
+						{Hostname: "server1", Uptime: time.Hour},
+						{Hostname: "server2", Uptime: 2 * time.Hour},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all error",
+			request: gen.GetSystemStatusRequestObject{
+				Params: gen.GetSystemStatusParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemStatusAll(gomock.Any()).
+					Return(nil, assert.AnError)
+			},
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
 				_, ok := resp.(gen.GetSystemStatus500JSONResponse)
 				s.True(ok)
@@ -105,11 +141,7 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.expectMock {
-				s.mockJobClient.EXPECT().
-					QuerySystemStatus(gomock.Any(), gomock.Any()).
-					Return(tt.mockResult, tt.mockError)
-			}
+			tt.setupMock()
 
 			resp, err := s.handler.GetSystemStatus(s.ctx, tt.request)
 			s.NoError(err)

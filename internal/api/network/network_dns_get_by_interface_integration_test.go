@@ -90,6 +90,24 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "InterfaceName", "alphanum"},
 		},
+		{
+			name: "when broadcast all",
+			path: "/network/dns/eth0?target_hostname=_all",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					Return(map[string]*dns.Config{
+						"server1": {
+							DNSServers:    []string{"8.8.8.8"},
+							SearchDomains: []string{"example.com"},
+						},
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"8.8.8.8"`},
+		},
 	}
 
 	for _, tc := range tests {

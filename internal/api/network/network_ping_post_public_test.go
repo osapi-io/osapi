@@ -59,9 +59,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 	tests := []struct {
 		name         string
 		request      gen.PostNetworkPingRequestObject
-		mockResult   *ping.Result
-		mockError    error
-		expectMock   bool
+		setupMock    func()
 		validateFunc func(resp gen.PostNetworkPingResponseObject)
 	}{
 		{
@@ -71,15 +69,18 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 					Address: "1.1.1.1",
 				},
 			},
-			mockResult: &ping.Result{
-				PacketsSent:     3,
-				PacketsReceived: 3,
-				PacketLoss:      0,
-				MinRTT:          10 * time.Millisecond,
-				AvgRTT:          15 * time.Millisecond,
-				MaxRTT:          20 * time.Millisecond,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
+					Return(&ping.Result{
+						PacketsSent:     3,
+						PacketsReceived: 3,
+						PacketLoss:      0,
+						MinRTT:          10 * time.Millisecond,
+						AvgRTT:          15 * time.Millisecond,
+						MaxRTT:          20 * time.Millisecond,
+					}, nil)
 			},
-			expectMock: true,
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				r, ok := resp.(gen.PostNetworkPing200JSONResponse)
 				s.True(ok)
@@ -95,7 +96,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 					Address: "not-an-ip",
 				},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				r, ok := resp.(gen.PostNetworkPing400JSONResponse)
 				s.True(ok)
@@ -112,7 +113,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 				},
 				Params: gen.PostNetworkPingParams{TargetHostname: strPtr("")},
 			},
-			expectMock: false,
+			setupMock: func() {},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				r, ok := resp.(gen.PostNetworkPing400JSONResponse)
 				s.True(ok)
@@ -128,8 +129,55 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 					Address: "1.1.1.1",
 				},
 			},
-			mockError:  assert.AnError,
-			expectMock: true,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
+					Return(nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				_, ok := resp.(gen.PostNetworkPing500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "broadcast all success",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+				Params: gen.PostNetworkPingParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					Return(map[string]*ping.Result{
+						"server1": {
+							PacketsSent:     3,
+							PacketsReceived: 3,
+							PacketLoss:      0,
+							MinRTT:          10 * time.Millisecond,
+							AvgRTT:          15 * time.Millisecond,
+							MaxRTT:          20 * time.Millisecond,
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all error",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+				Params: gen.PostNetworkPingParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					Return(nil, assert.AnError)
+			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNetworkPing500JSONResponse)
 				s.True(ok)
@@ -139,11 +187,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			if tt.expectMock {
-				s.mockJobClient.EXPECT().
-					QueryNetworkPing(gomock.Any(), gomock.Any(), tt.request.Body.Address).
-					Return(tt.mockResult, tt.mockError)
-			}
+			tt.setupMock()
 
 			resp, err := s.handler.PostNetworkPing(s.ctx, tt.request)
 			s.NoError(err)
