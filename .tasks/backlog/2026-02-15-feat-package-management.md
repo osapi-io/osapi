@@ -1,5 +1,5 @@
 ---
-title: "Feature: Package management (apt/yum)"
+title: Package management (apt/yum)
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

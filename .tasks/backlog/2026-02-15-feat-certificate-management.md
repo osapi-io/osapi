@@ -1,5 +1,5 @@
 ---
-title: "Feature: TLS certificate management"
+title: TLS certificate management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

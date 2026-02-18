@@ -1,5 +1,5 @@
 ---
-title: "Phase 3: Create job API domain (replace task API)"
+title: Create job API domain (replace task API)
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

@@ -1,5 +1,5 @@
 ---
-title: "Phase 5: Delete legacy task system"
+title: Delete legacy task system
 status: done
 created: 2026-02-15
 updated: 2026-02-15

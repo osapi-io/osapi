@@ -1,5 +1,5 @@
 ---
-title: "Phase 4: Port network API to strict-server + job client"
+title: Port network API to strict-server + job client
 status: done
 created: 2026-02-15
 updated: 2026-02-15

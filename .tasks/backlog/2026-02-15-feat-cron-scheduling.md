@@ -1,5 +1,5 @@
 ---
-title: "Feature: Cron/scheduled task management"
+title: Cron/scheduled task management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

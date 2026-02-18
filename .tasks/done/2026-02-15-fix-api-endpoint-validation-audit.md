@@ -1,5 +1,5 @@
 ---
-title: "Audit and ensure validation on all API endpoints"
+title: Audit and ensure validation on all API endpoints
 status: done
 created: 2026-02-15
 updated: 2026-02-16

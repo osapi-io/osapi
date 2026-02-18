@@ -1,5 +1,5 @@
 ---
-title: "Feature: Network interface configuration"
+title: Network interface configuration
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

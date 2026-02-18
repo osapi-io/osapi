@@ -1,5 +1,5 @@
 ---
-title: "Feature: NTP and time management"
+title: NTP and time management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

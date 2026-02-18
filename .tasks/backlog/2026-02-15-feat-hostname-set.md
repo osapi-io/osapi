@@ -1,5 +1,5 @@
 ---
-title: "Feature: Hostname set (complement existing get)"
+title: Hostname set (complement existing get)
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Process management"
+title: Process management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

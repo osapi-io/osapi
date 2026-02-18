@@ -1,5 +1,5 @@
 ---
-title: "Update Docusaurus docs for job system migration"
+title: Update Docusaurus docs for job system migration
 status: done
 created: 2026-02-15
 updated: 2026-02-15

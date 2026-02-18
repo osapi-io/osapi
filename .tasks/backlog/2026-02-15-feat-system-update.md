@@ -1,5 +1,5 @@
 ---
-title: "Feature: System update and patch management"
+title: System update and patch management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

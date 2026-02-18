@@ -1,5 +1,5 @@
 ---
-title: "Document feature roadmap with tiered priorities"
+title: Document feature roadmap with tiered priorities
 status: done
 created: 2026-02-15
 updated: 2026-02-18

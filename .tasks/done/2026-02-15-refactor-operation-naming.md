@@ -1,5 +1,5 @@
 ---
-title: "Phase 1: Fix operation naming inconsistencies"
+title: Fix operation naming inconsistencies
 status: in-progress
 created: 2026-02-15
 updated: 2026-02-15

@@ -1,5 +1,5 @@
 ---
-title: "Feature: Service management (systemctl)"
+title: Service management (systemctl)
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

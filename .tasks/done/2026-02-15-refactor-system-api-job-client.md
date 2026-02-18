@@ -1,5 +1,5 @@
 ---
-title: "Phase 2: Port system API to use job client"
+title: Port system API to use job client
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

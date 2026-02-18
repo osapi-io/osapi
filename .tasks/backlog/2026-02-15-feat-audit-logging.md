@@ -1,5 +1,5 @@
 ---
-title: "Feature: Audit logging for API operations"
+title: Audit logging for API operations
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

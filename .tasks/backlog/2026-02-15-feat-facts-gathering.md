@@ -1,5 +1,5 @@
 ---
-title: "Feature: System facts/inventory gathering"
+title: System facts/inventory gathering
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

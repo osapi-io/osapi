@@ -1,5 +1,5 @@
 ---
-title: "Feature: User and group management"
+title: User and group management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

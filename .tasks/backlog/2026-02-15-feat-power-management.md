@@ -1,5 +1,5 @@
 ---
-title: "Feature: Power management (shutdown/reboot)"
+title: Power management (shutdown/reboot)
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

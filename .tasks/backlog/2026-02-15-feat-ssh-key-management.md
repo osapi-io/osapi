@@ -1,5 +1,5 @@
 ---
-title: "Feature: SSH key and access management"
+title: SSH key and access management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

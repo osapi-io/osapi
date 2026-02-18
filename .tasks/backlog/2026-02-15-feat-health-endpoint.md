@@ -1,5 +1,5 @@
 ---
-title: "Feature: Health check and readiness endpoints"
+title: Health check and readiness endpoints
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15

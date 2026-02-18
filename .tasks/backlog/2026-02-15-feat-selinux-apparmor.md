@@ -1,5 +1,5 @@
 ---
-title: "Feature: SELinux/AppArmor security policy management"
+title: SELinux/AppArmor security policy management
 status: backlog
 created: 2026-02-15
 updated: 2026-02-15
