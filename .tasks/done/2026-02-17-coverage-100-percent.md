@@ -1,8 +1,8 @@
 ---
 title: Achieve 100% test coverage on non-generated packages
-status: backlog
+status: done
 created: 2026-02-17
-updated: 2026-02-17
+updated: 2026-02-18
 ---
 
 ## Objective
@@ -87,3 +87,16 @@ go tool cover -func=/tmp/cov.out | grep -v 100.0%
 - Generated packages (`gen/`, `mocks/`) and `cmd/` are excluded from this
   goal — only hand-written business logic packages are targeted.
 - The `internal/api/network` package is already at 100%.
+
+## Outcome
+
+All five hand-written packages reached 100% statement coverage as part of the
+label-based routing work (commit `e813549`):
+
+- `internal/job` — 100% (added ParseSubject invalid 4-part subject test)
+- `internal/job/client` — 100% (added ListWorkers skip tests, refactored
+  publishAndCollect to share timeout return path)
+- `internal/job/worker` — 100% (added label consumer tests, hostname-with-labels
+  processor test)
+- `internal/api/system` — 100% (added empty hostname fallback test)
+- `internal/api/network` — 100% (already at 100%)
