@@ -10,14 +10,14 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/lmittmann/tint v1.1.3
 	github.com/nats-io/nats-server/v2 v2.12.4
 	github.com/nats-io/nats.go v1.48.0
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/osapi-io/nats-client v0.0.0-20260215190839-25dd316864d1
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
-	github.com/prometheus-community/pro-bing v0.7.0
+	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/samber/slog-echo v1.21.0
 	github.com/shirou/gopsutil/v4 v4.26.1
 	github.com/spf13/afero v1.15.0
