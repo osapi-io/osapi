@@ -70,3 +70,40 @@ func (c *Client) ModifyNetworkDNSAny(
 ) error {
 	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
 }
+
+// ModifyNetworkDNSAll modifies DNS configuration on all hosts.
+func (c *Client) ModifyNetworkDNSAll(
+	ctx context.Context,
+	servers []string,
+	searchDomains []string,
+	iface string,
+) (map[string]error, error) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"servers":        servers,
+		"search_domains": searchDomains,
+		"interface":      iface,
+	})
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "network",
+		Operation: "dns.update",
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildModifySubject(job.BroadcastHost)
+	responses, err := c.publishAndCollect(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]error)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			results[hostname] = fmt.Errorf("job failed: %s", resp.Error)
+		} else {
+			results[hostname] = nil
+		}
+	}
+
+	return results, nil
+}

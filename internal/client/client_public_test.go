@@ -170,7 +170,10 @@ func (s *ClientPublicTestSuite) TestRoundTrip() {
 			c := client.New(slog.Default(), appConfig, genClient)
 			s.NotNil(c)
 
-			_, _ = genClient.GetSystemHostnameWithResponse(context.Background())
+			_, _ = genClient.GetSystemHostnameWithResponse(
+				context.Background(),
+				&gen.GetSystemHostnameParams{},
+			)
 
 			s.Equal(tt.expectedHeader, receivedAuth)
 		})
@@ -190,7 +193,7 @@ func (s *ClientPublicTestSuite) TestGetSystemHostname() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetSystemHostname(ctx)
+			resp, err := s.sut.GetSystemHostname(ctx, "_any")
 
 			s.NoError(err)
 			s.NotNil(resp)
@@ -211,7 +214,7 @@ func (s *ClientPublicTestSuite) TestGetSystemStatus() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetSystemStatus(ctx)
+			resp, err := s.sut.GetSystemStatus(ctx, "_any")
 
 			s.NoError(err)
 			s.NotNil(resp)
@@ -234,7 +237,7 @@ func (s *ClientPublicTestSuite) TestGetNetworkDNSByInterface() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetNetworkDNSByInterface(ctx, tt.interfaceName)
+			resp, err := s.sut.GetNetworkDNSByInterface(ctx, "_any", tt.interfaceName)
 
 			s.NoError(err)
 			s.NotNil(resp)
@@ -267,7 +270,13 @@ func (s *ClientPublicTestSuite) TestPutNetworkDNS() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.PutNetworkDNS(ctx, tt.servers, tt.searchDomains, tt.interfaceName)
+			resp, err := s.sut.PutNetworkDNS(
+				ctx,
+				"_any",
+				tt.servers,
+				tt.searchDomains,
+				tt.interfaceName,
+			)
 
 			s.NoError(err)
 			s.NotNil(resp)
@@ -290,7 +299,147 @@ func (s *ClientPublicTestSuite) TestPostNetworkPing() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.PostNetworkPing(ctx, tt.target)
+			resp, err := s.sut.PostNetworkPing(ctx, "_any", tt.target)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestPostJob() {
+	tests := []struct {
+		name           string
+		operation      map[string]interface{}
+		targetHostname string
+	}{
+		{
+			name:           "creates job with operation and target",
+			operation:      map[string]interface{}{"type": "system.hostname.get"},
+			targetHostname: "_any",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.PostJob(ctx, tt.operation, tt.targetHostname)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetJobByID() {
+	tests := []struct {
+		name string
+		id   string
+	}{
+		{
+			name: "returns job detail response",
+			id:   "test-job-id",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetJobByID(ctx, tt.id)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestDeleteJobByID() {
+	tests := []struct {
+		name string
+		id   string
+	}{
+		{
+			name: "returns delete response",
+			id:   "test-job-id",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.DeleteJobByID(ctx, tt.id)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetJobs() {
+	tests := []struct {
+		name   string
+		status string
+	}{
+		{
+			name:   "returns jobs without filter",
+			status: "",
+		},
+		{
+			name:   "returns jobs with status filter",
+			status: "completed",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetJobs(ctx, tt.status)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetJobQueueStats() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns queue stats response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetJobQueueStats(ctx)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetJobWorkers() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns workers response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetJobWorkers(ctx)
 
 			s.NoError(err)
 			s.NotNil(resp)

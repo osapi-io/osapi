@@ -24,96 +24,122 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strings"
+	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/client"
+	"github.com/retr0h/osapi/internal/client/gen"
 )
-
-// extractTargetFromSubject extracts the target hostname from a job subject
-// Expected format: job.{type}.{hostname}.{category}.{operation}
-func extractTargetFromSubject(
-	subject string,
-) string {
-	if subject == "" {
-		return "unknown"
-	}
-
-	parts := strings.Split(subject, ".")
-	if len(parts) < 3 {
-		return "unknown"
-	}
-
-	// Return the hostname part (3rd element)
-	return parts[2]
-}
 
 // clientJobListCmd represents the clientJobsList command.
 var clientJobListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List jobs from KV store",
-	Long: `Lists jobs stored in the NATS KV bucket with their current status computed from events.
-Shows job IDs, creation time, status, target, operation type, and worker information.
-Job status is computed in real-time from append-only status events.`,
+	Short: "List jobs",
+	Long:  `Lists jobs with their current status via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		// Get filter flags
 		statusFilter, _ := cmd.Flags().GetString("status")
 		limitFlag, _ := cmd.Flags().GetInt("limit")
 		offsetFlag, _ := cmd.Flags().GetInt("offset")
 
-		// Use job client to get jobs (this computes status from events)
-		jobs, err := jobClient.ListJobs(ctx, statusFilter)
+		jobHandler := handler.(client.JobHandler)
+
+		// Get jobs list
+		jobsResp, err := jobHandler.GetJobs(ctx, statusFilter)
 		if err != nil {
 			logFatal("failed to list jobs", err)
 		}
 
-		// Apply offset if specified
-		if offsetFlag > 0 && offsetFlag < len(jobs) {
-			jobs = jobs[offsetFlag:]
-		} else if offsetFlag >= len(jobs) {
-			jobs = []*job.QueuedJob{} // No jobs to show if offset exceeds total
-		}
-
-		// Apply limit if specified
-		if limitFlag > 0 && len(jobs) > limitFlag {
-			jobs = jobs[:limitFlag]
+		if jobsResp.StatusCode() != http.StatusOK {
+			switch jobsResp.StatusCode() {
+			case http.StatusUnauthorized:
+				handleAuthError(jobsResp.JSON401, jobsResp.StatusCode(), logger)
+			case http.StatusForbidden:
+				handleAuthError(jobsResp.JSON403, jobsResp.StatusCode(), logger)
+			default:
+				handleUnknownError(jobsResp.JSON500, jobsResp.StatusCode(), logger)
+			}
+			return
 		}
 
 		// Get queue stats for summary
-		stats, err := jobClient.GetQueueStats(ctx)
+		statsResp, err := jobHandler.GetJobQueueStats(ctx)
 		if err != nil {
 			logFatal("failed to get queue stats", err)
 		}
 
+		if statsResp.StatusCode() != http.StatusOK {
+			handleUnknownError(statsResp.JSON500, statsResp.StatusCode(), logger)
+			return
+		}
+
+		// Extract jobs from response
+		var jobs []gen.JobDetailResponse
+		if jobsResp.JSON200 != nil && jobsResp.JSON200.Items != nil {
+			jobs = *jobsResp.JSON200.Items
+		}
+
+		// Apply offset
+		if offsetFlag > 0 && offsetFlag < len(jobs) {
+			jobs = jobs[offsetFlag:]
+		} else if offsetFlag >= len(jobs) {
+			jobs = []gen.JobDetailResponse{}
+		}
+
+		// Apply limit
+		if limitFlag > 0 && len(jobs) > limitFlag {
+			jobs = jobs[:limitFlag]
+		}
+
+		stats := statsResp.JSON200
+
 		if jsonOutput {
+			totalJobs := 0
+			if stats != nil && stats.TotalJobs != nil {
+				totalJobs = *stats.TotalJobs
+			}
+			statusCounts := map[string]int{}
+			if stats != nil && stats.StatusCounts != nil {
+				statusCounts = *stats.StatusCounts
+			}
+
 			result := map[string]interface{}{
-				"total_jobs":     stats.TotalJobs,
+				"total_jobs":     totalJobs,
 				"displayed_jobs": len(jobs),
-				"status_counts":  stats.StatusCounts,
+				"status_counts":  statusCounts,
 				"filter_applied": statusFilter != "",
 				"limit_applied":  limitFlag > 0,
 				"offset_applied": offsetFlag,
 				"jobs":           jobs,
 			}
 			resultJSON, _ := json.Marshal(result)
-			logger.Info("jobs list", slog.String("response", string(resultJSON)))
+			fmt.Println(string(resultJSON))
 			return
 		}
 
-		// Display summary (always show total counts)
-		summaryData := map[string]interface{}{
-			"Total Jobs": stats.TotalJobs,
-			"Submitted":  stats.StatusCounts["submitted"],
-			"Processing": stats.StatusCounts["processing"],
-			"Completed":  stats.StatusCounts["completed"],
-			"Failed":     stats.StatusCounts["failed"],
-			"Partial":    stats.StatusCounts["partial_failure"],
+		// Display summary
+		totalJobs := 0
+		statusCounts := map[string]int{}
+		if stats != nil {
+			if stats.TotalJobs != nil {
+				totalJobs = *stats.TotalJobs
+			}
+			if stats.StatusCounts != nil {
+				statusCounts = *stats.StatusCounts
+			}
 		}
 
-		// Add filter info if applied
+		summaryData := map[string]interface{}{
+			"Total Jobs": totalJobs,
+			"Submitted":  statusCounts["submitted"],
+			"Processing": statusCounts["processing"],
+			"Completed":  statusCounts["completed"],
+			"Failed":     statusCounts["failed"],
+			"Partial":    statusCounts["partial_failure"],
+		}
+
 		if statusFilter != "" {
 			summaryData["Showing ("+statusFilter+")"] = len(jobs)
 		} else {
@@ -128,32 +154,27 @@ Job status is computed in real-time from append-only status events.`,
 
 		printStyledMap(summaryData)
 
-		// Display job details
 		if len(jobs) > 0 {
 			jobRows := [][]string{}
-			for _, job := range jobs {
-				// Format created time
-				created := job.Created
-				if t, err := time.Parse(time.RFC3339, job.Created); err == nil {
+			for _, j := range jobs {
+				created := safeString(j.Created)
+				if t, err := time.Parse(time.RFC3339, created); err == nil {
 					created = t.Format("2006-01-02 15:04")
 				}
 
-				// Get operation summary
 				operationSummary := "Unknown"
-				if job.Operation != nil {
-					if operationType, ok := job.Operation["type"].(string); ok {
+				if j.Operation != nil {
+					if operationType, ok := (*j.Operation)["type"].(string); ok {
 						operationSummary = operationType
 					}
 				}
 
-				// Get target from subject
-				target := extractTargetFromSubject(job.Subject)
+				target := safeString(j.Hostname)
 
-				// Get worker info if available
 				workers := ""
-				if len(job.WorkerStates) > 0 {
+				if j.WorkerStates != nil && len(*j.WorkerStates) > 0 {
 					var workerList []string
-					for hostname := range job.WorkerStates {
+					for hostname := range *j.WorkerStates {
 						workerList = append(workerList, hostname)
 					}
 					if len(workerList) == 1 {
@@ -164,8 +185,8 @@ Job status is computed in real-time from append-only status events.`,
 				}
 
 				jobRows = append(jobRows, []string{
-					job.ID,
-					job.Status,
+					safeString(j.Id),
+					safeString(j.Status),
 					created,
 					target,
 					operationSummary,
@@ -191,7 +212,7 @@ Job status is computed in real-time from append-only status events.`,
 		}
 
 		logger.Info("jobs listed successfully",
-			slog.Int("total", stats.TotalJobs),
+			slog.Int("total", totalJobs),
 			slog.Int("displayed", len(jobs)),
 			slog.String("status_filter", statusFilter),
 			slog.Int("limit", limitFlag),
@@ -203,7 +224,6 @@ Job status is computed in real-time from append-only status events.`,
 func init() {
 	clientJobCmd.AddCommand(clientJobListCmd)
 
-	// Add filtering flags
 	clientJobListCmd.Flags().
 		String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure)")
 	clientJobListCmd.Flags().Int("limit", 10, "Limit number of jobs displayed (0 for no limit)")

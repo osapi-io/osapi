@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -38,10 +37,11 @@ var clientNetworkPingCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
 		address, _ := cmd.Flags().GetString("address")
 
 		networkHandler := handler.(client.NetworkHandler)
-		resp, err := networkHandler.PostNetworkPing(ctx, address)
+		resp, err := networkHandler.PostNetworkPing(ctx, host, address)
 		if err != nil {
 			logFatal("failed to post network ping endpoint", err)
 		}
@@ -49,10 +49,7 @@ var clientNetworkPingCmd = &cobra.Command{
 		switch resp.StatusCode() {
 		case http.StatusOK:
 			if jsonOutput {
-				logger.Info(
-					"network ping",
-					slog.String("response", string(resp.Body)),
-				)
+				fmt.Println(string(resp.Body))
 				return
 			}
 

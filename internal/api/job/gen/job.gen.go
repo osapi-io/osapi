@@ -97,6 +97,13 @@ type ListJobsResponse struct {
 	TotalItems *int `json:"total_items,omitempty"`
 }
 
+// ListWorkersResponse defines model for ListWorkersResponse.
+type ListWorkersResponse struct {
+	// Total Total number of active workers.
+	Total   int          `json:"total"`
+	Workers []WorkerInfo `json:"workers"`
+}
+
 // QueueStatsResponse defines model for QueueStatsResponse.
 type QueueStatsResponse struct {
 	// DlqCount Number of jobs in the dead letter queue.
@@ -110,6 +117,12 @@ type QueueStatsResponse struct {
 
 	// TotalJobs Total number of jobs in the queue.
 	TotalJobs *int `json:"total_jobs,omitempty"`
+}
+
+// WorkerInfo defines model for WorkerInfo.
+type WorkerInfo struct {
+	// Hostname The hostname of the worker.
+	Hostname string `json:"hostname"`
 }
 
 // GetJobParams defines parameters for GetJob.
@@ -132,6 +145,9 @@ type ServerInterface interface {
 	// Get queue statistics
 	// (GET /job/status)
 	GetJobStatus(ctx echo.Context) error
+	// List active workers
+	// (GET /job/workers)
+	GetJobWorkers(ctx echo.Context) error
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx echo.Context, id string) error
@@ -184,6 +200,17 @@ func (w *ServerInterfaceWrapper) GetJobStatus(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJobStatus(ctx)
+	return err
+}
+
+// GetJobWorkers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetJobWorkers(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetJobWorkers(ctx)
 	return err
 }
 
@@ -254,6 +281,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/job", wrapper.GetJob)
 	router.POST(baseURL+"/job", wrapper.PostJob)
 	router.GET(baseURL+"/job/status", wrapper.GetJobStatus)
+	router.GET(baseURL+"/job/workers", wrapper.GetJobWorkers)
 	router.DELETE(baseURL+"/job/:id", wrapper.DeleteJobByID)
 	router.GET(baseURL+"/job/:id", wrapper.GetJobByID)
 
@@ -272,6 +300,15 @@ type GetJob200JSONResponse ListJobsResponse
 func (response GetJob200JSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetJob400JSONResponse externalRef0.ErrorResponse
+
+func (response GetJob400JSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -399,6 +436,49 @@ func (response GetJobStatus500JSONResponse) VisitGetJobStatusResponse(w http.Res
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetJobWorkersRequestObject struct {
+}
+
+type GetJobWorkersResponseObject interface {
+	VisitGetJobWorkersResponse(w http.ResponseWriter) error
+}
+
+type GetJobWorkers200JSONResponse ListWorkersResponse
+
+func (response GetJobWorkers200JSONResponse) VisitGetJobWorkersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetJobWorkers401JSONResponse externalRef0.ErrorResponse
+
+func (response GetJobWorkers401JSONResponse) VisitGetJobWorkersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetJobWorkers403JSONResponse externalRef0.ErrorResponse
+
+func (response GetJobWorkers403JSONResponse) VisitGetJobWorkersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetJobWorkers500JSONResponse externalRef0.ErrorResponse
+
+func (response GetJobWorkers500JSONResponse) VisitGetJobWorkersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteJobByIDRequestObject struct {
 	Id string `json:"id"`
 }
@@ -413,6 +493,15 @@ type DeleteJobByID204Response struct {
 func (response DeleteJobByID204Response) VisitDeleteJobByIDResponse(w http.ResponseWriter) error {
 	w.WriteHeader(204)
 	return nil
+}
+
+type DeleteJobByID400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteJobByID400JSONResponse) VisitDeleteJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type DeleteJobByID401JSONResponse externalRef0.ErrorResponse
@@ -468,6 +557,15 @@ func (response GetJobByID200JSONResponse) VisitGetJobByIDResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetJobByID400JSONResponse externalRef0.ErrorResponse
+
+func (response GetJobByID400JSONResponse) VisitGetJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetJobByID401JSONResponse externalRef0.ErrorResponse
 
 func (response GetJobByID401JSONResponse) VisitGetJobByIDResponse(w http.ResponseWriter) error {
@@ -515,6 +613,9 @@ type StrictServerInterface interface {
 	// Get queue statistics
 	// (GET /job/status)
 	GetJobStatus(ctx context.Context, request GetJobStatusRequestObject) (GetJobStatusResponseObject, error)
+	// List active workers
+	// (GET /job/workers)
+	GetJobWorkers(ctx context.Context, request GetJobWorkersRequestObject) (GetJobWorkersResponseObject, error)
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx context.Context, request DeleteJobByIDRequestObject) (DeleteJobByIDResponseObject, error)
@@ -606,6 +707,29 @@ func (sh *strictHandler) GetJobStatus(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(GetJobStatusResponseObject); ok {
 		return validResponse.VisitGetJobStatusResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetJobWorkers operation middleware
+func (sh *strictHandler) GetJobWorkers(ctx echo.Context) error {
+	var request GetJobWorkersRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJobWorkers(ctx.Request().Context(), request.(GetJobWorkersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJobWorkers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetJobWorkersResponseObject); ok {
+		return validResponse.VisitGetJobWorkersResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

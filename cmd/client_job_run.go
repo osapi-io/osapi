@@ -23,12 +23,16 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobRunCmd represents the clientJobRun command.
@@ -38,7 +42,6 @@ var clientJobRunCmd = &cobra.Command{
 	Long: `Submits a job request and polls for completion, then displays the results.
 This combines job submission and retrieval into a single command for convenience.`,
 	Run: func(cmd *cobra.Command, _ []string) {
-		// Get flags
 		timeoutSeconds, _ := cmd.Flags().GetInt("timeout")
 		pollSeconds, _ := cmd.Flags().GetInt("poll-interval")
 		jsonFilePath, _ := cmd.Flags().GetString("json-file")
@@ -47,12 +50,10 @@ This combines job submission and retrieval into a single command for convenience
 			targetHostname = "_any"
 		}
 
-		// Create context with timeout
 		timeout := time.Duration(timeoutSeconds) * time.Second
 		ctx, cancel := context.WithTimeout(cmd.Context(), timeout)
 		defer cancel()
 
-		// Open and read the JSON file
 		file, err := os.Open(jsonFilePath)
 		if err != nil {
 			logFatal("failed to open file", err)
@@ -64,20 +65,34 @@ This combines job submission and retrieval into a single command for convenience
 			logFatal("failed to read file", err)
 		}
 
-		// Parse the JSON operation
 		var operationData map[string]interface{}
 		if err := json.Unmarshal(fileContents, &operationData); err != nil {
 			logFatal("failed to parse JSON operation file", err)
 		}
 
+		jobHandler := handler.(client.JobHandler)
+
 		// Submit the job
-		result, err := jobClient.CreateJob(ctx, operationData, targetHostname)
+		resp, err := jobHandler.PostJob(ctx, operationData, targetHostname)
 		if err != nil {
 			logger.Error("failed to submit job", slog.String("error", err.Error()))
 			return
 		}
 
-		jobID := result.JobID
+		if resp.StatusCode() != http.StatusCreated {
+			logger.Error("failed to submit job",
+				slog.Int("status_code", resp.StatusCode()),
+				slog.String("body", string(resp.Body)),
+			)
+			return
+		}
+
+		if resp.JSON201 == nil {
+			logger.Error("failed to submit job: nil response")
+			return
+		}
+
+		jobID := resp.JSON201.JobId
 		logger.Debug("job submitted", slog.String("job_id", jobID))
 
 		// Poll for completion
@@ -85,12 +100,10 @@ This combines job submission and retrieval into a single command for convenience
 		ticker := time.NewTicker(pollInterval)
 		defer ticker.Stop()
 
-		// Check immediately
-		if checkJobComplete(ctx, jobID) {
+		if checkJobComplete(ctx, jobHandler, jobID) {
 			return
 		}
 
-		// Poll until timeout or completion
 		for {
 			select {
 			case <-ctx.Done():
@@ -100,7 +113,7 @@ This combines job submission and retrieval into a single command for convenience
 				)
 				return
 			case <-ticker.C:
-				if checkJobComplete(ctx, jobID) {
+				if checkJobComplete(ctx, jobHandler, jobID) {
 					return
 				}
 			}
@@ -110,9 +123,10 @@ This combines job submission and retrieval into a single command for convenience
 
 func checkJobComplete(
 	ctx context.Context,
+	jobHandler client.JobHandler,
 	jobID string,
 ) bool {
-	jobInfo, err := jobClient.GetJobStatus(ctx, jobID)
+	resp, err := jobHandler.GetJobByID(ctx, jobID)
 	if err != nil {
 		logger.Error("failed to get job status",
 			slog.String("job_id", jobID),
@@ -121,21 +135,32 @@ func checkJobComplete(
 		return false
 	}
 
+	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
+		logger.Error("failed to get job status",
+			slog.String("job_id", jobID),
+			slog.Int("status_code", resp.StatusCode()),
+		)
+		return false
+	}
+
+	status := safeString(resp.JSON200.Status)
 	logger.Debug("job status check",
 		slog.String("job_id", jobID),
-		slog.String("status", jobInfo.Status),
+		slog.String("status", status),
 	)
 
-	// Check if job is complete (including partial_failure)
-	if jobInfo.Status == "completed" || jobInfo.Status == "failed" ||
-		jobInfo.Status == "partial_failure" {
+	if status == "completed" || status == "failed" || status == "partial_failure" {
 		logger.Debug("job finished",
 			slog.String("job_id", jobID),
-			slog.String("status", jobInfo.Status),
+			slog.String("status", status),
 		)
 
-		// Display results
-		displayJobDetails(jobInfo)
+		if jsonOutput {
+			fmt.Println(string(resp.Body))
+			return true
+		}
+
+		displayJobDetailResponse(resp.JSON200)
 		return true
 	}
 

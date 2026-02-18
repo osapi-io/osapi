@@ -1,6 +1,6 @@
 ---
 title: Add consistent host targeting to all CLI commands
-status: backlog
+status: done
 created: 2026-02-17
 updated: 2026-02-17
 ---

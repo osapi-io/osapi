@@ -22,12 +22,30 @@ package network
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/validation"
 )
+
+// pingMultiResponse wraps multiple ping results for _all broadcast.
+type pingMultiResponse struct {
+	Results []gen.PingResponse `json:"results"`
+}
+
+func (r pingMultiResponse) VisitPostNetworkPingResponse(
+	w http.ResponseWriter,
+) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	return json.NewEncoder(w).Encode(r)
+}
 
 // PostNetworkPing post the network ping API endpoint.
 func (n Network) PostNetworkPing(
@@ -40,7 +58,25 @@ func (n Network) PostNetworkPing(
 		}, nil
 	}
 
-	pingResult, err := n.JobClient.QueryNetworkPingAny(ctx, request.Body.Address)
+	if request.Params.TargetHostname != nil {
+		th := struct {
+			TargetHostname string `validate:"min=1"`
+		}{TargetHostname: *request.Params.TargetHostname}
+		if errMsg, ok := validation.Struct(th); !ok {
+			return gen.PostNetworkPing400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
+	hostname := job.AnyHost
+	if request.Params.TargetHostname != nil {
+		hostname = *request.Params.TargetHostname
+	}
+
+	if hostname == job.BroadcastHost {
+		return n.postNetworkPingAll(ctx, request.Body.Address)
+	}
+
+	pingResult, err := n.JobClient.QueryNetworkPing(ctx, hostname, request.Body.Address)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{
@@ -48,14 +84,42 @@ func (n Network) PostNetworkPing(
 		}, nil
 	}
 
+	return buildPingResponse(pingResult), nil
+}
+
+// postNetworkPingAll handles _all broadcast for ping.
+func (n Network) postNetworkPingAll(
+	ctx context.Context,
+	address string,
+) (gen.PostNetworkPingResponseObject, error) {
+	results, err := n.JobClient.QueryNetworkPingAll(ctx, address)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNetworkPing500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []gen.PingResponse
+	for _, r := range results {
+		responses = append(responses, gen.PingResponse(buildPingResponse(r)))
+	}
+
+	return pingMultiResponse{Results: responses}, nil
+}
+
+// buildPingResponse converts a ping.Result to the API response.
+func buildPingResponse(
+	r *ping.Result,
+) gen.PostNetworkPing200JSONResponse {
 	return gen.PostNetworkPing200JSONResponse{
-		AvgRtt:          durationToString(&pingResult.AvgRTT),
-		MaxRtt:          durationToString(&pingResult.MaxRTT),
-		MinRtt:          durationToString(&pingResult.MinRTT),
-		PacketLoss:      &pingResult.PacketLoss,
-		PacketsReceived: &pingResult.PacketsReceived,
-		PacketsSent:     &pingResult.PacketsSent,
-	}, nil
+		AvgRtt:          durationToString(&r.AvgRTT),
+		MaxRtt:          durationToString(&r.MaxRTT),
+		MinRtt:          durationToString(&r.MinRTT),
+		PacketLoss:      &r.PacketLoss,
+		PacketsReceived: &r.PacketsReceived,
+		PacketsSent:     &r.PacketsSent,
+	}
 }
 
 // durationToString convert *time.Duration to *string.

@@ -202,6 +202,113 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 	}
 }
 
+func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAll() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "all hosts succeed",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"updated":true}}`,
+					`{"status":"completed","hostname":"server2","data":{"updated":true}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "partial failure",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"updated":true}}`,
+					`{"status":"failed","hostname":"server2","error":"disk full"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no workers respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no workers responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.ModifyNetworkDNSAll(
+				s.ctx,
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"eth0",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+				if tt.expectHostErr {
+					hasErr := false
+					for _, hostErr := range result {
+						if hostErr != nil {
+							hasErr = true
+							break
+						}
+					}
+					s.True(hasErr)
+				}
+			}
+		})
+	}
+}
+
 func TestModifyPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ModifyPublicTestSuite))
 }

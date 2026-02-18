@@ -62,20 +62,46 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 		request      gen.GetJobByIDRequestObject
 		mockJob      *jobtypes.QueuedJob
 		mockError    error
+		expectMock   bool
 		validateFunc func(resp gen.GetJobByIDResponseObject)
 	}{
 		{
+			name:       "validation error invalid uuid",
+			request:    gen.GetJobByIDRequestObject{Id: "not-a-uuid"},
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobByIDResponseObject) {
+				r, ok := resp.(gen.GetJobByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ID")
+				s.Contains(*r.Error, "uuid")
+			},
+		},
+		{
+			name:       "validation error empty id",
+			request:    gen.GetJobByIDRequestObject{Id: ""},
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobByIDResponseObject) {
+				r, ok := resp.(gen.GetJobByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ID")
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
 			name:    "success with basic fields",
-			request: gen.GetJobByIDRequestObject{Id: "job-1"},
+			request: gen.GetJobByIDRequestObject{Id: "550e8400-e29b-41d4-a716-446655440000"},
 			mockJob: &jobtypes.QueuedJob{
-				ID:      "job-1",
+				ID:      "550e8400-e29b-41d4-a716-446655440000",
 				Status:  "completed",
 				Created: "2025-06-14T10:00:00Z",
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("job-1", *r.Id)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", *r.Id)
 				s.Equal("completed", *r.Status)
 				s.Nil(r.Operation)
 				s.Nil(r.Error)
@@ -86,9 +112,9 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 		},
 		{
 			name:    "success with all optional fields",
-			request: gen.GetJobByIDRequestObject{Id: "job-2"},
+			request: gen.GetJobByIDRequestObject{Id: "660e8400-e29b-41d4-a716-446655440000"},
 			mockJob: &jobtypes.QueuedJob{
-				ID:        "job-2",
+				ID:        "660e8400-e29b-41d4-a716-446655440000",
 				Status:    "failed",
 				Created:   "2025-06-14T10:00:00Z",
 				Operation: map[string]interface{}{"type": "system.hostname.get"},
@@ -97,10 +123,11 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				UpdatedAt: "2025-06-14T10:05:00Z",
 				Result:    json.RawMessage(`{"hostname":"server-01"}`),
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("job-2", *r.Id)
+				s.Equal("660e8400-e29b-41d4-a716-446655440000", *r.Id)
 				s.Equal("failed", *r.Status)
 				s.NotNil(r.Operation)
 				s.Equal("system.hostname.get", (*r.Operation)["type"])
@@ -114,18 +141,20 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
-			name:      "not found",
-			request:   gen.GetJobByIDRequestObject{Id: "nonexistent"},
-			mockError: fmt.Errorf("job not found: nonexistent"),
+			name:       "not found",
+			request:    gen.GetJobByIDRequestObject{Id: "770e8400-e29b-41d4-a716-446655440000"},
+			mockError:  fmt.Errorf("job not found: 770e8400-e29b-41d4-a716-446655440000"),
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				_, ok := resp.(gen.GetJobByID404JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
-			name:      "job client error",
-			request:   gen.GetJobByIDRequestObject{Id: "job-1"},
-			mockError: assert.AnError,
+			name:       "job client error",
+			request:    gen.GetJobByIDRequestObject{Id: "880e8400-e29b-41d4-a716-446655440000"},
+			mockError:  assert.AnError,
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				_, ok := resp.(gen.GetJobByID500JSONResponse)
 				s.True(ok)
@@ -133,9 +162,9 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 		},
 		{
 			name:    "broadcast job with multiple responses",
-			request: gen.GetJobByIDRequestObject{Id: "job-3"},
+			request: gen.GetJobByIDRequestObject{Id: "990e8400-e29b-41d4-a716-446655440000"},
 			mockJob: &jobtypes.QueuedJob{
-				ID:      "job-3",
+				ID:      "990e8400-e29b-41d4-a716-446655440000",
 				Status:  "completed",
 				Created: "2025-06-14T10:00:00Z",
 				Responses: map[string]jobtypes.Response{
@@ -161,10 +190,11 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 					},
 				},
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("job-3", *r.Id)
+				s.Equal("990e8400-e29b-41d4-a716-446655440000", *r.Id)
 				s.Equal("completed", *r.Status)
 				s.NotNil(r.Responses)
 				s.Len(*r.Responses, 2)
@@ -174,9 +204,9 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 		},
 		{
 			name:    "single response omits responses map",
-			request: gen.GetJobByIDRequestObject{Id: "job-4"},
+			request: gen.GetJobByIDRequestObject{Id: "aa0e8400-e29b-41d4-a716-446655440000"},
 			mockJob: &jobtypes.QueuedJob{
-				ID:      "job-4",
+				ID:      "aa0e8400-e29b-41d4-a716-446655440000",
 				Status:  "completed",
 				Created: "2025-06-14T10:00:00Z",
 				Responses: map[string]jobtypes.Response{
@@ -188,6 +218,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				},
 				Result: json.RawMessage(`{"hostname":"server1"}`),
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
@@ -197,9 +228,9 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 		},
 		{
 			name:    "worker states with errors",
-			request: gen.GetJobByIDRequestObject{Id: "job-5"},
+			request: gen.GetJobByIDRequestObject{Id: "bb0e8400-e29b-41d4-a716-446655440000"},
 			mockJob: &jobtypes.QueuedJob{
-				ID:      "job-5",
+				ID:      "bb0e8400-e29b-41d4-a716-446655440000",
 				Status:  "partial_failure",
 				Created: "2025-06-14T10:00:00Z",
 				Responses: map[string]jobtypes.Response{
@@ -225,6 +256,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 					},
 				},
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
@@ -240,9 +272,11 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				GetJobStatus(gomock.Any(), tt.request.Id).
-				Return(tt.mockJob, tt.mockError)
+			if tt.expectMock {
+				s.mockJobClient.EXPECT().
+					GetJobStatus(gomock.Any(), tt.request.Id).
+					Return(tt.mockJob, tt.mockError)
+			}
 
 			resp, err := s.handler.GetJobByID(s.ctx, tt.request)
 			s.NoError(err)

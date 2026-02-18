@@ -118,6 +118,15 @@ type JobDetailResponse struct {
 	// Operation The operation data.
 	Operation *map[string]interface{} `json:"operation,omitempty"`
 
+	// Responses Per-worker response data for broadcast jobs.
+	Responses *map[string]struct {
+		// Data Worker result data.
+		Data     interface{} `json:"data,omitempty"`
+		Error    *string     `json:"error,omitempty"`
+		Hostname *string     `json:"hostname,omitempty"`
+		Status   *string     `json:"status,omitempty"`
+	} `json:"responses,omitempty"`
+
 	// Result The result data if completed.
 	Result interface{} `json:"result,omitempty"`
 
@@ -126,6 +135,13 @@ type JobDetailResponse struct {
 
 	// UpdatedAt Last update timestamp.
 	UpdatedAt *string `json:"updated_at,omitempty"`
+
+	// WorkerStates Per-worker processing state for broadcast jobs.
+	WorkerStates *map[string]struct {
+		Duration *string `json:"duration,omitempty"`
+		Error    *string `json:"error,omitempty"`
+		Status   *string `json:"status,omitempty"`
+	} `json:"worker_states,omitempty"`
 }
 
 // ListJobsResponse defines model for ListJobsResponse.
@@ -134,6 +150,13 @@ type ListJobsResponse struct {
 
 	// TotalItems Total number of jobs matching the filter.
 	TotalItems *int `json:"total_items,omitempty"`
+}
+
+// ListWorkersResponse defines model for ListWorkersResponse.
+type ListWorkersResponse struct {
+	// Total Total number of active workers.
+	Total   int          `json:"total"`
+	Workers []WorkerInfo `json:"workers"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
@@ -226,16 +249,52 @@ type SystemStatusResponse struct {
 	Uptime string `json:"uptime"`
 }
 
+// WorkerInfo defines model for WorkerInfo.
+type WorkerInfo struct {
+	// Hostname The hostname of the worker.
+	Hostname string `json:"hostname"`
+}
+
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
 	// Status Filter jobs by status (e.g., unprocessed, processing, completed, failed).
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
 }
 
+// PutNetworkDNSParams defines parameters for PutNetworkDNS.
+type PutNetworkDNSParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
+// GetNetworkDNSByInterfaceParams defines parameters for GetNetworkDNSByInterface.
+type GetNetworkDNSByInterfaceParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
 // PostNetworkPingJSONBody defines parameters for PostNetworkPing.
 type PostNetworkPingJSONBody struct {
 	// Address The IP address of the server to ping. Supports both IPv4 and IPv6.
 	Address string `json:"address" validate:"required,ip"`
+}
+
+// PostNetworkPingParams defines parameters for PostNetworkPing.
+type PostNetworkPingParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
+// GetSystemHostnameParams defines parameters for GetSystemHostname.
+type GetSystemHostnameParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
+// GetSystemStatusParams defines parameters for GetSystemStatus.
+type GetSystemStatusParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
 }
 
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
@@ -331,6 +390,9 @@ type ClientInterface interface {
 	// GetJobStatus request
 	GetJobStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetJobWorkers request
+	GetJobWorkers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteJobByID request
 	DeleteJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -338,23 +400,23 @@ type ClientInterface interface {
 	GetJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNetworkDNSWithBody request with any body
-	PutNetworkDNSWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNetworkDNSWithBody(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutNetworkDNS(ctx context.Context, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNetworkDNS(ctx context.Context, params *PutNetworkDNSParams, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNetworkDNSByInterface request
-	GetNetworkDNSByInterface(ctx context.Context, interfaceName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetNetworkDNSByInterface(ctx context.Context, interfaceName string, params *GetNetworkDNSByInterfaceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNetworkPingWithBody request with any body
-	PostNetworkPingWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNetworkPingWithBody(ctx context.Context, params *PostNetworkPingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNetworkPing(ctx context.Context, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNetworkPing(ctx context.Context, params *PostNetworkPingParams, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSystemHostname request
-	GetSystemHostname(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetSystemHostname(ctx context.Context, params *GetSystemHostnameParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSystemStatus request
-	GetSystemStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetSystemStatus(ctx context.Context, params *GetSystemStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetVersion request
 	GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -408,6 +470,18 @@ func (c *Client) GetJobStatus(ctx context.Context, reqEditors ...RequestEditorFn
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetJobWorkers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobWorkersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DeleteJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteJobByIDRequest(c.Server, id)
 	if err != nil {
@@ -432,8 +506,8 @@ func (c *Client) GetJobByID(ctx context.Context, id string, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNetworkDNSWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNetworkDNSRequestWithBody(c.Server, contentType, body)
+func (c *Client) PutNetworkDNSWithBody(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNetworkDNSRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -444,8 +518,8 @@ func (c *Client) PutNetworkDNSWithBody(ctx context.Context, contentType string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNetworkDNS(ctx context.Context, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNetworkDNSRequest(c.Server, body)
+func (c *Client) PutNetworkDNS(ctx context.Context, params *PutNetworkDNSParams, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNetworkDNSRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -456,8 +530,8 @@ func (c *Client) PutNetworkDNS(ctx context.Context, body PutNetworkDNSJSONReques
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNetworkDNSByInterface(ctx context.Context, interfaceName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNetworkDNSByInterfaceRequest(c.Server, interfaceName)
+func (c *Client) GetNetworkDNSByInterface(ctx context.Context, interfaceName string, params *GetNetworkDNSByInterfaceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNetworkDNSByInterfaceRequest(c.Server, interfaceName, params)
 	if err != nil {
 		return nil, err
 	}
@@ -468,8 +542,8 @@ func (c *Client) GetNetworkDNSByInterface(ctx context.Context, interfaceName str
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNetworkPingWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNetworkPingRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostNetworkPingWithBody(ctx context.Context, params *PostNetworkPingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNetworkPingRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -480,8 +554,8 @@ func (c *Client) PostNetworkPingWithBody(ctx context.Context, contentType string
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNetworkPing(ctx context.Context, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNetworkPingRequest(c.Server, body)
+func (c *Client) PostNetworkPing(ctx context.Context, params *PostNetworkPingParams, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNetworkPingRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -492,8 +566,8 @@ func (c *Client) PostNetworkPing(ctx context.Context, body PostNetworkPingJSONRe
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetSystemHostname(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetSystemHostnameRequest(c.Server)
+func (c *Client) GetSystemHostname(ctx context.Context, params *GetSystemHostnameParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSystemHostnameRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -504,8 +578,8 @@ func (c *Client) GetSystemHostname(ctx context.Context, reqEditors ...RequestEdi
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetSystemStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetSystemStatusRequest(c.Server)
+func (c *Client) GetSystemStatus(ctx context.Context, params *GetSystemStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSystemStatusRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -644,6 +718,33 @@ func NewGetJobStatusRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetJobWorkersRequest generates requests for GetJobWorkers
+func NewGetJobWorkersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/job/workers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDeleteJobByIDRequest generates requests for DeleteJobByID
 func NewDeleteJobByIDRequest(server string, id string) (*http.Request, error) {
 	var err error
@@ -713,18 +814,18 @@ func NewGetJobByIDRequest(server string, id string) (*http.Request, error) {
 }
 
 // NewPutNetworkDNSRequest calls the generic PutNetworkDNS builder with application/json body
-func NewPutNetworkDNSRequest(server string, body PutNetworkDNSJSONRequestBody) (*http.Request, error) {
+func NewPutNetworkDNSRequest(server string, params *PutNetworkDNSParams, body PutNetworkDNSJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutNetworkDNSRequestWithBody(server, "application/json", bodyReader)
+	return NewPutNetworkDNSRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPutNetworkDNSRequestWithBody generates requests for PutNetworkDNS with any type of body
-func NewPutNetworkDNSRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPutNetworkDNSRequestWithBody(server string, params *PutNetworkDNSParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -742,6 +843,28 @@ func NewPutNetworkDNSRequestWithBody(server string, contentType string, body io.
 		return nil, err
 	}
 
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
 	req, err := http.NewRequest("PUT", queryURL.String(), body)
 	if err != nil {
 		return nil, err
@@ -753,7 +876,7 @@ func NewPutNetworkDNSRequestWithBody(server string, contentType string, body io.
 }
 
 // NewGetNetworkDNSByInterfaceRequest generates requests for GetNetworkDNSByInterface
-func NewGetNetworkDNSByInterfaceRequest(server string, interfaceName string) (*http.Request, error) {
+func NewGetNetworkDNSByInterfaceRequest(server string, interfaceName string, params *GetNetworkDNSByInterfaceParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -778,6 +901,28 @@ func NewGetNetworkDNSByInterfaceRequest(server string, interfaceName string) (*h
 		return nil, err
 	}
 
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
@@ -787,18 +932,18 @@ func NewGetNetworkDNSByInterfaceRequest(server string, interfaceName string) (*h
 }
 
 // NewPostNetworkPingRequest calls the generic PostNetworkPing builder with application/json body
-func NewPostNetworkPingRequest(server string, body PostNetworkPingJSONRequestBody) (*http.Request, error) {
+func NewPostNetworkPingRequest(server string, params *PostNetworkPingParams, body PostNetworkPingJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNetworkPingRequestWithBody(server, "application/json", bodyReader)
+	return NewPostNetworkPingRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPostNetworkPingRequestWithBody generates requests for PostNetworkPing with any type of body
-func NewPostNetworkPingRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostNetworkPingRequestWithBody(server string, params *PostNetworkPingParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -816,6 +961,28 @@ func NewPostNetworkPingRequestWithBody(server string, contentType string, body i
 		return nil, err
 	}
 
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
 	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
@@ -827,7 +994,7 @@ func NewPostNetworkPingRequestWithBody(server string, contentType string, body i
 }
 
 // NewGetSystemHostnameRequest generates requests for GetSystemHostname
-func NewGetSystemHostnameRequest(server string) (*http.Request, error) {
+func NewGetSystemHostnameRequest(server string, params *GetSystemHostnameParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -845,6 +1012,28 @@ func NewGetSystemHostnameRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
@@ -854,7 +1043,7 @@ func NewGetSystemHostnameRequest(server string) (*http.Request, error) {
 }
 
 // NewGetSystemStatusRequest generates requests for GetSystemStatus
-func NewGetSystemStatusRequest(server string) (*http.Request, error) {
+func NewGetSystemStatusRequest(server string, params *GetSystemStatusParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -870,6 +1059,28 @@ func NewGetSystemStatusRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -961,6 +1172,9 @@ type ClientWithResponsesInterface interface {
 	// GetJobStatusWithResponse request
 	GetJobStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobStatusResponse, error)
 
+	// GetJobWorkersWithResponse request
+	GetJobWorkersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobWorkersResponse, error)
+
 	// DeleteJobByIDWithResponse request
 	DeleteJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
 
@@ -968,23 +1182,23 @@ type ClientWithResponsesInterface interface {
 	GetJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetJobByIDResponse, error)
 
 	// PutNetworkDNSWithBodyWithResponse request with any body
-	PutNetworkDNSWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error)
+	PutNetworkDNSWithBodyWithResponse(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error)
 
-	PutNetworkDNSWithResponse(ctx context.Context, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error)
+	PutNetworkDNSWithResponse(ctx context.Context, params *PutNetworkDNSParams, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error)
 
 	// GetNetworkDNSByInterfaceWithResponse request
-	GetNetworkDNSByInterfaceWithResponse(ctx context.Context, interfaceName string, reqEditors ...RequestEditorFn) (*GetNetworkDNSByInterfaceResponse, error)
+	GetNetworkDNSByInterfaceWithResponse(ctx context.Context, interfaceName string, params *GetNetworkDNSByInterfaceParams, reqEditors ...RequestEditorFn) (*GetNetworkDNSByInterfaceResponse, error)
 
 	// PostNetworkPingWithBodyWithResponse request with any body
-	PostNetworkPingWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error)
+	PostNetworkPingWithBodyWithResponse(ctx context.Context, params *PostNetworkPingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error)
 
-	PostNetworkPingWithResponse(ctx context.Context, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error)
+	PostNetworkPingWithResponse(ctx context.Context, params *PostNetworkPingParams, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error)
 
 	// GetSystemHostnameWithResponse request
-	GetSystemHostnameWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemHostnameResponse, error)
+	GetSystemHostnameWithResponse(ctx context.Context, params *GetSystemHostnameParams, reqEditors ...RequestEditorFn) (*GetSystemHostnameResponse, error)
 
 	// GetSystemStatusWithResponse request
-	GetSystemStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemStatusResponse, error)
+	GetSystemStatusWithResponse(ctx context.Context, params *GetSystemStatusParams, reqEditors ...RequestEditorFn) (*GetSystemStatusResponse, error)
 
 	// GetVersionWithResponse request
 	GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error)
@@ -1060,6 +1274,31 @@ func (r GetJobStatusResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetJobStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetJobWorkersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ListWorkersResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobWorkersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobWorkersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1301,6 +1540,15 @@ func (c *ClientWithResponses) GetJobStatusWithResponse(ctx context.Context, reqE
 	return ParseGetJobStatusResponse(rsp)
 }
 
+// GetJobWorkersWithResponse request returning *GetJobWorkersResponse
+func (c *ClientWithResponses) GetJobWorkersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobWorkersResponse, error) {
+	rsp, err := c.GetJobWorkers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobWorkersResponse(rsp)
+}
+
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
 func (c *ClientWithResponses) DeleteJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error) {
 	rsp, err := c.DeleteJobByID(ctx, id, reqEditors...)
@@ -1320,16 +1568,16 @@ func (c *ClientWithResponses) GetJobByIDWithResponse(ctx context.Context, id str
 }
 
 // PutNetworkDNSWithBodyWithResponse request with arbitrary body returning *PutNetworkDNSResponse
-func (c *ClientWithResponses) PutNetworkDNSWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error) {
-	rsp, err := c.PutNetworkDNSWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PutNetworkDNSWithBodyWithResponse(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error) {
+	rsp, err := c.PutNetworkDNSWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePutNetworkDNSResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutNetworkDNSWithResponse(ctx context.Context, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error) {
-	rsp, err := c.PutNetworkDNS(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PutNetworkDNSWithResponse(ctx context.Context, params *PutNetworkDNSParams, body PutNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error) {
+	rsp, err := c.PutNetworkDNS(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1337,8 +1585,8 @@ func (c *ClientWithResponses) PutNetworkDNSWithResponse(ctx context.Context, bod
 }
 
 // GetNetworkDNSByInterfaceWithResponse request returning *GetNetworkDNSByInterfaceResponse
-func (c *ClientWithResponses) GetNetworkDNSByInterfaceWithResponse(ctx context.Context, interfaceName string, reqEditors ...RequestEditorFn) (*GetNetworkDNSByInterfaceResponse, error) {
-	rsp, err := c.GetNetworkDNSByInterface(ctx, interfaceName, reqEditors...)
+func (c *ClientWithResponses) GetNetworkDNSByInterfaceWithResponse(ctx context.Context, interfaceName string, params *GetNetworkDNSByInterfaceParams, reqEditors ...RequestEditorFn) (*GetNetworkDNSByInterfaceResponse, error) {
+	rsp, err := c.GetNetworkDNSByInterface(ctx, interfaceName, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1346,16 +1594,16 @@ func (c *ClientWithResponses) GetNetworkDNSByInterfaceWithResponse(ctx context.C
 }
 
 // PostNetworkPingWithBodyWithResponse request with arbitrary body returning *PostNetworkPingResponse
-func (c *ClientWithResponses) PostNetworkPingWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error) {
-	rsp, err := c.PostNetworkPingWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostNetworkPingWithBodyWithResponse(ctx context.Context, params *PostNetworkPingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error) {
+	rsp, err := c.PostNetworkPingWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostNetworkPingResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNetworkPingWithResponse(ctx context.Context, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error) {
-	rsp, err := c.PostNetworkPing(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostNetworkPingWithResponse(ctx context.Context, params *PostNetworkPingParams, body PostNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNetworkPingResponse, error) {
+	rsp, err := c.PostNetworkPing(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1363,8 +1611,8 @@ func (c *ClientWithResponses) PostNetworkPingWithResponse(ctx context.Context, b
 }
 
 // GetSystemHostnameWithResponse request returning *GetSystemHostnameResponse
-func (c *ClientWithResponses) GetSystemHostnameWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemHostnameResponse, error) {
-	rsp, err := c.GetSystemHostname(ctx, reqEditors...)
+func (c *ClientWithResponses) GetSystemHostnameWithResponse(ctx context.Context, params *GetSystemHostnameParams, reqEditors ...RequestEditorFn) (*GetSystemHostnameResponse, error) {
+	rsp, err := c.GetSystemHostname(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1372,8 +1620,8 @@ func (c *ClientWithResponses) GetSystemHostnameWithResponse(ctx context.Context,
 }
 
 // GetSystemStatusWithResponse request returning *GetSystemStatusResponse
-func (c *ClientWithResponses) GetSystemStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemStatusResponse, error) {
-	rsp, err := c.GetSystemStatus(ctx, reqEditors...)
+func (c *ClientWithResponses) GetSystemStatusWithResponse(ctx context.Context, params *GetSystemStatusParams, reqEditors ...RequestEditorFn) (*GetSystemStatusResponse, error) {
+	rsp, err := c.GetSystemStatus(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1506,6 +1754,53 @@ func ParseGetJobStatusResponse(rsp *http.Response) (*GetJobStatusResponse, error
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest QueueStatsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobWorkersResponse parses an HTTP response from a GetJobWorkersWithResponse call
+func ParseGetJobWorkersResponse(rsp *http.Response) (*GetJobWorkersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobWorkersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListWorkersResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

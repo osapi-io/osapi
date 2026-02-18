@@ -29,7 +29,12 @@ import (
 // GetNetworkDNSByInterface get the network dns get API endpoint.
 func (c *Client) GetNetworkDNSByInterface(
 	ctx context.Context,
+	hostname string,
 	interfaceName string,
 ) (*gen.GetNetworkDNSByInterfaceResponse, error) {
-	return c.Client.GetNetworkDNSByInterfaceWithResponse(ctx, interfaceName)
+	params := &gen.GetNetworkDNSByInterfaceParams{
+		TargetHostname: &hostname,
+	}
+
+	return c.Client.GetNetworkDNSByInterfaceWithResponse(ctx, interfaceName, params)
 }

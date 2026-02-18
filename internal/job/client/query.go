@@ -212,3 +212,135 @@ func (c *Client) QueryNetworkPingAny(
 ) (*ping.Result, error) {
 	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }
+
+// QuerySystemHostnameAll queries hostname from all hosts.
+func (c *Client) QuerySystemHostnameAll(
+	ctx context.Context,
+) (map[string]string, error) {
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "system",
+		Operation: "hostname.get",
+		Data:      json.RawMessage(`{}`),
+	}
+
+	subject := job.BuildQuerySubject(job.BroadcastHost)
+	responses, err := c.publishAndCollect(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			continue
+		}
+
+		var result struct {
+			Hostname string `json:"hostname"`
+		}
+		if err := json.Unmarshal(resp.Data, &result); err != nil {
+			continue
+		}
+
+		results[hostname] = result.Hostname
+	}
+
+	return results, nil
+}
+
+// QueryNetworkDNSAll queries DNS configuration from all hosts.
+func (c *Client) QueryNetworkDNSAll(
+	ctx context.Context,
+	iface string,
+) (map[string]*dns.Config, error) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"interface": iface,
+	})
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "network",
+		Operation: "dns.get",
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildQuerySubject(job.BroadcastHost)
+	responses, err := c.publishAndCollect(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*dns.Config)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			continue
+		}
+
+		var result dns.Config
+		if err := json.Unmarshal(resp.Data, &result); err != nil {
+			continue
+		}
+
+		results[hostname] = &result
+	}
+
+	return results, nil
+}
+
+// QueryNetworkPingAll pings a host from all hosts.
+func (c *Client) QueryNetworkPingAll(
+	ctx context.Context,
+	address string,
+) (map[string]*ping.Result, error) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"address": address,
+	})
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "network",
+		Operation: "ping.do",
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildQuerySubject(job.BroadcastHost)
+	responses, err := c.publishAndCollect(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*ping.Result)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			continue
+		}
+
+		var result ping.Result
+		if err := json.Unmarshal(resp.Data, &result); err != nil {
+			continue
+		}
+
+		results[hostname] = &result
+	}
+
+	return results, nil
+}
+
+// ListWorkers discovers all active workers by broadcasting a hostname query
+// and collecting responses. Each responding worker is returned as a WorkerInfo.
+func (c *Client) ListWorkers(
+	ctx context.Context,
+) ([]job.WorkerInfo, error) {
+	hostnames, err := c.QuerySystemHostnameAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover workers: %w", err)
+	}
+
+	workers := make([]job.WorkerInfo, 0, len(hostnames))
+	for _, hostname := range hostnames {
+		workers = append(workers, job.WorkerInfo{
+			Hostname: hostname,
+		})
+	}
+
+	return workers, nil
+}

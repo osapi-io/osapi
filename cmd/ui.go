@@ -32,7 +32,6 @@ import (
 	"golang.org/x/term"
 
 	"github.com/retr0h/osapi/internal/client/gen"
-	"github.com/retr0h/osapi/internal/job"
 )
 
 // TODO(retr0h): consider moving out of global scope
@@ -294,55 +293,50 @@ func handleUnknownError(
 	)
 }
 
-// displayJobDetails displays detailed job information in a consistent format.
+// displayJobDetailResponse displays detailed job information from a REST API response.
 // Used by both job get and job run commands.
-func displayJobDetails(
-	jobInfo *job.QueuedJob,
+func displayJobDetailResponse(
+	resp *gen.JobDetailResponse,
 ) {
-	if jsonOutput {
-		resultJSON, _ := json.Marshal(jobInfo)
-		logger.Info("job", slog.String("response", string(resultJSON)))
-		return
-	}
-
-	// Display job details with enhanced status information
+	// Display job metadata
 	jobData := map[string]interface{}{
-		"Job ID":  jobInfo.ID,
-		"Status":  jobInfo.Status,
-		"Created": jobInfo.Created,
+		"Job ID": safeString(resp.Id),
+		"Status": safeString(resp.Status),
 	}
 
-	// Add error field if present
-	if jobInfo.Error != "" {
-		jobData["Error"] = jobInfo.Error
+	if resp.Created != nil {
+		jobData["Created"] = *resp.Created
+	}
+	if resp.Error != nil && *resp.Error != "" {
+		jobData["Error"] = *resp.Error
+	}
+	if resp.Hostname != nil && *resp.Hostname != "" {
+		jobData["Hostname"] = *resp.Hostname
+	}
+	if resp.UpdatedAt != nil && *resp.UpdatedAt != "" {
+		jobData["Updated At"] = *resp.UpdatedAt
 	}
 
-	// Add subject if present
-	if jobInfo.Subject != "" {
-		jobData["Subject"] = jobInfo.Subject
-	}
-
-	// Add worker summary
-	if len(jobInfo.WorkerStates) > 0 {
+	// Add worker summary from worker_states
+	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
 		completed := 0
 		failed := 0
 		processing := 0
-		acknowledged := 0
 
-		for _, state := range jobInfo.WorkerStates {
-			switch state.Status {
-			case "completed":
-				completed++
-			case "failed":
-				failed++
-			case "started":
-				processing++
-			case "acknowledged":
-				acknowledged++
+		for _, state := range *resp.WorkerStates {
+			if state.Status != nil {
+				switch *state.Status {
+				case "completed":
+					completed++
+				case "failed":
+					failed++
+				case "started":
+					processing++
+				}
 			}
 		}
 
-		total := len(jobInfo.WorkerStates)
+		total := len(*resp.WorkerStates)
 		if total > 1 {
 			jobData["Workers"] = fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
@@ -356,12 +350,11 @@ func displayJobDetails(
 
 	printStyledMap(jobData)
 
-	// Collect content for sections to ensure consistent table widths
 	var sections []section
 
 	// Display the operation request
-	if jobInfo.Operation != nil {
-		jobOperationJSON, _ := json.MarshalIndent(jobInfo.Operation, "", "  ")
+	if resp.Operation != nil {
+		jobOperationJSON, _ := json.MarshalIndent(*resp.Operation, "", "  ")
 		operationRows := [][]string{{string(jobOperationJSON)}}
 		sections = append(sections, section{
 			Title:   "Job Request",
@@ -370,85 +363,67 @@ func displayJobDetails(
 		})
 	}
 
-	// Display timeline if available
-	if len(jobInfo.Timeline) > 0 {
-		timelineRows := [][]string{}
-		for _, event := range jobInfo.Timeline {
-			row := []string{
-				event.Timestamp.Format("15:04:05 MST"),
-				event.Event,
-				event.Hostname,
-				event.Message,
-			}
-			if event.Error != "" {
-				row = append(row, event.Error)
-			} else {
-				row = append(row, "")
-			}
-			timelineRows = append(timelineRows, row)
-		}
-		sections = append(sections, section{
-			Title:   "Timeline",
-			Headers: []string{"TIME", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
-			Rows:    timelineRows,
-		})
-	}
-
-	// Display responses (the actual job results)
-	if len(jobInfo.Responses) > 0 {
-		responseRows := [][]string{}
-		for hostname, response := range jobInfo.Responses {
-			// Format the response data with nice indentation
-			var responseData string
-			if len(response.Data) > 0 {
-				var data interface{}
-				if err := json.Unmarshal(response.Data, &data); err == nil {
-					// Use pretty printing with 2-space indentation
-					dataJSON, _ := json.MarshalIndent(data, "", "  ")
-					responseData = string(dataJSON)
-				} else {
-					responseData = string(response.Data)
-				}
-			} else {
-				responseData = "(no data)"
+	// Display worker responses (for broadcast jobs)
+	if resp.Responses != nil && len(*resp.Responses) > 0 {
+		responseRows := make([][]string, 0, len(*resp.Responses))
+		for hostname, response := range *resp.Responses {
+			status := safeString(response.Status)
+			errMsg := ""
+			if response.Error != nil {
+				errMsg = *response.Error
 			}
 
-			row := []string{
-				hostname,
-				string(response.Status),
-				response.Timestamp.Format("15:04:05 MST"),
-				responseData,
-			}
-			if response.Error != "" {
-				row = append(row, response.Error)
+			var dataStr string
+			if response.Data != nil {
+				dataJSON, _ := json.MarshalIndent(response.Data, "", "  ")
+				dataStr = string(dataJSON)
 			} else {
-				row = append(row, "")
+				dataStr = "(no data)"
 			}
+
+			row := []string{hostname, status, dataStr, errMsg}
 			responseRows = append(responseRows, row)
 		}
 
 		sections = append(sections, section{
 			Title:   "Worker Responses",
-			Headers: []string{"HOSTNAME", "STATUS", "TIME", "DATA", "ERROR"},
+			Headers: []string{"HOSTNAME", "STATUS", "DATA", "ERROR"},
 			Rows:    responseRows,
 		})
 	}
 
-	// Display results if completed and available (legacy support)
-	if jobInfo.Status == "completed" && len(jobInfo.Result) > 0 {
-		var result interface{}
-		if err := json.Unmarshal(jobInfo.Result, &result); err == nil {
-			resultJSON, _ := json.MarshalIndent(result, "", "  ")
-			resultRows := [][]string{{string(resultJSON)}}
-			sections = append(sections, section{
-				Title:   "Job Response (Legacy)",
-				Headers: []string{"DATA"},
-				Rows:    resultRows,
-			})
+	// Display worker states (for broadcast jobs)
+	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
+		stateRows := make([][]string, 0, len(*resp.WorkerStates))
+		for hostname, state := range *resp.WorkerStates {
+			status := safeString(state.Status)
+			duration := safeString(state.Duration)
+			errMsg := ""
+			if state.Error != nil {
+				errMsg = *state.Error
+			}
+
+			stateRows = append(stateRows, []string{hostname, status, duration, errMsg})
 		}
+
+		sections = append(sections, section{
+			Title:   "Worker States",
+			Headers: []string{"HOSTNAME", "STATUS", "DURATION", "ERROR"},
+			Rows:    stateRows,
+		})
 	}
 
-	// Print each section individually to ensure consistent formatting
+	// Display result if completed
+	if resp.Result != nil {
+		resultJSON, _ := json.MarshalIndent(resp.Result, "", "  ")
+		resultRows := [][]string{{string(resultJSON)}}
+		sections = append(sections, section{
+			Title:   "Job Result",
+			Headers: []string{"DATA"},
+			Rows:    resultRows,
+		})
+	}
+
 	for _, sec := range sections {
 		printStyledTable([]section{sec})
 	}

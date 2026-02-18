@@ -823,6 +823,358 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 	}
 }
 
+func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"host1.example.com"}}`,
+					`{"status":"completed","hostname":"server2","data":{"hostname":"host2.example.com"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"host1.example.com"}}`,
+					`{"status":"failed","hostname":"server2","error":"unreachable"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"host1.example.com"}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_not_object"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no workers respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no workers responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.QuerySystemHostnameAll(s.ctx)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNetworkDNSAll() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"DNSServers":["8.8.8.8"],"SearchDomains":["example.com"]}}`,
+					`{"status":"completed","hostname":"server2","data":{"DNSServers":["1.1.1.1"],"SearchDomains":["local"]}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"DNSServers":["8.8.8.8"],"SearchDomains":[]}}`,
+					`{"status":"failed","hostname":"server2","error":"interface not found"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"DNSServers":["8.8.8.8"],"SearchDomains":[]}}`,
+					`{"status":"completed","hostname":"server2","data":"not_an_object"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.QueryNetworkDNSAll(s.ctx, "eth0")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"PacketsSent":4,"PacketsReceived":4,"PacketLoss":0.0}}`,
+					`{"status":"completed","hostname":"server2","data":{"PacketsSent":4,"PacketsReceived":3,"PacketLoss":25.0}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"PacketsSent":4,"PacketsReceived":4,"PacketLoss":0.0}}`,
+					`{"status":"failed","hostname":"server2","error":"host unreachable"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"PacketsSent":4,"PacketsReceived":4,"PacketLoss":0.0}}`,
+					`{"status":"completed","hostname":"server2","data":"not_an_object"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.QueryNetworkPingAll(s.ctx, "1.1.1.1")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestListWorkers() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple workers discovered",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
+					`{"status":"completed","hostname":"server2","data":{"hostname":"worker2"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "broadcast error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to discover workers",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			result, err := jobsClient.ListWorkers(s.ctx)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
 func TestQueryPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(QueryPublicTestSuite))
 }

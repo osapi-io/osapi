@@ -29,6 +29,11 @@ import (
 // GetSystemStatus get the system status API endpoint.
 func (c *Client) GetSystemStatus(
 	ctx context.Context,
+	hostname string,
 ) (*gen.GetSystemStatusResponse, error) {
-	return c.Client.GetSystemStatusWithResponse(ctx)
+	params := &gen.GetSystemStatusParams{
+		TargetHostname: &hostname,
+	}
+
+	return c.Client.GetSystemStatusWithResponse(ctx, params)
 }

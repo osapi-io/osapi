@@ -59,29 +59,57 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 		name         string
 		request      gen.DeleteJobByIDRequestObject
 		mockError    error
+		expectMock   bool
 		validateFunc func(resp gen.DeleteJobByIDResponseObject)
 	}{
 		{
-			name:    "success",
-			request: gen.DeleteJobByIDRequestObject{Id: "job-1"},
+			name:       "validation error invalid uuid",
+			request:    gen.DeleteJobByIDRequestObject{Id: "not-a-uuid"},
+			expectMock: false,
+			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
+				r, ok := resp.(gen.DeleteJobByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ID")
+				s.Contains(*r.Error, "uuid")
+			},
+		},
+		{
+			name:       "validation error empty id",
+			request:    gen.DeleteJobByIDRequestObject{Id: ""},
+			expectMock: false,
+			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
+				r, ok := resp.(gen.DeleteJobByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ID")
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name:       "success",
+			request:    gen.DeleteJobByIDRequestObject{Id: "550e8400-e29b-41d4-a716-446655440000"},
+			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
 				_, ok := resp.(gen.DeleteJobByID204Response)
 				s.True(ok)
 			},
 		},
 		{
-			name:      "not found",
-			request:   gen.DeleteJobByIDRequestObject{Id: "nonexistent"},
-			mockError: fmt.Errorf("job not found: nonexistent"),
+			name:       "not found",
+			request:    gen.DeleteJobByIDRequestObject{Id: "660e8400-e29b-41d4-a716-446655440000"},
+			mockError:  fmt.Errorf("job not found: 660e8400-e29b-41d4-a716-446655440000"),
+			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
 				_, ok := resp.(gen.DeleteJobByID404JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
-			name:      "job client error",
-			request:   gen.DeleteJobByIDRequestObject{Id: "job-1"},
-			mockError: assert.AnError,
+			name:       "job client error",
+			request:    gen.DeleteJobByIDRequestObject{Id: "770e8400-e29b-41d4-a716-446655440000"},
+			mockError:  assert.AnError,
+			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
 				_, ok := resp.(gen.DeleteJobByID500JSONResponse)
 				s.True(ok)
@@ -91,9 +119,11 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				DeleteJob(gomock.Any(), tt.request.Id).
-				Return(tt.mockError)
+			if tt.expectMock {
+				s.mockJobClient.EXPECT().
+					DeleteJob(gomock.Any(), tt.request.Id).
+					Return(tt.mockError)
+			}
 
 			resp, err := s.handler.DeleteJobByID(s.ctx, tt.request)
 			s.NoError(err)

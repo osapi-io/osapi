@@ -64,10 +64,28 @@ type PingResponse struct {
 	PacketsSent *int `json:"packets_sent,omitempty"`
 }
 
+// PutNetworkDNSParams defines parameters for PutNetworkDNS.
+type PutNetworkDNSParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
+// GetNetworkDNSByInterfaceParams defines parameters for GetNetworkDNSByInterface.
+type GetNetworkDNSByInterfaceParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
 // PostNetworkPingJSONBody defines parameters for PostNetworkPing.
 type PostNetworkPingJSONBody struct {
 	// Address The IP address of the server to ping. Supports both IPv4 and IPv6.
 	Address string `json:"address" validate:"required,ip"`
+}
+
+// PostNetworkPingParams defines parameters for PostNetworkPing.
+type PostNetworkPingParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
 }
 
 // PutNetworkDNSJSONRequestBody defines body for PutNetworkDNS for application/json ContentType.
@@ -80,13 +98,13 @@ type PostNetworkPingJSONRequestBody PostNetworkPingJSONBody
 type ServerInterface interface {
 	// Update DNS servers
 	// (PUT /network/dns)
-	PutNetworkDNS(ctx echo.Context) error
+	PutNetworkDNS(ctx echo.Context, params PutNetworkDNSParams) error
 	// List DNS servers
 	// (GET /network/dns/{interfaceName})
-	GetNetworkDNSByInterface(ctx echo.Context, interfaceName string) error
+	GetNetworkDNSByInterface(ctx echo.Context, interfaceName string, params GetNetworkDNSByInterfaceParams) error
 	// Ping a remote server
 	// (POST /network/ping)
-	PostNetworkPing(ctx echo.Context) error
+	PostNetworkPing(ctx echo.Context, params PostNetworkPingParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -100,8 +118,17 @@ func (w *ServerInterfaceWrapper) PutNetworkDNS(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{"write"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PutNetworkDNSParams
+	// ------------- Optional query parameter "target_hostname" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutNetworkDNS(ctx)
+	err = w.Handler.PutNetworkDNS(ctx, params)
 	return err
 }
 
@@ -118,8 +145,17 @@ func (w *ServerInterfaceWrapper) GetNetworkDNSByInterface(ctx echo.Context) erro
 
 	ctx.Set(BearerAuthScopes, []string{"read"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetNetworkDNSByInterfaceParams
+	// ------------- Optional query parameter "target_hostname" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNetworkDNSByInterface(ctx, interfaceName)
+	err = w.Handler.GetNetworkDNSByInterface(ctx, interfaceName, params)
 	return err
 }
 
@@ -129,8 +165,17 @@ func (w *ServerInterfaceWrapper) PostNetworkPing(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{"write"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostNetworkPingParams
+	// ------------- Optional query parameter "target_hostname" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNetworkPing(ctx)
+	err = w.Handler.PostNetworkPing(ctx, params)
 	return err
 }
 
@@ -169,7 +214,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 }
 
 type PutNetworkDNSRequestObject struct {
-	Body *PutNetworkDNSJSONRequestBody
+	Params PutNetworkDNSParams
+	Body   *PutNetworkDNSJSONRequestBody
 }
 
 type PutNetworkDNSResponseObject interface {
@@ -222,6 +268,7 @@ func (response PutNetworkDNS500JSONResponse) VisitPutNetworkDNSResponse(w http.R
 
 type GetNetworkDNSByInterfaceRequestObject struct {
 	InterfaceName string `json:"interfaceName"`
+	Params        GetNetworkDNSByInterfaceParams
 }
 
 type GetNetworkDNSByInterfaceResponseObject interface {
@@ -274,7 +321,8 @@ func (response GetNetworkDNSByInterface500JSONResponse) VisitGetNetworkDNSByInte
 }
 
 type PostNetworkPingRequestObject struct {
-	Body *PostNetworkPingJSONRequestBody
+	Params PostNetworkPingParams
+	Body   *PostNetworkPingJSONRequestBody
 }
 
 type PostNetworkPingResponseObject interface {
@@ -352,8 +400,10 @@ type strictHandler struct {
 }
 
 // PutNetworkDNS operation middleware
-func (sh *strictHandler) PutNetworkDNS(ctx echo.Context) error {
+func (sh *strictHandler) PutNetworkDNS(ctx echo.Context, params PutNetworkDNSParams) error {
 	var request PutNetworkDNSRequestObject
+
+	request.Params = params
 
 	var body PutNetworkDNSJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
@@ -381,10 +431,11 @@ func (sh *strictHandler) PutNetworkDNS(ctx echo.Context) error {
 }
 
 // GetNetworkDNSByInterface operation middleware
-func (sh *strictHandler) GetNetworkDNSByInterface(ctx echo.Context, interfaceName string) error {
+func (sh *strictHandler) GetNetworkDNSByInterface(ctx echo.Context, interfaceName string, params GetNetworkDNSByInterfaceParams) error {
 	var request GetNetworkDNSByInterfaceRequestObject
 
 	request.InterfaceName = interfaceName
+	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetNetworkDNSByInterface(ctx.Request().Context(), request.(GetNetworkDNSByInterfaceRequestObject))
@@ -406,8 +457,10 @@ func (sh *strictHandler) GetNetworkDNSByInterface(ctx echo.Context, interfaceNam
 }
 
 // PostNetworkPing operation middleware
-func (sh *strictHandler) PostNetworkPing(ctx echo.Context) error {
+func (sh *strictHandler) PostNetworkPing(ctx echo.Context, params PostNetworkPingParams) error {
 	var request PostNetworkPingRequestObject
+
+	request.Params = params
 
 	var body PostNetworkPingJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {

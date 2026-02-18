@@ -40,6 +40,15 @@ paths:
       security:
         - BearerAuth:
             - read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       responses:
         '200':
           description: A JSON object containing the system's status information.
@@ -47,6 +56,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SystemStatusResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -74,6 +89,15 @@ paths:
       security:
         - BearerAuth:
             - read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       responses:
         '200':
           description: A JSON object containing the system's hostname.
@@ -81,6 +105,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HostnameResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:

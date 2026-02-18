@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetJobByID retrieves details of a specific job by its ID.
@@ -33,6 +34,13 @@ func (j *Job) GetJobByID(
 	ctx context.Context,
 	request gen.GetJobByIDRequestObject,
 ) (gen.GetJobByIDResponseObject, error) {
+	id := struct {
+		ID string `validate:"required,uuid"`
+	}{ID: request.Id}
+	if errMsg, ok := validation.Struct(id); !ok {
+		return gen.GetJobByID400JSONResponse{Error: &errMsg}, nil
+	}
+
 	qj, err := j.JobClient.GetJobStatus(ctx, request.Id)
 	if err != nil {
 		errMsg := err.Error()

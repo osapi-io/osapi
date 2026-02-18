@@ -218,6 +218,12 @@ type SystemShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
+// WorkerInfo represents basic information about an active worker.
+type WorkerInfo struct {
+	// Hostname is the hostname of the worker.
+	Hostname string `json:"hostname"`
+}
+
 // SystemStatusResponse aggregates system status information from multiple providers.
 // This represents the response for system.status.get operations in the job queue.
 type SystemStatusResponse struct {

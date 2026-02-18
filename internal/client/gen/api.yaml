@@ -198,6 +198,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /job/workers:
+    servers: []
+    get:
+      summary: List active workers
+      description: Discover all active workers in the fleet by broadcasting a hostname query.
+      tags:
+        - Job_Management_API_job_operations
+      security:
+        - BearerAuth:
+            - read
+      responses:
+        '200':
+          description: List of active workers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWorkersResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error discovering workers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /job/{id}:
     servers: []
     get:
@@ -298,6 +333,15 @@ paths:
       security:
         - BearerAuth:
             - write
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       requestBody:
         description: The server to ping.
         required: true
@@ -371,6 +415,14 @@ paths:
           description: >
             The name of the network interface to retrieve DNS configuration for.
             Must only contain letters and numbers.
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       responses:
         '200':
           description: List of DNS servers.
@@ -413,6 +465,15 @@ paths:
       security:
         - BearerAuth:
             - write
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       requestBody:
         required: true
         content:
@@ -458,6 +519,15 @@ paths:
       security:
         - BearerAuth:
             - read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       responses:
         '200':
           description: A JSON object containing the system's status information.
@@ -493,6 +563,15 @@ paths:
       security:
         - BearerAuth:
             - read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       responses:
         '200':
           description: A JSON object containing the system's hostname.
@@ -610,6 +689,32 @@ components:
         updated_at:
           type: string
           description: Last update timestamp.
+        responses:
+          type: object
+          description: Per-worker response data for broadcast jobs.
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              data:
+                description: Worker result data.
+              error:
+                type: string
+              hostname:
+                type: string
+        worker_states:
+          type: object
+          description: Per-worker processing state for broadcast jobs.
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+              duration:
+                type: string
     QueueStatsResponse:
       type: object
       properties:
@@ -630,6 +735,27 @@ components:
         dlq_count:
           type: integer
           description: Number of jobs in the dead letter queue.
+    ListWorkersResponse:
+      type: object
+      properties:
+        workers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerInfo'
+        total:
+          type: integer
+          description: Total number of active workers.
+      required:
+        - workers
+        - total
+    WorkerInfo:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the worker.
+      required:
+        - hostname
     PingResponse:
       type: object
       properties:

@@ -60,6 +60,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TearDownTest() {
 func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 	tests := []struct {
 		name         string
+		path         string
 		body         string
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
@@ -67,11 +68,12 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 	}{
 		{
 			name: "when valid request",
+			path: "/network/dns",
 			body: `{"servers":["1.1.1.1","8.8.8.8"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ModifyNetworkDNSAny(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 				return mock
 			},
@@ -79,6 +81,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 		},
 		{
 			name: "when missing interface name",
+			path: "/network/dns",
 			body: `{"servers":["1.1.1.1"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
@@ -88,6 +91,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 		},
 		{
 			name: "when non-alphanum interface name",
+			path: "/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth-0!"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
@@ -97,6 +101,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 		},
 		{
 			name: "when invalid server IP",
+			path: "/network/dns",
 			body: `{"servers":["not-an-ip"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
@@ -106,12 +111,29 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 		},
 		{
 			name: "when invalid search domain",
+			path: "/network/dns",
 			body: `{"search_domains":["not a valid hostname!"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "SearchDomains", "hostname"},
+		},
+		{
+			name: "when broadcast all",
+			path: "/network/dns?target_hostname=_all",
+			body: `{"servers":["1.1.1.1"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					ModifyNetworkDNSAll(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(map[string]error{
+						"server1": nil,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"server1"`},
 		},
 	}
 
@@ -127,7 +149,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/network/dns",
+				tc.path,
 				strings.NewReader(tc.body),
 			)
 			req.Header.Set("Content-Type", "application/json")

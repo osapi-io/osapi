@@ -29,11 +29,16 @@ import (
 // PostNetworkPing post the network ping API endpoint.
 func (c *Client) PostNetworkPing(
 	ctx context.Context,
+	hostname string,
 	address string,
 ) (*gen.PostNetworkPingResponse, error) {
+	params := &gen.PostNetworkPingParams{
+		TargetHostname: &hostname,
+	}
+
 	body := gen.PostNetworkPingJSONRequestBody{
 		Address: address,
 	}
 
-	return c.Client.PostNetworkPingWithResponse(ctx, body)
+	return c.Client.PostNetworkPingWithResponse(ctx, params, body)
 }

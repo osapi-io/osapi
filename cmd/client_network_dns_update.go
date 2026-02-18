@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -38,13 +39,24 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
+		if host == "_all" {
+			fmt.Print("This will modify DNS on ALL hosts. Continue? [y/N] ")
+			var confirm string
+			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
+				fmt.Println("Aborted.")
+				return
+			}
+		}
+
 		networkHandler := handler.(client.NetworkHandler)
 		resp, err := networkHandler.PutNetworkDNS(
 			ctx,
+			host,
 			servers,
 			searchDomains,
 			interfaceName,

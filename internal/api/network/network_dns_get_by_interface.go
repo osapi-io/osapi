@@ -22,17 +22,59 @@ package network
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/validation"
 )
+
+// dnsMultiResponse wraps multiple DNS results for _all broadcast.
+type dnsMultiResponse struct {
+	Results []gen.DNSConfigResponse `json:"results"`
+}
+
+func (r dnsMultiResponse) VisitGetNetworkDNSByInterfaceResponse(
+	w http.ResponseWriter,
+) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	return json.NewEncoder(w).Encode(r)
+}
 
 // GetNetworkDNSByInterface get the network dns get API endpoint.
 func (n Network) GetNetworkDNSByInterface(
 	ctx context.Context,
 	request gen.GetNetworkDNSByInterfaceRequestObject,
 ) (gen.GetNetworkDNSByInterfaceResponseObject, error) {
-	dnsConfig, err := n.JobClient.QueryNetworkDNS(ctx, job.AnyHost, request.InterfaceName)
+	iface := struct {
+		InterfaceName string `validate:"required,alphanum"`
+	}{InterfaceName: request.InterfaceName}
+	if errMsg, ok := validation.Struct(iface); !ok {
+		return gen.GetNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if request.Params.TargetHostname != nil {
+		th := struct {
+			TargetHostname string `validate:"min=1"`
+		}{TargetHostname: *request.Params.TargetHostname}
+		if errMsg, ok := validation.Struct(th); !ok {
+			return gen.GetNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
+	hostname := job.AnyHost
+	if request.Params.TargetHostname != nil {
+		hostname = *request.Params.TargetHostname
+	}
+
+	if hostname == job.BroadcastHost {
+		return n.getNetworkDNSAll(ctx, request.InterfaceName)
+	}
+
+	dnsConfig, err := n.JobClient.QueryNetworkDNS(ctx, hostname, request.InterfaceName)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNetworkDNSByInterface500JSONResponse{
@@ -47,4 +89,30 @@ func (n Network) GetNetworkDNSByInterface(
 		SearchDomains: &searchDomains,
 		Servers:       &servers,
 	}, nil
+}
+
+// getNetworkDNSAll handles _all broadcast for DNS config.
+func (n Network) getNetworkDNSAll(
+	ctx context.Context,
+	iface string,
+) (gen.GetNetworkDNSByInterfaceResponseObject, error) {
+	results, err := n.JobClient.QueryNetworkDNSAll(ctx, iface)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetNetworkDNSByInterface500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []gen.DNSConfigResponse
+	for _, cfg := range results {
+		servers := cfg.DNSServers
+		searchDomains := cfg.SearchDomains
+		responses = append(responses, gen.DNSConfigResponse{
+			Servers:       &servers,
+			SearchDomains: &searchDomains,
+		})
+	}
+
+	return dnsMultiResponse{Results: responses}, nil
 }

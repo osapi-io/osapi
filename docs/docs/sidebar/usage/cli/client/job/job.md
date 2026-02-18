@@ -1,7 +1,6 @@
 # Job
 
-CLI to manage job queue resources. Interacts directly with the NATS job queue
-for job submission, monitoring, and management.
+Manage job queue resources via the REST API.
 
 import DocCardList from '@theme/DocCardList';
 

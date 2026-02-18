@@ -59,16 +59,19 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 	tests := []struct {
 		name         string
 		request      gen.GetNetworkDNSByInterfaceRequestObject
-		mockConfig   *dns.Config
-		mockError    error
+		setupMock    func()
 		validateFunc func(resp gen.GetNetworkDNSByInterfaceResponseObject)
 	}{
 		{
 			name:    "success",
 			request: gen.GetNetworkDNSByInterfaceRequestObject{InterfaceName: "eth0"},
-			mockConfig: &dns.Config{
-				DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
-				SearchDomains: []string{"example.com", "local.lan"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkDNS(gomock.Any(), gomock.Any(), "eth0").
+					Return(&dns.Config{
+						DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
+						SearchDomains: []string{"example.com", "local.lan"},
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				r, ok := resp.(gen.GetNetworkDNSByInterface200JSONResponse)
@@ -78,9 +81,88 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 			},
 		},
 		{
-			name:      "job client error",
-			request:   gen.GetNetworkDNSByInterfaceRequestObject{InterfaceName: "eth0"},
-			mockError: assert.AnError,
+			name:      "validation error non-alphanum interface name",
+			request:   gen.GetNetworkDNSByInterfaceRequestObject{InterfaceName: "eth-0!"},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNetworkDNSByInterface400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "InterfaceName")
+				s.Contains(*r.Error, "alphanum")
+			},
+		},
+		{
+			name:      "validation error empty interface name",
+			request:   gen.GetNetworkDNSByInterfaceRequestObject{InterfaceName: ""},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNetworkDNSByInterface400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "InterfaceName")
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "validation error empty target_hostname",
+			request: gen.GetNetworkDNSByInterfaceRequestObject{
+				InterfaceName: "eth0",
+				Params:        gen.GetNetworkDNSByInterfaceParams{TargetHostname: strPtr("")},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNetworkDNSByInterface400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "TargetHostname")
+				s.Contains(*r.Error, "min")
+			},
+		},
+		{
+			name:    "job client error",
+			request: gen.GetNetworkDNSByInterfaceRequestObject{InterfaceName: "eth0"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkDNS(gomock.Any(), gomock.Any(), "eth0").
+					Return(nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				_, ok := resp.(gen.GetNetworkDNSByInterface500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "broadcast all success",
+			request: gen.GetNetworkDNSByInterfaceRequestObject{
+				InterfaceName: "eth0",
+				Params:        gen.GetNetworkDNSByInterfaceParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					Return(map[string]*dns.Config{
+						"server1": {
+							DNSServers:    []string{"8.8.8.8"},
+							SearchDomains: []string{"example.com"},
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all error",
+			request: gen.GetNetworkDNSByInterfaceRequestObject{
+				InterfaceName: "eth0",
+				Params:        gen.GetNetworkDNSByInterfaceParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					Return(nil, assert.AnError)
+			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				_, ok := resp.(gen.GetNetworkDNSByInterface500JSONResponse)
 				s.True(ok)
@@ -90,15 +172,19 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				QueryNetworkDNS(gomock.Any(), gomock.Any(), tt.request.InterfaceName).
-				Return(tt.mockConfig, tt.mockError)
+			tt.setupMock()
 
 			resp, err := s.handler.GetNetworkDNSByInterface(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
+}
+
+func strPtr(
+	s string,
+) *string {
+	return &s
 }
 
 func TestNetworkDNSGetByInterfacePublicTestSuite(t *testing.T) {

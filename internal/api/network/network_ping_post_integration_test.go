@@ -62,6 +62,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TearDownTest() {
 func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 	tests := []struct {
 		name         string
+		path         string
 		body         string
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
@@ -69,11 +70,12 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 	}{
 		{
 			name: "when valid request",
+			path: "/network/ping",
 			body: `{"address":"1.1.1.1"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNetworkPingAny(gomock.Any(), "1.1.1.1").
+					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
 					Return(&ping.Result{
 						PacketsSent:     3,
 						PacketsReceived: 3,
@@ -89,6 +91,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 		},
 		{
 			name: "when missing address",
+			path: "/network/ping",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
@@ -98,12 +101,36 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 		},
 		{
 			name: "when invalid address format",
+			path: "/network/ping",
 			body: `{"address":"not-an-ip"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(suite.ctrl)
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "Address", "ip"},
+		},
+		{
+			name: "when broadcast all",
+			path: "/network/ping?target_hostname=_all",
+			body: `{"address":"1.1.1.1"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QueryNetworkPingAll(gomock.Any(), "1.1.1.1").
+					Return(map[string]*ping.Result{
+						"server1": {
+							PacketsSent:     3,
+							PacketsReceived: 3,
+							PacketLoss:      0,
+							MinRTT:          10 * time.Millisecond,
+							AvgRTT:          15 * time.Millisecond,
+							MaxRTT:          20 * time.Millisecond,
+						},
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"packets_sent":3`},
 		},
 	}
 
@@ -119,7 +146,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/network/ping",
+				tc.path,
 				strings.NewReader(tc.body),
 			)
 			req.Header.Set("Content-Type", "application/json")

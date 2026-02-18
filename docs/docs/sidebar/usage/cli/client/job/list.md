@@ -1,6 +1,6 @@
 # List
 
-List jobs from the NATS KV store:
+List jobs:
 
 ```bash
 $ osapi client job list

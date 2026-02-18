@@ -65,6 +65,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
 		wantBody     string
+		wantContains []string
 	}{
 		{
 			name: "when get Ok",
@@ -92,6 +93,22 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 			wantCode: http.StatusInternalServerError,
 			wantBody: `{"error":"assert.AnError general error for testing"}`,
 		},
+		{
+			name: "when broadcast all",
+			path: "/system/hostname?target_hostname=_all",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemHostnameAll(gomock.Any()).
+					Return(map[string]string{
+						"server1": "host1",
+						"server2": "host2",
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"host1"`, `"host2"`},
+		},
 	}
 
 	for _, tc := range tests {
@@ -110,7 +127,12 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 			a.Echo.ServeHTTP(rec, req)
 
 			suite.Equal(tc.wantCode, rec.Code)
-			suite.JSONEq(tc.wantBody, rec.Body.String())
+			if tc.wantBody != "" {
+				suite.JSONEq(tc.wantBody, rec.Body.String())
+			}
+			for _, s := range tc.wantContains {
+				suite.Contains(rec.Body.String(), s)
+			}
 		})
 	}
 }

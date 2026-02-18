@@ -70,6 +70,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
 		wantBody     string
+		wantContains []string
 	}{
 		{
 			name: "when get Ok",
@@ -77,7 +78,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemStatusAny(gomock.Any()).
+					QuerySystemStatus(gomock.Any(), job.AnyHost).
 					Return(&job.SystemStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
@@ -142,12 +143,34 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemStatusAny(gomock.Any()).
+					QuerySystemStatus(gomock.Any(), job.AnyHost).
 					Return(nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
 			wantBody: `{"error":"assert.AnError general error for testing"}`,
+		},
+		{
+			name: "when broadcast all",
+			path: "/system/status?target_hostname=_all",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemStatusAll(gomock.Any()).
+					Return([]*job.SystemStatusResponse{
+						{
+							Hostname: "server1",
+							Uptime:   time.Hour,
+						},
+						{
+							Hostname: "server2",
+							Uptime:   2 * time.Hour,
+						},
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"server1"`, `"server2"`},
 		},
 	}
 
@@ -167,7 +190,12 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			a.Echo.ServeHTTP(rec, req)
 
 			suite.Equal(tc.wantCode, rec.Code)
-			suite.JSONEq(tc.wantBody, rec.Body.String())
+			if tc.wantBody != "" {
+				suite.JSONEq(tc.wantBody, rec.Body.String())
+			}
+			for _, s := range tc.wantContains {
+				suite.Contains(rec.Body.String(), s)
+			}
 		})
 	}
 }

@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -38,10 +37,11 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
 		networkHandler := handler.(client.NetworkHandler)
-		resp, err := networkHandler.GetNetworkDNSByInterface(ctx, interfaceName)
+		resp, err := networkHandler.GetNetworkDNSByInterface(ctx, host, interfaceName)
 		if err != nil {
 			logFatal("failed to get network dns endpoint", err)
 		}
@@ -49,10 +49,7 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 		switch resp.StatusCode() {
 		case http.StatusOK:
 			if jsonOutput {
-				logger.Info(
-					"network dns get",
-					slog.String("response", string(resp.Body)),
-				)
+				fmt.Println(string(resp.Body))
 				return
 			}
 

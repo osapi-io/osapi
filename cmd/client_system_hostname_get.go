@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -38,8 +37,9 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
 		systemHandler := handler.(client.SystemHandler)
-		resp, err := systemHandler.GetSystemHostname(ctx)
+		resp, err := systemHandler.GetSystemHostname(ctx, host)
 		if err != nil {
 			logFatal("failed to get system status endpoint", err)
 		}
@@ -47,10 +47,7 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 		switch resp.StatusCode() {
 		case http.StatusOK:
 			if jsonOutput {
-				logger.Info(
-					"system hostname",
-					slog.String("response", string(resp.Body)),
-				)
+				fmt.Println(string(resp.Body))
 				return
 			}
 
