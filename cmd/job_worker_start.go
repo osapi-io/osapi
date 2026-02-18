@@ -76,7 +76,7 @@ It processes jobs as they become available.
 		providerFactory := worker.NewProviderFactory(logger)
 		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := providerFactory.CreateProviders()
 
-		w := worker.New(
+		var w Lifecycle = worker.New(
 			appFs,
 			appConfig,
 			logger,
@@ -89,7 +89,12 @@ It processes jobs as they become available.
 			pingProvider,
 		)
 
-		w.Start(ctx)
+		w.Start()
+		runServer(ctx, w, func() {
+			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
+				natsConn.NC.Close()
+			}
+		})
 	},
 }
 

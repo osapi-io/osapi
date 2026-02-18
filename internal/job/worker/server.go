@@ -27,20 +27,11 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// Start starts the worker and runs until the context is canceled.
-func (w *Worker) Start(
-	ctx context.Context,
-) {
-	w.logger.Info("starting job worker")
-	w.run(ctx)
-	w.logger.Info("job worker stopped")
-}
+// Start starts the worker without blocking. Call Stop to shut down.
+func (w *Worker) Start() {
+	w.ctx, w.cancel = context.WithCancel(context.Background())
 
-// run contains the main worker loop.
-func (w *Worker) run(
-	ctx context.Context,
-) {
-	w.logger.Info("job worker started successfully")
+	w.logger.Info("starting job worker")
 
 	// Determine worker hostname (GetWorkerHostname always succeeds)
 	hostname, _ := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
@@ -53,24 +44,32 @@ func (w *Worker) run(
 		slog.Any("labels", w.appConfig.Job.Worker.Labels),
 	)
 
-	// Start consuming messages for different job types
-	w.wg.Add(2)
+	// Start consuming messages for different job types.
+	// Each consume function spawns goroutines tracked by w.wg.
+	_ = w.consumeQueryJobs(w.ctx, hostname)
+	_ = w.consumeModifyJobs(w.ctx, hostname)
 
-	// Consumer for query jobs (read operations)
-	go func() {
-		defer w.wg.Done()
-		// consumeQueryJobs handles errors internally and always returns nil
-		_ = w.consumeQueryJobs(ctx, hostname)
-	}()
+	w.logger.Info("job worker started successfully")
+}
 
-	// Consumer for modify jobs (write operations)
-	go func() {
-		defer w.wg.Done()
-		// consumeModifyJobs handles errors internally and always returns nil
-		_ = w.consumeModifyJobs(ctx, hostname)
-	}()
-
-	// Wait for cancellation
-	<-ctx.Done()
+// Stop gracefully shuts down the worker, waiting for in-flight jobs
+// to finish or the context deadline to expire.
+func (w *Worker) Stop(
+	ctx context.Context,
+) {
 	w.logger.Info("job worker shutting down")
+	w.cancel()
+
+	done := make(chan struct{})
+	go func() {
+		w.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		w.logger.Info("job worker stopped gracefully")
+	case <-ctx.Done():
+		w.logger.Warn("job worker shutdown timed out")
+	}
 }

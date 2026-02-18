@@ -35,6 +35,15 @@ import (
 	"github.com/retr0h/osapi/internal/messaging"
 )
 
+// natsLifecycle adapts the embedded NATS server to the Lifecycle interface.
+type natsLifecycle struct {
+	server *natsembedded.Server
+}
+
+func (n *natsLifecycle) Start() {}
+
+func (n *natsLifecycle) Stop(_ context.Context) { n.server.Stop() }
+
 // natsServerStartCmd represents the natsServerStart command.
 var natsServerStartCmd = &cobra.Command{
 	Use:   "start",
@@ -78,9 +87,8 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			"store_dir", storeDir,
 		)
 
-		<-ctx.Done()
-
-		s.Stop()
+		var ns Lifecycle = &natsLifecycle{server: s}
+		runServer(ctx, ns)
 	},
 }
 

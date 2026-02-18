@@ -21,6 +21,7 @@
 package worker
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 
@@ -54,7 +55,9 @@ type Worker struct {
 	pingProvider ping.Provider
 
 	// Lifecycle management
-	wg sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 // JobContext contains the context and data for a single job execution.

@@ -15,8 +15,16 @@ This document applies to the [OSAPI][] repository.
 
 ## Before you start
 
-- Read the [Development](development.md) guide for prerequisites, setup, code
-  style, testing, and commit message conventions.
+- **Get familiar with the project** - Read through the docs in this order:
+  1. [Development](development.md) - Prerequisites, setup, code style, testing,
+     and commit conventions
+  2. [Guiding Principles](principles.md) - Design philosophy and project values
+  3. [System Architecture](system-architecture.md) - High-level component
+     overview (REST API, NATS, CLI)
+  4. [API Design Guidelines](api-guidelines.md) - REST conventions and endpoint
+     structure
+  5. [Job System Architecture](job-architecture.md) - KV-first job processing,
+     subject routing, and worker pipeline
 - **Check existing work** - Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.

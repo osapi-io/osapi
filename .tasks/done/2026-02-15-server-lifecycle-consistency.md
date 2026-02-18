@@ -1,8 +1,8 @@
 ---
 title: Standardize server/worker CLI lifecycle and context handling
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-18
 ---
 
 ## Objective
@@ -93,6 +93,15 @@ func runServer(ctx context.Context, server Lifecycle, cleanupFns ...func()) {
 
 - Root context and signal handling in `cmd/root.go` is already good — signals
   trigger `cancel()` which propagates to all commands via `ExecuteContext(ctx)`.
-- Decide between "non-blocking Start + explicit Stop" vs "blocking Run(ctx)"
-  — both are valid, pick one and apply everywhere.
-- Consider whether shutdown timeout should be configurable via config/flags.
+- Chose non-blocking `Start()` / `Stop(ctx)` over blocking `Run(ctx)` because
+  Echo and the embedded NATS server are inherently non-blocking.
+- Shutdown timeout is hardcoded at 10s in `runServer`.
+
+## Outcome
+
+All three server commands now use the same `Lifecycle` interface and shared
+`runServer` helper in `cmd/lifecycle.go`. The worker was refactored from
+blocking `Start(ctx)` to non-blocking `Start()` + `Stop(ctx)` with a
+`WaitGroup`-based graceful shutdown. NATS connection cleanup was added to
+the worker command (previously missing). The `ServerManager` interface was
+replaced by the shared `Lifecycle` interface.
