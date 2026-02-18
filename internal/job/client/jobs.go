@@ -50,20 +50,21 @@ func (c *Client) CreateJob(
 		targetHostname = job.AnyHost
 	}
 
-	// Build the notification subject using simplified routing based on operation semantics
-	var notificationSubject string
-
-	// Route based on operation name - operations ending in common read patterns are queries
+	// Build the notification subject using semantic routing based on operation type.
+	// Route based on operation name - operations ending in common read patterns are queries.
+	var prefix string
 	if strings.HasSuffix(operationType, ".get") ||
 		strings.HasSuffix(operationType, ".query") ||
 		strings.HasSuffix(operationType, ".read") ||
 		strings.HasSuffix(operationType, ".status") ||
 		strings.HasSuffix(operationType, ".do") ||
 		strings.HasPrefix(operationType, "system.") {
-		notificationSubject = job.BuildQuerySubject(targetHostname)
+		prefix = job.JobsQueryPrefix
 	} else {
-		notificationSubject = job.BuildModifySubject(targetHostname)
+		prefix = job.JobsModifyPrefix
 	}
+
+	notificationSubject := job.BuildSubjectFromTarget(prefix, targetHostname)
 
 	// Generate job ID
 	jobID := uuid.New().String()

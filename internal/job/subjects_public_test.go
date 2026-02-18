@@ -299,7 +299,7 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			name:     "when building subscription pattern for specific hostname",
 			hostname: "web-server-01",
 			want: []string{
-				"jobs.*.host.web-server-01",
+				"jobs.*.host.web_server_01",
 				"jobs.*._any",
 				"jobs.*._all",
 			},
@@ -314,10 +314,10 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			},
 		},
 		{
-			name:     "when building subscription pattern with complex hostname",
+			name:     "when building subscription pattern with dotted hostname",
 			hostname: "api.example.com",
 			want: []string{
-				"jobs.*.host.api.example.com",
+				"jobs.*.host.api_example_com",
 				"jobs.*._any",
 				"jobs.*._all",
 			},
@@ -327,7 +327,7 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			hostname: "web-01",
 			labels:   map[string]string{"group": "web.dev.us-east"},
 			want: []string{
-				"jobs.*.host.web-01",
+				"jobs.*.host.web_01",
 				"jobs.*._any",
 				"jobs.*._all",
 				"jobs.*.label.group.web",
@@ -340,7 +340,7 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			hostname: "web-01",
 			labels:   map[string]string{"team": "platform"},
 			want: []string{
-				"jobs.*.host.web-01",
+				"jobs.*.host.web_01",
 				"jobs.*._any",
 				"jobs.*._all",
 				"jobs.*.label.team.platform",
@@ -598,6 +598,12 @@ func (suite *SubjectsPublicTestSuite) TestBuildSubjectFromTarget() {
 			prefix: "jobs.query",
 			target: "server1",
 			want:   "jobs.query.host.server1",
+		},
+		{
+			name:   "when target is a dotted hostname",
+			prefix: "jobs.query",
+			target: "my-server.local",
+			want:   "jobs.query.host.my_server_local",
 		},
 		{
 			name:   "when target is a flat label",

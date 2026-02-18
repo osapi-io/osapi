@@ -156,9 +156,9 @@ func BuildWorkerSubscriptionPattern(
 
 	patterns := make([]string, 0, 3+labelCount)
 	patterns = append(patterns,
-		fmt.Sprintf("jobs.*.host.%s", hostname), // Direct messages to this host
-		fmt.Sprintf("jobs.*.%s", AnyHost),       // Load-balanced messages
-		fmt.Sprintf("jobs.*.%s", BroadcastHost), // Broadcast messages
+		fmt.Sprintf("jobs.*.host.%s", SanitizeHostname(hostname)), // Direct messages to this host
+		fmt.Sprintf("jobs.*.%s", AnyHost),                         // Load-balanced messages
+		fmt.Sprintf("jobs.*.%s", BroadcastHost),                   // Broadcast messages
 	)
 
 	for key, value := range labels {
@@ -248,7 +248,7 @@ func BuildSubjectFromTarget(
 	case "label":
 		return fmt.Sprintf("%s.label.%s.%s", prefix, key, value)
 	default: // "host"
-		return fmt.Sprintf("%s.host.%s", prefix, key)
+		return fmt.Sprintf("%s.host.%s", prefix, SanitizeHostname(key))
 	}
 }
 
