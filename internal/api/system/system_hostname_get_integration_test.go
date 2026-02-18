@@ -99,7 +99,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemHostnameAll(gomock.Any()).
+					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
 					Return(map[string]string{
 						"server1": "host1",
 						"server2": "host2",

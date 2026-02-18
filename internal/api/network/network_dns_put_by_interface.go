@@ -66,8 +66,8 @@ func (n Network) PutNetworkDNS(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return n.putNetworkDNSAll(ctx, servers, searchDomains, interfaceName)
+	if job.IsBroadcastTarget(hostname) {
+		return n.putNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
 	}
 
 	workerHostname, err := n.JobClient.ModifyNetworkDNS(
@@ -94,14 +94,21 @@ func (n Network) PutNetworkDNS(
 	}, nil
 }
 
-// putNetworkDNSAll handles _all broadcast for DNS modification.
-func (n Network) putNetworkDNSAll(
+// putNetworkDNSBroadcast handles broadcast targets (_all or label) for DNS modification.
+func (n Network) putNetworkDNSBroadcast(
 	ctx context.Context,
+	target string,
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
 ) (gen.PutNetworkDNSResponseObject, error) {
-	results, err := n.JobClient.ModifyNetworkDNSAll(ctx, servers, searchDomains, interfaceName)
+	results, err := n.JobClient.ModifyNetworkDNSBroadcast(
+		ctx,
+		target,
+		servers,
+		searchDomains,
+		interfaceName,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNetworkDNS500JSONResponse{

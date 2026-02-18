@@ -33,3 +33,10 @@ $ osapi client system status --target _all
   ┃ server2  ┃ 12 days, 3 hours, 45 minutes   ┃ 0.45      ┃ 8 GB / 16 GB  ┃
   ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━━━━━┛
 ```
+
+Target by label to query a group of servers:
+
+```bash
+$ osapi client system status --target group:web
+$ osapi client system status --target group:web.dev
+```

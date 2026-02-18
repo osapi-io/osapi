@@ -49,8 +49,8 @@ func (s *System) GetSystemStatus(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return s.getSystemStatusAll(ctx)
+	if job.IsBroadcastTarget(hostname) {
+		return s.getSystemStatusBroadcast(ctx, hostname)
 	}
 
 	status, err := s.JobClient.QuerySystemStatus(ctx, hostname)
@@ -68,11 +68,12 @@ func (s *System) GetSystemStatus(
 	}, nil
 }
 
-// getSystemStatusAll handles _all broadcast for system status.
-func (s *System) getSystemStatusAll(
+// getSystemStatusBroadcast handles broadcast targets (_all or label) for system status.
+func (s *System) getSystemStatusBroadcast(
 	ctx context.Context,
+	target string,
 ) (gen.GetSystemStatusResponseObject, error) {
-	results, err := s.JobClient.QuerySystemStatusAll(ctx)
+	results, err := s.JobClient.QuerySystemStatusBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{

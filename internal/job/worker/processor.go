@@ -92,7 +92,7 @@ func (w *Worker) processNetworkOperation(
 	}
 }
 
-// getSystemHostname retrieves the system hostname.
+// getSystemHostname retrieves the system hostname and worker labels.
 func (w *Worker) getSystemHostname() (json.RawMessage, error) {
 	hostProvider := w.getHostProvider()
 	hostname, err := hostProvider.GetHostname()
@@ -102,6 +102,10 @@ func (w *Worker) getSystemHostname() (json.RawMessage, error) {
 
 	result := map[string]interface{}{
 		"hostname": hostname,
+	}
+
+	if len(w.appConfig.Job.Worker.Labels) > 0 {
+		result["labels"] = w.appConfig.Job.Worker.Labels
 	}
 
 	return json.Marshal(result)

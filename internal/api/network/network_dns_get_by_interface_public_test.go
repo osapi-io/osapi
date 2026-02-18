@@ -142,7 +142,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
 					Return(map[string]*dns.Config{
 						"server1": {
 							DNSServers:    []string{"8.8.8.8"},
@@ -162,7 +162,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
 					Return(nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {

@@ -341,7 +341,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       requestBody:
         description: The server to ping.
         required: true
@@ -422,7 +423,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: List of DNS servers.
@@ -473,7 +475,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       requestBody:
         required: true
         content:
@@ -531,7 +534,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's status information.
@@ -575,7 +579,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target hostname for routing (_any, _all, or specific hostname).
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's hostname.

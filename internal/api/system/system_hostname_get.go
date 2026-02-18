@@ -47,8 +47,8 @@ func (s *System) GetSystemHostname(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return s.getSystemHostnameAll(ctx)
+	if job.IsBroadcastTarget(hostname) {
+		return s.getSystemHostnameBroadcast(ctx, hostname)
 	}
 
 	result, workerHostname, err := s.JobClient.QuerySystemHostname(ctx, hostname)
@@ -71,11 +71,12 @@ func (s *System) GetSystemHostname(
 	}, nil
 }
 
-// getSystemHostnameAll handles _all broadcast for system hostname.
-func (s *System) getSystemHostnameAll(
+// getSystemHostnameBroadcast handles broadcast targets (_all or label) for system hostname.
+func (s *System) getSystemHostnameBroadcast(
 	ctx context.Context,
+	target string,
 ) (gen.GetSystemHostnameResponseObject, error) {
-	results, err := s.JobClient.QuerySystemHostnameAll(ctx)
+	results, err := s.JobClient.QuerySystemHostnameBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{

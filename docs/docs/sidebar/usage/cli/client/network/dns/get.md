@@ -25,6 +25,12 @@ $ osapi client network dns get --interface-name eth0 --target _all
   ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━┛
 ```
 
+Target by label to query a group of servers:
+
+```bash
+$ osapi client network dns get --interface-name eth0 --target group:web
+```
+
 ## Flags
 
 | Flag               | Description                                    | Default  |

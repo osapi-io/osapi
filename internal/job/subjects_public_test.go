@@ -172,8 +172,29 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 			wantErr: true,
 		},
 		{
-			name:    "when parsing invalid subject with too many parts",
-			subject: "jobs.query.server-01.extra.part",
+			name:         "when parsing host subject",
+			subject:      "jobs.query.host.server-01",
+			wantPrefix:   "jobs.query",
+			wantHostname: "server-01",
+			wantErr:      false,
+		},
+		{
+			name:         "when parsing label subject",
+			subject:      "jobs.query.label.group.web",
+			wantPrefix:   "jobs.query",
+			wantHostname: "group:web",
+			wantErr:      false,
+		},
+		{
+			name:         "when parsing hierarchical label subject",
+			subject:      "jobs.query.label.group.web.dev.us-east",
+			wantPrefix:   "jobs.query",
+			wantHostname: "group:web.dev.us-east",
+			wantErr:      false,
+		},
+		{
+			name:    "when parsing invalid 4-part subject without host prefix",
+			subject: "jobs.query.invalid.server1",
 			wantErr: true,
 		},
 		{
@@ -271,13 +292,14 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 	tests := []struct {
 		name     string
 		hostname string
+		labels   map[string]string
 		want     []string
 	}{
 		{
 			name:     "when building subscription pattern for specific hostname",
 			hostname: "web-server-01",
 			want: []string{
-				"jobs.*.web-server-01",
+				"jobs.*.host.web-server-01",
 				"jobs.*._any",
 				"jobs.*._all",
 			},
@@ -286,7 +308,7 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			name:     "when building subscription pattern for localhost",
 			hostname: "localhost",
 			want: []string{
-				"jobs.*.localhost",
+				"jobs.*.host.localhost",
 				"jobs.*._any",
 				"jobs.*._all",
 			},
@@ -295,16 +317,40 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 			name:     "when building subscription pattern with complex hostname",
 			hostname: "api.example.com",
 			want: []string{
-				"jobs.*.api.example.com",
+				"jobs.*.host.api.example.com",
 				"jobs.*._any",
 				"jobs.*._all",
+			},
+		},
+		{
+			name:     "when building with hierarchical label",
+			hostname: "web-01",
+			labels:   map[string]string{"group": "web.dev.us-east"},
+			want: []string{
+				"jobs.*.host.web-01",
+				"jobs.*._any",
+				"jobs.*._all",
+				"jobs.*.label.group.web",
+				"jobs.*.label.group.web.dev",
+				"jobs.*.label.group.web.dev.us-east",
+			},
+		},
+		{
+			name:     "when building with flat label",
+			hostname: "web-01",
+			labels:   map[string]string{"team": "platform"},
+			want: []string{
+				"jobs.*.host.web-01",
+				"jobs.*._any",
+				"jobs.*._all",
+				"jobs.*.label.team.platform",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildWorkerSubscriptionPattern(tt.hostname)
+			got := job.BuildWorkerSubscriptionPattern(tt.hostname, tt.labels)
 			suite.Equal(tt.want, got)
 		})
 	}
@@ -407,6 +453,254 @@ func (suite *SubjectsPublicTestSuite) TestIsSpecialHostname() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			got := job.IsSpecialHostname(tt.hostname)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestValidateLabel() {
+	tests := []struct {
+		name    string
+		key     string
+		value   string
+		wantErr bool
+	}{
+		{
+			name:  "when key and value are simple alphanumeric",
+			key:   "role",
+			value: "web",
+		},
+		{
+			name:  "when value has hyphens and underscores",
+			key:   "env",
+			value: "us-east_1",
+		},
+		{
+			name:  "when value is hierarchical with dots",
+			key:   "group",
+			value: "web.dev.us-east",
+		},
+		{
+			name:    "when key contains dots",
+			key:     "my.key",
+			value:   "web",
+			wantErr: true,
+		},
+		{
+			name:    "when key contains colon",
+			key:     "my:key",
+			value:   "web",
+			wantErr: true,
+		},
+		{
+			name:    "when value segment contains spaces",
+			key:     "group",
+			value:   "web.dev server",
+			wantErr: true,
+		},
+		{
+			name:    "when value has empty segment",
+			key:     "group",
+			value:   "web..dev",
+			wantErr: true,
+		},
+		{
+			name:    "when key is empty",
+			key:     "",
+			value:   "web",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			err := job.ValidateLabel(tt.key, tt.value)
+			if tt.wantErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestParseTarget() {
+	tests := []struct {
+		name        string
+		target      string
+		wantRouting string
+		wantKey     string
+		wantValue   string
+	}{
+		{
+			name:        "when target is _any",
+			target:      "_any",
+			wantRouting: "_any",
+		},
+		{
+			name:        "when target is _all",
+			target:      "_all",
+			wantRouting: "_all",
+		},
+		{
+			name:        "when target is a hostname",
+			target:      "server1",
+			wantRouting: "host",
+			wantKey:     "server1",
+		},
+		{
+			name:        "when target is a flat label",
+			target:      "role:web",
+			wantRouting: "label",
+			wantKey:     "role",
+			wantValue:   "web",
+		},
+		{
+			name:        "when target is a hierarchical label",
+			target:      "group:web.dev.us-east",
+			wantRouting: "label",
+			wantKey:     "group",
+			wantValue:   "web.dev.us-east",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			rt, key, value := job.ParseTarget(tt.target)
+			suite.Equal(tt.wantRouting, rt)
+			suite.Equal(tt.wantKey, key)
+			suite.Equal(tt.wantValue, value)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestBuildSubjectFromTarget() {
+	tests := []struct {
+		name   string
+		prefix string
+		target string
+		want   string
+	}{
+		{
+			name:   "when target is _any",
+			prefix: "jobs.query",
+			target: "_any",
+			want:   "jobs.query._any",
+		},
+		{
+			name:   "when target is _all",
+			prefix: "jobs.modify",
+			target: "_all",
+			want:   "jobs.modify._all",
+		},
+		{
+			name:   "when target is a hostname",
+			prefix: "jobs.query",
+			target: "server1",
+			want:   "jobs.query.host.server1",
+		},
+		{
+			name:   "when target is a flat label",
+			prefix: "jobs.query",
+			target: "role:web",
+			want:   "jobs.query.label.role.web",
+		},
+		{
+			name:   "when target is a hierarchical label",
+			prefix: "jobs.query",
+			target: "group:web.dev.us-east",
+			want:   "jobs.query.label.group.web.dev.us-east",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.BuildSubjectFromTarget(tt.prefix, tt.target)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestIsBroadcastTarget() {
+	tests := []struct {
+		name   string
+		target string
+		want   bool
+	}{
+		{
+			name:   "when target is _all",
+			target: "_all",
+			want:   true,
+		},
+		{
+			name:   "when target is a label",
+			target: "role:web",
+			want:   true,
+		},
+		{
+			name:   "when target is a hierarchical label",
+			target: "group:web.dev",
+			want:   true,
+		},
+		{
+			name:   "when target is _any",
+			target: "_any",
+			want:   false,
+		},
+		{
+			name:   "when target is a hostname",
+			target: "server1",
+			want:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.IsBroadcastTarget(tt.target)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestBuildLabelSubjects() {
+	tests := []struct {
+		name  string
+		key   string
+		value string
+		want  []string
+	}{
+		{
+			name:  "when value is flat",
+			key:   "role",
+			value: "web",
+			want: []string{
+				"jobs.*.label.role.web",
+			},
+		},
+		{
+			name:  "when value is hierarchical with two levels",
+			key:   "group",
+			value: "web.dev",
+			want: []string{
+				"jobs.*.label.group.web",
+				"jobs.*.label.group.web.dev",
+			},
+		},
+		{
+			name:  "when value is hierarchical with three levels",
+			key:   "group",
+			value: "web.dev.us-east",
+			want: []string{
+				"jobs.*.label.group.web",
+				"jobs.*.label.group.web.dev",
+				"jobs.*.label.group.web.dev.us-east",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.BuildLabelSubjects(tt.key, tt.value)
 			suite.Equal(tt.want, got)
 		})
 	}

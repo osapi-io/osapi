@@ -195,12 +195,38 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 			},
 			expectErr: false,
 		},
+		{
+			name:     "with labels creates extra consumers",
+			hostname: "test-worker",
+			setupMocks: func() {
+				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+
+			// Set labels for the label-specific test case
+			if tt.name == "with labels creates extra consumers" {
+				s.worker.appConfig.Job.Worker.Labels = map[string]string{
+					"group": "web.dev.us-east",
+				}
+			} else {
+				s.worker.appConfig.Job.Worker.Labels = nil
+			}
 
 			tt.setupMocks()
 
@@ -287,12 +313,38 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 			},
 			expectErr: false,
 		},
+		{
+			name:     "with labels creates extra consumers",
+			hostname: "test-worker",
+			setupMocks: func() {
+				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+
+			// Set labels for the label-specific test case
+			if tt.name == "with labels creates extra consumers" {
+				s.worker.appConfig.Job.Worker.Labels = map[string]string{
+					"group": "web.dev.us-east",
+				}
+			} else {
+				s.worker.appConfig.Job.Worker.Labels = nil
+			}
 
 			tt.setupMocks()
 

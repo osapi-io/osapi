@@ -29,6 +29,12 @@ $ osapi client network ping --address 8.8.8.8 --target _all
   ┗━━━━━━━━━━┻━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━┛
 ```
 
+Target by label to ping from a group of servers:
+
+```bash
+$ osapi client network ping --address 8.8.8.8 --target group:web
+```
+
 ## Flags
 
 | Flag            | Description         | Default  |

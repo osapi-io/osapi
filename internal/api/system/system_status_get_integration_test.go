@@ -160,7 +160,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemStatusAll(gomock.Any()).
+					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
 					Return([]*job.SystemStatusResponse{
 						{
 							Hostname: "server1",

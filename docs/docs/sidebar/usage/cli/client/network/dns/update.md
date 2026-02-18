@@ -33,6 +33,15 @@ This will modify DNS on ALL hosts. Continue? [y/N] y
   ┗━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┛
 ```
 
+Target by label to update a group of servers:
+
+```bash
+$ osapi client network dns update \
+    --servers "1.1.1.1,2.2.2.2" \
+    --interface-name eth0 \
+    --target group:web
+```
+
 ## Flags
 
 | Flag               | Description                                    | Default  |

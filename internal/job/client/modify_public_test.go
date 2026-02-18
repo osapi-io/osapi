@@ -119,7 +119,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNS() {
 				s.mockCtrl,
 				s.mockKV,
 				s.mockNATSClient,
-				"jobs.modify.server1",
+				"jobs.modify.host.server1",
 				tt.responseData,
 				tt.mockError,
 			)

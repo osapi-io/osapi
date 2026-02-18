@@ -50,6 +50,7 @@ func (w *Worker) run(
 		slog.String("hostname", hostname),
 		slog.String("queue_group", w.appConfig.Job.Worker.QueueGroup),
 		slog.Int("max_jobs", w.appConfig.Job.Worker.MaxJobs),
+		slog.Any("labels", w.appConfig.Job.Worker.Labels),
 	)
 
 	// Start consuming messages for different job types

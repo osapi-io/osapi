@@ -24,3 +24,9 @@ $ osapi client system hostname --target _all
   ┃ server2  ┃
   ┗━━━━━━━━━━┛
 ```
+
+Target by label to query a group of servers:
+
+```bash
+$ osapi client system hostname --target group:web
+```

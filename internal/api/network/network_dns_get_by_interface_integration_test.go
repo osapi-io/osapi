@@ -102,7 +102,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNetworkDNSAll(gomock.Any(), "eth0").
+					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
 					Return(map[string]*dns.Config{
 						"server1": {
 							DNSServers:    []string{"8.8.8.8"},

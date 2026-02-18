@@ -380,6 +380,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 	tests := []struct {
 		name        string
 		operation   string
+		labels      map[string]string
 		expectError bool
 		validate    func(json.RawMessage)
 	}{
@@ -391,6 +392,21 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "hostname")
+			},
+		},
+		{
+			name:      "get hostname with labels",
+			operation: "hostname.get",
+			labels:    map[string]string{"group": "web.dev.us-east"},
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Contains(response, "hostname")
+				s.Contains(response, "labels")
+				labels, ok := response["labels"].(map[string]interface{})
+				s.True(ok)
+				s.Equal("web.dev.us-east", labels["group"])
 			},
 		},
 		{
@@ -417,6 +433,8 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			s.worker.appConfig.Job.Worker.Labels = tt.labels
+
 			request := job.Request{
 				Type:      job.TypeQuery,
 				Category:  "system",

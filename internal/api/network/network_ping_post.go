@@ -56,8 +56,8 @@ func (n Network) PostNetworkPing(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return n.postNetworkPingAll(ctx, request.Body.Address)
+	if job.IsBroadcastTarget(hostname) {
+		return n.postNetworkPingBroadcast(ctx, hostname, request.Body.Address)
 	}
 
 	pingResult, workerHostname, err := n.JobClient.QueryNetworkPing(
@@ -79,12 +79,13 @@ func (n Network) PostNetworkPing(
 	}, nil
 }
 
-// postNetworkPingAll handles _all broadcast for ping.
-func (n Network) postNetworkPingAll(
+// postNetworkPingBroadcast handles broadcast targets (_all or label) for ping.
+func (n Network) postNetworkPingBroadcast(
 	ctx context.Context,
+	target string,
 	address string,
 ) (gen.PostNetworkPingResponseObject, error) {
-	results, err := n.JobClient.QueryNetworkPingAll(ctx, address)
+	results, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{

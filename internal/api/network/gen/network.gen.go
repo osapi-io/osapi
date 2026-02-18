@@ -103,13 +103,13 @@ type PingResponse struct {
 
 // PutNetworkDNSParams defines parameters for PutNetworkDNS.
 type PutNetworkDNSParams struct {
-	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
 	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
 }
 
 // GetNetworkDNSByInterfaceParams defines parameters for GetNetworkDNSByInterface.
 type GetNetworkDNSByInterfaceParams struct {
-	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
 	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
 }
 
@@ -121,7 +121,7 @@ type PostNetworkPingJSONBody struct {
 
 // PostNetworkPingParams defines parameters for PostNetworkPing.
 type PostNetworkPingParams struct {
-	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
 	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
 }
 

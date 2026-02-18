@@ -54,8 +54,8 @@ func (n Network) GetNetworkDNSByInterface(
 		hostname = *request.Params.TargetHostname
 	}
 
-	if hostname == job.BroadcastHost {
-		return n.getNetworkDNSAll(ctx, request.InterfaceName)
+	if job.IsBroadcastTarget(hostname) {
+		return n.getNetworkDNSBroadcast(ctx, hostname, request.InterfaceName)
 	}
 
 	dnsConfig, workerHostname, err := n.JobClient.QueryNetworkDNS(
@@ -84,12 +84,13 @@ func (n Network) GetNetworkDNSByInterface(
 	}, nil
 }
 
-// getNetworkDNSAll handles _all broadcast for DNS config.
-func (n Network) getNetworkDNSAll(
+// getNetworkDNSBroadcast handles broadcast targets (_all or label) for DNS config.
+func (n Network) getNetworkDNSBroadcast(
 	ctx context.Context,
+	target string,
 	iface string,
 ) (gen.GetNetworkDNSByInterfaceResponseObject, error) {
-	results, err := n.JobClient.QueryNetworkDNSAll(ctx, iface)
+	results, err := n.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNetworkDNSByInterface500JSONResponse{
