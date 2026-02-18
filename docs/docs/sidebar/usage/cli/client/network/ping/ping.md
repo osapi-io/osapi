@@ -37,6 +37,7 @@ $ osapi client network ping --address 8.8.8.8 --target group:web
 
 ## Flags
 
-| Flag            | Description         | Default  |
-| --------------- | ------------------- | -------- |
-| `-a, --address` | The address to ping | required |
+| Flag            | Description                                              | Default  |
+| --------------- | -------------------------------------------------------- | -------- |
+| `-a, --address` | The address to ping                                      | required |
+| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |

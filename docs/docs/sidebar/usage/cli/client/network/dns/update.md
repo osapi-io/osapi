@@ -44,10 +44,11 @@ $ osapi client network dns update \
 
 ## Flags
 
-| Flag               | Description                                    | Default  |
-| ------------------ | ---------------------------------------------- | -------- |
-| `--servers`        | List of DNS server IP addresses                | one of\* |
-| `--search-domains` | List of DNS search domains                     | one of\* |
-| `--interface-name` | Name of the network interface to configure DNS | required |
+| Flag               | Description                                              | Default  |
+| ------------------ | -------------------------------------------------------- | -------- |
+| `--servers`        | List of DNS server IP addresses                          | one of\* |
+| `--search-domains` | List of DNS search domains                               | one of\* |
+| `--interface-name` | Name of the network interface to configure DNS           | required |
+| `-T, --target`     | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
 
 \*At least one of `--servers` or `--search-domains` must be provided.

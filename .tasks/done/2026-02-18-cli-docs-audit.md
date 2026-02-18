@@ -1,6 +1,6 @@
 ---
 title: Audit CLI commands and docs for consistency
-status: backlog
+status: done
 created: 2026-02-18
 updated: 2026-02-18
 ---
@@ -28,3 +28,15 @@ updated but there may be inconsistencies remaining.
 - The label-based routing feature changed target syntax and added hierarchical
   labels — make sure all references use the new format
 - Check for any stale references to old flat label syntax (e.g., `role:web`)
+
+## Outcome
+
+Added `-T, --target` flag documentation to 5 CLI doc files:
+
+- `system/hostname.md` — added new Flags section
+- `system/status.md` — added new Flags section
+- `network/dns/get.md` — added row to existing Flags table
+- `network/dns/update.md` — added row to existing Flags table
+- `network/ping/ping.md` — added row to existing Flags table
+
+No stale label syntax found; all examples already use hierarchical format.

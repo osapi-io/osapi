@@ -4,34 +4,26 @@ sidebar_position: 6
 
 # API Design Guidelines
 
-1. **General System Information or Status**
+1. **Top-Level Categories**
 
-- **Path**: `/system/`
-- **Description**: Endpoints that represent broader operations impacting the
-  entire system, such as system status or information, should stay under
-  `/system/`.
-- **Examples**:
-  - `/system/status`
-  - `/system/info`
+Group endpoints by functional domain. Each domain gets its own top-level path
+prefix (e.g., `/system/`, `/network/`, `/job/`). Avoid nesting unrelated
+operations under a shared prefix.
 
-2. **Functional Areas**
+2. **Resource-Oriented Paths**
 
-Functional areas like power management, NTP, or network management should be
-broken into separate categories if they involve multiple endpoints or represent
-distinct areas of configuration.
+Use nouns for resources and let HTTP methods convey the action. Sub-resources
+should be nested under their parent (e.g., `/network/dns/{interfaceName}`).
 
-- Examples:
-  - **Power Management**:
-    - `/power/` - Power-related operations (shutdown, reboot, hibernate).
-  - **NTP Management**:
-    - `/ntp/` - NTP settings management.
-    - `/ntp/sync` - Time synchronization with NTP servers.
-  - **Network Management**:
-    - `/network/` - Network interfaces, routes, and DNS management.
+3. **Consistent Verb Mapping**
 
-3. **Consider Scalability and Future Needs**
+- `GET` — Read or list resources
+- `POST` — Create a resource or trigger an action
+- `PUT` — Replace or update a resource
+- `DELETE` — Remove a resource
 
-If an area is expected to grow in complexity with more endpoints, it's best to
-separate it early into its own category, even if it only has a few operations
-today. This ensures future scalability and avoids clutter in the core `/system/`
-path.
+4. **Scalability and Future Needs**
+
+If an area is expected to grow in complexity with more endpoints, separate it
+into its own top-level category early — even if it only has a few operations
+today. This avoids clutter and keeps each domain cohesive.
