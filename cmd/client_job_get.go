@@ -21,52 +21,56 @@
 package cmd
 
 import (
-	"encoding/json"
+	"fmt"
 	"log/slog"
+	"net/http"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobGetCmd represents the clientJobsGet command.
 var clientJobGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get job details and status from KV store",
-	Long: `Retrieves a job's details and current status from the NATS KV store.
-Shows the job data, status (unprocessed/processing/completed/failed), 
-and any results if completed.`,
+	Short: "Get job details and status",
+	Long:  `Retrieves a job's details and current status via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		jobID, _ := cmd.Flags().GetString("job-id")
 
-		// Use job client to get job status
-		jobInfo, err := jobClient.GetJobStatus(ctx, jobID)
+		jobHandler := handler.(client.JobHandler)
+		resp, err := jobHandler.GetJobByID(ctx, jobID)
 		if err != nil {
+			logFatal("failed to get job", err)
+		}
+
+		switch resp.StatusCode() {
+		case http.StatusOK:
 			if jsonOutput {
-				result := map[string]interface{}{
-					"status":  "not_found",
-					"job_id":  jobID,
-					"message": err.Error(),
-				}
-				resultJSON, _ := json.Marshal(result)
-				logger.Info("job", slog.String("response", string(resultJSON)))
+				fmt.Println(string(resp.Body))
 				return
 			}
 
-			jobData := map[string]interface{}{
-				"Job ID":  jobID,
-				"Status":  "Not Found",
-				"Message": err.Error(),
+			if resp.JSON200 == nil {
+				logFatal("failed response", fmt.Errorf("job detail response was nil"))
 			}
-			printStyledMap(jobData)
-			return
+
+			displayJobDetailResponse(resp.JSON200)
+
+			logger.Info("job retrieved successfully",
+				slog.String("job_id", jobID),
+				slog.String("status", safeString(resp.JSON200.Status)),
+			)
+		case http.StatusNotFound:
+			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+		case http.StatusUnauthorized:
+			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+		case http.StatusForbidden:
+			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+		default:
+			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
-
-		displayJobDetails(jobInfo)
-
-		logger.Info("job retrieved successfully",
-			slog.String("job_id", jobID),
-			slog.String("status", jobInfo.Status),
-		)
 	},
 }
 

@@ -29,6 +29,11 @@ import (
 // GetSystemHostname get the system hostname API endpoint.
 func (c *Client) GetSystemHostname(
 	ctx context.Context,
+	hostname string,
 ) (*gen.GetSystemHostnameResponse, error) {
-	return c.Client.GetSystemHostnameWithResponse(ctx)
+	params := &gen.GetSystemHostnameParams{
+		TargetHostname: &hostname,
+	}
+
+	return c.Client.GetSystemHostnameWithResponse(ctx, params)
 }

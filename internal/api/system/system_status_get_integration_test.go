@@ -77,7 +77,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemStatusAny(gomock.Any()).
+					QuerySystemStatus(gomock.Any(), job.AnyHost).
 					Return(&job.SystemStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
@@ -142,7 +142,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QuerySystemStatusAny(gomock.Any()).
+					QuerySystemStatus(gomock.Any(), job.AnyHost).
 					Return(nil, assert.AnError)
 				return mock
 			},

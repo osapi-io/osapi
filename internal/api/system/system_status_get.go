@@ -22,18 +22,54 @@ package system
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/validation"
 )
+
+// systemStatusMultiResponse wraps multiple status results for _all broadcast.
+type systemStatusMultiResponse struct {
+	Results []gen.SystemStatusResponse `json:"results"`
+}
+
+func (r systemStatusMultiResponse) VisitGetSystemStatusResponse(
+	w http.ResponseWriter,
+) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	return json.NewEncoder(w).Encode(r)
+}
 
 // GetSystemStatus get the system status API endpoint.
 func (s *System) GetSystemStatus(
 	ctx context.Context,
-	_ gen.GetSystemStatusRequestObject,
+	request gen.GetSystemStatusRequestObject,
 ) (gen.GetSystemStatusResponseObject, error) {
-	status, err := s.JobClient.QuerySystemStatusAny(ctx)
+	if request.Params.TargetHostname != nil {
+		th := struct {
+			TargetHostname string `validate:"min=1"`
+		}{TargetHostname: *request.Params.TargetHostname}
+		if errMsg, ok := validation.Struct(th); !ok {
+			return gen.GetSystemStatus400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
+	hostname := job.AnyHost
+	if request.Params.TargetHostname != nil {
+		hostname = *request.Params.TargetHostname
+	}
+
+	if hostname == job.BroadcastHost {
+		return s.getSystemStatusAll(ctx)
+	}
+
+	status, err := s.JobClient.QuerySystemStatus(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{
@@ -41,6 +77,35 @@ func (s *System) GetSystemStatus(
 		}, nil
 	}
 
+	resp := buildSystemStatusResponse(status)
+
+	return gen.GetSystemStatus200JSONResponse(*resp), nil
+}
+
+// getSystemStatusAll handles _all broadcast for system status.
+func (s *System) getSystemStatusAll(
+	ctx context.Context,
+) (gen.GetSystemStatusResponseObject, error) {
+	results, err := s.JobClient.QuerySystemStatusAll(ctx)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetSystemStatus500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []gen.SystemStatusResponse
+	for _, status := range results {
+		responses = append(responses, *buildSystemStatusResponse(status))
+	}
+
+	return systemStatusMultiResponse{Results: responses}, nil
+}
+
+// buildSystemStatusResponse converts a job.SystemStatusResponse to the API response.
+func buildSystemStatusResponse(
+	status *job.SystemStatusResponse,
+) *gen.SystemStatusResponse {
 	disks := make([]gen.DiskResponse, 0, len(status.DiskUsage))
 	for _, d := range status.DiskUsage {
 		disk := gen.DiskResponse{
@@ -52,7 +117,7 @@ func (s *System) GetSystemStatus(
 		disks = append(disks, disk)
 	}
 
-	resp := gen.GetSystemStatus200JSONResponse{
+	resp := gen.SystemStatusResponse{
 		Hostname: status.Hostname,
 		Uptime:   formatDuration(status.Uptime),
 		Disks:    disks,
@@ -81,7 +146,7 @@ func (s *System) GetSystemStatus(
 		}
 	}
 
-	return resp, nil
+	return &resp
 }
 
 func formatDuration(

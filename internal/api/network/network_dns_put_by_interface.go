@@ -22,10 +22,34 @@ package network
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
+
+// dnsPutMultiResponse wraps multiple DNS modify results for _all broadcast.
+type dnsPutMultiResponse struct {
+	Results []dnsPutResult `json:"results"`
+}
+
+type dnsPutResult struct {
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+}
+
+func (r dnsPutMultiResponse) VisitPutNetworkDNSResponse(
+	w http.ResponseWriter,
+) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+
+	return json.NewEncoder(w).Encode(r)
+}
 
 // PutNetworkDNS put the network dns API endpoint.
 func (n Network) PutNetworkDNS(
@@ -36,6 +60,15 @@ func (n Network) PutNetworkDNS(
 		return gen.PutNetworkDNS400JSONResponse{
 			Error: &errMsg,
 		}, nil
+	}
+
+	if request.Params.TargetHostname != nil {
+		th := struct {
+			TargetHostname string `validate:"min=1"`
+		}{TargetHostname: *request.Params.TargetHostname}
+		if errMsg, ok := validation.Struct(th); !ok {
+			return gen.PutNetworkDNS400JSONResponse{Error: &errMsg}, nil
+		}
 	}
 
 	var servers []string
@@ -50,7 +83,16 @@ func (n Network) PutNetworkDNS(
 
 	interfaceName := request.Body.InterfaceName
 
-	err := n.JobClient.ModifyNetworkDNSAny(ctx, servers, searchDomains, interfaceName)
+	hostname := job.AnyHost
+	if request.Params.TargetHostname != nil {
+		hostname = *request.Params.TargetHostname
+	}
+
+	if hostname == job.BroadcastHost {
+		return n.putNetworkDNSAll(ctx, servers, searchDomains, interfaceName)
+	}
+
+	err := n.JobClient.ModifyNetworkDNS(ctx, hostname, servers, searchDomains, interfaceName)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNetworkDNS500JSONResponse{
@@ -59,4 +101,35 @@ func (n Network) PutNetworkDNS(
 	}
 
 	return gen.PutNetworkDNS202Response{}, nil
+}
+
+// putNetworkDNSAll handles _all broadcast for DNS modification.
+func (n Network) putNetworkDNSAll(
+	ctx context.Context,
+	servers []string,
+	searchDomains []string,
+	interfaceName string,
+) (gen.PutNetworkDNSResponseObject, error) {
+	results, err := n.JobClient.ModifyNetworkDNSAll(ctx, servers, searchDomains, interfaceName)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PutNetworkDNS500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []dnsPutResult
+	for host, hostErr := range results {
+		r := dnsPutResult{
+			Hostname: host,
+			Status:   "ok",
+		}
+		if hostErr != nil {
+			r.Status = "failed"
+			r.Error = fmt.Sprintf("%v", hostErr)
+		}
+		responses = append(responses, r)
+	}
+
+	return dnsPutMultiResponse{Results: responses}, nil
 }

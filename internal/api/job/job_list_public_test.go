@@ -57,14 +57,29 @@ func (s *JobListPublicTestSuite) TearDownTest() {
 
 func (s *JobListPublicTestSuite) TestGetJob() {
 	completedStatus := "completed"
+	invalidStatus := "bogus"
 
 	tests := []struct {
 		name         string
 		request      gen.GetJobRequestObject
 		mockJobs     []*jobtypes.QueuedJob
 		mockError    error
+		expectMock   bool
 		validateFunc func(resp gen.GetJobResponseObject)
 	}{
+		{
+			name: "validation error invalid status",
+			request: gen.GetJobRequestObject{
+				Params: gen.GetJobParams{Status: &invalidStatus},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "invalid status filter")
+			},
+		},
 		{
 			name: "success with filter",
 			request: gen.GetJobRequestObject{
@@ -76,6 +91,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 					Status: "completed",
 				},
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
 				r, ok := resp.(gen.GetJob200JSONResponse)
 				s.True(ok)
@@ -90,6 +106,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				{ID: "job-1", Status: "completed"},
 				{ID: "job-2", Status: "processing"},
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
 				r, ok := resp.(gen.GetJob200JSONResponse)
 				s.True(ok)
@@ -111,6 +128,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 					Result:    json.RawMessage(`{"servers":["8.8.8.8"]}`),
 				},
 			},
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
 				r, ok := resp.(gen.GetJob200JSONResponse)
 				s.True(ok)
@@ -127,9 +145,10 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			},
 		},
 		{
-			name:      "job client error",
-			request:   gen.GetJobRequestObject{},
-			mockError: assert.AnError,
+			name:       "job client error",
+			request:    gen.GetJobRequestObject{},
+			mockError:  assert.AnError,
+			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
 				_, ok := resp.(gen.GetJob500JSONResponse)
 				s.True(ok)
@@ -139,13 +158,15 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var statusFilter string
-			if tt.request.Params.Status != nil {
-				statusFilter = *tt.request.Params.Status
+			if tt.expectMock {
+				var statusFilter string
+				if tt.request.Params.Status != nil {
+					statusFilter = *tt.request.Params.Status
+				}
+				s.mockJobClient.EXPECT().
+					ListJobs(gomock.Any(), statusFilter).
+					Return(tt.mockJobs, tt.mockError)
 			}
-			s.mockJobClient.EXPECT().
-				ListJobs(gomock.Any(), statusFilter).
-				Return(tt.mockJobs, tt.mockError)
 
 			resp, err := s.handler.GetJob(s.ctx, tt.request)
 			s.NoError(err)

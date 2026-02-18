@@ -1,6 +1,6 @@
 ---
 title: "Feature: API endpoint to list registered NATS workers"
-status: backlog
+status: done
 created: 2026-02-17
 updated: 2026-02-17
 ---

@@ -105,6 +105,23 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			},
 		},
 		{
+			name: "validation error empty target_hostname",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+				Params: gen.PostNetworkPingParams{TargetHostname: strPtr("")},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				r, ok := resp.(gen.PostNetworkPing400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "TargetHostname")
+				s.Contains(*r.Error, "min")
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNetworkPingRequestObject{
 				Body: &gen.PostNetworkPingJSONRequestBody{
@@ -124,7 +141,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 		s.Run(tt.name, func() {
 			if tt.expectMock {
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingAny(gomock.Any(), tt.request.Body.Address).
+					QueryNetworkPing(gomock.Any(), gomock.Any(), tt.request.Body.Address).
 					Return(tt.mockResult, tt.mockError)
 			}
 

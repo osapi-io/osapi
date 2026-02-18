@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 	externalRef0 "github.com/retr0h/osapi/internal/api/common/gen"
 )
@@ -99,14 +100,26 @@ type SystemStatusResponse struct {
 	Uptime string `json:"uptime"`
 }
 
+// GetSystemHostnameParams defines parameters for GetSystemHostname.
+type GetSystemHostnameParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
+// GetSystemStatusParams defines parameters for GetSystemStatus.
+type GetSystemStatusParams struct {
+	// TargetHostname Target hostname for routing (_any, _all, or specific hostname).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Retrieve system hostname
 	// (GET /system/hostname)
-	GetSystemHostname(ctx echo.Context) error
+	GetSystemHostname(ctx echo.Context, params GetSystemHostnameParams) error
 	// Retrieve system status
 	// (GET /system/status)
-	GetSystemStatus(ctx echo.Context) error
+	GetSystemStatus(ctx echo.Context, params GetSystemStatusParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -120,8 +133,17 @@ func (w *ServerInterfaceWrapper) GetSystemHostname(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{"read"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSystemHostnameParams
+	// ------------- Optional query parameter "target_hostname" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetSystemHostname(ctx)
+	err = w.Handler.GetSystemHostname(ctx, params)
 	return err
 }
 
@@ -131,8 +153,17 @@ func (w *ServerInterfaceWrapper) GetSystemStatus(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{"read"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSystemStatusParams
+	// ------------- Optional query parameter "target_hostname" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetSystemStatus(ctx)
+	err = w.Handler.GetSystemStatus(ctx, params)
 	return err
 }
 
@@ -170,6 +201,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 }
 
 type GetSystemHostnameRequestObject struct {
+	Params GetSystemHostnameParams
 }
 
 type GetSystemHostnameResponseObject interface {
@@ -181,6 +213,15 @@ type GetSystemHostname200JSONResponse HostnameResponse
 func (response GetSystemHostname200JSONResponse) VisitGetSystemHostnameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSystemHostname400JSONResponse externalRef0.ErrorResponse
+
+func (response GetSystemHostname400JSONResponse) VisitGetSystemHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -213,6 +254,7 @@ func (response GetSystemHostname500JSONResponse) VisitGetSystemHostnameResponse(
 }
 
 type GetSystemStatusRequestObject struct {
+	Params GetSystemStatusParams
 }
 
 type GetSystemStatusResponseObject interface {
@@ -224,6 +266,15 @@ type GetSystemStatus200JSONResponse SystemStatusResponse
 func (response GetSystemStatus200JSONResponse) VisitGetSystemStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSystemStatus400JSONResponse externalRef0.ErrorResponse
+
+func (response GetSystemStatus400JSONResponse) VisitGetSystemStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -278,8 +329,10 @@ type strictHandler struct {
 }
 
 // GetSystemHostname operation middleware
-func (sh *strictHandler) GetSystemHostname(ctx echo.Context) error {
+func (sh *strictHandler) GetSystemHostname(ctx echo.Context, params GetSystemHostnameParams) error {
 	var request GetSystemHostnameRequestObject
+
+	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetSystemHostname(ctx.Request().Context(), request.(GetSystemHostnameRequestObject))
@@ -301,8 +354,10 @@ func (sh *strictHandler) GetSystemHostname(ctx echo.Context) error {
 }
 
 // GetSystemStatus operation middleware
-func (sh *strictHandler) GetSystemStatus(ctx echo.Context) error {
+func (sh *strictHandler) GetSystemStatus(ctx echo.Context, params GetSystemStatusParams) error {
 	var request GetSystemStatusRequestObject
+
+	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetSystemStatus(ctx.Request().Context(), request.(GetSystemStatusRequestObject))

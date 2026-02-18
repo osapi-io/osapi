@@ -158,8 +158,15 @@ func (c *Client) publishAndWait(
 	}
 }
 
+// broadcastQuietPeriod is the duration of silence after the last response
+// before we consider the broadcast complete. If no new responses arrive
+// within this window, we return whatever we've collected.
+const broadcastQuietPeriod = 3 * time.Second
+
 // publishAndCollect stores a job in KV, publishes a notification, and collects
-// all worker responses within the timeout window. Used for broadcast (_all) jobs.
+// worker responses using a quiet period strategy. After each response, a short
+// timer resets. When the timer expires with no new responses, the collected
+// results are returned. The overall timeout acts as a safety net.
 func (c *Client) publishAndCollect(
 	ctx context.Context,
 	subject string,
@@ -219,12 +226,26 @@ func (c *Client) publishAndCollect(
 	}()
 
 	responses := make(map[string]*job.Response)
+
+	// Overall timeout as safety net
 	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
+
+	// Quiet period timer — starts at the full timeout (waiting for first response),
+	// then resets to the short quiet period after each response arrives.
+	quietTimer := time.NewTimer(c.timeout)
+	defer quietTimer.Stop()
 
 	for {
 		select {
 		case <-timeoutCtx.Done():
+			if len(responses) == 0 {
+				return nil, fmt.Errorf(
+					"timeout waiting for broadcast responses: no workers responded",
+				)
+			}
+			return responses, nil
+		case <-quietTimer.C:
 			if len(responses) == 0 {
 				return nil, fmt.Errorf(
 					"timeout waiting for broadcast responses: no workers responded",
@@ -257,6 +278,10 @@ func (c *Client) publishAndCollect(
 			)
 
 			responses[hostname] = &response
+
+			// Reset quiet period — if no more responses arrive within
+			// this window, we're done collecting.
+			quietTimer.Reset(broadcastQuietPeriod)
 		}
 	}
 }

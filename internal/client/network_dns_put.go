@@ -29,10 +29,15 @@ import (
 // PutNetworkDNS put the network dns put API endpoint.
 func (c *Client) PutNetworkDNS(
 	ctx context.Context,
+	hostname string,
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
 ) (*gen.PutNetworkDNSResponse, error) {
+	params := &gen.PutNetworkDNSParams{
+		TargetHostname: &hostname,
+	}
+
 	body := gen.DNSConfigUpdateRequest{}
 
 	body.InterfaceName = interfaceName
@@ -45,5 +50,5 @@ func (c *Client) PutNetworkDNS(
 		body.SearchDomains = &searchDomains
 	}
 
-	return c.Client.PutNetworkDNSWithResponse(ctx, body)
+	return c.Client.PutNetworkDNSWithResponse(ctx, params, body)
 }

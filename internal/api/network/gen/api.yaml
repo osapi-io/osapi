@@ -41,6 +41,15 @@ paths:
       security:
         - BearerAuth:
             - write
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       requestBody:
         description: The server to ping.
         required: true
@@ -110,6 +119,14 @@ paths:
           description: >
             The name of the network interface to retrieve DNS configuration for.
             Must only contain letters and numbers.
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
 
       responses:
         '200':
@@ -153,6 +170,15 @@ paths:
       security:
         - BearerAuth:
             - write
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target hostname for routing (_any, _all, or specific hostname).
       requestBody:
         required: true
         content:

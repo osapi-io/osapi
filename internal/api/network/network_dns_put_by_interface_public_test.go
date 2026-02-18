@@ -97,6 +97,25 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			},
 		},
 		{
+			name: "validation error empty target_hostname",
+			request: gen.PutNetworkDNSRequestObject{
+				Body: &gen.PutNetworkDNSJSONRequestBody{
+					Servers:       &servers,
+					SearchDomains: &searchDomains,
+					InterfaceName: interfaceName,
+				},
+				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("")},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNetworkDNS400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "TargetHostname")
+				s.Contains(*r.Error, "min")
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PutNetworkDNSRequestObject{
 				Body: &gen.PutNetworkDNSJSONRequestBody{
@@ -118,7 +137,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 		s.Run(tt.name, func() {
 			if tt.expectMock {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSAny(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(tt.mockError)
 			}
 

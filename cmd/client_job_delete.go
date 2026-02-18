@@ -22,47 +22,62 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobDeleteCmd represents the clientJobsDelete command.
 var clientJobDeleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete a job from KV store",
-	Long: `Deletes a specific job from the NATS KV store using its job ID.
-This removes the job permanently from storage.`,
+	Short: "Delete a job",
+	Long:  `Deletes a specific job by its ID via the REST API.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		jobID, _ := cmd.Flags().GetString("job-id")
 		ctx := cmd.Context()
 
-		err := jobClient.DeleteJob(ctx, jobID)
+		jobHandler := handler.(client.JobHandler)
+		resp, err := jobHandler.DeleteJobByID(ctx, jobID)
 		if err != nil {
 			logFatal("failed to delete job", err)
 		}
 
-		if jsonOutput {
-			result := map[string]interface{}{
-				"status":    "deleted",
-				"job_id":    jobID,
-				"timestamp": time.Now().Format(time.RFC3339),
+		switch resp.StatusCode() {
+		case http.StatusNoContent:
+			if jsonOutput {
+				result := map[string]interface{}{
+					"status":    "deleted",
+					"job_id":    jobID,
+					"timestamp": time.Now().Format(time.RFC3339),
+				}
+				resultJSON, _ := json.Marshal(result)
+				fmt.Println(string(resultJSON))
+				return
 			}
-			resultJSON, _ := json.Marshal(result)
-			logger.Info("job deleted", slog.String("response", string(resultJSON)))
-			return
-		}
 
-		deleteData := map[string]interface{}{
-			"Job ID": jobID,
-			"Status": "Deleted",
-		}
-		printStyledMap(deleteData)
+			deleteData := map[string]interface{}{
+				"Job ID": jobID,
+				"Status": "Deleted",
+			}
+			printStyledMap(deleteData)
 
-		logger.Info("job deleted successfully",
-			slog.String("job_id", jobID),
-		)
+			logger.Info("job deleted successfully",
+				slog.String("job_id", jobID),
+			)
+		case http.StatusNotFound:
+			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+		case http.StatusUnauthorized:
+			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+		case http.StatusForbidden:
+			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+		default:
+			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		}
 	},
 }
 

@@ -32,6 +32,20 @@ func (j *Job) GetJob(
 	ctx context.Context,
 	request gen.GetJobRequestObject,
 ) (gen.GetJobResponseObject, error) {
+	if request.Params.Status != nil {
+		validStatuses := map[string]bool{
+			"unprocessed":     true,
+			"processing":      true,
+			"completed":       true,
+			"failed":          true,
+			"partial_failure": true,
+		}
+		if !validStatuses[*request.Params.Status] {
+			errMsg := "invalid status filter: must be one of unprocessed, processing, completed, failed, partial_failure"
+			return gen.GetJob400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
 	var statusFilter string
 	if request.Params.Status != nil {
 		statusFilter = *request.Params.Status

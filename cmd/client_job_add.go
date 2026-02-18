@@ -22,19 +22,22 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobAddCmd represents the clientJobAdd command.
 var clientJobAddCmd = &cobra.Command{
 	Use:   "add",
-	Short: "Add a job directly in NATS queue",
-	Long: `Adds a job directly in the NATS job queue using the nats-client library.
-This bypasses the API and talks directly to NATS for testing purposes.`,
+	Short: "Add a job to the queue",
+	Long:  `Adds a job to the queue via the REST API for processing.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
@@ -52,36 +55,50 @@ This bypasses the API and talks directly to NATS for testing purposes.`,
 			logFatal("failed to read file", err)
 		}
 
-		// Parse the JSON operation - using generic structure to handle new format
 		var operationData map[string]interface{}
 		if err := json.Unmarshal(fileContents, &operationData); err != nil {
 			logFatal("failed to parse JSON operation file", err)
 		}
 
-		// Use the job client to create the job
-		result, err := jobClient.CreateJob(ctx, operationData, targetHostname)
+		jobHandler := handler.(client.JobHandler)
+		resp, err := jobHandler.PostJob(ctx, operationData, targetHostname)
 		if err != nil {
 			logFatal("failed to create job", err)
 		}
 
-		if jsonOutput {
-			resultJSON, _ := json.Marshal(result)
-			logger.Info("job created", slog.String("response", string(resultJSON)))
-			return
-		}
+		switch resp.StatusCode() {
+		case http.StatusCreated:
+			if jsonOutput {
+				fmt.Println(string(resp.Body))
+				return
+			}
 
-		jobData := map[string]interface{}{
-			"Job ID":   result.JobID,
-			"Status":   result.Status,
-			"Revision": result.Revision,
-		}
-		printStyledMap(jobData)
+			if resp.JSON201 == nil {
+				logFatal("failed response", fmt.Errorf("create job response was nil"))
+			}
 
-		logger.Info("job created successfully",
-			slog.String("job_id", result.JobID),
-			slog.Uint64("revision", result.Revision),
-			slog.String("target_hostname", targetHostname),
-		)
+			jobData := map[string]interface{}{
+				"Job ID": resp.JSON201.JobId,
+				"Status": resp.JSON201.Status,
+			}
+			if resp.JSON201.Revision != nil {
+				jobData["Revision"] = *resp.JSON201.Revision
+			}
+			printStyledMap(jobData)
+
+			logger.Info("job created successfully",
+				slog.String("job_id", resp.JSON201.JobId),
+				slog.String("target_hostname", targetHostname),
+			)
+		case http.StatusBadRequest:
+			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+		case http.StatusUnauthorized:
+			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+		case http.StatusForbidden:
+			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+		default:
+			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		}
 	},
 }
 

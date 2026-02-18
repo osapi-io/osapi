@@ -73,7 +73,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNetworkPingAny(gomock.Any(), "1.1.1.1").
+					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
 					Return(&ping.Result{
 						PacketsSent:     3,
 						PacketsReceived: 3,

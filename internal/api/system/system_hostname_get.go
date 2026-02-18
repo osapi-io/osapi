@@ -22,17 +22,52 @@ package system
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/validation"
 )
+
+// hostnameMultiResponse wraps multiple hostname results for _all broadcast.
+type hostnameMultiResponse struct {
+	Results []gen.HostnameResponse `json:"results"`
+}
+
+func (r hostnameMultiResponse) VisitGetSystemHostnameResponse(
+	w http.ResponseWriter,
+) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	return json.NewEncoder(w).Encode(r)
+}
 
 // GetSystemHostname get the system hostname API endpoint.
 func (s *System) GetSystemHostname(
 	ctx context.Context,
-	_ gen.GetSystemHostnameRequestObject,
+	request gen.GetSystemHostnameRequestObject,
 ) (gen.GetSystemHostnameResponseObject, error) {
-	hostname, err := s.JobClient.QuerySystemHostname(ctx, job.AnyHost)
+	if request.Params.TargetHostname != nil {
+		th := struct {
+			TargetHostname string `validate:"min=1"`
+		}{TargetHostname: *request.Params.TargetHostname}
+		if errMsg, ok := validation.Struct(th); !ok {
+			return gen.GetSystemHostname400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
+	hostname := job.AnyHost
+	if request.Params.TargetHostname != nil {
+		hostname = *request.Params.TargetHostname
+	}
+
+	if hostname == job.BroadcastHost {
+		return s.getSystemHostnameAll(ctx)
+	}
+
+	result, err := s.JobClient.QuerySystemHostname(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -41,6 +76,26 @@ func (s *System) GetSystemHostname(
 	}
 
 	return gen.GetSystemHostname200JSONResponse{
-		Hostname: hostname,
+		Hostname: result,
 	}, nil
+}
+
+// getSystemHostnameAll handles _all broadcast for system hostname.
+func (s *System) getSystemHostnameAll(
+	ctx context.Context,
+) (gen.GetSystemHostnameResponseObject, error) {
+	results, err := s.JobClient.QuerySystemHostnameAll(ctx)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetSystemHostname500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []gen.HostnameResponse
+	for _, h := range results {
+		responses = append(responses, gen.HostnameResponse{Hostname: h})
+	}
+
+	return hostnameMultiResponse{Results: responses}, nil
 }

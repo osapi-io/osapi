@@ -71,7 +71,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ModifyNetworkDNSAny(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 				return mock
 			},

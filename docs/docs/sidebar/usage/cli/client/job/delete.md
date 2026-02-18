@@ -1,6 +1,6 @@
 # Delete
 
-Delete a job from the NATS KV store:
+Delete a job:
 
 ```bash
 $ osapi client job delete --job-id 550e8400-e29b-41d4-a716-446655440000

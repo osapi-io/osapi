@@ -1,6 +1,6 @@
 # Add
 
-Add a job to the NATS job queue:
+Add a job to the queue:
 
 ```bash
 $ osapi client job add \

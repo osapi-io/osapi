@@ -30,6 +30,45 @@ import (
 type CombinedHandler interface {
 	NetworkHandler
 	SystemHandler
+	JobHandler
+}
+
+// JobHandler defines an interface for interacting with Job client operations.
+type JobHandler interface {
+	// PostJob creates a new job via the REST API.
+	PostJob(
+		ctx context.Context,
+		operation map[string]interface{},
+		targetHostname string,
+	) (*gen.PostJobResponse, error)
+
+	// GetJobByID retrieves a specific job by ID via the REST API.
+	GetJobByID(
+		ctx context.Context,
+		id string,
+	) (*gen.GetJobByIDResponse, error)
+
+	// DeleteJobByID deletes a specific job by ID via the REST API.
+	DeleteJobByID(
+		ctx context.Context,
+		id string,
+	) (*gen.DeleteJobByIDResponse, error)
+
+	// GetJobs retrieves jobs, optionally filtered by status, via the REST API.
+	GetJobs(
+		ctx context.Context,
+		status string,
+	) (*gen.GetJobResponse, error)
+
+	// GetJobQueueStats retrieves queue statistics via the REST API.
+	GetJobQueueStats(
+		ctx context.Context,
+	) (*gen.GetJobStatusResponse, error)
+
+	// GetJobWorkers retrieves active workers via the REST API.
+	GetJobWorkers(
+		ctx context.Context,
+	) (*gen.GetJobWorkersResponse, error)
 }
 
 // NetworkHandler defines an interface for interacting with Network client operations.
@@ -37,12 +76,14 @@ type NetworkHandler interface {
 	// GetNetworkDNSByInterface get the network dns get API endpoint.
 	GetNetworkDNSByInterface(
 		ctx context.Context,
-		_ string,
+		hostname string,
+		interfaceName string,
 	) (*gen.GetNetworkDNSByInterfaceResponse, error)
 
 	// PutNetworkDNS put the network dns put API endpoint.
 	PutNetworkDNS(
 		ctx context.Context,
+		hostname string,
 		servers []string,
 		searchDomains []string,
 		interfaceName string,
@@ -50,6 +91,7 @@ type NetworkHandler interface {
 	// PostNetworkPing post the network ping API endpoint.
 	PostNetworkPing(
 		ctx context.Context,
+		hostname string,
 		address string,
 	) (*gen.PostNetworkPingResponse, error)
 }
@@ -59,9 +101,11 @@ type SystemHandler interface {
 	// GetSystemStatus get the system status API endpoint.
 	GetSystemStatus(
 		ctx context.Context,
+		hostname string,
 	) (*gen.GetSystemStatusResponse, error)
 	// GetSystemHostname get the system hostname API endpoint.
 	GetSystemHostname(
 		ctx context.Context,
+		hostname string,
 	) (*gen.GetSystemHostnameResponse, error)
 }
