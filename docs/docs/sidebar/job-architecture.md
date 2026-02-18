@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 # Job System Architecture
@@ -561,29 +561,39 @@ osapi client job delete --job-id uuid-12345
 
 ## Package Architecture
 
-```
-internal/job/
-├── types.go              # Core domain types (Request, Response, QueuedJob,
-│                         #   QueueStats, WorkerState, TimelineEvent)
-├── subjects.go           # Subject routing, target parsing, label validation
-├── hostname.go           # Local hostname resolution and caching
-├── config.go             # Configuration structures
-├── client/               # High-level job operations for API embedding
-│   ├── client.go         # Publish-and-wait/collect with KV + stream
-│   ├── query.go          # Query operations (system status, hostname, etc.)
-│   ├── modify.go         # Modify operations (DNS updates)
-│   ├── jobs.go           # CreateJob, GetJobStatus, GetQueueStats
-│   ├── worker.go         # WriteStatusEvent, WriteJobResponse
-│   └── types.go          # Client-specific types and interfaces
-└── worker/               # Job processing and worker lifecycle
-    ├── worker.go         # Worker implementation and lifecycle management
-    ├── server.go         # Worker server (NATS connect, stream setup, run)
-    ├── consumer.go       # JetStream consumer creation and subscription
-    ├── handler.go        # Job lifecycle handling with status events
-    ├── processor.go      # Provider dispatch and execution
-    ├── factory.go        # Worker creation
-    └── types.go          # Worker-specific types and context
-```
+The `internal/job/` package contains shared domain types and two subpackages:
+
+**Root (`internal/job/`):**
+
+| File          | Purpose                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| `types.go`    | Core domain types (Request, Response, QueuedJob, QueueStats, WorkerState, TimelineEvent) |
+| `subjects.go` | Subject routing, target parsing, label validation                                        |
+| `hostname.go` | Local hostname resolution and caching                                                    |
+| `config.go`   | Configuration structures                                                                 |
+
+**Client (`internal/job/client/`):**
+
+| File        | Purpose                                          |
+| ----------- | ------------------------------------------------ |
+| `client.go` | Publish-and-wait/collect with KV + stream        |
+| `query.go`  | Query operations (system status, hostname, etc.) |
+| `modify.go` | Modify operations (DNS updates)                  |
+| `jobs.go`   | CreateJob, GetJobStatus, GetQueueStats           |
+| `worker.go` | WriteStatusEvent, WriteJobResponse               |
+| `types.go`  | Client-specific types and interfaces             |
+
+**Worker (`internal/job/worker/`):**
+
+| File           | Purpose                                         |
+| -------------- | ----------------------------------------------- |
+| `worker.go`    | Worker implementation and lifecycle management  |
+| `server.go`    | Worker server (NATS connect, stream setup, run) |
+| `consumer.go`  | JetStream consumer creation and subscription    |
+| `handler.go`   | Job lifecycle handling with status events       |
+| `processor.go` | Provider dispatch and execution                 |
+| `factory.go`   | Worker creation                                 |
+| `types.go`     | Worker-specific types and context               |
 
 ### Separation of Concerns
 
