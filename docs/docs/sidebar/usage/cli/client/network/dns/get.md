@@ -33,6 +33,7 @@ $ osapi client network dns get --interface-name eth0 --target group:web
 
 ## Flags
 
-| Flag               | Description                                    | Default  |
-| ------------------ | ---------------------------------------------- | -------- |
-| `--interface-name` | Name of the network interface to query DNS for | required |
+| Flag               | Description                                              | Default  |
+| ------------------ | -------------------------------------------------------- | -------- |
+| `--interface-name` | Name of the network interface to query DNS for           | required |
+| `-T, --target`     | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |

@@ -40,3 +40,9 @@ Target by label to query a group of servers:
 $ osapi client system status --target group:web
 $ osapi client system status --target group:web.dev
 ```
+
+## Flags
+
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |

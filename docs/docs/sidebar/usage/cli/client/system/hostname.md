@@ -30,3 +30,9 @@ Target by label to query a group of servers:
 ```bash
 $ osapi client system hostname --target group:web
 ```
+
+## Flags
+
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
