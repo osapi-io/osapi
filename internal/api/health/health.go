@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+// Package health provides health check API handlers.
+package health
 
 import (
-	"log/slog"
+	"time"
 
-	"github.com/labstack/echo/v4"
-
-	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/api/health/gen"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
+var _ gen.StrictServerInterface = (*Health)(nil)
+
+// New factory to create a new instance.
+func New(
+	checker Checker,
+	startTime time.Time,
+	version string,
+) *Health {
+	return &Health{
+		Checker:   checker,
+		StartTime: startTime,
+		Version:   version,
+	}
 }

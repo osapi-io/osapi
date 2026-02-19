@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,56 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package health
 
 import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
-
-	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"context"
+	"errors"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+// NATSChecker checks NATS and KV bucket connectivity.
+type NATSChecker struct {
+	// NATSCheck verifies NATS connectivity.
+	NATSCheck func() error
+	// KVCheck verifies KV bucket accessibility.
+	KVCheck func() error
+}
+
+// CheckHealth runs all dependency checks and returns the first error.
+func (c *NATSChecker) CheckHealth(
+	_ context.Context,
+) error {
+	var errs []error
+
+	if c.NATSCheck != nil {
+		if err := c.NATSCheck(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if c.KVCheck != nil {
+		if err := c.KVCheck(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+// CheckNATS runs only the NATS connectivity check.
+func (c *NATSChecker) CheckNATS() error {
+	if c.NATSCheck != nil {
+		return c.NATSCheck()
+	}
+
+	return nil
+}
+
+// CheckKV runs only the KV bucket check.
+func (c *NATSChecker) CheckKV() error {
+	if c.KVCheck != nil {
+		return c.KVCheck()
+	}
+
+	return nil
 }

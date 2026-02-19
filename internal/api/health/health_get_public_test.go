@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,59 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package health_test
 
 import (
-	"log/slog"
+	"context"
+	"testing"
+	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/api/health/gen"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+type HealthGetPublicTestSuite struct {
+	suite.Suite
+
+	handler *health.Health
+	ctx     context.Context
+}
+
+func (s *HealthGetPublicTestSuite) SetupTest() {
+	s.handler = health.New(
+		&health.NATSChecker{},
+		time.Now(),
+		"0.1.0",
+	)
+	s.ctx = context.Background()
+}
+
+func (s *HealthGetPublicTestSuite) TestGetHealth() {
+	tests := []struct {
+		name         string
+		validateFunc func(resp gen.GetHealthResponseObject)
+	}{
+		{
+			name: "returns ok status",
+			validateFunc: func(resp gen.GetHealthResponseObject) {
+				r, ok := resp.(gen.GetHealth200JSONResponse)
+				s.True(ok)
+				s.Equal("ok", r.Status)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			resp, err := s.handler.GetHealth(s.ctx, gen.GetHealthRequestObject{})
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func TestHealthGetPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(HealthGetPublicTestSuite))
 }

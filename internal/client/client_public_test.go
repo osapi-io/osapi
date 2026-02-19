@@ -447,6 +447,69 @@ func (s *ClientPublicTestSuite) TestGetJobWorkers() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestGetHealth() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns health response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetHealth(ctx)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetHealthReady() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns health ready response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetHealthReady(ctx)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetHealthDetailed() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns health detailed response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetHealthDetailed(ctx)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
 func TestClientPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientPublicTestSuite))
 }

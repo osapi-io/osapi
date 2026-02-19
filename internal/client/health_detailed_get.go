@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package client
 
 import (
-	"log/slog"
+	"context"
 
-	"github.com/labstack/echo/v4"
-
-	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/client/gen"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+// GetHealthDetailed get the health detailed API endpoint.
+func (c *Client) GetHealthDetailed(
+	ctx context.Context,
+) (*gen.GetHealthDetailedResponse, error) {
+	return c.Client.GetHealthDetailedWithResponse(ctx)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package health
 
 import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
-
-	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"context"
+	"time"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+// Checker checks the health of a dependency.
+type Checker interface {
+	CheckHealth(ctx context.Context) error
+}
+
+// Health implementation of the Health APIs operations.
+type Health struct {
+	// Checker performs dependency health checks.
+	Checker Checker
+	// StartTime records when the server started.
+	StartTime time.Time
+	// Version is the application version string.
+	Version string
 }

@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -28,6 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/api"
+	"github.com/retr0h/osapi/internal/api/health"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
 )
@@ -79,7 +81,34 @@ var apiServerStartCmd = &cobra.Command{
 			logFatal("failed to create job client", err)
 		}
 
-		var sm ServerManager = api.New(appConfig, logger)
+		startTime := time.Now()
+
+		checker := &health.NATSChecker{
+			NATSCheck: func() error {
+				natsConn, ok := nc.(*natsclient.Client)
+				if !ok || natsConn.NC == nil {
+					return fmt.Errorf("NATS client unavailable")
+				}
+
+				if natsConn.NC.ConnectedUrl() == "" {
+					return fmt.Errorf("NATS not connected")
+				}
+
+				return nil
+			},
+			KVCheck: func() error {
+				_, err := jobsKV.Keys()
+				if err != nil {
+					return fmt.Errorf("KV bucket not accessible: %w", err)
+				}
+
+				return nil
+			},
+		}
+
+		healthHandler := health.New(checker, startTime, "0.1.0")
+
+		var sm ServerManager = api.New(appConfig, logger, api.WithHealthHandler(healthHandler))
 		handlers := sm.CreateHandlers(jc)
 		sm.RegisterHandlers(handlers)
 

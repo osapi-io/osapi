@@ -25,12 +25,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
+	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -172,20 +174,100 @@ func (s *HandlerPublicTestSuite) TestGetJobHandler() {
 	}
 }
 
-func (s *HandlerPublicTestSuite) TestCreateHandlers() {
+func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 	tests := []struct {
-		name string
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name: "returns all handler functions",
+			name: "returns health handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/health", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.CreateHandlers(s.mockJobClient)
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-signing-key",
+						},
+					},
+				},
+			}
 
-			s.Len(handlers, 3)
+			checker := &health.NATSChecker{}
+			healthHandler := health.New(checker, time.Now(), "0.1.0")
+			serverWithHealth := api.New(
+				appConfig,
+				slog.Default(),
+				api.WithHealthHandler(healthHandler),
+			)
+			handlers := serverWithHealth.GetHealthHandler()
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestCreateHandlers() {
+	tests := []struct {
+		name        string
+		withHealth  bool
+		expectedLen int
+	}{
+		{
+			name:        "returns handler functions without health",
+			withHealth:  false,
+			expectedLen: 3,
+		},
+		{
+			name:        "returns handler functions with health",
+			withHealth:  true,
+			expectedLen: 4,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-signing-key",
+						},
+					},
+				},
+			}
+
+			var opts []api.Option
+			if tt.withHealth {
+				checker := &health.NATSChecker{}
+				healthHandler := health.New(checker, time.Now(), "0.1.0")
+				opts = append(opts, api.WithHealthHandler(healthHandler))
+			}
+
+			server := api.New(appConfig, slog.Default(), opts...)
+			handlers := server.CreateHandlers(s.mockJobClient)
+
+			s.Len(handlers, tt.expectedLen)
 		})
 	}
 }

@@ -28,9 +28,26 @@ import (
 
 // CombinedHandler is a superset of all smaller handler interfaces.
 type CombinedHandler interface {
+	HealthHandler
 	NetworkHandler
 	SystemHandler
 	JobHandler
+}
+
+// HealthHandler defines an interface for interacting with Health client operations.
+type HealthHandler interface {
+	// GetHealth get the health liveness API endpoint.
+	GetHealth(
+		ctx context.Context,
+	) (*gen.GetHealthResponse, error)
+	// GetHealthReady get the health readiness API endpoint.
+	GetHealthReady(
+		ctx context.Context,
+	) (*gen.GetHealthReadyResponse, error)
+	// GetHealthDetailed get the health detailed API endpoint.
+	GetHealthDetailed(
+		ctx context.Context,
+	) (*gen.GetHealthDetailedResponse, error)
 }
 
 // JobHandler defines an interface for interacting with Job client operations.

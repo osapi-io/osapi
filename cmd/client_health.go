@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,21 +18,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package cmd
 
 import (
-	"log/slog"
+	"fmt"
+	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/api/health"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/client"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	healthHandler *health.Health
+// clientHealthCmd represents the clientHealth command.
+var clientHealthCmd = &cobra.Command{
+	Use:   "health",
+	Short: "Health check endpoints",
+	Long: `Check the health of the API server.
+
+Running without a subcommand performs a liveness probe.
+`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		healthHandler := handler.(client.HealthHandler)
+		resp, err := healthHandler.GetHealth(ctx)
+		if err != nil {
+			logFatal("failed to get health endpoint", err)
+		}
+
+		switch resp.StatusCode() {
+		case http.StatusOK:
+			if jsonOutput {
+				fmt.Println(string(resp.Body))
+				return
+			}
+
+			if resp.JSON200 == nil {
+				logFatal("failed response", fmt.Errorf("health response was nil"))
+			}
+
+			data := map[string]interface{}{
+				"Status": resp.JSON200.Status,
+			}
+			printStyledMap(data)
+
+		default:
+			handleUnknownError(nil, resp.StatusCode(), logger)
+		}
+	},
+}
+
+func init() {
+	clientCmd.AddCommand(clientHealthCmd)
 }

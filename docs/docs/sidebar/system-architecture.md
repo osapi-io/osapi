@@ -38,7 +38,7 @@ The `osapi` binary exposes four top-level command groups:
 - **`osapi nats server start`** — starts an embedded NATS server with JetStream
   enabled
 - **`osapi client`** — CLI client that talks to the REST API (system, network,
-  and job subcommands)
+  job, and health subcommands)
 
 ## Layers
 
@@ -60,6 +60,7 @@ subpackages:
 | `internal/api/system/`  | System endpoints (hostname, status, uptime, disk, memory, load)  |
 | `internal/api/network/` | Network endpoints (DNS, ping)                                    |
 | `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
+| `internal/api/health/`  | Health check endpoints (liveness, readiness, detailed)           |
 | `internal/api/common/`  | Shared middleware, error handling, collection responses          |
 
 All state-changing operations are dispatched as jobs through the job client
@@ -139,6 +140,64 @@ job:
       group: 'web.dev'
 ```
 
+## Health Checks (`internal/api/health/`)
+
+The API server exposes three health check endpoints following the Kubernetes
+liveness/readiness probe pattern. These endpoints live outside the `/api/v1/`
+prefix at `/health` because they serve infrastructure concerns rather than
+business operations.
+
+| Endpoint               | Auth       | Purpose                                    |
+| ---------------------- | ---------- | ------------------------------------------ |
+| `GET /health`          | None       | Liveness — returns 200 if the process runs |
+| `GET /health/ready`    | None       | Readiness — verifies dependencies          |
+| `GET /health/detailed` | JWT `read` | Per-component status for operators         |
+
+### Liveness (`/health`)
+
+Returns `{"status":"ok"}` unconditionally. No dependency checks are performed.
+If the HTTP server responds, the process is alive. This endpoint is deliberately
+trivial — putting dependency checks here would cause orchestrators to restart
+the process during a transient NATS outage, creating a restart storm on top of
+the original problem.
+
+### Readiness (`/health/ready`)
+
+Runs all checks registered with the `Checker` interface and returns 200
+(`ready`) or 503 (`not_ready`). The default checker (`NATSChecker`) verifies:
+
+- **NATS connectivity** — the NATS connection is active and has a connected URL
+- **KV bucket access** — the `job-queue` KV bucket is reachable and can list
+  keys
+
+Load balancers should use this endpoint to decide whether to route traffic. When
+readiness fails, the server stays running but stops receiving requests until the
+dependency recovers.
+
+### Detailed (`/health/detailed`)
+
+Breaks out each dependency as a named component with its own status and error
+message. Also reports the application version and uptime. Returns `ok` when all
+components are healthy or `degraded` (with HTTP 503) when any component fails.
+Requires JWT authentication because it exposes internal topology.
+
+Components checked:
+
+| Component | What it checks                      |
+| --------- | ----------------------------------- |
+| `nats`    | NATS client is connected            |
+| `kv`      | `job-queue` KV bucket is accessible |
+
+### CLI Access
+
+Operators can check health from the command line:
+
+```bash
+osapi client health              # liveness
+osapi client health ready        # readiness
+osapi client health detailed     # per-component (requires auth)
+```
+
 ## Request Flow
 
 A typical operation (e.g., `system.hostname.get`) follows these steps:
@@ -175,7 +234,10 @@ Access control is scope-based with a three-tier role hierarchy:
 | `read`  | `read`                   |
 
 Each API endpoint declares a required scope. The JWT middleware checks that the
-caller's role includes that scope before allowing the request.
+caller's role includes that scope before allowing the request. The health
+endpoints `/health` and `/health/ready` are exceptions — they bypass JWT
+authentication so that load balancers and orchestrators can probe them without
+credentials.
 
 ### CORS
 

@@ -1,11 +1,11 @@
 ---
-id: retrieve-system-hostname
-title: "Retrieve system hostname"
-description: "Get the current hostname of the system."
-sidebar_label: "Retrieve system hostname"
+id: list-active-workers
+title: "List active workers"
+description: "Discover all active workers in the fleet by broadcasting a hostname query."
+sidebar_label: "List active workers"
 hide_title: true
 hide_table_of_contents: true
-api: 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
+api: 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
 sidebar_class_name: "get api-method"
 info_path: gen/api/osapi-a-crud-api-for-managing-linux-systems
 custom_edit_url: null
@@ -27,54 +27,22 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Retrieve system hostname"}
+  children={"List active workers"}
 >
 </Heading>
 
 <MethodEndpoint
   method={"get"}
-  path={"/system/hostname"}
+  path={"/job/workers"}
 >
   
 </MethodEndpoint>
 
 
 
-Get the current hostname of the system.
+Discover all active workers in the fleet by broadcasting a hostname query.
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
-  children={"Request"}
->
-</Heading>
-
-<details
-  style={{"marginBottom":"1rem"}}
-  className={"openapi-markdown__details"}
-  data-collapsed={false}
-  open={true}
->
-  <summary
-    style={{}}
-  >
-    <h3
-      className={"openapi-markdown__details-summary-header-params"}
-    >
-      Query Parameters
-    </h3>
-  </summary><div>
-    <ul>
-      <ParamsItem
-        className={"paramsItem"}
-        param={{"name":"target_hostname","in":"query","required":false,"schema":{"type":"string","default":"_any"},"description":"Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).\n"}}
-      >
-        
-      </ParamsItem>
-    </ul>
-  </div>
-</details><div>
+<div>
   <div>
     <ApiTabs
       label={undefined}
@@ -87,7 +55,7 @@ Get the current hostname of the system.
         <div>
           
           
-          A JSON object containing the system's hostname.
+          List of active workers.
           
           
         </div><div>
@@ -143,7 +111,7 @@ Get the current hostname of the system.
                               <strong
                                 className={"openapi-schema__property"}
                               >
-                                results
+                                workers
                               </strong><span
                                 className={"openapi-schema__name"}
                               >
@@ -173,7 +141,7 @@ Get the current hostname of the system.
                               required={true}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The system's hostname.","example":"my-linux-server"}}
+                              schema={{"type":"string","description":"The hostname of the worker."}}
                             >
                               
                             </SchemaItem><li>
@@ -185,95 +153,13 @@ Get the current hostname of the system.
                             </li>
                           </div>
                         </details>
-                      </SchemaItem>
-                    </ul>
-                  </details>
-                </TabItem><TabItem
-                  label={"Example (from schema)"}
-                  value={"Example (from schema)"}
-                >
-                  <ResponseSamples
-                    responseExample={"{\n  \"results\": [\n    {\n      \"hostname\": \"my-linux-server\"\n    }\n  ]\n}"}
-                    language={"json"}
-                  >
-                    
-                  </ResponseSamples>
-                </TabItem>
-              </SchemaTabs>
-            </TabItem>
-          </MimeTabs>
-        </div>
-      </TabItem><TabItem
-        label={"400"}
-        value={"400"}
-      >
-        <div>
-          
-          
-          Invalid request parameters.
-          
-          
-        </div><div>
-          <MimeTabs
-            className={"openapi-tabs__mime"}
-            schemaType={"response"}
-          >
-            <TabItem
-              label={"application/json"}
-              value={"application/json"}
-            >
-              <SchemaTabs
-                className={"openapi-tabs__schema"}
-              >
-                <TabItem
-                  label={"Schema"}
-                  value={"Schema"}
-                >
-                  <details
-                    style={{}}
-                    className={"openapi-markdown__details response"}
-                    data-collapsed={false}
-                    open={true}
-                  >
-                    <summary
-                      style={{}}
-                      className={"openapi-markdown__details-summary-response"}
-                    >
-                      <strong>
-                        Schema
-                      </strong>
-                    </summary><div
-                      style={{"textAlign":"left","marginLeft":"1rem"}}
-                    >
-                      
-                    </div><ul
-                      style={{"marginLeft":"1rem"}}
-                    >
-                      <SchemaItem
-                        collapsible={false}
-                        name={"error"}
-                        required={false}
-                        schemaName={"string"}
-                        qualifierMessage={undefined}
-                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
-                      >
-                        
                       </SchemaItem><SchemaItem
                         collapsible={false}
-                        name={"details"}
-                        required={false}
-                        schemaName={"string"}
-                        qualifierMessage={undefined}
-                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
-                      >
-                        
-                      </SchemaItem><SchemaItem
-                        collapsible={false}
-                        name={"code"}
-                        required={false}
+                        name={"total"}
+                        required={true}
                         schemaName={"integer"}
                         qualifierMessage={undefined}
-                        schema={{"type":"integer","description":"The error code.","example":500}}
+                        schema={{"type":"integer","description":"Total number of active workers."}}
                       >
                         
                       </SchemaItem>
@@ -284,7 +170,7 @@ Get the current hostname of the system.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    responseExample={"{\n  \"workers\": [\n    {\n      \"hostname\": \"string\"\n    }\n  ],\n  \"total\": 0\n}"}
                     language={"json"}
                   >
                     
@@ -483,7 +369,7 @@ Get the current hostname of the system.
         <div>
           
           
-          Error retrieving hostname.
+          Error discovering workers.
           
           
         </div><div>
