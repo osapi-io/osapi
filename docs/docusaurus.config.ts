@@ -11,6 +11,9 @@ const config: Config = {
   title: 'OSAPI',
   tagline: 'OSAPI is cool',
   favicon: 'img/favicon.ico',
+  markdown: {
+    mermaid: true
+  },
 
   // Set the production url of your site here
   url: 'https://osapi-io.github.io/',
@@ -194,7 +197,7 @@ const config: Config = {
     ]
   ],
 
-  themes: ['docusaurus-theme-openapi-docs']
+  themes: ['docusaurus-theme-openapi-docs', '@docusaurus/theme-mermaid']
 };
 
 export default async function createConfig() {

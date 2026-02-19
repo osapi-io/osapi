@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 ---
 
 # Contributing
@@ -19,12 +19,12 @@ This document applies to the [OSAPI][] repository.
   1. [Development](development.md) - Prerequisites, setup, code style, testing,
      and commit conventions
   2. [Guiding Principles](principles.md) - Design philosophy and project values
-  3. [System Architecture](system-architecture.md) - High-level component
-     overview (REST API, NATS, CLI)
+  3. [System Architecture](architecture/system-architecture.md) - High-level
+     component overview (REST API, NATS, CLI)
   4. [API Design Guidelines](api-guidelines.md) - REST conventions and endpoint
      structure
-  5. [Job System Architecture](job-architecture.md) - KV-first job processing,
-     subject routing, and worker pipeline
+  5. [Job System Architecture](architecture/job-architecture.md) - KV-first job
+     processing, subject routing, and worker pipeline
 - **Check existing work** - Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.

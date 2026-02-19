@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 3
 ---
 
 # Job System Architecture
@@ -49,6 +49,19 @@ type-safe business logic operations (`CreateJob`, `GetQueueStats`,
 | KV `job-responses` | Result storage (worker responses keyed by request ID)       |
 
 ### Job Flow
+
+```mermaid
+graph LR
+    A["API / CLI"] -->|1. create| JC["Job Client"]
+    JC -->|store job| KV["KV job-queue"]
+    JC -->|publish notification| Stream["JOBS Stream"]
+    Stream -->|deliver| Worker
+    Worker -->|fetch job| KV
+    Worker -->|execute| Provider
+    Worker -->|write result| KVR["KV job-responses"]
+    A -->|3. poll status| KV
+    A -->|3. read result| KVR
+```
 
 1. **Job Creation** — API/CLI calls Job Client, which stores the job in KV and
    publishes a notification to the stream
@@ -261,8 +274,14 @@ osapi client job add --json-file dns-query.json --target-hostname _any
 
 ### 2. Job States
 
-**State flow:** `submitted` → `acknowledged` → `started` → `completed` (or
-`failed`)
+```mermaid
+stateDiagram-v2
+    [*] --> submitted
+    submitted --> acknowledged
+    acknowledged --> started
+    started --> completed
+    started --> failed
+```
 
 **State Transitions via Events:**
 
@@ -338,12 +357,24 @@ GET /api/v1/jobs/{job-id}
 
 ### Processing Flow
 
-1. **Receive notification** from JetStream
-2. **Fetch immutable job** from KV using key from notification
-3. **Write status events** (acknowledged → started → completed/failed)
-4. **Execute operation** based on category/operation
-5. **Store response** in job-responses KV with hostname tracking
-6. **ACK message** to JetStream
+```mermaid
+sequenceDiagram
+    participant JS as JetStream
+    participant Worker
+    participant KV as KV job-queue
+    participant Provider
+    participant KVR as KV job-responses
+
+    JS->>Worker: deliver notification
+    Worker->>KV: fetch immutable job
+    Worker->>KV: write status: acknowledged
+    Worker->>KV: write status: started
+    Worker->>Provider: execute operation
+    Provider-->>Worker: result
+    Worker->>KV: write status: completed/failed
+    Worker->>KVR: store response
+    Worker->>JS: ACK message
+```
 
 ### Append-Only Status Architecture
 

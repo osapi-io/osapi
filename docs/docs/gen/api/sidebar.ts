@@ -24,6 +24,34 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Health",
+      link: {
+        type: "doc",
+        id: "gen/api/health-check-api-health",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-health",
+          label: "Liveness probe",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-health-ready",
+          label: "Readiness probe",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-health-detailed",
+          label: "Detailed component health",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Job",
       link: {
         type: "doc",
@@ -46,6 +74,12 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-queue-statistics",
           label: "Get queue statistics",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/list-active-workers",
+          label: "List active workers",
           className: "api-method get",
         },
         {

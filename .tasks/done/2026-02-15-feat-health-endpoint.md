@@ -1,8 +1,8 @@
 ---
 title: Health check and readiness endpoints
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-19
 ---
 
 ## Objective

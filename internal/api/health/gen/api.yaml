@@ -1,0 +1,172 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Health Check API
+  version: 1.0.0
+tags:
+  - name: health
+    x-displayName: Health
+    description: Health check endpoints for liveness, readiness, and detailed status.
+paths:
+  /health:
+    get:
+      operationId: GetHealth
+      summary: Liveness probe
+      description: Returns 200 if the process is alive. No checks performed.
+      tags:
+        - health
+      responses:
+        '200':
+          description: Process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /health/ready:
+    get:
+      operationId: GetHealthReady
+      summary: Readiness probe
+      description: Returns 200 when the service is ready to accept traffic.
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: Service is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+  /health/detailed:
+    get:
+      operationId: GetHealthDetailed
+      summary: Detailed component health
+      description: Returns per-component health status. Requires authentication.
+      tags:
+        - health
+      security:
+        - BearerAuth:
+            - read
+      responses:
+        '200':
+          description: All components healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '503':
+          description: One or more components unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Health status.
+          example: "ok"
+      required:
+        - status
+
+    ReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Readiness status.
+          example: "ready"
+        error:
+          type: string
+          description: Error message when not ready.
+      required:
+        - status
+
+    ComponentHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Component health status.
+          example: "ok"
+        error:
+          type: string
+          description: Error message when component is unhealthy.
+      required:
+        - status
+
+    DetailedHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Overall health status.
+          example: "ok"
+        components:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentHealth'
+          description: Per-component health status.
+        version:
+          type: string
+          description: Application version.
+          example: "0.1.0"
+        uptime:
+          type: string
+          description: Time since server started.
+          example: "2h30m"
+      required:
+        - status
+        - components
+        - version
+        - uptime

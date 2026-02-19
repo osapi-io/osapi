@@ -41,6 +41,9 @@ tags:
   - name: OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
     x-displayName: Info
     description: Operations related to the info endpoint.
+  - name: Health_Check_API_health
+    x-displayName: Health
+    description: Health check endpoints for liveness, readiness, and detailed status.
   - name: Job_Management_API_job_operations
     x-displayName: Job
     description: Operations related to the job queue.
@@ -73,6 +76,78 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /health:
+    servers: []
+    get:
+      operationId: GetHealth
+      summary: Liveness probe
+      description: Returns 200 if the process is alive. No checks performed.
+      tags:
+        - Health_Check_API_health
+      responses:
+        '200':
+          description: Process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /health/ready:
+    servers: []
+    get:
+      operationId: GetHealthReady
+      summary: Readiness probe
+      description: Returns 200 when the service is ready to accept traffic.
+      tags:
+        - Health_Check_API_health
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: Service is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+  /health/detailed:
+    servers: []
+    get:
+      operationId: GetHealthDetailed
+      summary: Detailed component health
+      description: Returns per-component health status. Requires authentication.
+      tags:
+        - Health_Check_API_health
+      security:
+        - BearerAuth:
+            - read
+      responses:
+        '200':
+          description: All components healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: One or more components unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
   /job:
     servers: []
     post:
@@ -145,6 +220,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListJobsResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -202,7 +283,9 @@ paths:
     servers: []
     get:
       summary: List active workers
-      description: Discover all active workers in the fleet by broadcasting a hostname query.
+      description: >-
+        Discover all active workers in the fleet by broadcasting a hostname
+        query.
       tags:
         - Job_Management_API_job_operations
       security:
@@ -257,6 +340,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobDetailResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -299,6 +388,12 @@ paths:
       responses:
         '204':
           description: Job deleted successfully. No content returned.
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -341,8 +436,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+            Target: _any (load-balanced), _all (broadcast), hostname (direct),
+            or key:value (label group, e.g., group:web.dev).
       requestBody:
         description: The server to ping.
         required: true
@@ -423,8 +518,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+            Target: _any (load-balanced), _all (broadcast), hostname (direct),
+            or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: List of DNS servers.
@@ -475,8 +570,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+            Target: _any (load-balanced), _all (broadcast), hostname (direct),
+            or key:value (label group, e.g., group:web.dev).
       requestBody:
         required: true
         content:
@@ -534,8 +629,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+            Target: _any (load-balanced), _all (broadcast), hostname (direct),
+            or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's status information.
@@ -543,6 +638,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SystemStatusCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -579,8 +680,8 @@ paths:
             type: string
             default: _any
           description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+            Target: _any (load-balanced), _all (broadcast), hostname (direct),
+            or key:value (label group, e.g., group:web.dev).
       responses:
         '200':
           description: A JSON object containing the system's hostname.
@@ -588,6 +689,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HostnameCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -623,6 +730,64 @@ components:
           type: integer
           description: The error code.
           example: 500
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Health status.
+          example: ok
+      required:
+        - status
+    ReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Readiness status.
+          example: ready
+        error:
+          type: string
+          description: Error message when not ready.
+      required:
+        - status
+    ComponentHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Component health status.
+          example: ok
+        error:
+          type: string
+          description: Error message when component is unhealthy.
+      required:
+        - status
+    DetailedHealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Overall health status.
+          example: ok
+        components:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ComponentHealth'
+          description: Per-component health status.
+        version:
+          type: string
+          description: Application version.
+          example: 0.1.0
+        uptime:
+          type: string
+          description: Time since server started.
+          example: 2h30m
+      required:
+        - status
+        - components
+        - version
+        - uptime
     CreateJobRequest:
       type: object
       properties:
@@ -630,10 +795,14 @@ components:
           type: object
           description: The operation to perform, as a JSON object.
           additionalProperties: true
+          x-oapi-codegen-extra-tags:
+            validate: required
         target_hostname:
           type: string
           description: The target hostname for routing (_any, _all, or specific hostname).
           example: _any
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
       required:
         - operation
         - target_hostname
@@ -724,26 +893,6 @@ components:
                 type: string
               duration:
                 type: string
-    QueueStatsResponse:
-      type: object
-      properties:
-        total_jobs:
-          type: integer
-          description: Total number of jobs in the queue.
-          example: 42
-        status_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by status.
-        operation_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by operation type.
-        dlq_count:
-          type: integer
-          description: Number of jobs in the dead letter queue.
     ListWorkersResponse:
       type: object
       properties:
@@ -765,6 +914,26 @@ components:
           description: The hostname of the worker.
       required:
         - hostname
+    QueueStatsResponse:
+      type: object
+      properties:
+        total_jobs:
+          type: integer
+          description: Total number of jobs in the queue.
+          example: 42
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of jobs by status.
+        operation_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of jobs by operation type.
+        dlq_count:
+          type: integer
+          description: Number of jobs in the dead letter queue.
     PingResponse:
       type: object
       properties:
@@ -956,24 +1125,6 @@ components:
       description: List of local disk usage information.
       items:
         $ref: '#/components/schemas/DiskResponse'
-    SystemStatusCollectionResponse:
-      type: object
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SystemStatusResponse'
-      required:
-        - results
-    HostnameCollectionResponse:
-      type: object
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/HostnameResponse'
-      required:
-        - results
     SystemStatusResponse:
       type: object
       properties:
@@ -1010,6 +1161,24 @@ components:
           example: my-linux-server
       required:
         - hostname
+    SystemStatusCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemStatusResponse'
+      required:
+        - results
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
     OSInfoResponse:
       type: object
       description: Operating system information.
@@ -1034,6 +1203,9 @@ x-tagGroups:
   - name: OSAPI - A CRUD API for managing Linux systems
     tags:
       - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
+  - name: Health Check API
+    tags:
+      - Health_Check_API_health
   - name: Job Management API
     tags:
       - Job_Management_API_job_operations

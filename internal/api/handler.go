@@ -35,15 +35,24 @@ func (s *Server) CreateHandlers(
 	networkHandler := s.GetNetworkHandler(jobClient)
 	jobHandler := s.GetJobHandler(jobClient)
 
+	totalCap := len(systemHandler) + len(networkHandler) + len(jobHandler)
+
+	var healthHandler []func(e *echo.Echo)
+	if s.healthHandler != nil {
+		healthHandler = s.GetHealthHandler()
+		totalCap += len(healthHandler)
+	}
+
 	handlers := make(
 		[]func(e *echo.Echo),
 		0,
-		len(systemHandler)+len(networkHandler)+len(jobHandler),
+		totalCap,
 	)
 
 	handlers = append(handlers, systemHandler...)
 	handlers = append(handlers, networkHandler...)
 	handlers = append(handlers, jobHandler...)
+	handlers = append(handlers, healthHandler...)
 
 	return handlers
 }
