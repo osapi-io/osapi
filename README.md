@@ -24,7 +24,7 @@ them to be used as appliances.
 
 [Architecture][] | [Getting Started][] | [API][] | [Usage][]
 
-[Architecture]: https://osapi-io.github.io/osapi/sidebar/architecture/architecture
+[Architecture]: https://osapi-io.github.io/osapi/sidebar/architecture
 [Getting Started]: https://osapi-io.github.io/osapi/
 [API]: https://osapi-io.github.io/osapi/category/api
 [Usage]: https://osapi-io.github.io/osapi/sidebar/usage/
