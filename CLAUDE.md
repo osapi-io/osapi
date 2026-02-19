@@ -39,6 +39,81 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/client/`** - Generated REST API client
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 
+## Adding a New API Domain
+
+When adding a new domain (e.g., `service`, `power`), follow the `health`
+domain as a reference. Read the existing files before creating new ones.
+
+### Step 1: OpenAPI Spec + Code Generation
+
+Create `internal/api/{domain}/gen/` with three hand-written files:
+
+- `api.yaml` — OpenAPI spec with paths, schemas, and `BearerAuth` security
+- `cfg.yaml` — oapi-codegen config (`strict-server: true`, import-mapping
+  for `common/gen`)
+- `generate.go` — `//go:generate` directive
+
+### Step 2: Handler Implementation
+
+Create `internal/api/{domain}/`:
+
+- `types.go` — domain struct, dependency interfaces (e.g., `Checker`)
+- `{domain}.go` — `New()` factory, compile-time interface check:
+  `var _ gen.StrictServerInterface = (*Domain)(nil)`
+- One file per endpoint (e.g., `{operation}_get.go`)
+- Tests: `{operation}_get_public_test.go` (testify/suite, table-driven)
+
+### Step 3: Server Wiring (4 files in `internal/api/`)
+
+- `handler_{domain}.go` — `Get{Domain}Handler()` method that wraps the
+  handler with `NewStrictHandler` + `scopeMiddleware`. Define
+  `unauthenticatedOperations` map if any endpoints skip auth.
+- `types.go` — add `{domain}Handler` field to `Server` struct +
+  `With{Domain}Handler()` option func
+- `handler.go` — call `Get{Domain}Handler()` in `CreateHandlers()` and
+  append results
+- `handler_public_test.go` — add `TestGet{Domain}Handler` with test cases
+  for both unauthenticated and authenticated paths
+
+### Step 4: Startup Wiring
+
+- `cmd/api_server_start.go` — initialize the handler with real
+  dependencies and pass `api.With{Domain}Handler(h)` to `api.New()`
+
+### Step 5: Generate Client Code
+
+Run `just generate` which:
+1. `redocly join` merges all `internal/api/*/gen/api.yaml` into
+   `internal/client/gen/api.yaml`
+2. `go generate` creates `client.gen.go` with typed
+   `Get{Op}WithResponse()` methods
+
+### Step 6: Client Wrappers
+
+- `internal/client/handler.go` — add `{Domain}Handler` interface to
+  `CombinedHandler` composition
+- `internal/client/{domain}_{operation}.go` — thin wrapper per endpoint
+  calling `c.Client.Get{Op}WithResponse(ctx)`
+- `internal/client/client_public_test.go` — add test methods to existing
+  suite
+
+### Step 7: CLI Commands
+
+- `cmd/client_{domain}.go` — parent command registered under `clientCmd`
+- `cmd/client_{domain}_{operation}.go` — one subcommand per endpoint
+- All commands support `--json` for raw output
+- Use `printStyledMap` and `printStyledTable` from `cmd/ui.go` for
+  formatted output
+
+### Step 8: Verify
+
+```bash
+just generate        # regenerate specs + code
+go build ./...       # compiles
+just go::unit        # tests pass
+just go::vet         # lint passes
+```
+
 ## Code Standards (MANDATORY)
 
 ### Function Signatures
