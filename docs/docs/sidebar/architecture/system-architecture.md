@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 2
 ---
 
 # System Architecture
@@ -21,6 +21,16 @@ The system is organized into six layers, top to bottom:
 | **Job Client**                  | `internal/job/client/`                       | Business logic for job CRUD and status            |
 | **NATS JetStream**              | (external)                                   | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
 | **Job Worker / Provider Layer** | `internal/job/worker/`, `internal/provider/` | Consumes jobs from NATS and executes providers    |
+
+```mermaid
+graph TD
+    CLI["CLI (cmd/)"] --> Client["Generated HTTP Client (internal/client/)"]
+    Client --> API["REST API (internal/api/)"]
+    API --> JobClient["Job Client (internal/job/client/)"]
+    JobClient --> NATS["NATS JetStream"]
+    NATS --> Worker["Job Worker (internal/job/worker/)"]
+    Worker --> Provider["Provider Layer (internal/provider/)"]
+```
 
 The CLI talks to the REST API through the generated HTTP client. The REST API
 delegates state-changing operations to the job client, which stores jobs in NATS
@@ -65,7 +75,7 @@ subpackages:
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
-envelope documented in the [API Design Guidelines](api-guidelines.md).
+envelope documented in the [API Design Guidelines](../api-guidelines.md).
 
 ### Job System (`internal/job/`)
 
@@ -107,7 +117,7 @@ Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
 Environment variables override file values using the `OSAPI_` prefix with
 underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
 
-Minimal configuration skeleton (see [Configuration](configuration.md) for the
+Minimal configuration skeleton (see [Configuration](../configuration.md) for the
 full reference):
 
 ```yaml
@@ -202,17 +212,29 @@ osapi client health detailed     # per-component (requires auth)
 
 A typical operation (e.g., `system.hostname.get`) follows these steps:
 
-1. **CLI** sends `POST /api/v1/jobs` to the REST API.
-2. **REST API** calls `CreateJob()` on the job client.
-3. **Job Client** stores the immutable job definition in NATS KV (`job-queue`)
-   and publishes a notification to the `JOBS` stream.
-4. The API returns `201` with the `job_id` to the CLI.
-5. A **Worker** receives the stream notification, fetches the immutable job from
-   KV, and executes the matching provider.
-6. The **Worker** writes status events and the result back to KV
-   (`job-responses`).
-7. **CLI** polls `GET /api/v1/jobs/{id}`. The API reads computed status from KV
-   events and returns the result.
+```mermaid
+sequenceDiagram
+    participant CLI
+    participant API as REST API
+    participant JC as Job Client
+    participant NATS as NATS JetStream
+    participant Worker
+    participant Provider
+
+    CLI->>API: POST /api/v1/jobs
+    API->>JC: CreateJob()
+    JC->>NATS: store job in KV (job-queue)
+    JC->>NATS: publish notification to JOBS stream
+    API-->>CLI: 201 (job_id)
+    NATS->>Worker: deliver stream notification
+    Worker->>NATS: fetch immutable job from KV
+    Worker->>Provider: execute operation
+    Provider-->>Worker: result
+    Worker->>NATS: write status events + result to KV
+    CLI->>API: GET /api/v1/jobs/{id}
+    API->>NATS: read computed status from KV
+    API-->>CLI: 200 (result)
+```
 
 ## Security
 
@@ -262,10 +284,10 @@ CORS headers entirely.
 
 - [Job System Architecture](job-architecture.md) — deep dive into the KV-first
   job system, subject routing, and worker pipeline
-- [API Design Guidelines](api-guidelines.md) — REST conventions, collection
+- [API Design Guidelines](../api-guidelines.md) — REST conventions, collection
   envelopes, and endpoint patterns
-- [Guiding Principles](principles.md) — design philosophy and project values
-- [Development](development.md) — setup, building, testing, and contributing
+- [Guiding Principles](../principles.md) — design philosophy and project values
+- [Development](../development.md) — setup, building, testing, and contributing
 
 <!-- prettier-ignore-start -->
 [Cobra]: https://github.com/spf13/cobra

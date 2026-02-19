@@ -16,8 +16,9 @@ For setup, building, testing, and contributing, see the Docusaurus docs:
 - @docs/docs/sidebar/principles.md - Guiding principles (simplicity, minimalism, design philosophy)
 - @docs/docs/sidebar/api-guidelines.md - API design guidelines (REST conventions, endpoint structure)
 - @docs/docs/sidebar/configuration.md - Configuration reference (osapi.yaml, env overrides)
-- @docs/docs/sidebar/system-architecture.md - System architecture (components, REST API, NATS, CLI)
-- @docs/docs/sidebar/job-architecture.md - Job system architecture (KV-first, subject routing, worker pipeline)
+- @docs/docs/sidebar/architecture/architecture.md - Architecture overview (deployment models, request flow)
+- @docs/docs/sidebar/architecture/system-architecture.md - System architecture (components, REST API, NATS, CLI)
+- @docs/docs/sidebar/architecture/job-architecture.md - Job system architecture (KV-first, subject routing, worker pipeline)
 
 Quick reference for common commands:
 

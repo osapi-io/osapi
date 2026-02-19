@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Roadmap
@@ -83,8 +83,8 @@ Each new feature follows the same architecture:
 7. CLI commands with `--json` output
 8. Tests (provider, client, handler, integration)
 
-See [Job System Architecture](job-architecture.md) for details on the provider
-and worker pipeline.
+See [Job System Architecture](architecture/job-architecture.md) for details on
+the provider and worker pipeline.
 
 ## Contributing
 
