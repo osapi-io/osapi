@@ -111,46 +111,102 @@ func (s *WorkerPublicTestSuite) TestNew() {
 
 func (s *WorkerPublicTestSuite) TestStart() {
 	tests := []struct {
-		name string
+		name      string
+		setupFunc func() *worker.Worker
+		stopFunc  func(w *worker.Worker)
 	}{
 		{
-			name: "starts and stops with context cancellation",
+			name: "starts and stops gracefully",
+			setupFunc: func() *worker.Worker {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				return worker.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				)
+			},
+			stopFunc: func(w *worker.Worker) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				w.Stop(stopCtx)
+			},
+		},
+		{
+			name: "stop times out when workers are slow to finish",
+			setupFunc: func() *worker.Worker {
+				blockCh := make(chan struct{})
+
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						_ interface{},
+						_ interface{},
+					) error {
+						<-blockCh
+						return nil
+					}).
+					Times(6)
+
+				w := worker.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				)
+
+				// Schedule cleanup after Stop returns
+				s.T().Cleanup(func() {
+					close(blockCh)
+					time.Sleep(10 * time.Millisecond)
+				})
+
+				return w
+			},
+			stopFunc: func(w *worker.Worker) {
+				stopCtx, cancel := context.WithCancel(context.Background())
+				cancel()
+
+				w.Stop(stopCtx)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			// Mock consumer creation for 3 query + 3 modify consumers
-			s.mockJobClient.EXPECT().
-				CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-				Return(nil).
-				Times(6)
-
-			// Mock job consumption returning context.Canceled
-			s.mockJobClient.EXPECT().
-				ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(context.Canceled).
-				Times(6)
-
-			w := worker.New(
-				s.appFs,
-				s.appConfig,
-				s.logger,
-				s.mockJobClient,
-				hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-				pingMocks.NewDefaultMockProvider(s.mockCtrl),
-			)
-
+			w := tt.setupFunc()
 			w.Start()
-
-			stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			w.Stop(stopCtx)
+			tt.stopFunc(w)
 		})
 	}
 }
