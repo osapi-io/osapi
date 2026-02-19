@@ -186,7 +186,7 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 			},
 		},
 		{
-			name: "closure registers routes and middleware executes",
+			name: "closure registers routes and middleware executes for unauthenticated",
 			validate: func(handlers []func(e *echo.Echo)) {
 				e := echo.New()
 				for _, h := range handlers {
@@ -195,6 +195,20 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 				s.NotEmpty(e.Routes())
 
 				req := httptest.NewRequest(http.MethodGet, "/health", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes for authenticated",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/health/detailed", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},
