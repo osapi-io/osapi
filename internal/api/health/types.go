@@ -22,6 +22,7 @@ package health
 
 import (
 	"context"
+	"log/slog"
 	"time"
 )
 
@@ -115,4 +116,5 @@ type Health struct {
 	Version string
 	// Metrics provides system metrics (optional, can be nil).
 	Metrics MetricsProvider
+	logger  *slog.Logger
 }

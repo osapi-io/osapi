@@ -22,6 +22,7 @@ package health_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -40,6 +41,7 @@ type HealthGetPublicTestSuite struct {
 
 func (s *HealthGetPublicTestSuite) SetupTest() {
 	s.handler = health.New(
+		slog.Default(),
 		&health.NATSChecker{},
 		time.Now(),
 		"0.1.0",

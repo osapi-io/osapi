@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -57,11 +56,6 @@ var clientJobGetCmd = &cobra.Command{
 			}
 
 			displayJobDetailResponse(resp.JSON200)
-
-			logger.Info("job retrieved successfully",
-				slog.String("job_id", jobID),
-				slog.String("status", safeString(resp.JSON200.Status)),
-			)
 		case http.StatusNotFound:
 			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:

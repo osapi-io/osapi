@@ -23,6 +23,7 @@ package network_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -46,7 +47,7 @@ type NetworkDNSPutByInterfacePublicTestSuite struct {
 func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinetwork.New(s.mockJobClient)
+	s.handler = apinetwork.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 

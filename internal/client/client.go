@@ -24,6 +24,7 @@ package client
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/retr0h/osapi/internal/client/gen"
 	"github.com/retr0h/osapi/internal/config"
@@ -45,11 +46,13 @@ func New(
 // NewClientWithResponses factory to create new instance.
 // hate returning an error here... feels like a design flaw.
 func NewClientWithResponses(
+	logger *slog.Logger,
 	appConfig config.Config,
 ) (*gen.ClientWithResponses, error) {
 	transport := &authTransport{
 		base:       http.DefaultTransport,
 		authHeader: "Bearer " + appConfig.API.Client.Security.BearerToken,
+		logger:     logger,
 	}
 
 	hc := http.Client{
@@ -64,5 +67,27 @@ func (t *authTransport) RoundTrip(
 	req *http.Request,
 ) (*http.Response, error) {
 	req.Header.Set("Authorization", t.authHeader)
-	return t.base.RoundTrip(req)
+
+	start := time.Now()
+	resp, err := t.base.RoundTrip(req)
+	duration := time.Since(start)
+
+	if err != nil {
+		t.logger.Debug("http request failed",
+			slog.String("method", req.Method),
+			slog.String("url", req.URL.String()),
+			slog.String("error", err.Error()),
+			slog.Duration("duration", duration),
+		)
+		return nil, err
+	}
+
+	t.logger.Debug("http response",
+		slog.String("method", req.Method),
+		slog.String("url", req.URL.String()),
+		slog.Int("status", resp.StatusCode),
+		slog.Duration("duration", duration),
+	)
+
+	return resp, nil
 }

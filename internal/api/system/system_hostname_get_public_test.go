@@ -22,6 +22,7 @@ package system_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -45,7 +46,7 @@ type SystemHostnameGetPublicTestSuite struct {
 func (s *SystemHostnameGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apisystem.New(s.mockJobClient)
+	s.handler = apisystem.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 

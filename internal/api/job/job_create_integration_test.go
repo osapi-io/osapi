@@ -108,7 +108,7 @@ func (suite *JobCreateIntegrationTestSuite) TestPostJob() {
 		suite.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			jobHandler := apijob.New(jobMock)
+			jobHandler := apijob.New(suite.logger, jobMock)
 			strictHandler := jobGen.NewStrictHandler(jobHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)

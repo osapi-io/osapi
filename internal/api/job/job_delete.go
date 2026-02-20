@@ -22,6 +22,7 @@ package job
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
@@ -39,6 +40,10 @@ func (j *Job) DeleteJobByID(
 	if errMsg, ok := validation.Struct(id); !ok {
 		return gen.DeleteJobByID400JSONResponse{Error: &errMsg}, nil
 	}
+
+	j.logger.Debug("deleting job",
+		slog.String("job_id", request.Id),
+	)
 
 	err := j.JobClient.DeleteJob(ctx, request.Id)
 	if err != nil {

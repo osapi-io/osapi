@@ -23,6 +23,7 @@ package job_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -46,7 +47,7 @@ type JobDeletePublicTestSuite struct {
 func (s *JobDeletePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apijob.New(s.mockJobClient)
+	s.handler = apijob.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 

@@ -228,7 +228,7 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 			}
 
 			checker := &health.NATSChecker{}
-			healthHandler := health.New(checker, time.Now(), "0.1.0", nil)
+			healthHandler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil)
 			serverWithHealth := api.New(
 				appConfig,
 				slog.Default(),
@@ -274,7 +274,7 @@ func (s *HandlerPublicTestSuite) TestCreateHandlers() {
 			var opts []api.Option
 			if tt.withHealth {
 				checker := &health.NATSChecker{}
-				healthHandler := health.New(checker, time.Now(), "0.1.0", nil)
+				healthHandler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil)
 				opts = append(opts, api.WithHealthHandler(healthHandler))
 			}
 

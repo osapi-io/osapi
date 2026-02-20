@@ -22,6 +22,7 @@ package network_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -47,7 +48,7 @@ type NetworkPingPostPublicTestSuite struct {
 func (s *NetworkPingPostPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinetwork.New(s.mockJobClient)
+	s.handler = apinetwork.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 

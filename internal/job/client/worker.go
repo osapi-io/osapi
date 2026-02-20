@@ -41,17 +41,20 @@ func (c *Client) WriteStatusEvent(
 	jobID, event, hostname string,
 	data map[string]interface{},
 ) error {
+	// Capture time once for consistency across key and payload
+	now := time.Now()
+
 	// Create unique key with nanosecond timestamp to ensure uniqueness
 	statusKey := fmt.Sprintf("status.%s.%s.%s.%d",
-		jobID, event, sanitizeKeyForNATS(hostname), time.Now().UnixNano())
+		jobID, event, sanitizeKeyForNATS(hostname), now.UnixNano())
 
 	// Build event data
 	eventData := map[string]interface{}{
 		"job_id":    jobID,
 		"event":     event,
 		"hostname":  hostname,
-		"timestamp": time.Now().Format(time.RFC3339),
-		"unix_nano": time.Now().UnixNano(),
+		"timestamp": now.Format(time.RFC3339Nano),
+		"unix_nano": now.UnixNano(),
 	}
 
 	// Add any additional data
@@ -140,6 +143,9 @@ func (c *Client) GetJobData(
 	_ context.Context,
 	jobKey string,
 ) ([]byte, error) {
+	c.logger.Debug("kv.get",
+		slog.String("key", jobKey),
+	)
 	entry, err := c.kv.Get(jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job data for key %s: %w", jobKey, err)

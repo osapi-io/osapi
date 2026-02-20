@@ -22,6 +22,8 @@
 package network
 
 import (
+	"log/slog"
+
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
@@ -31,9 +33,11 @@ var _ gen.StrictServerInterface = (*Network)(nil)
 
 // New factory to create a new instance.
 func New(
+	logger *slog.Logger,
 	jobClient client.JobClient,
 ) *Network {
 	return &Network{
 		JobClient: jobClient,
+		logger:    logger,
 	}
 }

@@ -23,6 +23,7 @@ package worker
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -38,6 +39,11 @@ import (
 func (w *Worker) processJobOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
+	w.logger.Debug("dispatching to provider",
+		slog.String("category", jobRequest.Category),
+		slog.String("operation", jobRequest.Operation),
+	)
+
 	switch jobRequest.Category {
 	case "system":
 		return w.processSystemOperation(jobRequest)
@@ -94,6 +100,7 @@ func (w *Worker) processNetworkOperation(
 
 // getSystemHostname retrieves the system hostname and worker labels.
 func (w *Worker) getSystemHostname() (json.RawMessage, error) {
+	w.logger.Debug("executing host.GetHostname")
 	hostProvider := w.getHostProvider()
 	hostname, err := hostProvider.GetHostname()
 	if err != nil {
@@ -113,6 +120,7 @@ func (w *Worker) getSystemHostname() (json.RawMessage, error) {
 
 // getSystemStatus retrieves comprehensive system status.
 func (w *Worker) getSystemStatus() (json.RawMessage, error) {
+	w.logger.Debug("executing system.GetStatus")
 	hostProvider := w.getHostProvider()
 	diskProvider := w.getDiskProvider()
 	memProvider := w.getMemProvider()
@@ -140,6 +148,7 @@ func (w *Worker) getSystemStatus() (json.RawMessage, error) {
 
 // getSystemUptime retrieves the system uptime.
 func (w *Worker) getSystemUptime() (json.RawMessage, error) {
+	w.logger.Debug("executing host.GetUptime")
 	hostProvider := w.getHostProvider()
 	uptime, err := hostProvider.GetUptime()
 	if err != nil {
@@ -156,6 +165,7 @@ func (w *Worker) getSystemUptime() (json.RawMessage, error) {
 
 // getSystemOSInfo retrieves the operating system information.
 func (w *Worker) getSystemOSInfo() (json.RawMessage, error) {
+	w.logger.Debug("executing host.GetOSInfo")
 	hostProvider := w.getHostProvider()
 	osInfo, err := hostProvider.GetOSInfo()
 	if err != nil {
@@ -167,6 +177,7 @@ func (w *Worker) getSystemOSInfo() (json.RawMessage, error) {
 
 // getSystemDisk retrieves disk usage statistics.
 func (w *Worker) getSystemDisk() (json.RawMessage, error) {
+	w.logger.Debug("executing disk.GetLocalUsageStats")
 	diskProvider := w.getDiskProvider()
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	if err != nil {
@@ -182,6 +193,7 @@ func (w *Worker) getSystemDisk() (json.RawMessage, error) {
 
 // getSystemMemory retrieves memory statistics.
 func (w *Worker) getSystemMemory() (json.RawMessage, error) {
+	w.logger.Debug("executing mem.GetStats")
 	memProvider := w.getMemProvider()
 	memInfo, err := memProvider.GetStats()
 	if err != nil {
@@ -193,6 +205,7 @@ func (w *Worker) getSystemMemory() (json.RawMessage, error) {
 
 // getSystemLoad retrieves load average statistics.
 func (w *Worker) getSystemLoad() (json.RawMessage, error) {
+	w.logger.Debug("executing load.GetAverageStats")
 	loadProvider := w.getLoadProvider()
 	loadAvg, err := loadProvider.GetAverageStats()
 	if err != nil {
@@ -218,6 +231,9 @@ func (w *Worker) processNetworkDNS(
 			interfaceName = "eth0" // Default interface
 		}
 
+		w.logger.Debug("executing dns.GetResolvConfByInterface",
+			slog.String("interface", interfaceName),
+		)
 		dnsProvider := w.getDNSProvider()
 		config, err := dnsProvider.GetResolvConfByInterface(interfaceName)
 		if err != nil {
@@ -246,6 +262,10 @@ func (w *Worker) processNetworkDNS(
 		}
 	}
 
+	w.logger.Debug("executing dns.UpdateResolvConfByInterface",
+		slog.String("interface", interfaceName),
+		slog.Int("servers", len(serverStrings)),
+	)
 	dnsProvider := w.getDNSProvider()
 	err := dnsProvider.UpdateResolvConfByInterface(serverStrings, searchStrings, interfaceName)
 	if err != nil {
@@ -274,6 +294,9 @@ func (w *Worker) processNetworkPing(
 		return nil, fmt.Errorf("missing ping address")
 	}
 
+	w.logger.Debug("executing ping.Do",
+		slog.String("address", address),
+	)
 	pingProvider := w.getPingProvider()
 	result, err := pingProvider.Do(address)
 	if err != nil {

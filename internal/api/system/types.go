@@ -21,6 +21,8 @@
 package system
 
 import (
+	"log/slog"
+
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
@@ -28,4 +30,5 @@ import (
 type System struct {
 	// JobClient provides job-based operations for system queries.
 	JobClient client.JobClient
+	logger    *slog.Logger
 }

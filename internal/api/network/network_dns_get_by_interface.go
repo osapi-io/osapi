@@ -22,6 +22,7 @@ package network
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
@@ -53,6 +54,11 @@ func (n Network) GetNetworkDNSByInterface(
 	if request.Params.TargetHostname != nil {
 		hostname = *request.Params.TargetHostname
 	}
+
+	n.logger.Debug("dns get",
+		slog.String("interface", request.InterfaceName),
+		slog.String("target", hostname),
+	)
 
 	if job.IsBroadcastTarget(hostname) {
 		return n.getNetworkDNSBroadcast(ctx, hostname, request.InterfaceName)

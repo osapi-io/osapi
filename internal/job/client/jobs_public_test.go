@@ -32,6 +32,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -259,6 +260,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 		workerCount    int
 		responseCount  int
 		setupMocks     func()
+		validateFunc   func(qj *job.QueuedJob)
 	}{
 		{
 			name:  "successful job status retrieval",
@@ -593,6 +595,97 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			workerCount:    1,
 		},
 		{
+			name:  "redelivered job has positive duration",
+			jobID: "job-1",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockJobEntry, nil)
+
+				// Simulate NATS redelivery: two started/failed cycles
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-1.started.worker1.100",
+					"status.job-1.failed.worker1.200",
+					"status.job-1.started.worker1.300",
+					"status.job-1.failed.worker1.400",
+				}, nil)
+
+				// First attempt: started at T+0, failed at T+1s
+				start1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				start1.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"started","hostname":"worker1","timestamp":"2024-01-01T00:00:01Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.started.worker1.100").Return(start1, nil)
+
+				fail1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				fail1.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"failed","hostname":"worker1","timestamp":"2024-01-01T00:00:02Z","data":{"error":"attempt 1"}}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.failed.worker1.200").Return(fail1, nil)
+
+				// Second attempt (redelivery): started at T+60s, failed at T+61s
+				start2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				start2.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"started","hostname":"worker1","timestamp":"2024-01-01T00:01:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.started.worker1.300").Return(start2, nil)
+
+				fail2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				fail2.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"failed","hostname":"worker1","timestamp":"2024-01-01T00:01:01Z","data":{"error":"attempt 2"}}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.failed.worker1.400").Return(fail2, nil)
+			},
+			expectedStatus: "failed",
+			expectedError:  "attempt 2",
+			workerCount:    1,
+			validateFunc: func(qj *job.QueuedJob) {
+				ws := qj.WorkerStates["worker1"]
+				// Duration should span from first start to last failure (60s)
+				// and must be positive (not negative like the old bug)
+				s.Equal("1m0s", ws.Duration)
+				s.False(ws.StartTime.IsZero())
+				s.False(ws.EndTime.IsZero())
+				s.True(ws.EndTime.After(ws.StartTime))
+			},
+		},
+		{
+			name:  "completed job has sub-second duration with RFC3339Nano",
+			jobID: "job-1",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-1.started.worker1.100",
+					"status.job-1.completed.worker1.200",
+				}, nil)
+
+				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				startEntry.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"started","hostname":"worker1","timestamp":"2024-01-01T00:00:01.000000000Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.started.worker1.100").Return(startEntry, nil)
+
+				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				compEntry.EXPECT().Value().Return([]byte(
+					`{"job_id":"job-1","event":"completed","hostname":"worker1","timestamp":"2024-01-01T00:00:01.045000000Z"}`,
+				))
+				s.mockKV.EXPECT().Get("status.job-1.completed.worker1.200").Return(compEntry, nil)
+			},
+			expectedStatus: "completed",
+			workerCount:    1,
+			validateFunc: func(qj *job.QueuedJob) {
+				ws := qj.WorkerStates["worker1"]
+				s.Equal("45ms", ws.Duration)
+			},
+		},
+		{
 			name:  "invalid timestamp skipped",
 			jobID: "job-1",
 			setupMocks: func() {
@@ -639,6 +732,9 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				}
 				if tt.responseCount > 0 {
 					s.Len(jobStatus.Responses, tt.responseCount)
+				}
+				if tt.validateFunc != nil {
+					tt.validateFunc(jobStatus)
 				}
 			}
 		})

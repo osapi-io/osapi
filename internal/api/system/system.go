@@ -22,6 +22,8 @@
 package system
 
 import (
+	"log/slog"
+
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
@@ -31,9 +33,11 @@ var _ gen.StrictServerInterface = (*System)(nil)
 
 // New factory to create a new instance.
 func New(
+	logger *slog.Logger,
 	jobClient client.JobClient,
 ) *System {
 	return &System{
 		JobClient: jobClient,
+		logger:    logger,
 	}
 }

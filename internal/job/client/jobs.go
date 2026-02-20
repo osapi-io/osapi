@@ -147,6 +147,9 @@ func (c *Client) CreateJob(
 func (c *Client) GetQueueStats(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
+	c.logger.Debug("kv.keys",
+		slog.String("operation", "get_queue_stats"),
+	)
 	// Get all job keys from KV store
 	keys, err := c.kv.Keys()
 	if err != nil {
@@ -237,6 +240,9 @@ func (c *Client) GetJobStatus(
 ) (*job.QueuedJob, error) {
 	// Get the immutable job data
 	jobKey := "jobs." + jobID
+	c.logger.Debug("kv.get",
+		slog.String("key", jobKey),
+	)
 	entry, err := c.kv.Get(jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %s", jobID)
@@ -292,6 +298,10 @@ func (c *Client) ListJobs(
 	ctx context.Context,
 	statusFilter string,
 ) ([]*job.QueuedJob, error) {
+	c.logger.Debug("kv.keys",
+		slog.String("operation", "list_jobs"),
+		slog.String("status_filter", statusFilter),
+	)
 	keys, err := c.kv.Keys()
 	if err != nil {
 		if err.Error() == "nats: no keys found" {
@@ -299,6 +309,10 @@ func (c *Client) ListJobs(
 		}
 		return nil, fmt.Errorf("error fetching jobs: %w", err)
 	}
+
+	c.logger.Debug("kv.keys",
+		slog.Int("count", len(keys)),
+	)
 
 	var jobs []*job.QueuedJob
 
@@ -374,6 +388,7 @@ func (c *Client) computeStatusFromEvents(
 	// Track status by worker
 	workerStates := make(map[string]string)
 	workerStartTimes := make(map[string]time.Time)
+	workerEndTimes := make(map[string]time.Time)
 	workerErrors := make(map[string]string)
 	var latestEvent time.Time
 	var latestError string
@@ -395,8 +410,8 @@ func (c *Client) computeStatusFromEvents(
 		eventType := getStringField(event, "event")
 		timestamp := getStringField(event, "timestamp")
 
-		// Parse timestamp
-		t, timestampErr := time.Parse(time.RFC3339, timestamp)
+		// Parse timestamp (supports both RFC3339 and RFC3339Nano)
+		t, timestampErr := time.Parse(time.RFC3339Nano, timestamp)
 		if timestampErr != nil {
 			continue
 		}
@@ -435,13 +450,16 @@ func (c *Client) computeStatusFromEvents(
 		if hostname != "" && hostname != "_api" {
 			workerStates[hostname] = eventType
 
-			// Track start times for duration calculation
+			// Track first start time for duration calculation
 			if eventType == "started" {
-				workerStartTimes[hostname] = t
+				if _, exists := workerStartTimes[hostname]; !exists {
+					workerStartTimes[hostname] = t
+				}
 			}
 
-			// Track the processing hostname
+			// Track last end time for duration calculation
 			if eventType == "completed" || eventType == "failed" {
+				workerEndTimes[hostname] = t
 				result.Hostname = hostname
 			}
 		}
@@ -474,19 +492,14 @@ func (c *Client) computeStatusFromEvents(
 			workerState.Error = errorMsg
 		}
 
-		// Calculate duration if we have start time
+		// Calculate duration from first start to last end
 		if startTime, hasStart := workerStartTimes[hostname]; hasStart {
 			workerState.StartTime = startTime
 
-			// Find end time from timeline events
-			for _, event := range timeline {
-				if event.Hostname == hostname &&
-					(event.Event == "completed" || event.Event == "failed") {
-					workerState.EndTime = event.Timestamp
-					duration := event.Timestamp.Sub(startTime)
-					workerState.Duration = duration.String()
-					break
-				}
+			if endTime, hasEnd := workerEndTimes[hostname]; hasEnd {
+				workerState.EndTime = endTime
+				duration := endTime.Sub(startTime)
+				workerState.Duration = duration.String()
 			}
 		}
 
@@ -539,6 +552,9 @@ func (c *Client) DeleteJob(
 	jobID string,
 ) error {
 	jobKey := "jobs." + jobID
+	c.logger.Debug("kv.delete",
+		slog.String("key", jobKey),
+	)
 	_, err := c.kv.Get(jobKey)
 	if err != nil {
 		return fmt.Errorf("job not found: %s", jobID)

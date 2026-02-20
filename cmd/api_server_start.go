@@ -174,7 +174,7 @@ var apiServerStartCmd = &cobra.Command{
 			},
 		}
 
-		healthHandler := health.New(checker, startTime, "0.1.0", metricsProvider)
+		healthHandler := health.New(logger, checker, startTime, "0.1.0", metricsProvider)
 
 		var sm ServerManager = api.New(appConfig, logger, api.WithHealthHandler(healthHandler))
 		handlers := sm.CreateHandlers(jc)
