@@ -124,7 +124,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNS() {
 				tt.mockError,
 			)
 
-			_, err := s.jobsClient.ModifyNetworkDNS(
+			_, _, err := s.jobsClient.ModifyNetworkDNS(
 				s.ctx,
 				tt.hostname,
 				tt.servers,
@@ -188,7 +188,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 				tt.mockError,
 			)
 
-			_, err := s.jobsClient.ModifyNetworkDNSAny(
+			_, _, err := s.jobsClient.ModifyNetworkDNSAny(
 				s.ctx,
 				tt.servers,
 				tt.searchDomains,
@@ -283,7 +283,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAll() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.ModifyNetworkDNSAll(
+			_, result, err := jobsClient.ModifyNetworkDNSAll(
 				s.ctx,
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},

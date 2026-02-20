@@ -74,11 +74,11 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemHostname(gomock.Any(), job.AnyHost).
-					Return("default-hostname", "worker1", nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", "worker1", nil)
 				return mock
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"results":[{"hostname":"default-hostname"}]}`,
+			wantBody: `{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"default-hostname"}]}`,
 		},
 		{
 			name: "when job client errors",
@@ -87,7 +87,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemHostname(gomock.Any(), job.AnyHost).
-					Return("", "", assert.AnError)
+					Return("", "", "", assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -100,7 +100,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return(map[string]string{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]string{
 						"server1": "host1",
 						"server2": "host2",
 					}, nil)

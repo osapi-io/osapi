@@ -87,8 +87,8 @@ func (w *Worker) handleJobMessage(
 		return fmt.Errorf("failed to parse job data: %w", err)
 	}
 
-	// Extract the RequestID from top-level job data
-	requestID, ok := jobData["id"].(string)
+	// Extract the job ID from top-level job data
+	jobID, ok := jobData["id"].(string)
 	if !ok {
 		return fmt.Errorf("invalid job format: missing id")
 	}
@@ -122,8 +122,8 @@ func (w *Worker) handleJobMessage(
 	// operationJSON is valid JSON, Unmarshal into a struct always succeeds.
 	_ = json.Unmarshal(operationJSON, &jobRequest)
 
-	// Set the RequestID and extract category/operation from operation data
-	jobRequest.RequestID = requestID
+	// Set the job ID and extract category/operation from operation data
+	jobRequest.JobID = jobID
 	jobRequest.Category = category
 	jobRequest.Operation = operation
 
@@ -166,7 +166,7 @@ func (w *Worker) handleJobMessage(
 
 	// Create job response
 	response := job.Response{
-		RequestID: jobRequest.RequestID,
+		JobID:     jobRequest.JobID,
 		Status:    job.StatusProcessing,
 		Hostname:  hostname,
 		Timestamp: time.Now(),

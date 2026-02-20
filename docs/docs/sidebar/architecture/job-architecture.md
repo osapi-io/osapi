@@ -82,7 +82,7 @@ graph LR
    - History: 5 versions
 
 2. **job-responses**: Result storage
-   - Key format: `{sanitized_request_id}`
+   - Key format: `{sanitized_job_id}`
    - TTL: 24 hours
    - Used for worker-to-client result passing
 

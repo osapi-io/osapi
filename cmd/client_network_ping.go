@@ -62,6 +62,7 @@ var clientNetworkPingCmd = &cobra.Command{
 				printKV("Job ID", resp.JSON200.JobId.String())
 			}
 
+			fmt.Println()
 			respRows := make([][]string, 0, len(resp.JSON200.Results))
 			for _, r := range resp.JSON200.Results {
 				respRows = append(respRows, []string{

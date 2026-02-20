@@ -82,7 +82,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("550e8400-e29b-41d4-a716-446655440000", *r.Id)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.Id.String())
 				s.Equal("completed", *r.Status)
 				s.Nil(r.Operation)
 				s.Nil(r.Error)
@@ -110,7 +110,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("660e8400-e29b-41d4-a716-446655440000", *r.Id)
+				s.Equal("660e8400-e29b-41d4-a716-446655440000", r.Id.String())
 				s.Equal("failed", *r.Status)
 				s.NotNil(r.Operation)
 				s.Equal("system.hostname.get", (*r.Operation)["type"])
@@ -183,7 +183,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("990e8400-e29b-41d4-a716-446655440000", *r.Id)
+				s.Equal("990e8400-e29b-41d4-a716-446655440000", r.Id.String())
 				s.Equal("completed", *r.Status)
 				s.NotNil(r.Responses)
 				s.Len(*r.Responses, 2)
@@ -302,7 +302,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Equal("cc0e8400-e29b-41d4-a716-446655440000", *r.Id)
+				s.Equal("cc0e8400-e29b-41d4-a716-446655440000", r.Id.String())
 				s.Equal("failed", *r.Status)
 				s.NotNil(r.Timeline)
 				tl := *r.Timeline

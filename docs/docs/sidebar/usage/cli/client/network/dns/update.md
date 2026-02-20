@@ -8,6 +8,8 @@ $ osapi client network dns update \
     --search-domains "foo.bar,baz.qux" \
     --interface-name eth0
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
   ┃ HOSTNAME ┃ STATUS ┃ ERROR ┃
   ┣━━━━━━━━━━╋━━━━━━━━╋━━━━━━━┫
@@ -24,6 +26,8 @@ $ osapi client network dns update \
     --interface-name eth0 \
     --target _all
 This will modify DNS on ALL hosts. Continue? [y/N] y
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┓
   ┃ HOSTNAME ┃ STATUS ┃ ERROR     ┃

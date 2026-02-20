@@ -75,7 +75,7 @@ func (suite *JobListIntegrationTestSuite) TestGetJob() {
 					ListJobs(gomock.Any(), "", 10, 0).
 					Return(&jobclient.ListJobsResult{
 						Jobs: []*jobtypes.QueuedJob{
-							{ID: "job-1", Status: "completed"},
+							{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
 						},
 						TotalCount: 1,
 					}, nil)

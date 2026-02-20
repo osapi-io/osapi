@@ -56,8 +56,8 @@ const (
 
 // Request represents a request to perform a job operation.
 type Request struct {
-	// RequestID is a unique identifier for this request.
-	RequestID string `json:"request_id"`
+	// JobID is a unique identifier for this job.
+	JobID string `json:"job_id"`
 	// Type specifies whether this is a query or modify operation.
 	Type Type `json:"type"`
 	// Category specifies the operation category (system, network, etc.).
@@ -72,8 +72,8 @@ type Request struct {
 
 // Response represents the response from a job operation.
 type Response struct {
-	// RequestID matches the original request ID.
-	RequestID string `json:"request_id"`
+	// JobID matches the original job ID.
+	JobID string `json:"job_id"`
 	// Status indicates the job completion status.
 	Status Status `json:"status"`
 	// Data contains the operation results as raw JSON.

@@ -62,8 +62,8 @@ type Worker struct {
 
 // JobContext contains the context and data for a single job execution.
 type JobContext struct {
-	// RequestID from the original job request
-	RequestID string
+	// JobID from the original job request
+	JobID string
 	// WorkerHostname identifies which worker is processing this job
 	WorkerHostname string
 	// JobData contains the raw job request data

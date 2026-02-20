@@ -5,6 +5,8 @@ Ping the desired address:
 ```bash
 $ osapi client network ping --address 8.8.8.8
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   Ping Response:
 
   ┏━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
@@ -18,6 +20,8 @@ When targeting all hosts:
 
 ```bash
 $ osapi client network ping --address 8.8.8.8 --target _all
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   Ping Response:
 

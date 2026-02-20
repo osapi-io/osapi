@@ -78,7 +78,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("worker1", nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "worker1", nil)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				r, ok := resp.(gen.PutNetworkDNS202JSONResponse)
@@ -135,7 +135,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("", assert.AnError)
+					Return("", "", assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNetworkDNS500JSONResponse)
@@ -155,7 +155,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(map[string]error{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]error{
 						"server1": nil,
 						"server2": nil,
 					}, nil)
@@ -177,7 +177,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(map[string]error{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]error{
 						"server1": nil,
 						"server2": fmt.Errorf("disk full"),
 					}, nil)
@@ -199,7 +199,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNetworkDNS500JSONResponse)

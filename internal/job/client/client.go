@@ -89,13 +89,13 @@ func (c *Client) publishAndWait(
 	subject string,
 	req *job.Request,
 ) (string, *job.Response, error) {
-	// Generate request ID if not provided
-	if req.RequestID == "" {
-		req.RequestID = uuid.New().String()
+	// Generate job ID if not provided
+	if req.JobID == "" {
+		req.JobID = uuid.New().String()
 	}
 	req.Timestamp = time.Now()
 
-	jobID := req.RequestID
+	jobID := req.JobID
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
 	// Build operation type from category and operation
@@ -119,7 +119,7 @@ func (c *Client) publishAndWait(
 
 	c.logger.Debug("kv.put",
 		slog.String("key", kvKey),
-		slog.String("request_id", jobID),
+		slog.String("job_id", jobID),
 	)
 
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
@@ -127,7 +127,7 @@ func (c *Client) publishAndWait(
 	}
 
 	c.logger.Info("publishing job request",
-		slog.String("request_id", jobID),
+		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
 	)
@@ -165,7 +165,7 @@ func (c *Client) publishAndWait(
 			}
 
 			c.logger.Info("received job response",
-				slog.String("request_id", jobID),
+				slog.String("job_id", jobID),
 				slog.String("status", string(response.Status)),
 			)
 
@@ -189,13 +189,13 @@ func (c *Client) publishAndCollect(
 	subject string,
 	req *job.Request,
 ) (string, map[string]*job.Response, error) {
-	// Generate request ID if not provided
-	if req.RequestID == "" {
-		req.RequestID = uuid.New().String()
+	// Generate job ID if not provided
+	if req.JobID == "" {
+		req.JobID = uuid.New().String()
 	}
 	req.Timestamp = time.Now()
 
-	jobID := req.RequestID
+	jobID := req.JobID
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
 	// Build operation type from category and operation
@@ -219,7 +219,7 @@ func (c *Client) publishAndCollect(
 
 	c.logger.Debug("kv.put",
 		slog.String("key", kvKey),
-		slog.String("request_id", jobID),
+		slog.String("job_id", jobID),
 	)
 
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
@@ -227,7 +227,7 @@ func (c *Client) publishAndCollect(
 	}
 
 	c.logger.Info("publishing broadcast job request",
-		slog.String("request_id", jobID),
+		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
 	)
@@ -270,7 +270,7 @@ func (c *Client) publishAndCollect(
 			var response job.Response
 			if err := json.Unmarshal(entry.Value(), &response); err != nil {
 				c.logger.Warn("failed to unmarshal broadcast response",
-					slog.String("request_id", jobID),
+					slog.String("job_id", jobID),
 					slog.String("error", err.Error()),
 				)
 				continue
@@ -282,7 +282,7 @@ func (c *Client) publishAndCollect(
 			}
 
 			c.logger.Info("received broadcast response",
-				slog.String("request_id", jobID),
+				slog.String("job_id", jobID),
 				slog.String("hostname", hostname),
 				slog.String("status", string(response.Status)),
 			)
