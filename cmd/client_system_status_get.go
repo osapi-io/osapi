@@ -86,6 +86,7 @@ func displaySystemStatusCollection(
 		return
 	}
 
+	fmt.Println()
 	rows := make([][]string, 0, len(data.Results))
 	for _, s := range data.Results {
 		rows = append(rows, []string{

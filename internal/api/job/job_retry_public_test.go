@@ -85,7 +85,7 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByID() {
 			validateFunc: func(resp gen.RetryJobByIDResponseObject) {
 				r, ok := resp.(gen.RetryJobByID201JSONResponse)
 				s.True(ok)
-				s.Equal("660e8400-e29b-41d4-a716-446655440000", r.JobId)
+				s.Equal("660e8400-e29b-41d4-a716-446655440000", r.JobId.String())
 				s.Equal("created", r.Status)
 			},
 		},
@@ -104,7 +104,7 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByID() {
 			validateFunc: func(resp gen.RetryJobByIDResponseObject) {
 				r, ok := resp.(gen.RetryJobByID201JSONResponse)
 				s.True(ok)
-				s.Equal("770e8400-e29b-41d4-a716-446655440000", r.JobId)
+				s.Equal("770e8400-e29b-41d4-a716-446655440000", r.JobId.String())
 			},
 		},
 		{

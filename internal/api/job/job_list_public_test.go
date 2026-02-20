@@ -90,7 +90,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
 					{
-						ID:     "job-1",
+						ID:     "550e8400-e29b-41d4-a716-446655440000",
 						Status: "completed",
 					},
 				},
@@ -109,8 +109,8 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			request: gen.GetJobRequestObject{},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
-					{ID: "job-1", Status: "completed"},
-					{ID: "job-2", Status: "processing"},
+					{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
+					{ID: "660e8400-e29b-41d4-a716-446655440000", Status: "processing"},
 				},
 				TotalCount: 2,
 			},
@@ -127,7 +127,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
 					{
-						ID:        "job-1",
+						ID:        "550e8400-e29b-41d4-a716-446655440000",
 						Status:    "failed",
 						Created:   "2025-06-14T10:00:00Z",
 						Operation: map[string]interface{}{"type": "network.dns.get"},
@@ -145,7 +145,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				s.True(ok)
 				s.Equal(1, *r.TotalItems)
 				item := (*r.Items)[0]
-				s.Equal("job-1", *item.Id)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", item.Id.String())
 				s.NotNil(item.Operation)
 				s.NotNil(item.Error)
 				s.Equal("timeout", *item.Error)
@@ -190,7 +190,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			request: gen.GetJobRequestObject{},
 			mockResult: &jobclient.ListJobsResult{
 				Jobs: []*jobtypes.QueuedJob{
-					{ID: "job-1", Status: "completed"},
+					{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
 				},
 				TotalCount: 50,
 			},

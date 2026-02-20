@@ -72,7 +72,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNetworkDNS(gomock.Any(), gomock.Any(), "eth0").
-					Return(&dns.Config{
+					Return("550e8400-e29b-41d4-a716-446655440000", &dns.Config{
 						DNSServers:    []string{"8.8.8.8"},
 						SearchDomains: []string{"example.com"},
 					}, "worker1", nil)
@@ -103,7 +103,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
-					Return(map[string]*dns.Config{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*dns.Config{
 						"server1": {
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},

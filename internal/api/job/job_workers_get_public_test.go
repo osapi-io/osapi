@@ -101,7 +101,7 @@ func (s *JobWorkersGetPublicTestSuite) TestGetJobWorkers() {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
 				ListWorkers(gomock.Any()).
-				Return(tt.mockWorkers, tt.mockError)
+				Return("", tt.mockWorkers, tt.mockError)
 
 			resp, err := s.handler.GetJobWorkers(s.ctx, gen.GetJobWorkersRequestObject{})
 			s.NoError(err)

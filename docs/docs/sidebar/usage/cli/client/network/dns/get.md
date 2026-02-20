@@ -5,6 +5,8 @@ Get the systems DNS config:
 ```bash
 $ osapi client network dns get --interface-name eth0
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
   ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃
   ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┫
@@ -16,6 +18,8 @@ When targeting all hosts:
 
 ```bash
 $ osapi client network dns get --interface-name eth0 --target _all
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
   ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃

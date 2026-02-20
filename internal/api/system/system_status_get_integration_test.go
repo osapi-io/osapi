@@ -79,7 +79,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemStatus(gomock.Any(), job.AnyHost).
-					Return(&job.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.SystemStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
 						OSInfo: &host.OSInfo{
@@ -110,6 +110,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 			wantCode: http.StatusOK,
 			wantBody: `
 {
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
   "results": [
     {
       "disks": [
@@ -148,7 +149,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemStatus(gomock.Any(), job.AnyHost).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -161,7 +162,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
-					Return([]*job.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", []*job.SystemStatusResponse{
 						{
 							Hostname: "server1",
 							Uptime:   time.Hour,

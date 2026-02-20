@@ -74,15 +74,18 @@ func (suite *JobCreateIntegrationTestSuite) TestPostJob() {
 				mock.EXPECT().
 					CreateJob(gomock.Any(), gomock.Any(), "_any").
 					Return(&client.CreateJobResult{
-						JobID:     "test-job-id",
+						JobID:     "550e8400-e29b-41d4-a716-446655440000",
 						Status:    "created",
 						Revision:  1,
 						Timestamp: "2025-06-14T10:00:00Z",
 					}, nil)
 				return mock
 			},
-			wantCode:     http.StatusCreated,
-			wantContains: []string{`"job_id":"test-job-id"`, `"status":"created"`},
+			wantCode: http.StatusCreated,
+			wantContains: []string{
+				`"job_id":"550e8400-e29b-41d4-a716-446655440000"`,
+				`"status":"created"`,
+			},
 		},
 		{
 			name: "when missing operation",

@@ -72,6 +72,12 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 				return
 			}
 
+			if resp.JSON202 != nil && resp.JSON202.JobId != nil {
+				fmt.Println()
+				printKV("Job ID", resp.JSON202.JobId.String())
+			}
+
+			fmt.Println()
 			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
 				rows := make([][]string, 0, len(resp.JSON202.Results))
 				for _, r := range resp.JSON202.Results {

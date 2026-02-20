@@ -5,6 +5,8 @@ Get the system's hostname:
 ```bash
 $ osapi client system hostname
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   ┏━━━━━━━━━━┓
   ┃ HOSTNAME ┃
   ┣━━━━━━━━━━┫
@@ -16,6 +18,8 @@ When targeting all hosts:
 
 ```bash
 $ osapi client system hostname --target _all
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   ┏━━━━━━━━━━┓
   ┃ HOSTNAME ┃

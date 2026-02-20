@@ -76,7 +76,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(&ping.Result{
+					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
 						PacketsSent:     3,
 						PacketsReceived: 3,
 						PacketLoss:      0,
@@ -117,7 +117,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(map[string]*ping.Result{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*ping.Result{
 						"server1": {
 							PacketsSent:     3,
 							PacketsReceived: 3,

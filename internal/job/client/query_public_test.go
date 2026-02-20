@@ -160,7 +160,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QuerySystemStatus(s.ctx, tt.hostname)
+			_, result, err := s.jobsClient.QuerySystemStatus(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -244,7 +244,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				tt.mockError,
 			)
 
-			result, _, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
+			_, result, _, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -363,7 +363,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNS() {
 				tt.mockError,
 			)
 
-			result, _, err := s.jobsClient.QueryNetworkDNS(s.ctx, tt.hostname, tt.iface)
+			_, result, _, err := s.jobsClient.QueryNetworkDNS(s.ctx, tt.hostname, tt.iface)
 
 			if tt.expectError {
 				s.Error(err)
@@ -451,7 +451,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPing() {
 				tt.mockError,
 			)
 
-			result, _, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
+			_, result, _, err := s.jobsClient.QueryNetworkPing(s.ctx, tt.hostname, tt.address)
 
 			if tt.expectError {
 				s.Error(err)
@@ -508,7 +508,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 				tt.mockError,
 			)
 
-			result, _, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
+			_, result, _, err := s.jobsClient.QueryNetworkPingAny(s.ctx, tt.address)
 
 			if tt.expectError {
 				s.Error(err)
@@ -561,7 +561,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 				tt.mockError,
 			)
 
-			result, err := s.jobsClient.QuerySystemStatusAny(s.ctx)
+			_, result, err := s.jobsClient.QuerySystemStatusAny(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -647,7 +647,7 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				tt.opts,
 			)
 
-			result, _, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+			_, result, _, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
@@ -808,7 +808,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.QuerySystemStatusAll(s.ctx)
+			_, result, err := jobsClient.QuerySystemStatusAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -909,7 +909,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.QuerySystemHostnameAll(s.ctx)
+			_, result, err := jobsClient.QuerySystemHostnameAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -1000,7 +1000,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNSAll() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.QueryNetworkDNSAll(s.ctx, "eth0")
+			_, result, err := jobsClient.QueryNetworkDNSAll(s.ctx, "eth0")
 
 			if tt.expectError {
 				s.Error(err)
@@ -1091,7 +1091,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.QueryNetworkPingAll(s.ctx, "1.1.1.1")
+			_, result, err := jobsClient.QueryNetworkPingAll(s.ctx, "1.1.1.1")
 
 			if tt.expectError {
 				s.Error(err)
@@ -1182,7 +1182,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 				tt.opts,
 			)
 
-			result, err := jobsClient.ListWorkers(s.ctx)
+			_, result, err := jobsClient.ListWorkers(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)

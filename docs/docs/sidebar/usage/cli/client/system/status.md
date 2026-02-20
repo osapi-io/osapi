@@ -5,6 +5,8 @@ Get the system status:
 ```bash
 $ osapi client system status
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   Hostname: server1              OS: Ubuntu 24.04
   Load: 1.83, 1.96, 2.02 (1m, 5m, 15m)
   Memory: 19 GB used / 31 GB total / 10 GB free
@@ -23,6 +25,8 @@ When targeting all hosts, a summary table is shown:
 
 ```bash
 $ osapi client system status --target _all
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
   ┃ HOSTNAME ┃ UPTIME                         ┃ LOAD (1m) ┃ MEMORY USED   ┃

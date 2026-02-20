@@ -67,7 +67,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("my-hostname", "worker1", nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", "worker1", nil)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
@@ -82,7 +82,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("", "worker1", nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "", "worker1", nil)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
@@ -111,7 +111,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostname(gomock.Any(), gomock.Any()).
-					Return("", "", assert.AnError)
+					Return("", "", "", assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)
@@ -126,7 +126,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return(map[string]string{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]string{
 						"server1": "host1",
 						"server2": "host2",
 					}, nil)
@@ -143,7 +143,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)

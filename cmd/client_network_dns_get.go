@@ -57,6 +57,12 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("get dns response was nil"))
 			}
 
+			if resp.JSON200.JobId != nil {
+				fmt.Println()
+				printKV("Job ID", resp.JSON200.JobId.String())
+			}
+
+			fmt.Println()
 			rows := make([][]string, 0, len(resp.JSON200.Results))
 			for _, cfg := range resp.JSON200.Results {
 				var serversList, searchDomainsList []string

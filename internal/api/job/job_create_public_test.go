@@ -73,7 +73,7 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 				},
 			},
 			mockResult: &client.CreateJobResult{
-				JobID:     "test-job-id",
+				JobID:     "550e8400-e29b-41d4-a716-446655440000",
 				Status:    "created",
 				Revision:  1,
 				Timestamp: "2025-06-14T10:00:00Z",
@@ -82,7 +82,7 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 			validateFunc: func(resp gen.PostJobResponseObject) {
 				r, ok := resp.(gen.PostJob201JSONResponse)
 				s.True(ok)
-				s.Equal("test-job-id", r.JobId)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId.String())
 				s.Equal("created", r.Status)
 			},
 		},

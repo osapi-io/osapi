@@ -73,7 +73,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(&ping.Result{
+					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
 						PacketsSent:     3,
 						PacketsReceived: 3,
 						PacketLoss:      0,
@@ -135,7 +135,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPing(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(nil, "", assert.AnError)
+					Return("", nil, "", assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNetworkPing500JSONResponse)
@@ -153,7 +153,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(map[string]*ping.Result{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*ping.Result{
 						"server1": {
 							PacketsSent:     3,
 							PacketsReceived: 3,
@@ -179,7 +179,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNetworkPing500JSONResponse)

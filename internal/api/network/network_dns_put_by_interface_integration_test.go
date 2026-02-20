@@ -74,7 +74,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("worker1", nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "worker1", nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -128,7 +128,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ModifyNetworkDNSBroadcast(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(map[string]error{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]error{
 						"server1": nil,
 					}, nil)
 				return mock
