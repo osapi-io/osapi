@@ -212,9 +212,17 @@ paths:
           required: false
           schema:
             type: string
-          description: >-
-            Filter jobs by status (e.g., unprocessed, processing, completed,
-            failed).
+            enum:
+              - submitted
+              - processing
+              - completed
+              - failed
+              - partial_failure
+            x-oapi-codegen-extra-tags:
+              validate: >-
+                omitempty,oneof=submitted processing completed failed
+                partial_failure
+          description: Filter jobs by status.
         - name: limit
           in: query
           required: false
@@ -222,6 +230,8 @@ paths:
             type: integer
             minimum: 0
             default: 10
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=0
           description: Maximum number of jobs to return. Use 0 for no limit.
         - name: offset
           in: query
@@ -230,6 +240,8 @@ paths:
             type: integer
             minimum: 0
             default: 0
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=0
           description: Number of jobs to skip for pagination.
       responses:
         '200':
@@ -349,8 +361,12 @@ paths:
         - name: id
           in: path
           required: true
+          description: UUID of the job to retrieve.
           schema:
             type: string
+            format: uuid
+            x-oapi-codegen-extra-tags:
+              validate: required,uuid
       responses:
         '200':
           description: The job details.
@@ -401,8 +417,12 @@ paths:
         - name: id
           in: path
           required: true
+          description: UUID of the job to delete.
           schema:
             type: string
+            format: uuid
+            x-oapi-codegen-extra-tags:
+              validate: required,uuid
       responses:
         '204':
           description: Job deleted successfully. No content returned.
@@ -432,6 +452,72 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /job/{id}/retry:
+    servers: []
+    post:
+      summary: Retry a job
+      description: >-
+        Create a new job using the same operation data as an existing job. The
+        original job is preserved. Returns the new job ID.
+      tags:
+        - Job_Management_API_job_operations
+      operationId: RetryJobByID
+      security:
+        - BearerAuth:
+            - write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the job to retry.
+          schema:
+            type: string
+            format: uuid
+            x-oapi-codegen-extra-tags:
+              validate: required,uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryJobRequest'
+      responses:
+        '201':
+          description: The retry job was created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateJobResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrying job.
           content:
             application/json:
               schema:
@@ -952,6 +1038,17 @@ components:
       required:
         - job_id
         - status
+    RetryJobRequest:
+      type: object
+      properties:
+        target_hostname:
+          type: string
+          description: >-
+            Override target hostname for the retried job. Defaults to _any if
+            not specified.
+          example: _any
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
     ListJobsResponse:
       type: object
       properties:
@@ -1016,6 +1113,29 @@ components:
                 type: string
               duration:
                 type: string
+        timeline:
+          type: array
+          description: Chronological sequence of job lifecycle events.
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                description: ISO 8601 timestamp of the event.
+              event:
+                type: string
+                description: >-
+                  Event type (submitted, acknowledged, started, completed,
+                  failed, retried).
+              hostname:
+                type: string
+                description: Worker or source that generated the event.
+              message:
+                type: string
+                description: Human-readable description of the event.
+              error:
+                type: string
+                description: Error details if applicable.
     ListWorkersResponse:
       type: object
       properties:

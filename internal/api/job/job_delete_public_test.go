@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -64,32 +65,10 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 		validateFunc func(resp gen.DeleteJobByIDResponseObject)
 	}{
 		{
-			name:       "validation error invalid uuid",
-			request:    gen.DeleteJobByIDRequestObject{Id: "not-a-uuid"},
-			expectMock: false,
-			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
-				r, ok := resp.(gen.DeleteJobByID400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "ID")
-				s.Contains(*r.Error, "uuid")
+			name: "success",
+			request: gen.DeleteJobByIDRequestObject{
+				Id: uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"),
 			},
-		},
-		{
-			name:       "validation error empty id",
-			request:    gen.DeleteJobByIDRequestObject{Id: ""},
-			expectMock: false,
-			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
-				r, ok := resp.(gen.DeleteJobByID400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "ID")
-				s.Contains(*r.Error, "required")
-			},
-		},
-		{
-			name:       "success",
-			request:    gen.DeleteJobByIDRequestObject{Id: "550e8400-e29b-41d4-a716-446655440000"},
 			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
 				_, ok := resp.(gen.DeleteJobByID204Response)
@@ -97,8 +76,10 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 			},
 		},
 		{
-			name:       "not found",
-			request:    gen.DeleteJobByIDRequestObject{Id: "660e8400-e29b-41d4-a716-446655440000"},
+			name: "not found",
+			request: gen.DeleteJobByIDRequestObject{
+				Id: uuid.MustParse("660e8400-e29b-41d4-a716-446655440000"),
+			},
 			mockError:  fmt.Errorf("job not found: 660e8400-e29b-41d4-a716-446655440000"),
 			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
@@ -107,8 +88,10 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 			},
 		},
 		{
-			name:       "job client error",
-			request:    gen.DeleteJobByIDRequestObject{Id: "770e8400-e29b-41d4-a716-446655440000"},
+			name: "job client error",
+			request: gen.DeleteJobByIDRequestObject{
+				Id: uuid.MustParse("770e8400-e29b-41d4-a716-446655440000"),
+			},
 			mockError:  assert.AnError,
 			expectMock: true,
 			validateFunc: func(resp gen.DeleteJobByIDResponseObject) {
@@ -122,7 +105,7 @@ func (s *JobDeletePublicTestSuite) TestDeleteJobByID() {
 		s.Run(tt.name, func() {
 			if tt.expectMock {
 				s.mockJobClient.EXPECT().
-					DeleteJob(gomock.Any(), tt.request.Id).
+					DeleteJob(gomock.Any(), tt.request.Id.String()).
 					Return(tt.mockError)
 			}
 

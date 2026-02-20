@@ -446,6 +446,21 @@ func (mr *MockJobClientMockRecorder) QuerySystemStatusBroadcast(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatusBroadcast", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatusBroadcast), arg0, arg1)
 }
 
+// RetryJob mocks base method.
+func (m *MockJobClient) RetryJob(arg0 context.Context, arg1, arg2 string) (*client0.CreateJobResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RetryJob", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*client0.CreateJobResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RetryJob indicates an expected call of RetryJob.
+func (mr *MockJobClientMockRecorder) RetryJob(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetryJob", reflect.TypeOf((*MockJobClient)(nil).RetryJob), arg0, arg1, arg2)
+}
+
 // WriteJobResponse mocks base method.
 func (m *MockJobClient) WriteJobResponse(arg0 context.Context, arg1, arg2 string, arg3 []byte, arg4, arg5 string) error {
 	m.ctrl.T.Helper()

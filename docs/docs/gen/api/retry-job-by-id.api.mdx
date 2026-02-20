@@ -1,12 +1,12 @@
 ---
-id: delete-job-by-id
-title: "Delete a job"
-description: "Delete a specific job by its ID."
-sidebar_label: "Delete a job"
+id: retry-job-by-id
+title: "Retry a job"
+description: "Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID."
+sidebar_label: "Retry a job"
 hide_title: true
 hide_table_of_contents: true
-api: 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
-sidebar_class_name: "delete api-method"
+api: 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
+sidebar_class_name: "post api-method"
 info_path: gen/api/osapi-a-crud-api-for-managing-linux-systems
 custom_edit_url: null
 ---
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Delete a job"}
+  children={"Retry a job"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"delete"}
-  path={"/job/{id}"}
+  method={"post"}
+  path={"/job/{id}/retry"}
 >
   
 </MethodEndpoint>
 
 
 
-Delete a specific job by its ID.
+Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID.
 
 <Heading
   id={"request"}
@@ -68,30 +68,159 @@ Delete a specific job by its ID.
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"id","in":"path","required":true,"description":"UUID of the job to delete.","schema":{"type":"string","format":"uuid","x-oapi-codegen-extra-tags":{"validate":"required,uuid"}}}}
+        param={{"name":"id","in":"path","required":true,"description":"UUID of the job to retry.","schema":{"type":"string","format":"uuid","x-oapi-codegen-extra-tags":{"validate":"required,uuid"}}}}
       >
         
       </ParamsItem>
     </ul>
   </div>
-</details><div>
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
+>
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
+  >
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
+    >
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
+      >
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"target_hostname"}
+          required={false}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Override target hostname for the retried job. Defaults to _any if not specified.","example":"_any","x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1"}}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
   <div>
     <ApiTabs
       label={undefined}
       id={undefined}
     >
       <TabItem
-        label={"204"}
-        value={"204"}
+        label={"201"}
+        value={"201"}
       >
         <div>
           
           
-          Job deleted successfully. No content returned.
+          The retry job was created successfully.
           
           
         </div><div>
-          
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"job_id"}
+                        required={true}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Unique identifier for the created job.","example":"550e8400-e29b-41d4-a716-446655440000"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"status"}
+                        required={true}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Initial status of the job.","example":"unprocessed"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"revision"}
+                        required={false}
+                        schemaName={"int64"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","format":"int64","description":"The KV revision number.","example":1}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"timestamp"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Creation timestamp.","example":"2025-06-14T10:00:00Z"}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"unprocessed\",\n  \"revision\": 1,\n  \"timestamp\": \"2025-06-14T10:00:00Z\"\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
         </div>
       </TabItem><TabItem
         label={"400"}
@@ -464,7 +593,7 @@ Delete a specific job by its ID.
         <div>
           
           
-          Error deleting job.
+          Error retrying job.
           
           
         </div><div>

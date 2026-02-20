@@ -88,6 +88,13 @@ type JobHandler interface {
 	GetJobWorkers(
 		ctx context.Context,
 	) (*gen.GetJobWorkersResponse, error)
+
+	// RetryJobByID retries a specific job by ID via the REST API.
+	RetryJobByID(
+		ctx context.Context,
+		id string,
+		targetHostname string,
+	) (*gen.RetryJobByIDResponse, error)
 }
 
 // NetworkHandler defines an interface for interacting with Network client operations.

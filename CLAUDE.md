@@ -53,6 +53,44 @@ Create `internal/api/{domain}/gen/` with three hand-written files:
   for `common/gen`)
 - `generate.go` — `//go:generate` directive
 
+#### Validation in OpenAPI Specs
+
+The OpenAPI spec is the **source of truth** for input validation. All user
+input must be validated, and the spec must declare how:
+
+- **Request body properties**: Add `x-oapi-codegen-extra-tags` with
+  `validate:` tags. These generate Go struct tags that
+  `validation.Struct()` enforces at runtime.
+  ```yaml
+  properties:
+    address:
+      type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,ip
+  ```
+- **Path parameters (UUID)**: Use `format: uuid` on the schema. This
+  causes oapi-codegen to generate `openapi_types.UUID` type, and the
+  router validates the format before the handler runs. No manual
+  validation needed in the handler.
+  ```yaml
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  ```
+- **Query parameters**: `x-oapi-codegen-extra-tags` does NOT generate
+  validate tags for query params (oapi-codegen limitation). Add them
+  as documentation, but validate manually in the handler. Use `enum`
+  for constrained string values.
+
+Every endpoint with user input MUST have an integration test
+(`*_integration_test.go`) that sends raw HTTP through the full Echo
+middleware stack and verifies validation errors return the correct
+status codes and error messages.
+
 ### Step 2: Handler Implementation
 
 Create `internal/api/{domain}/`:
@@ -62,6 +100,9 @@ Create `internal/api/{domain}/`:
   `var _ gen.StrictServerInterface = (*Domain)(nil)`
 - One file per endpoint (e.g., `{operation}_get.go`)
 - Tests: `{operation}_get_public_test.go` (testify/suite, table-driven)
+- Integration tests: `{operation}_get_integration_test.go` — tests
+  validation through full HTTP stack (see existing examples in
+  `internal/api/job/` and `internal/api/network/`)
 
 ### Step 3: Server Wiring (4 files in `internal/api/`)
 

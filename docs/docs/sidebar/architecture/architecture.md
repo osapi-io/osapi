@@ -129,12 +129,12 @@ coordination layer between clients and workers.
 
 ## What It Can Do Today
 
-| Domain  | Operations                                          |
-| ------- | --------------------------------------------------- |
-| System  | Hostname, uptime, OS info, disk, memory, load       |
-| Network | DNS configuration (get/update), ping                |
-| Jobs    | Create, list, get, delete, queue stats, worker list |
-| Health  | Liveness, readiness, system status with metrics     |
+| Domain  | Operations                                                 |
+| ------- | ---------------------------------------------------------- |
+| System  | Hostname, uptime, OS info, disk, memory, load              |
+| Network | DNS configuration (get/update), ping                       |
+| Jobs    | Create, list, get, delete, retry, queue stats, worker list |
+| Health  | Liveness, readiness, system status with metrics            |
 
 ## Health Checks
 

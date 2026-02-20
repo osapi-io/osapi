@@ -29,15 +29,21 @@ import (
 	"github.com/retr0h/osapi/internal/client/gen"
 )
 
-// GetJobByID retrieves a specific job by ID via the REST API.
-func (c *Client) GetJobByID(
+// RetryJobByID retries a specific job by ID via the REST API.
+func (c *Client) RetryJobByID(
 	ctx context.Context,
 	id string,
-) (*gen.GetJobByIDResponse, error) {
+	targetHostname string,
+) (*gen.RetryJobByIDResponse, error) {
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid job ID: %w", err)
 	}
 
-	return c.Client.GetJobByIDWithResponse(ctx, parsedID)
+	body := gen.RetryJobByIDJSONRequestBody{}
+	if targetHostname != "" {
+		body.TargetHostname = &targetHostname
+	}
+
+	return c.Client.RetryJobByIDWithResponse(ctx, parsedID, body)
 }

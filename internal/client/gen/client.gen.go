@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -22,8 +23,17 @@ const (
 
 // Defines values for DNSUpdateResultItemStatus.
 const (
-	Failed DNSUpdateResultItemStatus = "failed"
-	Ok     DNSUpdateResultItemStatus = "ok"
+	DNSUpdateResultItemStatusFailed DNSUpdateResultItemStatus = "failed"
+	DNSUpdateResultItemStatusOk     DNSUpdateResultItemStatus = "ok"
+)
+
+// Defines values for GetJobParamsStatus.
+const (
+	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
+	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
+	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
+	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
+	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
 )
 
 // ComponentHealth defines model for ComponentHealth.
@@ -182,6 +192,24 @@ type JobDetailResponse struct {
 	// Status Current status of the job.
 	Status *string `json:"status,omitempty"`
 
+	// Timeline Chronological sequence of job lifecycle events.
+	Timeline *[]struct {
+		// Error Error details if applicable.
+		Error *string `json:"error,omitempty"`
+
+		// Event Event type (submitted, acknowledged, started, completed, failed, retried).
+		Event *string `json:"event,omitempty"`
+
+		// Hostname Worker or source that generated the event.
+		Hostname *string `json:"hostname,omitempty"`
+
+		// Message Human-readable description of the event.
+		Message *string `json:"message,omitempty"`
+
+		// Timestamp ISO 8601 timestamp of the event.
+		Timestamp *string `json:"timestamp,omitempty"`
+	} `json:"timeline,omitempty"`
+
 	// UpdatedAt Last update timestamp.
 	UpdatedAt *string `json:"updated_at,omitempty"`
 
@@ -336,6 +364,12 @@ type ReadyResponse struct {
 	Status string `json:"status"`
 }
 
+// RetryJobRequest defines model for RetryJobRequest.
+type RetryJobRequest struct {
+	// TargetHostname Override target hostname for the retried job. Defaults to _any if not specified.
+	TargetHostname *string `json:"target_hostname,omitempty" validate:"omitempty,min=1"`
+}
+
 // StatusResponse defines model for StatusResponse.
 type StatusResponse struct {
 	// Components Per-component health status.
@@ -408,8 +442,8 @@ type WorkerInfo struct {
 
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
-	// Status Filter jobs by status (e.g., unprocessed, processing, completed, failed).
-	Status *string `form:"status,omitempty" json:"status,omitempty"`
+	// Status Filter jobs by status.
+	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 
 	// Limit Maximum number of jobs to return. Use 0 for no limit.
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
@@ -417,6 +451,9 @@ type GetJobParams struct {
 	// Offset Number of jobs to skip for pagination.
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
+
+// GetJobParamsStatus defines parameters for GetJob.
+type GetJobParamsStatus string
 
 // PutNetworkDNSParams defines parameters for PutNetworkDNS.
 type PutNetworkDNSParams struct {
@@ -456,6 +493,9 @@ type GetSystemStatusParams struct {
 
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
 type PostJobJSONRequestBody = CreateJobRequest
+
+// RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
+type RetryJobByIDJSONRequestBody = RetryJobRequest
 
 // PutNetworkDNSJSONRequestBody defines body for PutNetworkDNS for application/json ContentType.
 type PutNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
@@ -560,10 +600,15 @@ type ClientInterface interface {
 	GetJobWorkers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteJobByID request
-	DeleteJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetJobByID request
-	GetJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetryJobByIDWithBody request with any body
+	RetryJobByIDWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RetryJobByID(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNetworkDNSWithBody request with any body
 	PutNetworkDNSWithBody(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -684,7 +729,7 @@ func (c *Client) GetJobWorkers(ctx context.Context, reqEditors ...RequestEditorF
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteJobByIDRequest(c.Server, id)
 	if err != nil {
 		return nil, err
@@ -696,8 +741,32 @@ func (c *Client) DeleteJobByID(ctx context.Context, id string, reqEditors ...Req
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetJobByID(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetJobByIDRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetryJobByIDWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetryJobByIDRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetryJobByID(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetryJobByIDRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1061,7 +1130,7 @@ func NewGetJobWorkersRequest(server string) (*http.Request, error) {
 }
 
 // NewDeleteJobByIDRequest generates requests for DeleteJobByID
-func NewDeleteJobByIDRequest(server string, id string) (*http.Request, error) {
+func NewDeleteJobByIDRequest(server string, id openapi_types.UUID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1095,7 +1164,7 @@ func NewDeleteJobByIDRequest(server string, id string) (*http.Request, error) {
 }
 
 // NewGetJobByIDRequest generates requests for GetJobByID
-func NewGetJobByIDRequest(server string, id string) (*http.Request, error) {
+func NewGetJobByIDRequest(server string, id openapi_types.UUID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1124,6 +1193,53 @@ func NewGetJobByIDRequest(server string, id string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewRetryJobByIDRequest calls the generic RetryJobByID builder with application/json body
+func NewRetryJobByIDRequest(server string, id openapi_types.UUID, body RetryJobByIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRetryJobByIDRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewRetryJobByIDRequestWithBody generates requests for RetryJobByID with any type of body
+func NewRetryJobByIDRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/job/%s/retry", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -1500,10 +1616,15 @@ type ClientWithResponsesInterface interface {
 	GetJobWorkersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobWorkersResponse, error)
 
 	// DeleteJobByIDWithResponse request
-	DeleteJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
+	DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
 
 	// GetJobByIDWithResponse request
-	GetJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetJobByIDResponse, error)
+	GetJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetJobByIDResponse, error)
+
+	// RetryJobByIDWithBodyWithResponse request with any body
+	RetryJobByIDWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error)
+
+	RetryJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error)
 
 	// PutNetworkDNSWithBodyWithResponse request with any body
 	PutNetworkDNSWithBodyWithResponse(ctx context.Context, params *PutNetworkDNSParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNetworkDNSResponse, error)
@@ -1753,6 +1874,33 @@ func (r GetJobByIDResponse) StatusCode() int {
 	return 0
 }
 
+type RetryJobByIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CreateJobResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RetryJobByIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetryJobByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PutNetworkDNSResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1977,7 +2125,7 @@ func (c *ClientWithResponses) GetJobWorkersWithResponse(ctx context.Context, req
 }
 
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
-func (c *ClientWithResponses) DeleteJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error) {
+func (c *ClientWithResponses) DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error) {
 	rsp, err := c.DeleteJobByID(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -1986,12 +2134,29 @@ func (c *ClientWithResponses) DeleteJobByIDWithResponse(ctx context.Context, id 
 }
 
 // GetJobByIDWithResponse request returning *GetJobByIDResponse
-func (c *ClientWithResponses) GetJobByIDWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetJobByIDResponse, error) {
+func (c *ClientWithResponses) GetJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetJobByIDResponse, error) {
 	rsp, err := c.GetJobByID(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGetJobByIDResponse(rsp)
+}
+
+// RetryJobByIDWithBodyWithResponse request with arbitrary body returning *RetryJobByIDResponse
+func (c *ClientWithResponses) RetryJobByIDWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error) {
+	rsp, err := c.RetryJobByIDWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetryJobByIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) RetryJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error) {
+	rsp, err := c.RetryJobByID(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetryJobByIDResponse(rsp)
 }
 
 // PutNetworkDNSWithBodyWithResponse request with arbitrary body returning *PutNetworkDNSResponse
@@ -2446,6 +2611,67 @@ func ParseGetJobByIDResponse(rsp *http.Response) (*GetJobByIDResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetryJobByIDResponse parses an HTTP response from a RetryJobByIDWithResponse call
+func ParseRetryJobByIDResponse(rsp *http.Response) (*RetryJobByIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetryJobByIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CreateJobResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
