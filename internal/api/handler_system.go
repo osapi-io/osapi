@@ -36,7 +36,7 @@ func (s *Server) GetSystemHandler(
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	systemHandler := system.New(jobClient)
+	systemHandler := system.New(s.logger, jobClient)
 
 	strictHandler := systemGen.NewStrictHandler(
 		systemHandler,

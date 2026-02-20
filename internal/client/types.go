@@ -40,4 +40,5 @@ type Client struct {
 type authTransport struct {
 	base       http.RoundTripper
 	authHeader string
+	logger     *slog.Logger
 }

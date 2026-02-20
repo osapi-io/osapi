@@ -23,6 +23,7 @@ package job
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
@@ -40,6 +41,10 @@ func (j *Job) GetJobByID(
 	if errMsg, ok := validation.Struct(id); !ok {
 		return gen.GetJobByID400JSONResponse{Error: &errMsg}, nil
 	}
+
+	j.logger.Debug("getting job",
+		slog.String("job_id", request.Id),
+	)
 
 	qj, err := j.JobClient.GetJobStatus(ctx, request.Id)
 	if err != nil {

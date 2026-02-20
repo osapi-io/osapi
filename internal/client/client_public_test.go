@@ -62,7 +62,7 @@ func (s *ClientPublicTestSuite) SetupTest() {
 	}
 
 	var err error
-	s.genClient, err = client.NewClientWithResponses(s.appConfig)
+	s.genClient, err = client.NewClientWithResponses(slog.Default(), s.appConfig)
 	s.Require().NoError(err)
 
 	s.sut = client.New(slog.Default(), s.appConfig, s.genClient)
@@ -114,7 +114,7 @@ func (s *ClientPublicTestSuite) TestNewClientWithResponses() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			c, err := client.NewClientWithResponses(tt.config)
+			c, err := client.NewClientWithResponses(slog.Default(), tt.config)
 
 			if tt.expectError {
 				s.Error(err)
@@ -131,32 +131,47 @@ func (s *ClientPublicTestSuite) TestRoundTrip() {
 	tests := []struct {
 		name           string
 		bearerToken    string
+		serverURL      string
+		useRealServer  bool
 		expectedHeader string
+		expectError    bool
 	}{
 		{
 			name:           "injects authorization header",
 			bearerToken:    "my-secret-token",
+			useRealServer:  true,
 			expectedHeader: "Bearer my-secret-token",
+		},
+		{
+			name:        "logs error when request fails",
+			bearerToken: "my-secret-token",
+			serverURL:   "http://127.0.0.1:0",
+			expectError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			var receivedAuth string
-			server := httptest.NewServer(
-				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					receivedAuth = r.Header.Get("Authorization")
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte(`{}`))
-				}),
-			)
-			defer server.Close()
+			serverURL := tt.serverURL
+
+			if tt.useRealServer {
+				server := httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						receivedAuth = r.Header.Get("Authorization")
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write([]byte(`{}`))
+					}),
+				)
+				defer server.Close()
+				serverURL = server.URL
+			}
 
 			appConfig := config.Config{
 				API: config.API{
 					Client: config.Client{
-						URL: server.URL,
+						URL: serverURL,
 						Security: config.ClientSecurity{
 							BearerToken: tt.bearerToken,
 						},
@@ -164,18 +179,23 @@ func (s *ClientPublicTestSuite) TestRoundTrip() {
 				},
 			}
 
-			genClient, err := client.NewClientWithResponses(appConfig)
+			genClient, err := client.NewClientWithResponses(slog.Default(), appConfig)
 			s.Require().NoError(err)
 
 			c := client.New(slog.Default(), appConfig, genClient)
 			s.NotNil(c)
 
-			_, _ = genClient.GetSystemHostnameWithResponse(
+			_, err = genClient.GetSystemHostnameWithResponse(
 				context.Background(),
 				&gen.GetSystemHostnameParams{},
 			)
 
-			s.Equal(tt.expectedHeader, receivedAuth)
+			if tt.expectError {
+				s.Error(err)
+			} else {
+				s.NoError(err)
+				s.Equal(tt.expectedHeader, receivedAuth)
+			}
 		})
 	}
 }

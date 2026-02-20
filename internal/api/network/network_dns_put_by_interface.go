@@ -23,6 +23,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
@@ -65,6 +66,12 @@ func (n Network) PutNetworkDNS(
 	if request.Params.TargetHostname != nil {
 		hostname = *request.Params.TargetHostname
 	}
+
+	n.logger.Debug("dns put",
+		slog.String("interface", interfaceName),
+		slog.Int("servers", len(servers)),
+		slog.String("target", hostname),
+	)
 
 	if job.IsBroadcastTarget(hostname) {
 		return n.putNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)

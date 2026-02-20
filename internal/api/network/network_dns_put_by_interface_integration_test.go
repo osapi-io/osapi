@@ -142,7 +142,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 		suite.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			networkHandler := apinetwork.New(jobMock)
+			networkHandler := apinetwork.New(suite.logger, jobMock)
 			strictHandler := networkGen.NewStrictHandler(networkHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)

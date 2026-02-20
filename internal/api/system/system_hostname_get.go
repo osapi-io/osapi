@@ -22,6 +22,7 @@ package system
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
@@ -46,6 +47,11 @@ func (s *System) GetSystemHostname(
 	if request.Params.TargetHostname != nil {
 		hostname = *request.Params.TargetHostname
 	}
+
+	s.logger.Debug("routing",
+		slog.String("target", hostname),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
+	)
 
 	if job.IsBroadcastTarget(hostname) {
 		return s.getSystemHostnameBroadcast(ctx, hostname)

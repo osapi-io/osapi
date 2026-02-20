@@ -23,6 +23,7 @@ package health_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -243,11 +244,41 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Jobs)
 			},
 		},
+		{
+			name: "all metric failures degrade gracefully",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			metrics: &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return nil, fmt.Errorf("NATS info unavailable")
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return nil, fmt.Errorf("stream info unavailable")
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return nil, fmt.Errorf("KV info unavailable")
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return nil, fmt.Errorf("job stats unavailable")
+				},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+				s.Equal("ok", r.Status)
+				s.Nil(r.Nats)
+				s.Nil(r.Streams)
+				s.Nil(r.KvBuckets)
+				s.Nil(r.Jobs)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(tt.checker, time.Now(), "0.1.0", tt.metrics)
+			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics)
 
 			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
 			s.NoError(err)

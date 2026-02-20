@@ -36,7 +36,7 @@ func (s *Server) GetNetworkHandler(
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	networkHandler := network.New(jobClient)
+	networkHandler := network.New(s.logger, jobClient)
 
 	strictHandler := networkGen.NewStrictHandler(
 		networkHandler,

@@ -1,6 +1,6 @@
 ---
 title: Consistent debug logging across all components
-status: backlog
+status: done
 created: 2026-02-19
 updated: 2026-02-19
 ---
@@ -72,4 +72,11 @@ Define a common set of slog attributes used everywhere:
 
 ## Outcome
 
-_To be filled in when done._
+Implemented across 49 files in 4 phases:
+- HTTP client transport logging with method, URL, status, and duration
+- NATS KV operation logging (get, put, keys, delete)
+- Worker processor dispatch logging (category, operation, provider)
+- API handler domain-context logging (routing, job IDs, interfaces)
+- Fixed bug: health_status_get.go used package-level slog instead of
+  injected logger
+- All logging is Debug-level, invisible unless `--debug` is set

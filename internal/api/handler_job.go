@@ -36,7 +36,7 @@ func (s *Server) GetJobHandler(
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	jobHandler := apijob.New(jobClient)
+	jobHandler := apijob.New(s.logger, jobClient)
 
 	strictHandler := jobGen.NewStrictHandler(
 		jobHandler,

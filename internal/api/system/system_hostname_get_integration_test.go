@@ -115,7 +115,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 		suite.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			systemHandler := system.New(jobMock)
+			systemHandler := system.New(suite.logger, jobMock)
 			strictHandler := systemGen.NewStrictHandler(systemHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)

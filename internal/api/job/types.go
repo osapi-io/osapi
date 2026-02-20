@@ -21,6 +21,8 @@
 package job
 
 import (
+	"log/slog"
+
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
@@ -28,4 +30,5 @@ import (
 type Job struct {
 	// JobClient provides job queue operations.
 	JobClient client.JobClient
+	logger    *slog.Logger
 }

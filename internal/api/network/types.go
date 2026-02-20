@@ -21,6 +21,8 @@
 package network
 
 import (
+	"log/slog"
+
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
@@ -28,4 +30,5 @@ import (
 type Network struct {
 	// JobClient provides the interface for interacting with the jobs system.
 	JobClient client.JobClient
+	logger    *slog.Logger
 }

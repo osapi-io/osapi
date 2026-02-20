@@ -22,6 +22,7 @@ package job
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
 	"github.com/retr0h/osapi/internal/validation"
@@ -36,6 +37,13 @@ func (j *Job) PostJob(
 		return gen.PostJob400JSONResponse{
 			Error: &errMsg,
 		}, nil
+	}
+
+	if opType, ok := request.Body.Operation["type"].(string); ok {
+		j.logger.Debug("creating job",
+			slog.String("operation_type", opType),
+			slog.String("target", request.Body.TargetHostname),
+		)
 	}
 
 	result, err := j.JobClient.CreateJob(ctx, request.Body.Operation, request.Body.TargetHostname)

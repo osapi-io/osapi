@@ -22,6 +22,7 @@
 package health
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/health/gen"
@@ -32,6 +33,7 @@ var _ gen.StrictServerInterface = (*Health)(nil)
 
 // New factory to create a new instance.
 func New(
+	logger *slog.Logger,
 	checker Checker,
 	startTime time.Time,
 	version string,
@@ -42,5 +44,6 @@ func New(
 		StartTime: startTime,
 		Version:   version,
 		Metrics:   metrics,
+		logger:    logger,
 	}
 }

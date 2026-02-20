@@ -116,6 +116,11 @@ func (c *Client) publishAndWait(
 	jobJSON, _ := json.Marshal(jobData)
 	kvKey := "jobs." + jobID
 
+	c.logger.Debug("kv.put",
+		slog.String("key", kvKey),
+		slog.String("request_id", jobID),
+	)
+
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
@@ -209,6 +214,11 @@ func (c *Client) publishAndCollect(
 
 	jobJSON, _ := json.Marshal(jobData)
 	kvKey := "jobs." + jobID
+
+	c.logger.Debug("kv.put",
+		slog.String("key", kvKey),
+		slog.String("request_id", jobID),
+	)
 
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)

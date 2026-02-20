@@ -23,7 +23,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -173,26 +172,12 @@ var clientJobListCmd = &cobra.Command{
 
 				target := safeString(j.Hostname)
 
-				workers := ""
-				if j.WorkerStates != nil && len(*j.WorkerStates) > 0 {
-					var workerList []string
-					for hostname := range *j.WorkerStates {
-						workerList = append(workerList, hostname)
-					}
-					if len(workerList) == 1 {
-						workers = workerList[0]
-					} else {
-						workers = fmt.Sprintf("%d workers", len(workerList))
-					}
-				}
-
 				jobRows = append(jobRows, []string{
 					safeString(j.Id),
 					safeString(j.Status),
 					created,
 					target,
 					operationSummary,
-					workers,
 				})
 			}
 
@@ -205,21 +190,12 @@ var clientJobListCmd = &cobra.Command{
 						"CREATED",
 						"TARGET",
 						"OPERATION",
-						"WORKERS",
 					},
 					Rows: jobRows,
 				},
 			}
 			printStyledTable(sections)
 		}
-
-		logger.Info("jobs listed successfully",
-			slog.Int("total", totalJobs),
-			slog.Int("displayed", len(jobs)),
-			slog.String("status_filter", statusFilter),
-			slog.Int("limit", limitFlag),
-			slog.Int("offset", offsetFlag),
-		)
 	},
 }
 

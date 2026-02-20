@@ -44,7 +44,7 @@ var clientCmd = &cobra.Command{
 			slog.String("api.client.url", appConfig.API.URL),
 		)
 
-		cwr, err := client.NewClientWithResponses(appConfig)
+		cwr, err := client.NewClientWithResponses(logger, appConfig)
 		if err != nil {
 			logFatal("failed to create http client", err)
 		}

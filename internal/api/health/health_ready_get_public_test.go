@@ -23,6 +23,7 @@ package health_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -107,7 +108,7 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(tt.checker, time.Now(), "0.1.0", nil)
+			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", nil)
 
 			resp, err := handler.GetHealthReady(s.ctx, gen.GetHealthReadyRequestObject{})
 			s.NoError(err)

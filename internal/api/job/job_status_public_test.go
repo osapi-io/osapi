@@ -22,6 +22,7 @@ package job_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -46,7 +47,7 @@ type JobStatusPublicTestSuite struct {
 func (s *JobStatusPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apijob.New(s.mockJobClient)
+	s.handler = apijob.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 

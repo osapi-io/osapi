@@ -22,7 +22,6 @@ package health
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/health/gen"
@@ -99,7 +98,7 @@ func (h *Health) populateMetrics(
 	resp *gen.StatusResponse,
 ) {
 	if natsInfo, err := h.Metrics.GetNATSInfo(ctx); err != nil {
-		slog.Warn("failed to get NATS info for status", "error", err)
+		h.logger.Warn("failed to get NATS info for status", "error", err)
 	} else {
 		resp.Nats = &gen.NATSInfo{
 			Url:     natsInfo.URL,
@@ -108,7 +107,7 @@ func (h *Health) populateMetrics(
 	}
 
 	if streams, err := h.Metrics.GetStreamInfo(ctx); err != nil {
-		slog.Warn("failed to get stream info for status", "error", err)
+		h.logger.Warn("failed to get stream info for status", "error", err)
 	} else {
 		streamInfos := make([]gen.StreamInfo, 0, len(streams))
 		for _, s := range streams {
@@ -123,7 +122,7 @@ func (h *Health) populateMetrics(
 	}
 
 	if kvBuckets, err := h.Metrics.GetKVInfo(ctx); err != nil {
-		slog.Warn("failed to get KV info for status", "error", err)
+		h.logger.Warn("failed to get KV info for status", "error", err)
 	} else {
 		bucketInfos := make([]gen.KVBucketInfo, 0, len(kvBuckets))
 		for _, b := range kvBuckets {
@@ -137,7 +136,7 @@ func (h *Health) populateMetrics(
 	}
 
 	if jobStats, err := h.Metrics.GetJobStats(ctx); err != nil {
-		slog.Warn("failed to get job stats for status", "error", err)
+		h.logger.Warn("failed to get job stats for status", "error", err)
 	} else {
 		resp.Jobs = &gen.JobStats{
 			Total:       jobStats.Total,

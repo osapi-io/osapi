@@ -23,6 +23,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/network/gen"
@@ -55,6 +56,11 @@ func (n Network) PostNetworkPing(
 	if request.Params.TargetHostname != nil {
 		hostname = *request.Params.TargetHostname
 	}
+
+	n.logger.Debug("ping",
+		slog.String("address", request.Body.Address),
+		slog.String("target", hostname),
+	)
 
 	if job.IsBroadcastTarget(hostname) {
 		return n.postNetworkPingBroadcast(ctx, hostname, request.Body.Address)

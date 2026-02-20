@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -48,7 +49,7 @@ type JobGetPublicTestSuite struct {
 func (s *JobGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apijob.New(s.mockJobClient)
+	s.handler = apijob.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 
