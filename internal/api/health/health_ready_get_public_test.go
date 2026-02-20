@@ -107,7 +107,7 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(tt.checker, time.Now(), "0.1.0")
+			handler := health.New(tt.checker, time.Now(), "0.1.0", nil)
 
 			resp, err := handler.GetHealthReady(s.ctx, gen.GetHealthReadyRequestObject{})
 			s.NoError(err)

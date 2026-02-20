@@ -60,11 +60,8 @@ var clientJobDeleteCmd = &cobra.Command{
 				return
 			}
 
-			deleteData := map[string]interface{}{
-				"Job ID": jobID,
-				"Status": "Deleted",
-			}
-			printStyledMap(deleteData)
+			fmt.Println()
+			printKV("Job ID", jobID, "Status", "Deleted")
 
 			logger.Info("job deleted successfully",
 				slog.String("job_id", jobID),

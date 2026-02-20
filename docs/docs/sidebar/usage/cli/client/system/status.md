@@ -5,11 +5,9 @@ Get the system status:
 ```bash
 $ osapi client system status
 
-  Hostname: server1
-  Load Average (1m, 5m, 15m): 1.83, 1.96, 2.02
+  Hostname: server1              OS: Ubuntu 24.04
+  Load: 1.83, 1.96, 2.02 (1m, 5m, 15m)
   Memory: 19 GB used / 31 GB total / 10 GB free
-  OS: Ubuntu 24.04
-
 
   Disks:
 

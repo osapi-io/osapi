@@ -35,10 +35,12 @@ func New(
 	checker Checker,
 	startTime time.Time,
 	version string,
+	metrics MetricsProvider,
 ) *Health {
 	return &Health{
 		Checker:   checker,
 		StartTime: startTime,
 		Version:   version,
+		Metrics:   metrics,
 	}
 }

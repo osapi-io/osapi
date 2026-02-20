@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -106,7 +107,74 @@ var apiServerStartCmd = &cobra.Command{
 			},
 		}
 
-		healthHandler := health.New(checker, startTime, "0.1.0")
+		metricsProvider := &health.ClosureMetricsProvider{
+			NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+				natsConn, ok := nc.(*natsclient.Client)
+				if !ok || natsConn.NC == nil {
+					return nil, fmt.Errorf("NATS client unavailable")
+				}
+
+				metrics := &health.NATSMetrics{
+					URL: natsConn.NC.ConnectedUrl(),
+				}
+
+				if wrapper, ok := natsConn.NC.(*natsclient.NATSConnWrapper); ok &&
+					wrapper.Conn != nil {
+					metrics.Version = wrapper.Conn.ConnectedServerVersion()
+				}
+
+				return metrics, nil
+			},
+			StreamInfoFn: func(fnCtx context.Context) ([]health.StreamMetrics, error) {
+				info, err := nc.GetStreamInfo(fnCtx, appConfig.Job.StreamName)
+				if err != nil {
+					return nil, fmt.Errorf("stream info: %w", err)
+				}
+
+				return []health.StreamMetrics{
+					{
+						Name:      appConfig.Job.StreamName,
+						Messages:  info.State.Msgs,
+						Bytes:     info.State.Bytes,
+						Consumers: info.State.Consumers,
+					},
+				}, nil
+			},
+			KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+				status, err := jobsKV.Status()
+				if err != nil {
+					return nil, fmt.Errorf("KV status: %w", err)
+				}
+
+				keys, _ := jobsKV.Keys()
+				keyCount := len(keys)
+
+				return []health.KVMetrics{
+					{
+						Name:  status.Bucket(),
+						Keys:  keyCount,
+						Bytes: status.Bytes(),
+					},
+				}, nil
+			},
+			JobStatsFn: func(fnCtx context.Context) (*health.JobMetrics, error) {
+				stats, err := jc.GetQueueStats(fnCtx)
+				if err != nil {
+					return nil, fmt.Errorf("job stats: %w", err)
+				}
+
+				return &health.JobMetrics{
+					Total:       stats.TotalJobs,
+					Unprocessed: stats.StatusCounts["submitted"],
+					Processing:  stats.StatusCounts["processing"],
+					Completed:   stats.StatusCounts["completed"],
+					Failed:      stats.StatusCounts["failed"],
+					DLQ:         stats.DLQCount,
+				}, nil
+			},
+		}
+
+		healthHandler := health.New(checker, startTime, "0.1.0", metricsProvider)
 
 		var sm ServerManager = api.New(appConfig, logger, api.WithHealthHandler(healthHandler))
 		handlers := sm.CreateHandlers(jc)

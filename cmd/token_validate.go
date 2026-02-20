@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -54,14 +55,12 @@ This command ensures that the token is authentic, has not expired, and conforms 
 			logFatal("failed to validate token", err)
 		}
 
-		claimsData := map[string]interface{}{
-			"Roles":    strings.Join(claims.Roles, ","),
-			"Subject":  claims.Subject,
-			"Audience": strings.Join(claims.Audience, ","),
-			"Expires":  claims.ExpiresAt.Format(time.RFC3339),
-			"Issued":   claims.IssuedAt.Format(time.RFC3339),
-		}
-		printStyledMap(claimsData)
+		fmt.Println()
+		printKV("Subject", claims.Subject, "Roles", strings.Join(claims.Roles, ", "))
+		printKV("Audience", strings.Join(claims.Audience, ", "))
+		printKV("Issued", claims.IssuedAt.Format(time.RFC3339),
+			"Expires", claims.ExpiresAt.Format(time.RFC3339),
+		)
 	},
 }
 

@@ -489,12 +489,12 @@ func (s *ClientPublicTestSuite) TestGetHealthReady() {
 	}
 }
 
-func (s *ClientPublicTestSuite) TestGetHealthDetailed() {
+func (s *ClientPublicTestSuite) TestGetHealthStatus() {
 	tests := []struct {
 		name string
 	}{
 		{
-			name: "returns health detailed response",
+			name: "returns health status response",
 		},
 	}
 
@@ -502,7 +502,7 @@ func (s *ClientPublicTestSuite) TestGetHealthDetailed() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetHealthDetailed(ctx)
+			resp, err := s.sut.GetHealthStatus(ctx)
 
 			s.NoError(err)
 			s.NotNil(resp)

@@ -41,6 +41,11 @@ var (
 	lightGray = lipgloss.Color("241")
 	white     = lipgloss.Color("15")
 	teal      = lipgloss.Color("#06ffa5") // Soft teal for values/highlights
+
+	// Reusable inline styles for compact key-value output.
+	labelStyle = lipgloss.NewStyle().Bold(true).Foreground(purple)
+	valueStyle = lipgloss.NewStyle().Foreground(teal)
+	dimStyle   = lipgloss.NewStyle().Foreground(gray)
 )
 
 // section represents a header with its corresponding rows.
@@ -140,27 +145,40 @@ func printStyledTable(
 	}
 }
 
-// printStyledMap format and print the map into a styled, padded table.
-func printStyledMap(
-	data map[string]interface{},
+// kvMinColWidth is the minimum visual width for each key-value column.
+// A consistent minimum ensures columns align across consecutive printKV calls.
+const kvMinColWidth = 20
+
+// printKV prints labeled key-value pairs on a single indented line.
+// Pairs are padded to equal column widths for alignment.
+// Arguments alternate between labels and values: label1, val1, label2, val2, ...
+func printKV(
+	pairs ...string,
 ) {
-	paddingStyle := lipgloss.NewStyle().Padding(1, 2)
-
-	var builder strings.Builder
-
-	for key, value := range data {
-		styledKey := lipgloss.NewStyle().
-			Bold(true).
-			Foreground(purple).
-			Render(key)
-
-		formattedLine := fmt.Sprintf("\n%s: %v", styledKey, value)
-		builder.WriteString(formattedLine)
+	if len(pairs)%2 != 0 || len(pairs) == 0 {
+		return
 	}
 
-	paddedOutput := paddingStyle.Render(builder.String())
+	rendered := make([]string, 0, len(pairs)/2)
+	maxWidth := kvMinColWidth
+	for i := 0; i < len(pairs); i += 2 {
+		pair := labelStyle.Render(pairs[i]+":") + " " + valueStyle.Render(pairs[i+1])
+		rendered = append(rendered, pair)
+		if w := lipgloss.Width(pair); w > maxWidth {
+			maxWidth = w
+		}
+	}
 
-	fmt.Println(paddedOutput)
+	var line strings.Builder
+	line.WriteString("  ")
+	for i, pair := range rendered {
+		line.WriteString(pair)
+		if i < len(rendered)-1 {
+			pad := maxWidth - lipgloss.Width(pair) + 4
+			line.WriteString(strings.Repeat(" ", pad))
+		}
+	}
+	fmt.Println(line.String())
 }
 
 // formatList helper function to convert []string to a formatted string.
@@ -299,22 +317,19 @@ func displayJobDetailResponse(
 	resp *gen.JobDetailResponse,
 ) {
 	// Display job metadata
-	jobData := map[string]interface{}{
-		"Job ID": safeString(resp.Id),
-		"Status": safeString(resp.Status),
-	}
-
-	if resp.Created != nil {
-		jobData["Created"] = *resp.Created
-	}
-	if resp.Error != nil && *resp.Error != "" {
-		jobData["Error"] = *resp.Error
-	}
+	fmt.Println()
+	printKV("Job ID", safeString(resp.Id), "Status", safeString(resp.Status))
 	if resp.Hostname != nil && *resp.Hostname != "" {
-		jobData["Hostname"] = *resp.Hostname
+		printKV("Hostname", *resp.Hostname)
+	}
+	if resp.Created != nil {
+		printKV("Created", *resp.Created)
 	}
 	if resp.UpdatedAt != nil && *resp.UpdatedAt != "" {
-		jobData["Updated At"] = *resp.UpdatedAt
+		printKV("Updated At", *resp.UpdatedAt)
+	}
+	if resp.Error != nil && *resp.Error != "" {
+		printKV("Error", *resp.Error)
 	}
 
 	// Add worker summary from worker_states
@@ -338,17 +353,15 @@ func displayJobDetailResponse(
 
 		total := len(*resp.WorkerStates)
 		if total > 1 {
-			jobData["Workers"] = fmt.Sprintf(
+			printKV("Workers", fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
 				total,
 				completed,
 				failed,
 				processing,
-			)
+			))
 		}
 	}
-
-	printStyledMap(jobData)
 
 	var sections []section
 

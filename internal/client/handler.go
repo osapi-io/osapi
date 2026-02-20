@@ -44,10 +44,10 @@ type HealthHandler interface {
 	GetHealthReady(
 		ctx context.Context,
 	) (*gen.GetHealthReadyResponse, error)
-	// GetHealthDetailed get the health detailed API endpoint.
-	GetHealthDetailed(
+	// GetHealthStatus get the health status API endpoint.
+	GetHealthStatus(
 		ctx context.Context,
-	) (*gen.GetHealthDetailedResponse, error)
+	) (*gen.GetHealthStatusResponse, error)
 }
 
 // JobHandler defines an interface for interacting with Job client operations.

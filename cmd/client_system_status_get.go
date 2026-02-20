@@ -106,27 +106,18 @@ func displaySystemStatusCollection(
 func displaySystemStatusDetail(
 	data *gen.SystemStatusResponse,
 ) {
-	systemData := map[string]interface{}{
-		"Hostname": data.Hostname,
-		"Load Average (1m, 5m, 15m)": fmt.Sprintf(
-			"%.2f, %.2f, %.2f",
-			data.LoadAverage.N1min,
-			data.LoadAverage.N5min,
-			data.LoadAverage.N15min,
-		),
-		"Memory": fmt.Sprintf(
-			"%d GB used / %d GB total / %d GB free",
-			data.Memory.Used/1024/1024/1024,
-			data.Memory.Total/1024/1024/1024,
-			data.Memory.Free/1024/1024/1024,
-		),
-		"OS": fmt.Sprintf(
-			"%s %s",
-			data.OsInfo.Distribution,
-			data.OsInfo.Version,
-		),
-	}
-	printStyledMap(systemData)
+	fmt.Println()
+	printKV("Hostname", data.Hostname,
+		"OS", data.OsInfo.Distribution+" "+dimStyle.Render(data.OsInfo.Version),
+	)
+	printKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
+		data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
+	)+" "+dimStyle.Render("(1m, 5m, 15m)"))
+	printKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
+		data.Memory.Used/1024/1024/1024,
+		data.Memory.Total/1024/1024/1024,
+		data.Memory.Free/1024/1024/1024,
+	))
 
 	diskRows := [][]string{}
 
