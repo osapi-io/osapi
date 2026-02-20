@@ -160,7 +160,7 @@ var clientJobListCmd = &cobra.Command{
 				target := safeString(j.Hostname)
 
 				jobRows = append(jobRows, []string{
-					safeString(j.Id),
+					safeUUID(j.Id),
 					safeString(j.Status),
 					created,
 					target,

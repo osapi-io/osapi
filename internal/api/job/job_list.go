@@ -24,6 +24,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/job/gen"
 )
 
@@ -63,8 +65,9 @@ func (j *Job) GetJob(
 
 	items := make([]gen.JobDetailResponse, 0, len(result.Jobs))
 	for _, qj := range result.Jobs {
+		jobUUID := uuid.MustParse(qj.ID)
 		item := gen.JobDetailResponse{
-			Id:      &qj.ID,
+			Id:      &jobUUID,
 			Status:  &qj.Status,
 			Created: &qj.Created,
 		}

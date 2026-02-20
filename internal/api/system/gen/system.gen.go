@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	externalRef0 "github.com/retr0h/osapi/internal/api/common/gen"
 )
 
@@ -42,7 +43,9 @@ type ErrorResponse = externalRef0.ErrorResponse
 
 // HostnameCollectionResponse defines model for HostnameCollectionResponse.
 type HostnameCollectionResponse struct {
-	Results []HostnameResponse `json:"results"`
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []HostnameResponse  `json:"results"`
 }
 
 // HostnameResponse The hostname of the system.
@@ -86,6 +89,8 @@ type OSInfoResponse struct {
 
 // SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
 type SystemStatusCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
 	Results []SystemStatusResponse `json:"results"`
 }
 

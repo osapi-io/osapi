@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
@@ -64,7 +66,7 @@ func (n Network) GetNetworkDNSByInterface(
 		return n.getNetworkDNSBroadcast(ctx, hostname, request.InterfaceName)
 	}
 
-	dnsConfig, workerHostname, err := n.JobClient.QueryNetworkDNS(
+	jobID, dnsConfig, workerHostname, err := n.JobClient.QueryNetworkDNS(
 		ctx,
 		hostname,
 		request.InterfaceName,
@@ -79,7 +81,9 @@ func (n Network) GetNetworkDNSByInterface(
 	searchDomains := dnsConfig.SearchDomains
 	servers := dnsConfig.DNSServers
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNetworkDNSByInterface200JSONResponse{
+		JobId: &jobUUID,
 		Results: []gen.DNSConfigResponse{
 			{
 				Hostname:      workerHostname,
@@ -96,7 +100,7 @@ func (n Network) getNetworkDNSBroadcast(
 	target string,
 	iface string,
 ) (gen.GetNetworkDNSByInterfaceResponseObject, error) {
-	results, err := n.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
+	jobID, results, err := n.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNetworkDNSByInterface500JSONResponse{
@@ -115,7 +119,9 @@ func (n Network) getNetworkDNSBroadcast(
 		})
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNetworkDNSByInterface200JSONResponse{
+		JobId:   &jobUUID,
 		Results: responses,
 	}, nil
 }

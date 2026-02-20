@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/job/gen"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -55,8 +57,9 @@ func (j *Job) PostJob(
 	}
 
 	revision := int64(result.Revision)
+	jobUUID := uuid.MustParse(result.JobID)
 	return gen.PostJob201JSONResponse{
-		JobId:     result.JobID,
+		JobId:     jobUUID,
 		Status:    result.Status,
 		Revision:  &revision,
 		Timestamp: &result.Timestamp,

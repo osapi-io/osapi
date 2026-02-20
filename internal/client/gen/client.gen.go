@@ -57,7 +57,7 @@ type CreateJobRequest struct {
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
-	JobId string `json:"job_id"`
+	JobId openapi_types.UUID `json:"job_id"`
 
 	// Revision The KV revision number.
 	Revision *int64 `json:"revision,omitempty"`
@@ -71,6 +71,8 @@ type CreateJobResponse struct {
 
 // DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
 type DNSConfigCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
 	Results []DNSConfigResponse `json:"results"`
 }
 
@@ -100,6 +102,8 @@ type DNSConfigUpdateRequest struct {
 
 // DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
 type DNSUpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
 	Results []DNSUpdateResultItem `json:"results"`
 }
 
@@ -151,7 +155,9 @@ type HealthResponse struct {
 
 // HostnameCollectionResponse defines model for HostnameCollectionResponse.
 type HostnameCollectionResponse struct {
-	Results []HostnameResponse `json:"results"`
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []HostnameResponse  `json:"results"`
 }
 
 // HostnameResponse The hostname of the system.
@@ -172,7 +178,7 @@ type JobDetailResponse struct {
 	Hostname *string `json:"hostname,omitempty"`
 
 	// Id Unique identifier of the job.
-	Id *string `json:"id,omitempty"`
+	Id *openapi_types.UUID `json:"id,omitempty"`
 
 	// Operation The operation data.
 	Operation *map[string]interface{} `json:"operation,omitempty"`
@@ -313,7 +319,9 @@ type OSInfoResponse struct {
 
 // PingCollectionResponse defines model for PingCollectionResponse.
 type PingCollectionResponse struct {
-	Results []PingResponse `json:"results"`
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PingResponse      `json:"results"`
 }
 
 // PingResponse defines model for PingResponse.
@@ -410,6 +418,8 @@ type StreamInfo struct {
 
 // SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
 type SystemStatusCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
 	Results []SystemStatusResponse `json:"results"`
 }
 

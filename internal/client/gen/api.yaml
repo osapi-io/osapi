@@ -1020,6 +1020,7 @@ components:
       properties:
         job_id:
           type: string
+          format: uuid
           description: Unique identifier for the created job.
           example: 550e8400-e29b-41d4-a716-446655440000
         status:
@@ -1065,6 +1066,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           description: Unique identifier of the job.
         status:
           type: string
@@ -1213,6 +1215,11 @@ components:
     PingCollectionResponse:
       type: object
       properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
         results:
           type: array
           items:
@@ -1241,6 +1248,11 @@ components:
     DNSConfigCollectionResponse:
       type: object
       properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
         results:
           type: array
           items:
@@ -1265,6 +1277,11 @@ components:
     DNSUpdateCollectionResponse:
       type: object
       properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
         results:
           type: array
           items:
@@ -1407,6 +1424,11 @@ components:
     SystemStatusCollectionResponse:
       type: object
       properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
         results:
           type: array
           items:
@@ -1416,6 +1438,11 @@ components:
     HostnameCollectionResponse:
       type: object
       properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
         results:
           type: array
           items:

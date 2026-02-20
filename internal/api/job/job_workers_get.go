@@ -31,7 +31,7 @@ func (j *Job) GetJobWorkers(
 	ctx context.Context,
 	_ gen.GetJobWorkersRequestObject,
 ) (gen.GetJobWorkersResponseObject, error) {
-	workers, err := j.JobClient.ListWorkers(ctx)
+	_, workers, err := j.JobClient.ListWorkers(ctx)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetJobWorkers500JSONResponse{

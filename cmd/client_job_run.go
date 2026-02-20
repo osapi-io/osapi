@@ -92,7 +92,7 @@ This combines job submission and retrieval into a single command for convenience
 			return
 		}
 
-		jobID := resp.JSON201.JobId
+		jobID := resp.JSON201.JobId.String()
 		logger.Debug("job submitted", slog.String("job_id", jobID))
 
 		// Poll for completion

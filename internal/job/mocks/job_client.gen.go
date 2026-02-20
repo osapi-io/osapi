@@ -158,12 +158,13 @@ func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1, arg2, arg3 interface{}
 }
 
 // ListWorkers mocks base method.
-func (m *MockJobClient) ListWorkers(arg0 context.Context) ([]job.WorkerInfo, error) {
+func (m *MockJobClient) ListWorkers(arg0 context.Context) (string, []job.WorkerInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWorkers", arg0)
-	ret0, _ := ret[0].([]job.WorkerInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].([]job.WorkerInfo)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ListWorkers indicates an expected call of ListWorkers.
@@ -173,12 +174,13 @@ func (mr *MockJobClientMockRecorder) ListWorkers(arg0 interface{}) *gomock.Call 
 }
 
 // ModifyNetworkDNS mocks base method.
-func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, error) {
+func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNS", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ModifyNetworkDNS indicates an expected call of ModifyNetworkDNS.
@@ -188,12 +190,13 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNS(arg0, arg1, arg2, arg3, ar
 }
 
 // ModifyNetworkDNSAll mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSAll(arg0 context.Context, arg1, arg2 []string, arg3 string) (map[string]error, error) {
+func (m *MockJobClient) ModifyNetworkDNSAll(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, map[string]error, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSAll", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(map[string]error)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]error)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ModifyNetworkDNSAll indicates an expected call of ModifyNetworkDNSAll.
@@ -203,12 +206,13 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAll(arg0, arg1, arg2, arg3 
 }
 
 // ModifyNetworkDNSAny mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, error) {
+func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSAny", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ModifyNetworkDNSAny indicates an expected call of ModifyNetworkDNSAny.
@@ -218,12 +222,13 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAny(arg0, arg1, arg2, arg3 
 }
 
 // ModifyNetworkDNSBroadcast mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (map[string]error, error) {
+func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, map[string]error, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSBroadcast", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(map[string]error)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]error)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ModifyNetworkDNSBroadcast indicates an expected call of ModifyNetworkDNSBroadcast.
@@ -233,13 +238,14 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSBroadcast(arg0, arg1, arg2,
 }
 
 // QueryNetworkDNS mocks base method.
-func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (*dns.Config, string, error) {
+func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (string, *dns.Config, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNS", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*dns.Config)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*dns.Config)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // QueryNetworkDNS indicates an expected call of QueryNetworkDNS.
@@ -249,12 +255,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNS(arg0, arg1, arg2 interface{
 }
 
 // QueryNetworkDNSAll mocks base method.
-func (m *MockJobClient) QueryNetworkDNSAll(arg0 context.Context, arg1 string) (map[string]*dns.Config, error) {
+func (m *MockJobClient) QueryNetworkDNSAll(arg0 context.Context, arg1 string) (string, map[string]*dns.Config, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNSAll", arg0, arg1)
-	ret0, _ := ret[0].(map[string]*dns.Config)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*dns.Config)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkDNSAll indicates an expected call of QueryNetworkDNSAll.
@@ -264,12 +271,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNSAll(arg0, arg1 interface{}) 
 }
 
 // QueryNetworkDNSBroadcast mocks base method.
-func (m *MockJobClient) QueryNetworkDNSBroadcast(arg0 context.Context, arg1, arg2 string) (map[string]*dns.Config, error) {
+func (m *MockJobClient) QueryNetworkDNSBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*dns.Config, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNSBroadcast", arg0, arg1, arg2)
-	ret0, _ := ret[0].(map[string]*dns.Config)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*dns.Config)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkDNSBroadcast indicates an expected call of QueryNetworkDNSBroadcast.
@@ -279,13 +287,14 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNSBroadcast(arg0, arg1, arg2 i
 }
 
 // QueryNetworkPing mocks base method.
-func (m *MockJobClient) QueryNetworkPing(arg0 context.Context, arg1, arg2 string) (*ping.Result, string, error) {
+func (m *MockJobClient) QueryNetworkPing(arg0 context.Context, arg1, arg2 string) (string, *ping.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPing", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*ping.Result)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // QueryNetworkPing indicates an expected call of QueryNetworkPing.
@@ -295,12 +304,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPing(arg0, arg1, arg2 interface
 }
 
 // QueryNetworkPingAll mocks base method.
-func (m *MockJobClient) QueryNetworkPingAll(arg0 context.Context, arg1 string) (map[string]*ping.Result, error) {
+func (m *MockJobClient) QueryNetworkPingAll(arg0 context.Context, arg1 string) (string, map[string]*ping.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPingAll", arg0, arg1)
-	ret0, _ := ret[0].(map[string]*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*ping.Result)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkPingAll indicates an expected call of QueryNetworkPingAll.
@@ -310,13 +320,14 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingAll(arg0, arg1 interface{})
 }
 
 // QueryNetworkPingAny mocks base method.
-func (m *MockJobClient) QueryNetworkPingAny(arg0 context.Context, arg1 string) (*ping.Result, string, error) {
+func (m *MockJobClient) QueryNetworkPingAny(arg0 context.Context, arg1 string) (string, *ping.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPingAny", arg0, arg1)
-	ret0, _ := ret[0].(*ping.Result)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*ping.Result)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // QueryNetworkPingAny indicates an expected call of QueryNetworkPingAny.
@@ -326,12 +337,13 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingAny(arg0, arg1 interface{})
 }
 
 // QueryNetworkPingBroadcast mocks base method.
-func (m *MockJobClient) QueryNetworkPingBroadcast(arg0 context.Context, arg1, arg2 string) (map[string]*ping.Result, error) {
+func (m *MockJobClient) QueryNetworkPingBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*ping.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkPingBroadcast", arg0, arg1, arg2)
-	ret0, _ := ret[0].(map[string]*ping.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*ping.Result)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QueryNetworkPingBroadcast indicates an expected call of QueryNetworkPingBroadcast.
@@ -341,13 +353,14 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingBroadcast(arg0, arg1, arg2 
 }
 
 // QuerySystemHostname mocks base method.
-func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, error) {
+func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostname", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // QuerySystemHostname indicates an expected call of QuerySystemHostname.
@@ -357,12 +370,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemHostname(arg0, arg1 interface{})
 }
 
 // QuerySystemHostnameAll mocks base method.
-func (m *MockJobClient) QuerySystemHostnameAll(arg0 context.Context) (map[string]string, error) {
+func (m *MockJobClient) QuerySystemHostnameAll(arg0 context.Context) (string, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostnameAll", arg0)
-	ret0, _ := ret[0].(map[string]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemHostnameAll indicates an expected call of QuerySystemHostnameAll.
@@ -372,12 +386,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemHostnameAll(arg0 interface{}) *g
 }
 
 // QuerySystemHostnameBroadcast mocks base method.
-func (m *MockJobClient) QuerySystemHostnameBroadcast(arg0 context.Context, arg1 string) (map[string]string, error) {
+func (m *MockJobClient) QuerySystemHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostnameBroadcast", arg0, arg1)
-	ret0, _ := ret[0].(map[string]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemHostnameBroadcast indicates an expected call of QuerySystemHostnameBroadcast.
@@ -387,12 +402,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemHostnameBroadcast(arg0, arg1 int
 }
 
 // QuerySystemStatus mocks base method.
-func (m *MockJobClient) QuerySystemStatus(arg0 context.Context, arg1 string) (*job.SystemStatusResponse, error) {
+func (m *MockJobClient) QuerySystemStatus(arg0 context.Context, arg1 string) (string, *job.SystemStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemStatus", arg0, arg1)
-	ret0, _ := ret[0].(*job.SystemStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemStatus indicates an expected call of QuerySystemStatus.
@@ -402,12 +418,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemStatus(arg0, arg1 interface{}) *
 }
 
 // QuerySystemStatusAll mocks base method.
-func (m *MockJobClient) QuerySystemStatusAll(arg0 context.Context) ([]*job.SystemStatusResponse, error) {
+func (m *MockJobClient) QuerySystemStatusAll(arg0 context.Context) (string, []*job.SystemStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemStatusAll", arg0)
-	ret0, _ := ret[0].([]*job.SystemStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemStatusAll indicates an expected call of QuerySystemStatusAll.
@@ -417,12 +434,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemStatusAll(arg0 interface{}) *gom
 }
 
 // QuerySystemStatusAny mocks base method.
-func (m *MockJobClient) QuerySystemStatusAny(arg0 context.Context) (*job.SystemStatusResponse, error) {
+func (m *MockJobClient) QuerySystemStatusAny(arg0 context.Context) (string, *job.SystemStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemStatusAny", arg0)
-	ret0, _ := ret[0].(*job.SystemStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemStatusAny indicates an expected call of QuerySystemStatusAny.
@@ -432,12 +450,13 @@ func (mr *MockJobClientMockRecorder) QuerySystemStatusAny(arg0 interface{}) *gom
 }
 
 // QuerySystemStatusBroadcast mocks base method.
-func (m *MockJobClient) QuerySystemStatusBroadcast(arg0 context.Context, arg1 string) ([]*job.SystemStatusResponse, error) {
+func (m *MockJobClient) QuerySystemStatusBroadcast(arg0 context.Context, arg1 string) (string, []*job.SystemStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemStatusBroadcast", arg0, arg1)
-	ret0, _ := ret[0].([]*job.SystemStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // QuerySystemStatusBroadcast indicates an expected call of QuerySystemStatusBroadcast.

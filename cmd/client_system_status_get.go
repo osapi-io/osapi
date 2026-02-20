@@ -56,6 +56,11 @@ var clientSystemStatusGetCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("system data response was nil"))
 			}
 
+			if resp.JSON200.JobId != nil {
+				fmt.Println()
+				printKV("Job ID", resp.JSON200.JobId.String())
+			}
+
 			displaySystemStatusCollection(host, resp.JSON200)
 
 		case http.StatusBadRequest:

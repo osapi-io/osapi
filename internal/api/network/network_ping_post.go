@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -66,7 +68,7 @@ func (n Network) PostNetworkPing(
 		return n.postNetworkPingBroadcast(ctx, hostname, request.Body.Address)
 	}
 
-	pingResult, workerHostname, err := n.JobClient.QueryNetworkPing(
+	jobID, pingResult, workerHostname, err := n.JobClient.QueryNetworkPing(
 		ctx,
 		hostname,
 		request.Body.Address,
@@ -78,7 +80,9 @@ func (n Network) PostNetworkPing(
 		}, nil
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNetworkPing200JSONResponse{
+		JobId: &jobUUID,
 		Results: []gen.PingResponse{
 			buildPingResponse(workerHostname, pingResult),
 		},
@@ -91,7 +95,7 @@ func (n Network) postNetworkPingBroadcast(
 	target string,
 	address string,
 ) (gen.PostNetworkPingResponseObject, error) {
-	results, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
+	jobID, results, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{
@@ -104,7 +108,9 @@ func (n Network) postNetworkPingBroadcast(
 		responses = append(responses, buildPingResponse(host, r))
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNetworkPing200JSONResponse{
+		JobId:   &jobUUID,
 		Results: responses,
 	}, nil
 }

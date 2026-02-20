@@ -83,11 +83,12 @@ func New(
 }
 
 // publishAndWait stores a job in KV, publishes a notification, and waits for the worker response.
+// Returns the job ID, response, and any error.
 func (c *Client) publishAndWait(
 	ctx context.Context,
 	subject string,
 	req *job.Request,
-) (*job.Response, error) {
+) (string, *job.Response, error) {
 	// Generate request ID if not provided
 	if req.RequestID == "" {
 		req.RequestID = uuid.New().String()
@@ -122,7 +123,7 @@ func (c *Client) publishAndWait(
 	)
 
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
-		return nil, fmt.Errorf("failed to store job in KV: %w", err)
+		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
 	c.logger.Info("publishing job request",
@@ -133,14 +134,14 @@ func (c *Client) publishAndWait(
 
 	// Publish just the job ID to the stream as a notification
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
-		return nil, fmt.Errorf("failed to publish notification: %w", err)
+		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
 
 	// Watch for worker response in KV
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(responsePattern)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create response watcher: %w", err)
+		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
 	}
 	defer func() {
 		_ = watcher.Stop()
@@ -152,7 +153,7 @@ func (c *Client) publishAndWait(
 	for {
 		select {
 		case <-timeoutCtx.Done():
-			return nil, fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err())
+			return "", nil, fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err())
 		case entry := <-watcher.Updates():
 			if entry == nil {
 				continue
@@ -160,7 +161,7 @@ func (c *Client) publishAndWait(
 
 			var response job.Response
 			if err := json.Unmarshal(entry.Value(), &response); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+				return "", nil, fmt.Errorf("failed to unmarshal response: %w", err)
 			}
 
 			c.logger.Info("received job response",
@@ -168,7 +169,7 @@ func (c *Client) publishAndWait(
 				slog.String("status", string(response.Status)),
 			)
 
-			return &response, nil
+			return jobID, &response, nil
 		}
 	}
 }
@@ -182,11 +183,12 @@ const broadcastQuietPeriod = 3 * time.Second
 // worker responses using a quiet period strategy. After each response, a short
 // timer resets. When the timer expires with no new responses, the collected
 // results are returned. The overall timeout acts as a safety net.
+// Returns the job ID, collected responses keyed by hostname, and any error.
 func (c *Client) publishAndCollect(
 	ctx context.Context,
 	subject string,
 	req *job.Request,
-) (map[string]*job.Response, error) {
+) (string, map[string]*job.Response, error) {
 	// Generate request ID if not provided
 	if req.RequestID == "" {
 		req.RequestID = uuid.New().String()
@@ -221,7 +223,7 @@ func (c *Client) publishAndCollect(
 	)
 
 	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
-		return nil, fmt.Errorf("failed to store job in KV: %w", err)
+		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
 	c.logger.Info("publishing broadcast job request",
@@ -232,14 +234,14 @@ func (c *Client) publishAndCollect(
 
 	// Publish just the job ID to the stream as a notification
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
-		return nil, fmt.Errorf("failed to publish notification: %w", err)
+		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
 
 	// Watch for worker responses in KV
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(responsePattern)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create response watcher: %w", err)
+		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
 	}
 	defer func() {
 		_ = watcher.Stop()
@@ -295,10 +297,10 @@ func (c *Client) publishAndCollect(
 
 		// Reached from either timeoutCtx.Done() or quietTimer.C
 		if len(responses) == 0 {
-			return nil, fmt.Errorf(
+			return "", nil, fmt.Errorf(
 				"timeout waiting for broadcast responses: no workers responded",
 			)
 		}
-		return responses, nil
+		return jobID, responses, nil
 	}
 }

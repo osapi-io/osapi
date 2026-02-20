@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
@@ -53,7 +55,7 @@ func (s *System) GetSystemStatus(
 		return s.getSystemStatusBroadcast(ctx, hostname)
 	}
 
-	status, err := s.JobClient.QuerySystemStatus(ctx, hostname)
+	jobID, status, err := s.JobClient.QuerySystemStatus(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{
@@ -62,8 +64,10 @@ func (s *System) GetSystemStatus(
 	}
 
 	resp := buildSystemStatusResponse(status)
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetSystemStatus200JSONResponse{
+		JobId:   &jobUUID,
 		Results: []gen.SystemStatusResponse{*resp},
 	}, nil
 }
@@ -73,7 +77,7 @@ func (s *System) getSystemStatusBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetSystemStatusResponseObject, error) {
-	results, err := s.JobClient.QuerySystemStatusBroadcast(ctx, target)
+	jobID, results, err := s.JobClient.QuerySystemStatusBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{
@@ -86,7 +90,9 @@ func (s *System) getSystemStatusBroadcast(
 		responses = append(responses, *buildSystemStatusResponse(status))
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetSystemStatus200JSONResponse{
+		JobId:   &jobUUID,
 		Results: responses,
 	}, nil
 }

@@ -29,6 +29,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/google/uuid"
 	"golang.org/x/term"
 
 	"github.com/retr0h/osapi/internal/client/gen"
@@ -253,6 +254,16 @@ func safeString(
 	return ""
 }
 
+// safeUUID converts a *uuid.UUID to its string representation. Returns "" if nil.
+func safeUUID(
+	u *uuid.UUID,
+) string {
+	if u != nil {
+		return u.String()
+	}
+	return ""
+}
+
 // float64ToSafeString converts a *float64 to a string. Returns "N/A" if nil.
 func float64ToSafeString(
 	f *float64,
@@ -318,7 +329,7 @@ func displayJobDetailResponse(
 ) {
 	// Display job metadata
 	fmt.Println()
-	printKV("Job ID", safeString(resp.Id), "Status", safeString(resp.Status))
+	printKV("Job ID", safeUUID(resp.Id), "Status", safeString(resp.Status))
 	if resp.Hostname != nil && *resp.Hostname != "" {
 		printKV("Hostname", *resp.Hostname)
 	}

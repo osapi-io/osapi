@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/job/gen"
 )
 
@@ -53,8 +55,9 @@ func (j *Job) GetJobByID(
 		}, nil
 	}
 
+	jobUUID := uuid.MustParse(qj.ID)
 	resp := gen.GetJobByID200JSONResponse{
-		Id:      &qj.ID,
+		Id:      &jobUUID,
 		Status:  &qj.Status,
 		Created: &qj.Created,
 	}

@@ -41,7 +41,7 @@ type CreateJobRequest struct {
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
-	JobId string `json:"job_id"`
+	JobId openapi_types.UUID `json:"job_id"`
 
 	// Revision The KV revision number.
 	Revision *int64 `json:"revision,omitempty"`
@@ -68,7 +68,7 @@ type JobDetailResponse struct {
 	Hostname *string `json:"hostname,omitempty"`
 
 	// Id Unique identifier of the job.
-	Id *string `json:"id,omitempty"`
+	Id *openapi_types.UUID `json:"id,omitempty"`
 
 	// Operation The operation data.
 	Operation *map[string]interface{} `json:"operation,omitempty"`

@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
@@ -57,7 +59,7 @@ func (s *System) GetSystemHostname(
 		return s.getSystemHostnameBroadcast(ctx, hostname)
 	}
 
-	result, workerHostname, err := s.JobClient.QuerySystemHostname(ctx, hostname)
+	jobID, result, workerHostname, err := s.JobClient.QuerySystemHostname(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -70,7 +72,9 @@ func (s *System) GetSystemHostname(
 		displayHostname = workerHostname
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetSystemHostname200JSONResponse{
+		JobId: &jobUUID,
 		Results: []gen.HostnameResponse{
 			{Hostname: displayHostname},
 		},
@@ -82,7 +86,7 @@ func (s *System) getSystemHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetSystemHostnameResponseObject, error) {
-	results, err := s.JobClient.QuerySystemHostnameBroadcast(ctx, target)
+	jobID, results, err := s.JobClient.QuerySystemHostnameBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -95,7 +99,9 @@ func (s *System) getSystemHostnameBroadcast(
 		responses = append(responses, gen.HostnameResponse{Hostname: h})
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetSystemHostname200JSONResponse{
+		JobId:   &jobUUID,
 		Results: responses,
 	}, nil
 }

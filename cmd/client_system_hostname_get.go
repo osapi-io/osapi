@@ -55,6 +55,11 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("system data response was nil"))
 			}
 
+			if resp.JSON200.JobId != nil {
+				fmt.Println()
+				printKV("Job ID", resp.JSON200.JobId.String())
+			}
+
 			rows := make([][]string, 0, len(resp.JSON200.Results))
 			for _, h := range resp.JSON200.Results {
 				rows = append(rows, []string{h.Hostname})

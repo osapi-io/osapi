@@ -58,14 +58,14 @@ var clientJobRetryCmd = &cobra.Command{
 			}
 
 			fmt.Println()
-			printKV("Job ID", resp.JSON201.JobId, "Status", resp.JSON201.Status)
+			printKV("Job ID", resp.JSON201.JobId.String(), "Status", resp.JSON201.Status)
 			if resp.JSON201.Revision != nil {
 				printKV("Revision", fmt.Sprintf("%d", *resp.JSON201.Revision))
 			}
 
 			logger.Info("job retried successfully",
 				slog.String("original_job_id", jobID),
-				slog.String("new_job_id", resp.JSON201.JobId),
+				slog.String("new_job_id", resp.JSON201.JobId.String()),
 				slog.String("target_hostname", targetHostname),
 			)
 		case http.StatusBadRequest:

@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	externalRef0 "github.com/retr0h/osapi/internal/api/common/gen"
 )
 
@@ -27,6 +28,8 @@ const (
 
 // DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
 type DNSConfigCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
 	Results []DNSConfigResponse `json:"results"`
 }
 
@@ -56,6 +59,8 @@ type DNSConfigUpdateRequest struct {
 
 // DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
 type DNSUpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
 	Results []DNSUpdateResultItem `json:"results"`
 }
 
@@ -74,7 +79,9 @@ type ErrorResponse = externalRef0.ErrorResponse
 
 // PingCollectionResponse defines model for PingCollectionResponse.
 type PingCollectionResponse struct {
-	Results []PingResponse `json:"results"`
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PingResponse      `json:"results"`
 }
 
 // PingResponse defines model for PingResponse.

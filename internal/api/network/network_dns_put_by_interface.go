@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
@@ -77,7 +79,7 @@ func (n Network) PutNetworkDNS(
 		return n.putNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
 	}
 
-	workerHostname, err := n.JobClient.ModifyNetworkDNS(
+	jobID, workerHostname, err := n.JobClient.ModifyNetworkDNS(
 		ctx,
 		hostname,
 		servers,
@@ -91,7 +93,9 @@ func (n Network) PutNetworkDNS(
 		}, nil
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNetworkDNS202JSONResponse{
+		JobId: &jobUUID,
 		Results: []gen.DNSUpdateResultItem{
 			{
 				Hostname: workerHostname,
@@ -109,7 +113,7 @@ func (n Network) putNetworkDNSBroadcast(
 	searchDomains []string,
 	interfaceName string,
 ) (gen.PutNetworkDNSResponseObject, error) {
-	results, err := n.JobClient.ModifyNetworkDNSBroadcast(
+	jobID, results, err := n.JobClient.ModifyNetworkDNSBroadcast(
 		ctx,
 		target,
 		servers,
@@ -137,7 +141,9 @@ func (n Network) putNetworkDNSBroadcast(
 		responses = append(responses, item)
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNetworkDNS202JSONResponse{
+		JobId:   &jobUUID,
 		Results: responses,
 	}, nil
 }

@@ -112,26 +112,21 @@ telemetry:
   # otlp_endpoint: "localhost:4317"
 ```
 
-## Quick Wins (Pre-OTel)
+## Prerequisite (in progress)
 
-These improvements can be done before the full OTel integration and
-provide immediate debugging value:
+`.tasks/in-progress/2026-02-19-quick-wins-job-id-tracing.md` surfaces
+job IDs in API responses and CLI output. This is purely about giving
+users a way to run `osapi client job get --job-id <id>` without
+hunting through logs. It does NOT add any slog/logging correlation —
+that is what THIS task (OTel) solves properly.
 
-1. **Return job-id in CLI output** — The CLI already shows job-id for
-   `job create`, but operations like `client system hostname` (which
-   internally create a job) should also display the job-id for
-   debugging. This lets users correlate CLI output with server logs.
+## Key design principle
 
-2. **Structured logging with job-id** — The job client, API handler,
-   and worker should all include `slog.String("job_id", jobID)` in
-   every log line for that request. This is largely already happening
-   in the job client code but should be consistent across all layers.
-
-3. **Request-scoped correlation** — Pass the job-id through context
-   (`context.WithValue`) so that every layer in the stack (API → NATS
-   publish → worker pickup → handler execution → result write) logs
-   it consistently. This gives grep-based tracing (`grep job_id=<id>`)
-   without requiring OTel infrastructure.
+Do NOT sprinkle `slog.String("job_id", ...)` in handlers to simulate
+tracing. OTel handles correlation automatically via `otelslog` bridge:
+every log line in a traced context gets `trace_id` and `span_id`
+attached without per-call changes. Manual slog additions are noise
+that OTel makes unnecessary.
 
 ## Notes
 
