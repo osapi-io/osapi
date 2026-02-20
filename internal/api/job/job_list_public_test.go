@@ -58,8 +58,8 @@ func (s *JobListPublicTestSuite) TearDownTest() {
 }
 
 func (s *JobListPublicTestSuite) TestGetJob() {
-	completedStatus := "completed"
-	invalidStatus := "bogus"
+	completedStatus := gen.Completed
+	invalidStatus := gen.GetJobParamsStatus("bogus")
 
 	tests := []struct {
 		name         string
@@ -209,7 +209,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			if tt.expectMock {
 				var statusFilter string
 				if tt.request.Params.Status != nil {
-					statusFilter = *tt.request.Params.Status
+					statusFilter = string(*tt.request.Params.Status)
 				}
 				expectedLimit := 10
 				if tt.request.Params.Limit != nil {

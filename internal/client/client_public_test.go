@@ -354,12 +354,18 @@ func (s *ClientPublicTestSuite) TestPostJob() {
 
 func (s *ClientPublicTestSuite) TestGetJobByID() {
 	tests := []struct {
-		name string
-		id   string
+		name    string
+		id      string
+		wantErr string
 	}{
 		{
 			name: "returns job detail response",
-			id:   "test-job-id",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+		},
+		{
+			name:    "returns error for invalid uuid",
+			id:      "not-a-uuid",
+			wantErr: "invalid job ID",
 		},
 	}
 
@@ -369,20 +375,31 @@ func (s *ClientPublicTestSuite) TestGetJobByID() {
 
 			resp, err := s.sut.GetJobByID(ctx, tt.id)
 
-			s.NoError(err)
-			s.NotNil(resp)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				s.Nil(resp)
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+			}
 		})
 	}
 }
 
 func (s *ClientPublicTestSuite) TestDeleteJobByID() {
 	tests := []struct {
-		name string
-		id   string
+		name    string
+		id      string
+		wantErr string
 	}{
 		{
 			name: "returns delete response",
-			id:   "test-job-id",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+		},
+		{
+			name:    "returns error for invalid uuid",
+			id:      "not-a-uuid",
+			wantErr: "invalid job ID",
 		},
 	}
 
@@ -392,8 +409,13 @@ func (s *ClientPublicTestSuite) TestDeleteJobByID() {
 
 			resp, err := s.sut.DeleteJobByID(ctx, tt.id)
 
-			s.NoError(err)
-			s.NotNil(resp)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				s.Nil(resp)
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+			}
 		})
 	}
 }
@@ -429,6 +451,47 @@ func (s *ClientPublicTestSuite) TestGetJobs() {
 
 			s.NoError(err)
 			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestRetryJobByID() {
+	tests := []struct {
+		name           string
+		id             string
+		targetHostname string
+		wantErr        string
+	}{
+		{
+			name:           "returns retry response",
+			id:             "550e8400-e29b-41d4-a716-446655440000",
+			targetHostname: "_any",
+		},
+		{
+			name:    "returns error for invalid uuid",
+			id:      "not-a-uuid",
+			wantErr: "invalid job ID",
+		},
+		{
+			name:           "returns retry response with empty target",
+			id:             "550e8400-e29b-41d4-a716-446655440000",
+			targetHostname: "",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.RetryJobByID(ctx, tt.id, tt.targetHostname)
+
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				s.Nil(resp)
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+			}
 		})
 	}
 }

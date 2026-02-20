@@ -1275,6 +1275,264 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 	}
 }
 
+func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
+	now := time.Now().Format(time.RFC3339)
+
+	tests := []struct {
+		name         string
+		jobID        string
+		setupMocks   func()
+		validateFunc func(qj *job.QueuedJob)
+	}{
+		{
+			name:  "retried event appears in timeline with new job ID",
+			jobID: "job-original",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-original","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-original").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-original.submitted._api.100",
+					"status.job-original.failed.worker1.200",
+					"status.job-original.retried._api.300",
+				}, nil)
+
+				submitEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				submitEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-original","event":"submitted","hostname":"_api","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get("status.job-original.submitted._api.100").
+					Return(submitEntry, nil)
+
+				failEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				failEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-original","event":"failed","hostname":"worker1","timestamp":"%s","data":{"error":"timeout"}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get("status.job-original.failed.worker1.200").
+					Return(failEntry, nil)
+
+				retriedEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				retriedEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-original","event":"retried","hostname":"_api","timestamp":"%s","data":{"new_job_id":"job-new-123","target_hostname":"_any"}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get("status.job-original.retried._api.300").
+					Return(retriedEntry, nil)
+			},
+			validateFunc: func(qj *job.QueuedJob) {
+				s.Equal("failed", qj.Status)
+				s.Len(qj.Timeline, 3)
+
+				// Find retried event in timeline
+				var found bool
+				for _, te := range qj.Timeline {
+					if te.Event == "retried" {
+						s.Contains(te.Message, "job-new-123")
+						found = true
+					}
+				}
+				s.True(found, "retried event should appear in timeline")
+			},
+		},
+		{
+			name:  "retried event without new_job_id shows fallback message",
+			jobID: "job-original-2",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-original-2","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-original-2").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys().Return([]string{
+					"status.job-original-2.retried._api.100",
+				}, nil)
+
+				retriedEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				retriedEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-original-2","event":"retried","hostname":"_api","timestamp":"%s","data":{}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get("status.job-original-2.retried._api.100").
+					Return(retriedEntry, nil)
+			},
+			validateFunc: func(qj *job.QueuedJob) {
+				s.Len(qj.Timeline, 1)
+				s.Equal("retried", qj.Timeline[0].Event)
+				s.Equal("Job retried", qj.Timeline[0].Message)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			qj, err := s.jobsClient.GetJobStatus(s.ctx, tt.jobID)
+			s.NoError(err)
+			s.NotNil(qj)
+			tt.validateFunc(qj)
+		})
+	}
+}
+
+func (s *JobsPublicTestSuite) TestRetryJob() {
+	tests := []struct {
+		name        string
+		jobID       string
+		target      string
+		expectedErr string
+		setupMocks  func()
+	}{
+		{
+			name:   "successful retry",
+			jobID:  "job-123",
+			target: "_any",
+			setupMocks: func() {
+				// Read original job
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-123","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-123").Return(mockEntry, nil)
+
+				// CreateJob: store new job + status event + publish
+				s.mockKV.EXPECT().Put(gomock.Any(), gomock.Any()).Return(uint64(1), nil).Times(2)
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				// Write retried event on original job
+				s.mockKV.EXPECT().Put(gomock.Any(), gomock.Any()).Return(uint64(2), nil)
+			},
+		},
+		{
+			name:        "job not found",
+			jobID:       "nonexistent",
+			target:      "_any",
+			expectedErr: "job not found: nonexistent",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Get("jobs.nonexistent").Return(nil, errors.New("key not found"))
+			},
+		},
+		{
+			name:        "invalid job JSON",
+			jobID:       "job-bad",
+			target:      "_any",
+			expectedErr: "failed to parse job data",
+			setupMocks: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(`not json`))
+				s.mockKV.EXPECT().Get("jobs.job-bad").Return(mockEntry, nil)
+			},
+		},
+		{
+			name:        "missing operation field",
+			jobID:       "job-no-op",
+			target:      "_any",
+			expectedErr: "job has no operation data",
+			setupMocks: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-no-op","subject":"jobs.query._any"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-no-op").Return(mockEntry, nil)
+			},
+		},
+		{
+			name:        "create job fails",
+			jobID:       "job-456",
+			target:      "_any",
+			expectedErr: "failed to create retry job",
+			setupMocks: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-456","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-456").Return(mockEntry, nil)
+
+				// CreateJob fails on KV put
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any()).
+					Return(uint64(0), errors.New("kv error"))
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+			},
+		},
+		{
+			name:   "retried event put error is logged not returned",
+			jobID:  "job-789",
+			target: "_any",
+			setupMocks: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-789","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-789").Return(mockEntry, nil)
+
+				// CreateJob succeeds
+				s.mockKV.EXPECT().Put(gomock.Any(), gomock.Any()).Return(uint64(1), nil).Times(2)
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				// Retried event put fails (should be logged, not returned)
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any()).
+					Return(uint64(0), errors.New("event put failed"))
+			},
+		},
+		{
+			name:   "empty target defaults to any",
+			jobID:  "job-empty-target",
+			target: "",
+			setupMocks: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-empty-target","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-empty-target").Return(mockEntry, nil)
+
+				s.mockKV.EXPECT().Put(gomock.Any(), gomock.Any()).Return(uint64(1), nil).Times(2)
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				// Retried event
+				s.mockKV.EXPECT().Put(gomock.Any(), gomock.Any()).Return(uint64(2), nil)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			result, err := s.jobsClient.RetryJob(s.ctx, tt.jobID, tt.target)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+			} else {
+				s.NoError(err)
+				s.NotEmpty(result.JobID)
+				s.Equal("created", result.Status)
+			}
+		})
+	}
+}
+
 func TestJobsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(JobsPublicTestSuite))
 }

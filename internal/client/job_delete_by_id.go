@@ -22,6 +22,9 @@ package client
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/client/gen"
 )
@@ -31,5 +34,10 @@ func (c *Client) DeleteJobByID(
 	ctx context.Context,
 	id string,
 ) (*gen.DeleteJobByIDResponse, error) {
-	return c.Client.DeleteJobByIDWithResponse(ctx, id)
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	return c.Client.DeleteJobByIDWithResponse(ctx, parsedID)
 }

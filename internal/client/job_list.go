@@ -35,7 +35,8 @@ func (c *Client) GetJobs(
 ) (*gen.GetJobResponse, error) {
 	params := &gen.GetJobParams{}
 	if status != "" {
-		params.Status = &status
+		s := gen.GetJobParamsStatus(status)
+		params.Status = &s
 	}
 	if limit > 0 {
 		params.Limit = &limit

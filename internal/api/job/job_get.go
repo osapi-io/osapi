@@ -27,7 +27,6 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
-	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetJobByID retrieves details of a specific job by its ID.
@@ -35,18 +34,13 @@ func (j *Job) GetJobByID(
 	ctx context.Context,
 	request gen.GetJobByIDRequestObject,
 ) (gen.GetJobByIDResponseObject, error) {
-	id := struct {
-		ID string `validate:"required,uuid"`
-	}{ID: request.Id}
-	if errMsg, ok := validation.Struct(id); !ok {
-		return gen.GetJobByID400JSONResponse{Error: &errMsg}, nil
-	}
+	jobID := request.Id.String()
 
 	j.logger.Debug("getting job",
-		slog.String("job_id", request.Id),
+		slog.String("job_id", jobID),
 	)
 
-	qj, err := j.JobClient.GetJobStatus(ctx, request.Id)
+	qj, err := j.JobClient.GetJobStatus(ctx, jobID)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") {
@@ -112,6 +106,28 @@ func (j *Job) GetJobByID(
 			respMap[hostname] = entry
 		}
 		resp.Responses = &respMap
+	}
+
+	// Expose timeline
+	if len(qj.Timeline) > 0 {
+		timeline := make([]struct {
+			Error     *string `json:"error,omitempty"`
+			Event     *string `json:"event,omitempty"`
+			Hostname  *string `json:"hostname,omitempty"`
+			Message   *string `json:"message,omitempty"`
+			Timestamp *string `json:"timestamp,omitempty"`
+		}, len(qj.Timeline))
+		for i, te := range qj.Timeline {
+			ts := te.Timestamp.Format("2006-01-02T15:04:05Z07:00")
+			timeline[i].Timestamp = &ts
+			timeline[i].Event = strPtr(te.Event)
+			timeline[i].Hostname = strPtr(te.Hostname)
+			timeline[i].Message = strPtr(te.Message)
+			if te.Error != "" {
+				timeline[i].Error = strPtr(te.Error)
+			}
+		}
+		resp.Timeline = &timeline
 	}
 
 	// Expose worker states

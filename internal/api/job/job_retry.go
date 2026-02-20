@@ -26,31 +26,55 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
-// DeleteJobByID deletes a specific job by its ID.
-func (j *Job) DeleteJobByID(
+// RetryJobByID creates a new job using the same operation data as an existing job.
+func (j *Job) RetryJobByID(
 	ctx context.Context,
-	request gen.DeleteJobByIDRequestObject,
-) (gen.DeleteJobByIDResponseObject, error) {
+	request gen.RetryJobByIDRequestObject,
+) (gen.RetryJobByIDResponseObject, error) {
 	jobID := request.Id.String()
 
-	j.logger.Debug("deleting job",
+	if request.Body != nil {
+		if errMsg, ok := validation.Struct(request.Body); !ok {
+			return gen.RetryJobByID400JSONResponse{Error: &errMsg}, nil
+		}
+	}
+
+	var targetHostname string
+	if request.Body != nil && request.Body.TargetHostname != nil {
+		targetHostname = *request.Body.TargetHostname
+	}
+
+	j.logger.Debug("retrying job",
 		slog.String("job_id", jobID),
+		slog.String("target_hostname", targetHostname),
 	)
 
-	err := j.JobClient.DeleteJob(ctx, jobID)
+	result, err := j.JobClient.RetryJob(ctx, jobID, targetHostname)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") {
-			return gen.DeleteJobByID404JSONResponse{
+			return gen.RetryJobByID404JSONResponse{
 				Error: &errMsg,
 			}, nil
 		}
-		return gen.DeleteJobByID500JSONResponse{
+		if strings.Contains(errMsg, "no operation data") {
+			return gen.RetryJobByID400JSONResponse{
+				Error: &errMsg,
+			}, nil
+		}
+		return gen.RetryJobByID500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
 
-	return gen.DeleteJobByID204Response{}, nil
+	revision := int64(result.Revision)
+	return gen.RetryJobByID201JSONResponse{
+		JobId:     result.JobID,
+		Status:    result.Status,
+		Revision:  &revision,
+		Timestamp: &result.Timestamp,
+	}, nil
 }

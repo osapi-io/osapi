@@ -1,6 +1,6 @@
 ---
 title: Add job retry command
-status: backlog
+status: done
 created: 2026-02-19
 updated: 2026-02-19
 ---
@@ -66,4 +66,13 @@ creates a brand new job with a new ID.
 
 ## Outcome
 
-_To be filled in when done._
+Implemented job retry command with full validation and test coverage:
+
+- `RetryJob` in job client reads original job from KV, creates new job,
+  writes "retried" status event on original job linking to new job
+- `POST /job/{id}/retry` API endpoint with optional `target_hostname`
+- `osapi client job retry --job-id <id>` CLI command
+- UUID validation via `format: uuid` in OpenAPI spec (framework-level)
+- Enum validation for job list status filter
+- Integration tests for all job endpoints with user input
+- Updated CLAUDE.md with validation pattern documentation

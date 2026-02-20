@@ -151,6 +151,13 @@ type JobClient interface {
 		jobID string,
 	) error
 
+	// Job retry
+	RetryJob(
+		ctx context.Context,
+		jobID string,
+		targetHostname string,
+	) (*CreateJobResult, error)
+
 	// Worker operations - used by job workers for processing
 	WriteStatusEvent(
 		ctx context.Context,

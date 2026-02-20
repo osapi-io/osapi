@@ -583,6 +583,15 @@ func (c *Client) computeStatusFromEvents(
 					latestError = errMsg
 				}
 			}
+		case "retried":
+			if data, ok := event["data"].(map[string]interface{}); ok {
+				if newJobID, ok := data["new_job_id"].(string); ok {
+					timelineEvent.Message = fmt.Sprintf("Job retried as %s", newJobID)
+				}
+			}
+			if timelineEvent.Message == "" {
+				timelineEvent.Message = "Job retried"
+			}
 		}
 
 		timeline = append(timeline, timelineEvent)
@@ -685,6 +694,72 @@ func (c *Client) computeStatusFromEvents(
 	}
 
 	return result
+}
+
+// RetryJob creates a new job using the same operation data as an existing job.
+// The original job is preserved. A "retried" status event is written to the
+// original job's timeline linking to the new job.
+func (c *Client) RetryJob(
+	ctx context.Context,
+	jobID string,
+	targetHostname string,
+) (*CreateJobResult, error) {
+	// Read original job from KV
+	jobKey := "jobs." + jobID
+	c.logger.Debug("kv.get",
+		slog.String("key", jobKey),
+		slog.String("operation", "retry_job"),
+	)
+
+	entry, err := c.kv.Get(jobKey)
+	if err != nil {
+		return nil, fmt.Errorf("job not found: %s", jobID)
+	}
+
+	var jobData map[string]interface{}
+	if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
+		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	}
+
+	// Extract operation data
+	operationData, ok := jobData["operation"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("job has no operation data: %s", jobID)
+	}
+
+	// Create new job with the same operation data
+	result, err := c.CreateJob(ctx, operationData, targetHostname)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create retry job: %w", err)
+	}
+
+	// Write "retried" status event on the original job's timeline
+	retriedKey := fmt.Sprintf("status.%s.retried._api.%d", jobID, time.Now().UnixNano())
+	retriedEvent := map[string]interface{}{
+		"job_id":    jobID,
+		"event":     "retried",
+		"hostname":  "_api",
+		"timestamp": time.Now().Format(time.RFC3339Nano),
+		"unix_nano": time.Now().UnixNano(),
+		"data": map[string]interface{}{
+			"new_job_id":      result.JobID,
+			"target_hostname": targetHostname,
+		},
+	}
+	retriedEventJSON, _ := json.Marshal(retriedEvent)
+	if _, err := c.kv.Put(retriedKey, retriedEventJSON); err != nil {
+		c.logger.Error("failed to write retried event",
+			slog.String("error", err.Error()),
+		)
+	}
+
+	c.logger.Debug("job retried successfully",
+		slog.String("original_job_id", jobID),
+		slog.String("new_job_id", result.JobID),
+		slog.String("target_hostname", targetHostname),
+	)
+
+	return result, nil
 }
 
 // DeleteJob deletes a job from the KV store by its ID.

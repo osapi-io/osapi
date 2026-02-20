@@ -44,8 +44,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/get-health-detailed",
-          label: "Detailed component health",
+          id: "gen/api/get-health-status",
+          label: "System status and component health",
           className: "api-method get",
         },
       ],
@@ -93,6 +93,12 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-job-by-id",
           label: "Delete a job",
           className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/retry-job-by-id",
+          label: "Retry a job",
+          className: "api-method post",
         },
       ],
     },

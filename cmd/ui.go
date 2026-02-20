@@ -426,6 +426,28 @@ func displayJobDetailResponse(
 		})
 	}
 
+	// Display timeline
+	if resp.Timeline != nil && len(*resp.Timeline) > 0 {
+		timelineRows := make([][]string, 0, len(*resp.Timeline))
+		for _, te := range *resp.Timeline {
+			ts := safeString(te.Timestamp)
+			event := safeString(te.Event)
+			hostname := safeString(te.Hostname)
+			message := safeString(te.Message)
+			errMsg := ""
+			if te.Error != nil {
+				errMsg = *te.Error
+			}
+			timelineRows = append(timelineRows, []string{ts, event, hostname, message, errMsg})
+		}
+
+		sections = append(sections, section{
+			Title:   "Timeline",
+			Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+			Rows:    timelineRows,
+		})
+	}
+
 	// Display result if completed
 	if resp.Result != nil {
 		resultJSON, _ := json.MarshalIndent(resp.Result, "", "  ")

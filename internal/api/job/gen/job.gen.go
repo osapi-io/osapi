@@ -12,11 +12,21 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	externalRef0 "github.com/retr0h/osapi/internal/api/common/gen"
 )
 
 const (
 	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
+// Defines values for GetJobParamsStatus.
+const (
+	Completed      GetJobParamsStatus = "completed"
+	Failed         GetJobParamsStatus = "failed"
+	PartialFailure GetJobParamsStatus = "partial_failure"
+	Processing     GetJobParamsStatus = "processing"
+	Submitted      GetJobParamsStatus = "submitted"
 )
 
 // CreateJobRequest defines model for CreateJobRequest.
@@ -78,6 +88,24 @@ type JobDetailResponse struct {
 	// Status Current status of the job.
 	Status *string `json:"status,omitempty"`
 
+	// Timeline Chronological sequence of job lifecycle events.
+	Timeline *[]struct {
+		// Error Error details if applicable.
+		Error *string `json:"error,omitempty"`
+
+		// Event Event type (submitted, acknowledged, started, completed, failed, retried).
+		Event *string `json:"event,omitempty"`
+
+		// Hostname Worker or source that generated the event.
+		Hostname *string `json:"hostname,omitempty"`
+
+		// Message Human-readable description of the event.
+		Message *string `json:"message,omitempty"`
+
+		// Timestamp ISO 8601 timestamp of the event.
+		Timestamp *string `json:"timestamp,omitempty"`
+	} `json:"timeline,omitempty"`
+
 	// UpdatedAt Last update timestamp.
 	UpdatedAt *string `json:"updated_at,omitempty"`
 
@@ -119,6 +147,12 @@ type QueueStatsResponse struct {
 	TotalJobs *int `json:"total_jobs,omitempty"`
 }
 
+// RetryJobRequest defines model for RetryJobRequest.
+type RetryJobRequest struct {
+	// TargetHostname Override target hostname for the retried job. Defaults to _any if not specified.
+	TargetHostname *string `json:"target_hostname,omitempty" validate:"omitempty,min=1"`
+}
+
 // WorkerInfo defines model for WorkerInfo.
 type WorkerInfo struct {
 	// Hostname The hostname of the worker.
@@ -127,8 +161,8 @@ type WorkerInfo struct {
 
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
-	// Status Filter jobs by status (e.g., unprocessed, processing, completed, failed).
-	Status *string `form:"status,omitempty" json:"status,omitempty"`
+	// Status Filter jobs by status.
+	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 
 	// Limit Maximum number of jobs to return. Use 0 for no limit.
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
@@ -137,8 +171,14 @@ type GetJobParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// GetJobParamsStatus defines parameters for GetJob.
+type GetJobParamsStatus string
+
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
 type PostJobJSONRequestBody = CreateJobRequest
+
+// RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
+type RetryJobByIDJSONRequestBody = RetryJobRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -156,10 +196,13 @@ type ServerInterface interface {
 	GetJobWorkers(ctx echo.Context) error
 	// Delete a job
 	// (DELETE /job/{id})
-	DeleteJobByID(ctx echo.Context, id string) error
+	DeleteJobByID(ctx echo.Context, id openapi_types.UUID) error
 	// Get job detail
 	// (GET /job/{id})
-	GetJobByID(ctx echo.Context, id string) error
+	GetJobByID(ctx echo.Context, id openapi_types.UUID) error
+	// Retry a job
+	// (POST /job/{id}/retry)
+	RetryJobByID(ctx echo.Context, id openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -238,7 +281,7 @@ func (w *ServerInterfaceWrapper) GetJobWorkers(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) DeleteJobByID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
-	var id string
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -256,7 +299,7 @@ func (w *ServerInterfaceWrapper) DeleteJobByID(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetJobByID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
-	var id string
+	var id openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -267,6 +310,24 @@ func (w *ServerInterfaceWrapper) GetJobByID(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJobByID(ctx, id)
+	return err
+}
+
+// RetryJobByID converts echo context to params.
+func (w *ServerInterfaceWrapper) RetryJobByID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetryJobByID(ctx, id)
 	return err
 }
 
@@ -304,6 +365,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/job/workers", wrapper.GetJobWorkers)
 	router.DELETE(baseURL+"/job/:id", wrapper.DeleteJobByID)
 	router.GET(baseURL+"/job/:id", wrapper.GetJobByID)
+	router.POST(baseURL+"/job/:id/retry", wrapper.RetryJobByID)
 
 }
 
@@ -500,7 +562,7 @@ func (response GetJobWorkers500JSONResponse) VisitGetJobWorkersResponse(w http.R
 }
 
 type DeleteJobByIDRequestObject struct {
-	Id string `json:"id"`
+	Id openapi_types.UUID `json:"id"`
 }
 
 type DeleteJobByIDResponseObject interface {
@@ -561,7 +623,7 @@ func (response DeleteJobByID500JSONResponse) VisitDeleteJobByIDResponse(w http.R
 }
 
 type GetJobByIDRequestObject struct {
-	Id string `json:"id"`
+	Id openapi_types.UUID `json:"id"`
 }
 
 type GetJobByIDResponseObject interface {
@@ -622,6 +684,69 @@ func (response GetJobByID500JSONResponse) VisitGetJobByIDResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type RetryJobByIDRequestObject struct {
+	Id   openapi_types.UUID `json:"id"`
+	Body *RetryJobByIDJSONRequestBody
+}
+
+type RetryJobByIDResponseObject interface {
+	VisitRetryJobByIDResponse(w http.ResponseWriter) error
+}
+
+type RetryJobByID201JSONResponse CreateJobResponse
+
+func (response RetryJobByID201JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryJobByID400JSONResponse externalRef0.ErrorResponse
+
+func (response RetryJobByID400JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryJobByID401JSONResponse externalRef0.ErrorResponse
+
+func (response RetryJobByID401JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryJobByID403JSONResponse externalRef0.ErrorResponse
+
+func (response RetryJobByID403JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryJobByID404JSONResponse externalRef0.ErrorResponse
+
+func (response RetryJobByID404JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryJobByID500JSONResponse externalRef0.ErrorResponse
+
+func (response RetryJobByID500JSONResponse) VisitRetryJobByIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List jobs
@@ -642,6 +767,9 @@ type StrictServerInterface interface {
 	// Get job detail
 	// (GET /job/{id})
 	GetJobByID(ctx context.Context, request GetJobByIDRequestObject) (GetJobByIDResponseObject, error)
+	// Retry a job
+	// (POST /job/{id}/retry)
+	RetryJobByID(ctx context.Context, request RetryJobByIDRequestObject) (RetryJobByIDResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -757,7 +885,7 @@ func (sh *strictHandler) GetJobWorkers(ctx echo.Context) error {
 }
 
 // DeleteJobByID operation middleware
-func (sh *strictHandler) DeleteJobByID(ctx echo.Context, id string) error {
+func (sh *strictHandler) DeleteJobByID(ctx echo.Context, id openapi_types.UUID) error {
 	var request DeleteJobByIDRequestObject
 
 	request.Id = id
@@ -782,7 +910,7 @@ func (sh *strictHandler) DeleteJobByID(ctx echo.Context, id string) error {
 }
 
 // GetJobByID operation middleware
-func (sh *strictHandler) GetJobByID(ctx echo.Context, id string) error {
+func (sh *strictHandler) GetJobByID(ctx echo.Context, id openapi_types.UUID) error {
 	var request GetJobByIDRequestObject
 
 	request.Id = id
@@ -800,6 +928,37 @@ func (sh *strictHandler) GetJobByID(ctx echo.Context, id string) error {
 		return err
 	} else if validResponse, ok := response.(GetJobByIDResponseObject); ok {
 		return validResponse.VisitGetJobByIDResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetryJobByID operation middleware
+func (sh *strictHandler) RetryJobByID(ctx echo.Context, id openapi_types.UUID) error {
+	var request RetryJobByIDRequestObject
+
+	request.Id = id
+
+	var body RetryJobByIDJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetryJobByID(ctx.Request().Context(), request.(RetryJobByIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetryJobByID")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetryJobByIDResponseObject); ok {
+		return validResponse.VisitRetryJobByIDResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

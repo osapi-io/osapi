@@ -529,6 +529,27 @@ Content-Type: application/json
 }
 ```
 
+### Job Retry Endpoint
+
+```http
+POST /api/jobs/{job_id}/retry
+Content-Type: application/json
+
+{
+  "target_hostname": "_any"
+}
+```
+
+**Response:**
+
+```json
+{
+  "job_id": "uuid-67890",
+  "status": "created",
+  "revision": 1
+}
+```
+
 ### Job Status Endpoint
 
 ```http
@@ -588,6 +609,9 @@ osapi client job status --poll-interval-seconds 5
 
 # Delete a job
 osapi client job delete --job-id uuid-12345
+
+# Retry a failed/stuck job
+osapi client job retry --job-id 550e8400-...
 ```
 
 ## Package Architecture
@@ -610,7 +634,7 @@ The `internal/job/` package contains shared domain types and two subpackages:
 | `client.go` | Publish-and-wait/collect with KV + stream        |
 | `query.go`  | Query operations (system status, hostname, etc.) |
 | `modify.go` | Modify operations (DNS updates)                  |
-| `jobs.go`   | CreateJob, GetJobStatus, GetQueueStats           |
+| `jobs.go`   | CreateJob, RetryJob, GetJobStatus, GetQueueStats |
 | `worker.go` | WriteStatusEvent, WriteJobResponse               |
 | `types.go`  | Client-specific types and interfaces             |
 
