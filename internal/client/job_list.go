@@ -30,10 +30,18 @@ import (
 func (c *Client) GetJobs(
 	ctx context.Context,
 	status string,
+	limit int,
+	offset int,
 ) (*gen.GetJobResponse, error) {
 	params := &gen.GetJobParams{}
 	if status != "" {
 		params.Status = &status
+	}
+	if limit > 0 {
+		params.Limit = &limit
+	}
+	if offset > 0 {
+		params.Offset = &offset
 	}
 
 	return c.Client.GetJobWithResponse(ctx, params)

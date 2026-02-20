@@ -129,6 +129,12 @@ type WorkerInfo struct {
 type GetJobParams struct {
 	// Status Filter jobs by status (e.g., unprocessed, processing, completed, failed).
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
+
+	// Limit Maximum number of jobs to return. Use 0 for no limit.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Number of jobs to skip for pagination.
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
@@ -174,6 +180,20 @@ func (w *ServerInterfaceWrapper) GetJob(ctx echo.Context) error {
 	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter status: %s", err))
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", ctx.QueryParams(), &params.Limit)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter limit: %s", err))
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", ctx.QueryParams(), &params.Offset)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter offset: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments

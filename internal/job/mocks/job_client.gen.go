@@ -143,18 +143,18 @@ func (mr *MockJobClientMockRecorder) GetQueueStats(arg0 interface{}) *gomock.Cal
 }
 
 // ListJobs mocks base method.
-func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string) ([]*job.QueuedJob, error) {
+func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string, arg2, arg3 int) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListJobs", arg0, arg1)
-	ret0, _ := ret[0].([]*job.QueuedJob)
+	ret := m.ctrl.Call(m, "ListJobs", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*client0.ListJobsResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListJobs indicates an expected call of ListJobs.
-func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), arg0, arg1, arg2, arg3)
 }
 
 // ListWorkers mocks base method.

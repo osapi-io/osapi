@@ -49,7 +49,9 @@ type JobClient interface {
 	ListJobs(
 		ctx context.Context,
 		statusFilter string,
-	) ([]*job.QueuedJob, error)
+		limit int,
+		offset int,
+	) (*ListJobsResult, error)
 
 	// Query operations
 	QuerySystemStatus(
@@ -189,6 +191,12 @@ type CreateJobResult struct {
 	Status    string `json:"status"`
 	Revision  uint64 `json:"revision"`
 	Timestamp string `json:"timestamp"`
+}
+
+// ListJobsResult represents the result of listing jobs with pagination.
+type ListJobsResult struct {
+	Jobs       []*job.QueuedJob
+	TotalCount int
 }
 
 // computedJobStatus represents the computed status from events

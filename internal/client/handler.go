@@ -75,6 +75,8 @@ type JobHandler interface {
 	GetJobs(
 		ctx context.Context,
 		status string,
+		limit int,
+		offset int,
 	) (*gen.GetJobResponse, error)
 
 	// GetJobQueueStats retrieves queue statistics via the REST API.

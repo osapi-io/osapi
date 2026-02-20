@@ -87,6 +87,8 @@ var clientNetworkPingCmd = &cobra.Command{
 			}
 			printStyledTable(sections)
 
+		case http.StatusBadRequest:
+			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
 			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:

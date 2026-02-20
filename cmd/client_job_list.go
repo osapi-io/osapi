@@ -46,14 +46,16 @@ var clientJobListCmd = &cobra.Command{
 
 		jobHandler := handler.(client.JobHandler)
 
-		// Get jobs list
-		jobsResp, err := jobHandler.GetJobs(ctx, statusFilter)
+		// Get jobs list (server-side pagination)
+		jobsResp, err := jobHandler.GetJobs(ctx, statusFilter, limitFlag, offsetFlag)
 		if err != nil {
 			logFatal("failed to list jobs", err)
 		}
 
 		if jobsResp.StatusCode() != http.StatusOK {
 			switch jobsResp.StatusCode() {
+			case http.StatusBadRequest:
+				handleUnknownError(jobsResp.JSON400, jobsResp.StatusCode(), logger)
 			case http.StatusUnauthorized:
 				handleAuthError(jobsResp.JSON401, jobsResp.StatusCode(), logger)
 			case http.StatusForbidden:
@@ -75,38 +77,27 @@ var clientJobListCmd = &cobra.Command{
 			return
 		}
 
-		// Extract jobs from response
+		// Extract jobs from response (already paginated server-side)
 		var jobs []gen.JobDetailResponse
 		if jobsResp.JSON200 != nil && jobsResp.JSON200.Items != nil {
 			jobs = *jobsResp.JSON200.Items
 		}
 
-		// Apply offset
-		if offsetFlag > 0 && offsetFlag < len(jobs) {
-			jobs = jobs[offsetFlag:]
-		} else if offsetFlag >= len(jobs) {
-			jobs = []gen.JobDetailResponse{}
-		}
-
-		// Apply limit
-		if limitFlag > 0 && len(jobs) > limitFlag {
-			jobs = jobs[:limitFlag]
+		totalItems := 0
+		if jobsResp.JSON200 != nil && jobsResp.JSON200.TotalItems != nil {
+			totalItems = *jobsResp.JSON200.TotalItems
 		}
 
 		stats := statsResp.JSON200
 
 		if jsonOutput {
-			totalJobs := 0
-			if stats != nil && stats.TotalJobs != nil {
-				totalJobs = *stats.TotalJobs
-			}
 			statusCounts := map[string]int{}
 			if stats != nil && stats.StatusCounts != nil {
 				statusCounts = *stats.StatusCounts
 			}
 
 			result := map[string]interface{}{
-				"total_jobs":     totalJobs,
+				"total_jobs":     totalItems,
 				"displayed_jobs": len(jobs),
 				"status_counts":  statusCounts,
 				"filter_applied": statusFilter != "",
@@ -120,12 +111,8 @@ var clientJobListCmd = &cobra.Command{
 		}
 
 		// Display summary
-		totalJobs := 0
 		statusCounts := map[string]int{}
 		if stats != nil {
-			if stats.TotalJobs != nil {
-				totalJobs = *stats.TotalJobs
-			}
 			if stats.StatusCounts != nil {
 				statusCounts = *stats.StatusCounts
 			}
@@ -134,10 +121,10 @@ var clientJobListCmd = &cobra.Command{
 		// Summary header
 		showing := "All jobs"
 		if statusFilter != "" {
-			showing = fmt.Sprintf("%s (%d)", statusFilter, len(jobs))
+			showing = fmt.Sprintf("%s (%d)", statusFilter, totalItems)
 		}
 		fmt.Println()
-		printKV("Total", fmt.Sprintf("%d", totalJobs), "Showing", showing)
+		printKV("Total", fmt.Sprintf("%d", totalItems), "Showing", showing)
 		printKV(
 			"Submitted", fmt.Sprintf("%d", statusCounts["submitted"]),
 			"Completed", fmt.Sprintf("%d", statusCounts["completed"]),
