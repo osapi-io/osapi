@@ -43,6 +43,7 @@ func (s *HealthGetPublicTestSuite) SetupTest() {
 		&health.NATSChecker{},
 		time.Now(),
 		"0.1.0",
+		nil,
 	)
 	s.ctx = context.Background()
 }

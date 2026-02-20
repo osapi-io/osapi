@@ -30,6 +30,81 @@ type Checker interface {
 	CheckHealth(ctx context.Context) error
 }
 
+// MetricsProvider retrieves system metrics for the status endpoint.
+type MetricsProvider interface {
+	GetNATSInfo(ctx context.Context) (*NATSMetrics, error)
+	GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
+	GetKVInfo(ctx context.Context) ([]KVMetrics, error)
+	GetJobStats(ctx context.Context) (*JobMetrics, error)
+}
+
+// NATSMetrics holds NATS connection information.
+type NATSMetrics struct {
+	URL     string
+	Version string
+}
+
+// StreamMetrics holds JetStream stream statistics.
+type StreamMetrics struct {
+	Name      string
+	Messages  uint64
+	Bytes     uint64
+	Consumers int
+}
+
+// KVMetrics holds KV bucket statistics.
+type KVMetrics struct {
+	Name  string
+	Keys  int
+	Bytes uint64
+}
+
+// JobMetrics holds job queue statistics.
+type JobMetrics struct {
+	Total       int
+	Unprocessed int
+	Processing  int
+	Completed   int
+	Failed      int
+	DLQ         int
+}
+
+// ClosureMetricsProvider implements MetricsProvider using function closures.
+type ClosureMetricsProvider struct {
+	NATSInfoFn   func(ctx context.Context) (*NATSMetrics, error)
+	StreamInfoFn func(ctx context.Context) ([]StreamMetrics, error)
+	KVInfoFn     func(ctx context.Context) ([]KVMetrics, error)
+	JobStatsFn   func(ctx context.Context) (*JobMetrics, error)
+}
+
+// GetNATSInfo delegates to the NATSInfoFn closure.
+func (p *ClosureMetricsProvider) GetNATSInfo(
+	ctx context.Context,
+) (*NATSMetrics, error) {
+	return p.NATSInfoFn(ctx)
+}
+
+// GetStreamInfo delegates to the StreamInfoFn closure.
+func (p *ClosureMetricsProvider) GetStreamInfo(
+	ctx context.Context,
+) ([]StreamMetrics, error) {
+	return p.StreamInfoFn(ctx)
+}
+
+// GetKVInfo delegates to the KVInfoFn closure.
+func (p *ClosureMetricsProvider) GetKVInfo(
+	ctx context.Context,
+) ([]KVMetrics, error) {
+	return p.KVInfoFn(ctx)
+}
+
+// GetJobStats delegates to the JobStatsFn closure.
+func (p *ClosureMetricsProvider) GetJobStats(
+	ctx context.Context,
+) (*JobMetrics, error) {
+	return p.JobStatsFn(ctx)
+}
+
 // Health implementation of the Health APIs operations.
 type Health struct {
 	// Checker performs dependency health checks.
@@ -38,4 +113,6 @@ type Health struct {
 	StartTime time.Time
 	// Version is the application version string.
 	Version string
+	// Metrics provides system metrics (optional, can be nil).
+	Metrics MetricsProvider
 }

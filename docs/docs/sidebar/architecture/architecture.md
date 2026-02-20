@@ -134,7 +134,7 @@ coordination layer between clients and workers.
 | System  | Hostname, uptime, OS info, disk, memory, load       |
 | Network | DNS configuration (get/update), ping                |
 | Jobs    | Create, list, get, delete, queue stats, worker list |
-| Health  | Liveness, readiness, detailed component status      |
+| Health  | Liveness, readiness, system status with metrics     |
 
 ## Health Checks
 
@@ -142,8 +142,7 @@ The API server exposes health endpoints for load balancers and monitoring:
 
 - `/health` — is the process alive? (always returns 200)
 - `/health/ready` — can it serve traffic? (checks NATS and KV connectivity)
-- `/health/detailed` — per-component status with version and uptime (requires
-  auth)
+- `/health/status` — per-component status with system metrics (requires auth)
 
 ## Security
 

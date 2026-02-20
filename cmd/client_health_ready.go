@@ -54,10 +54,8 @@ var clientHealthReadyCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("health ready response was nil"))
 			}
 
-			data := map[string]interface{}{
-				"Status": resp.JSON200.Status,
-			}
-			printStyledMap(data)
+			fmt.Println()
+			printKV("Status", resp.JSON200.Status)
 
 		case http.StatusServiceUnavailable:
 			if jsonOutput {
@@ -69,13 +67,11 @@ var clientHealthReadyCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("health ready response was nil"))
 			}
 
-			data := map[string]interface{}{
-				"Status": resp.JSON503.Status,
-			}
+			fmt.Println()
+			printKV("Status", resp.JSON503.Status)
 			if resp.JSON503.Error != nil {
-				data["Error"] = *resp.JSON503.Error
+				printKV("Error", *resp.JSON503.Error)
 			}
-			printStyledMap(data)
 
 		default:
 			handleUnknownError(nil, resp.StatusCode(), logger)

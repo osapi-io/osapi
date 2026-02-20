@@ -27,21 +27,6 @@ type ComponentHealth struct {
 	Status string `json:"status"`
 }
 
-// DetailedHealthResponse defines model for DetailedHealthResponse.
-type DetailedHealthResponse struct {
-	// Components Per-component health status.
-	Components map[string]ComponentHealth `json:"components"`
-
-	// Status Overall health status.
-	Status string `json:"status"`
-
-	// Uptime Time since server started.
-	Uptime string `json:"uptime"`
-
-	// Version Application version.
-	Version string `json:"version"`
-}
-
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
@@ -49,6 +34,48 @@ type ErrorResponse = externalRef0.ErrorResponse
 type HealthResponse struct {
 	// Status Health status.
 	Status string `json:"status"`
+}
+
+// JobStats defines model for JobStats.
+type JobStats struct {
+	// Completed Number of completed jobs.
+	Completed int `json:"completed"`
+
+	// Dlq Number of jobs in the dead letter queue.
+	Dlq int `json:"dlq"`
+
+	// Failed Number of failed jobs.
+	Failed int `json:"failed"`
+
+	// Processing Number of jobs currently processing.
+	Processing int `json:"processing"`
+
+	// Total Total number of jobs.
+	Total int `json:"total"`
+
+	// Unprocessed Number of unprocessed jobs.
+	Unprocessed int `json:"unprocessed"`
+}
+
+// KVBucketInfo defines model for KVBucketInfo.
+type KVBucketInfo struct {
+	// Bytes Total bytes in the bucket.
+	Bytes int `json:"bytes"`
+
+	// Keys Number of keys in the bucket.
+	Keys int `json:"keys"`
+
+	// Name KV bucket name.
+	Name string `json:"name"`
+}
+
+// NATSInfo defines model for NATSInfo.
+type NATSInfo struct {
+	// Url Connected NATS server URL.
+	Url string `json:"url"`
+
+	// Version NATS server version.
+	Version string `json:"version"`
 }
 
 // ReadyResponse defines model for ReadyResponse.
@@ -60,17 +87,55 @@ type ReadyResponse struct {
 	Status string `json:"status"`
 }
 
+// StatusResponse defines model for StatusResponse.
+type StatusResponse struct {
+	// Components Per-component health status.
+	Components map[string]ComponentHealth `json:"components"`
+	Jobs       *JobStats                  `json:"jobs,omitempty"`
+
+	// KvBuckets KV bucket statistics.
+	KvBuckets *[]KVBucketInfo `json:"kv_buckets,omitempty"`
+	Nats      *NATSInfo       `json:"nats,omitempty"`
+
+	// Status Overall health status.
+	Status string `json:"status"`
+
+	// Streams JetStream stream statistics.
+	Streams *[]StreamInfo `json:"streams,omitempty"`
+
+	// Uptime Time since server started.
+	Uptime string `json:"uptime"`
+
+	// Version Application version.
+	Version string `json:"version"`
+}
+
+// StreamInfo defines model for StreamInfo.
+type StreamInfo struct {
+	// Bytes Total bytes in the stream.
+	Bytes int `json:"bytes"`
+
+	// Consumers Number of consumers on the stream.
+	Consumers int `json:"consumers"`
+
+	// Messages Number of messages in the stream.
+	Messages int `json:"messages"`
+
+	// Name Stream name.
+	Name string `json:"name"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Liveness probe
 	// (GET /health)
 	GetHealth(ctx echo.Context) error
-	// Detailed component health
-	// (GET /health/detailed)
-	GetHealthDetailed(ctx echo.Context) error
 	// Readiness probe
 	// (GET /health/ready)
 	GetHealthReady(ctx echo.Context) error
+	// System status and component health
+	// (GET /health/status)
+	GetHealthStatus(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -87,23 +152,23 @@ func (w *ServerInterfaceWrapper) GetHealth(ctx echo.Context) error {
 	return err
 }
 
-// GetHealthDetailed converts echo context to params.
-func (w *ServerInterfaceWrapper) GetHealthDetailed(ctx echo.Context) error {
-	var err error
-
-	ctx.Set(BearerAuthScopes, []string{"read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetHealthDetailed(ctx)
-	return err
-}
-
 // GetHealthReady converts echo context to params.
 func (w *ServerInterfaceWrapper) GetHealthReady(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetHealthReady(ctx)
+	return err
+}
+
+// GetHealthStatus converts echo context to params.
+func (w *ServerInterfaceWrapper) GetHealthStatus(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetHealthStatus(ctx)
 	return err
 }
 
@@ -136,8 +201,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/health", wrapper.GetHealth)
-	router.GET(baseURL+"/health/detailed", wrapper.GetHealthDetailed)
 	router.GET(baseURL+"/health/ready", wrapper.GetHealthReady)
+	router.GET(baseURL+"/health/status", wrapper.GetHealthStatus)
 
 }
 
@@ -153,49 +218,6 @@ type GetHealth200JSONResponse HealthResponse
 func (response GetHealth200JSONResponse) VisitGetHealthResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetHealthDetailedRequestObject struct {
-}
-
-type GetHealthDetailedResponseObject interface {
-	VisitGetHealthDetailedResponse(w http.ResponseWriter) error
-}
-
-type GetHealthDetailed200JSONResponse DetailedHealthResponse
-
-func (response GetHealthDetailed200JSONResponse) VisitGetHealthDetailedResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetHealthDetailed401JSONResponse externalRef0.ErrorResponse
-
-func (response GetHealthDetailed401JSONResponse) VisitGetHealthDetailedResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetHealthDetailed403JSONResponse externalRef0.ErrorResponse
-
-func (response GetHealthDetailed403JSONResponse) VisitGetHealthDetailedResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetHealthDetailed503JSONResponse DetailedHealthResponse
-
-func (response GetHealthDetailed503JSONResponse) VisitGetHealthDetailedResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(503)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -225,17 +247,60 @@ func (response GetHealthReady503JSONResponse) VisitGetHealthReadyResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetHealthStatusRequestObject struct {
+}
+
+type GetHealthStatusResponseObject interface {
+	VisitGetHealthStatusResponse(w http.ResponseWriter) error
+}
+
+type GetHealthStatus200JSONResponse StatusResponse
+
+func (response GetHealthStatus200JSONResponse) VisitGetHealthStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetHealthStatus401JSONResponse externalRef0.ErrorResponse
+
+func (response GetHealthStatus401JSONResponse) VisitGetHealthStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetHealthStatus403JSONResponse externalRef0.ErrorResponse
+
+func (response GetHealthStatus403JSONResponse) VisitGetHealthStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetHealthStatus503JSONResponse StatusResponse
+
+func (response GetHealthStatus503JSONResponse) VisitGetHealthStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Liveness probe
 	// (GET /health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
-	// Detailed component health
-	// (GET /health/detailed)
-	GetHealthDetailed(ctx context.Context, request GetHealthDetailedRequestObject) (GetHealthDetailedResponseObject, error)
 	// Readiness probe
 	// (GET /health/ready)
 	GetHealthReady(ctx context.Context, request GetHealthReadyRequestObject) (GetHealthReadyResponseObject, error)
+	// System status and component health
+	// (GET /health/status)
+	GetHealthStatus(ctx context.Context, request GetHealthStatusRequestObject) (GetHealthStatusResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -273,29 +338,6 @@ func (sh *strictHandler) GetHealth(ctx echo.Context) error {
 	return nil
 }
 
-// GetHealthDetailed operation middleware
-func (sh *strictHandler) GetHealthDetailed(ctx echo.Context) error {
-	var request GetHealthDetailedRequestObject
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetHealthDetailed(ctx.Request().Context(), request.(GetHealthDetailedRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetHealthDetailed")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetHealthDetailedResponseObject); ok {
-		return validResponse.VisitGetHealthDetailedResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
 // GetHealthReady operation middleware
 func (sh *strictHandler) GetHealthReady(ctx echo.Context) error {
 	var request GetHealthReadyRequestObject
@@ -313,6 +355,29 @@ func (sh *strictHandler) GetHealthReady(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(GetHealthReadyResponseObject); ok {
 		return validResponse.VisitGetHealthReadyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetHealthStatus operation middleware
+func (sh *strictHandler) GetHealthStatus(ctx echo.Context) error {
+	var request GetHealthStatusRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetHealthStatus(ctx.Request().Context(), request.(GetHealthStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetHealthStatus")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetHealthStatusResponseObject); ok {
+		return validResponse.VisitGetHealthStatusResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

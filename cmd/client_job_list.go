@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -131,28 +132,29 @@ var clientJobListCmd = &cobra.Command{
 			}
 		}
 
-		summaryData := map[string]interface{}{
-			"Total Jobs": totalJobs,
-			"Submitted":  statusCounts["submitted"],
-			"Processing": statusCounts["processing"],
-			"Completed":  statusCounts["completed"],
-			"Failed":     statusCounts["failed"],
-			"Partial":    statusCounts["partial_failure"],
-		}
-
+		// Summary header
+		showing := "All jobs"
 		if statusFilter != "" {
-			summaryData["Showing ("+statusFilter+")"] = len(jobs)
-		} else {
-			summaryData["Showing"] = "All jobs"
+			showing = fmt.Sprintf("%s (%d)", statusFilter, len(jobs))
 		}
-		if offsetFlag > 0 {
-			summaryData["Skipped"] = fmt.Sprintf("%d jobs", offsetFlag)
+		fmt.Println()
+		printKV("Total", fmt.Sprintf("%d", totalJobs), "Showing", showing)
+		printKV(
+			"Submitted", fmt.Sprintf("%d", statusCounts["submitted"]),
+			"Completed", fmt.Sprintf("%d", statusCounts["completed"]),
+			"Failed", fmt.Sprintf("%d", statusCounts["failed"]),
+			"Partial", fmt.Sprintf("%d", statusCounts["partial_failure"]),
+		)
+		if offsetFlag > 0 || (limitFlag > 0 && len(jobs) >= limitFlag) {
+			parts := []string{}
+			if offsetFlag > 0 {
+				parts = append(parts, fmt.Sprintf("offset %d", offsetFlag))
+			}
+			if limitFlag > 0 && len(jobs) >= limitFlag {
+				parts = append(parts, fmt.Sprintf("limit %d", limitFlag))
+			}
+			printKV("Filter", dimStyle.Render(strings.Join(parts, ", ")))
 		}
-		if limitFlag > 0 && len(jobs) >= limitFlag {
-			summaryData["Limited to"] = fmt.Sprintf("First %d jobs", limitFlag)
-		}
-
-		printStyledMap(summaryData)
 
 		if len(jobs) > 0 {
 			jobRows := [][]string{}

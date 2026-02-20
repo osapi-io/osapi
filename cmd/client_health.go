@@ -56,10 +56,8 @@ Running without a subcommand performs a liveness probe.
 				logFatal("failed response", fmt.Errorf("health response was nil"))
 			}
 
-			data := map[string]interface{}{
-				"Status": resp.JSON200.Status,
-			}
-			printStyledMap(data)
+			fmt.Println()
+			printKV("Status", resp.JSON200.Status)
 
 		default:
 			handleUnknownError(nil, resp.StatusCode(), logger)

@@ -31,7 +31,7 @@ The minimum feature set to be taken seriously as an OS management API.
 | User/group management | Create, modify, delete users and groups     | `user`, `group`         |
 | Power management      | Shutdown, reboot (with delay/scheduling)    | `reboot`                |
 | Hostname set          | Set hostname (complement existing get)      | `hostname`              |
-| Health endpoints      | Liveness, readiness, detailed health        | —                       |
+| Health endpoints      | Liveness, readiness, system status          | —                       |
 
 ## Tier 2 — Security & Networking
 

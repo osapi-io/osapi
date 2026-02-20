@@ -103,21 +103,6 @@ type DNSUpdateResultItem struct {
 // DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
 type DNSUpdateResultItemStatus string
 
-// DetailedHealthResponse defines model for DetailedHealthResponse.
-type DetailedHealthResponse struct {
-	// Components Per-component health status.
-	Components map[string]ComponentHealth `json:"components"`
-
-	// Status Overall health status.
-	Status string `json:"status"`
-
-	// Uptime Time since server started.
-	Uptime string `json:"uptime"`
-
-	// Version Application version.
-	Version string `json:"version"`
-}
-
 // DiskResponse Local disk usage information.
 type DiskResponse struct {
 	// Free Free disk space in bytes.
@@ -208,6 +193,39 @@ type JobDetailResponse struct {
 	} `json:"worker_states,omitempty"`
 }
 
+// JobStats defines model for JobStats.
+type JobStats struct {
+	// Completed Number of completed jobs.
+	Completed int `json:"completed"`
+
+	// Dlq Number of jobs in the dead letter queue.
+	Dlq int `json:"dlq"`
+
+	// Failed Number of failed jobs.
+	Failed int `json:"failed"`
+
+	// Processing Number of jobs currently processing.
+	Processing int `json:"processing"`
+
+	// Total Total number of jobs.
+	Total int `json:"total"`
+
+	// Unprocessed Number of unprocessed jobs.
+	Unprocessed int `json:"unprocessed"`
+}
+
+// KVBucketInfo defines model for KVBucketInfo.
+type KVBucketInfo struct {
+	// Bytes Total bytes in the bucket.
+	Bytes int `json:"bytes"`
+
+	// Keys Number of keys in the bucket.
+	Keys int `json:"keys"`
+
+	// Name KV bucket name.
+	Name string `json:"name"`
+}
+
 // ListJobsResponse defines model for ListJobsResponse.
 type ListJobsResponse struct {
 	Items *[]JobDetailResponse `json:"items,omitempty"`
@@ -245,6 +263,15 @@ type MemoryResponse struct {
 
 	// Used Used memory in bytes.
 	Used int `json:"used"`
+}
+
+// NATSInfo defines model for NATSInfo.
+type NATSInfo struct {
+	// Url Connected NATS server URL.
+	Url string `json:"url"`
+
+	// Version NATS server version.
+	Version string `json:"version"`
 }
 
 // OSInfoResponse Operating system information.
@@ -307,6 +334,44 @@ type ReadyResponse struct {
 
 	// Status Readiness status.
 	Status string `json:"status"`
+}
+
+// StatusResponse defines model for StatusResponse.
+type StatusResponse struct {
+	// Components Per-component health status.
+	Components map[string]ComponentHealth `json:"components"`
+	Jobs       *JobStats                  `json:"jobs,omitempty"`
+
+	// KvBuckets KV bucket statistics.
+	KvBuckets *[]KVBucketInfo `json:"kv_buckets,omitempty"`
+	Nats      *NATSInfo       `json:"nats,omitempty"`
+
+	// Status Overall health status.
+	Status string `json:"status"`
+
+	// Streams JetStream stream statistics.
+	Streams *[]StreamInfo `json:"streams,omitempty"`
+
+	// Uptime Time since server started.
+	Uptime string `json:"uptime"`
+
+	// Version Application version.
+	Version string `json:"version"`
+}
+
+// StreamInfo defines model for StreamInfo.
+type StreamInfo struct {
+	// Bytes Total bytes in the stream.
+	Bytes int `json:"bytes"`
+
+	// Consumers Number of consumers on the stream.
+	Consumers int `json:"consumers"`
+
+	// Messages Number of messages in the stream.
+	Messages int `json:"messages"`
+
+	// Name Stream name.
+	Name string `json:"name"`
 }
 
 // SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
@@ -468,11 +533,11 @@ type ClientInterface interface {
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetHealthDetailed request
-	GetHealthDetailed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetHealthReady request
 	GetHealthReady(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetHealthStatus request
+	GetHealthStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetJob request
 	GetJob(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -529,8 +594,8 @@ func (c *Client) GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetHealthDetailed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetHealthDetailedRequest(c.Server)
+func (c *Client) GetHealthReady(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthReadyRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -541,8 +606,8 @@ func (c *Client) GetHealthDetailed(ctx context.Context, reqEditors ...RequestEdi
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetHealthReady(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetHealthReadyRequest(c.Server)
+func (c *Client) GetHealthStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthStatusRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -760,8 +825,8 @@ func NewGetHealthRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetHealthDetailedRequest generates requests for GetHealthDetailed
-func NewGetHealthDetailedRequest(server string) (*http.Request, error) {
+// NewGetHealthReadyRequest generates requests for GetHealthReady
+func NewGetHealthReadyRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -769,7 +834,7 @@ func NewGetHealthDetailedRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/health/detailed")
+	operationPath := fmt.Sprintf("/health/ready")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -787,8 +852,8 @@ func NewGetHealthDetailedRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetHealthReadyRequest generates requests for GetHealthReady
-func NewGetHealthReadyRequest(server string) (*http.Request, error) {
+// NewGetHealthStatusRequest generates requests for GetHealthStatus
+func NewGetHealthStatusRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -796,7 +861,7 @@ func NewGetHealthReadyRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/health/ready")
+	operationPath := fmt.Sprintf("/health/status")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1376,11 +1441,11 @@ type ClientWithResponsesInterface interface {
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
 
-	// GetHealthDetailedWithResponse request
-	GetHealthDetailedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthDetailedResponse, error)
-
 	// GetHealthReadyWithResponse request
 	GetHealthReadyWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthReadyResponse, error)
+
+	// GetHealthStatusWithResponse request
+	GetHealthStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthStatusResponse, error)
 
 	// GetJobWithResponse request
 	GetJobWithResponse(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*GetJobResponse, error)
@@ -1447,31 +1512,6 @@ func (r GetHealthResponse) StatusCode() int {
 	return 0
 }
 
-type GetHealthDetailedResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *DetailedHealthResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON503      *DetailedHealthResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetHealthDetailedResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetHealthDetailedResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetHealthReadyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1489,6 +1529,31 @@ func (r GetHealthReadyResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetHealthReadyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetHealthStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *StatusResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON503      *StatusResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetHealthStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetHealthStatusResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1811,15 +1876,6 @@ func (c *ClientWithResponses) GetHealthWithResponse(ctx context.Context, reqEdit
 	return ParseGetHealthResponse(rsp)
 }
 
-// GetHealthDetailedWithResponse request returning *GetHealthDetailedResponse
-func (c *ClientWithResponses) GetHealthDetailedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthDetailedResponse, error) {
-	rsp, err := c.GetHealthDetailed(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetHealthDetailedResponse(rsp)
-}
-
 // GetHealthReadyWithResponse request returning *GetHealthReadyResponse
 func (c *ClientWithResponses) GetHealthReadyWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthReadyResponse, error) {
 	rsp, err := c.GetHealthReady(ctx, reqEditors...)
@@ -1827,6 +1883,15 @@ func (c *ClientWithResponses) GetHealthReadyWithResponse(ctx context.Context, re
 		return nil, err
 	}
 	return ParseGetHealthReadyResponse(rsp)
+}
+
+// GetHealthStatusWithResponse request returning *GetHealthStatusResponse
+func (c *ClientWithResponses) GetHealthStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthStatusResponse, error) {
+	rsp, err := c.GetHealthStatus(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetHealthStatusResponse(rsp)
 }
 
 // GetJobWithResponse request returning *GetJobResponse
@@ -1987,53 +2052,6 @@ func ParseGetHealthResponse(rsp *http.Response) (*GetHealthResponse, error) {
 	return response, nil
 }
 
-// ParseGetHealthDetailedResponse parses an HTTP response from a GetHealthDetailedWithResponse call
-func ParseGetHealthDetailedResponse(rsp *http.Response) (*GetHealthDetailedResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetHealthDetailedResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DetailedHealthResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
-		var dest DetailedHealthResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON503 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetHealthReadyResponse parses an HTTP response from a GetHealthReadyWithResponse call
 func ParseGetHealthReadyResponse(rsp *http.Response) (*GetHealthReadyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -2057,6 +2075,53 @@ func ParseGetHealthReadyResponse(rsp *http.Response) (*GetHealthReadyResponse, e
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
 		var dest ReadyResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetHealthStatusResponse parses an HTTP response from a GetHealthStatusWithResponse call
+func ParseGetHealthStatusResponse(rsp *http.Response) (*GetHealthStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetHealthStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest StatusResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest StatusResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

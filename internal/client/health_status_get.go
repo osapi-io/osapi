@@ -26,9 +26,9 @@ import (
 	"github.com/retr0h/osapi/internal/client/gen"
 )
 
-// GetHealthDetailed get the health detailed API endpoint.
-func (c *Client) GetHealthDetailed(
+// GetHealthStatus get the health status API endpoint.
+func (c *Client) GetHealthStatus(
 	ctx context.Context,
-) (*gen.GetHealthDetailedResponse, error) {
-	return c.Client.GetHealthDetailedWithResponse(ctx)
+) (*gen.GetHealthStatusResponse, error) {
+	return c.Client.GetHealthStatusWithResponse(ctx)
 }

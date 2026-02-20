@@ -102,10 +102,19 @@ Run `just generate` which:
 - `cmd/client_{domain}.go` — parent command registered under `clientCmd`
 - `cmd/client_{domain}_{operation}.go` — one subcommand per endpoint
 - All commands support `--json` for raw output
-- Use `printStyledMap` and `printStyledTable` from `cmd/ui.go` for
-  formatted output
+- Use `printKV` for inline key-value output and `printStyledTable` for
+  multi-row tabular data (both in `cmd/ui.go`)
 
-### Step 8: Verify
+### Step 8: Documentation
+
+- `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
+  per CLI subcommand with usage examples and `--json` output
+- Update `docs/docs/sidebar/architecture/architecture.md` — add domain to
+  the "What It Can Do Today" table
+- Update `docs/docs/sidebar/architecture/system-architecture.md` — add
+  endpoints to the health/endpoint tables if applicable
+
+### Step 9: Verify
 
 ```bash
 just generate        # regenerate specs + code

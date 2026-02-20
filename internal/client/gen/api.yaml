@@ -112,12 +112,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadyResponse'
-  /health/detailed:
+  /health/status:
     servers: []
     get:
-      operationId: GetHealthDetailed
-      summary: Detailed component health
-      description: Returns per-component health status. Requires authentication.
+      operationId: GetHealthStatus
+      summary: System status and component health
+      description: >-
+        Returns per-component health status with system metrics. Requires
+        authentication.
       tags:
         - Health_Check_API_health
       security:
@@ -129,7 +131,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DetailedHealthResponse'
+                $ref: '#/components/schemas/StatusResponse'
         '401':
           description: Unauthorized - API key required.
           content:
@@ -147,7 +149,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DetailedHealthResponse'
+                $ref: '#/components/schemas/StatusResponse'
   /job:
     servers: []
     post:
@@ -763,7 +765,98 @@ components:
           description: Error message when component is unhealthy.
       required:
         - status
-    DetailedHealthResponse:
+    NATSInfo:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Connected NATS server URL.
+          example: nats://localhost:4222
+        version:
+          type: string
+          description: NATS server version.
+          example: 2.10.0
+      required:
+        - url
+        - version
+    StreamInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Stream name.
+          example: JOBS
+        messages:
+          type: integer
+          description: Number of messages in the stream.
+          example: 42
+        bytes:
+          type: integer
+          description: Total bytes in the stream.
+          example: 1024
+        consumers:
+          type: integer
+          description: Number of consumers on the stream.
+          example: 1
+      required:
+        - name
+        - messages
+        - bytes
+        - consumers
+    KVBucketInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: KV bucket name.
+          example: job-queue
+        keys:
+          type: integer
+          description: Number of keys in the bucket.
+          example: 10
+        bytes:
+          type: integer
+          description: Total bytes in the bucket.
+          example: 2048
+      required:
+        - name
+        - keys
+        - bytes
+    JobStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of jobs.
+          example: 100
+        unprocessed:
+          type: integer
+          description: Number of unprocessed jobs.
+          example: 5
+        processing:
+          type: integer
+          description: Number of jobs currently processing.
+          example: 2
+        completed:
+          type: integer
+          description: Number of completed jobs.
+          example: 90
+        failed:
+          type: integer
+          description: Number of failed jobs.
+          example: 3
+        dlq:
+          type: integer
+          description: Number of jobs in the dead letter queue.
+          example: 0
+      required:
+        - total
+        - unprocessed
+        - processing
+        - completed
+        - failed
+        - dlq
+    StatusResponse:
       type: object
       properties:
         status:
@@ -783,6 +876,20 @@ components:
           type: string
           description: Time since server started.
           example: 2h30m
+        nats:
+          $ref: '#/components/schemas/NATSInfo'
+        streams:
+          type: array
+          items:
+            $ref: '#/components/schemas/StreamInfo'
+          description: JetStream stream statistics.
+        kv_buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/KVBucketInfo'
+          description: KV bucket statistics.
+        jobs:
+          $ref: '#/components/schemas/JobStats'
       required:
         - status
         - components

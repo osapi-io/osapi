@@ -77,14 +77,11 @@ var clientJobAddCmd = &cobra.Command{
 				logFatal("failed response", fmt.Errorf("create job response was nil"))
 			}
 
-			jobData := map[string]interface{}{
-				"Job ID": resp.JSON201.JobId,
-				"Status": resp.JSON201.Status,
-			}
+			fmt.Println()
+			printKV("Job ID", resp.JSON201.JobId, "Status", resp.JSON201.Status)
 			if resp.JSON201.Revision != nil {
-				jobData["Revision"] = *resp.JSON201.Revision
+				printKV("Revision", fmt.Sprintf("%d", *resp.JSON201.Revision))
 			}
-			printStyledMap(jobData)
 
 			logger.Info("job created successfully",
 				slog.String("job_id", resp.JSON201.JobId),

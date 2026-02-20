@@ -70,7 +70,7 @@ subpackages:
 | `internal/api/system/`  | System endpoints (hostname, status, uptime, disk, memory, load)  |
 | `internal/api/network/` | Network endpoints (DNS, ping)                                    |
 | `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
-| `internal/api/health/`  | Health check endpoints (liveness, readiness, detailed)           |
+| `internal/api/health/`  | Health check endpoints (liveness, readiness, status)             |
 | `internal/api/common/`  | Shared middleware, error handling, collection responses          |
 
 All state-changing operations are dispatched as jobs through the job client
@@ -157,11 +157,11 @@ liveness/readiness probe pattern. These endpoints live outside the `/api/v1/`
 prefix at `/health` because they serve infrastructure concerns rather than
 business operations.
 
-| Endpoint               | Auth       | Purpose                                    |
-| ---------------------- | ---------- | ------------------------------------------ |
-| `GET /health`          | None       | Liveness — returns 200 if the process runs |
-| `GET /health/ready`    | None       | Readiness — verifies dependencies          |
-| `GET /health/detailed` | JWT `read` | Per-component status for operators         |
+| Endpoint             | Auth       | Purpose                                    |
+| -------------------- | ---------- | ------------------------------------------ |
+| `GET /health`        | None       | Liveness — returns 200 if the process runs |
+| `GET /health/ready`  | None       | Readiness — verifies dependencies          |
+| `GET /health/status` | JWT `read` | System status with metrics for operators   |
 
 ### Liveness (`/health`)
 
@@ -184,12 +184,14 @@ Load balancers should use this endpoint to decide whether to route traffic. When
 readiness fails, the server stays running but stops receiving requests until the
 dependency recovers.
 
-### Detailed (`/health/detailed`)
+### Status (`/health/status`)
 
 Breaks out each dependency as a named component with its own status and error
-message. Also reports the application version and uptime. Returns `ok` when all
-components are healthy or `degraded` (with HTTP 503) when any component fails.
-Requires JWT authentication because it exposes internal topology.
+message. Also reports NATS connection info, JetStream stream statistics, KV
+bucket statistics, job queue counts, application version, and uptime. Returns
+`ok` when all components are healthy or `degraded` (with HTTP 503) when any
+component fails. Requires JWT authentication because it exposes internal
+topology.
 
 Components checked:
 
@@ -198,6 +200,15 @@ Components checked:
 | `nats`    | NATS client is connected            |
 | `kv`      | `job-queue` KV bucket is accessible |
 
+Additional metrics (optional, gracefully skipped on failure):
+
+| Section   | What it reports                                        |
+| --------- | ------------------------------------------------------ |
+| `nats`    | Connected URL, server version                          |
+| `streams` | Message count, bytes, consumer count                   |
+| `kv`      | Bucket name, key count, bytes                          |
+| `jobs`    | Total, unprocessed, processing, completed, failed, DLQ |
+
 ### CLI Access
 
 Operators can check health from the command line:
@@ -205,7 +216,7 @@ Operators can check health from the command line:
 ```bash
 osapi client health              # liveness
 osapi client health ready        # readiness
-osapi client health detailed     # per-component (requires auth)
+osapi client health status       # system status with metrics (requires auth)
 ```
 
 ## Request Flow
