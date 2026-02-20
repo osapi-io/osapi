@@ -33,6 +33,7 @@ import (
 	apijob "github.com/retr0h/osapi/internal/api/job"
 	"github.com/retr0h/osapi/internal/api/job/gen"
 	jobtypes "github.com/retr0h/osapi/internal/job"
+	jobclient "github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
@@ -63,7 +64,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 	tests := []struct {
 		name         string
 		request      gen.GetJobRequestObject
-		mockJobs     []*jobtypes.QueuedJob
+		mockResult   *jobclient.ListJobsResult
 		mockError    error
 		expectMock   bool
 		validateFunc func(resp gen.GetJobResponseObject)
@@ -86,11 +87,14 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			request: gen.GetJobRequestObject{
 				Params: gen.GetJobParams{Status: &completedStatus},
 			},
-			mockJobs: []*jobtypes.QueuedJob{
-				{
-					ID:     "job-1",
-					Status: "completed",
+			mockResult: &jobclient.ListJobsResult{
+				Jobs: []*jobtypes.QueuedJob{
+					{
+						ID:     "job-1",
+						Status: "completed",
+					},
 				},
+				TotalCount: 1,
 			},
 			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
@@ -103,9 +107,12 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 		{
 			name:    "success without filter",
 			request: gen.GetJobRequestObject{},
-			mockJobs: []*jobtypes.QueuedJob{
-				{ID: "job-1", Status: "completed"},
-				{ID: "job-2", Status: "processing"},
+			mockResult: &jobclient.ListJobsResult{
+				Jobs: []*jobtypes.QueuedJob{
+					{ID: "job-1", Status: "completed"},
+					{ID: "job-2", Status: "processing"},
+				},
+				TotalCount: 2,
 			},
 			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
@@ -117,17 +124,20 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 		{
 			name:    "success with all optional fields",
 			request: gen.GetJobRequestObject{},
-			mockJobs: []*jobtypes.QueuedJob{
-				{
-					ID:        "job-1",
-					Status:    "failed",
-					Created:   "2025-06-14T10:00:00Z",
-					Operation: map[string]interface{}{"type": "network.dns.get"},
-					Error:     "timeout",
-					Hostname:  "worker-2",
-					UpdatedAt: "2025-06-14T10:05:00Z",
-					Result:    json.RawMessage(`{"servers":["8.8.8.8"]}`),
+			mockResult: &jobclient.ListJobsResult{
+				Jobs: []*jobtypes.QueuedJob{
+					{
+						ID:        "job-1",
+						Status:    "failed",
+						Created:   "2025-06-14T10:00:00Z",
+						Operation: map[string]interface{}{"type": "network.dns.get"},
+						Error:     "timeout",
+						Hostname:  "worker-2",
+						UpdatedAt: "2025-06-14T10:05:00Z",
+						Result:    json.RawMessage(`{"servers":["8.8.8.8"]}`),
+					},
 				},
+				TotalCount: 1,
 			},
 			expectMock: true,
 			validateFunc: func(resp gen.GetJobResponseObject) {
@@ -146,6 +156,26 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			},
 		},
 		{
+			name: "explicit limit and offset params",
+			request: func() gen.GetJobRequestObject {
+				limit := 5
+				offset := 20
+				return gen.GetJobRequestObject{
+					Params: gen.GetJobParams{Limit: &limit, Offset: &offset},
+				}
+			}(),
+			mockResult: &jobclient.ListJobsResult{
+				Jobs:       []*jobtypes.QueuedJob{},
+				TotalCount: 50,
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob200JSONResponse)
+				s.True(ok)
+				s.Equal(50, *r.TotalItems)
+			},
+		},
+		{
 			name:       "job client error",
 			request:    gen.GetJobRequestObject{},
 			mockError:  assert.AnError,
@@ -153,6 +183,23 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			validateFunc: func(resp gen.GetJobResponseObject) {
 				_, ok := resp.(gen.GetJob500JSONResponse)
 				s.True(ok)
+			},
+		},
+		{
+			name:    "total items reflects total count not page size",
+			request: gen.GetJobRequestObject{},
+			mockResult: &jobclient.ListJobsResult{
+				Jobs: []*jobtypes.QueuedJob{
+					{ID: "job-1", Status: "completed"},
+				},
+				TotalCount: 50,
+			},
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob200JSONResponse)
+				s.True(ok)
+				s.Equal(50, *r.TotalItems)
+				s.Len(*r.Items, 1)
 			},
 		},
 	}
@@ -164,9 +211,17 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				if tt.request.Params.Status != nil {
 					statusFilter = *tt.request.Params.Status
 				}
+				expectedLimit := 10
+				if tt.request.Params.Limit != nil {
+					expectedLimit = *tt.request.Params.Limit
+				}
+				expectedOffset := 0
+				if tt.request.Params.Offset != nil {
+					expectedOffset = *tt.request.Params.Offset
+				}
 				s.mockJobClient.EXPECT().
-					ListJobs(gomock.Any(), statusFilter).
-					Return(tt.mockJobs, tt.mockError)
+					ListJobs(gomock.Any(), statusFilter, expectedLimit, expectedOffset).
+					Return(tt.mockResult, tt.mockError)
 			}
 
 			resp, err := s.handler.GetJob(s.ctx, tt.request)

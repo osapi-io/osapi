@@ -402,6 +402,8 @@ func (s *ClientPublicTestSuite) TestGetJobs() {
 	tests := []struct {
 		name   string
 		status string
+		limit  int
+		offset int
 	}{
 		{
 			name:   "returns jobs without filter",
@@ -411,13 +413,19 @@ func (s *ClientPublicTestSuite) TestGetJobs() {
 			name:   "returns jobs with status filter",
 			status: "completed",
 		},
+		{
+			name:   "returns jobs with limit and offset",
+			status: "",
+			limit:  5,
+			offset: 10,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetJobs(ctx, tt.status)
+			resp, err := s.sut.GetJobs(ctx, tt.status, tt.limit, tt.offset)
 
 			s.NoError(err)
 			s.NotNil(resp)

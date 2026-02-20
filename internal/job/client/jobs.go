@@ -200,11 +200,8 @@ func (c *Client) GetQueueStats(
 		jobID := strings.TrimPrefix(key, "jobs.")
 		jobCount++
 
-		// Get status events for this job
-		statusKeys, _ := c.kv.Keys()
-
-		// Compute status from events
-		computedStatus := c.computeStatusFromEvents(statusKeys, jobID)
+		// Compute status from events (reuse already-fetched keys)
+		computedStatus := c.computeStatusFromEvents(keys, jobID)
 		statusCounts[computedStatus.Status]++
 
 		// Track operation type
@@ -293,43 +290,124 @@ func (c *Client) GetJobStatus(
 	return queuedJob, nil
 }
 
-// ListJobs returns jobs filtered by status.
+// ListJobs returns jobs filtered by status with server-side pagination.
+// limit=0 means no limit. offset=0 means start from beginning.
+// Jobs are returned newest-first (reverse insertion order).
 func (c *Client) ListJobs(
-	ctx context.Context,
+	_ context.Context,
 	statusFilter string,
-) ([]*job.QueuedJob, error) {
+	limit int,
+	offset int,
+) (*ListJobsResult, error) {
 	c.logger.Debug("kv.keys",
 		slog.String("operation", "list_jobs"),
 		slog.String("status_filter", statusFilter),
+		slog.Int("limit", limit),
+		slog.Int("offset", offset),
 	)
-	keys, err := c.kv.Keys()
+	allKeys, err := c.kv.Keys()
 	if err != nil {
 		if err.Error() == "nats: no keys found" {
-			return []*job.QueuedJob{}, nil
+			return &ListJobsResult{
+				Jobs:       []*job.QueuedJob{},
+				TotalCount: 0,
+			}, nil
 		}
 		return nil, fmt.Errorf("error fetching jobs: %w", err)
 	}
 
+	// Extract job keys and reverse for newest-first ordering
+	var jobKeys []string
+	for _, key := range allKeys {
+		if strings.HasPrefix(key, "jobs.") {
+			jobID := strings.TrimPrefix(key, "jobs.")
+			if jobID != "" {
+				jobKeys = append(jobKeys, key)
+			}
+		}
+	}
+
+	// Reverse for newest-first (KV insertion order is chronological)
+	for i, j := 0, len(jobKeys)-1; i < j; i, j = i+1, j-1 {
+		jobKeys[i], jobKeys[j] = jobKeys[j], jobKeys[i]
+	}
+
 	c.logger.Debug("kv.keys",
-		slog.Int("count", len(keys)),
+		slog.Int("total_job_keys", len(jobKeys)),
+		slog.Int("all_keys", len(allKeys)),
 	)
 
+	// No status filter: we know the total count immediately
+	if statusFilter == "" {
+		return c.listJobsNoFilter(allKeys, jobKeys, limit, offset), nil
+	}
+
+	// With status filter: scan all jobs to count matches and collect page
+	return c.listJobsWithFilter(allKeys, jobKeys, statusFilter, limit, offset), nil
+}
+
+// listJobsNoFilter handles pagination when no status filter is applied.
+func (c *Client) listJobsNoFilter(
+	allKeys []string,
+	jobKeys []string,
+	limit int,
+	offset int,
+) *ListJobsResult {
+	totalCount := len(jobKeys)
+
+	// Apply offset
+	if offset >= len(jobKeys) {
+		return &ListJobsResult{
+			Jobs:       []*job.QueuedJob{},
+			TotalCount: totalCount,
+		}
+	}
+	jobKeys = jobKeys[offset:]
+
+	// Apply limit
+	if limit > 0 && len(jobKeys) > limit {
+		jobKeys = jobKeys[:limit]
+	}
+
 	var jobs []*job.QueuedJob
-
-	for _, key := range keys {
-		// Only process job keys (format: jobs.{job-id})
-		if !strings.HasPrefix(key, "jobs.") {
-			continue
-		}
-
-		// Extract job ID from job key
+	for _, key := range jobKeys {
 		jobID := strings.TrimPrefix(key, "jobs.")
-		if jobID == "" {
+		jobInfo, err := c.getJobStatusFromKeys(allKeys, key, jobID)
+		if err != nil {
+			c.logger.Debug("failed to get job status during list",
+				slog.String("job_id", jobID),
+				slog.String("error", err.Error()),
+			)
 			continue
 		}
+		jobs = append(jobs, jobInfo)
+	}
 
-		// Get the full job status (including computed status from events)
-		jobInfo, err := c.GetJobStatus(ctx, jobID)
+	if jobs == nil {
+		jobs = []*job.QueuedJob{}
+	}
+
+	return &ListJobsResult{
+		Jobs:       jobs,
+		TotalCount: totalCount,
+	}
+}
+
+// listJobsWithFilter handles pagination when a status filter is applied.
+func (c *Client) listJobsWithFilter(
+	allKeys []string,
+	jobKeys []string,
+	statusFilter string,
+	limit int,
+	offset int,
+) *ListJobsResult {
+	var jobs []*job.QueuedJob
+	totalCount := 0
+	skipped := 0
+
+	for _, key := range jobKeys {
+		jobID := strings.TrimPrefix(key, "jobs.")
+		jobInfo, err := c.getJobStatusFromKeys(allKeys, key, jobID)
 		if err != nil {
 			c.logger.Debug("failed to get job status during list",
 				slog.String("job_id", jobID),
@@ -338,15 +416,78 @@ func (c *Client) ListJobs(
 			continue
 		}
 
-		// Apply status filter if specified
-		if statusFilter != "" && jobInfo.Status != statusFilter {
+		if jobInfo.Status != statusFilter {
 			continue
 		}
 
-		jobs = append(jobs, jobInfo)
+		totalCount++
+
+		// Skip offset items
+		if skipped < offset {
+			skipped++
+			continue
+		}
+
+		// Collect items up to limit
+		if limit == 0 || len(jobs) < limit {
+			jobs = append(jobs, jobInfo)
+		}
 	}
 
-	return jobs, nil
+	if jobs == nil {
+		jobs = []*job.QueuedJob{}
+	}
+
+	return &ListJobsResult{
+		Jobs:       jobs,
+		TotalCount: totalCount,
+	}
+}
+
+// getJobStatusFromKeys builds a QueuedJob using pre-fetched keys (no inner kv.Keys() call).
+func (c *Client) getJobStatusFromKeys(
+	allKeys []string,
+	jobKey string,
+	jobID string,
+) (*job.QueuedJob, error) {
+	entry, err := c.kv.Get(jobKey)
+	if err != nil {
+		return nil, fmt.Errorf("job not found: %s", jobID)
+	}
+
+	var jobData map[string]interface{}
+	if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
+		return nil, fmt.Errorf("failed to parse job data: %w", err)
+	}
+
+	computedStatus := c.computeStatusFromEvents(allKeys, jobID)
+	responses := c.getJobResponses(allKeys, jobID)
+
+	queuedJob := &job.QueuedJob{
+		ID:           jobID,
+		Status:       computedStatus.Status,
+		Created:      getStringField(jobData, "created"),
+		Subject:      getStringField(jobData, "subject"),
+		Hostname:     computedStatus.Hostname,
+		Error:        computedStatus.Error,
+		UpdatedAt:    computedStatus.UpdatedAt,
+		WorkerStates: computedStatus.WorkerStates,
+		Timeline:     computedStatus.Timeline,
+		Responses:    responses,
+	}
+
+	if operation, ok := jobData["operation"].(map[string]interface{}); ok {
+		queuedJob.Operation = operation
+	}
+
+	if len(responses) == 1 {
+		for _, resp := range responses {
+			queuedJob.Result = resp.Data
+			break
+		}
+	}
+
+	return queuedJob, nil
 }
 
 // getStringField safely extracts a string field from a map.

@@ -89,7 +89,23 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter jobs by status (e.g., unprocessed, processing, completed, failed).
+          description: Filter jobs by status (e.g., submitted, processing, completed, failed).
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 10
+          description: Maximum number of jobs to return. Use 0 for no limit.
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of jobs to skip for pagination.
       responses:
         '200':
           description: A list of jobs.

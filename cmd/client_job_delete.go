@@ -66,6 +66,8 @@ var clientJobDeleteCmd = &cobra.Command{
 			logger.Info("job deleted successfully",
 				slog.String("job_id", jobID),
 			)
+		case http.StatusBadRequest:
+			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusNotFound:
 			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:

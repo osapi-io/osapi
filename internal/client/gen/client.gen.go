@@ -410,6 +410,12 @@ type WorkerInfo struct {
 type GetJobParams struct {
 	// Status Filter jobs by status (e.g., unprocessed, processing, completed, failed).
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
+
+	// Limit Maximum number of jobs to return. Use 0 for no limit.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Number of jobs to skip for pagination.
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // PutNetworkDNSParams defines parameters for PutNetworkDNS.
@@ -904,6 +910,38 @@ func NewGetJobRequest(server string, params *GetJobParams) (*http.Request, error
 		if params.Status != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err

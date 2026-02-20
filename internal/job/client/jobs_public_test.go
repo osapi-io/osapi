@@ -800,7 +800,6 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 					`{"id":"job-1","operation":{"type":"system.hostname.get"}}`,
 				))
 				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
-				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
 
 				s.mockNATSClient.EXPECT().
 					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
@@ -819,7 +818,6 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 					`{"id":"job-1","operation":{"data":"some value"}}`,
 				))
 				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
-				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
 
 				s.mockNATSClient.EXPECT().
 					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
@@ -837,7 +835,6 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 					`{"id":"job-1","operation":"string-value"}`,
 				))
 				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
-				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
 
 				s.mockNATSClient.EXPECT().
 					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
@@ -877,8 +874,6 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 					Return([]byte(`{"id":"job-2","operation":{"type":"system.status.get"}}`))
 				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry2, nil)
 
-				s.mockKV.EXPECT().Keys().Return([]string{}, nil).Times(2)
-
 				s.mockNATSClient.EXPECT().
 					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
 					Return(nil, errors.New("stream not found"))
@@ -911,11 +906,14 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 
 func (s *JobsPublicTestSuite) TestListJobs() {
 	tests := []struct {
-		name         string
-		statusFilter string
-		expectedErr  string
-		setupMocks   func()
-		expectedJobs int
+		name               string
+		statusFilter       string
+		limit              int
+		offset             int
+		expectedErr        string
+		setupMocks         func()
+		expectedJobs       int
+		expectedTotalCount int
 	}{
 		{
 			name:         "no jobs found",
@@ -923,24 +921,22 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			setupMocks: func() {
 				s.mockKV.EXPECT().Keys().Return(nil, errors.New("nats: no keys found"))
 			},
-			expectedJobs: 0,
+			expectedJobs:       0,
+			expectedTotalCount: 0,
 		},
 		{
-			name:         "kv error",
-			statusFilter: "",
-			expectedErr:  "error fetching jobs",
+			name:        "kv error",
+			expectedErr: "error fetching jobs",
 			setupMocks: func() {
 				s.mockKV.EXPECT().Keys().Return(nil, errors.New("connection failed"))
 			},
 		},
 		{
-			name:         "returns all jobs",
-			statusFilter: "",
+			name: "returns all jobs no limit",
 			setupMocks: func() {
 				s.mockKV.EXPECT().
 					Keys().
-					Return([]string{"jobs.job-1", "jobs.job-2"}, nil).
-					Times(3)
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
@@ -954,13 +950,14 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				))
 				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry2, nil)
 			},
-			expectedJobs: 2,
+			expectedJobs:       2,
+			expectedTotalCount: 2,
 		},
 		{
 			name:         "filters out non matching status",
 			statusFilter: "completed",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"jobs.job-1"}, nil).Times(2)
+				s.mockKV.EXPECT().Keys().Return([]string{"jobs.job-1"}, nil)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
@@ -968,19 +965,19 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				))
 				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
 			},
-			expectedJobs: 0,
+			expectedJobs:       0,
+			expectedTotalCount: 0,
 		},
 		{
-			name:         "empty job ID after trim skipped",
-			statusFilter: "",
+			name: "empty job ID after trim skipped",
 			setupMocks: func() {
 				s.mockKV.EXPECT().Keys().Return([]string{"jobs."}, nil)
 			},
-			expectedJobs: 0,
+			expectedJobs:       0,
+			expectedTotalCount: 0,
 		},
 		{
-			name:         "GetJobStatus error skipped",
-			statusFilter: "",
+			name: "getJobStatusFromKeys error skipped",
 			setupMocks: func() {
 				s.mockKV.EXPECT().
 					Keys().
@@ -990,11 +987,11 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 					Get("jobs.job-bad").
 					Return(nil, errors.New("kv error"))
 			},
-			expectedJobs: 0,
+			expectedJobs:       0,
+			expectedTotalCount: 1,
 		},
 		{
-			name:         "only processes jobs prefix keys",
-			statusFilter: "",
+			name: "only processes jobs prefix keys",
 			setupMocks: func() {
 				s.mockKV.EXPECT().Keys().Return(
 					[]string{
@@ -1003,7 +1000,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 						"responses.job-1.host.123",
 					},
 					nil,
-				).Times(2)
+				)
 
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
@@ -1027,7 +1024,176 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 					Get("responses.job-1.host.123").
 					Return(mockRespEntry, nil)
 			},
-			expectedJobs: 1,
+			expectedJobs:       1,
+			expectedTotalCount: 1,
+		},
+		{
+			name:  "limit restricts returned jobs",
+			limit: 1,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+
+				// Only job-2 is fetched (newest-first, limit 1)
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry, nil)
+			},
+			expectedJobs:       1,
+			expectedTotalCount: 2,
+		},
+		{
+			name:   "offset skips jobs",
+			offset: 1,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+
+				// After reversing: [job-2, job-1], offset 1 skips job-2, returns job-1
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
+			},
+			expectedJobs:       1,
+			expectedTotalCount: 2,
+		},
+		{
+			name:   "offset beyond total returns empty",
+			offset: 10,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+			},
+			expectedJobs:       0,
+			expectedTotalCount: 2,
+		},
+		{
+			name:         "filter with offset skips matching jobs",
+			statusFilter: "submitted",
+			offset:       1,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
+
+				// Reversed: job-3, job-2, job-1 — all submitted
+				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry3.EXPECT().Value().Return([]byte(
+					`{"id":"job-3","operation":{"type":"system.status.get"},"created":"2024-01-03T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-3").Return(mockEntry3, nil)
+
+				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry2.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry2, nil)
+
+				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry1.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry1, nil)
+			},
+			expectedJobs:       2,
+			expectedTotalCount: 3,
+		},
+		{
+			name:         "filter with limit restricts results",
+			statusFilter: "submitted",
+			limit:        1,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+
+				// Reversed: job-2, job-1 — both submitted
+				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry2.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry2, nil)
+
+				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry1.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry1, nil)
+			},
+			expectedJobs:       1,
+			expectedTotalCount: 2,
+		},
+		{
+			name:         "filter skips jobs with get error",
+			statusFilter: "submitted",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-bad", "jobs.job-good"}, nil)
+
+				// Reversed: job-good, job-bad
+				s.mockKV.EXPECT().
+					Get("jobs.job-good").
+					Return(nil, errors.New("kv error"))
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-bad","operation":{"type":"system.status.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-bad").Return(mockEntry, nil)
+			},
+			expectedJobs:       1,
+			expectedTotalCount: 1,
+		},
+		{
+			name: "getJobStatusFromKeys with invalid JSON",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1"}, nil)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry.EXPECT().Value().Return([]byte(`not valid json`))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry, nil)
+			},
+			expectedJobs:       0,
+			expectedTotalCount: 1,
+		},
+		{
+			name: "newest first ordering",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys().
+					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
+
+				// Reversed: job-3, job-2, job-1
+				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry3.EXPECT().Value().Return([]byte(
+					`{"id":"job-3","operation":{"type":"system.status.get"},"created":"2024-01-03T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-3").Return(mockEntry3, nil)
+
+				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry2.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-2").Return(mockEntry2, nil)
+
+				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry1.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get("jobs.job-1").Return(mockEntry1, nil)
+			},
+			expectedJobs:       3,
+			expectedTotalCount: 3,
 		},
 	}
 
@@ -1035,14 +1201,21 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			jobs, err := s.jobsClient.ListJobs(s.ctx, tt.statusFilter)
+			result, err := s.jobsClient.ListJobs(
+				s.ctx,
+				tt.statusFilter,
+				tt.limit,
+				tt.offset,
+			)
 
 			if tt.expectedErr != "" {
 				s.Error(err)
 				s.Contains(err.Error(), tt.expectedErr)
 			} else {
 				s.NoError(err)
-				s.Len(jobs, tt.expectedJobs)
+				s.NotNil(result)
+				s.Len(result.Jobs, tt.expectedJobs)
+				s.Equal(tt.expectedTotalCount, result.TotalCount)
 			}
 		})
 	}

@@ -112,6 +112,27 @@ telemetry:
   # otlp_endpoint: "localhost:4317"
 ```
 
+## Quick Wins (Pre-OTel)
+
+These improvements can be done before the full OTel integration and
+provide immediate debugging value:
+
+1. **Return job-id in CLI output** — The CLI already shows job-id for
+   `job create`, but operations like `client system hostname` (which
+   internally create a job) should also display the job-id for
+   debugging. This lets users correlate CLI output with server logs.
+
+2. **Structured logging with job-id** — The job client, API handler,
+   and worker should all include `slog.String("job_id", jobID)` in
+   every log line for that request. This is largely already happening
+   in the job client code but should be consistent across all layers.
+
+3. **Request-scoped correlation** — Pass the job-id through context
+   (`context.WithValue`) so that every layer in the stack (API → NATS
+   publish → worker pickup → handler execution → result write) logs
+   it consistently. This gives grep-based tracing (`grep job_id=<id>`)
+   without requiring OTel infrastructure.
+
 ## Notes
 
 - OTel adds dependencies but they are well-maintained CNCF projects

@@ -34,14 +34,14 @@ func (j *Job) GetJob(
 ) (gen.GetJobResponseObject, error) {
 	if request.Params.Status != nil {
 		validStatuses := map[string]bool{
-			"unprocessed":     true,
+			"submitted":       true,
 			"processing":      true,
 			"completed":       true,
 			"failed":          true,
 			"partial_failure": true,
 		}
 		if !validStatuses[*request.Params.Status] {
-			errMsg := "invalid status filter: must be one of unprocessed, processing, completed, failed, partial_failure"
+			errMsg := "invalid status filter: must be one of submitted, processing, completed, failed, partial_failure"
 			return gen.GetJob400JSONResponse{Error: &errMsg}, nil
 		}
 	}
@@ -51,7 +51,17 @@ func (j *Job) GetJob(
 		statusFilter = *request.Params.Status
 	}
 
-	jobs, err := j.JobClient.ListJobs(ctx, statusFilter)
+	limit := 10
+	if request.Params.Limit != nil {
+		limit = *request.Params.Limit
+	}
+
+	offset := 0
+	if request.Params.Offset != nil {
+		offset = *request.Params.Offset
+	}
+
+	result, err := j.JobClient.ListJobs(ctx, statusFilter, limit, offset)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetJob500JSONResponse{
@@ -59,8 +69,8 @@ func (j *Job) GetJob(
 		}, nil
 	}
 
-	items := make([]gen.JobDetailResponse, 0, len(jobs))
-	for _, qj := range jobs {
+	items := make([]gen.JobDetailResponse, 0, len(result.Jobs))
+	for _, qj := range result.Jobs {
 		item := gen.JobDetailResponse{
 			Id:      &qj.ID,
 			Status:  &qj.Status,
@@ -87,7 +97,7 @@ func (j *Job) GetJob(
 		items = append(items, item)
 	}
 
-	totalItems := len(items)
+	totalItems := result.TotalCount
 	return gen.GetJob200JSONResponse{
 		TotalItems: &totalItems,
 		Items:      &items,
