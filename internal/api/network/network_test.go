@@ -49,22 +49,22 @@ func (suite *NetworkTestSuite) TestDurationToString() {
 		{
 			name:  "zero duration",
 			input: durationPtr(0),
-			want:  stringPtr("0s"),
+			want:  stringPtr("0.00ms"),
+		},
+		{
+			name:  "millisecond duration",
+			input: durationPtr(15 * time.Millisecond),
+			want:  stringPtr("15.00ms"),
+		},
+		{
+			name:  "sub-millisecond precision",
+			input: durationPtr(22633115 * time.Nanosecond),
+			want:  stringPtr("22.63ms"),
 		},
 		{
 			name:  "one second duration",
 			input: durationPtr(time.Second),
-			want:  stringPtr("1s"),
-		},
-		{
-			name:  "two minutes duration",
-			input: durationPtr(2 * time.Minute),
-			want:  stringPtr("2m0s"),
-		},
-		{
-			name:  "one and a half hours duration",
-			input: durationPtr(1*time.Hour + 30*time.Minute),
-			want:  stringPtr("1h30m0s"),
+			want:  stringPtr("1000.00ms"),
 		},
 	}
 

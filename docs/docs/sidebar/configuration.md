@@ -9,11 +9,11 @@ overrides.
 
 ## Config File
 
-By default OSAPI looks for `osapi.yaml` in the current working directory.
-Override the path with the `-f` / `--osapi-file` flag:
+By default OSAPI looks for `/etc/osapi/osapi.yaml`. Override the path with the
+`-f` / `--osapi-file` flag:
 
 ```bash
-osapi --osapi-file /etc/osapi/osapi.yaml api server start
+osapi -f /path/to/osapi.yaml api server start
 ```
 
 ## Environment Variables

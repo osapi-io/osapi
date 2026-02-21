@@ -60,7 +60,6 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 				printKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			fmt.Println()
 			rows := make([][]string, 0, len(resp.JSON200.Results))
 			for _, h := range resp.JSON200.Results {
 				rows = append(rows, []string{h.Hostname})

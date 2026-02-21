@@ -12,7 +12,6 @@ $ osapi client system status
   Memory: 19 GB used / 31 GB total / 10 GB free
 
   Disks:
-
   ┏━━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┓
   ┃ DISK NAME ┃ TOTAL ┃ USED  ┃ FREE  ┃
   ┣━━━━━━━━━━━╋━━━━━━━╋━━━━━━━╋━━━━━━━┫
