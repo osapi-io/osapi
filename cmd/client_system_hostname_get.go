@@ -60,17 +60,15 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 				printKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			rows := make([][]string, 0, len(resp.JSON200.Results))
+			results := make([]resultRow, 0, len(resp.JSON200.Results))
 			for _, h := range resp.JSON200.Results {
-				rows = append(rows, []string{h.Hostname})
+				results = append(results, resultRow{
+					Hostname: h.Hostname,
+					Error:    h.Error,
+				})
 			}
-			sections := []section{
-				{
-					Headers: []string{"HOSTNAME"},
-					Rows:    rows,
-				},
-			}
-			printStyledTable(sections)
+			headers, rows := buildBroadcastTable(results, nil)
+			printStyledTable([]section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:
 			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)

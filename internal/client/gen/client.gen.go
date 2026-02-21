@@ -78,6 +78,9 @@ type DNSConfigCollectionResponse struct {
 
 // DNSConfigResponse defines model for DNSConfigResponse.
 type DNSConfigResponse struct {
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
+
 	// Hostname The hostname of the worker that served this DNS config.
 	Hostname string `json:"hostname"`
 
@@ -162,6 +165,9 @@ type HostnameCollectionResponse struct {
 
 // HostnameResponse The hostname of the system.
 type HostnameResponse struct {
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
+
 	// Hostname The system's hostname.
 	Hostname string `json:"hostname"`
 }
@@ -329,6 +335,9 @@ type PingResponse struct {
 	// AvgRtt Average round-trip time as a string in Go's time.Duration format.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
 
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
+
 	// Hostname The hostname of the worker that executed the ping.
 	Hostname string `json:"hostname"`
 
@@ -426,22 +435,25 @@ type SystemStatusCollectionResponse struct {
 // SystemStatusResponse defines model for SystemStatusResponse.
 type SystemStatusResponse struct {
 	// Disks List of local disk usage information.
-	Disks DisksResponse `json:"disks"`
+	Disks *DisksResponse `json:"disks,omitempty"`
+
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The hostname of the system.
 	Hostname string `json:"hostname"`
 
 	// LoadAverage The system load averages for 1, 5, and 15 minutes.
-	LoadAverage LoadAverageResponse `json:"load_average"`
+	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
 
 	// Memory Memory usage information.
-	Memory MemoryResponse `json:"memory"`
+	Memory *MemoryResponse `json:"memory,omitempty"`
 
 	// OsInfo Operating system information.
-	OsInfo OSInfoResponse `json:"os_info"`
+	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
 
 	// Uptime The uptime of the system.
-	Uptime string `json:"uptime"`
+	Uptime *string `json:"uptime,omitempty"`
 }
 
 // WorkerInfo defines model for WorkerInfo.

@@ -108,7 +108,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

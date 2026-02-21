@@ -62,35 +62,34 @@ var clientNetworkPingCmd = &cobra.Command{
 				printKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			respRows := make([][]string, 0, len(resp.JSON200.Results))
+			results := make([]resultRow, 0, len(resp.JSON200.Results))
 			for _, r := range resp.JSON200.Results {
-				respRows = append(respRows, []string{
-					r.Hostname,
-					safeString(r.AvgRtt),
-					safeString(r.MaxRtt),
-					safeString(r.MinRtt),
-					float64ToSafeString(r.PacketLoss),
-					intToSafeString(r.PacketsReceived),
-					intToSafeString(r.PacketsSent),
+				results = append(results, resultRow{
+					Hostname: r.Hostname,
+					Error:    r.Error,
+					Fields: []string{
+						safeString(r.AvgRtt),
+						safeString(r.MaxRtt),
+						safeString(r.MinRtt),
+						float64ToSafeString(r.PacketLoss),
+						intToSafeString(r.PacketsReceived),
+						intToSafeString(r.PacketsSent),
+					},
 				})
 			}
-
-			sections := []section{
-				{
-					Title: "Ping Response",
-					Headers: []string{
-						"HOSTNAME",
-						"AVG RTT",
-						"MAX RTT",
-						"MIN RTT",
-						"PACKET LOSS",
-						"PACKETS RECEIVED",
-						"PACKETS SENT",
-					},
-					Rows: respRows,
-				},
-			}
-			printStyledTable(sections)
+			headers, rows := buildBroadcastTable(results, []string{
+				"AVG RTT",
+				"MAX RTT",
+				"MIN RTT",
+				"PACKET LOSS",
+				"PACKETS RECEIVED",
+				"PACKETS SENT",
+			})
+			printStyledTable([]section{{
+				Title:   "Ping Response",
+				Headers: headers,
+				Rows:    rows,
+			}})
 
 		case http.StatusBadRequest:
 			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)

@@ -289,6 +289,9 @@ components:
           type: string
           description: Maximum round-trip time as a string in Go's time.Duration format.
           example: "24.309240ms"
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
 
@@ -324,6 +327,9 @@ components:
           description: List of search domains.
           items:
             type: string
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
 

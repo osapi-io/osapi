@@ -63,22 +63,22 @@ type JobClient interface {
 	) (string, *job.SystemStatusResponse, error)
 	QuerySystemStatusAll(
 		ctx context.Context,
-	) (string, []*job.SystemStatusResponse, error)
+	) (string, []*job.SystemStatusResponse, map[string]string, error)
 	QuerySystemStatusBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, []*job.SystemStatusResponse, error)
+	) (string, []*job.SystemStatusResponse, map[string]string, error)
 	QuerySystemHostname(
 		ctx context.Context,
 		hostname string,
 	) (string, string, string, error)
 	QuerySystemHostnameAll(
 		ctx context.Context,
-	) (string, map[string]string, error)
+	) (string, map[string]string, map[string]string, error)
 	QuerySystemHostnameBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]string, error)
+	) (string, map[string]string, map[string]string, error)
 	QueryNetworkDNS(
 		ctx context.Context,
 		hostname string,
@@ -87,12 +87,12 @@ type JobClient interface {
 	QueryNetworkDNSAll(
 		ctx context.Context,
 		iface string,
-	) (string, map[string]*dns.Config, error)
+	) (string, map[string]*dns.Config, map[string]string, error)
 	QueryNetworkDNSBroadcast(
 		ctx context.Context,
 		target string,
 		iface string,
-	) (string, map[string]*dns.Config, error)
+	) (string, map[string]*dns.Config, map[string]string, error)
 
 	// Modify operations — all return (jobID, result..., error)
 	ModifyNetworkDNS(
@@ -133,12 +133,12 @@ type JobClient interface {
 	QueryNetworkPingAll(
 		ctx context.Context,
 		address string,
-	) (string, map[string]*ping.Result, error)
+	) (string, map[string]*ping.Result, map[string]string, error)
 	QueryNetworkPingBroadcast(
 		ctx context.Context,
 		target string,
 		address string,
-	) (string, map[string]*ping.Result, error)
+	) (string, map[string]*ping.Result, map[string]string, error)
 
 	// Worker discovery
 	ListWorkers(

@@ -78,25 +78,16 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 			}
 
 			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
-				rows := make([][]string, 0, len(resp.JSON202.Results))
+				results := make([]mutationResultRow, 0, len(resp.JSON202.Results))
 				for _, r := range resp.JSON202.Results {
-					errStr := ""
-					if r.Error != nil {
-						errStr = *r.Error
-					}
-					rows = append(rows, []string{
-						r.Hostname,
-						string(r.Status),
-						errStr,
+					results = append(results, mutationResultRow{
+						Hostname: r.Hostname,
+						Status:   string(r.Status),
+						Error:    r.Error,
 					})
 				}
-				sections := []section{
-					{
-						Headers: []string{"HOSTNAME", "STATUS", "ERROR"},
-						Rows:    rows,
-					},
-				}
-				printStyledTable(sections)
+				headers, rows := buildMutationTable(results, nil)
+				printStyledTable([]section{{Headers: headers, Rows: rows}})
 			} else {
 				logger.Info(
 					"network dns put",

@@ -129,10 +129,39 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]string{
 						"server1": "host1",
 						"server2": "host2",
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all with errors",
+			request: gen.GetSystemHostnameRequestObject{
+				Params: gen.GetSystemHostnameParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]string{
+						"server1": "host1",
+					}, map[string]string{
+						"server2": "interface not found",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
+				r, ok := resp.(gen.GetSystemHostname200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+				var foundError bool
+				for _, h := range r.Results {
+					if h.Error != nil {
+						foundError = true
+						s.Equal("server2", h.Hostname)
+						s.Equal("interface not found", *h.Error)
+					}
+				}
+				s.True(foundError)
 			},
 		},
 		{
@@ -143,7 +172,7 @@ func (s *SystemHostnameGetPublicTestSuite) TestGetSystemHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemHostnameResponseObject) {
 				_, ok := resp.(gen.GetSystemHostname500JSONResponse)

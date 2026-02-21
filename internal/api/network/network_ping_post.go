@@ -95,7 +95,7 @@ func (n Network) postNetworkPingBroadcast(
 	target string,
 	address string,
 ) (gen.PostNetworkPingResponseObject, error) {
-	jobID, results, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
+	jobID, results, errs, err := n.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNetworkPing500JSONResponse{
@@ -106,6 +106,13 @@ func (n Network) postNetworkPingBroadcast(
 	var responses []gen.PingResponse
 	for host, r := range results {
 		responses = append(responses, buildPingResponse(host, r))
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.PingResponse{
+			Hostname: host,
+			Error:    &e,
+		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)

@@ -171,7 +171,7 @@ func (suite *SystemStatusGetIntegrationTestSuite) TestGetSystemStatus() {
 							Hostname: "server2",
 							Uptime:   2 * time.Hour,
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

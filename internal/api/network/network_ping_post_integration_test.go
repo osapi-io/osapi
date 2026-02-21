@@ -126,7 +126,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPing() {
 							AvgRTT:          15 * time.Millisecond,
 							MaxRTT:          20 * time.Millisecond,
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

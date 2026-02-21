@@ -1,6 +1,6 @@
 ---
 title: Surface failed worker responses in broadcast query results
-status: backlog
+status: done
 created: 2026-02-21
 updated: 2026-02-21
 ---

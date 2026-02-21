@@ -87,27 +87,37 @@ func displaySystemStatusCollection(
 	}
 
 	fmt.Println()
-	rows := make([][]string, 0, len(data.Results))
+
+	results := make([]resultRow, 0, len(data.Results))
 	for _, s := range data.Results {
-		rows = append(rows, []string{
-			s.Hostname,
-			s.Uptime,
-			fmt.Sprintf("%.2f", s.LoadAverage.N1min),
-			fmt.Sprintf(
+		uptime := ""
+		if s.Uptime != nil {
+			uptime = *s.Uptime
+		}
+		load := ""
+		if s.LoadAverage != nil {
+			load = fmt.Sprintf("%.2f", s.LoadAverage.N1min)
+		}
+		memory := ""
+		if s.Memory != nil {
+			memory = fmt.Sprintf(
 				"%d GB / %d GB",
 				s.Memory.Used/1024/1024/1024,
 				s.Memory.Total/1024/1024/1024,
-			),
+			)
+		}
+		results = append(results, resultRow{
+			Hostname: s.Hostname,
+			Error:    s.Error,
+			Fields:   []string{uptime, load, memory},
 		})
 	}
-
-	sections := []section{
-		{
-			Headers: []string{"HOSTNAME", "UPTIME", "LOAD (1m)", "MEMORY USED"},
-			Rows:    rows,
-		},
-	}
-	printStyledTable(sections)
+	headers, rows := buildBroadcastTable(results, []string{
+		"UPTIME",
+		"LOAD (1m)",
+		"MEMORY USED",
+	})
+	printStyledTable([]section{{Headers: headers, Rows: rows}})
 }
 
 // displaySystemStatusDetail renders a single system status response with full details.
@@ -115,22 +125,35 @@ func displaySystemStatusDetail(
 	data *gen.SystemStatusResponse,
 ) {
 	fmt.Println()
-	printKV("Hostname", data.Hostname,
-		"OS", data.OsInfo.Distribution+" "+dimStyle.Render(data.OsInfo.Version),
-	)
-	printKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
-		data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
-	)+" "+dimStyle.Render("(1m, 5m, 15m)"))
-	printKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
-		data.Memory.Used/1024/1024/1024,
-		data.Memory.Total/1024/1024/1024,
-		data.Memory.Free/1024/1024/1024,
-	))
+
+	kvArgs := []string{"Hostname", data.Hostname}
+	if data.OsInfo != nil {
+		kvArgs = append(
+			kvArgs,
+			"OS",
+			data.OsInfo.Distribution+" "+dimStyle.Render(data.OsInfo.Version),
+		)
+	}
+	printKV(kvArgs...)
+
+	if data.LoadAverage != nil {
+		printKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
+			data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
+		)+" "+dimStyle.Render("(1m, 5m, 15m)"))
+	}
+
+	if data.Memory != nil {
+		printKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
+			data.Memory.Used/1024/1024/1024,
+			data.Memory.Total/1024/1024/1024,
+			data.Memory.Free/1024/1024/1024,
+		))
+	}
 
 	diskRows := [][]string{}
 
 	if data.Disks != nil {
-		for _, disk := range data.Disks {
+		for _, disk := range *data.Disks {
 			diskRows = append(diskRows, []string{
 				disk.Name,
 				fmt.Sprintf("%d GB", disk.Total/1024/1024/1024),

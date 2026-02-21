@@ -86,7 +86,7 @@ func (s *System) getSystemHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetSystemHostnameResponseObject, error) {
-	jobID, results, err := s.JobClient.QuerySystemHostnameBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QuerySystemHostnameBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -97,6 +97,13 @@ func (s *System) getSystemHostnameBroadcast(
 	var responses []gen.HostnameResponse
 	for _, h := range results {
 		responses = append(responses, gen.HostnameResponse{Hostname: h})
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.HostnameResponse{
+			Hostname: host,
+			Error:    &e,
+		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)

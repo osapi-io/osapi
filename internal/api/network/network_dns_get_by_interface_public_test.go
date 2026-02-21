@@ -149,10 +149,43 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all with errors",
+			request: gen.GetNetworkDNSByInterfaceRequestObject{
+				InterfaceName: "eth0",
+				Params:        gen.GetNetworkDNSByInterfaceParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*dns.Config{
+						"server1": {
+							DNSServers:    []string{"8.8.8.8"},
+							SearchDomains: []string{"example.com"},
+						},
+					}, map[string]string{
+						"server2": "interface eth0 does not exist",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNetworkDNSByInterface200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+				var foundError bool
+				for _, res := range r.Results {
+					if res.Error != nil {
+						foundError = true
+						s.Equal("server2", res.Hostname)
+						s.Equal("interface eth0 does not exist", *res.Error)
+					}
+				}
+				s.True(foundError)
 			},
 		},
 		{
@@ -164,7 +197,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkDNSBroadcast(gomock.Any(), gomock.Any(), "eth0").
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				_, ok := resp.(gen.GetNetworkDNSByInterface500JSONResponse)

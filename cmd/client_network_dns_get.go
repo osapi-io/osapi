@@ -62,7 +62,7 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				printKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			rows := make([][]string, 0, len(resp.JSON200.Results))
+			results := make([]resultRow, 0, len(resp.JSON200.Results))
 			for _, cfg := range resp.JSON200.Results {
 				var serversList, searchDomainsList []string
 				if cfg.Servers != nil {
@@ -71,19 +71,20 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				if cfg.SearchDomains != nil {
 					searchDomainsList = *cfg.SearchDomains
 				}
-				rows = append(rows, []string{
-					cfg.Hostname,
-					formatList(serversList),
-					formatList(searchDomainsList),
+				results = append(results, resultRow{
+					Hostname: cfg.Hostname,
+					Error:    cfg.Error,
+					Fields: []string{
+						formatList(serversList),
+						formatList(searchDomainsList),
+					},
 				})
 			}
-			sections := []section{
-				{
-					Headers: []string{"HOSTNAME", "SERVERS", "SEARCH DOMAINS"},
-					Rows:    rows,
-				},
-			}
-			printStyledTable(sections)
+			headers, rows := buildBroadcastTable(results, []string{
+				"SERVERS",
+				"SEARCH DOMAINS",
+			})
+			printStyledTable([]section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:
 			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)

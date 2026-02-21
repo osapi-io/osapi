@@ -683,7 +683,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 			expectedCount: 2,
 		},
 		{
-			name:    "failed responses skipped",
+			name:    "failed responses collected in errors",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				responseEntries: []string{
@@ -808,7 +808,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 				tt.opts,
 			)
 
-			_, result, err := jobsClient.QuerySystemStatusAll(s.ctx)
+			_, result, _, err := jobsClient.QuerySystemStatusAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -845,7 +845,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 			expectedCount: 2,
 		},
 		{
-			name:    "failed responses skipped",
+			name:    "failed responses collected in errors",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				responseEntries: []string{
@@ -909,7 +909,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 				tt.opts,
 			)
 
-			_, result, err := jobsClient.QuerySystemHostnameAll(s.ctx)
+			_, result, _, err := jobsClient.QuerySystemHostnameAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -1000,7 +1000,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNSAll() {
 				tt.opts,
 			)
 
-			_, result, err := jobsClient.QueryNetworkDNSAll(s.ctx, "eth0")
+			_, result, _, err := jobsClient.QueryNetworkDNSAll(s.ctx, "eth0")
 
 			if tt.expectError {
 				s.Error(err)
@@ -1091,7 +1091,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 				tt.opts,
 			)
 
-			_, result, err := jobsClient.QueryNetworkPingAll(s.ctx, "1.1.1.1")
+			_, result, _, err := jobsClient.QueryNetworkPingAll(s.ctx, "1.1.1.1")
 
 			if tt.expectError {
 				s.Error(err)
