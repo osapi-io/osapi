@@ -26,6 +26,9 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+
 	"github.com/retr0h/osapi/internal/client/gen"
 	"github.com/retr0h/osapi/internal/config"
 )
@@ -67,6 +70,7 @@ func (t *authTransport) RoundTrip(
 	req *http.Request,
 ) (*http.Response, error) {
 	req.Header.Set("Authorization", t.authHeader)
+	otel.GetTextMapPropagator().Inject(req.Context(), propagation.HeaderCarrier(req.Header))
 
 	start := time.Now()
 	resp, err := t.base.RoundTrip(req)

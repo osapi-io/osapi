@@ -92,7 +92,7 @@ func (c *Client) CreateJob(
 
 	// Store job in KV with immutable key format
 	kvKey := "jobs." + jobID
-	c.logger.Debug("storing job and sending notification",
+	c.logger.DebugContext(ctx, "storing job and sending notification",
 		slog.String("kv_bucket", c.kv.Bucket()),
 		slog.String("key", kvKey),
 		slog.String("subject", notificationSubject),
@@ -119,16 +119,21 @@ func (c *Client) CreateJob(
 	}
 	statusEventJSON, _ := json.Marshal(statusEvent)
 	if _, err := c.kv.Put(statusKey, statusEventJSON); err != nil {
-		c.logger.Error("failed to write submitted event", slog.String("error", err.Error()))
+		c.logger.ErrorContext(
+			ctx,
+			"failed to write submitted event",
+			slog.String("error", err.Error()),
+		)
 	}
 
-	// Send notification via stream
+	// Send notification via stream.
+	// Trace context is propagated via NATS message headers automatically by nats-client.
 	err = c.natsClient.Publish(ctx, notificationSubject, []byte(jobID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
 
-	c.logger.Debug("job created successfully",
+	c.logger.DebugContext(ctx, "job created successfully",
 		slog.String("job_id", jobID),
 		slog.Uint64("revision", revision),
 		slog.String("subject", notificationSubject),

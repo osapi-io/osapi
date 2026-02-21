@@ -29,6 +29,9 @@ uppercased:
 | `api.server.security.signing_key`  | `OSAPI_API_SERVER_SECURITY_SIGNING_KEY`  |
 | `api.client.security.bearer_token` | `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN` |
 | `nats.server.host`                 | `OSAPI_NATS_SERVER_HOST`                 |
+| `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
+| `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
+| `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
 | `job.worker.hostname`              | `OSAPI_JOB_WORKER_HOSTNAME`              |
 
 Environment variables take precedence over file values.
@@ -86,6 +89,15 @@ nats:
     port: 4222
     # Directory for JetStream file-based storage.
     store_dir: '.nats/jetstream/'
+
+telemetry:
+  tracing:
+    # Enable distributed tracing (default: false).
+    enabled: false
+    # Exporter type: "stdout" or "otlp".
+    # exporter: stdout
+    # gRPC endpoint for OTLP exporter (e.g., Jaeger, Tempo).
+    # otlp_endpoint: localhost:4317
 
 job:
   # ── Shared infrastructure names ──────────────────────────
@@ -208,6 +220,14 @@ job:
 | `host`      | string | Hostname the NATS server binds to    |
 | `port`      | int    | Port the NATS server binds to        |
 | `store_dir` | string | Directory for JetStream file storage |
+
+### `telemetry.tracing`
+
+| Key             | Type   | Description                                   |
+| --------------- | ------ | --------------------------------------------- |
+| `enabled`       | bool   | Enable distributed tracing (default: `false`) |
+| `exporter`      | string | Exporter type: `"stdout"` or `"otlp"`         |
+| `otlp_endpoint` | string | gRPC endpoint for OTLP exporter               |
 
 ### `job` (top-level)
 

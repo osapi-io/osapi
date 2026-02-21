@@ -25,6 +25,12 @@ nats:
     port: 4222
     store_dir: .nats/jetstream/
 
+telemetry:
+  tracing:
+    enabled: false
+    # exporter: stdout
+    # otlp_endpoint: localhost:4317
+
 job:
   stream_name: JOBS
   stream_subjects: jobs.>

@@ -702,6 +702,17 @@ osapi client job add --target-hostname _any --json-file system-check.json
 
 ### Observability & Debugging
 
+**Distributed Tracing:**
+
+Every job carries an OpenTelemetry trace context through NATS message headers.
+The nats-client `Publish` method automatically injects the W3C `traceparent`
+header, and the worker extracts it to continue the trace. This means a single
+`trace_id` follows a request from the API server through NATS to the worker.
+
+Enable tracing with `--debug` or `telemetry.tracing.enabled: true`, then filter
+logs by `trace_id` to see the complete flow of any job. See the
+[Architecture Overview](architecture.md#distributed-tracing) for setup details.
+
 **Complete Event Timeline:**
 
 - See exactly when each worker received job

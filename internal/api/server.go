@@ -29,6 +29,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	slogecho "github.com/samber/slog-echo"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/config"
@@ -63,6 +64,7 @@ func New(
 		corsConfig.AllowOrigins = allowOrigins
 	}
 
+	e.Use(otelecho.Middleware("osapi-api"))
 	e.Use(slogecho.New(logger))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())

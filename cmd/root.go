@@ -36,6 +36,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/telemetry"
 )
 
 var (
@@ -109,6 +110,12 @@ func initConfig() {
 		logFatal("failed to unmarshal config", err, "osapiFile", viper.ConfigFileUsed())
 	}
 
+	// Auto-enable tracing in debug mode so trace_id appears in log lines.
+	// No exporter is set — just log correlation, no span dumps.
+	if appConfig.Debug && !appConfig.Telemetry.Tracing.Enabled {
+		appConfig.Telemetry.Tracing.Enabled = true
+	}
+
 	err := config.Validate(&appConfig)
 	if err != nil {
 		logFatal("validation failed", err, "osapiFile", viper.ConfigFileUsed())
@@ -121,15 +128,17 @@ func initLogger() {
 		logLevel = slog.LevelDebug
 	}
 
-	logger = slog.New(
-		tint.NewHandler(os.Stderr, &tint.Options{
+	var handler slog.Handler
+	if jsonOutput {
+		handler = slog.NewJSONHandler(os.Stderr, nil)
+	} else {
+		handler = tint.NewHandler(os.Stderr, &tint.Options{
 			Level:      logLevel,
 			TimeFormat: time.Kitchen,
 			NoColor:    !term.IsTerminal(int(os.Stdout.Fd())),
-		}),
-	)
-
-	if jsonOutput {
-		logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
+		})
 	}
+
+	handler = telemetry.NewTraceHandler(handler)
+	logger = slog.New(handler)
 }

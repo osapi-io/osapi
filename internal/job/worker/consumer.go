@@ -231,6 +231,7 @@ func (w *Worker) handleJobMessageJS(
 	natsMsg := &nats.Msg{
 		Subject: msg.Subject(),
 		Data:    msg.Data(),
+		Header:  msg.Headers(),
 	}
 
 	// Call the handler and check if job processing actually succeeded

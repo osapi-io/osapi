@@ -1,0 +1,198 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package telemetry_test
+
+import (
+	"context"
+	"net/http"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/retr0h/osapi/internal/telemetry"
+)
+
+type PropagationPublicTestSuite struct {
+	suite.Suite
+
+	ctx context.Context
+}
+
+func (s *PropagationPublicTestSuite) SetupTest() {
+	s.ctx = context.Background()
+
+	// Set up a real tracer provider and propagator for tests
+	tp := sdktrace.NewTracerProvider()
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+}
+
+func (s *PropagationPublicTestSuite) TestInjectExtractRoundtrip() {
+	tests := []struct {
+		name         string
+		setupCtx     func() context.Context
+		validateFunc func(originalCtx context.Context, data map[string]interface{})
+	}{
+		{
+			name: "when active span roundtrips trace context",
+			setupCtx: func() context.Context {
+				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+
+				return ctx
+			},
+			validateFunc: func(originalCtx context.Context, data map[string]interface{}) {
+				// traceparent should be set in the map
+				s.Contains(data, "traceparent")
+				s.NotEmpty(data["traceparent"])
+
+				// Extract and verify trace ID matches
+				extractedCtx := telemetry.ExtractTraceContext(context.Background(), data)
+				originalSC := trace.SpanContextFromContext(originalCtx)
+				extractedSC := trace.SpanContextFromContext(extractedCtx)
+
+				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
+			},
+		},
+		{
+			name: "when no active span inject is noop",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			validateFunc: func(_ context.Context, data map[string]interface{}) {
+				s.NotContains(data, "traceparent")
+			},
+		},
+		{
+			name: "when no traceparent extract returns original context",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			validateFunc: func(_ context.Context, data map[string]interface{}) {
+				extractedCtx := telemetry.ExtractTraceContext(context.Background(), data)
+				sc := trace.SpanContextFromContext(extractedCtx)
+				s.False(sc.IsValid())
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx := tc.setupCtx()
+			data := make(map[string]interface{})
+			telemetry.InjectTraceContext(ctx, data)
+			tc.validateFunc(ctx, data)
+		})
+	}
+}
+
+func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
+	tests := []struct {
+		name         string
+		setupCtx     func() context.Context
+		validateFunc func(originalCtx context.Context, header http.Header)
+	}{
+		{
+			name: "when active span roundtrips trace context via headers",
+			setupCtx: func() context.Context {
+				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+
+				return ctx
+			},
+			validateFunc: func(originalCtx context.Context, header http.Header) {
+				s.NotEmpty(header.Get("Traceparent"))
+
+				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+					context.Background(),
+					header,
+				)
+				originalSC := trace.SpanContextFromContext(originalCtx)
+				extractedSC := trace.SpanContextFromContext(extractedCtx)
+
+				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
+			},
+		},
+		{
+			name: "when non-canonical header keys extracts trace context",
+			setupCtx: func() context.Context {
+				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+
+				return ctx
+			},
+			validateFunc: func(originalCtx context.Context, header http.Header) {
+				// Simulate NATS JetStream delivering headers with lowercase keys
+				lowercaseHeader := http.Header{}
+				for k, v := range header {
+					lowercaseHeader[strings.ToLower(k)] = v
+				}
+
+				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+					context.Background(),
+					lowercaseHeader,
+				)
+				originalSC := trace.SpanContextFromContext(originalCtx)
+				extractedSC := trace.SpanContextFromContext(extractedCtx)
+
+				s.Equal(originalSC.TraceID(), extractedSC.TraceID())
+			},
+		},
+		{
+			name: "when no active span inject is noop",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			validateFunc: func(_ context.Context, header http.Header) {
+				s.Empty(header.Get("Traceparent"))
+			},
+		},
+		{
+			name: "when no traceparent extract returns original context",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			validateFunc: func(_ context.Context, header http.Header) {
+				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+					context.Background(),
+					header,
+				)
+				sc := trace.SpanContextFromContext(extractedCtx)
+				s.False(sc.IsValid())
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx := tc.setupCtx()
+			header := make(http.Header)
+			telemetry.InjectTraceContextToHeader(ctx, header)
+			tc.validateFunc(ctx, header)
+		})
+	}
+}
+
+func TestPropagationPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(PropagationPublicTestSuite))
+}
