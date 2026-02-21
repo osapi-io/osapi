@@ -1,6 +1,6 @@
 ---
 title: Fix trace context propagation from API server to worker via NATS
-status: backlog
+status: done
 created: 2026-02-21
 updated: 2026-02-21
 ---
@@ -11,11 +11,6 @@ Trace IDs differ between the API server and worker for the same job,
 meaning OpenTelemetry trace context is not propagating through NATS
 JetStream message headers. The worker creates a new root span instead
 of continuing the API server's trace.
-
-**Observed**: API server logs `trace_id=0b3e...` for job `64564a8e`,
-worker logs `trace_id=7e68...` for the same job.
-
-**Expected**: Both should share the same trace ID.
 
 ## Analysis
 
@@ -39,34 +34,13 @@ The extraction silently falls back to `context.Background()` when no
 valid trace context is found, causing the worker to create a new root
 span.
 
-## Debugging Steps
-
-1. Add temporary debug logging in nats-client `Publish` to dump
-   `msg.Header` after `Inject` — verify `Traceparent` key is present
-2. Add temporary debug logging in worker `handleJobMessage` to dump
-   `msg.Header` before `ExtractTraceContextFromHeader` — verify
-   `traceparent` key arrives
-3. This narrows the break to: injection failure, transit loss, or
-   extraction failure
-
-## Possible Causes
-
-- JetStream header preservation issue (unlikely but check NATS server
-  version)
-- `nats.Header` vs `http.Header` type conversion subtlety in the
-  `Inject` call
-- The `Inject` call is a no-op because the span context in `ctx` is
-  somehow invalid despite appearing in logs
-- Header key casing lost in transit (extraction normalizes, but verify)
-
-## Fix Options
-
-1. **Debug and fix the header propagation** — add logging, find the
-   break, fix it
-2. **Inject trace context into KV job data** — as a fallback, store
-   `traceparent` in the job data written to KV (which the worker
-   already reads), not just in NATS message headers. This is more
-   reliable since KV data is definitely preserved.
+**Root cause**: The nats-client version pinned in go.mod
+(`v0.0.0-20260215190839-25dd316864d1`) used `ExtJS.Publish()` which
+does not pass headers. The old `Publish(ctx, subject, data)` method
+had no way to attach headers to the message. The Feb 20 commit
+`80144e1` in nats-client switched to `ExtJS.PublishMsg(ctx, msg)`
+with OTel trace context injected into NATS message headers via
+`otel.GetTextMapPropagator().Inject()`.
 
 ## Files Involved
 
@@ -78,9 +52,12 @@ span.
 | `internal/job/worker/consumer.go:226-246` | JetStream → nats.Msg adapter |
 | `internal/job/client/client.go:137` | publishAndWait Publish call |
 
-## Notes
+## Outcome
 
-- The refactor in #164 (NATS config ownership) did not change any
-  trace propagation code — this bug likely predates that PR.
-- Architecture docs claim trace propagation works; update docs if this
-  turns out to be a known limitation.
+**Fix**: Updated nats-client dependency to
+`v0.0.0-20260221001231-80144e1c7d21` via `go get
+github.com/osapi-io/nats-client@latest`. No code changes needed in
+osapi — the trace injection/extraction code paths were already correct.
+
+**Verification**: `go build ./...` compiles, `just go::unit` all tests
+pass.
