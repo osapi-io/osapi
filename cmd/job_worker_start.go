@@ -27,6 +27,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/job/worker"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -52,13 +53,17 @@ It processes jobs as they become available.
 			logFatal("failed to initialize tracer", err)
 		}
 
+		// Initialize subject namespace
+		namespace := appConfig.Job.Worker.NATS.Namespace
+		job.Init(namespace)
+		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
+		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
+
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 			Host: appConfig.Job.Worker.NATS.Host,
 			Port: appConfig.Job.Worker.NATS.Port,
-			Auth: natsclient.AuthOptions{
-				AuthType: natsclient.NoAuth,
-			},
+			Auth: buildNATSAuthOptions(appConfig.Job.Worker.NATS.Auth),
 			Name: appConfig.Job.Worker.NATS.ClientName,
 		})
 
@@ -68,7 +73,7 @@ It processes jobs as they become available.
 		}
 
 		// Create/get the jobs KV bucket
-		jobsKV, err := nc.CreateKVBucket(appConfig.Job.KVBucket)
+		jobsKV, err := nc.CreateKVBucket(kvBucket)
 		if err != nil {
 			logFatal("failed to create KV bucket", err)
 		}
@@ -76,8 +81,9 @@ It processes jobs as they become available.
 		// Create job client
 		var jc client.JobClient
 		jc, err = client.New(logger, nc, &client.Options{
-			Timeout:  30 * time.Second, // Default timeout
-			KVBucket: jobsKV,
+			Timeout:    30 * time.Second, // Default timeout
+			KVBucket:   jobsKV,
+			StreamName: streamName,
 		})
 		if err != nil {
 			logFatal("failed to create job client", err)
@@ -92,6 +98,7 @@ It processes jobs as they become available.
 			appConfig,
 			logger,
 			jc,
+			streamName,
 			hostProvider,
 			diskProvider,
 			memProvider,

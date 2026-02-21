@@ -144,10 +144,10 @@ func (w *Worker) handleJobMessage(
 	jobRequest.Category = category
 	jobRequest.Operation = operation
 
-	// Determine Type from subject prefix (jobs.query vs jobs.modify)
-	if strings.HasPrefix(prefix, "jobs.query") {
+	// Determine Type from subject prefix
+	if strings.HasPrefix(prefix, job.JobsQueryPrefix) {
 		jobRequest.Type = job.TypeQuery
-	} else if strings.HasPrefix(prefix, "jobs.modify") {
+	} else if strings.HasPrefix(prefix, job.JobsModifyPrefix) {
 		jobRequest.Type = job.TypeModify
 	}
 

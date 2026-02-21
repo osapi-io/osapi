@@ -57,8 +57,12 @@ func (s *HandlerTestSuite) SetupTest() {
 
 	appFs := afero.NewMemMapFs()
 	appConfig := config.Config{
+		NATS: config.NATS{
+			Stream: config.NATSStream{
+				Name: "test-stream",
+			},
+		},
 		Job: config.Job{
-			StreamName: "test-stream",
 			Worker: config.JobWorker{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
@@ -97,6 +101,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		appConfig,
 		slog.Default(),
 		s.mockJobClient,
+		"test-stream",
 		hostMock,
 		diskMock,
 		memMock,

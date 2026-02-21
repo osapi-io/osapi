@@ -32,14 +32,14 @@ import (
 // GetJobsStreamConfig returns the stream configuration for job processing.
 // This creates a stream that accepts all job-related subjects (job.>).
 func GetJobsStreamConfig(
-	jobConfig *config.Job,
+	streamConfig *config.NATSStream,
 ) *nats.StreamConfig {
 	// Parse duration string to time.Duration
-	maxAge, _ := time.ParseDuration(jobConfig.Stream.MaxAge)
+	maxAge, _ := time.ParseDuration(streamConfig.MaxAge)
 
 	// Parse storage type
 	var storage nats.StorageType
-	if jobConfig.Stream.Storage == "memory" {
+	if streamConfig.Storage == "memory" {
 		storage = nats.MemoryStorage
 	} else {
 		storage = nats.FileStorage
@@ -47,73 +47,74 @@ func GetJobsStreamConfig(
 
 	// Parse discard policy
 	var discard nats.DiscardPolicy
-	if jobConfig.Stream.Discard == "new" {
+	if streamConfig.Discard == "new" {
 		discard = nats.DiscardNew
 	} else {
 		discard = nats.DiscardOld
 	}
 
 	return &nats.StreamConfig{
-		Name:        jobConfig.StreamName,
+		Name:        streamConfig.Name,
 		Description: "Stream for job request and processing",
-		Subjects:    []string{jobConfig.StreamSubjects},
+		Subjects:    []string{streamConfig.Subjects},
 		Storage:     storage,
-		Replicas:    jobConfig.Stream.Replicas,
+		Replicas:    streamConfig.Replicas,
 		MaxAge:      maxAge,
-		MaxMsgs:     jobConfig.Stream.MaxMsgs,
+		MaxMsgs:     streamConfig.MaxMsgs,
 		Discard:     discard,
 	}
 }
 
 // GetJobsConsumerConfig returns the consumer configuration for processing job requests.
 func GetJobsConsumerConfig(
-	jobConfig *config.Job,
+	consumerConfig *config.JobWorkerConsumer,
+	streamSubjects string,
 ) jetstream.ConsumerConfig {
 	// Parse duration string to time.Duration
-	ackWait, _ := time.ParseDuration(jobConfig.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(consumerConfig.AckWait)
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if jobConfig.Consumer.ReplayPolicy == "original" {
+	if consumerConfig.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
 	}
 
 	return jetstream.ConsumerConfig{
-		Name:          jobConfig.ConsumerName,
+		Name:          consumerConfig.Name,
 		Description:   "Consumer for processing job requests",
-		Durable:       jobConfig.ConsumerName,
+		Durable:       consumerConfig.Name,
 		AckPolicy:     jetstream.AckExplicitPolicy,
-		MaxDeliver:    jobConfig.Consumer.MaxDeliver,
+		MaxDeliver:    consumerConfig.MaxDeliver,
 		AckWait:       ackWait,
-		MaxAckPending: jobConfig.Consumer.MaxAckPending,
-		FilterSubject: jobConfig.StreamSubjects,
+		MaxAckPending: consumerConfig.MaxAckPending,
+		FilterSubject: streamSubjects,
 		ReplayPolicy:  replayPolicy,
 	}
 }
 
 // GetKVBucketConfig returns the KeyValue bucket configuration for storing job responses.
 func GetKVBucketConfig(
-	jobConfig *config.Job,
+	kvConfig *config.NATSKV,
 ) *nats.KeyValueConfig {
 	// Parse duration string to time.Duration
-	ttl, _ := time.ParseDuration(jobConfig.KV.TTL)
+	ttl, _ := time.ParseDuration(kvConfig.TTL)
 
 	// Parse storage type
 	var storage nats.StorageType
-	if jobConfig.KV.Storage == "memory" {
+	if kvConfig.Storage == "memory" {
 		storage = nats.MemoryStorage
 	} else {
 		storage = nats.FileStorage
 	}
 
 	return &nats.KeyValueConfig{
-		Bucket:      jobConfig.KVResponseBucket,
+		Bucket:      kvConfig.ResponseBucket,
 		Description: "Storage for job responses indexed by request ID",
 		TTL:         ttl,
-		MaxBytes:    jobConfig.KV.MaxBytes,
+		MaxBytes:    kvConfig.MaxBytes,
 		Storage:     storage,
-		Replicas:    jobConfig.KV.Replicas,
+		Replicas:    kvConfig.Replicas,
 	}
 }

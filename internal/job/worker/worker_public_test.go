@@ -58,19 +58,21 @@ func (s *WorkerPublicTestSuite) SetupTest() {
 	s.logger = slog.Default()
 
 	s.appConfig = config.Config{
+		NATS: config.NATS{
+			Stream: config.NATSStream{Name: "test-stream"},
+		},
 		Job: config.Job{
-			StreamName: "test-stream",
 			Worker: config.JobWorker{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
-			},
-			Consumer: config.JobConsumer{
-				AckWait:       "30s",
-				BackOff:       []string{"1s", "2s", "5s"},
-				MaxDeliver:    3,
-				MaxAckPending: 10,
-				ReplayPolicy:  "instant",
+				Consumer: config.JobWorkerConsumer{
+					AckWait:       "30s",
+					BackOff:       []string{"1s", "2s", "5s"},
+					MaxDeliver:    3,
+					MaxAckPending: 10,
+					ReplayPolicy:  "instant",
+				},
 			},
 		},
 	}
@@ -96,6 +98,7 @@ func (s *WorkerPublicTestSuite) TestNew() {
 				s.appConfig,
 				s.logger,
 				s.mockJobClient,
+				"test-stream",
 				hostMocks.NewDefaultMockProvider(s.mockCtrl),
 				diskMocks.NewDefaultMockProvider(s.mockCtrl),
 				memMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -133,6 +136,7 @@ func (s *WorkerPublicTestSuite) TestStart() {
 					s.appConfig,
 					s.logger,
 					s.mockJobClient,
+					"test-stream",
 					hostMocks.NewDefaultMockProvider(s.mockCtrl),
 					diskMocks.NewDefaultMockProvider(s.mockCtrl),
 					memMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -177,6 +181,7 @@ func (s *WorkerPublicTestSuite) TestStart() {
 					s.appConfig,
 					s.logger,
 					s.mockJobClient,
+					"test-stream",
 					hostMocks.NewDefaultMockProvider(s.mockCtrl),
 					diskMocks.NewDefaultMockProvider(s.mockCtrl),
 					memMocks.NewDefaultMockProvider(s.mockCtrl),

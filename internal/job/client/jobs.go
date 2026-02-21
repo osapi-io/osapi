@@ -219,7 +219,8 @@ func (c *Client) GetQueueStats(
 
 	// Get DLQ count
 	dlqCount := 0
-	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, "JOBS-DLQ")
+	dlqName := c.streamName + "-DLQ"
+	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, dlqName)
 	if err != nil {
 		// DLQ might not exist, which is fine
 		c.logger.Debug("failed to get DLQ info", slog.String("error", err.Error()))
