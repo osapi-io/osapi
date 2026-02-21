@@ -1210,6 +1210,9 @@ components:
           type: string
           description: Maximum round-trip time as a string in Go's time.Duration format.
           example: 24.309240ms
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
     PingCollectionResponse:
@@ -1243,6 +1246,9 @@ components:
           description: List of search domains.
           items:
             type: string
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
     DNSConfigCollectionResponse:
@@ -1404,13 +1410,11 @@ components:
           $ref: '#/components/schemas/DisksResponse'
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
-        - uptime
-        - load_average
-        - memory
-        - disks
-        - os_info
     HostnameResponse:
       type: object
       description: The hostname of the system.
@@ -1419,6 +1423,9 @@ components:
           type: string
           description: The system's hostname.
           example: my-linux-server
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
       required:
         - hostname
     SystemStatusCollectionResponse:

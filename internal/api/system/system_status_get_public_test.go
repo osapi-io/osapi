@@ -117,10 +117,39 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.SystemStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 						{Hostname: "server2", Uptime: 2 * time.Hour},
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
 				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all with errors",
+			request: gen.GetSystemStatusRequestObject{
+				Params: gen.GetSystemStatusParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.SystemStatusResponse{
+						{Hostname: "server1", Uptime: time.Hour},
+					}, map[string]string{
+						"server2": "disk full",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
+				r, ok := resp.(gen.GetSystemStatus200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+				var foundError bool
+				for _, res := range r.Results {
+					if res.Error != nil {
+						foundError = true
+						s.Equal("server2", res.Hostname)
+						s.Equal("disk full", *res.Error)
+					}
+				}
+				s.True(foundError)
 			},
 		},
 		{
@@ -131,7 +160,7 @@ func (s *SystemStatusGetPublicTestSuite) TestGetSystemStatus() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QuerySystemStatusBroadcast(gomock.Any(), gomock.Any()).
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetSystemStatusResponseObject) {
 				_, ok := resp.(gen.GetSystemStatus500JSONResponse)

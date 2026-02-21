@@ -138,7 +138,7 @@ func (c *Client) QuerySystemStatusAny(
 func (c *Client) QuerySystemStatusBroadcast(
 	ctx context.Context,
 	target string,
-) (string, []*job.SystemStatusResponse, error) {
+) (string, []*job.SystemStatusResponse, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "system",
@@ -149,12 +149,14 @@ func (c *Client) QuerySystemStatusBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
 	var results []*job.SystemStatusResponse
+	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
 			continue
 		}
 
@@ -170,13 +172,13 @@ func (c *Client) QuerySystemStatusBroadcast(
 		results = append(results, &result)
 	}
 
-	return jobID, results, nil
+	return jobID, results, errs, nil
 }
 
 // QuerySystemStatusAll queries system status from all hosts.
 func (c *Client) QuerySystemStatusAll(
 	ctx context.Context,
-) (string, []*job.SystemStatusResponse, error) {
+) (string, []*job.SystemStatusResponse, map[string]string, error) {
 	return c.QuerySystemStatusBroadcast(ctx, job.BroadcastHost)
 }
 
@@ -227,7 +229,7 @@ func (c *Client) QueryNetworkPingAny(
 func (c *Client) QuerySystemHostnameBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]string, error) {
+) (string, map[string]string, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "system",
@@ -238,12 +240,14 @@ func (c *Client) QuerySystemHostnameBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
 	results := make(map[string]string)
+	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
 			continue
 		}
 
@@ -257,13 +261,13 @@ func (c *Client) QuerySystemHostnameBroadcast(
 		results[hostname] = result.Hostname
 	}
 
-	return jobID, results, nil
+	return jobID, results, errs, nil
 }
 
 // QuerySystemHostnameAll queries hostname from all hosts.
 func (c *Client) QuerySystemHostnameAll(
 	ctx context.Context,
-) (string, map[string]string, error) {
+) (string, map[string]string, map[string]string, error) {
 	return c.QuerySystemHostnameBroadcast(ctx, job.BroadcastHost)
 }
 
@@ -273,7 +277,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	ctx context.Context,
 	target string,
 	iface string,
-) (string, map[string]*dns.Config, error) {
+) (string, map[string]*dns.Config, map[string]string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"interface": iface,
 	})
@@ -287,12 +291,14 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
 	results := make(map[string]*dns.Config)
+	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
 			continue
 		}
 
@@ -304,14 +310,14 @@ func (c *Client) QueryNetworkDNSBroadcast(
 		results[hostname] = &result
 	}
 
-	return jobID, results, nil
+	return jobID, results, errs, nil
 }
 
 // QueryNetworkDNSAll queries DNS configuration from all hosts.
 func (c *Client) QueryNetworkDNSAll(
 	ctx context.Context,
 	iface string,
-) (string, map[string]*dns.Config, error) {
+) (string, map[string]*dns.Config, map[string]string, error) {
 	return c.QueryNetworkDNSBroadcast(ctx, job.BroadcastHost, iface)
 }
 
@@ -321,7 +327,7 @@ func (c *Client) QueryNetworkPingBroadcast(
 	ctx context.Context,
 	target string,
 	address string,
-) (string, map[string]*ping.Result, error) {
+) (string, map[string]*ping.Result, map[string]string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"address": address,
 	})
@@ -335,12 +341,14 @@ func (c *Client) QueryNetworkPingBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
 	results := make(map[string]*ping.Result)
+	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
 			continue
 		}
 
@@ -352,14 +360,14 @@ func (c *Client) QueryNetworkPingBroadcast(
 		results[hostname] = &result
 	}
 
-	return jobID, results, nil
+	return jobID, results, errs, nil
 }
 
 // QueryNetworkPingAll pings a host from all hosts.
 func (c *Client) QueryNetworkPingAll(
 	ctx context.Context,
 	address string,
-) (string, map[string]*ping.Result, error) {
+) (string, map[string]*ping.Result, map[string]string, error) {
 	return c.QueryNetworkPingBroadcast(ctx, job.BroadcastHost, address)
 }
 

@@ -100,7 +100,7 @@ func (n Network) getNetworkDNSBroadcast(
 	target string,
 	iface string,
 ) (gen.GetNetworkDNSByInterfaceResponseObject, error) {
-	jobID, results, err := n.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
+	jobID, results, errs, err := n.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNetworkDNSByInterface500JSONResponse{
@@ -116,6 +116,13 @@ func (n Network) getNetworkDNSBroadcast(
 			Hostname:      host,
 			Servers:       &servers,
 			SearchDomains: &searchDomains,
+		})
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DNSConfigResponse{
+			Hostname: host,
+			Error:    &e,
 		})
 	}
 

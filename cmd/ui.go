@@ -56,6 +56,87 @@ type section struct {
 	Rows    [][]string
 }
 
+// resultRow is a per-host broadcast result used by buildBroadcastTable.
+type resultRow struct {
+	Hostname string
+	Error    *string
+	Fields   []string
+}
+
+// buildBroadcastTable builds headers and rows for a broadcast result table.
+// It prepends HOSTNAME to every row and conditionally inserts STATUS and ERROR
+// columns when any result carries an error.
+func buildBroadcastTable(
+	results []resultRow,
+	fieldHeaders []string,
+) ([]string, [][]string) {
+	hasErrors := false
+	for _, r := range results {
+		if r.Error != nil {
+			hasErrors = true
+			break
+		}
+	}
+
+	headers := []string{"HOSTNAME"}
+	if hasErrors {
+		headers = append(headers, "STATUS", "ERROR")
+	}
+	headers = append(headers, fieldHeaders...)
+
+	rows := make([][]string, 0, len(results))
+	for _, r := range results {
+		row := []string{r.Hostname}
+		if hasErrors {
+			status := "ok"
+			errMsg := ""
+			if r.Error != nil {
+				status = "failed"
+				errMsg = *r.Error
+			}
+			row = append(row, status, errMsg)
+		}
+		row = append(row, r.Fields...)
+		rows = append(rows, row)
+	}
+
+	return headers, rows
+}
+
+// mutationResultRow is a per-host mutation result used by buildMutationTable.
+type mutationResultRow struct {
+	Hostname string
+	Status   string
+	Error    *string
+	Fields   []string
+}
+
+// buildMutationTable builds headers and rows for a mutation broadcast table.
+// Unlike buildBroadcastTable, STATUS and ERROR columns are always shown because
+// mutation results carry an explicit status field.
+func buildMutationTable(
+	results []mutationResultRow,
+	fieldHeaders []string,
+) ([]string, [][]string) {
+	headers := make([]string, 0, 3+len(fieldHeaders))
+	headers = append(headers, "HOSTNAME", "STATUS", "ERROR")
+	headers = append(headers, fieldHeaders...)
+
+	rows := make([][]string, 0, len(results))
+	for _, r := range results {
+		errMsg := ""
+		if r.Error != nil {
+			errMsg = *r.Error
+		}
+		row := make([]string, 0, 3+len(r.Fields))
+		row = append(row, r.Hostname, r.Status, errMsg)
+		row = append(row, r.Fields...)
+		rows = append(rows, row)
+	}
+
+	return headers, rows
+}
+
 // printStyledTable renders a styled table with dynamic column widths.
 func printStyledTable(
 	sections []section,

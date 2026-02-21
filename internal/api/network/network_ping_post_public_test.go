@@ -162,10 +162,49 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 							AvgRTT:          15 * time.Millisecond,
 							MaxRTT:          20 * time.Millisecond,
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				s.NotNil(resp)
+			},
+		},
+		{
+			name: "broadcast all with errors",
+			request: gen.PostNetworkPingRequestObject{
+				Body: &gen.PostNetworkPingJSONRequestBody{
+					Address: "1.1.1.1",
+				},
+				Params: gen.PostNetworkPingParams{TargetHostname: strPtr("_all")},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*ping.Result{
+						"server1": {
+							PacketsSent:     3,
+							PacketsReceived: 3,
+							PacketLoss:      0,
+							MinRTT:          10 * time.Millisecond,
+							AvgRTT:          15 * time.Millisecond,
+							MaxRTT:          20 * time.Millisecond,
+						},
+					}, map[string]string{
+						"server2": "host unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
+				r, ok := resp.(gen.PostNetworkPing200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+				var foundError bool
+				for _, res := range r.Results {
+					if res.Error != nil {
+						foundError = true
+						s.Equal("server2", res.Hostname)
+						s.Equal("host unreachable", *res.Error)
+					}
+				}
+				s.True(foundError)
 			},
 		},
 		{
@@ -179,7 +218,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNetworkPingBroadcast(gomock.Any(), gomock.Any(), "1.1.1.1").
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNetworkPing500JSONResponse)

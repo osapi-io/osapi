@@ -103,7 +103,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]string{
 						"server1": "host1",
 						"server2": "host2",
-					}, nil)
+					}, map[string]string{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

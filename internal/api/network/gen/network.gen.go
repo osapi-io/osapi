@@ -35,6 +35,9 @@ type DNSConfigCollectionResponse struct {
 
 // DNSConfigResponse defines model for DNSConfigResponse.
 type DNSConfigResponse struct {
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
+
 	// Hostname The hostname of the worker that served this DNS config.
 	Hostname string `json:"hostname"`
 
@@ -88,6 +91,9 @@ type PingCollectionResponse struct {
 type PingResponse struct {
 	// AvgRtt Average round-trip time as a string in Go's time.Duration format.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The hostname of the worker that executed the ping.
 	Hostname string `json:"hostname"`

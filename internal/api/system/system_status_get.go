@@ -77,7 +77,7 @@ func (s *System) getSystemStatusBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetSystemStatusResponseObject, error) {
-	jobID, results, err := s.JobClient.QuerySystemStatusBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QuerySystemStatusBroadcast(ctx, target)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemStatus500JSONResponse{
@@ -88,6 +88,13 @@ func (s *System) getSystemStatusBroadcast(
 	var responses []gen.SystemStatusResponse
 	for _, status := range results {
 		responses = append(responses, *buildSystemStatusResponse(status))
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.SystemStatusResponse{
+			Hostname: host,
+			Error:    &e,
+		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)
@@ -101,7 +108,7 @@ func (s *System) getSystemStatusBroadcast(
 func buildSystemStatusResponse(
 	status *job.SystemStatusResponse,
 ) *gen.SystemStatusResponse {
-	disks := make([]gen.DiskResponse, 0, len(status.DiskUsage))
+	disksSlice := make(gen.DisksResponse, 0, len(status.DiskUsage))
 	for _, d := range status.DiskUsage {
 		disk := gen.DiskResponse{
 			Name:  d.Name,
@@ -109,17 +116,18 @@ func buildSystemStatusResponse(
 			Used:  uint64ToInt(d.Used),
 			Free:  uint64ToInt(d.Free),
 		}
-		disks = append(disks, disk)
+		disksSlice = append(disksSlice, disk)
 	}
 
+	uptime := formatDuration(status.Uptime)
 	resp := gen.SystemStatusResponse{
 		Hostname: status.Hostname,
-		Uptime:   formatDuration(status.Uptime),
-		Disks:    disks,
+		Uptime:   &uptime,
+		Disks:    &disksSlice,
 	}
 
 	if status.LoadAverages != nil {
-		resp.LoadAverage = gen.LoadAverageResponse{
+		resp.LoadAverage = &gen.LoadAverageResponse{
 			N1min:  status.LoadAverages.Load1,
 			N5min:  status.LoadAverages.Load5,
 			N15min: status.LoadAverages.Load15,
@@ -127,14 +135,14 @@ func buildSystemStatusResponse(
 	}
 
 	if status.OSInfo != nil {
-		resp.OsInfo = gen.OSInfoResponse{
+		resp.OsInfo = &gen.OSInfoResponse{
 			Distribution: status.OSInfo.Distribution,
 			Version:      status.OSInfo.Version,
 		}
 	}
 
 	if status.MemoryStats != nil {
-		resp.Memory = gen.MemoryResponse{
+		resp.Memory = &gen.MemoryResponse{
 			Total: uint64ToInt(status.MemoryStats.Total),
 			Free:  uint64ToInt(status.MemoryStats.Free),
 			Used:  uint64ToInt(status.MemoryStats.Cached),
