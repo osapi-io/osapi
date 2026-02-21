@@ -65,7 +65,7 @@ nats:
 
 telemetry:
   tracing:
-    enabled: false
+    enabled: true
     # exporter: stdout
     # otlp_endpoint: localhost:4317
   metrics:
