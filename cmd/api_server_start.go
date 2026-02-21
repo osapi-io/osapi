@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/api/health"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/telemetry"
 )
 
 // ServerManager responsible for Server operations.
@@ -54,6 +55,11 @@ var apiServerStartCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
+
+		shutdownTracer, err := telemetry.InitTracer(ctx, "osapi-api", appConfig.Telemetry.Tracing)
+		if err != nil {
+			logFatal("failed to initialize tracer", err)
+		}
 
 		// Create NATS client for job system
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
@@ -182,6 +188,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		sm.Start()
 		runServer(ctx, sm, func() {
+			_ = shutdownTracer(context.Background())
 			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
 				natsConn.NC.Close()
 			}

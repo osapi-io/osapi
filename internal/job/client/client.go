@@ -117,7 +117,7 @@ func (c *Client) publishAndWait(
 	jobJSON, _ := json.Marshal(jobData)
 	kvKey := "jobs." + jobID
 
-	c.logger.Debug("kv.put",
+	c.logger.DebugContext(ctx, "kv.put",
 		slog.String("key", kvKey),
 		slog.String("job_id", jobID),
 	)
@@ -126,13 +126,14 @@ func (c *Client) publishAndWait(
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
-	c.logger.Info("publishing job request",
+	c.logger.InfoContext(ctx, "publishing job request",
 		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
 	)
 
-	// Publish just the job ID to the stream as a notification
+	// Publish just the job ID to the stream as a notification.
+	// Trace context is propagated via NATS message headers automatically by nats-client.
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
@@ -164,7 +165,7 @@ func (c *Client) publishAndWait(
 				return "", nil, fmt.Errorf("failed to unmarshal response: %w", err)
 			}
 
-			c.logger.Info("received job response",
+			c.logger.InfoContext(ctx, "received job response",
 				slog.String("job_id", jobID),
 				slog.String("status", string(response.Status)),
 			)
@@ -217,7 +218,7 @@ func (c *Client) publishAndCollect(
 	jobJSON, _ := json.Marshal(jobData)
 	kvKey := "jobs." + jobID
 
-	c.logger.Debug("kv.put",
+	c.logger.DebugContext(ctx, "kv.put",
 		slog.String("key", kvKey),
 		slog.String("job_id", jobID),
 	)
@@ -226,13 +227,14 @@ func (c *Client) publishAndCollect(
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
-	c.logger.Info("publishing broadcast job request",
+	c.logger.InfoContext(ctx, "publishing broadcast job request",
 		slog.String("job_id", jobID),
 		slog.String("subject", subject),
 		slog.String("type", string(req.Type)),
 	)
 
-	// Publish just the job ID to the stream as a notification
+	// Publish just the job ID to the stream as a notification.
+	// Trace context is propagated via NATS message headers automatically by nats-client.
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
@@ -269,7 +271,7 @@ func (c *Client) publishAndCollect(
 
 			var response job.Response
 			if err := json.Unmarshal(entry.Value(), &response); err != nil {
-				c.logger.Warn("failed to unmarshal broadcast response",
+				c.logger.WarnContext(ctx, "failed to unmarshal broadcast response",
 					slog.String("job_id", jobID),
 					slog.String("error", err.Error()),
 				)
@@ -281,7 +283,7 @@ func (c *Client) publishAndCollect(
 				hostname = "unknown"
 			}
 
-			c.logger.Info("received broadcast response",
+			c.logger.InfoContext(ctx, "received broadcast response",
 				slog.String("job_id", jobID),
 				slog.String("hostname", hostname),
 				slog.String("status", string(response.Status)),

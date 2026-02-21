@@ -21,6 +21,7 @@
 package worker
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"testing"
@@ -174,7 +175,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			err := s.worker.writeStatusEvent(tt.jobID, tt.event, tt.data)
+			err := s.worker.writeStatusEvent(context.Background(), tt.jobID, tt.event, tt.data)
 
 			if tt.expectError {
 				s.Error(err)

@@ -21,22 +21,37 @@
 package cmd
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/retr0h/osapi/internal/client"
+	"github.com/retr0h/osapi/internal/telemetry"
 )
 
-var handler client.CombinedHandler
+var (
+	handler        client.CombinedHandler
+	tracerShutdown func(context.Context) error
+)
 
 // clientCmd represents the client command.
 var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "The client subcommand",
-	PersistentPreRun: func(_ *cobra.Command, _ []string) {
+	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 		validateDistribution()
+
+		var err error
+		tracerShutdown, err = telemetry.InitTracer(
+			cmd.Context(),
+			"osapi-cli",
+			appConfig.Telemetry.Tracing,
+		)
+		if err != nil {
+			logFatal("failed to initialize tracer", err)
+		}
 
 		logger.Debug(
 			"client configuration",
@@ -54,6 +69,11 @@ var clientCmd = &cobra.Command{
 			appConfig,
 			cwr,
 		)
+	},
+	PersistentPostRun: func(_ *cobra.Command, _ []string) {
+		if tracerShutdown != nil {
+			_ = tracerShutdown(context.Background())
+		}
 	},
 }
 

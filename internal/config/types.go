@@ -23,11 +23,27 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API  API  `mapstructure:"api"   mask:"struct"`
-	Job  Job  `mapstructure:"job"`
-	NATS NATS `mapstructure:"nats"`
+	API       API       `mapstructure:"api"       mask:"struct"`
+	Job       Job       `mapstructure:"job"`
+	NATS      NATS      `mapstructure:"nats"`
+	Telemetry Telemetry `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
+}
+
+// Telemetry configuration settings.
+type Telemetry struct {
+	Tracing TracingConfig `mapstructure:"tracing,omitempty"`
+}
+
+// TracingConfig configuration settings for distributed tracing.
+type TracingConfig struct {
+	// Enabled enables or disables tracing.
+	Enabled bool `mapstructure:"enabled"`
+	// Exporter selects the trace exporter: "stdout" or "otlp".
+	Exporter string `mapstructure:"exporter"`
+	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
+	OTLPEndpoint string `mapstructure:"otlp_endpoint"`
 }
 
 // NATS configuration settings.

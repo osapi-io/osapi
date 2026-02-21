@@ -1,6 +1,6 @@
 ---
 title: Distributed tracing with OpenTelemetry
-status: backlog
+status: done
 created: 2026-02-20
 updated: 2026-02-20
 ---
@@ -68,8 +68,12 @@ Use the OpenTelemetry Go SDK (CNCF standard):
 
 ### NATS Propagation
 
-- Inject trace context into NATS message headers when publishing jobs
-- Extract trace context from NATS message headers in the worker
+- nats-client `Publish` automatically injects W3C `traceparent` into
+  NATS message headers via OTel — callers just pass `ctx`
+- Worker extracts trace context from NATS message headers
+- Header keys are normalized on extraction because NATS JetStream
+  delivers headers with non-canonical casing (lowercase `traceparent`
+  instead of `Traceparent`), which breaks `http.Header.Get` lookups
 - This links API-side spans to worker-side spans under the same trace
 
 ### Worker Spans
@@ -119,4 +123,26 @@ telemetry:
 
 ## Outcome
 
-_To be filled in when done._
+Implemented end-to-end distributed tracing with OpenTelemetry:
+
+- Created `internal/telemetry/` package with tracer initialization,
+  header and map-based trace propagation, and slog trace handler
+- Added `Telemetry` and `TracingConfig` types to `internal/config/`
+- Added `otelecho` middleware to the Echo API server
+- Injected `traceparent` into HTTP client outgoing requests
+- nats-client `Publish` transparently injects trace context into
+  NATS message headers via OTel propagator — no caller changes
+  needed
+- Worker extracts trace context from NATS message headers and
+  creates a `job.process` span with job attributes
+- Header key normalization handles NATS JetStream delivering
+  headers with non-canonical casing (lowercase instead of
+  canonical MIME format)
+- All slog output automatically includes `trace_id` and `span_id`
+  when a span is active
+- Tracer provider initialized at startup in API server, worker,
+  and CLI with proper shutdown
+- Debug mode auto-enables stdout tracing
+- Updated `osapi.yaml` and configuration docs
+- All tests pass (9 new tests in telemetry package including
+  non-canonical header roundtrip, all existing tests passing)

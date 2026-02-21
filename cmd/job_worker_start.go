@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -29,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/job/worker"
 	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/telemetry"
 )
 
 // jobWorkerStartCmd represents the jobWorkerStart command.
@@ -41,6 +43,15 @@ It processes jobs as they become available.
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
+		shutdownTracer, err := telemetry.InitTracer(
+			ctx,
+			"osapi-worker",
+			appConfig.Telemetry.Tracing,
+		)
+		if err != nil {
+			logFatal("failed to initialize tracer", err)
+		}
+
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 			Host: appConfig.Job.Worker.Host,
@@ -51,7 +62,7 @@ It processes jobs as they become available.
 			Name: appConfig.Job.Worker.ClientName,
 		})
 
-		err := nc.Connect()
+		err = nc.Connect()
 		if err != nil {
 			logFatal("failed to connect to NATS", err)
 		}
@@ -91,6 +102,7 @@ It processes jobs as they become available.
 
 		w.Start()
 		runServer(ctx, w, func() {
+			_ = shutdownTracer(context.Background())
 			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
 				natsConn.NC.Close()
 			}
