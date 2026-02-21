@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Architecture | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Architecture | OSAPI"><meta data-rh="true" name="description" content="OSAPI turns Linux servers into managed appliances. You install a single binary,"><meta data-rh="true" property="og:description" content="OSAPI turns Linux servers into managed appliances. You install a single binary,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.56a51dbd.css">
-<script src="/osapi/assets/js/runtime~main.a28c33ca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.d65779e1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.1a546be3.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -61,7 +61,7 @@ the job routing system delivers work to the right place.</p>
 <p>The API server never touches the operating system directly. It&#x27;s a thin
 coordination layer between clients and workers.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-it-can-do-today">What It Can Do Today<a href="#what-it-can-do-today" class="hash-link" aria-label="Direct link to What It Can Do Today" title="Direct link to What It Can Do Today">​</a></h2>
-<table><thead><tr><th>Domain</th><th>Operations</th></tr></thead><tbody><tr><td>System</td><td>Hostname, uptime, OS info, disk, memory, load</td></tr><tr><td>Network</td><td>DNS configuration (get/update), ping</td></tr><tr><td>Jobs</td><td>Create, list, get, delete, retry, queue stats, worker list</td></tr><tr><td>Health</td><td>Liveness, readiness, system status with metrics</td></tr></tbody></table>
+<table><thead><tr><th>Domain</th><th>Operations</th></tr></thead><tbody><tr><td>System</td><td>Hostname, uptime, OS info, disk, memory, load</td></tr><tr><td>Network</td><td>DNS configuration (get/update), ping</td></tr><tr><td>Jobs</td><td>Create, list, get, delete, retry, queue stats, worker list</td></tr><tr><td>Health</td><td>Liveness, readiness, system status with metrics</td></tr><tr><td>Metrics</td><td>Prometheus endpoint (<code>/metrics</code>)</td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="health-checks">Health Checks<a href="#health-checks" class="hash-link" aria-label="Direct link to Health Checks" title="Direct link to Health Checks">​</a></h2>
 <p>The API server exposes health endpoints for load balancers and monitoring:</p>
 <ul>
