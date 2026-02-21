@@ -36,6 +36,7 @@ var jobWorkerCmd = &cobra.Command{
 
 		logger.Debug(
 			"job worker configuration",
+			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("worker.nats.host", appConfig.Job.Worker.NATS.Host),
 			slog.Int("worker.nats.port", appConfig.Job.Worker.NATS.Port),

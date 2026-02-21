@@ -24,6 +24,7 @@ import (
 	"log/slog"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // natsServerCmd represents the natsServer command.
@@ -33,6 +34,7 @@ var natsServerCmd = &cobra.Command{
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		logger.Debug(
 			"nats server configuration",
+			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("nats.server.host", appConfig.NATS.Server.Host),
 			slog.Int("nats.server.port", appConfig.NATS.Server.Port),

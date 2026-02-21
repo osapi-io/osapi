@@ -55,6 +55,7 @@ var clientCmd = &cobra.Command{
 
 		logger.Debug(
 			"client configuration",
+			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
 			slog.String("api.client.url", appConfig.API.URL),
 		)
