@@ -51,6 +51,7 @@ var apiServerCmd = &cobra.Command{
 
 		logger.Debug(
 			"api server configuration",
+			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
 			slog.Int("api.server.port", appConfig.API.Port),
 			slog.String(
