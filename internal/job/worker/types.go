@@ -39,10 +39,11 @@ import (
 
 // Worker implements job processing with clean lifecycle management.
 type Worker struct {
-	logger    *slog.Logger
-	appConfig config.Config
-	appFs     afero.Fs
-	jobClient client.JobClient
+	logger     *slog.Logger
+	appConfig  config.Config
+	appFs      afero.Fs
+	jobClient  client.JobClient
+	streamName string
 
 	// System providers
 	hostProvider host.Provider

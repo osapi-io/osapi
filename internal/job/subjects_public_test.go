@@ -32,7 +32,10 @@ type SubjectsPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *SubjectsPublicTestSuite) SetupTest() {}
+func (suite *SubjectsPublicTestSuite) SetupTest() {
+	// Reset namespace to default before each test
+	job.Init("")
+}
 
 func (suite *SubjectsPublicTestSuite) SetupSubTest() {}
 
@@ -707,6 +710,179 @@ func (suite *SubjectsPublicTestSuite) TestBuildLabelSubjects() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			got := job.BuildLabelSubjects(tt.key, tt.value)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestInit() {
+	tests := []struct {
+		name             string
+		namespace        string
+		wantQueryPrefix  string
+		wantModifyPrefix string
+		wantBuildQuery   string
+		wantSubscription string
+		wantLabelSubject string
+	}{
+		{
+			name:             "when namespace is empty",
+			namespace:        "",
+			wantQueryPrefix:  "jobs.query",
+			wantModifyPrefix: "jobs.modify",
+			wantBuildQuery:   "jobs.query._any",
+			wantSubscription: "jobs.*._any",
+			wantLabelSubject: "jobs.*.label.role.web",
+		},
+		{
+			name:             "when namespace is set",
+			namespace:        "osapi",
+			wantQueryPrefix:  "osapi.jobs.query",
+			wantModifyPrefix: "osapi.jobs.modify",
+			wantBuildQuery:   "osapi.jobs.query._any",
+			wantSubscription: "osapi.jobs.*._any",
+			wantLabelSubject: "osapi.jobs.*.label.role.web",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			job.Init(tt.namespace)
+			defer job.Init("")
+
+			suite.Equal(tt.wantQueryPrefix, job.JobsQueryPrefix)
+			suite.Equal(tt.wantModifyPrefix, job.JobsModifyPrefix)
+			suite.Equal(tt.wantBuildQuery, job.BuildQuerySubject("_any"))
+			subs := job.BuildWorkerSubscriptionPattern("web-01", nil)
+			suite.Contains(subs, tt.wantSubscription)
+			labels := job.BuildLabelSubjects("role", "web")
+			suite.Equal([]string{tt.wantLabelSubject}, labels)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestParseSubjectWithNamespace() {
+	tests := []struct {
+		name         string
+		namespace    string
+		subject      string
+		wantPrefix   string
+		wantHostname string
+		wantErr      bool
+	}{
+		{
+			name:         "when parsing namespaced query subject",
+			namespace:    "osapi",
+			subject:      "osapi.jobs.query.host.server-01",
+			wantPrefix:   "osapi.jobs.query",
+			wantHostname: "server-01",
+		},
+		{
+			name:         "when parsing namespaced modify subject",
+			namespace:    "osapi",
+			subject:      "osapi.jobs.modify._any",
+			wantPrefix:   "osapi.jobs.modify",
+			wantHostname: "_any",
+		},
+		{
+			name:         "when parsing namespaced label subject",
+			namespace:    "osapi",
+			subject:      "osapi.jobs.query.label.group.web.dev",
+			wantPrefix:   "osapi.jobs.query",
+			wantHostname: "group:web.dev",
+		},
+		{
+			name:      "when parsing invalid namespaced subject with too few parts",
+			namespace: "osapi",
+			subject:   "osapi.jobs",
+			wantErr:   true,
+		},
+		{
+			name:      "when parsing namespaced subject without jobs token",
+			namespace: "osapi",
+			subject:   "osapi.other.query._any",
+			wantErr:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			job.Init(tt.namespace)
+			defer job.Init("")
+
+			gotPrefix, gotHostname, err := job.ParseSubject(tt.subject)
+
+			if tt.wantErr {
+				suite.Error(err)
+				return
+			}
+
+			suite.NoError(err)
+			suite.Equal(tt.wantPrefix, gotPrefix)
+			suite.Equal(tt.wantHostname, gotHostname)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestApplyNamespaceToInfraName() {
+	tests := []struct {
+		name      string
+		namespace string
+		infraName string
+		want      string
+	}{
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			infraName: "JOBS",
+			want:      "JOBS",
+		},
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			infraName: "JOBS",
+			want:      "osapi-JOBS",
+		},
+		{
+			name:      "when namespace applied to KV bucket",
+			namespace: "osapi",
+			infraName: "job-queue",
+			want:      "osapi-job-queue",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.ApplyNamespaceToInfraName(tt.namespace, tt.infraName)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectsPublicTestSuite) TestApplyNamespaceToSubjects() {
+	tests := []struct {
+		name      string
+		namespace string
+		subjects  string
+		want      string
+	}{
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			subjects:  "jobs.>",
+			want:      "jobs.>",
+		},
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			subjects:  "jobs.>",
+			want:      "osapi.jobs.>",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.ApplyNamespaceToSubjects(tt.namespace, tt.subjects)
 			suite.Equal(tt.want, got)
 		})
 	}

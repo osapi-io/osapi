@@ -54,9 +54,42 @@ type TracingConfig struct {
 	OTLPEndpoint string `mapstructure:"otlp_endpoint"`
 }
 
+// NATSAuth holds client-side authentication settings for connecting to NATS.
+type NATSAuth struct {
+	// Type is the auth method: "none", "user_pass", or "nkey".
+	Type string `mapstructure:"type"`
+	// Username for user_pass auth.
+	Username string `mapstructure:"username"`
+	// Password for user_pass auth.
+	Password string `mapstructure:"password"  mask:"password"`
+	// NKeyFile path to the NKey seed file for nkey auth.
+	NKeyFile string `mapstructure:"nkey_file"`
+}
+
+// NATSServerAuth holds server-side authentication settings for the embedded NATS server.
+type NATSServerAuth struct {
+	// Type is the auth method: "none", "user_pass", or "nkey".
+	Type string `mapstructure:"type"`
+	// Users allowed to connect (for user_pass auth).
+	Users []NATSServerUser `mapstructure:"users"`
+	// NKeys is a list of allowed public NKeys (for nkey auth).
+	NKeys []string `mapstructure:"nkeys"`
+}
+
+// NATSServerUser represents an allowed username/password pair for the NATS server.
+type NATSServerUser struct {
+	// Username for the user.
+	Username string `mapstructure:"username"`
+	// Password for the user.
+	Password string `mapstructure:"password" mask:"password"`
+}
+
 // NATS configuration settings.
 type NATS struct {
 	Server NATSServer `mapstructure:"server,omitempty"`
+	Stream NATSStream `mapstructure:"stream,omitempty"`
+	KV     NATSKV     `mapstructure:"kv,omitempty"`
+	DLQ    NATSDLQ    `mapstructure:"dlq,omitempty"`
 }
 
 // NATSServer configuration settings for the embedded NATS server.
@@ -67,6 +100,57 @@ type NATSServer struct {
 	Port int `mapstructure:"port"`
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir"`
+	// Namespace is a prefix for all NATS subjects and infrastructure names.
+	Namespace string `mapstructure:"namespace"`
+	// Auth holds server-side authentication configuration.
+	Auth NATSServerAuth `mapstructure:"auth,omitempty"`
+}
+
+// NATSStream configuration for JetStream stream settings.
+type NATSStream struct {
+	// Name is the JetStream stream name.
+	Name string `mapstructure:"name"`
+	// Subjects is the subject filter for the stream.
+	Subjects string `mapstructure:"subjects"`
+	MaxAge   string `mapstructure:"max_age"` // e.g. "24h", "1h30m"
+	MaxMsgs  int64  `mapstructure:"max_msgs"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+	Discard  string `mapstructure:"discard"` // "old" or "new"
+}
+
+// NATSKV configuration for KeyValue bucket settings.
+type NATSKV struct {
+	// Bucket is the KV bucket name for job definitions and status events.
+	Bucket string `mapstructure:"bucket"`
+	// ResponseBucket is the KV bucket name for worker result storage.
+	ResponseBucket string `mapstructure:"response_bucket"`
+	TTL            string `mapstructure:"ttl"` // e.g. "1h", "30m"
+	MaxBytes       int64  `mapstructure:"max_bytes"`
+	Storage        string `mapstructure:"storage"` // "file" or "memory"
+	Replicas       int    `mapstructure:"replicas"`
+}
+
+// NATSDLQ configuration for Dead Letter Queue stream settings.
+type NATSDLQ struct {
+	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"
+	MaxMsgs  int64  `mapstructure:"max_msgs"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSConnection is a reusable NATS connection configuration block.
+type NATSConnection struct {
+	// Host the NATS server hostname.
+	Host string `mapstructure:"host"`
+	// Port the NATS server port.
+	Port int `mapstructure:"port"`
+	// ClientName the NATS client name for identification.
+	ClientName string `mapstructure:"client_name"`
+	// Namespace is a prefix for all NATS subjects used by this client.
+	Namespace string `mapstructure:"namespace"`
+	// Auth holds client-side authentication configuration.
+	Auth NATSAuth `mapstructure:"auth,omitempty"`
 }
 
 // API configuration settings.
@@ -81,16 +165,6 @@ type Client struct {
 	URL string `mapstructure:"url"`
 	// Security contains security-related configuration for the client, such as access tokens.
 	Security ClientSecurity `mapstructure:"security" mask:"struct"`
-}
-
-// NATSConnection is a reusable NATS connection configuration block.
-type NATSConnection struct {
-	// Host the NATS server hostname.
-	Host string `mapstructure:"host"`
-	// Port the NATS server port.
-	Port int `mapstructure:"port"`
-	// ClientName the NATS client name for identification.
-	ClientName string `mapstructure:"client_name"`
 }
 
 // Server configuration settings.
@@ -125,60 +199,31 @@ type CORS struct {
 
 // Job configuration settings.
 type Job struct {
-	// Shared infrastructure settings
-	StreamName       string `mapstructure:"stream_name"`
-	StreamSubjects   string `mapstructure:"stream_subjects"`
-	KVBucket         string `mapstructure:"kv_bucket"`
-	KVResponseBucket string `mapstructure:"kv_response_bucket"`
-	ConsumerName     string `mapstructure:"consumer_name"`
-
-	// Individual component configurations
-	Stream   JobStream   `mapstructure:"stream,omitempty"`
-	Consumer JobConsumer `mapstructure:"consumer,omitempty"`
-	KV       JobKV       `mapstructure:"kv,omitempty"`
-	DLQ      JobDLQ      `mapstructure:"dlq,omitempty"`
-
 	Worker JobWorker `mapstructure:"worker,omitempty"`
 }
 
-// JobStream configuration for JetStream stream settings.
-type JobStream struct {
-	MaxAge   string `mapstructure:"max_age"` // e.g. "24h", "1h30m"
-	MaxMsgs  int64  `mapstructure:"max_msgs"`
-	Storage  string `mapstructure:"storage"` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"`
-	Discard  string `mapstructure:"discard"` // "old" or "new"
-}
-
-// JobConsumer configuration for JetStream consumer settings.
-type JobConsumer struct {
-	MaxDeliver    int      `mapstructure:"max_deliver"`
-	AckWait       string   `mapstructure:"ack_wait"` // e.g. "30s", "1m"
-	MaxAckPending int      `mapstructure:"max_ack_pending"`
-	ReplayPolicy  string   `mapstructure:"replay_policy"` // "instant" or "original"
-	BackOff       []string `mapstructure:"back_off"`      // e.g. ["30s", "2m", "5m", "15m", "30m"]
-}
-
-// JobKV configuration for KeyValue bucket settings.
-type JobKV struct {
-	TTL      string `mapstructure:"ttl"` // e.g. "1h", "30m"
-	MaxBytes int64  `mapstructure:"max_bytes"`
-	Storage  string `mapstructure:"storage"` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"`
-}
-
-// JobDLQ configuration for Dead Letter Queue stream settings.
-type JobDLQ struct {
-	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"
-	MaxMsgs  int64  `mapstructure:"max_msgs"`
-	Storage  string `mapstructure:"storage"` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"`
+// JobWorkerConsumer configuration for the worker's JetStream consumer settings.
+type JobWorkerConsumer struct {
+	// Name is the durable consumer name.
+	Name string `mapstructure:"name"`
+	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
+	MaxDeliver int `mapstructure:"max_deliver"`
+	// AckWait is the time to wait for an ACK before redelivering.
+	AckWait string `mapstructure:"ack_wait"` // e.g. "30s", "1m"
+	// MaxAckPending is the maximum outstanding unacknowledged messages.
+	MaxAckPending int `mapstructure:"max_ack_pending"`
+	// ReplayPolicy is "instant" or "original".
+	ReplayPolicy string `mapstructure:"replay_policy"`
+	// BackOff durations between redelivery attempts.
+	BackOff []string `mapstructure:"back_off"` // e.g. ["30s", "2m", "5m"]
 }
 
 // JobWorker configuration settings.
 type JobWorker struct {
 	// NATS connection settings for the worker.
 	NATS NATSConnection `mapstructure:"nats"`
+	// Consumer settings for the worker's JetStream consumer.
+	Consumer JobWorkerConsumer `mapstructure:"consumer,omitempty"`
 	// QueueGroup for load balancing multiple workers.
 	QueueGroup string `mapstructure:"queue_group"`
 	// Hostname identifies this worker instance for routing.

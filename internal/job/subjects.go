@@ -20,7 +20,7 @@
 
 // Package job provides NATS subject hierarchy for distributed job routing.
 //
-// Subject Format: jobs.{type}.{routing_type}.{value...}
+// Subject Format: [namespace.]jobs.{type}.{routing_type}.{value...}
 //
 // Routing Patterns:
 //   - Direct: jobs.query.host.server1 (specific host)
@@ -34,6 +34,10 @@
 //   - Load-balanced work: jobs.*._any (with queue group)
 //   - Broadcast messages: jobs.*._all
 //   - Label prefixes: jobs.*.label.group.web, jobs.*.label.group.web.dev, etc.
+//
+// When a namespace is configured via Init(), all subjects are prefixed:
+//
+//	Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
 package job
 
 import (
@@ -42,12 +46,33 @@ import (
 	"strings"
 )
 
-const (
+var (
 	// JobsQueryPrefix is the subject hierarchy prefix for query operations.
 	JobsQueryPrefix = "jobs.query"
 	// JobsModifyPrefix is the subject hierarchy prefix for modify operations.
 	JobsModifyPrefix = "jobs.modify"
+	// jobsBase is the base subject token (e.g., "jobs" or "osapi.jobs").
+	jobsBase = "jobs"
+)
 
+// Init configures the subject namespace. An empty namespace keeps the default
+// "jobs.*" hierarchy. A non-empty namespace prepends it:
+//
+//	Init("")      -> jobs.query, jobs.modify
+//	Init("osapi") -> osapi.jobs.query, osapi.jobs.modify
+func Init(
+	namespace string,
+) {
+	if namespace == "" {
+		jobsBase = "jobs"
+	} else {
+		jobsBase = namespace + ".jobs"
+	}
+	JobsQueryPrefix = jobsBase + ".query"
+	JobsModifyPrefix = jobsBase + ".modify"
+}
+
+const (
 	// AllHosts is a wildcard for targeting all hosts.
 	AllHosts = "*" // Wildcard for targeting all hosts
 	// AnyHost is load-balanced across available hosts.
@@ -105,33 +130,45 @@ func BuildModifySubjectForAllHosts() string {
 }
 
 // ParseSubject extracts the prefix and routing target from a job subject.
-// Supported formats:
-//   - jobs.{type}._any (3 parts)
-//   - jobs.{type}._all (3 parts)
-//   - jobs.{type}.host.{hostname} (4 parts)
-//   - jobs.{type}.label.{key}.{value...} (5+ parts, hierarchical values)
+// Supported formats (with optional namespace prefix):
+//   - [ns.]jobs.{type}._any
+//   - [ns.]jobs.{type}._all
+//   - [ns.]jobs.{type}.host.{hostname}
+//   - [ns.]jobs.{type}.label.{key}.{value...}
 func ParseSubject(
 	subject string,
 ) (prefix, hostname string, err error) {
 	parts := strings.Split(subject, ".")
-	if len(parts) < 3 {
+
+	// Find the "jobs" token in the parts to determine namespace offset.
+	jobsIdx := -1
+	for i, p := range parts {
+		if p == "jobs" {
+			jobsIdx = i
+			break
+		}
+	}
+	if jobsIdx < 0 || jobsIdx+2 >= len(parts) {
 		return "", "", fmt.Errorf("invalid subject format: %s", subject)
 	}
 
-	prefix = fmt.Sprintf("%s.%s", parts[0], parts[1])
+	// prefix = everything up to and including the type token (e.g., "osapi.jobs.query")
+	prefix = strings.Join(parts[:jobsIdx+2], ".")
+
+	// remaining parts after the prefix
+	remaining := parts[jobsIdx+2:]
 
 	switch {
-	case len(parts) == 3:
+	case len(remaining) == 1:
 		// _any, _all, or legacy hostname
-		hostname = parts[2]
-	case len(parts) == 4 && parts[2] == "host":
-		// jobs.{type}.host.{hostname}
-		hostname = parts[3]
-	case len(parts) >= 5 && parts[2] == "label":
-		// jobs.{type}.label.{key}.{value...}
-		// Value segments are joined back with dots for hierarchical labels
-		key := parts[3]
-		value := strings.Join(parts[4:], ".")
+		hostname = remaining[0]
+	case len(remaining) == 2 && remaining[0] == "host":
+		// [ns.]jobs.{type}.host.{hostname}
+		hostname = remaining[1]
+	case len(remaining) >= 3 && remaining[0] == "label":
+		// [ns.]jobs.{type}.label.{key}.{value...}
+		key := remaining[1]
+		value := strings.Join(remaining[2:], ".")
 		hostname = fmt.Sprintf("%s:%s", key, value)
 	default:
 		return "", "", fmt.Errorf("invalid subject format: %s", subject)
@@ -155,10 +192,15 @@ func BuildWorkerSubscriptionPattern(
 	}
 
 	patterns := make([]string, 0, 3+labelCount)
-	patterns = append(patterns,
-		fmt.Sprintf("jobs.*.host.%s", SanitizeHostname(hostname)), // Direct messages to this host
-		fmt.Sprintf("jobs.*.%s", AnyHost),                         // Load-balanced messages
-		fmt.Sprintf("jobs.*.%s", BroadcastHost),                   // Broadcast messages
+	patterns = append(
+		patterns,
+		fmt.Sprintf(
+			"%s.*.host.%s",
+			jobsBase,
+			SanitizeHostname(hostname),
+		), // Direct messages to this host
+		fmt.Sprintf("%s.*.%s", jobsBase, AnyHost),       // Load-balanced messages
+		fmt.Sprintf("%s.*.%s", jobsBase, BroadcastHost), // Broadcast messages
 	)
 
 	for key, value := range labels {
@@ -280,7 +322,35 @@ func BuildLabelSubjects(
 	subjects := make([]string, 0, len(segments))
 	for i := range segments {
 		prefix := strings.Join(segments[:i+1], ".")
-		subjects = append(subjects, fmt.Sprintf("jobs.*.label.%s.%s", key, prefix))
+		subjects = append(subjects, fmt.Sprintf("%s.*.label.%s.%s", jobsBase, key, prefix))
 	}
 	return subjects
+}
+
+// ApplyNamespaceToInfraName prefixes an infrastructure name (stream, KV bucket)
+// with the namespace. Returns the name unchanged if namespace is empty.
+//
+//	ApplyNamespaceToInfraName("", "JOBS")      -> "JOBS"
+//	ApplyNamespaceToInfraName("osapi", "JOBS")  -> "osapi-JOBS"
+func ApplyNamespaceToInfraName(
+	namespace, name string,
+) string {
+	if namespace == "" {
+		return name
+	}
+	return namespace + "-" + name
+}
+
+// ApplyNamespaceToSubjects prefixes a subject filter with the namespace.
+// Returns the subject unchanged if namespace is empty.
+//
+//	ApplyNamespaceToSubjects("", "jobs.>")      -> "jobs.>"
+//	ApplyNamespaceToSubjects("osapi", "jobs.>")  -> "osapi.jobs.>"
+func ApplyNamespaceToSubjects(
+	namespace, subjects string,
+) string {
+	if namespace == "" {
+		return subjects
+	}
+	return namespace + "." + subjects
 }

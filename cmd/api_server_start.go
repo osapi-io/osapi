@@ -32,6 +32,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/health"
+	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/telemetry"
@@ -80,13 +81,17 @@ var apiServerStartCmd = &cobra.Command{
 			logFatal("failed to initialize meter", err)
 		}
 
+		// Initialize subject namespace
+		namespace := appConfig.API.NATS.Namespace
+		job.Init(namespace)
+		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
+		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
+
 		// Create NATS client for job system
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 			Host: appConfig.API.NATS.Host,
 			Port: appConfig.API.NATS.Port,
-			Auth: natsclient.AuthOptions{
-				AuthType: natsclient.NoAuth,
-			},
+			Auth: buildNATSAuthOptions(appConfig.API.NATS.Auth),
 			Name: appConfig.API.NATS.ClientName,
 		})
 
@@ -94,14 +99,15 @@ var apiServerStartCmd = &cobra.Command{
 			logFatal("failed to connect to NATS for job client", err)
 		}
 
-		jobsKV, err := nc.CreateKVBucket(appConfig.Job.KVBucket)
+		jobsKV, err := nc.CreateKVBucket(kvBucket)
 		if err != nil {
 			logFatal("failed to create KV bucket", err)
 		}
 
 		jc, err := jobclient.New(logger, nc, &jobclient.Options{
-			Timeout:  30 * time.Second,
-			KVBucket: jobsKV,
+			Timeout:    30 * time.Second,
+			KVBucket:   jobsKV,
+			StreamName: streamName,
 		})
 		if err != nil {
 			logFatal("failed to create job client", err)
@@ -151,14 +157,14 @@ var apiServerStartCmd = &cobra.Command{
 				return metrics, nil
 			},
 			StreamInfoFn: func(fnCtx context.Context) ([]health.StreamMetrics, error) {
-				info, err := nc.GetStreamInfo(fnCtx, appConfig.Job.StreamName)
+				info, err := nc.GetStreamInfo(fnCtx, streamName)
 				if err != nil {
 					return nil, fmt.Errorf("stream info: %w", err)
 				}
 
 				return []health.StreamMetrics{
 					{
-						Name:      appConfig.Job.StreamName,
+						Name:      streamName,
 						Messages:  info.State.Msgs,
 						Bytes:     info.State.Bytes,
 						Consumers: info.State.Consumers,

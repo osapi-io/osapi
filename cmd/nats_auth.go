@@ -21,34 +21,30 @@
 package cmd
 
 import (
-	"log/slog"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/retr0h/osapi/internal/config"
 )
 
-// natsServerCmd represents the natsServer command.
-var natsServerCmd = &cobra.Command{
-	Use:   "server",
-	Short: "The server subcommand",
-	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		logger.Debug(
-			"nats server configuration",
-			slog.String("config_file", viper.ConfigFileUsed()),
-			slog.Bool("debug", appConfig.Debug),
-			slog.String("nats.server.host", appConfig.NATS.Server.Host),
-			slog.Int("nats.server.port", appConfig.NATS.Server.Port),
-			slog.String("nats.server.store_dir", appConfig.NATS.Server.StoreDir),
-			slog.String("nats.server.namespace", appConfig.NATS.Server.Namespace),
-			slog.String("nats.server.auth.type", appConfig.NATS.Server.Auth.Type),
-			slog.String("nats.stream.name", appConfig.NATS.Stream.Name),
-			slog.String("nats.stream.subjects", appConfig.NATS.Stream.Subjects),
-			slog.String("nats.kv.bucket", appConfig.NATS.KV.Bucket),
-			slog.String("nats.kv.response_bucket", appConfig.NATS.KV.ResponseBucket),
-		)
-	},
-}
-
-func init() {
-	natsCmd.AddCommand(natsServerCmd)
+// buildNATSAuthOptions converts a config NATSAuth to natsclient.AuthOptions.
+func buildNATSAuthOptions(
+	auth config.NATSAuth,
+) natsclient.AuthOptions {
+	switch auth.Type {
+	case "user_pass":
+		return natsclient.AuthOptions{
+			AuthType: natsclient.UserPassAuth,
+			Username: auth.Username,
+			Password: auth.Password,
+		}
+	case "nkey":
+		return natsclient.AuthOptions{
+			AuthType: natsclient.NKeyAuth,
+			NKeyFile: auth.NKeyFile,
+		}
+	default:
+		return natsclient.AuthOptions{
+			AuthType: natsclient.NoAuth,
+		}
+	}
 }

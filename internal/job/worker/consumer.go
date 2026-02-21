@@ -40,7 +40,7 @@ func (w *Worker) consumeQueryJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.appConfig.Job.StreamName
+	streamName := w.streamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -53,16 +53,16 @@ func (w *Worker) consumeQueryJobs(
 	}{
 		{
 			name:       "query_any_" + sanitizedHostname,
-			filter:     "jobs.query._any",
+			filter:     job.JobsQueryPrefix + "._any",
 			queueGroup: w.appConfig.Job.Worker.QueueGroup,
 		},
 		{
 			name:   "query_all_" + sanitizedHostname,
-			filter: "jobs.query._all",
+			filter: job.JobsQueryPrefix + "._all",
 		},
 		{
 			name:   "query_direct_" + sanitizedHostname,
-			filter: "jobs.query.host." + sanitizedHostname,
+			filter: job.JobsQueryPrefix + ".host." + sanitizedHostname,
 		},
 	}
 
@@ -87,7 +87,7 @@ func (w *Worker) consumeQueryJobs(
 					sanitizedPrefix,
 					sanitizedHostname,
 				),
-				filter: fmt.Sprintf("jobs.query.label.%s.%s", key, prefix),
+				filter: job.JobsQueryPrefix + ".label." + key + "." + prefix,
 			})
 		}
 	}
@@ -136,7 +136,7 @@ func (w *Worker) consumeModifyJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.appConfig.Job.StreamName
+	streamName := w.streamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -149,16 +149,16 @@ func (w *Worker) consumeModifyJobs(
 	}{
 		{
 			name:       "modify_any_" + sanitizedHostname,
-			filter:     "jobs.modify._any",
+			filter:     job.JobsModifyPrefix + "._any",
 			queueGroup: w.appConfig.Job.Worker.QueueGroup,
 		},
 		{
 			name:   "modify_all_" + sanitizedHostname,
-			filter: "jobs.modify._all",
+			filter: job.JobsModifyPrefix + "._all",
 		},
 		{
 			name:   "modify_direct_" + sanitizedHostname,
-			filter: "jobs.modify.host." + sanitizedHostname,
+			filter: job.JobsModifyPrefix + ".host." + sanitizedHostname,
 		},
 	}
 
@@ -179,7 +179,7 @@ func (w *Worker) consumeModifyJobs(
 					sanitizedPrefix,
 					sanitizedHostname,
 				),
-				filter: fmt.Sprintf("jobs.modify.label.%s.%s", key, prefix),
+				filter: job.JobsModifyPrefix + ".label." + key + "." + prefix,
 			})
 		}
 	}
@@ -251,11 +251,11 @@ func (w *Worker) createConsumer(
 	streamName, consumerName, filterSubject string,
 ) error {
 	// Parse AckWait duration from config
-	ackWait, _ := time.ParseDuration(w.appConfig.Job.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(w.appConfig.Job.Worker.Consumer.AckWait)
 
 	// Parse BackOff durations from config
 	var backOff []time.Duration
-	for _, duration := range w.appConfig.Job.Consumer.BackOff {
+	for _, duration := range w.appConfig.Job.Worker.Consumer.BackOff {
 		if d, err := time.ParseDuration(duration); err == nil {
 			backOff = append(backOff, d)
 		}
@@ -263,7 +263,7 @@ func (w *Worker) createConsumer(
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if w.appConfig.Job.Consumer.ReplayPolicy == "original" {
+	if w.appConfig.Job.Worker.Consumer.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
@@ -274,10 +274,10 @@ func (w *Worker) createConsumer(
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    w.appConfig.Job.Consumer.MaxDeliver,
+		MaxDeliver:    w.appConfig.Job.Worker.Consumer.MaxDeliver,
 		AckWait:       ackWait,
 		BackOff:       backOff,
-		MaxAckPending: w.appConfig.Job.Consumer.MaxAckPending,
+		MaxAckPending: w.appConfig.Job.Worker.Consumer.MaxAckPending,
 		ReplayPolicy:  replayPolicy,
 	}
 

@@ -38,12 +38,15 @@ var jobWorkerCmd = &cobra.Command{
 			"job worker configuration",
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("worker.nats.host", appConfig.Job.Worker.NATS.Host),
-			slog.Int("worker.nats.port", appConfig.Job.Worker.NATS.Port),
-			slog.String("worker.nats.client_name", appConfig.Job.Worker.NATS.ClientName),
-			slog.String("worker.queue_group", appConfig.Job.Worker.QueueGroup),
-			slog.String("worker.hostname", appConfig.Job.Worker.Hostname),
-			slog.Int("worker.max_jobs", appConfig.Job.Worker.MaxJobs),
+			slog.String("job.worker.nats.host", appConfig.Job.Worker.NATS.Host),
+			slog.Int("job.worker.nats.port", appConfig.Job.Worker.NATS.Port),
+			slog.String("job.worker.nats.client_name", appConfig.Job.Worker.NATS.ClientName),
+			slog.String("job.worker.nats.namespace", appConfig.Job.Worker.NATS.Namespace),
+			slog.String("job.worker.nats.auth.type", appConfig.Job.Worker.NATS.Auth.Type),
+			slog.String("job.worker.queue_group", appConfig.Job.Worker.QueueGroup),
+			slog.String("job.worker.hostname", appConfig.Job.Worker.Hostname),
+			slog.Int("job.worker.max_jobs", appConfig.Job.Worker.MaxJobs),
+			slog.String("job.worker.consumer.name", appConfig.Job.Worker.Consumer.Name),
 		)
 	},
 }
@@ -105,23 +108,23 @@ func init() {
 
 	// Bind consumer configuration flags
 	_ = viper.BindPFlag(
-		"job.consumer.max_deliver",
+		"job.worker.consumer.max_deliver",
 		jobWorkerCmd.PersistentFlags().Lookup("consumer-max-deliver"),
 	)
 	_ = viper.BindPFlag(
-		"job.consumer.ack_wait",
+		"job.worker.consumer.ack_wait",
 		jobWorkerCmd.PersistentFlags().Lookup("consumer-ack-wait"),
 	)
 	_ = viper.BindPFlag(
-		"job.consumer.max_ack_pending",
+		"job.worker.consumer.max_ack_pending",
 		jobWorkerCmd.PersistentFlags().Lookup("consumer-max-ack-pending"),
 	)
 	_ = viper.BindPFlag(
-		"job.consumer.replay_policy",
+		"job.worker.consumer.replay_policy",
 		jobWorkerCmd.PersistentFlags().Lookup("consumer-replay-policy"),
 	)
 	_ = viper.BindPFlag(
-		"job.consumer.back_off",
+		"job.worker.consumer.back_off",
 		jobWorkerCmd.PersistentFlags().Lookup("consumer-back-off"),
 	)
 }

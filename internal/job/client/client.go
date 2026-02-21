@@ -42,6 +42,7 @@ type Client struct {
 	kv                 nats.KeyValue
 	timeout            time.Duration
 	broadcastQuietTime time.Duration
+	streamName         string
 }
 
 // Options configures the jobs client.
@@ -53,6 +54,8 @@ type Options struct {
 	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
 	KVBucket nats.KeyValue
+	// StreamName is the JetStream stream name (used to derive DLQ name).
+	StreamName string
 }
 
 // New creates a new jobs client using an existing NATS client.
@@ -77,6 +80,7 @@ func New(
 		logger:             logger,
 		natsClient:         natsClient,
 		kv:                 opts.KVBucket,
+		streamName:         opts.StreamName,
 		timeout:            opts.Timeout,
 		broadcastQuietTime: quietPeriod,
 	}, nil

@@ -57,19 +57,23 @@ func (s *ConsumerTestSuite) SetupTest() {
 
 	appFs := afero.NewMemMapFs()
 	appConfig := config.Config{
+		NATS: config.NATS{
+			Stream: config.NATSStream{
+				Name: "test-stream",
+			},
+		},
 		Job: config.Job{
-			StreamName: "test-stream",
 			Worker: config.JobWorker{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
-			},
-			Consumer: config.JobConsumer{
-				AckWait:       "30s",
-				BackOff:       []string{"1s", "2s"},
-				MaxDeliver:    3,
-				MaxAckPending: 10,
-				ReplayPolicy:  "instant",
+				Consumer: config.JobWorkerConsumer{
+					AckWait:       "30s",
+					BackOff:       []string{"1s", "2s"},
+					MaxDeliver:    3,
+					MaxAckPending: 10,
+					ReplayPolicy:  "instant",
+				},
 			},
 		},
 	}
@@ -87,6 +91,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		appConfig,
 		slog.Default(),
 		s.mockJobClient,
+		"test-stream",
 		hostMock,
 		diskMock,
 		memMock,
@@ -368,7 +373,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 		streamName    string
 		consumerName  string
 		filterSubject string
-		config        config.JobConsumer
+		config        config.JobWorkerConsumer
 		setupMocks    func()
 		expectErr     bool
 		errorMsg      string
@@ -378,7 +383,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.JobConsumer{
+			config: config.JobWorkerConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s", "5s"},
 				MaxDeliver:    3,
@@ -408,7 +413,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer-orig",
 			filterSubject: "jobs.modify._any",
-			config: config.JobConsumer{
+			config: config.JobWorkerConsumer{
 				AckWait:       "60s",
 				BackOff:       []string{"2s"},
 				MaxDeliver:    5,
@@ -436,7 +441,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.JobConsumer{
+			config: config.JobWorkerConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s"},
 				MaxDeliver:    3,
@@ -456,7 +461,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.JobConsumer{
+			config: config.JobWorkerConsumer{
 				AckWait:       "invalid-duration",
 				BackOff:       []string{"invalid", "2s"},
 				MaxDeliver:    3,
@@ -480,7 +485,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			// Update worker config for this test
-			s.worker.appConfig.Job.Consumer = tt.config
+			s.worker.appConfig.Job.Worker.Consumer = tt.config
 
 			tt.setupMocks()
 

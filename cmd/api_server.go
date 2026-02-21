@@ -54,6 +54,11 @@ var apiServerCmd = &cobra.Command{
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
 			slog.Int("api.server.port", appConfig.API.Port),
+			slog.String("api.server.nats.host", appConfig.API.NATS.Host),
+			slog.Int("api.server.nats.port", appConfig.API.NATS.Port),
+			slog.String("api.server.nats.client_name", appConfig.API.NATS.ClientName),
+			slog.String("api.server.nats.namespace", appConfig.API.NATS.Namespace),
+			slog.String("api.server.nats.auth.type", appConfig.API.NATS.Auth.Type),
 			slog.String(
 				"api.server.security.cors.allow_origins",
 				strings.Join(appConfig.API.Server.Security.CORS.AllowOrigins, ","),

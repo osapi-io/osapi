@@ -27,11 +27,12 @@ import (
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
 )
 
@@ -57,16 +58,44 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		host := appConfig.NATS.Server.Host
 		port := appConfig.NATS.Server.Port
 		storeDir := appConfig.NATS.Server.StoreDir
+		namespace := appConfig.NATS.Server.Namespace
+
+		// Initialize subject namespace
+		job.Init(namespace)
+
+		serverOpts := &natsserver.Options{
+			Host:      host,
+			Port:      port,
+			JetStream: true,
+			StoreDir:  storeDir,
+			NoSigs:    true,
+			NoLog:     false,
+		}
+
+		// Configure server-side authentication
+		serverAuth := appConfig.NATS.Server.Auth
+		switch serverAuth.Type {
+		case "user_pass":
+			users := make([]*natsserver.User, 0, len(serverAuth.Users))
+			for _, u := range serverAuth.Users {
+				users = append(users, &natsserver.User{
+					Username: u.Username,
+					Password: u.Password,
+				})
+			}
+			serverOpts.Users = users
+		case "nkey":
+			nkeys := make([]*natsserver.NkeyUser, 0, len(serverAuth.NKeys))
+			for _, nk := range serverAuth.NKeys {
+				nkeys = append(nkeys, &natsserver.NkeyUser{
+					Nkey: nk,
+				})
+			}
+			serverOpts.Nkeys = nkeys
+		}
 
 		opts := &natsembedded.Options{
-			Options: &natsserver.Options{
-				Host:      host,
-				Port:      port,
-				JetStream: true,
-				StoreDir:  storeDir,
-				NoSigs:    true,
-				NoLog:     false,
-			},
+			Options:      serverOpts,
 			ReadyTimeout: 5 * time.Second,
 		}
 
@@ -75,7 +104,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			logFatal("failed to start embedded NATS server", err)
 		}
 
-		if err := setupJetStream(ctx, host, port); err != nil {
+		if err := setupJetStream(ctx, host, port, namespace, serverAuth); err != nil {
 			s.Stop()
 			logFatal("failed to setup JetStream infrastructure", err)
 		}
@@ -85,6 +114,8 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			"host", host,
 			"port", port,
 			"store_dir", storeDir,
+			"namespace", namespace,
+			"auth.type", serverAuth.Type,
 		)
 
 		var ns Lifecycle = &natsLifecycle{server: s}
@@ -96,13 +127,31 @@ func setupJetStream(
 	ctx context.Context,
 	host string,
 	port int,
+	namespace string,
+	serverAuth config.NATSServerAuth,
 ) error {
+	// Build auth options for the setup client from the server auth config.
+	// Use the first configured user for user_pass auth.
+	var setupAuth natsclient.AuthOptions
+	switch serverAuth.Type {
+	case "user_pass":
+		if len(serverAuth.Users) > 0 {
+			setupAuth = natsclient.AuthOptions{
+				AuthType: natsclient.UserPassAuth,
+				Username: serverAuth.Users[0].Username,
+				Password: serverAuth.Users[0].Password,
+			}
+		}
+	default:
+		setupAuth = natsclient.AuthOptions{
+			AuthType: natsclient.NoAuth,
+		}
+	}
+
 	var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 		Host: host,
 		Port: port,
-		Auth: natsclient.AuthOptions{
-			AuthType: natsclient.NoAuth,
-		},
+		Auth: setupAuth,
 		Name: "osapi-nats-setup",
 	})
 
@@ -115,29 +164,35 @@ func setupJetStream(
 		}
 	}()
 
+	// Apply namespace to infrastructure names
+	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
+	streamSubjects := job.ApplyNamespaceToSubjects(namespace, appConfig.NATS.Stream.Subjects)
+	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
+	kvResponseBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.ResponseBucket)
+
 	// Create JOBS stream
-	streamMaxAge, _ := time.ParseDuration(appConfig.Job.Stream.MaxAge)
+	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
 	var streamStorage nats.StorageType
-	if appConfig.Job.Stream.Storage == "memory" {
+	if appConfig.NATS.Stream.Storage == "memory" {
 		streamStorage = nats.MemoryStorage
 	} else {
 		streamStorage = nats.FileStorage
 	}
 
 	var streamDiscard nats.DiscardPolicy
-	if appConfig.Job.Stream.Discard == "new" {
+	if appConfig.NATS.Stream.Discard == "new" {
 		streamDiscard = nats.DiscardNew
 	} else {
 		streamDiscard = nats.DiscardOld
 	}
 
 	streamConfig := &nats.StreamConfig{
-		Name:     appConfig.Job.StreamName,
-		Subjects: []string{appConfig.Job.StreamSubjects},
+		Name:     streamName,
+		Subjects: []string{streamSubjects},
 		MaxAge:   streamMaxAge,
-		MaxMsgs:  appConfig.Job.Stream.MaxMsgs,
+		MaxMsgs:  appConfig.NATS.Stream.MaxMsgs,
 		Storage:  streamStorage,
-		Replicas: appConfig.Job.Stream.Replicas,
+		Replicas: appConfig.NATS.Stream.Replicas,
 		Discard:  streamDiscard,
 	}
 
@@ -145,62 +200,33 @@ func setupJetStream(
 		return fmt.Errorf("create JOBS stream: %w", err)
 	}
 
-	// Create consumer
-	ackWait, _ := time.ParseDuration(appConfig.Job.Consumer.AckWait)
-
-	backOff := make([]time.Duration, 0, len(appConfig.Job.Consumer.BackOff))
-	for _, b := range appConfig.Job.Consumer.BackOff {
-		d, _ := time.ParseDuration(b)
-		backOff = append(backOff, d)
-	}
-
-	var replayPolicy jetstream.ReplayPolicy
-	if appConfig.Job.Consumer.ReplayPolicy == "original" {
-		replayPolicy = jetstream.ReplayOriginalPolicy
-	} else {
-		replayPolicy = jetstream.ReplayInstantPolicy
-	}
-
-	consumerConfig := jetstream.ConsumerConfig{
-		Durable:       appConfig.Job.ConsumerName,
-		AckWait:       ackWait,
-		MaxDeliver:    appConfig.Job.Consumer.MaxDeliver,
-		MaxAckPending: appConfig.Job.Consumer.MaxAckPending,
-		ReplayPolicy:  replayPolicy,
-		BackOff:       backOff,
-	}
-
-	if err := nc.CreateOrUpdateConsumerWithConfig(ctx, appConfig.Job.StreamName, consumerConfig); err != nil {
-		return fmt.Errorf("create consumer: %w", err)
-	}
-
 	// Create KV buckets
-	if _, err := nc.CreateKVBucket(appConfig.Job.KVBucket); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", appConfig.Job.KVBucket, err)
+	if _, err := nc.CreateKVBucket(kvBucket); err != nil {
+		return fmt.Errorf("create KV bucket %s: %w", kvBucket, err)
 	}
 
-	if _, err := nc.CreateKVBucket(appConfig.Job.KVResponseBucket); err != nil {
-		return fmt.Errorf("create KV bucket %s: %w", appConfig.Job.KVResponseBucket, err)
+	if _, err := nc.CreateKVBucket(kvResponseBucket); err != nil {
+		return fmt.Errorf("create KV bucket %s: %w", kvResponseBucket, err)
 	}
 
 	// Create DLQ stream
-	dlqMaxAge, _ := time.ParseDuration(appConfig.Job.DLQ.MaxAge)
+	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
 	var dlqStorage nats.StorageType
-	if appConfig.Job.DLQ.Storage == "memory" {
+	if appConfig.NATS.DLQ.Storage == "memory" {
 		dlqStorage = nats.MemoryStorage
 	} else {
 		dlqStorage = nats.FileStorage
 	}
 
 	dlqStreamConfig := &nats.StreamConfig{
-		Name: appConfig.Job.StreamName + "-DLQ",
+		Name: streamName + "-DLQ",
 		Subjects: []string{
-			"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + appConfig.Job.StreamName + ".*",
+			"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + streamName + ".*",
 		},
 		Storage:  dlqStorage,
 		MaxAge:   dlqMaxAge,
-		MaxMsgs:  appConfig.Job.DLQ.MaxMsgs,
-		Replicas: appConfig.Job.DLQ.Replicas,
+		MaxMsgs:  appConfig.NATS.DLQ.MaxMsgs,
+		Replicas: appConfig.NATS.DLQ.Replicas,
 		Metadata: map[string]string{
 			"dead_letter_queue": "true",
 		},

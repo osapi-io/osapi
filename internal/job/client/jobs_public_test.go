@@ -54,8 +54,9 @@ func (s *JobsPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	opts := &client.Options{
-		Timeout:  30 * time.Second,
-		KVBucket: s.mockKV,
+		Timeout:    30 * time.Second,
+		KVBucket:   s.mockKV,
+		StreamName: "JOBS",
 	}
 	var err error
 	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
@@ -900,6 +901,60 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 					s.Equal(tt.expectedDLQ, stats.DLQCount)
 				}
 			}
+		})
+	}
+}
+
+func (s *JobsPublicTestSuite) TestGetQueueStatsDLQNameDerivedFromStreamName() {
+	tests := []struct {
+		name         string
+		streamName   string
+		expectedDLQ  string
+		setupMocks   func(dlqName string)
+		expectedMsgs int
+	}{
+		{
+			name:        "when stream name is JOBS",
+			streamName:  "JOBS",
+			expectedDLQ: "JOBS-DLQ",
+			setupMocks: func(dlqName string) {
+				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), dlqName).
+					Return(&nats.StreamInfo{State: nats.StreamState{Msgs: 5}}, nil)
+			},
+			expectedMsgs: 5,
+		},
+		{
+			name:        "when stream name is namespaced",
+			streamName:  "osapi-JOBS",
+			expectedDLQ: "osapi-JOBS-DLQ",
+			setupMocks: func(dlqName string) {
+				s.mockKV.EXPECT().Keys().Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), dlqName).
+					Return(&nats.StreamInfo{State: nats.StreamState{Msgs: 3}}, nil)
+			},
+			expectedMsgs: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks(tt.expectedDLQ)
+
+			opts := &client.Options{
+				Timeout:    30 * time.Second,
+				KVBucket:   s.mockKV,
+				StreamName: tt.streamName,
+			}
+			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			stats, err := c.GetQueueStats(s.ctx)
+			s.NoError(err)
+			s.NotNil(stats)
+			s.Equal(tt.expectedMsgs, stats.DLQCount)
 		})
 	}
 }
