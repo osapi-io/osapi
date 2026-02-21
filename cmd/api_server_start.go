@@ -23,6 +23,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -52,6 +53,8 @@ type ServerManager interface {
 		version string,
 		metrics health.MetricsProvider,
 	) []func(e *echo.Echo)
+	// GetMetricsHandler returns Prometheus metrics handler for registration.
+	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -68,6 +71,13 @@ var apiServerStartCmd = &cobra.Command{
 		shutdownTracer, err := telemetry.InitTracer(ctx, "osapi-api", appConfig.Telemetry.Tracing)
 		if err != nil {
 			logFatal("failed to initialize tracer", err)
+		}
+
+		metricsHandler, metricsPath, shutdownMeter, err := telemetry.InitMeter(
+			appConfig.Telemetry.Metrics,
+		)
+		if err != nil {
+			logFatal("failed to initialize meter", err)
 		}
 
 		// Create NATS client for job system
@@ -191,18 +201,20 @@ var apiServerStartCmd = &cobra.Command{
 
 		var sm ServerManager = api.New(appConfig, logger)
 
-		var handlers []func(e *echo.Echo)
+		handlers := make([]func(e *echo.Echo), 0, 5)
 		handlers = append(handlers, sm.GetSystemHandler(jc)...)
 		handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 		handlers = append(handlers, sm.GetJobHandler(jc)...)
 		handlers = append(
 			handlers,
 			sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
+		handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
 
 		sm.RegisterHandlers(handlers)
 
 		sm.Start()
 		runServer(ctx, sm, func() {
+			_ = shutdownMeter(context.Background())
 			_ = shutdownTracer(context.Background())
 			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
 				natsConn.NC.Close()

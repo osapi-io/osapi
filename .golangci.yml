@@ -27,6 +27,10 @@ linters:
           - revive
         path: internal/exec/
         text: "var-naming: avoid package names that conflict with Go standard library package names"
+      - linters:
+          - revive
+        path: internal/api/metrics/
+        text: "var-naming: avoid package names that conflict with Go standard library package names"
 
 formatters:
   enable:

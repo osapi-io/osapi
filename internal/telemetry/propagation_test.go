@@ -123,8 +123,8 @@ func (s *MapCarrierTestSuite) TestKeys() {
 		{
 			name: "when data has entries returns all keys",
 			data: map[string]interface{}{
-				"traceparent":  "00-abc123-def456-01",
-				"tracestate":   "vendor=opaque",
+				"traceparent":   "00-abc123-def456-01",
+				"tracestate":    "vendor=opaque",
 				"custom-header": "value",
 			},
 			validateFunc: func(keys []string) {

@@ -538,6 +538,97 @@ func (s *ClientPublicTestSuite) TestGetJobWorkers() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestGetMetrics() {
+	tests := []struct {
+		name           string
+		url            string
+		serverBody     string
+		serverStatus   int
+		useServer      bool
+		wantErr        string
+		expectedResult string
+	}{
+		{
+			name:           "returns metrics text",
+			useServer:      true,
+			serverBody:     "# HELP go_goroutines Number of goroutines.\n# TYPE go_goroutines gauge\ngo_goroutines 42\n",
+			serverStatus:   http.StatusOK,
+			expectedResult: "# HELP go_goroutines Number of goroutines.\n# TYPE go_goroutines gauge\ngo_goroutines 42\n",
+		},
+		{
+			name:         "returns error on non-200 status",
+			useServer:    true,
+			serverBody:   "not found",
+			serverStatus: http.StatusNotFound,
+			wantErr:      "metrics endpoint returned status",
+		},
+		{
+			name:    "returns error when request creation fails",
+			url:     "://invalid-url",
+			wantErr: "creating metrics request",
+		},
+		{
+			name:    "returns error when server is unreachable",
+			url:     "http://127.0.0.1:0",
+			wantErr: "fetching metrics",
+		},
+		{
+			name:         "returns error when response body read fails",
+			useServer:    true,
+			serverStatus: http.StatusOK,
+			wantErr:      "reading metrics response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			url := tt.url
+
+			if tt.useServer {
+				server := httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+						w.Header().Set("Content-Type", "text/plain")
+						if tt.wantErr == "reading metrics response" {
+							w.Header().Set("Content-Length", "9999")
+							w.WriteHeader(tt.serverStatus)
+							// Write partial data then let the handler return,
+							// causing the connection to close prematurely.
+							_, _ = w.Write([]byte("partial"))
+							if f, ok := w.(http.Flusher); ok {
+								f.Flush()
+							}
+							return
+						}
+						w.WriteHeader(tt.serverStatus)
+						_, _ = w.Write([]byte(tt.serverBody))
+					}),
+				)
+				defer server.Close()
+				url = server.URL
+			}
+
+			appConfig := config.Config{
+				API: config.API{
+					Client: config.Client{
+						URL: url,
+					},
+				},
+			}
+			c := client.New(slog.Default(), appConfig, nil)
+
+			result, err := c.GetMetrics(context.Background())
+
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				s.Empty(result)
+			} else {
+				s.NoError(err)
+				s.Equal(tt.expectedResult, result)
+			}
+		})
+	}
+}
+
 func (s *ClientPublicTestSuite) TestGetHealth() {
 	tests := []struct {
 		name string

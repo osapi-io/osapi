@@ -99,7 +99,7 @@ func (s *InitTracerTestSuite) TestInitTracerStdoutExporter() {
 		validateFunc func(func(context.Context) error, error)
 	}{
 		{
-			name:   "when stdout exporter creation fails returns error",
+			name: "when stdout exporter creation fails returns error",
 			stubFn: func(_ ...stdouttrace.Option) (*stdouttrace.Exporter, error) {
 				return nil, errors.New("stdout exporter failed")
 			},
