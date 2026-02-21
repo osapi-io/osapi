@@ -88,7 +88,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "Enable JSON output")
 
 	rootCmd.PersistentFlags().
-		StringP("osapi-file", "f", "osapi.yaml", "Path to config file")
+		StringP("osapi-file", "f", "/etc/osapi/osapi.yaml", "Path to config file")
 
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	_ = viper.BindPFlag("osapiFile", rootCmd.PersistentFlags().Lookup("osapi-file"))

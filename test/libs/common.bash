@@ -21,15 +21,16 @@
 PROGRAM="../main.go"
 BATS_TEST_TIMEOUT=60
 CONFIG="osapi.yaml"
+export OSAPI_OSAPIFILE="${CONFIG}"
 
 # Function to start the server
 start_server() {
   # Start embedded NATS server (replaces external nats-server binary)
-  go run ${PROGRAM} -f "${CONFIG}" nats server start &
+  go run ${PROGRAM} nats server start &
   sleep 2
 
   # Generate fresh admin token and update config
-  TOKEN=$(go run ${PROGRAM} -j -f "${CONFIG}" token generate \
+  TOKEN=$(go run ${PROGRAM} -j token generate \
     -r admin -u test@ci 2>/dev/null \
     | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
   if [ -n "${TOKEN}" ]; then
@@ -38,11 +39,11 @@ start_server() {
   fi
 
   # Start API server
-  go run ${PROGRAM} -f "${CONFIG}" api server start &
+  go run ${PROGRAM} api server start &
   sleep 2
 
   # Start job worker
-  go run ${PROGRAM} -f "${CONFIG}" job worker start &
+  go run ${PROGRAM} job worker start &
   sleep 3
 }
 

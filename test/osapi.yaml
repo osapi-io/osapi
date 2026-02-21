@@ -8,6 +8,10 @@ api:
       bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6InRlc3RAY2kiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2NDQ0NiwiaWF0IjoxNzcxMjc4NDQ2fQ.d9Rh86HUON7eXCL5l3LKiFhakkXXK6kGHnU8ZXIgQ-c
   server:
     port: 8080
+    nats:
+      host: localhost
+      port: 4222
+      client_name: osapi-api-test
     security:
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
       cors:
@@ -59,15 +63,11 @@ job:
     storage: file
     replicas: 1
 
-  client:
-    host: localhost
-    port: 4222
-    client_name: osapi-jobs-test
-
   worker:
-    host: localhost
-    port: 4222
-    client_name: osapi-job-worker-test
+    nats:
+      host: localhost
+      port: 4222
+      client_name: osapi-job-worker-test
     queue_group: job-workers
     hostname: ""
     max_jobs: 10

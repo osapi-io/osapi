@@ -1,4 +1,5 @@
 .coverage/
+configs/osapi.*.yaml
 database.db*
 dist/
 .nats/jetstream/

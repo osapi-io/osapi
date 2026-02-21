@@ -37,9 +37,9 @@ var jobWorkerCmd = &cobra.Command{
 		logger.Debug(
 			"job worker configuration",
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("worker.host", appConfig.Job.Worker.Host),
-			slog.Int("worker.port", appConfig.Job.Worker.Port),
-			slog.String("worker.client_name", appConfig.Job.Worker.ClientName),
+			slog.String("worker.nats.host", appConfig.Job.Worker.NATS.Host),
+			slog.Int("worker.nats.port", appConfig.Job.Worker.NATS.Port),
+			slog.String("worker.nats.client_name", appConfig.Job.Worker.NATS.ClientName),
 			slog.String("worker.queue_group", appConfig.Job.Worker.QueueGroup),
 			slog.String("worker.hostname", appConfig.Job.Worker.Hostname),
 			slog.Int("worker.max_jobs", appConfig.Job.Worker.MaxJobs),
@@ -77,10 +77,16 @@ func init() {
 		StringSliceP("consumer-back-off", "", []string{"30s", "2m", "5m", "15m", "30m"}, "Retry backoff intervals")
 
 	// Bind flags to viper config
-	_ = viper.BindPFlag("job.worker.host", jobWorkerCmd.PersistentFlags().Lookup("worker-host"))
-	_ = viper.BindPFlag("job.worker.port", jobWorkerCmd.PersistentFlags().Lookup("worker-port"))
 	_ = viper.BindPFlag(
-		"job.worker.client_name",
+		"job.worker.nats.host",
+		jobWorkerCmd.PersistentFlags().Lookup("worker-host"),
+	)
+	_ = viper.BindPFlag(
+		"job.worker.nats.port",
+		jobWorkerCmd.PersistentFlags().Lookup("worker-port"),
+	)
+	_ = viper.BindPFlag(
+		"job.worker.nats.client_name",
 		jobWorkerCmd.PersistentFlags().Lookup("worker-client-name"),
 	)
 	_ = viper.BindPFlag(

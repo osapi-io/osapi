@@ -26,12 +26,18 @@ uppercased:
 | ---------------------------------- | ---------------------------------------- |
 | `debug`                            | `OSAPI_DEBUG`                            |
 | `api.server.port`                  | `OSAPI_API_SERVER_PORT`                  |
+| `api.server.nats.host`             | `OSAPI_API_SERVER_NATS_HOST`             |
+| `api.server.nats.port`             | `OSAPI_API_SERVER_NATS_PORT`             |
+| `api.server.nats.client_name`      | `OSAPI_API_SERVER_NATS_CLIENT_NAME`      |
 | `api.server.security.signing_key`  | `OSAPI_API_SERVER_SECURITY_SIGNING_KEY`  |
 | `api.client.security.bearer_token` | `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN` |
 | `nats.server.host`                 | `OSAPI_NATS_SERVER_HOST`                 |
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
+| `job.worker.nats.host`             | `OSAPI_JOB_WORKER_NATS_HOST`             |
+| `job.worker.nats.port`             | `OSAPI_JOB_WORKER_NATS_PORT`             |
+| `job.worker.nats.client_name`      | `OSAPI_JOB_WORKER_NATS_CLIENT_NAME`      |
 | `job.worker.hostname`              | `OSAPI_JOB_WORKER_HOSTNAME`              |
 
 Environment variables take precedence over file values.
@@ -70,6 +76,13 @@ api:
   server:
     # Port the REST API server listens on.
     port: 8080
+    nats:
+      # NATS server hostname for the API server.
+      host: 'localhost'
+      # NATS server port for the API server.
+      port: 4222
+      # Client name sent to NATS for identification.
+      client_name: 'osapi-api'
     security:
       # HS256 signing key for JWT validation (REQUIRED).
       # Generate with: openssl rand -hex 32
@@ -165,23 +178,15 @@ job:
     # Number of DLQ replicas.
     replicas: 1
 
-  # ── Job client (CLI → NATS) ────────────────────────────
-  client:
-    # NATS server hostname for the job client.
-    host: 'localhost'
-    # NATS server port for the job client.
-    port: 4222
-    # Client name sent to NATS for identification.
-    client_name: 'osapi-jobs-cli'
-
   # ── Job worker ─────────────────────────────────────────
   worker:
-    # NATS server hostname for the worker.
-    host: 'localhost'
-    # NATS server port for the worker.
-    port: 4222
-    # Client name sent to NATS for identification.
-    client_name: 'osapi-job-worker'
+    nats:
+      # NATS server hostname for the worker.
+      host: 'localhost'
+      # NATS server port for the worker.
+      port: 4222
+      # Client name sent to NATS for identification.
+      client_name: 'osapi-job-worker'
     # Queue group for load-balanced (_any) subscriptions.
     queue_group: 'job-workers'
     # Worker hostname for direct routing. Defaults to the
@@ -210,6 +215,9 @@ job:
 | Key                           | Type     | Description                          |
 | ----------------------------- | -------- | ------------------------------------ |
 | `port`                        | int      | Port the API server listens on       |
+| `nats.host`                   | string   | NATS server hostname                 |
+| `nats.port`                   | int      | NATS server port                     |
+| `nats.client_name`            | string   | NATS client identification name      |
 | `security.signing_key`        | string   | HS256 JWT signing key (**required**) |
 | `security.cors.allow_origins` | []string | Allowed CORS origins                 |
 
@@ -277,22 +285,14 @@ job:
 | `storage`  | string | `"file"` or `"memory"`            |
 | `replicas` | int    | Number of DLQ replicas            |
 
-### `job.client`
-
-| Key           | Type   | Description                     |
-| ------------- | ------ | ------------------------------- |
-| `host`        | string | NATS server hostname            |
-| `port`        | int    | NATS server port                |
-| `client_name` | string | NATS client identification name |
-
 ### `job.worker`
 
-| Key           | Type              | Description                               |
-| ------------- | ----------------- | ----------------------------------------- |
-| `host`        | string            | NATS server hostname                      |
-| `port`        | int               | NATS server port                          |
-| `client_name` | string            | NATS client identification name           |
-| `queue_group` | string            | Queue group for load-balanced routing     |
-| `hostname`    | string            | Worker hostname (defaults to OS hostname) |
-| `max_jobs`    | int               | Max concurrent jobs                       |
-| `labels`      | map[string]string | Key-value pairs for label-based routing   |
+| Key                | Type              | Description                               |
+| ------------------ | ----------------- | ----------------------------------------- |
+| `nats.host`        | string            | NATS server hostname                      |
+| `nats.port`        | int               | NATS server port                          |
+| `nats.client_name` | string            | NATS client identification name           |
+| `queue_group`      | string            | Queue group for load-balanced routing     |
+| `hostname`         | string            | Worker hostname (defaults to OS hostname) |
+| `max_jobs`         | int               | Max concurrent jobs                       |
+| `labels`           | map[string]string | Key-value pairs for label-based routing   |
