@@ -72,6 +72,7 @@ subpackages:
 | `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
 | `internal/api/health/`  | Health check endpoints (liveness, readiness, status)             |
 | `internal/api/common/`  | Shared middleware, error handling, collection responses          |
+| (metrics)               | Prometheus endpoint (`/metrics`) via OpenTelemetry               |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -128,6 +129,10 @@ api:
       bearer_token: '<jwt>'
   server:
     port: 8080
+    nats:
+      host: 'localhost'
+      port: 4222
+      client_name: 'osapi-api'
     security:
       signing_key: '<secret>'
       cors:
@@ -145,6 +150,10 @@ job:
   kv_response_bucket: 'job-responses'
   consumer_name: 'jobs-worker'
   worker:
+    nats:
+      host: 'localhost'
+      port: 4222
+      client_name: 'osapi-job-worker'
     hostname: 'worker-01'
     labels:
       group: 'web.dev'
@@ -286,6 +295,7 @@ CORS headers entirely.
 | [Cobra][] / [Viper][]         | CLI framework and configuration             |
 | [NATS][] / JetStream          | Messaging, KV store, stream processing      |
 | [oapi-codegen][]              | OpenAPI strict-server code generation       |
+| [OpenTelemetry][]             | Distributed tracing and Prometheus metrics  |
 | [gopsutil][]                  | Cross-platform system metrics               |
 | [pro-bing][]                  | ICMP ping implementation                    |
 | [golang-jwt][]                | JWT creation and validation                 |
@@ -309,4 +319,5 @@ CORS headers entirely.
 [gopsutil]: https://github.com/shirou/gopsutil
 [pro-bing]: https://github.com/prometheus-community/pro-bing
 [golang-jwt]: https://github.com/golang-jwt/jwt
+[OpenTelemetry]: https://opentelemetry.io
 <!-- prettier-ignore-end -->

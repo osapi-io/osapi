@@ -131,13 +131,15 @@ func buildPingResponse(
 	}
 }
 
-// durationToString convert *time.Duration to *string.
+// durationToString converts *time.Duration to a human-readable *string
+// with consistent precision (e.g., "22.63ms").
 func durationToString(
 	d *time.Duration,
 ) *string {
 	if d == nil {
 		return nil
 	}
-	str := fmt.Sprintf("%v", *d)
+	ms := float64(*d) / float64(time.Millisecond)
+	str := fmt.Sprintf("%.2fms", ms)
 	return &str
 }
