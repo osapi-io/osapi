@@ -64,7 +64,7 @@ func (c *Client) QuerySystemStatus(
 func (c *Client) QuerySystemHostname(
 	ctx context.Context,
 	hostname string,
-) (string, string, string, error) {
+) (string, string, *job.WorkerInfo, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "system",
@@ -75,21 +75,27 @@ func (c *Client) QuerySystemHostname(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, hostname)
 	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to publish and wait: %w", err)
+		return "", "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return "", "", "", fmt.Errorf("job failed: %s", resp.Error)
+		return "", "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
 	var result struct {
-		Hostname string `json:"hostname"`
+		Hostname string            `json:"hostname"`
+		Labels   map[string]string `json:"labels,omitempty"`
 	}
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
-		return "", "", "", fmt.Errorf("failed to unmarshal hostname response: %w", err)
+		return "", "", nil, fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	return jobID, result.Hostname, resp.Hostname, nil
+	worker := &job.WorkerInfo{
+		Hostname: resp.Hostname,
+		Labels:   result.Labels,
+	}
+
+	return jobID, result.Hostname, worker, nil
 }
 
 // QueryNetworkDNS queries DNS configuration from a specific hostname.
@@ -229,7 +235,7 @@ func (c *Client) QueryNetworkPingAny(
 func (c *Client) QuerySystemHostnameBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]string, map[string]string, error) {
+) (string, map[string]*job.WorkerInfo, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "system",
@@ -243,7 +249,7 @@ func (c *Client) QuerySystemHostnameBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]string)
+	results := make(map[string]*job.WorkerInfo)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -252,13 +258,17 @@ func (c *Client) QuerySystemHostnameBroadcast(
 		}
 
 		var result struct {
-			Hostname string `json:"hostname"`
+			Hostname string            `json:"hostname"`
+			Labels   map[string]string `json:"labels,omitempty"`
 		}
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
 
-		results[hostname] = result.Hostname
+		results[hostname] = &job.WorkerInfo{
+			Hostname: result.Hostname,
+			Labels:   result.Labels,
+		}
 	}
 
 	return jobID, results, errs, nil
@@ -267,7 +277,7 @@ func (c *Client) QuerySystemHostnameBroadcast(
 // QuerySystemHostnameAll queries hostname from all hosts.
 func (c *Client) QuerySystemHostnameAll(
 	ctx context.Context,
-) (string, map[string]string, map[string]string, error) {
+) (string, map[string]*job.WorkerInfo, map[string]string, error) {
 	return c.QuerySystemHostnameBroadcast(ctx, job.BroadcastHost)
 }
 

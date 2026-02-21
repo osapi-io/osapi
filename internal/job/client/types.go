@@ -71,14 +71,14 @@ type JobClient interface {
 	QuerySystemHostname(
 		ctx context.Context,
 		hostname string,
-	) (string, string, string, error)
+	) (string, string, *job.WorkerInfo, error)
 	QuerySystemHostnameAll(
 		ctx context.Context,
-	) (string, map[string]string, map[string]string, error)
+	) (string, map[string]*job.WorkerInfo, map[string]string, error)
 	QuerySystemHostnameBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]string, map[string]string, error)
+	) (string, map[string]*job.WorkerInfo, map[string]string, error)
 	QueryNetworkDNS(
 		ctx context.Context,
 		hostname string,

@@ -357,12 +357,12 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingBroadcast(arg0, arg1, arg2 
 }
 
 // QuerySystemHostname mocks base method.
-func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, string, error) {
+func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, *job.WorkerInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostname", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(string)
+	ret2, _ := ret[2].(*job.WorkerInfo)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
@@ -374,11 +374,11 @@ func (mr *MockJobClientMockRecorder) QuerySystemHostname(arg0, arg1 interface{})
 }
 
 // QuerySystemHostnameAll mocks base method.
-func (m *MockJobClient) QuerySystemHostnameAll(arg0 context.Context) (string, map[string]string, map[string]string, error) {
+func (m *MockJobClient) QuerySystemHostnameAll(arg0 context.Context) (string, map[string]*job.WorkerInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostnameAll", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]string)
+	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -391,11 +391,11 @@ func (mr *MockJobClientMockRecorder) QuerySystemHostnameAll(arg0 interface{}) *g
 }
 
 // QuerySystemHostnameBroadcast mocks base method.
-func (m *MockJobClient) QuerySystemHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]string, map[string]string, error) {
+func (m *MockJobClient) QuerySystemHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.WorkerInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySystemHostnameBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]string)
+	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3

@@ -59,7 +59,7 @@ func (s *System) GetSystemHostname(
 		return s.getSystemHostnameBroadcast(ctx, hostname)
 	}
 
-	jobID, result, workerHostname, err := s.JobClient.QuerySystemHostname(ctx, hostname)
+	jobID, result, worker, err := s.JobClient.QuerySystemHostname(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetSystemHostname500JSONResponse{
@@ -68,16 +68,19 @@ func (s *System) GetSystemHostname(
 	}
 
 	displayHostname := result
-	if displayHostname == "" {
-		displayHostname = workerHostname
+	if displayHostname == "" && worker != nil {
+		displayHostname = worker.Hostname
+	}
+
+	resp := gen.HostnameResponse{Hostname: displayHostname}
+	if worker != nil && len(worker.Labels) > 0 {
+		resp.Labels = &worker.Labels
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetSystemHostname200JSONResponse{
-		JobId: &jobUUID,
-		Results: []gen.HostnameResponse{
-			{Hostname: displayHostname},
-		},
+		JobId:   &jobUUID,
+		Results: []gen.HostnameResponse{resp},
 	}, nil
 }
 
@@ -95,8 +98,12 @@ func (s *System) getSystemHostnameBroadcast(
 	}
 
 	var responses []gen.HostnameResponse
-	for _, h := range results {
-		responses = append(responses, gen.HostnameResponse{Hostname: h})
+	for _, w := range results {
+		r := gen.HostnameResponse{Hostname: w.Hostname}
+		if len(w.Labels) > 0 {
+			r.Labels = &w.Labels
+		}
+		responses = append(responses, r)
 	}
 	for host, errMsg := range errs {
 		e := errMsg

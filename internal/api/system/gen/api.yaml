@@ -250,6 +250,11 @@ components:
           type: string
           description: The system's hostname.
           example: "my-linux-server"
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: Key-value labels configured on the worker.
         error:
           type: string
           description: Error message if the worker failed to process the request.
