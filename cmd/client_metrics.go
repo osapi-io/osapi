@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,18 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package api provides the REST API server and handler registration.
-package api
+package cmd
 
 import (
-	"github.com/labstack/echo/v4"
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/client"
 )
 
-// RegisterHandlers registers a list of handlers with the Echo instance.
-func (s *Server) RegisterHandlers(
-	handlers []func(e *echo.Echo),
-) {
-	for _, handler := range handlers {
-		handler(s.Echo)
-	}
+// clientMetricsCmd represents the clientMetrics command.
+var clientMetricsCmd = &cobra.Command{
+	Use:   "metrics",
+	Short: "Fetch Prometheus metrics",
+	Long: `Fetch Prometheus metrics from the API server.
+
+Returns the raw Prometheus exposition text.
+`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		metricsHandler := handler.(client.MetricsHandler)
+		body, err := metricsHandler.GetMetrics(ctx)
+		if err != nil {
+			logFatal("failed to get metrics endpoint", err)
+		}
+
+		fmt.Print(body)
+	},
+}
+
+func init() {
+	clientCmd.AddCommand(clientMetricsCmd)
 }

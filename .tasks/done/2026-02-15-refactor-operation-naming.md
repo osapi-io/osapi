@@ -1,6 +1,6 @@
 ---
 title: Fix operation naming inconsistencies
-status: in-progress
+status: done
 created: 2026-02-15
 updated: 2026-02-15
 ---

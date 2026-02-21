@@ -217,71 +217,51 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
-						Security: config.ServerSecurity{
-							SigningKey: "test-signing-key",
-						},
-					},
-				},
-			}
-
 			checker := &health.NATSChecker{}
-			healthHandler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil)
-			serverWithHealth := api.New(
-				appConfig,
-				slog.Default(),
-				api.WithHealthHandler(healthHandler),
-			)
-			handlers := serverWithHealth.GetHealthHandler()
+			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)
 
 			tt.validate(handlers)
 		})
 	}
 }
 
-func (s *HandlerPublicTestSuite) TestCreateHandlers() {
+func (s *HandlerPublicTestSuite) TestGetMetricsHandler() {
 	tests := []struct {
-		name        string
-		withHealth  bool
-		expectedLen int
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name:        "returns handler functions without health",
-			withHealth:  false,
-			expectedLen: 3,
+			name: "returns metrics handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
 		},
 		{
-			name:        "returns handler functions with health",
-			withHealth:  true,
-			expectedLen: 4,
+			name: "closure registers route at provided path",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+
+				s.Equal(http.StatusOK, rec.Code)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
-						Security: config.ServerSecurity{
-							SigningKey: "test-signing-key",
-						},
-					},
-				},
-			}
+			metricsHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+			handlers := s.server.GetMetricsHandler(metricsHandler, "/metrics")
 
-			var opts []api.Option
-			if tt.withHealth {
-				checker := &health.NATSChecker{}
-				healthHandler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil)
-				opts = append(opts, api.WithHealthHandler(healthHandler))
-			}
-
-			server := api.New(appConfig, slog.Default(), opts...)
-			handlers := server.CreateHandlers(s.mockJobClient)
-
-			s.Len(handlers, tt.expectedLen)
+			tt.validate(handlers)
 		})
 	}
 }
@@ -297,7 +277,15 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.CreateHandlers(s.mockJobClient)
+			checker := &health.NATSChecker{}
+
+			handlers := make([]func(e *echo.Echo), 0, 4)
+			handlers = append(handlers, s.server.GetSystemHandler(s.mockJobClient)...)
+			handlers = append(handlers, s.server.GetNetworkHandler(s.mockJobClient)...)
+			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)
+			handlers = append(
+				handlers,
+				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)...)
 
 			routesBefore := len(s.server.Echo.Routes())
 			s.server.RegisterHandlers(handlers)

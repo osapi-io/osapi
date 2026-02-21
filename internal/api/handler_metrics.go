@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,18 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package api provides the REST API server and handler registration.
 package api
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
+
+	"github.com/retr0h/osapi/internal/api/metrics"
 )
 
-// RegisterHandlers registers a list of handlers with the Echo instance.
-func (s *Server) RegisterHandlers(
-	handlers []func(e *echo.Echo),
-) {
-	for _, handler := range handlers {
-		handler(s.Echo)
+// GetMetricsHandler returns a handler that registers the Prometheus scrape endpoint.
+func (s *Server) GetMetricsHandler(
+	metricsHandler http.Handler,
+	path string,
+) []func(e *echo.Echo) {
+	m := metrics.New(metricsHandler, path)
+
+	return []func(e *echo.Echo){
+		m.RegisterHandler(),
 	}
 }

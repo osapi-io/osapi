@@ -37,6 +37,16 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 )
 
+// resourceNewFn is the function used to create OTel resources. It is a
+// package-level variable so tests can replace it to simulate errors.
+var resourceNewFn = resource.New
+
+// stdouttraceNewFn is the function used to create stdout exporters.
+var stdouttraceNewFn = stdouttrace.New
+
+// otlptraceNewFn is the function used to create OTLP gRPC exporters.
+var otlptraceNewFn = otlptracegrpc.New
+
 // InitTracer initializes the OpenTelemetry tracer provider.
 // It always sets the global W3C TraceContext propagator.
 // When tracing is disabled, a noop provider is used.
@@ -55,7 +65,7 @@ func InitTracer(
 		return func(_ context.Context) error { return nil }, nil
 	}
 
-	res, err := resource.New(
+	res, err := resourceNewFn(
 		ctx,
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),
@@ -76,14 +86,14 @@ func InitTracer(
 	case "", "none":
 		// No exporter — log-only trace correlation
 	case "stdout":
-		exp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+		exp, err := stdouttraceNewFn(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			return nil, fmt.Errorf("creating stdout exporter: %w", err)
 		}
 
 		opts = append(opts, sdktrace.WithBatcher(exp))
 	case "otlp":
-		exp, err := otlptracegrpc.New(
+		exp, err := otlptraceNewFn(
 			ctx,
 			otlptracegrpc.WithEndpoint(cfg.OTLPEndpoint),
 			otlptracegrpc.WithInsecure(),

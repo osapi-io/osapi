@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,18 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package api provides the REST API server and handler registration.
-package api
+package client
 
 import (
-	"github.com/labstack/echo/v4"
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 )
 
-// RegisterHandlers registers a list of handlers with the Echo instance.
-func (s *Server) RegisterHandlers(
-	handlers []func(e *echo.Echo),
-) {
-	for _, handler := range handlers {
-		handler(s.Echo)
+// GetMetrics fetches the Prometheus metrics endpoint.
+func (c *Client) GetMetrics(
+	ctx context.Context,
+) (string, error) {
+	url := strings.TrimRight(c.appConfig.API.URL, "/") + "/metrics"
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("creating metrics request: %w", err)
 	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("fetching metrics: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("metrics endpoint returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("reading metrics response: %w", err)
+	}
+
+	return string(body), nil
 }

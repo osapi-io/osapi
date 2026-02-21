@@ -29,9 +29,18 @@ import (
 // CombinedHandler is a superset of all smaller handler interfaces.
 type CombinedHandler interface {
 	HealthHandler
+	MetricsHandler
 	NetworkHandler
 	SystemHandler
 	JobHandler
+}
+
+// MetricsHandler defines an interface for fetching Prometheus metrics.
+type MetricsHandler interface {
+	// GetMetrics fetches the Prometheus metrics endpoint.
+	GetMetrics(
+		ctx context.Context,
+	) (string, error)
 }
 
 // HealthHandler defines an interface for interacting with Health client operations.

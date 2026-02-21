@@ -34,6 +34,14 @@ type Config struct {
 // Telemetry configuration settings.
 type Telemetry struct {
 	Tracing TracingConfig `mapstructure:"tracing,omitempty"`
+	Metrics MetricsConfig `mapstructure:"metrics,omitempty"`
+}
+
+// MetricsConfig configuration settings for Prometheus metrics.
+type MetricsConfig struct {
+	// Path is the HTTP path for the Prometheus scrape endpoint.
+	// Defaults to "/metrics" when empty.
+	Path string `mapstructure:"path"`
 }
 
 // TracingConfig configuration settings for distributed tracing.

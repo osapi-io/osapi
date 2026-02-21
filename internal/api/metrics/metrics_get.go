@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,18 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package api provides the REST API server and handler registration.
-package api
+package metrics
 
 import (
 	"github.com/labstack/echo/v4"
 )
 
-// RegisterHandlers registers a list of handlers with the Echo instance.
-func (s *Server) RegisterHandlers(
-	handlers []func(e *echo.Echo),
-) {
-	for _, handler := range handlers {
-		handler(s.Echo)
+// RegisterHandler returns a closure that registers the Prometheus scrape endpoint.
+func (m *Metrics) RegisterHandler() func(e *echo.Echo) {
+	return func(e *echo.Echo) {
+		e.GET(m.Path, echo.WrapHandler(m.Handler))
 	}
 }
