@@ -54,12 +54,12 @@ It processes jobs as they become available.
 
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Job.Worker.Host,
-			Port: appConfig.Job.Worker.Port,
+			Host: appConfig.Job.Worker.NATS.Host,
+			Port: appConfig.Job.Worker.NATS.Port,
 			Auth: natsclient.AuthOptions{
 				AuthType: natsclient.NoAuth,
 			},
-			Name: appConfig.Job.Worker.ClientName,
+			Name: appConfig.Job.Worker.NATS.ClientName,
 		})
 
 		err = nc.Connect()

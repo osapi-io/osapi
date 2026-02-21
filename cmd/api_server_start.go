@@ -82,12 +82,12 @@ var apiServerStartCmd = &cobra.Command{
 
 		// Create NATS client for job system
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Job.Client.Host,
-			Port: appConfig.Job.Client.Port,
+			Host: appConfig.API.NATS.Host,
+			Port: appConfig.API.NATS.Port,
 			Auth: natsclient.AuthOptions{
 				AuthType: natsclient.NoAuth,
 			},
-			Name: appConfig.Job.Client.ClientName,
+			Name: appConfig.API.NATS.ClientName,
 		})
 
 		if err := nc.Connect(); err != nil {
@@ -123,7 +123,7 @@ var apiServerStartCmd = &cobra.Command{
 				return nil
 			},
 			KVCheck: func() error {
-				_, err := jobsKV.Keys()
+				_, err := jobsKV.Status()
 				if err != nil {
 					return fmt.Errorf("KV bucket not accessible: %w", err)
 				}

@@ -83,10 +83,22 @@ type Client struct {
 	Security ClientSecurity `mapstructure:"security" mask:"struct"`
 }
 
+// NATSConnection is a reusable NATS connection configuration block.
+type NATSConnection struct {
+	// Host the NATS server hostname.
+	Host string `mapstructure:"host"`
+	// Port the NATS server port.
+	Port int `mapstructure:"port"`
+	// ClientName the NATS client name for identification.
+	ClientName string `mapstructure:"client_name"`
+}
+
 // Server configuration settings.
 type Server struct {
 	// Port the server will bind to.
 	Port int `mapstructure:"port"`
+	// NATS connection settings for the API server.
+	NATS NATSConnection `mapstructure:"nats"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
 	Security ServerSecurity `mapstructure:"security" mask:"struct"`
 }
@@ -126,7 +138,6 @@ type Job struct {
 	KV       JobKV       `mapstructure:"kv,omitempty"`
 	DLQ      JobDLQ      `mapstructure:"dlq,omitempty"`
 
-	Client JobClient `mapstructure:"client,omitempty"`
 	Worker JobWorker `mapstructure:"worker,omitempty"`
 }
 
@@ -164,24 +175,10 @@ type JobDLQ struct {
 	Replicas int    `mapstructure:"replicas"`
 }
 
-// JobClient configuration settings.
-type JobClient struct {
-	// Host the NATS server hostname.
-	Host string `mapstructure:"host"`
-	// Port the NATS server port.
-	Port int `mapstructure:"port"`
-	// ClientName the NATS client name for identification.
-	ClientName string `mapstructure:"client_name"`
-}
-
 // JobWorker configuration settings.
 type JobWorker struct {
-	// Host the NATS server hostname.
-	Host string `mapstructure:"host"`
-	// Port the NATS server port.
-	Port int `mapstructure:"port"`
-	// ClientName the NATS client name for identification.
-	ClientName string `mapstructure:"client_name"`
+	// NATS connection settings for the worker.
+	NATS NATSConnection `mapstructure:"nats"`
 	// QueueGroup for load balancing multiple workers.
 	QueueGroup string `mapstructure:"queue_group"`
 	// Hostname identifies this worker instance for routing.

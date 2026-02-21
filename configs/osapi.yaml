@@ -11,6 +11,10 @@ api:
       bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
   server:
     port: 8080
+    nats:
+      host: localhost
+      port: 4222
+      client_name: osapi-api
     security:
       # openssl rand -hex 32
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
@@ -21,7 +25,7 @@ api:
 
 nats:
   server:
-    host: 0.0.0.0
+    host: localhost
     port: 4222
     store_dir: .nats/jetstream/
 
@@ -69,15 +73,11 @@ job:
     storage: file
     replicas: 1
 
-  client:
-    host: localhost
-    port: 4222
-    client_name: osapi-jobs-cli
-
   worker:
-    host: localhost
-    port: 4222
-    client_name: osapi-job-worker
+    nats:
+      host: localhost
+      port: 4222
+      client_name: osapi-job-worker
     queue_group: job-workers
     hostname: ""  # defaults to system hostname
     max_jobs: 10
