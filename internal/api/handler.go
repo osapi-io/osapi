@@ -23,39 +23,7 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
-
-	jobclient "github.com/retr0h/osapi/internal/job/client"
 )
-
-// CreateHandlers initializes handlers and returns a slice of functions to register them.
-func (s *Server) CreateHandlers(
-	jobClient jobclient.JobClient,
-) []func(e *echo.Echo) {
-	systemHandler := s.GetSystemHandler(jobClient)
-	networkHandler := s.GetNetworkHandler(jobClient)
-	jobHandler := s.GetJobHandler(jobClient)
-
-	totalCap := len(systemHandler) + len(networkHandler) + len(jobHandler)
-
-	var healthHandler []func(e *echo.Echo)
-	if s.healthHandler != nil {
-		healthHandler = s.GetHealthHandler()
-		totalCap += len(healthHandler)
-	}
-
-	handlers := make(
-		[]func(e *echo.Echo),
-		0,
-		totalCap,
-	)
-
-	handlers = append(handlers, systemHandler...)
-	handlers = append(handlers, networkHandler...)
-	handlers = append(handlers, jobHandler...)
-	handlers = append(handlers, healthHandler...)
-
-	return handlers
-}
 
 // RegisterHandlers registers a list of handlers with the Echo instance.
 func (s *Server) RegisterHandlers(

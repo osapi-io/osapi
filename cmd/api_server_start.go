@@ -39,9 +39,18 @@ import (
 // ServerManager responsible for Server operations.
 type ServerManager interface {
 	Lifecycle
-	// CreateHandlers initializes handlers and returns a slice of functions to register them.
-	CreateHandlers(
-		jobClient jobclient.JobClient,
+	// GetSystemHandler returns system handler for registration.
+	GetSystemHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetNetworkHandler returns network handler for registration.
+	GetNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetJobHandler returns job handler for registration.
+	GetJobHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetHealthHandler returns health handler for registration.
+	GetHealthHandler(
+		checker health.Checker,
+		startTime time.Time,
+		version string,
+		metrics health.MetricsProvider,
 	) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
@@ -180,10 +189,16 @@ var apiServerStartCmd = &cobra.Command{
 			},
 		}
 
-		healthHandler := health.New(logger, checker, startTime, "0.1.0", metricsProvider)
+		var sm ServerManager = api.New(appConfig, logger)
 
-		var sm ServerManager = api.New(appConfig, logger, api.WithHealthHandler(healthHandler))
-		handlers := sm.CreateHandlers(jc)
+		var handlers []func(e *echo.Echo)
+		handlers = append(handlers, sm.GetSystemHandler(jc)...)
+		handlers = append(handlers, sm.GetNetworkHandler(jc)...)
+		handlers = append(handlers, sm.GetJobHandler(jc)...)
+		handlers = append(
+			handlers,
+			sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
+
 		sm.RegisterHandlers(handlers)
 
 		sm.Start()

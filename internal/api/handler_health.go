@@ -21,9 +21,12 @@
 package api
 
 import (
+	"time"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
+	"github.com/retr0h/osapi/internal/api/health"
 	healthGen "github.com/retr0h/osapi/internal/api/health/gen"
 	"github.com/retr0h/osapi/internal/authtoken"
 )
@@ -35,10 +38,15 @@ var unauthenticatedOperations = map[string]bool{
 }
 
 // GetHealthHandler returns health handler for registration.
-func (s *Server) GetHealthHandler() []func(e *echo.Echo) {
+func (s *Server) GetHealthHandler(
+	checker health.Checker,
+	startTime time.Time,
+	version string,
+	metrics health.MetricsProvider,
+) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	healthHandler := s.healthHandler
+	healthHandler := health.New(s.logger, checker, startTime, version, metrics)
 
 	strictHandler := healthGen.NewStrictHandler(
 		healthHandler,

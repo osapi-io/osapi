@@ -31,27 +31,13 @@ import (
 	slogecho "github.com/samber/slog-echo"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
-	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/config"
 )
-
-// Option configures the Server.
-type Option func(*Server)
-
-// WithHealthHandler sets the health handler on the server.
-func WithHealthHandler(
-	h *health.Health,
-) Option {
-	return func(s *Server) {
-		s.healthHandler = h
-	}
-}
 
 // New initialize a new Server and configure an Echo server.
 func New(
 	appConfig config.Config,
 	logger *slog.Logger,
-	opts ...Option,
 ) *Server {
 	e := echo.New()
 	e.HideBanner = true
@@ -75,10 +61,6 @@ func New(
 		Echo:      e,
 		logger:    logger,
 		appConfig: appConfig,
-	}
-
-	for _, opt := range opts {
-		opt(s)
 	}
 
 	return s
