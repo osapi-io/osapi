@@ -114,6 +114,42 @@ func (suite *UITestSuite) TestBuildBroadcastTable() {
 	}
 }
 
+func (suite *UITestSuite) TestFormatLabels() {
+	tests := []struct {
+		name   string
+		labels *map[string]string
+		want   string
+	}{
+		{
+			name:   "when nil returns empty",
+			labels: nil,
+			want:   "",
+		},
+		{
+			name:   "when empty map returns empty",
+			labels: &map[string]string{},
+			want:   "",
+		},
+		{
+			name:   "when single label formats correctly",
+			labels: &map[string]string{"group": "web"},
+			want:   "group:web",
+		},
+		{
+			name:   "when multiple labels sorts by key",
+			labels: &map[string]string{"group": "web", "env": "prod", "az": "us-east"},
+			want:   "az:us-east, env:prod, group:web",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := formatLabels(tc.labels)
+			assert.Equal(suite.T(), tc.want, result)
+		})
+	}
+}
+
 func (suite *UITestSuite) TestBuildMutationTable() {
 	errMsg := "interface not found"
 

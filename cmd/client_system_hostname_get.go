@@ -65,9 +65,10 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 				results = append(results, resultRow{
 					Hostname: h.Hostname,
 					Error:    h.Error,
+					Fields:   []string{formatLabels(h.Labels)},
 				})
 			}
-			headers, rows := buildBroadcastTable(results, nil)
+			headers, rows := buildBroadcastTable(results, []string{"LABELS"})
 			printStyledTable([]section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:

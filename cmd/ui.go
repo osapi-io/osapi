@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -273,6 +274,27 @@ func formatList(
 		return "None"
 	}
 	return strings.Join(list, ", ")
+}
+
+// formatLabels formats a label map as "key:value, key:value" sorted by key.
+func formatLabels(
+	labels *map[string]string,
+) string {
+	if labels == nil || len(*labels) == 0 {
+		return ""
+	}
+
+	keys := make([]string, 0, len(*labels))
+	for k := range *labels {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		parts = append(parts, k+":"+(*labels)[k])
+	}
+	return strings.Join(parts, ", ")
 }
 
 // calculateColumnWidths calculates the optimal width for each column based on content

@@ -184,6 +184,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 		mockError     error
 		expectError   bool
 		errorContains string
+		validateFunc  func(result string, worker *job.WorkerInfo)
 	}{
 		{
 			name:     "success",
@@ -192,6 +193,21 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				"status": "completed",
 				"data": {"hostname": "server1.example.com"}
 			}`,
+		},
+		{
+			name:     "success with labels",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"hostname": "worker1",
+				"data": {"hostname": "server1.example.com", "labels": {"group": "web", "env": "prod"}}
+			}`,
+			validateFunc: func(result string, worker *job.WorkerInfo) {
+				s.Equal("server1.example.com", result)
+				s.Require().NotNil(worker)
+				s.Equal("worker1", worker.Hostname)
+				s.Equal(map[string]string{"group": "web", "env": "prod"}, worker.Labels)
+			},
 		},
 		{
 			name:     "job failed",
@@ -244,16 +260,21 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				tt.mockError,
 			)
 
-			_, result, _, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
+			_, result, worker, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
+				s.Nil(worker)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}
 			} else {
 				s.NoError(err)
+			}
+
+			if tt.validateFunc != nil {
+				tt.validateFunc(result, worker)
 			}
 		})
 	}
@@ -647,11 +668,12 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				tt.opts,
 			)
 
-			_, result, _, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+			_, result, worker, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
+				s.Nil(worker)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}

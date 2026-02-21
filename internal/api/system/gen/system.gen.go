@@ -55,6 +55,9 @@ type HostnameResponse struct {
 
 	// Hostname The system's hostname.
 	Hostname string `json:"hostname"`
+
+	// Labels Key-value labels configured on the worker.
+	Labels *map[string]string `json:"labels,omitempty"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.

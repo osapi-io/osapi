@@ -170,6 +170,9 @@ type HostnameResponse struct {
 
 	// Hostname The system's hostname.
 	Hostname string `json:"hostname"`
+
+	// Labels Key-value labels configured on the worker.
+	Labels *map[string]string `json:"labels,omitempty"`
 }
 
 // JobDetailResponse defines model for JobDetailResponse.
