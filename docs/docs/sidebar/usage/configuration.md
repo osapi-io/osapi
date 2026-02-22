@@ -118,11 +118,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------- |
-| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read` |
-| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`               |
-| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                                             |
+| Role    | Permissions                                                                                                            |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
+| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                 |
+| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                                                               |
 
 ### Custom Roles
 
@@ -218,7 +218,8 @@ api:
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
       # Permissions: system:read, network:read, network:write,
-      #              job:read, job:write, health:read, audit:read
+      #              job:read, job:write, health:read, audit:read,
+      #              command:execute
       # roles:
       #   ops:
       #     permissions:
