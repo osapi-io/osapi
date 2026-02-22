@@ -57,19 +57,34 @@ INF job processing completed job_id=abc123 trace_id=e0fd287f... span_id=4d5e6f..
 
 ## Configuration
 
-Tracing is off by default. Enable it in `osapi.yaml`:
+Tracing is off by default. The `exporter` field controls where spans are sent:
+
+| `exporter` | Behavior                                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| _(unset)_  | Log correlation only -- `trace_id` appears in structured logs but no spans are exported                                          |
+| `stdout`   | Raw OpenTelemetry span JSON dumped directly to stdout (bypasses the structured logger -- useful for one-off debugging but noisy) |
+| `otlp`     | Spans sent via gRPC to a tracing backend (Jaeger, Tempo, etc.)                                                                   |
+
+The `--debug` flag auto-enables tracing with **no exporter** (log correlation
+only). It does not enable the `stdout` exporter.
+
+### Log correlation (recommended default)
+
+Enable tracing so `trace_id` and `span_id` appear in structured log lines. No
+spans are exported -- you correlate requests by grepping logs.
 
 ```yaml
 telemetry:
   tracing:
     enabled: true
-    exporter: stdout # or "otlp" for production backends
 ```
 
-The `--debug` flag auto-enables stdout tracing with no extra configuration.
+### OTLP export (production)
 
-For production, use the OTLP exporter to send traces to Jaeger, Tempo, or any
-OTel-compatible backend:
+Send spans to a self-hosted tracing backend like
+[Jaeger](https://www.jaegertracing.io/) or
+[Grafana Tempo](https://grafana.com/oss/tempo/). The `otlp_endpoint` is the gRPC
+address of that backend.
 
 ```yaml
 telemetry:
@@ -78,6 +93,11 @@ telemetry:
     exporter: otlp
     otlp_endpoint: localhost:4317
 ```
+
+:::note The OTLP exporter currently uses an insecure (non-TLS) gRPC connection
+with no authentication. This works for local or internal backends but not for
+cloud services (Grafana Cloud, Honeycomb, Datadog) that require TLS and API
+keys. Authenticated OTLP is planned. :::
 
 See [Configuration](../usage/configuration.md#telemetrytracing) for the full
 reference.
