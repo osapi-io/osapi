@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/assert"
@@ -53,43 +52,6 @@ func (suite *NATSTestSuite) SetupTest() {
 
 func (suite *NATSTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
-}
-
-func (suite *NATSTestSuite) TestParseStorageType() {
-	tests := []struct {
-		name  string
-		input string
-		want  nats.StorageType
-	}{
-		{
-			name:  "when memory",
-			input: "memory",
-			want:  nats.MemoryStorage,
-		},
-		{
-			name:  "when file",
-			input: "file",
-			want:  nats.FileStorage,
-		},
-		{
-			name:  "when empty string defaults to file",
-			input: "",
-			want:  nats.FileStorage,
-		},
-		{
-			name:  "when unknown string defaults to file",
-			input: "unknown",
-			want:  nats.FileStorage,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			got := cli.ParseStorageType(tc.input)
-
-			assert.Equal(suite.T(), tc.want, got)
-		})
-	}
 }
 
 func (suite *NATSTestSuite) TestCloseNATSClient() {

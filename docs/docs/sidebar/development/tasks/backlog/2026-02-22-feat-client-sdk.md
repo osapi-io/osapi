@@ -8,9 +8,9 @@ updated: 2026-02-22
 ## Objective
 
 Extract a public Go SDK from `internal/client/` so that developers can
-programmatically automate system management without going through the CLI.
-The SDK would be the foundation layer that both the CLI and declarative
-automation tools build on top of.
+programmatically automate system management without going through the CLI. The
+SDK would be the foundation layer that both the CLI and declarative automation
+tools build on top of.
 
 ## Motivation
 
@@ -32,8 +32,8 @@ configs on top.
 - **Structured config** — accept Go structs or parse YAML playbooks
 - **Connection management** — handle auth, retries, timeouts
 - **CLI refactor** — rebuild CLI commands on top of the SDK
-- **Declarative engine** — parse YAML task files, execute steps via SDK
-  (similar to Ansible playbooks)
+- **Declarative engine** — parse YAML task files, execute steps via SDK (similar
+  to Ansible playbooks)
 
 ## Example Usage
 
@@ -56,10 +56,9 @@ results := client.Apply(ctx, tasks)
 
 ## Notes
 
-- Breaking this out as a separate module (`go.sum`-tracked) enables
-  independent versioning
-- Current `internal/client/` can evolve into the SDK with public API
-  surface
-- Consider whether the SDK should wrap the REST API or also support
-  direct NATS communication for lower latency
+- Breaking this out as a separate module (`go.sum`-tracked) enables independent
+  versioning
+- Current `internal/client/` can evolve into the SDK with public API surface
+- Consider whether the SDK should wrap the REST API or also support direct NATS
+  communication for lower latency
 - Playbook format could be inspired by Ansible but simpler

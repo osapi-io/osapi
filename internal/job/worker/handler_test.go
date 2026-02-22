@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
@@ -201,16 +201,16 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 func (s *HandlerTestSuite) TestHandleJobMessage() {
 	tests := []struct {
 		name        string
-		msg         *nats.Msg
+		msg         jetstream.Msg
 		setupMocks  func()
 		expectError bool
 		errorMsg    string
 	}{
 		{
 			name: "successful job processing",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("test-job-123"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("test-job-123"),
 			},
 			setupMocks: func() {
 				// Mock job data retrieval
@@ -246,9 +246,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "job processing with failure",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("test-job-456"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("test-job-456"),
 			},
 			setupMocks: func() {
 				// Mock job data retrieval
@@ -285,9 +285,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "invalid subject format",
-			msg: &nats.Msg{
-				Subject: "invalid",
-				Data:    []byte("test-job-789"),
+			msg: &mockJetStreamMsg{
+				subject: "invalid",
+				data:    []byte("test-job-789"),
 			},
 			setupMocks: func() {
 				// No mocks needed as it should fail early
@@ -297,9 +297,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "job not found",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("nonexistent-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("nonexistent-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -311,9 +311,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "invalid job data format",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("invalid-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("invalid-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -325,9 +325,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "missing job ID",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("missing-id-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("missing-id-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -344,9 +344,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "missing operation",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("missing-op-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("missing-op-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -360,9 +360,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "missing operation type",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("missing-type-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("missing-type-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -379,9 +379,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "invalid operation type format",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("invalid-type-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("invalid-type-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -399,9 +399,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "acknowledged write error logged",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("ack-err-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("ack-err-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -434,9 +434,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "started write error logged",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("start-err-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("start-err-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -469,9 +469,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "completed write error logged",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("comp-err-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("comp-err-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -504,9 +504,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "failed write error logged",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("fail-err-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("fail-err-job"),
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -540,9 +540,9 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "response storage failure",
-			msg: &nats.Msg{
-				Subject: "jobs.query.test-worker",
-				Data:    []byte("storage-fail-job"),
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-worker",
+				data:    []byte("storage-fail-job"),
 			},
 			setupMocks: func() {
 				// Mock successful job processing
@@ -651,9 +651,9 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			msg := &nats.Msg{
-				Subject: tt.subject,
-				Data:    []byte("modify-job-123"),
+			msg := &mockJetStreamMsg{
+				subject: tt.subject,
+				data:    []byte("modify-job-123"),
 			}
 
 			err := s.worker.handleJobMessage(msg)

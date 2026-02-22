@@ -24,7 +24,6 @@ package cli
 import (
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -32,17 +31,6 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
 )
-
-// ParseStorageType maps "memory"/"file" strings to nats.StorageType.
-func ParseStorageType(
-	s string,
-) nats.StorageType {
-	if s == "memory" {
-		return nats.MemoryStorage
-	}
-
-	return nats.FileStorage
-}
 
 // ParseJetstreamStorageType maps "memory"/"file" strings to jetstream.StorageType.
 func ParseJetstreamStorageType(

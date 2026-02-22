@@ -24,7 +24,7 @@ them to be used as appliances.
 
 | | |
 |---|---|
-| 🖥️ **System & Network** | Hostname, uptime, OS info, disk, memory, load, DNS read/update, ping |
+| 🖥️ **System & Network** | Hostname, uptime, OS info, disk, memory, load, DNS read/update, ping, command execution (exec/shell) |
 | ⚡ **Async Job System** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
 | 💚 **Health & Metrics** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
 | 📋 **Audit Logging** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |

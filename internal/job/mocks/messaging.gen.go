@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	nats "github.com/nats-io/nats.go"
 	jetstream "github.com/nats-io/nats.go/jetstream"
 	client "github.com/osapi-io/nats-client/pkg/client"
 )
@@ -65,36 +64,6 @@ func (mr *MockNATSClientMockRecorder) ConsumeMessages(arg0, arg1, arg2, arg3, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeMessages", reflect.TypeOf((*MockNATSClient)(nil).ConsumeMessages), arg0, arg1, arg2, arg3, arg4)
 }
 
-// CreateKVBucket mocks base method.
-func (m *MockNATSClient) CreateKVBucket(arg0 string) (nats.KeyValue, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateKVBucket", arg0)
-	ret0, _ := ret[0].(nats.KeyValue)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateKVBucket indicates an expected call of CreateKVBucket.
-func (mr *MockNATSClientMockRecorder) CreateKVBucket(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKVBucket", reflect.TypeOf((*MockNATSClient)(nil).CreateKVBucket), arg0)
-}
-
-// CreateKVBucketWithConfig mocks base method.
-func (m *MockNATSClient) CreateKVBucketWithConfig(arg0 *nats.KeyValueConfig) (nats.KeyValue, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateKVBucketWithConfig", arg0)
-	ret0, _ := ret[0].(nats.KeyValue)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateKVBucketWithConfig indicates an expected call of CreateKVBucketWithConfig.
-func (mr *MockNATSClientMockRecorder) CreateKVBucketWithConfig(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKVBucketWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateKVBucketWithConfig), arg0)
-}
-
 // CreateOrUpdateConsumerWithConfig mocks base method.
 func (m *MockNATSClient) CreateOrUpdateConsumerWithConfig(arg0 context.Context, arg1 string, arg2 jetstream.ConsumerConfig) error {
 	m.ctrl.T.Helper()
@@ -110,7 +79,7 @@ func (mr *MockNATSClientMockRecorder) CreateOrUpdateConsumerWithConfig(arg0, arg
 }
 
 // CreateOrUpdateJetStreamWithConfig mocks base method.
-func (m *MockNATSClient) CreateOrUpdateJetStreamWithConfig(arg0 context.Context, arg1 *nats.StreamConfig, arg2 ...jetstream.ConsumerConfig) error {
+func (m *MockNATSClient) CreateOrUpdateJetStreamWithConfig(arg0 context.Context, arg1 jetstream.StreamConfig, arg2 ...jetstream.ConsumerConfig) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -159,7 +128,7 @@ func (mr *MockNATSClientMockRecorder) CreateOrUpdateKVBucketWithConfig(arg0, arg
 }
 
 // CreateOrUpdateStreamWithConfig mocks base method.
-func (m *MockNATSClient) CreateOrUpdateStreamWithConfig(arg0 context.Context, arg1 *nats.StreamConfig) error {
+func (m *MockNATSClient) CreateOrUpdateStreamWithConfig(arg0 context.Context, arg1 jetstream.StreamConfig) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateStreamWithConfig", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -173,10 +142,10 @@ func (mr *MockNATSClientMockRecorder) CreateOrUpdateStreamWithConfig(arg0, arg1 
 }
 
 // GetStreamInfo mocks base method.
-func (m *MockNATSClient) GetStreamInfo(arg0 context.Context, arg1 string) (*nats.StreamInfo, error) {
+func (m *MockNATSClient) GetStreamInfo(arg0 context.Context, arg1 string) (*jetstream.StreamInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStreamInfo", arg0, arg1)
-	ret0, _ := ret[0].(*nats.StreamInfo)
+	ret0, _ := ret[0].(*jetstream.StreamInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -257,19 +226,4 @@ func (m *MockNATSClient) Publish(arg0 context.Context, arg1 string, arg2 []byte)
 func (mr *MockNATSClientMockRecorder) Publish(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSClient)(nil).Publish), arg0, arg1, arg2)
-}
-
-// PublishAndWaitKV mocks base method.
-func (m *MockNATSClient) PublishAndWaitKV(arg0 context.Context, arg1 string, arg2 []byte, arg3 nats.KeyValue, arg4 *client.RequestReplyOptions) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PublishAndWaitKV", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// PublishAndWaitKV indicates an expected call of PublishAndWaitKV.
-func (mr *MockNATSClientMockRecorder) PublishAndWaitKV(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishAndWaitKV", reflect.TypeOf((*MockNATSClient)(nil).PublishAndWaitKV), arg0, arg1, arg2, arg3, arg4)
 }

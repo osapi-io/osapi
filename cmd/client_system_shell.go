@@ -23,7 +23,6 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -31,19 +30,18 @@ import (
 	"github.com/retr0h/osapi/internal/client"
 )
 
-var clientCommandExecCmd = &cobra.Command{
-	Use:   "exec",
-	Short: "Execute a command directly",
+var clientSystemShellCmd = &cobra.Command{
+	Use:   "shell",
+	Short: "Execute a shell command",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		command, _ := cmd.Flags().GetString("command")
-		args, _ := cmd.Flags().GetStringSlice("args")
 		cwd, _ := cmd.Flags().GetString("cwd")
 		timeout, _ := cmd.Flags().GetInt("timeout")
 
 		if host == "_all" {
-			fmt.Print("This will execute command on ALL hosts. Continue? [y/N] ")
+			fmt.Print("This will execute shell command on ALL hosts. Continue? [y/N] ")
 			var confirm string
 			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
 				fmt.Println("Aborted.")
@@ -52,16 +50,15 @@ var clientCommandExecCmd = &cobra.Command{
 		}
 
 		commandHandler := handler.(client.CommandHandler)
-		resp, err := commandHandler.PostCommandExec(
+		resp, err := commandHandler.PostCommandShell(
 			ctx,
 			host,
 			command,
-			args,
 			cwd,
 			timeout,
 		)
 		if err != nil {
-			cli.LogFatal(logger, "failed to execute command", err)
+			cli.LogFatal(logger, "failed to execute shell command", err)
 		}
 
 		switch resp.StatusCode() {
@@ -111,26 +108,15 @@ var clientCommandExecCmd = &cobra.Command{
 	},
 }
 
-func formatDurationMs(
-	ms *int64,
-) string {
-	if ms == nil {
-		return ""
-	}
-	return strconv.FormatInt(*ms, 10) + "ms"
-}
-
 func init() {
-	clientCommandCmd.AddCommand(clientCommandExecCmd)
+	clientSystemCmd.AddCommand(clientSystemShellCmd)
 
-	clientCommandExecCmd.PersistentFlags().
-		String("command", "", "The command to execute (required)")
-	clientCommandExecCmd.PersistentFlags().
-		StringSlice("args", []string{}, "Command arguments (comma-separated)")
-	clientCommandExecCmd.PersistentFlags().
+	clientSystemShellCmd.PersistentFlags().
+		String("command", "", "The shell command to execute (required)")
+	clientSystemShellCmd.PersistentFlags().
 		String("cwd", "", "Working directory for the command")
-	clientCommandExecCmd.PersistentFlags().
+	clientSystemShellCmd.PersistentFlags().
 		Int("timeout", 30, "Timeout in seconds (default 30, max 300)")
 
-	_ = clientCommandExecCmd.MarkPersistentFlagRequired("command")
+	_ = clientSystemShellCmd.MarkPersistentFlagRequired("command")
 }

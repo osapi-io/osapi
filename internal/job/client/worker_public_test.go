@@ -371,7 +371,9 @@ func (s *WorkerPublicTestSuite) TestGetJobData() {
 			jobKey:      "jobs.nonexistent",
 			expectedErr: "failed to get job data for key jobs.nonexistent",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.nonexistent").Return(nil, errors.New("key not found"))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "jobs.nonexistent").
+					Return(nil, errors.New("key not found"))
 			},
 		},
 	}

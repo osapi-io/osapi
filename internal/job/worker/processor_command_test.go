@@ -93,7 +93,9 @@ func (s *ProcessorCommandTestSuite) TestProcessCommandOperation() {
 				Type:      job.TypeModify,
 				Category:  "command",
 				Operation: "exec.execute",
-				Data:      json.RawMessage(`{"command":"ls","args":["-la"],"cwd":"/tmp","timeout":30}`),
+				Data: json.RawMessage(
+					`{"command":"ls","args":["-la"],"cwd":"/tmp","timeout":30}`,
+				),
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().
@@ -124,7 +126,9 @@ func (s *ProcessorCommandTestSuite) TestProcessCommandOperation() {
 				Type:      job.TypeModify,
 				Category:  "command",
 				Operation: "shell.execute",
-				Data:      json.RawMessage(`{"command":"echo hello | tr a-z A-Z","cwd":"/tmp","timeout":30}`),
+				Data: json.RawMessage(
+					`{"command":"echo hello | tr a-z A-Z","cwd":"/tmp","timeout":30}`,
+				),
 			},
 			setupMock: func(m *commandMocks.MockProvider) {
 				m.EXPECT().

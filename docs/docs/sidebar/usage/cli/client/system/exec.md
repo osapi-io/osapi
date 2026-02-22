@@ -1,11 +1,10 @@
 # Exec
 
-Execute a command directly without a shell interpreter. Arguments are
-passed to the executable as-is, without shell expansion or
-interpretation.
+Execute a command directly without a shell interpreter. Arguments are passed to
+the executable as-is, without shell expansion or interpretation.
 
 ```bash
-$ osapi client command exec --command ls --args "-la,/tmp"
+$ osapi client system exec --command ls --args "-la,/tmp"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -20,7 +19,7 @@ $ osapi client command exec --command ls --args "-la,/tmp"
 Execute a command in a specific working directory with a custom timeout:
 
 ```bash
-$ osapi client command exec \
+$ osapi client system exec \
     --command cat \
     --args "config.yaml" \
     --cwd /etc/osapi \
@@ -30,7 +29,7 @@ $ osapi client command exec \
 When targeting all hosts, the CLI prompts for confirmation:
 
 ```bash
-$ osapi client command exec --command uptime --target _all
+$ osapi client system exec --command uptime --target _all
 
   This will execute command on ALL hosts. Continue? [y/N] y
 
@@ -47,7 +46,7 @@ $ osapi client command exec --command uptime --target _all
 Target by label to execute on a group of servers:
 
 ```bash
-$ osapi client command exec --command whoami --target group:web
+$ osapi client system exec --command whoami --target group:web
 ```
 
 ## JSON Output
@@ -55,14 +54,14 @@ $ osapi client command exec --command whoami --target group:web
 Use `--json` to get the raw API response:
 
 ```bash
-$ osapi client command exec --command hostname --json
+$ osapi client system exec --command hostname --json
 ```
 
 ## Flags
 
 | Flag           | Description                                              | Default |
 | -------------- | -------------------------------------------------------- | ------- |
-| `--command`    | The command to execute (**required**)                     |         |
+| `--command`    | The command to execute (**required**)                    |         |
 | `--args`       | Command arguments (comma-separated)                      | `[]`    |
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |

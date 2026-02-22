@@ -26,7 +26,7 @@ import (
 	"time"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 	"github.com/spf13/cobra"
@@ -123,16 +123,16 @@ func setupJetStream(
 
 	// Create JOBS stream
 	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
-	streamStorage := cli.ParseStorageType(appConfig.NATS.Stream.Storage)
+	streamStorage := cli.ParseJetstreamStorageType(appConfig.NATS.Stream.Storage)
 
-	var streamDiscard nats.DiscardPolicy
+	var streamDiscard jetstream.DiscardPolicy
 	if appConfig.NATS.Stream.Discard == "new" {
-		streamDiscard = nats.DiscardNew
+		streamDiscard = jetstream.DiscardNew
 	} else {
-		streamDiscard = nats.DiscardOld
+		streamDiscard = jetstream.DiscardOld
 	}
 
-	streamConfig := &nats.StreamConfig{
+	streamConfig := jetstream.StreamConfig{
 		Name:     streamName,
 		Subjects: []string{streamSubjects},
 		MaxAge:   streamMaxAge,
@@ -165,9 +165,9 @@ func setupJetStream(
 
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
-	dlqStorage := cli.ParseStorageType(appConfig.NATS.DLQ.Storage)
+	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)
 
-	dlqStreamConfig := &nats.StreamConfig{
+	dlqStreamConfig := jetstream.StreamConfig{
 		Name: streamName + "-DLQ",
 		Subjects: []string{
 			"$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES." + streamName + ".*",

@@ -1,10 +1,10 @@
 # Shell
 
-Execute a command through `/bin/sh -c`. Supports shell features like
-pipes, redirects, and variable expansion.
+Execute a command through `/bin/sh -c`. Supports shell features like pipes,
+redirects, and variable expansion.
 
 ```bash
-$ osapi client command shell --command "ls -la /tmp | grep log"
+$ osapi client system shell --command "ls -la /tmp | grep log"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -18,7 +18,7 @@ $ osapi client command shell --command "ls -la /tmp | grep log"
 Use shell syntax like pipes and redirects:
 
 ```bash
-$ osapi client command shell \
+$ osapi client system shell \
     --command "df -h / | tail -1 | awk '{print \$5}'" \
     --timeout 10
 ```
@@ -26,7 +26,7 @@ $ osapi client command shell \
 Execute in a specific working directory:
 
 ```bash
-$ osapi client command shell \
+$ osapi client system shell \
     --command "cat *.conf | wc -l" \
     --cwd /etc
 ```
@@ -34,7 +34,7 @@ $ osapi client command shell \
 When targeting all hosts, the CLI prompts for confirmation:
 
 ```bash
-$ osapi client command shell --command "hostname -f" --target _all
+$ osapi client system shell --command "hostname -f" --target _all
 
   This will execute shell command on ALL hosts. Continue? [y/N] y
 
@@ -51,7 +51,7 @@ $ osapi client command shell --command "hostname -f" --target _all
 Target by label to execute on a group of servers:
 
 ```bash
-$ osapi client command shell \
+$ osapi client system shell \
     --command "systemctl is-active nginx" \
     --target group:web
 ```
@@ -61,14 +61,14 @@ $ osapi client command shell \
 Use `--json` to get the raw API response:
 
 ```bash
-$ osapi client command shell --command "uname -r" --json
+$ osapi client system shell --command "uname -r" --json
 ```
 
 ## Flags
 
 | Flag           | Description                                              | Default |
 | -------------- | -------------------------------------------------------- | ------- |
-| `--command`    | The shell command to execute (**required**)               |         |
+| `--command`    | The shell command to execute (**required**)              |         |
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |

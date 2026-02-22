@@ -23,7 +23,6 @@ package job
 import (
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -33,27 +32,27 @@ import (
 // This creates a stream that accepts all job-related subjects (job.>).
 func GetJobsStreamConfig(
 	streamConfig *config.NATSStream,
-) *nats.StreamConfig {
+) *jetstream.StreamConfig {
 	// Parse duration string to time.Duration
 	maxAge, _ := time.ParseDuration(streamConfig.MaxAge)
 
 	// Parse storage type
-	var storage nats.StorageType
+	var storage jetstream.StorageType
 	if streamConfig.Storage == "memory" {
-		storage = nats.MemoryStorage
+		storage = jetstream.MemoryStorage
 	} else {
-		storage = nats.FileStorage
+		storage = jetstream.FileStorage
 	}
 
 	// Parse discard policy
-	var discard nats.DiscardPolicy
+	var discard jetstream.DiscardPolicy
 	if streamConfig.Discard == "new" {
-		discard = nats.DiscardNew
+		discard = jetstream.DiscardNew
 	} else {
-		discard = nats.DiscardOld
+		discard = jetstream.DiscardOld
 	}
 
-	return &nats.StreamConfig{
+	return &jetstream.StreamConfig{
 		Name:        streamConfig.Name,
 		Description: "Stream for job request and processing",
 		Subjects:    []string{streamConfig.Subjects},

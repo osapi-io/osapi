@@ -24,7 +24,6 @@ package messaging
 import (
 	"context"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 )
@@ -37,11 +36,11 @@ type NATSClient interface {
 	// JetStream setup and configuration
 	CreateOrUpdateStreamWithConfig(
 		ctx context.Context,
-		streamConfig *nats.StreamConfig,
+		streamConfig jetstream.StreamConfig,
 	) error
 	CreateOrUpdateJetStreamWithConfig(
 		ctx context.Context,
-		streamConfig *nats.StreamConfig,
+		streamConfig jetstream.StreamConfig,
 		consumerConfigs ...jetstream.ConsumerConfig,
 	) error
 	CreateOrUpdateConsumerWithConfig(
@@ -51,12 +50,6 @@ type NATSClient interface {
 	) error
 
 	// Key-Value operations
-	CreateKVBucket(
-		bucketName string,
-	) (nats.KeyValue, error)
-	CreateKVBucketWithConfig(
-		config *nats.KeyValueConfig,
-	) (nats.KeyValue, error)
 	CreateOrUpdateKVBucket(
 		ctx context.Context,
 		bucketName string,
@@ -89,15 +82,6 @@ type NATSClient interface {
 		data []byte,
 	) error
 
-	// Request-reply operations
-	PublishAndWaitKV(
-		ctx context.Context,
-		subject string,
-		data []byte,
-		kv nats.KeyValue,
-		opts *natsclient.RequestReplyOptions,
-	) ([]byte, error)
-
 	// Message consumption
 	ConsumeMessages(
 		ctx context.Context,
@@ -111,7 +95,7 @@ type NATSClient interface {
 	GetStreamInfo(
 		ctx context.Context,
 		streamName string,
-	) (*nats.StreamInfo, error)
+	) (*jetstream.StreamInfo, error)
 }
 
 // Ensure natsclient.Client implements NATSClient interface
