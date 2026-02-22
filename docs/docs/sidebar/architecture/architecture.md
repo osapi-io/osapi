@@ -135,6 +135,7 @@ configure them — see the Features section:
 - [System Management](../features/system-management.md) — hostname, disk,
   memory, load
 - [Network Management](../features/network-management.md) — DNS, ping
+- [Command Execution](../features/command-execution.md) — exec, shell
 - [Job System](../features/job-system.md) — async job processing and routing
 - [Audit Logging](../features/audit-logging.md) — API audit trail and export
 - [Health Checks](../features/health-checks.md) — liveness, readiness, status

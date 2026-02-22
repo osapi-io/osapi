@@ -75,6 +75,61 @@ type AuditEntryResponse struct {
 	Entry AuditEntry `json:"entry"`
 }
 
+// CommandExecRequest defines model for CommandExecRequest.
+type CommandExecRequest struct {
+	// Args Command arguments.
+	Args *[]string `json:"args,omitempty"`
+
+	// Command The executable name or path.
+	Command string `json:"command" validate:"required,min=1"`
+
+	// Cwd Working directory for the command.
+	Cwd *string `json:"cwd,omitempty"`
+
+	// Timeout Timeout in seconds (default 30, max 300).
+	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
+}
+
+// CommandResultCollectionResponse defines model for CommandResultCollectionResponse.
+type CommandResultCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []CommandResultItem `json:"results"`
+}
+
+// CommandResultItem defines model for CommandResultItem.
+type CommandResultItem struct {
+	// DurationMs Execution time in milliseconds.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+
+	// Error Error message if the worker failed to process the request.
+	Error *string `json:"error,omitempty"`
+
+	// ExitCode Exit code of the command.
+	ExitCode *int `json:"exit_code,omitempty"`
+
+	// Hostname The hostname of the worker that executed the command.
+	Hostname string `json:"hostname"`
+
+	// Stderr Standard error output of the command.
+	Stderr *string `json:"stderr,omitempty"`
+
+	// Stdout Standard output of the command.
+	Stdout *string `json:"stdout,omitempty"`
+}
+
+// CommandShellRequest defines model for CommandShellRequest.
+type CommandShellRequest struct {
+	// Command The full shell command string.
+	Command string `json:"command" validate:"required,min=1"`
+
+	// Cwd Working directory for the command.
+	Cwd *string `json:"cwd,omitempty"`
+
+	// Timeout Timeout in seconds (default 30, max 300).
+	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
+}
+
 // ComponentHealth defines model for ComponentHealth.
 type ComponentHealth struct {
 	// Error Error message when component is unhealthy.
@@ -522,6 +577,18 @@ type GetAuditLogsParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
+// PostCommandExecParams defines parameters for PostCommandExec.
+type PostCommandExecParams struct {
+	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
+}
+
+// PostCommandShellParams defines parameters for PostCommandShell.
+type PostCommandShellParams struct {
+	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
+}
+
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
 	// Status Filter jobs by status.
@@ -572,6 +639,12 @@ type GetSystemStatusParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
 	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
+
+// PostCommandExecJSONRequestBody defines body for PostCommandExec for application/json ContentType.
+type PostCommandExecJSONRequestBody = CommandExecRequest
+
+// PostCommandShellJSONRequestBody defines body for PostCommandShell for application/json ContentType.
+type PostCommandShellJSONRequestBody = CommandShellRequest
 
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
 type PostJobJSONRequestBody = CreateJobRequest
@@ -667,6 +740,16 @@ type ClientInterface interface {
 	// GetAuditLogByID request
 	GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostCommandExecWithBody request with any body
+	PostCommandExecWithBody(ctx context.Context, params *PostCommandExecParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostCommandExec(ctx context.Context, params *PostCommandExecParams, body PostCommandExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostCommandShellWithBody request with any body
+	PostCommandShellWithBody(ctx context.Context, params *PostCommandShellParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostCommandShell(ctx context.Context, params *PostCommandShellParams, body PostCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -750,6 +833,54 @@ func (c *Client) GetAuditExport(ctx context.Context, reqEditors ...RequestEditor
 
 func (c *Client) GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAuditLogByIDRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostCommandExecWithBody(ctx context.Context, params *PostCommandExecParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostCommandExecRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostCommandExec(ctx context.Context, params *PostCommandExecParams, body PostCommandExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostCommandExecRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostCommandShellWithBody(ctx context.Context, params *PostCommandShellParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostCommandShellRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostCommandShell(ctx context.Context, params *PostCommandShellParams, body PostCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostCommandShellRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1122,6 +1253,130 @@ func NewGetAuditLogByIDRequest(server string, id openapi_types.UUID) (*http.Requ
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewPostCommandExecRequest calls the generic PostCommandExec builder with application/json body
+func NewPostCommandExecRequest(server string, params *PostCommandExecParams, body PostCommandExecJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostCommandExecRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPostCommandExecRequestWithBody generates requests for PostCommandExec with any type of body
+func NewPostCommandExecRequestWithBody(server string, params *PostCommandExecParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/command/exec")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostCommandShellRequest calls the generic PostCommandShell builder with application/json body
+func NewPostCommandShellRequest(server string, params *PostCommandShellParams, body PostCommandShellJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostCommandShellRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPostCommandShellRequestWithBody generates requests for PostCommandShell with any type of body
+func NewPostCommandShellRequestWithBody(server string, params *PostCommandShellParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/command/shell")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.TargetHostname != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "target_hostname", runtime.ParamLocationQuery, *params.TargetHostname); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -1854,6 +2109,16 @@ type ClientWithResponsesInterface interface {
 	// GetAuditLogByIDWithResponse request
 	GetAuditLogByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAuditLogByIDResponse, error)
 
+	// PostCommandExecWithBodyWithResponse request with any body
+	PostCommandExecWithBodyWithResponse(ctx context.Context, params *PostCommandExecParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommandExecResponse, error)
+
+	PostCommandExecWithResponse(ctx context.Context, params *PostCommandExecParams, body PostCommandExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommandExecResponse, error)
+
+	// PostCommandShellWithBodyWithResponse request with any body
+	PostCommandShellWithBodyWithResponse(ctx context.Context, params *PostCommandShellParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommandShellResponse, error)
+
+	PostCommandShellWithResponse(ctx context.Context, params *PostCommandShellParams, body PostCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommandShellResponse, error)
+
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
 
@@ -1982,6 +2247,58 @@ func (r GetAuditLogByIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetAuditLogByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostCommandExecResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *CommandResultCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostCommandExecResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostCommandExecResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostCommandShellResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *CommandResultCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostCommandShellResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostCommandShellResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -2419,6 +2736,40 @@ func (c *ClientWithResponses) GetAuditLogByIDWithResponse(ctx context.Context, i
 	return ParseGetAuditLogByIDResponse(rsp)
 }
 
+// PostCommandExecWithBodyWithResponse request with arbitrary body returning *PostCommandExecResponse
+func (c *ClientWithResponses) PostCommandExecWithBodyWithResponse(ctx context.Context, params *PostCommandExecParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommandExecResponse, error) {
+	rsp, err := c.PostCommandExecWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostCommandExecResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostCommandExecWithResponse(ctx context.Context, params *PostCommandExecParams, body PostCommandExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommandExecResponse, error) {
+	rsp, err := c.PostCommandExec(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostCommandExecResponse(rsp)
+}
+
+// PostCommandShellWithBodyWithResponse request with arbitrary body returning *PostCommandShellResponse
+func (c *ClientWithResponses) PostCommandShellWithBodyWithResponse(ctx context.Context, params *PostCommandShellParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommandShellResponse, error) {
+	rsp, err := c.PostCommandShellWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostCommandShellResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostCommandShellWithResponse(ctx context.Context, params *PostCommandShellParams, body PostCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommandShellResponse, error) {
+	rsp, err := c.PostCommandShell(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostCommandShellResponse(rsp)
+}
+
 // GetHealthWithResponse request returning *GetHealthResponse
 func (c *ClientWithResponses) GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error) {
 	rsp, err := c.GetHealth(ctx, reqEditors...)
@@ -2737,6 +3088,114 @@ func ParseGetAuditLogByIDResponse(rsp *http.Response) (*GetAuditLogByIDResponse,
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostCommandExecResponse parses an HTTP response from a PostCommandExecWithResponse call
+func ParsePostCommandExecResponse(rsp *http.Response) (*PostCommandExecResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostCommandExecResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest CommandResultCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostCommandShellResponse parses an HTTP response from a PostCommandShellWithResponse call
+func ParsePostCommandShellResponse(rsp *http.Response) (*PostCommandShellResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostCommandShellResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest CommandResultCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

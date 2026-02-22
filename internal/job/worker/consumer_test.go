@@ -35,6 +35,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
@@ -85,6 +86,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 	dnsMock := dnsMocks.NewDefaultMockProvider(s.mockCtrl)
 	pingMock := pingMocks.NewDefaultMockProvider(s.mockCtrl)
+	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.worker = New(
 		appFs,
@@ -98,6 +100,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		loadMock,
 		dnsMock,
 		pingMock,
+		commandMock,
 	)
 }
 

@@ -34,6 +34,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -102,6 +103,8 @@ func (s *ProcessorTestSuite) SetupTest() {
 		PacketLoss:      0,
 	}, nil).AnyTimes()
 
+	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
+
 	s.worker = New(
 		appFs,
 		appConfig,
@@ -114,6 +117,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		loadMock,
 		dnsMock,
 		pingMock,
+		commandMock,
 	)
 }
 
@@ -290,6 +294,38 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				// Ping response should be a valid object
+			},
+		},
+		{
+			name: "successful command exec operation",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "command",
+				Operation: "exec.execute",
+				Data:      json.RawMessage(`{"command":"ls","args":["-la"]}`),
+			},
+			expectError: false,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Contains(response, "stdout")
+			},
+		},
+		{
+			name: "successful command shell operation",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "command",
+				Operation: "shell.execute",
+				Data:      json.RawMessage(`{"command":"echo hello"}`),
+			},
+			expectError: false,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Contains(response, "stdout")
 			},
 		},
 		{
@@ -572,6 +608,10 @@ func (s *ProcessorTestSuite) TestProviderFactoryMethods() {
 			name:        "getPingProvider",
 			getProvider: func() interface{} { return s.worker.getPingProvider() },
 		},
+		{
+			name:        "getCommandProvider",
+			getProvider: func() interface{} { return s.worker.getCommandProvider() },
+		},
 	}
 
 	for _, tt := range tests {
@@ -608,6 +648,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -632,6 +673,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -654,6 +696,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -676,6 +719,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -698,6 +742,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -720,6 +765,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMock,
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -776,6 +822,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -802,6 +849,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},
@@ -826,6 +874,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMock,
+					commandMocks.NewPlainMockProvider(s.mockCtrl),
 				)
 			},
 		},

@@ -768,6 +768,83 @@ func (s *ClientPublicTestSuite) TestGetAuditLogByID() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestPostCommandExec() {
+	tests := []struct {
+		name    string
+		command string
+		args    []string
+		cwd     string
+		timeout int
+	}{
+		{
+			name:    "returns command exec response",
+			command: "ls",
+			args:    []string{"-la"},
+			cwd:     "/tmp",
+			timeout: 30,
+		},
+		{
+			name:    "with empty args and cwd",
+			command: "whoami",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.PostCommandExec(
+				ctx,
+				"_any",
+				tt.command,
+				tt.args,
+				tt.cwd,
+				tt.timeout,
+			)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestPostCommandShell() {
+	tests := []struct {
+		name    string
+		command string
+		cwd     string
+		timeout int
+	}{
+		{
+			name:    "returns command shell response",
+			command: "echo hello | tr a-z A-Z",
+			cwd:     "/tmp",
+			timeout: 30,
+		},
+		{
+			name:    "with empty cwd",
+			command: "whoami",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.PostCommandShell(
+				ctx,
+				"_any",
+				tt.command,
+				tt.cwd,
+				tt.timeout,
+			)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
 func TestClientPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientPublicTestSuite))
 }

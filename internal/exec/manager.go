@@ -28,4 +28,13 @@ type Manager interface {
 		name string,
 		args []string,
 	) (string, error)
+
+	// RunCmdFull executes a command with separate stdout/stderr capture,
+	// an optional working directory, and a timeout in seconds.
+	RunCmdFull(
+		name string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (*CmdResult, error)
 }

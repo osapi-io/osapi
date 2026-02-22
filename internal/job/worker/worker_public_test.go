@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/job/worker"
+	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
@@ -105,6 +106,7 @@ func (s *WorkerPublicTestSuite) TestNew() {
 				loadMocks.NewDefaultMockProvider(s.mockCtrl),
 				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				commandMocks.NewDefaultMockProvider(s.mockCtrl),
 			)
 
 			s.NotNil(w)
@@ -143,6 +145,7 @@ func (s *WorkerPublicTestSuite) TestStart() {
 					loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 				)
 			},
 			stopFunc: func(w *worker.Worker) {
@@ -188,6 +191,7 @@ func (s *WorkerPublicTestSuite) TestStart() {
 					loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 				)
 
 				// Schedule cleanup after Stop returns

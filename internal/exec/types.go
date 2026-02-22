@@ -28,3 +28,16 @@ import (
 type Exec struct {
 	logger *slog.Logger
 }
+
+// CmdResult contains the full result of a command execution
+// with separate stdout and stderr streams.
+type CmdResult struct {
+	// Stdout contains the standard output of the command.
+	Stdout string
+	// Stderr contains the standard error output of the command.
+	Stderr string
+	// ExitCode is the exit code of the command.
+	ExitCode int
+	// DurationMs is the execution time in milliseconds.
+	DurationMs int64
+}

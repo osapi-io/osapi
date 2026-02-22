@@ -27,6 +27,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/system/disk"
@@ -48,18 +49,20 @@ func New(
 	loadProvider load.Provider,
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
+	commandProvider command.Provider,
 ) *Worker {
 	return &Worker{
-		logger:       logger,
-		appConfig:    appConfig,
-		appFs:        appFs,
-		jobClient:    jobClient,
-		streamName:   streamName,
-		hostProvider: hostProvider,
-		diskProvider: diskProvider,
-		memProvider:  memProvider,
-		loadProvider: loadProvider,
-		dnsProvider:  dnsProvider,
-		pingProvider: pingProvider,
+		logger:          logger,
+		appConfig:       appConfig,
+		appFs:           appFs,
+		jobClient:       jobClient,
+		streamName:      streamName,
+		hostProvider:    hostProvider,
+		diskProvider:    diskProvider,
+		memProvider:     memProvider,
+		loadProvider:    loadProvider,
+		dnsProvider:     dnsProvider,
+		pingProvider:    pingProvider,
+		commandProvider: commandProvider,
 	}
 }

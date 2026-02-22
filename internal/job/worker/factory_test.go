@@ -78,7 +78,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			factoryHostInfoFn = tt.setupMock()
 
 			factory := NewProviderFactory(slog.Default())
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -86,6 +86,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			s.NotNil(loadProvider)
 			s.NotNil(dnsProvider)
 			s.NotNil(pingProvider)
+			s.NotNil(commandProvider)
 		})
 	}
 }

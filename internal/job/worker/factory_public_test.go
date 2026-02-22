@@ -64,7 +64,7 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 		s.Run(tt.name, func() {
 			factory := worker.NewProviderFactory(slog.Default())
 
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -72,6 +72,7 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 			s.NotNil(loadProvider)
 			s.NotNil(dnsProvider)
 			s.NotNil(pingProvider)
+			s.NotNil(commandProvider)
 		})
 	}
 }

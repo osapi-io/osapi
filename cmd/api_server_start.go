@@ -59,6 +59,8 @@ type ServerManager interface {
 	) []func(e *echo.Echo)
 	// GetMetricsHandler returns Prometheus metrics handler for registration.
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
+	// GetCommandHandler returns command handler for registration.
+	GetCommandHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
@@ -281,10 +283,11 @@ func registerAPIHandlers(
 ) {
 	startTime := time.Now()
 
-	handlers := make([]func(e *echo.Echo), 0, 6)
+	handlers := make([]func(e *echo.Echo), 0, 7)
 	handlers = append(handlers, sm.GetSystemHandler(jc)...)
 	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
+	handlers = append(handlers, sm.GetCommandHandler(jc)...)
 	handlers = append(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)

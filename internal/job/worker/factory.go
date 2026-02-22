@@ -27,6 +27,7 @@ import (
 	"github.com/shirou/gopsutil/v4/host"
 
 	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/system/disk"
@@ -60,6 +61,7 @@ func (f *ProviderFactory) CreateProviders() (
 	load.Provider,
 	dns.Provider,
 	ping.Provider,
+	command.Provider,
 ) {
 	info, _ := factoryHostInfoFn()
 	platform := strings.ToLower(info.Platform)
@@ -136,5 +138,8 @@ func (f *ProviderFactory) CreateProviders() (
 		pingProvider = ping.NewLinuxProvider()
 	}
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider
+	// Create command provider (cross-platform, uses exec.Manager)
+	commandProvider := command.New(f.logger, execManager)
+
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider
 }

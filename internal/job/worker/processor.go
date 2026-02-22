@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/system/disk"
@@ -49,6 +50,8 @@ func (w *Worker) processJobOperation(
 		return w.processSystemOperation(jobRequest)
 	case "network":
 		return w.processNetworkOperation(jobRequest)
+	case "command":
+		return w.processCommandOperation(jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported job category: %s", jobRequest.Category)
 	}
@@ -329,4 +332,8 @@ func (w *Worker) getDNSProvider() dns.Provider {
 
 func (w *Worker) getPingProvider() ping.Provider {
 	return w.pingProvider
+}
+
+func (w *Worker) getCommandProvider() command.Provider {
+	return w.commandProvider
 }
