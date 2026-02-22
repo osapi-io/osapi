@@ -58,6 +58,23 @@ func (s *ServerPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "creates server with custom roles",
+			appConfig: config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+							Roles: map[string]config.CustomRole{
+								"ops": {
+									Permissions: []string{"system:read", "health:read"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "creates server with CORS origins",
 			appConfig: config.Config{
 				API: config.API{
