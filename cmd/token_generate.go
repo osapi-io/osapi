@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -59,17 +58,11 @@ This command allows you to customize the token properties for various use cases.
 			logFatal("failed to generate token", err)
 		}
 
-		logger.Info(
-			"generated token",
-			slog.String("token", tokin),
-			slog.String("roles", strings.Join(roles, ",")),
-			slog.String("subject", subject),
-		)
+		fmt.Println()
+		printKV("Token", tokin)
+		printKV("Subject", subject, "Roles", strings.Join(roles, ", "))
 		if len(permissions) > 0 {
-			logger.Info(
-				"token permissions",
-				slog.String("permissions", strings.Join(permissions, ",")),
-			)
+			printKV("Permissions", strings.Join(permissions, ", "))
 		}
 	},
 }
