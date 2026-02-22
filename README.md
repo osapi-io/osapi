@@ -37,12 +37,12 @@ them to be used as appliances.
 
 [Features][] | [Architecture][] | [Getting Started][] | [API][] | [Usage][] | [Roadmap][]
 
-[Features]: https://osapi-io.github.io/osapi/sidebar/features
+[Features]: https://osapi-io.github.io/osapi/category/features
 [Architecture]: https://osapi-io.github.io/osapi/sidebar/architecture
 [Getting Started]: https://osapi-io.github.io/osapi/
 [API]: https://osapi-io.github.io/osapi/category/api
-[Usage]: https://osapi-io.github.io/osapi/sidebar/usage/
-[Roadmap]: https://osapi-io.github.io/osapi/sidebar/roadmap
+[Usage]: https://osapi-io.github.io/osapi/sidebar/usage
+[Roadmap]: https://osapi-io.github.io/osapi/sidebar/development/roadmap
 
 ## License
 
