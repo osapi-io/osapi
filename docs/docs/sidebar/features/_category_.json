@@ -1,0 +1,9 @@
+{
+  "label": "Features",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Features",
+    "description": "OSAPI provides a comprehensive set of features for managing Linux systems. Each feature page describes what it does, how it works, relevant configuration, and links to CLI and API documentation."
+  }
+}

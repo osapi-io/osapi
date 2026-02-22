@@ -1,5 +1,6 @@
 ---
-sidebar_position: 4
+sidebar_position: 1
+sidebar_label: Overview
 ---
 
 # Development
@@ -79,7 +80,8 @@ just docs::fmt-check # Check docs formatting
 
 ## Testing
 
-See the [Testing](testing.md) page for details on running tests.
+See the [Testing](testing.md) page for details on running tests and listing just
+recipes.
 
 ```bash
 just test           # Run all tests (lint + unit + coverage + bats)

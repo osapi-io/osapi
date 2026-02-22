@@ -15,14 +15,58 @@ file, and get a REST API and CLI for querying and changing system configuration
 
 <br clear="left"/>
 
-Explore the docs:
+## Quickstart
 
+Install OSAPI and start all three processes:
+
+```bash
+# Start the embedded NATS server
+osapi nats server start &
+
+# Start the API server
+osapi api server start &
+
+# Start a worker
+osapi job worker start &
+```
+
+Generate a token and configure the CLI:
+
+```bash
+# Generate a signing key
+export OSAPI_API_SERVER_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
+
+# Generate a bearer token
+osapi token generate -r admin -u admin@example.com
+
+# Set the token for CLI use
+export OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
+```
+
+Query the system:
+
+```bash
+# Get the hostname
+osapi client system hostname
+
+# Check system status
+osapi client system status
+
+# View health
+osapi client health
+```
+
+## Explore the Docs
+
+- [Features](sidebar/features/system-management.md) — what OSAPI can manage and
+  how each feature works
 - [Architecture](sidebar/architecture/architecture.md) — how the three processes
   (NATS, API server, worker) fit together
-- [Configuration](sidebar/configuration.md) — full `osapi.yaml` reference
+- [Configuration](sidebar/usage/configuration.md) — full `osapi.yaml` reference
 - [API](category/api) — OpenAPI documentation for all endpoints
-- [CLI Usage](sidebar/usage/usage.md) — command reference with examples
-- [Roadmap](sidebar/roadmap.md) — current capabilities and what's next
+- [CLI Usage](sidebar/usage/usage.mdx) — command reference with examples
+- [Roadmap](sidebar/development/roadmap.md) — current capabilities and what's
+  next
 
 ## Alternatives
 
