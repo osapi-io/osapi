@@ -74,10 +74,10 @@ type ListAuditResponse struct {
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
 	// Limit Maximum number of entries to return.
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 
 	// Offset Number of entries to skip.
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
 // ServerInterface represents all server handlers.

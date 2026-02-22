@@ -44,6 +44,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -94,6 +96,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any

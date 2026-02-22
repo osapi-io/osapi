@@ -36,6 +36,10 @@ func (a *Audit) GetAuditLogs(
 	ctx context.Context,
 	request gen.GetAuditLogsRequestObject,
 ) (gen.GetAuditLogsResponseObject, error) {
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.GetAuditLogs400JSONResponse{Error: &errMsg}, nil
+	}
+
 	limit := 20
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
@@ -44,15 +48,6 @@ func (a *Audit) GetAuditLogs(
 	offset := 0
 	if request.Params.Offset != nil {
 		offset = *request.Params.Offset
-	}
-
-	params := struct {
-		Limit  int `validate:"min=1,max=100"`
-		Offset int `validate:"min=0"`
-	}{Limit: limit, Offset: offset}
-
-	if errMsg, ok := validation.Struct(params); !ok {
-		return gen.GetAuditLogs400JSONResponse{Error: &errMsg}, nil
 	}
 
 	entries, total, err := a.Store.List(ctx, limit, offset)

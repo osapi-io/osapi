@@ -516,22 +516,22 @@ type WorkerInfo struct {
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
 	// Limit Maximum number of entries to return.
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 
 	// Offset Number of entries to skip.
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
 	// Status Filter jobs by status.
-	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
 	// Limit Maximum number of jobs to return. Use 0 for no limit.
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=0"`
 
 	// Offset Number of jobs to skip for pagination.
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
 // GetJobParamsStatus defines parameters for GetJob.
@@ -540,13 +540,13 @@ type GetJobParamsStatus string
 // PutNetworkDNSParams defines parameters for PutNetworkDNS.
 type PutNetworkDNSParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // GetNetworkDNSByInterfaceParams defines parameters for GetNetworkDNSByInterface.
 type GetNetworkDNSByInterfaceParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // PostNetworkPingJSONBody defines parameters for PostNetworkPing.
@@ -558,19 +558,19 @@ type PostNetworkPingJSONBody struct {
 // PostNetworkPingParams defines parameters for PostNetworkPing.
 type PostNetworkPingParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // GetSystemHostnameParams defines parameters for GetSystemHostname.
 type GetSystemHostnameParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // GetSystemStatusParams defines parameters for GetSystemStatus.
 type GetSystemStatusParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // PostJobJSONRequestBody defines body for PostJob for application/json ContentType.

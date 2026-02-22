@@ -43,23 +43,23 @@ paths:
         - name: limit
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=100
           schema:
             type: integer
             default: 20
             minimum: 1
             maximum: 100
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=1,max=100
           description: Maximum number of entries to return.
         - name: offset
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
           schema:
             type: integer
             default: 0
             minimum: 0
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=0
           description: Number of entries to skip.
       responses:
         '200':
@@ -328,6 +328,10 @@ paths:
         - name: status
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: >-
+              omitempty,oneof=submitted processing completed failed
+              partial_failure
           schema:
             type: string
             enum:
@@ -336,30 +340,26 @@ paths:
               - completed
               - failed
               - partial_failure
-            x-oapi-codegen-extra-tags:
-              validate: >-
-                omitempty,oneof=submitted processing completed failed
-                partial_failure
           description: Filter jobs by status.
         - name: limit
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
           schema:
             type: integer
             minimum: 0
             default: 10
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=0
           description: Maximum number of jobs to return. Use 0 for no limit.
         - name: offset
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
           schema:
             type: integer
             minimum: 0
             default: 0
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=0
           description: Number of jobs to skip for pagination.
       responses:
         '200':
@@ -654,6 +654,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -726,16 +728,18 @@ paths:
         - name: interfaceName
           in: path
           required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,alphanum
           schema:
             type: string
-            x-oapi-codegen-extra-tags:
-              validate: required,alphanum
           description: >
             The name of the network interface to retrieve DNS configuration for.
             Must only contain letters and numbers.
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -788,6 +792,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -847,6 +853,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -898,6 +906,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any

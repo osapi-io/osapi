@@ -79,7 +79,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				r, ok := resp.(gen.GetJob400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "invalid status filter")
+				s.Contains(*r.Error, "'oneof'")
 			},
 		},
 		{

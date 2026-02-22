@@ -37,13 +37,8 @@ func (s *System) GetSystemStatus(
 	ctx context.Context,
 	request gen.GetSystemStatusRequestObject,
 ) (gen.GetSystemStatusResponseObject, error) {
-	if request.Params.TargetHostname != nil {
-		th := struct {
-			TargetHostname string `validate:"min=1"`
-		}{TargetHostname: *request.Params.TargetHostname}
-		if errMsg, ok := validation.Struct(th); !ok {
-			return gen.GetSystemStatus400JSONResponse{Error: &errMsg}, nil
-		}
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.GetSystemStatus400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := job.AnyHost

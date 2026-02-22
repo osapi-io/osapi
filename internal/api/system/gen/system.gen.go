@@ -127,13 +127,13 @@ type SystemStatusResponse struct {
 // GetSystemHostnameParams defines parameters for GetSystemHostname.
 type GetSystemHostnameParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // GetSystemStatusParams defines parameters for GetSystemStatus.
 type GetSystemStatusParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // ServerInterface represents all server handlers.

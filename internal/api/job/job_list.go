@@ -35,15 +35,13 @@ func (j *Job) GetJob(
 	ctx context.Context,
 	request gen.GetJobRequestObject,
 ) (gen.GetJobResponseObject, error) {
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.GetJob400JSONResponse{Error: &errMsg}, nil
+	}
+
 	var statusFilter string
 	if request.Params.Status != nil {
-		switch *request.Params.Status {
-		case gen.Completed, gen.Failed, gen.PartialFailure, gen.Processing, gen.Submitted:
-			statusFilter = string(*request.Params.Status)
-		default:
-			errMsg := "invalid status filter: must be one of submitted, processing, completed, failed, partial_failure"
-			return gen.GetJob400JSONResponse{Error: &errMsg}, nil
-		}
+		statusFilter = string(*request.Params.Status)
 	}
 
 	limit := 10
@@ -54,15 +52,6 @@ func (j *Job) GetJob(
 	offset := 0
 	if request.Params.Offset != nil {
 		offset = *request.Params.Offset
-	}
-
-	params := struct {
-		Limit  int `validate:"min=0"`
-		Offset int `validate:"min=0"`
-	}{Limit: limit, Offset: offset}
-
-	if errMsg, ok := validation.Struct(params); !ok {
-		return gen.GetJob400JSONResponse{Error: &errMsg}, nil
 	}
 
 	result, err := j.JobClient.ListJobs(ctx, statusFilter, limit, offset)

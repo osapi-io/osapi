@@ -123,6 +123,16 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSVali
 			wantContains: []string{`"error"`, "SearchDomains", "hostname"},
 		},
 		{
+			name: "when empty target_hostname returns 400",
+			path: "/network/dns?target_hostname=",
+			body: `{"servers":["1.1.1.1"],"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name: "when broadcast all",
 			path: "/network/dns?target_hostname=_all",
 			body: `{"servers":["1.1.1.1"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,

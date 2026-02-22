@@ -162,13 +162,13 @@ type WorkerInfo struct {
 // GetJobParams defines parameters for GetJob.
 type GetJobParams struct {
 	// Status Filter jobs by status.
-	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
 	// Limit Maximum number of jobs to return. Use 0 for no limit.
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=0"`
 
 	// Offset Number of jobs to skip for pagination.
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
 }
 
 // GetJobParamsStatus defines parameters for GetJob.

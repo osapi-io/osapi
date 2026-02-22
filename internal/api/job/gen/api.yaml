@@ -87,6 +87,8 @@ paths:
         - name: status
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=submitted processing completed failed partial_failure
           schema:
             type: string
             enum:
@@ -95,28 +97,26 @@ paths:
               - completed
               - failed
               - partial_failure
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,oneof=submitted processing completed failed partial_failure
           description: Filter jobs by status.
         - name: limit
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
           schema:
             type: integer
             minimum: 0
             default: 10
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=0
           description: Maximum number of jobs to return. Use 0 for no limit.
         - name: offset
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
           schema:
             type: integer
             minimum: 0
             default: 0
-            x-oapi-codegen-extra-tags:
-              validate: omitempty,min=0
           description: Number of jobs to skip for pagination.
       responses:
         '200':
