@@ -38,6 +38,7 @@ import (
 func New(
 	appConfig config.Config,
 	logger *slog.Logger,
+	opts ...Option,
 ) *Server {
 	e := echo.New()
 	e.HideBanner = true
@@ -71,6 +72,15 @@ func New(
 		logger:      logger,
 		appConfig:   appConfig,
 		customRoles: customRoles,
+	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	// Register audit middleware if an audit store is configured.
+	if s.auditStore != nil {
+		e.Use(auditMiddleware(s.auditStore, logger))
 	}
 
 	return s

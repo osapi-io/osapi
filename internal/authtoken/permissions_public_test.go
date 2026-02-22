@@ -48,7 +48,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			expectMissing: nil,
 		},
 		{
-			name:  "write role gets all permissions",
+			name:  "write role gets write permissions but not audit",
 			roles: []string{"write"},
 			expectPerms: []string{
 				authtoken.PermSystemRead,
@@ -57,6 +57,9 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				authtoken.PermJobRead,
 				authtoken.PermJobWrite,
 				authtoken.PermHealthRead,
+			},
+			expectMissing: []string{
+				authtoken.PermAuditRead,
 			},
 		},
 		{
@@ -71,6 +74,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			expectMissing: []string{
 				authtoken.PermNetworkWrite,
 				authtoken.PermJobWrite,
+				authtoken.PermAuditRead,
 			},
 		},
 		{
@@ -102,6 +106,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				authtoken.PermJobRead,
 				authtoken.PermJobWrite,
 				authtoken.PermHealthRead,
+				authtoken.PermAuditRead,
 			},
 		},
 		{

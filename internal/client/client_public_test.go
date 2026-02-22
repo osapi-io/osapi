@@ -692,6 +692,48 @@ func (s *ClientPublicTestSuite) TestGetHealthStatus() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestGetAuditLogs() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns audit logs response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetAuditLogs(ctx, 20, 0)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
+func (s *ClientPublicTestSuite) TestGetAuditLogByID() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns audit log entry response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetAuditLogByID(ctx, "550e8400-e29b-41d4-a716-446655440000")
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
 func TestClientPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientPublicTestSuite))
 }

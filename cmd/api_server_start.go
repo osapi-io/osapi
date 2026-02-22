@@ -32,6 +32,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/health"
+	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -56,6 +57,8 @@ type ServerManager interface {
 	) []func(e *echo.Echo)
 	// GetMetricsHandler returns Prometheus metrics handler for registration.
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
+	// GetAuditHandler returns audit handler for registration.
+	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -205,9 +208,22 @@ var apiServerStartCmd = &cobra.Command{
 			},
 		}
 
-		var sm ServerManager = api.New(appConfig, logger)
+		// Create audit KV bucket and store (optional)
+		var auditStore audit.Store
+		var serverOpts []api.Option
+		if appConfig.NATS.Audit.Bucket != "" {
+			auditBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Audit.Bucket)
+			auditKV, err := nc.CreateKVBucket(auditBucket)
+			if err != nil {
+				logFatal("failed to create audit KV bucket", err)
+			}
+			auditStore = audit.NewKVStore(logger, auditKV)
+			serverOpts = append(serverOpts, api.WithAuditStore(auditStore))
+		}
 
-		handlers := make([]func(e *echo.Echo), 0, 5)
+		var sm ServerManager = api.New(appConfig, logger, serverOpts...)
+
+		handlers := make([]func(e *echo.Echo), 0, 6)
 		handlers = append(handlers, sm.GetSystemHandler(jc)...)
 		handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 		handlers = append(handlers, sm.GetJobHandler(jc)...)
@@ -215,6 +231,9 @@ var apiServerStartCmd = &cobra.Command{
 			handlers,
 			sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
 		handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
+		if auditStore != nil {
+			handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
+		}
 
 		sm.RegisterHandlers(handlers)
 

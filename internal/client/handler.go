@@ -28,11 +28,27 @@ import (
 
 // CombinedHandler is a superset of all smaller handler interfaces.
 type CombinedHandler interface {
+	AuditHandler
 	HealthHandler
 	MetricsHandler
 	NetworkHandler
 	SystemHandler
 	JobHandler
+}
+
+// AuditHandler defines an interface for interacting with Audit client operations.
+type AuditHandler interface {
+	// GetAuditLogs get the audit logs list API endpoint.
+	GetAuditLogs(
+		ctx context.Context,
+		limit int,
+		offset int,
+	) (*gen.GetAuditLogsResponse, error)
+	// GetAuditLogByID get a single audit log entry by ID.
+	GetAuditLogByID(
+		ctx context.Context,
+		id string,
+	) (*gen.GetAuditLogByIDResponse, error)
 }
 
 // MetricsHandler defines an interface for fetching Prometheus metrics.

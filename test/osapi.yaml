@@ -48,6 +48,13 @@ nats:
     storage: file
     replicas: 1
 
+  audit:
+    bucket: audit-log
+    ttl: 720h
+    max_bytes: 52428800
+    storage: file
+    replicas: 1
+
   dlq:
     max_age: 7d
     max_msgs: 1000

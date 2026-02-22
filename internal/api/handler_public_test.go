@@ -21,6 +21,7 @@
 package api_test
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -33,9 +34,25 @@ import (
 
 	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/health"
+	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
+
+// fakeAuditStore implements audit.Store for handler wiring tests.
+type fakeAuditStore struct{}
+
+func (f *fakeAuditStore) Write(_ context.Context, _ auditstore.Entry) error {
+	return nil
+}
+
+func (f *fakeAuditStore) Get(_ context.Context, _ string) (*auditstore.Entry, error) {
+	return nil, nil
+}
+
+func (f *fakeAuditStore) List(_ context.Context, _ int, _ int) ([]auditstore.Entry, int, error) {
+	return nil, 0, nil
+}
 
 type HandlerPublicTestSuite struct {
 	suite.Suite
@@ -260,6 +277,43 @@ func (s *HandlerPublicTestSuite) TestGetMetricsHandler() {
 				w.WriteHeader(http.StatusOK)
 			})
 			handlers := s.server.GetMetricsHandler(metricsHandler, "/metrics")
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetAuditHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns audit handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/audit", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			store := &fakeAuditStore{}
+			handlers := s.server.GetAuditHandler(store)
 
 			tt.validate(handlers)
 		})

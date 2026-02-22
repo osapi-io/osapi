@@ -25,6 +25,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
 )
 
@@ -34,4 +35,17 @@ type Server struct {
 	logger      *slog.Logger
 	appConfig   config.Config
 	customRoles map[string][]string
+	auditStore  audit.Store
+}
+
+// Option is a functional option for configuring the Server.
+type Option func(*Server)
+
+// WithAuditStore sets the audit store for audit middleware.
+func WithAuditStore(
+	store audit.Store,
+) Option {
+	return func(s *Server) {
+		s.auditStore = store
+	}
 }

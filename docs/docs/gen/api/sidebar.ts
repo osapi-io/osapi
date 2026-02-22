@@ -4,7 +4,29 @@ const sidebar: SidebarsConfig = {
   apisidebar: [
     {
       type: "doc",
-      id: "gen/api/osapi-a-crud-api-for-managing-linux-systems",
+      id: "gen/api/audit-log-api",
+    },
+    {
+      type: "category",
+      label: "Audit",
+      link: {
+        type: "doc",
+        id: "gen/api/audit-log-api-audit",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-audit-logs",
+          label: "List audit log entries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-audit-log-by-id",
+          label: "Get a single audit log entry",
+          className: "api-method get",
+        },
+      ],
     },
     {
       type: "category",

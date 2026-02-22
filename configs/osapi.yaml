@@ -29,7 +29,7 @@ api:
       # Built-in roles (admin, write, read) expand to default permissions
       # unless overridden here. Permissions use resource:verb format.
       # Available: system:read, network:read, network:write,
-      #            job:read, job:write, health:read
+      #            job:read, job:write, health:read, audit:read
       # roles:
       #   ops:
       #     permissions:
@@ -75,6 +75,13 @@ nats:
   dlq:
     max_age: 7d
     max_msgs: 1000
+    storage: file
+    replicas: 1
+
+  audit:
+    bucket: audit-log
+    ttl: 720h
+    max_bytes: 52428800
     storage: file
     replicas: 1
 

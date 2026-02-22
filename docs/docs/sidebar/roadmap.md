@@ -16,9 +16,19 @@ These features are implemented and available today:
 - **Network** — DNS get/update, ping
 - **Job system** — async job processing via NATS JetStream with KV-first
   architecture, broadcast/load-balanced/label-based routing
-- **Authentication** — JWT bearer tokens with role-based scopes
-  (admin/write/read)
-- **CLI** — full parity with the REST API
+- **Health** — liveness (`/health`), readiness (`/health/ready`), system status
+  with component metrics (`/health/status`)
+- **Audit logging** — structured API operation audit trail stored in NATS KV
+  with 30-day retention, read-only API, admin-only access
+- **Authentication** — JWT bearer tokens with HS256 signing
+- **Authorization** — fine-grained `resource:verb` RBAC with built-in roles
+  (admin/write/read), custom roles, and direct permission grants
+- **Metrics** — Prometheus endpoint (`/metrics`)
+- **Distributed tracing** — OpenTelemetry with stdout and OTLP exporters, trace
+  context propagation across HTTP and NATS
+- **Namespace support** — multi-tenant NATS subject and infrastructure prefixing
+  for shared clusters
+- **CLI** — full parity with the REST API, `--json` output on all commands
 
 ## Tier 1 — Core Appliance
 
@@ -31,7 +41,6 @@ The minimum feature set to be taken seriously as an OS management API.
 | User/group management | Create, modify, delete users and groups     | `user`, `group`         |
 | Power management      | Shutdown, reboot (with delay/scheduling)    | `reboot`                |
 | Hostname set          | Set hostname (complement existing get)      | `hostname`              |
-| Health endpoints      | Liveness, readiness, system status          | —                       |
 
 ## Tier 2 — Security & Networking
 
@@ -44,7 +53,6 @@ What makes OSAPI production-ready and secure.
 | SSH key management  | Authorized key management per user       | `authorized_key`      |
 | TLS certificates    | Certificate install, CSR, CA trust store | `openssl_certificate` |
 | SELinux/AppArmor    | Security policy mode and profiles        | `selinux`             |
-| Audit logging       | Structured API operation audit trail     | —                     |
 
 ## Tier 3 — Operations & Observability
 

@@ -31,6 +31,7 @@ const (
 	PermJobRead      Permission = "job:read"
 	PermJobWrite     Permission = "job:write"
 	PermHealthRead   Permission = "health:read"
+	PermAuditRead    Permission = "audit:read"
 )
 
 // AllPermissions is the full set of known permissions.
@@ -41,6 +42,7 @@ var AllPermissions = []Permission{
 	PermJobRead,
 	PermJobWrite,
 	PermHealthRead,
+	PermAuditRead,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -52,6 +54,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermJobRead,
 		PermJobWrite,
 		PermHealthRead,
+		PermAuditRead,
 	},
 	"write": {
 		PermSystemRead,
