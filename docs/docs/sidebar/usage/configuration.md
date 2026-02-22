@@ -438,11 +438,11 @@ job:
 
 ### `telemetry.tracing`
 
-| Key             | Type   | Description                                   |
-| --------------- | ------ | --------------------------------------------- |
-| `enabled`       | bool   | Enable distributed tracing (default: `false`) |
-| `exporter`      | string | Exporter type: `"stdout"` or `"otlp"`         |
-| `otlp_endpoint` | string | gRPC endpoint for OTLP exporter               |
+| Key             | Type   | Description                                                            |
+| --------------- | ------ | ---------------------------------------------------------------------- |
+| `enabled`       | bool   | Enable distributed tracing (default: `false`)                          |
+| `exporter`      | string | `"stdout"`, `"otlp"`, or unset (log correlation only, no span export)  |
+| `otlp_endpoint` | string | gRPC endpoint for OTLP exporter (required when `exporter` is `"otlp"`) |
 
 ### `job.worker`
 
