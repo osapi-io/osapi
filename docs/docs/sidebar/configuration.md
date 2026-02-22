@@ -40,6 +40,11 @@ uppercased:
 | `nats.stream.name`                 | `OSAPI_NATS_STREAM_NAME`                 |
 | `nats.kv.bucket`                   | `OSAPI_NATS_KV_BUCKET`                   |
 | `nats.kv.response_bucket`          | `OSAPI_NATS_KV_RESPONSE_BUCKET`          |
+| `nats.audit.bucket`                | `OSAPI_NATS_AUDIT_BUCKET`                |
+| `nats.audit.ttl`                   | `OSAPI_NATS_AUDIT_TTL`                   |
+| `nats.audit.max_bytes`             | `OSAPI_NATS_AUDIT_MAX_BYTES`             |
+| `nats.audit.storage`               | `OSAPI_NATS_AUDIT_STORAGE`               |
+| `nats.audit.replicas`              | `OSAPI_NATS_AUDIT_REPLICAS`              |
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
@@ -112,11 +117,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                            |
-| ------- | -------------------------------------------------------------------------------------- |
-| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read` |
-| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read` |
-| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                               |
+| Role    | Permissions                                                                                          |
+| ------- | ---------------------------------------------------------------------------------------------------- |
+| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read` |
+| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`               |
+| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                                             |
 
 ### Custom Roles
 
@@ -212,7 +217,7 @@ api:
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
       # Permissions: system:read, network:read, network:write,
-      #              job:read, job:write, health:read
+      #              job:read, job:write, health:read, audit:read
       # roles:
       #   ops:
       #     permissions:
@@ -267,6 +272,19 @@ nats:
     ttl: '1h'
     # Maximum total size of the bucket in bytes.
     max_bytes: 104857600 # 100 MiB
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of KV replicas.
+    replicas: 1
+
+  # ── Audit log KV bucket ──────────────────────────────────
+  audit:
+    # KV bucket for audit log entries.
+    bucket: 'audit-log'
+    # TTL for audit entries (Go duration). Default 30 days.
+    ttl: '720h'
+    # Maximum total size of the audit bucket in bytes.
+    max_bytes: 52428800 # 50 MiB
     # Storage backend: "file" or "memory".
     storage: 'file'
     # Number of KV replicas.
@@ -397,6 +415,16 @@ job:
 | `max_bytes`       | int    | Maximum bucket size in bytes             |
 | `storage`         | string | `"file"` or `"memory"`                   |
 | `replicas`        | int    | Number of KV replicas                    |
+
+### `nats.audit`
+
+| Key         | Type   | Description                      |
+| ----------- | ------ | -------------------------------- |
+| `bucket`    | string | KV bucket for audit log entries  |
+| `ttl`       | string | Entry time-to-live (Go duration) |
+| `max_bytes` | int    | Maximum bucket size in bytes     |
+| `storage`   | string | `"file"` or `"memory"`           |
+| `replicas`  | int    | Number of KV replicas            |
 
 ### `nats.dlq`
 

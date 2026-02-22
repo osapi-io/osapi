@@ -1,43 +1,11 @@
 openapi: 3.0.0
 info:
-  title: OSAPI - A CRUD API for managing Linux systems
-  description: |
-    OSAPI is a lightweight, minimalistic RESTful API designed to manage and
-    configure Linux systems as appliances. The API provides comprehensive
-    management capabilities, including reading the current state of the system
-    and making privileged, asynchronous changes to match a desired configuration
-    state.
-
-    OSAPI is built with pluggability and extensibility in mind, allowing it to
-    adapt to different Linux distributions and environments by implementing
-    custom handlers for various system operations.
-
-    Key Features:
-    - **RESTful API Design:** A RESTful approach for managing Linux systems,
-      enabling clear and organized endpoints for system configurations,
-      diagnostics, and state management.
-    - **Pluggable Architecture:** Easily extend or replace components to suit
-      different Linux environments. This flexibility allows users to customize
-      behavior based on specific distribution requirements or operational needs.
-    - **Job System for Privileged Actions:** Asynchronous job execution via
-      NATS JetStream to perform system modifications securely, ensuring that
-      changes are managed in a controlled and orderly manner.
-    - **System Information Gathering:** Provides detailed system insights, such
-      as OS details, hostname, and other environment-specific information,
-      facilitating diagnostics and monitoring.
-    - **CLI Equivalence:** All functionalities accessible via the API are also
-      available through an equivalent command-line interface, making the tool
-      adaptable to both programmatic and manual use cases.
-    - **Written in Go:** The API and its supporting tools are written in Go,
-      ensuring high performance, low resource usage, and easy cross-platform
-      deployment.
+  title: Audit Log API
   version: 1.0.0
-  contact:
-    url: https://github.com/retr0h/osapi
-  license:
-    name: MIT License
-    url: https://opensource.org/licenses/MIT
 tags:
+  - name: Audit_Log_API_audit
+    x-displayName: Audit
+    description: Audit log endpoints for viewing API activity.
   - name: OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info
     x-displayName: Info
     description: Operations related to the info endpoint.
@@ -60,6 +28,120 @@ tags:
     x-displayName: System/Status
     description: Operations related to system status endpoint.
 paths:
+  /audit:
+    servers: []
+    get:
+      operationId: GetAuditLogs
+      summary: List audit log entries
+      description: Returns a paginated list of audit log entries, newest first.
+      tags:
+        - Audit_Log_API_audit
+      security:
+        - BearerAuth:
+            - audit:read
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=1,max=100
+          description: Maximum number of entries to return.
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=0
+          description: Number of entries to skip.
+      responses:
+        '200':
+          description: List of audit entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuditResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /audit/{id}:
+    servers: []
+    get:
+      operationId: GetAuditLogByID
+      summary: Get a single audit log entry
+      description: Returns a single audit log entry by ID.
+      tags:
+        - Audit_Log_API_audit
+      security:
+        - BearerAuth:
+            - audit:read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The audit entry ID.
+      responses:
+        '200':
+          description: Audit entry found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEntryResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Audit entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
     servers:
       - url: http://127.0.0.1:8080
@@ -818,6 +900,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     ErrorResponse:
       type: object
@@ -834,6 +921,87 @@ components:
           type: integer
           description: The error code.
           example: 500
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the audit entry.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        timestamp:
+          type: string
+          format: date-time
+          description: When the request was processed.
+          example: '2026-02-21T10:30:00Z'
+        user:
+          type: string
+          description: Authenticated user (JWT subject).
+          example: ops@example.com
+        roles:
+          type: array
+          items:
+            type: string
+          description: Roles from the JWT token.
+          example:
+            - admin
+        method:
+          type: string
+          description: HTTP method.
+          example: GET
+        path:
+          type: string
+          description: Request URL path.
+          example: /system/hostname
+        operation_id:
+          type: string
+          description: OpenAPI operation ID.
+          example: GetSystemHostname
+        source_ip:
+          type: string
+          description: Client IP address.
+          example: 192.168.1.100
+        response_code:
+          type: integer
+          description: HTTP response status code.
+          example: 200
+        duration_ms:
+          type: integer
+          format: int64
+          description: Request duration in milliseconds.
+          example: 42
+      required:
+        - id
+        - timestamp
+        - user
+        - roles
+        - method
+        - path
+        - source_ip
+        - response_code
+        - duration_ms
+    AuditEntryResponse:
+      type: object
+      properties:
+        entry:
+          $ref: '#/components/schemas/AuditEntry'
+      required:
+        - entry
+    ListAuditResponse:
+      type: object
+      properties:
+        total_items:
+          type: integer
+          description: Total number of audit entries.
+          example: 150
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+          description: The audit entries for this page.
+      required:
+        - total_items
+        - items
     HealthResponse:
       type: object
       properties:
@@ -1476,12 +1644,10 @@ components:
       required:
         - distribution
         - version
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 x-tagGroups:
+  - name: Audit Log API
+    tags:
+      - Audit_Log_API_audit
   - name: OSAPI - A CRUD API for managing Linux systems
     tags:
       - OSAPI_-_A_CRUD_API_for_managing_Linux_systems_info

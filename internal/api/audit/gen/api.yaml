@@ -1,0 +1,236 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Audit Log API
+  version: 1.0.0
+tags:
+  - name: audit
+    x-displayName: Audit
+    description: Audit log endpoints for viewing API activity.
+paths:
+  /audit:
+    get:
+      operationId: GetAuditLogs
+      summary: List audit log entries
+      description: Returns a paginated list of audit log entries, newest first.
+      tags:
+        - audit
+      security:
+        - BearerAuth:
+            - audit:read
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=1,max=100
+          description: Maximum number of entries to return.
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+            x-oapi-codegen-extra-tags:
+              validate: omitempty,min=0
+          description: Number of entries to skip.
+      responses:
+        '200':
+          description: List of audit entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuditResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /audit/{id}:
+    get:
+      operationId: GetAuditLogByID
+      summary: Get a single audit log entry
+      description: Returns a single audit log entry by ID.
+      tags:
+        - audit
+      security:
+        - BearerAuth:
+            - audit:read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The audit entry ID.
+      responses:
+        '200':
+          description: Audit entry found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEntryResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Audit entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the audit entry.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the request was processed.
+          example: "2026-02-21T10:30:00Z"
+        user:
+          type: string
+          description: Authenticated user (JWT subject).
+          example: "ops@example.com"
+        roles:
+          type: array
+          items:
+            type: string
+          description: Roles from the JWT token.
+          example: ["admin"]
+        method:
+          type: string
+          description: HTTP method.
+          example: "GET"
+        path:
+          type: string
+          description: Request URL path.
+          example: "/system/hostname"
+        operation_id:
+          type: string
+          description: OpenAPI operation ID.
+          example: "GetSystemHostname"
+        source_ip:
+          type: string
+          description: Client IP address.
+          example: "192.168.1.100"
+        response_code:
+          type: integer
+          description: HTTP response status code.
+          example: 200
+        duration_ms:
+          type: integer
+          format: int64
+          description: Request duration in milliseconds.
+          example: 42
+      required:
+        - id
+        - timestamp
+        - user
+        - roles
+        - method
+        - path
+        - source_ip
+        - response_code
+        - duration_ms
+
+    AuditEntryResponse:
+      type: object
+      properties:
+        entry:
+          $ref: '#/components/schemas/AuditEntry'
+      required:
+        - entry
+
+    ListAuditResponse:
+      type: object
+      properties:
+        total_items:
+          type: integer
+          description: Total number of audit entries.
+          example: 150
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+          description: The audit entries for this page.
+      required:
+        - total_items
+        - items

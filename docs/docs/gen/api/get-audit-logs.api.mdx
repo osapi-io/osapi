@@ -1,0 +1,677 @@
+---
+id: get-audit-logs
+title: "List audit log entries"
+description: "Returns a paginated list of audit log entries, newest first."
+sidebar_label: "List audit log entries"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWG1v2zYQ/ivEfdoA2ZFcO2sFFFi29cVDtgWpgwILDIOWzjYbiVTJUxrP0H8fjpJtyXa6YOuHFein2A7v7rm7hw953IAp0EpSRo9TiOEN0kWZKro0SwcBpOgSqwr+N8RwjVRa7YQUhVwqLQlTkSlHwiyEZCuRmaVATVahC4TGT+hILJR11IcASC4dxLfgA8wuzXJ2cTWeeUOYBuAwKa2iNcS3G/gJpUV7UdKKLfya2KJMYVpNAyiklTkSWucXa5kjxJCpXBEEoBjrxxLtGgKw+LFUFlOIFzJzGIBLVphLiDdA64LNlCZcovXZLmSZEcSDMIBcaZWXOcRRALl8aD6HYQAPPSML1UtMikvUPXwgK3t1chu4l5lKJbFjkyvCvKB1kCv9Mgpy+fAyCkOoqsPC/lb7F7rM52i5nE0RBRlhfdX7UAW7TM1i4fDLpNrO9F/ndiqn30/l4u5U0QduoUVXGO3QOx6EIf/pOrjsMKtxwjxKjCbUxBayKDKVePqefXBstjnO2sw/YMLVKiyTnVQdlAzJbMZpuEdK1EYz4dWtBh2hwgeZFxlCHI3CKoBDv9JayU06/P0RcCptrXFklV5CAAtjc0kQQ1mq9AjijVYfSxQqRU1qodCKhbGCVtgCu+5AhdEoxOfDMOzh4MW8N4zSYU/+EJ33hsPz89FoOAxD5msApHJ0JPPis6iYGz1eegTt/Qq1R8IcZVH4JJ0orEnQOUy7mAbh4LwXDnqDaBKF8bMwDsM/GUPp0J4K343EksH5J16d2EZ89+v7iXClL/T33VimcD823/qJyTmMNRk+pXFN/CPeX7O9WFiT+4Q5Npk71J3AtyDTXGmYVgHkSCtzst1dx28nkytRL+4m8ebVhGEUksXyn7xcNw24ub4UbNF1debWjjA/WxlHXmuqYH9AzE6Tsuv/jwL1xdVY7KzE+JcDuEjvfJS3rSDOlDbBmTpJsG6EnzOFmsT4Ssg0tei6uw+iF4N+dP68H/WjmrtbpZmxqD1hp/s6b42EI0mlE2zbiTMIeZenZVOaRzRktzWUpvPho83YuhFKi1xlmXKYGJ12MxsOqqot8rfgNWC/NZstsqXwjlkNNdpFPqxKN5MpeyVfTX9Wv2LhOGb6pKMsrPC13ijH9wPswyHetuJuN1QrFgu+j3fdYIOqYhfDU6fDWPvTaCco+yvBFzwi0FrzFM0Rre98OPDG97aCVpKESZLS2kOdey1VhmlzwluF91uy9etSk1TZCcE5Cp6mij/KTDQ2Qs5NSXsQJ8OmJXJojfTJ2DvBLDIl+dBP3CeTXZJHm2MUhlW1b+wrXnXU1Oi4qTdalrQyVv2FqegJ1pE7XIsth7519uvo7LPjzr42dq7SFLXoibF25WKhEi/jBdpcOaeM/rZxv4r2jk6rMaHlTBzae7R7+N/6+f/uZ+v+CUs/UtbXSDir53Iey7mjPGi3ZvR33Le6Ne1JfQd1RcSXDN9e/j73iyBoPrzeXot+fT/xtwSlF8abt68d4tIs+QyAABhBnWzUD/v+WlcYR7n0LGqmYj8wHr1DHJZrs+fkf37QqJMlfKCzIpNK+zHFZhykLmPzdMG3HL5S8w+bzVw6vLFZVfHP9fDOrxipcnKetcb3R2E/6bngEXh3uG49ldzLrOQ1/nHh6QA+M9t/Nuzu3WIfd8pfrOLATLEqgBXKlCe9201jdZEkWLStjpSEvexozONQALJLyAMCeu/bAU+vW743m3rFhGe2qoItdD/DQTWtqupv0HiYdw==
+sidebar_class_name: "get api-method"
+info_path: gen/api/audit-log-api
+custom_edit_url: null
+---
+
+import ApiTabs from "@theme/ApiTabs";
+import DiscriminatorTabs from "@theme/DiscriminatorTabs";
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import SecuritySchemes from "@theme/ApiExplorer/SecuritySchemes";
+import MimeTabs from "@theme/MimeTabs";
+import ParamsItem from "@theme/ParamsItem";
+import ResponseSamples from "@theme/ResponseSamples";
+import SchemaItem from "@theme/SchemaItem";
+import SchemaTabs from "@theme/SchemaTabs";
+import Heading from "@theme/Heading";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List audit log entries"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/audit"}
+>
+  
+</MethodEndpoint>
+
+
+
+Returns a paginated list of audit log entries, newest first.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<details
+  style={{"marginBottom":"1rem"}}
+  className={"openapi-markdown__details"}
+  data-collapsed={false}
+  open={true}
+>
+  <summary
+    style={{}}
+  >
+    <h3
+      className={"openapi-markdown__details-summary-header-params"}
+    >
+      Query Parameters
+    </h3>
+  </summary><div>
+    <ul>
+      <ParamsItem
+        className={"paramsItem"}
+        param={{"name":"limit","in":"query","required":false,"schema":{"type":"integer","default":20,"minimum":1,"maximum":100,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=100"}},"description":"Maximum number of entries to return."}}
+      >
+        
+      </ParamsItem><ParamsItem
+        className={"paramsItem"}
+        param={{"name":"offset","in":"query","required":false,"schema":{"type":"integer","default":0,"minimum":0,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=0"}},"description":"Number of entries to skip."}}
+      >
+        
+      </ParamsItem>
+    </ul>
+  </div>
+</details><div>
+  <div>
+    <ApiTabs
+      label={undefined}
+      id={undefined}
+    >
+      <TabItem
+        label={"200"}
+        value={"200"}
+      >
+        <div>
+          
+          
+          List of audit entries.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"total_items"}
+                        required={true}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"Total number of audit entries.","example":150}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={true}
+                        className={"schemaItem"}
+                      >
+                        <details
+                          style={{}}
+                          className={"openapi-markdown__details"}
+                        >
+                          <summary
+                            style={{}}
+                          >
+                            <span
+                              className={"openapi-schema__container"}
+                            >
+                              <strong
+                                className={"openapi-schema__property"}
+                              >
+                                items
+                              </strong><span
+                                className={"openapi-schema__name"}
+                              >
+                                 object[]
+                              </span><span
+                                className={"openapi-schema__divider"}
+                              >
+                                
+                              </span><span
+                                className={"openapi-schema__required"}
+                              >
+                                required
+                              </span>
+                            </span>
+                          </summary><div
+                            style={{"marginLeft":"1rem"}}
+                          >
+                            <div
+                              style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                            >
+                              
+                              
+                              The audit entries for this page.
+                              
+                              
+                            </div><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                              >
+                                Array [
+                              </div>
+                            </li><SchemaItem
+                              collapsible={false}
+                              name={"id"}
+                              required={true}
+                              schemaName={"uuid"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","format":"uuid","description":"Unique identifier for the audit entry.","example":"550e8400-e29b-41d4-a716-446655440000"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"timestamp"}
+                              required={true}
+                              schemaName={"date-time"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","format":"date-time","description":"When the request was processed.","example":"2026-02-21T10:30:00Z"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"user"}
+                              required={true}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Authenticated user (JWT subject).","example":"ops@example.com"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"roles"}
+                              required={true}
+                              schemaName={"string[]"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"array","items":{"type":"string"},"description":"Roles from the JWT token.","example":["admin"]}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"method"}
+                              required={true}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"HTTP method.","example":"GET"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"path"}
+                              required={true}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Request URL path.","example":"/system/hostname"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"operation_id"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"OpenAPI operation ID.","example":"GetSystemHostname"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"source_ip"}
+                              required={true}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Client IP address.","example":"192.168.1.100"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"response_code"}
+                              required={true}
+                              schemaName={"integer"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","description":"HTTP response status code.","example":200}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"duration_ms"}
+                              required={true}
+                              schemaName={"int64"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","format":"int64","description":"Request duration in milliseconds.","example":42}}
+                            >
+                              
+                            </SchemaItem><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                              >
+                                ]
+                              </div>
+                            </li>
+                          </div>
+                        </details>
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"total_items\": 150,\n  \"items\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"timestamp\": \"2026-02-21T10:30:00Z\",\n      \"user\": \"ops@example.com\",\n      \"roles\": [\n        \"admin\"\n      ],\n      \"method\": \"GET\",\n      \"path\": \"/system/hostname\",\n      \"operation_id\": \"GetSystemHostname\",\n      \"source_ip\": \"192.168.1.100\",\n      \"response_code\": 200,\n      \"duration_ms\": 42\n    }\n  ]\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Invalid request parameters.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"401"}
+        value={"401"}
+      >
+        <div>
+          
+          
+          Unauthorized - API key required.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"403"}
+        value={"403"}
+      >
+        <div>
+          
+          
+          Forbidden - Insufficient permissions.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"500"}
+        value={"500"}
+      >
+        <div>
+          
+          
+          Internal server error.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem>
+    </ApiTabs>
+  </div>
+</div>
+      

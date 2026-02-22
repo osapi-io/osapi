@@ -209,6 +209,14 @@ func setupJetStream(
 		return fmt.Errorf("create KV bucket %s: %w", kvResponseBucket, err)
 	}
 
+	// Create audit KV bucket
+	if appConfig.NATS.Audit.Bucket != "" {
+		auditBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Audit.Bucket)
+		if _, err := nc.CreateKVBucket(auditBucket); err != nil {
+			return fmt.Errorf("create audit KV bucket %s: %w", auditBucket, err)
+		}
+	}
+
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
 	var dlqStorage nats.StorageType

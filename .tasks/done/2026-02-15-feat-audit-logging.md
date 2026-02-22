@@ -1,8 +1,8 @@
 ---
 title: Audit logging for API operations
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-21
 ---
 
 ## Objective
@@ -32,10 +32,22 @@ This is primarily middleware, not a new provider:
 - Store audit entries in NATS KV or append-only file
 - Structured JSON format for machine parsing
 
+## Outcome
+
+Implemented in `feat/audit-logging` branch. Includes:
+
+- `audit:read` permission (admin role only)
+- NATS KV-backed audit store with 30-day TTL
+- Echo-level middleware (async writes, excludes health/metrics)
+- OpenAPI spec with validation, generated handler + client code
+- CLI commands: `osapi client audit list`, `osapi client audit get`
+- Full test coverage: unit, integration (validation + RBAC)
+- Documentation: CLI docs, architecture table, config reference
+- CLAUDE.md updated with validation and integration test guidance
+
 ## Notes
 
 - Read-only via API — audit logs should be tamper-resistant
 - Scopes: `audit:read` (admin only)
-- Consider retention policy (auto-purge after N days)
-- Consider forwarding to external syslog/SIEM
-- Complement to the system log viewing feature
+- 30-day retention via NATS KV TTL
+- No request/response bodies logged to avoid sensitive data leakage

@@ -90,6 +90,17 @@ type NATS struct {
 	Stream NATSStream `mapstructure:"stream,omitempty"`
 	KV     NATSKV     `mapstructure:"kv,omitempty"`
 	DLQ    NATSDLQ    `mapstructure:"dlq,omitempty"`
+	Audit  NATSAudit  `mapstructure:"audit,omitempty"`
+}
+
+// NATSAudit configuration for the audit log KV bucket.
+type NATSAudit struct {
+	// Bucket is the KV bucket name for audit log entries.
+	Bucket   string `mapstructure:"bucket"`
+	TTL      string `mapstructure:"ttl"` // e.g. "720h" (30 days)
+	MaxBytes int64  `mapstructure:"max_bytes"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
 }
 
 // NATSServer configuration settings for the embedded NATS server.

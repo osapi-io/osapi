@@ -134,6 +134,7 @@ coordination layer between clients and workers.
 | System  | Hostname, uptime, OS info, disk, memory, load              |
 | Network | DNS configuration (get/update), ping                       |
 | Jobs    | Create, list, get, delete, retry, queue stats, worker list |
+| Audit   | List entries, get entry by ID (admin only)                 |
 | Health  | Liveness, readiness, system status with metrics            |
 | Metrics | Prometheus endpoint (`/metrics`)                           |
 

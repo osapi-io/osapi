@@ -83,13 +83,43 @@ input must be validated, and the spec must declare how:
   ```
 - **Query parameters**: `x-oapi-codegen-extra-tags` does NOT generate
   validate tags for query params (oapi-codegen limitation). Add them
-  as documentation, but validate manually in the handler. Use `enum`
-  for constrained string values.
+  in the spec as documentation, but **validate manually in the handler**
+  using a temporary struct with validate tags. Use `enum` for
+  constrained string values.
+  ```yaml
+  parameters:
+    - name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+        x-oapi-codegen-extra-tags:
+          validate: omitempty,min=1,max=100
+  ```
+  Then in the handler:
+  ```go
+  params := struct {
+      Limit  int `validate:"min=1,max=100"`
+      Offset int `validate:"min=0"`
+  }{Limit: limit, Offset: offset}
+  if errMsg, ok := validation.Struct(params); !ok {
+      return gen.GetFoo400JSONResponse{Error: &errMsg}, nil
+  }
+  ```
 
-Every endpoint with user input MUST have an integration test
-(`*_integration_test.go`) that sends raw HTTP through the full Echo
-middleware stack and verifies validation errors return the correct
-status codes and error messages.
+**IMPORTANT — every endpoint with user input MUST have:**
+1. `x-oapi-codegen-extra-tags` with `validate:` tags on all request
+   body properties and query params in the OpenAPI spec
+2. Manual `validation.Struct()` calls in the handler for query params
+3. A `400` response defined in the OpenAPI spec for endpoints that
+   accept user input
+4. An integration test (`*_integration_test.go`) that sends raw HTTP
+   through the full Echo middleware stack and verifies:
+   - Validation errors return correct status codes and error messages
+   - RBAC: 401 (no token), 403 (wrong permissions), 200 (valid token)
 
 ### Step 2: Handler Implementation
 
@@ -98,11 +128,20 @@ Create `internal/api/{domain}/`:
 - `types.go` — domain struct, dependency interfaces (e.g., `Checker`)
 - `{domain}.go` — `New()` factory, compile-time interface check:
   `var _ gen.StrictServerInterface = (*Domain)(nil)`
-- One file per endpoint (e.g., `{operation}_get.go`)
-- Tests: `{operation}_get_public_test.go` (testify/suite, table-driven)
-- Integration tests: `{operation}_get_integration_test.go` — tests
-  validation through full HTTP stack (see existing examples in
-  `internal/api/job/` and `internal/api/network/`)
+- One file per endpoint (e.g., `{operation}_get.go`). Every handler
+  that accepts user input MUST call `validation.Struct()` and return
+  a 400 on failure.
+- Tests: `{operation}_get_public_test.go` (testify/suite, table-driven).
+  Must cover validation failures (400), success, and error paths.
+- Integration tests: `{operation}_get_integration_test.go` — sends raw
+  HTTP through the full Echo middleware stack. Every integration test
+  MUST include:
+  - **Validation tests**: valid input, invalid input (400 responses)
+  - **RBAC tests**: no token (401), wrong permissions (403), valid
+    token (200). Uses `api.New()` + `server.GetXxxHandler()` +
+    `server.RegisterHandlers()` to wire through `scopeMiddleware`.
+  See existing examples in `internal/api/job/` and
+  `internal/api/audit/`.
 
 ### Step 3: Server Wiring (4 files in `internal/api/`)
 
@@ -145,13 +184,23 @@ Run `just generate` which:
 - All commands support `--json` for raw output
 - Use `printKV` for inline key-value output and `printStyledTable` for
   multi-row tabular data (both in `cmd/ui.go`)
+- Use flags (e.g., `--job-id`, `--audit-id`) instead of positional args
+  for resource IDs
+- Handle **all** API response codes in the `switch resp.StatusCode()`
+  block: 200, 400 (`handleUnknownError`), 401/403 (`handleAuthError`),
+  404 (`handleUnknownError`), 500 (`handleUnknownError`). Match the
+  responses declared in the OpenAPI spec.
 
 ### Step 8: Documentation
 
+- `docs/docs/sidebar/usage/cli/client/{domain}/{domain}.md` — parent
+  page with `<DocCardList />` for sidebar navigation
 - `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
   per CLI subcommand with usage examples and `--json` output
 - Update `docs/docs/sidebar/architecture/architecture.md` — add domain to
   the "What It Can Do Today" table
+- Update `docs/docs/sidebar/configuration.md` — add any new config
+  sections (env vars, YAML reference, section reference table)
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
 
