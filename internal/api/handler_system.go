@@ -47,6 +47,7 @@ func (s *Server) GetSystemHandler(
 					tokenManager,
 					s.appConfig.API.Server.Security.SigningKey,
 					systemGen.BearerAuthScopes,
+					s.customRoles,
 				)
 			},
 		},

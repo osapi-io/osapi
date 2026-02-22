@@ -166,7 +166,7 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) PutNetworkDNS(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"write"})
+	ctx.Set(BearerAuthScopes, []string{"network:write"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutNetworkDNSParams
@@ -193,7 +193,7 @@ func (w *ServerInterfaceWrapper) GetNetworkDNSByInterface(ctx echo.Context) erro
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter interfaceName: %s", err))
 	}
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"network:read"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetNetworkDNSByInterfaceParams
@@ -213,7 +213,7 @@ func (w *ServerInterfaceWrapper) GetNetworkDNSByInterface(ctx echo.Context) erro
 func (w *ServerInterfaceWrapper) PostNetworkPing(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"write"})
+	ctx.Set(BearerAuthScopes, []string{"network:write"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostNetworkPingParams

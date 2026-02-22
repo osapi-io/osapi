@@ -25,6 +25,21 @@ api:
         allow_origins:
           - http://localhost:3001
           - https://osapi-io.github.io
+      # Custom roles with fine-grained permissions.
+      # Built-in roles (admin, write, read) expand to default permissions
+      # unless overridden here. Permissions use resource:verb format.
+      # Available: system:read, network:read, network:write,
+      #            job:read, job:write, health:read
+      # roles:
+      #   ops:
+      #     permissions:
+      #       - system:read
+      #       - health:read
+      #   netadmin:
+      #     permissions:
+      #       - network:read
+      #       - network:write
+      #       - health:read
 
 nats:
   server:

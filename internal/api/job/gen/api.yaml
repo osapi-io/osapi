@@ -36,7 +36,7 @@ paths:
         - job_operations
       security:
         - BearerAuth:
-            - write
+            - job:write
       requestBody:
         description: The job to create.
         required: true
@@ -82,7 +82,7 @@ paths:
         - job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       parameters:
         - name: status
           in: query
@@ -158,7 +158,7 @@ paths:
         - job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       responses:
         '200':
           description: Queue statistics.
@@ -193,7 +193,7 @@ paths:
         - job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       responses:
         '200':
           description: List of active workers.
@@ -229,7 +229,7 @@ paths:
       operationId: GetJobByID
       security:
         - BearerAuth:
-            - read
+            - job:read
       parameters:
         - name: id
           in: path
@@ -286,7 +286,7 @@ paths:
       operationId: DeleteJobByID
       security:
         - BearerAuth:
-            - write
+            - job:write
       parameters:
         - name: id
           in: path
@@ -342,7 +342,7 @@ paths:
       operationId: RetryJobByID
       security:
         - BearerAuth:
-            - write
+            - job:write
       parameters:
         - name: id
           in: path

@@ -27,9 +27,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-	"github.com/retr0h/osapi/internal/api/common/gen"
 
+	"github.com/retr0h/osapi/internal/api/common/gen"
 	"github.com/retr0h/osapi/internal/authtoken"
+)
+
+// Context key constants for injecting user identity into handlers.
+const (
+	ContextKeySubject = "auth.subject"
+	ContextKeyRoles   = "auth.roles"
 )
 
 // TokenValidator parses and validates JWT tokens.
@@ -40,12 +46,13 @@ type TokenValidator interface {
 	) (*authtoken.CustomClaims, error)
 }
 
-// scopeMiddleware validates JWT tokens and checks for required scopes.
+// scopeMiddleware validates JWT tokens and checks for required permissions.
 func scopeMiddleware(
 	handler strictecho.StrictEchoHandlerFunc,
 	tokenManager TokenValidator,
 	signingKey string,
 	contextKey string,
+	customRoles map[string][]string,
 ) strictecho.StrictEchoHandlerFunc {
 	return strictecho.StrictEchoHandlerFunc(
 		func(ctx echo.Context, request interface{}) (response interface{}, err error) {
@@ -66,42 +73,35 @@ func scopeMiddleware(
 				})
 			}
 
+			// Inject user identity into context for handlers and audit logging.
+			ctx.Set(ContextKeySubject, claims.Subject)
+			ctx.Set(ContextKeyRoles, claims.Roles)
+
 			requiredScopes, ok := ctx.Get(contextKey).([]string)
 			if !ok || len(requiredScopes) == 0 {
 				return handler(ctx, request)
 			}
 
-			for _, requiredScope := range requiredScopes {
-				if hasScope(claims.Roles, requiredScope) {
+			resolved := authtoken.ResolvePermissions(
+				claims.Roles,
+				claims.Permissions,
+				customRoles,
+			)
+
+			for _, required := range requiredScopes {
+				if authtoken.HasPermission(resolved, required) {
 					return handler(ctx, request)
 				}
 			}
 
 			errMsg := fmt.Sprintf(
-				"Insufficient permissions. Required scope: %v, found: %v",
+				"Insufficient permissions. Required: %v, resolved: %v",
 				requiredScopes,
-				claims.Roles,
+				resolved,
 			)
 			return nil, ctx.JSON(http.StatusForbidden, gen.ErrorResponse{
 				Error: &errMsg,
 			})
 		},
 	)
-}
-
-// hasScope checks if the token's roles contain the required scope.
-func hasScope(
-	roles []string,
-	requiredScope string,
-) bool {
-	for _, role := range roles {
-		if impliedScopes, ok := authtoken.RoleHierarchy[role]; ok {
-			for _, scope := range impliedScopes {
-				if scope == requiredScope {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }

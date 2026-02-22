@@ -30,7 +30,8 @@ import (
 
 // Server implementation of the Server's API operations.
 type Server struct {
-	Echo      *echo.Echo
-	logger    *slog.Logger
-	appConfig config.Config
+	Echo        *echo.Echo
+	logger      *slog.Logger
+	appConfig   config.Config
+	customRoles map[string][]string
 }

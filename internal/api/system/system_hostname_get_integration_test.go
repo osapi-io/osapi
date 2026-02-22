@@ -21,6 +21,7 @@
 package system_test
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -34,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/system"
 	systemGen "github.com/retr0h/osapi/internal/api/system/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -58,7 +60,7 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
+func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostnameValidation() {
 	tests := []struct {
 		name         string
 		path         string
@@ -132,6 +134,108 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostname() {
 			if tc.wantBody != "" {
 				suite.JSONEq(tc.wantBody, rec.Body.String())
 			}
+			for _, s := range tc.wantContains {
+				suite.Contains(rec.Body.String(), s)
+			}
+		})
+	}
+}
+
+const rbacTestSigningKey = "test-signing-key-for-rbac-integration"
+
+func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostnameRBAC() {
+	tokenManager := authtoken.New(suite.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"job:read"},
+				)
+				suite.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with system:read returns 200",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				suite.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					QuerySystemHostname(gomock.Any(), job.AnyHost).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						"test-host",
+						&job.WorkerInfo{Hostname: "worker1"},
+						nil,
+					)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"hostname":"test-host"`},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, suite.logger)
+			handlers := server.GetSystemHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(http.MethodGet, "/system/hostname", nil)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
+
+			suite.Equal(tc.wantCode, rec.Code)
 			for _, s := range tc.wantContains {
 				suite.Contains(rec.Body.String(), s)
 			}

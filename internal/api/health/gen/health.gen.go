@@ -165,7 +165,7 @@ func (w *ServerInterfaceWrapper) GetHealthReady(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetHealthStatus(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"health:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetHealthStatus(ctx)

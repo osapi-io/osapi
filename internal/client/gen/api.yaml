@@ -124,7 +124,7 @@ paths:
         - Health_Check_API_health
       security:
         - BearerAuth:
-            - read
+            - health:read
       responses:
         '200':
           description: All components healthy.
@@ -159,7 +159,7 @@ paths:
         - Job_Management_API_job_operations
       security:
         - BearerAuth:
-            - write
+            - job:write
       requestBody:
         description: The job to create.
         required: true
@@ -205,7 +205,7 @@ paths:
         - Job_Management_API_job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       parameters:
         - name: status
           in: query
@@ -283,7 +283,7 @@ paths:
         - Job_Management_API_job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       responses:
         '200':
           description: Queue statistics.
@@ -320,7 +320,7 @@ paths:
         - Job_Management_API_job_operations
       security:
         - BearerAuth:
-            - read
+            - job:read
       responses:
         '200':
           description: List of active workers.
@@ -356,7 +356,7 @@ paths:
       operationId: GetJobByID
       security:
         - BearerAuth:
-            - read
+            - job:read
       parameters:
         - name: id
           in: path
@@ -412,7 +412,7 @@ paths:
       operationId: DeleteJobByID
       security:
         - BearerAuth:
-            - write
+            - job:write
       parameters:
         - name: id
           in: path
@@ -468,7 +468,7 @@ paths:
       operationId: RetryJobByID
       security:
         - BearerAuth:
-            - write
+            - job:write
       parameters:
         - name: id
           in: path
@@ -531,7 +531,7 @@ paths:
         - Network_Management_API_network_operations
       security:
         - BearerAuth:
-            - write
+            - network:write
       parameters:
         - name: target_hostname
           in: query
@@ -603,7 +603,7 @@ paths:
       operationId: GetNetworkDNSByInterface
       security:
         - BearerAuth:
-            - read
+            - network:read
       parameters:
         - name: interfaceName
           in: path
@@ -665,7 +665,7 @@ paths:
       operationId: PutNetworkDNS
       security:
         - BearerAuth:
-            - write
+            - network:write
       parameters:
         - name: target_hostname
           in: query
@@ -724,7 +724,7 @@ paths:
         - System_Management_API_system_status
       security:
         - BearerAuth:
-            - read
+            - system:read
       parameters:
         - name: target_hostname
           in: query
@@ -775,7 +775,7 @@ paths:
         - System_Management_API_system_operations
       security:
         - BearerAuth:
-            - read
+            - system:read
       parameters:
         - name: target_hostname
           in: query

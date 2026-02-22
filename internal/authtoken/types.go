@@ -33,6 +33,7 @@ type Token struct {
 
 // CustomClaims defines the structure of your token claims
 type CustomClaims struct {
-	Roles []string `json:"roles" validate:"required,dive,oneof=read write admin"`
+	Roles       []string `json:"roles"                 validate:"required,dive,oneof=read write admin"`
+	Permissions []string `json:"permissions,omitempty"`
 	jwt.RegisteredClaims
 }

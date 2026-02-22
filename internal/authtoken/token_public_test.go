@@ -57,7 +57,7 @@ func (s *AuthTokenPublicTestSuite) TestGenerateAllowedRoles() {
 }
 
 func (s *AuthTokenPublicTestSuite) TestGenerate() {
-	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject")
+	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil)
 
 	s.NoError(err)
 	s.NotEmpty(tokenString)
@@ -75,7 +75,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "valid token",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject")
+				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil)
 				return t
 			},
 			signingKey:  s.signingKey,
@@ -89,7 +89,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "wrong signing key",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject")
+				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject", nil)
 				return t
 			},
 			signingKey:  "wrong-key",
@@ -199,7 +199,7 @@ func (s *AuthTokenPublicTestSuite) TestGenerateAndValidateRoundTrip() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tokenString, err := s.token.Generate(s.signingKey, tt.roles, tt.subject)
+			tokenString, err := s.token.Generate(s.signingKey, tt.roles, tt.subject, nil)
 			s.NoError(err)
 			s.NotEmpty(tokenString)
 
