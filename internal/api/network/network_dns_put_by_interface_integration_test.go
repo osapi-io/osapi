@@ -21,6 +21,7 @@
 package network_test
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -34,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/api"
 	apinetwork "github.com/retr0h/osapi/internal/api/network"
 	networkGen "github.com/retr0h/osapi/internal/api/network/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -57,7 +59,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
+func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSValidation() {
 	tests := []struct {
 		name         string
 		path         string
@@ -157,6 +159,112 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNS() {
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
+
+			suite.Equal(tc.wantCode, rec.Code)
+			for _, s := range tc.wantContains {
+				suite.Contains(rec.Body.String(), s)
+			}
+		})
+	}
+}
+
+const rbacDNSPutTestSigningKey = "test-signing-key-for-rbac-integration"
+
+func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSRBAC() {
+	tokenManager := authtoken.New(suite.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacDNSPutTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
+				suite.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with network:write returns 200",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacDNSPutTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				suite.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(suite.ctrl)
+				mock.EXPECT().
+					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						"worker1",
+						nil,
+					)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacDNSPutTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, suite.logger)
+			handlers := server.GetNetworkHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodPut,
+				"/network/dns",
+				strings.NewReader(`{"servers":["8.8.8.8"],"interface_name":"eth0"}`),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
 
 			suite.Equal(tc.wantCode, rec.Code)
 			for _, s := range tc.wantContains {

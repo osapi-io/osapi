@@ -214,7 +214,7 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) GetJob(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"job:read"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetJobParams
@@ -248,7 +248,7 @@ func (w *ServerInterfaceWrapper) GetJob(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostJob(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"write"})
+	ctx.Set(BearerAuthScopes, []string{"job:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostJob(ctx)
@@ -259,7 +259,7 @@ func (w *ServerInterfaceWrapper) PostJob(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetJobStatus(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"job:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJobStatus(ctx)
@@ -270,7 +270,7 @@ func (w *ServerInterfaceWrapper) GetJobStatus(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetJobWorkers(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"job:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJobWorkers(ctx)
@@ -288,7 +288,7 @@ func (w *ServerInterfaceWrapper) DeleteJobByID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
 	}
 
-	ctx.Set(BearerAuthScopes, []string{"write"})
+	ctx.Set(BearerAuthScopes, []string{"job:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.DeleteJobByID(ctx, id)
@@ -306,7 +306,7 @@ func (w *ServerInterfaceWrapper) GetJobByID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
 	}
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"job:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJobByID(ctx, id)
@@ -324,7 +324,7 @@ func (w *ServerInterfaceWrapper) RetryJobByID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
 	}
 
-	ctx.Set(BearerAuthScopes, []string{"write"})
+	ctx.Set(BearerAuthScopes, []string{"job:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.RetryJobByID(ctx, id)

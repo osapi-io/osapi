@@ -61,6 +61,7 @@ func (s *Server) GetHealthHandler(
 					tokenManager,
 					s.appConfig.API.Server.Security.SigningKey,
 					healthGen.BearerAuthScopes,
+					s.customRoles,
 				)
 			},
 		},

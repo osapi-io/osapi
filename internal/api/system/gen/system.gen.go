@@ -155,7 +155,7 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) GetSystemHostname(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"system:read"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetSystemHostnameParams
@@ -175,7 +175,7 @@ func (w *ServerInterfaceWrapper) GetSystemHostname(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetSystemStatus(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"read"})
+	ctx.Set(BearerAuthScopes, []string{"system:read"})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetSystemStatusParams

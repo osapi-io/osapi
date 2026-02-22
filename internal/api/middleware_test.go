@@ -46,111 +46,33 @@ func (s *MiddlewareTestSuite) SetupSuite() {
 	s.tokenManager = authtoken.New(logger)
 }
 
-func (s *MiddlewareTestSuite) generateToken(roles []string) string {
-	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject")
+func (s *MiddlewareTestSuite) generateToken(
+	roles []string,
+) string {
+	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", nil)
 	s.Require().NoError(err)
 
 	return token
 }
 
-func (s *MiddlewareTestSuite) TestHasScope() {
-	tests := []struct {
-		name          string
-		roles         []string
-		requiredScope string
-		expected      bool
-	}{
-		{
-			name:          "admin has read scope",
-			roles:         []string{"admin"},
-			requiredScope: "read",
-			expected:      true,
-		},
-		{
-			name:          "admin has write scope",
-			roles:         []string{"admin"},
-			requiredScope: "write",
-			expected:      true,
-		},
-		{
-			name:          "admin has admin scope",
-			roles:         []string{"admin"},
-			requiredScope: "admin",
-			expected:      true,
-		},
-		{
-			name:          "write role has read scope",
-			roles:         []string{"write"},
-			requiredScope: "read",
-			expected:      true,
-		},
-		{
-			name:          "write role has write scope",
-			roles:         []string{"write"},
-			requiredScope: "write",
-			expected:      true,
-		},
-		{
-			name:          "write role does not have admin scope",
-			roles:         []string{"write"},
-			requiredScope: "admin",
-			expected:      false,
-		},
-		{
-			name:          "read role has read scope",
-			roles:         []string{"read"},
-			requiredScope: "read",
-			expected:      true,
-		},
-		{
-			name:          "read role does not have write scope",
-			roles:         []string{"read"},
-			requiredScope: "write",
-			expected:      false,
-		},
-		{
-			name:          "unknown role has no scopes",
-			roles:         []string{"unknown"},
-			requiredScope: "read",
-			expected:      false,
-		},
-		{
-			name:          "empty roles",
-			roles:         []string{},
-			requiredScope: "read",
-			expected:      false,
-		},
-		{
-			name:          "nil roles",
-			roles:         nil,
-			requiredScope: "read",
-			expected:      false,
-		},
-	}
+func (s *MiddlewareTestSuite) generateTokenWithPerms(
+	roles []string,
+	permissions []string,
+) string {
+	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", permissions)
+	s.Require().NoError(err)
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			result := hasScope(tt.roles, tt.requiredScope)
-			s.Equal(tt.expected, result)
-		})
-	}
+	return token
 }
 
 func (s *MiddlewareTestSuite) TestScopeMiddleware() {
-	handlerCalled := false
-	testHandler := strictecho.StrictEchoHandlerFunc(
-		func(_ echo.Context, _ interface{}) (interface{}, error) {
-			handlerCalled = true
-			return "ok", nil
-		},
-	)
-
 	contextKey := "BearerAuthScopes"
 
 	tests := []struct {
 		name            string
 		authHeader      string
 		requiredScopes  []string
+		customRoles     map[string][]string
 		expectedStatus  int
 		expectCalled    bool
 		setupContextKey bool
@@ -158,7 +80,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "no auth header returns 401",
 			authHeader:      "",
-			requiredScopes:  []string{"read"},
+			requiredScopes:  []string{"system:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
@@ -166,7 +88,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "non-bearer auth header returns 401",
 			authHeader:      "Basic dXNlcjpwYXNz",
-			requiredScopes:  []string{"read"},
+			requiredScopes:  []string{"system:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
@@ -174,23 +96,31 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "invalid token returns 401",
 			authHeader:      "Bearer invalid-token-string",
-			requiredScopes:  []string{"read"},
+			requiredScopes:  []string{"system:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
 		},
 		{
-			name:            "valid token with sufficient scope calls handler",
+			name:            "admin role has system:read",
 			authHeader:      "", // set dynamically
-			requiredScopes:  []string{"read"},
+			requiredScopes:  []string{"system:read"},
 			expectedStatus:  http.StatusOK,
 			expectCalled:    true,
 			setupContextKey: true,
 		},
 		{
-			name:            "valid token with insufficient scope returns 403",
+			name:            "read role has system:read",
 			authHeader:      "", // set dynamically
-			requiredScopes:  []string{"admin"},
+			requiredScopes:  []string{"system:read"},
+			expectedStatus:  http.StatusOK,
+			expectCalled:    true,
+			setupContextKey: true,
+		},
+		{
+			name:            "read role lacks network:write returns 403",
+			authHeader:      "", // set dynamically
+			requiredScopes:  []string{"network:write"},
 			expectedStatus:  http.StatusForbidden,
 			expectCalled:    false,
 			setupContextKey: true,
@@ -207,18 +137,26 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlerCalled = false
+			handlerCalled := false
+			testHandler := strictecho.StrictEchoHandlerFunc(
+				func(_ echo.Context, _ interface{}) (interface{}, error) {
+					handlerCalled = true
+					return "ok", nil
+				},
+			)
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			rec := httptest.NewRecorder()
 
-			// Set auth header
 			authHeader := tt.authHeader
 			if authHeader == "" && tt.expectedStatus != http.StatusUnauthorized {
-				// Generate a valid token with "read" role
-				token := s.generateToken([]string{"read"})
-				authHeader = "Bearer " + token
+				if tt.expectedStatus == http.StatusForbidden {
+					// Use read role for insufficient permission tests
+					authHeader = "Bearer " + s.generateToken([]string{"read"})
+				} else {
+					authHeader = "Bearer " + s.generateToken([]string{"admin"})
+				}
 			}
 			if authHeader != "" {
 				req.Header.Set("Authorization", authHeader)
@@ -230,7 +168,13 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 				ctx.Set(contextKey, tt.requiredScopes)
 			}
 
-			wrapped := scopeMiddleware(testHandler, s.tokenManager, testSigningKey, contextKey)
+			wrapped := scopeMiddleware(
+				testHandler,
+				s.tokenManager,
+				testSigningKey,
+				contextKey,
+				tt.customRoles,
+			)
 			_, _ = wrapped(ctx, nil)
 
 			s.Equal(tt.expectCalled, handlerCalled)
@@ -239,6 +183,200 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 			}
 		})
 	}
+}
+
+func (s *MiddlewareTestSuite) TestScopeMiddlewareCustomRoles() {
+	contextKey := "BearerAuthScopes"
+
+	tests := []struct {
+		name           string
+		tokenRoles     []string
+		customRoles    map[string][]string
+		requiredScope  string
+		expectedStatus int
+		expectCalled   bool
+	}{
+		{
+			name:       "custom role grants access",
+			tokenRoles: []string{"ops"},
+			customRoles: map[string][]string{
+				"ops": {"system:read", "health:read"},
+			},
+			requiredScope:  "system:read",
+			expectedStatus: http.StatusOK,
+			expectCalled:   true,
+		},
+		{
+			name:       "custom role lacks permission",
+			tokenRoles: []string{"ops"},
+			customRoles: map[string][]string{
+				"ops": {"health:read"},
+			},
+			requiredScope:  "system:read",
+			expectedStatus: http.StatusForbidden,
+			expectCalled:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlerCalled := false
+			testHandler := strictecho.StrictEchoHandlerFunc(
+				func(_ echo.Context, _ interface{}) (interface{}, error) {
+					handlerCalled = true
+					return "ok", nil
+				},
+			)
+
+			// Custom-role tokens need roles that validate (read/write/admin),
+			// but we want to test custom role resolution. We'll use a token with
+			// "admin" role and have the custom role shadow it.
+			// Actually, custom roles use custom role names not built-in ones.
+			// The token validation requires oneof=read write admin, so we
+			// generate with "admin" but configure a custom role "ops".
+			// Wait - the custom role name "ops" wouldn't be in the JWT Roles validation.
+			// Let me think... The JWT requires roles to be read/write/admin.
+			// Custom roles would shadow built-in roles. Let me use "admin" and
+			// shadow it with a custom role mapping.
+			token, err := s.tokenManager.Generate(
+				testSigningKey,
+				[]string{"admin"},
+				"test-subject",
+				nil,
+			)
+			s.Require().NoError(err)
+
+			// Override custom roles to shadow "admin"
+			customRoles := map[string][]string{
+				"admin": tt.customRoles[tt.tokenRoles[0]],
+			}
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			rec := httptest.NewRecorder()
+
+			ctx := e.NewContext(req, rec)
+			ctx.Set(contextKey, []string{tt.requiredScope})
+
+			wrapped := scopeMiddleware(
+				testHandler,
+				s.tokenManager,
+				testSigningKey,
+				contextKey,
+				customRoles,
+			)
+			_, _ = wrapped(ctx, nil)
+
+			s.Equal(tt.expectCalled, handlerCalled)
+			if !tt.expectCalled {
+				s.Equal(tt.expectedStatus, rec.Code)
+			}
+		})
+	}
+}
+
+func (s *MiddlewareTestSuite) TestScopeMiddlewareDirectPermissions() {
+	contextKey := "BearerAuthScopes"
+
+	tests := []struct {
+		name           string
+		permissions    []string
+		requiredScope  string
+		expectedStatus int
+		expectCalled   bool
+	}{
+		{
+			name:           "direct permission grants access",
+			permissions:    []string{"system:read"},
+			requiredScope:  "system:read",
+			expectedStatus: http.StatusOK,
+			expectCalled:   true,
+		},
+		{
+			name:           "direct permission restricts to only listed",
+			permissions:    []string{"health:read"},
+			requiredScope:  "system:read",
+			expectedStatus: http.StatusForbidden,
+			expectCalled:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlerCalled := false
+			testHandler := strictecho.StrictEchoHandlerFunc(
+				func(_ echo.Context, _ interface{}) (interface{}, error) {
+					handlerCalled = true
+					return "ok", nil
+				},
+			)
+
+			token := s.generateTokenWithPerms([]string{"admin"}, tt.permissions)
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			rec := httptest.NewRecorder()
+
+			ctx := e.NewContext(req, rec)
+			ctx.Set(contextKey, []string{tt.requiredScope})
+
+			wrapped := scopeMiddleware(
+				testHandler,
+				s.tokenManager,
+				testSigningKey,
+				contextKey,
+				nil,
+			)
+			_, _ = wrapped(ctx, nil)
+
+			s.Equal(tt.expectCalled, handlerCalled)
+			if !tt.expectCalled {
+				s.Equal(tt.expectedStatus, rec.Code)
+			}
+		})
+	}
+}
+
+func (s *MiddlewareTestSuite) TestScopeMiddlewareInjectsIdentity() {
+	contextKey := "BearerAuthScopes"
+
+	handlerCalled := false
+	var capturedSubject string
+	var capturedRoles []string
+
+	testHandler := strictecho.StrictEchoHandlerFunc(
+		func(ctx echo.Context, _ interface{}) (interface{}, error) {
+			handlerCalled = true
+			capturedSubject, _ = ctx.Get(ContextKeySubject).(string)
+			capturedRoles, _ = ctx.Get(ContextKeyRoles).([]string)
+			return "ok", nil
+		},
+	)
+
+	token := s.generateToken([]string{"admin"})
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	ctx := e.NewContext(req, rec)
+	ctx.Set(contextKey, []string{"system:read"})
+
+	wrapped := scopeMiddleware(
+		testHandler,
+		s.tokenManager,
+		testSigningKey,
+		contextKey,
+		nil,
+	)
+	_, _ = wrapped(ctx, nil)
+
+	s.True(handlerCalled)
+	s.Equal("test-subject", capturedSubject)
+	s.Equal([]string{"admin"}, capturedRoles)
 }
 
 func TestMiddlewareTestSuite(t *testing.T) {

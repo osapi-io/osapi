@@ -40,7 +40,7 @@ paths:
         - network_operations
       security:
         - BearerAuth:
-            - write
+            - network:write
       parameters:
         - name: target_hostname
           in: query
@@ -108,7 +108,7 @@ paths:
       operationId: GetNetworkDNSByInterface
       security:
         - BearerAuth:
-            - read
+            - network:read
       parameters:
         - name: interfaceName
           in: path
@@ -171,7 +171,7 @@ paths:
       operationId: PutNetworkDNS
       security:
         - BearerAuth:
-            - write
+            - network:write
       parameters:
         - name: target_hostname
           in: query

@@ -71,7 +71,7 @@ paths:
         - health
       security:
         - BearerAuth:
-            - read
+            - health:read
       responses:
         '200':
           description: All components healthy.

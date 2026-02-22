@@ -177,12 +177,20 @@ type Server struct {
 	Security ServerSecurity `mapstructure:"security" mask:"struct"`
 }
 
+// CustomRole defines a named set of permissions that can be assigned to tokens.
+type CustomRole struct {
+	// Permissions granted to this role.
+	Permissions []string `mapstructure:"permissions"`
+}
+
 // ServerSecurity represents security-related settings for the server.
 type ServerSecurity struct {
 	// CORS Cross-Origin Resource Sharing (CORS) settings for the server.
 	CORS CORS `mapstructure:"cors"`
 	// SigningKey is the key used for signing or validating tokens.
 	SigningKey string `mapstructure:"signing_key" validate:"required" mask:"password"`
+	// Roles defines custom roles with fine-grained permissions.
+	Roles map[string]CustomRole `mapstructure:"roles"`
 }
 
 // ClientSecurity represents security-related settings for the client.

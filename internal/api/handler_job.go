@@ -47,6 +47,7 @@ func (s *Server) GetJobHandler(
 					tokenManager,
 					s.appConfig.API.Server.Security.SigningKey,
 					jobGen.BearerAuthScopes,
+					s.customRoles,
 				)
 			},
 		},

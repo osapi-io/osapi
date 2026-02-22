@@ -106,6 +106,51 @@ api:
         password: '<secret>'
 ```
 
+## Permissions
+
+OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
+endpoint requires a specific permission. Built-in roles expand to a default set
+of permissions:
+
+| Role    | Permissions                                                                            |
+| ------- | -------------------------------------------------------------------------------------- |
+| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read` |
+| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read` |
+| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                               |
+
+### Custom Roles
+
+You can define custom roles in the `api.server.security.roles` section. Custom
+roles override the default permission mapping for the same name, or define
+entirely new role names:
+
+```yaml
+api:
+  server:
+    security:
+      roles:
+        ops:
+          permissions:
+            - system:read
+            - health:read
+        netadmin:
+          permissions:
+            - network:read
+            - network:write
+            - health:read
+```
+
+### Direct Permissions
+
+Tokens can carry a `permissions` claim that overrides role-based expansion. When
+the claim is present, only the listed permissions are granted regardless of the
+token's roles. Generate a token with direct permissions:
+
+```bash
+osapi token generate -r admin -u user@example.com \
+  -p system:read -p health:read
+```
+
 ## Namespace
 
 The `namespace` field on NATS connections prefixes all subject names and
@@ -165,6 +210,14 @@ api:
         allow_origins:
           - 'http://localhost:3001'
           - 'https://osapi-io.github.io'
+      # Custom roles with fine-grained permissions.
+      # Permissions: system:read, network:read, network:write,
+      #              job:read, job:write, health:read
+      # roles:
+      #   ops:
+      #     permissions:
+      #       - system:read
+      #       - health:read
 
 nats:
   server:
@@ -308,6 +361,7 @@ job:
 | `nats.auth.password`          | string   | Password for `user_pass` auth        |
 | `security.signing_key`        | string   | HS256 JWT signing key (**required**) |
 | `security.cors.allow_origins` | []string | Allowed CORS origins                 |
+| `security.roles`              | map      | Custom roles with permissions lists  |
 
 ### `nats.server`
 

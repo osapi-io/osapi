@@ -57,10 +57,20 @@ func New(
 	e.Use(middleware.CORSWithConfig(corsConfig))
 	e.Use(middleware.Recover())
 
+	// Build custom roles map from config.
+	var customRoles map[string][]string
+	if cfgRoles := appConfig.API.Server.Security.Roles; len(cfgRoles) > 0 {
+		customRoles = make(map[string][]string, len(cfgRoles))
+		for name, role := range cfgRoles {
+			customRoles[name] = role.Permissions
+		}
+	}
+
 	s := &Server{
-		Echo:      e,
-		logger:    logger,
-		appConfig: appConfig,
+		Echo:        e,
+		logger:      logger,
+		appConfig:   appConfig,
+		customRoles: customRoles,
 	}
 
 	return s

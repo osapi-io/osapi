@@ -57,6 +57,17 @@ This command ensures that the token is authentic, has not expired, and conforms 
 
 		fmt.Println()
 		printKV("Subject", claims.Subject, "Roles", strings.Join(claims.Roles, ", "))
+		if len(claims.Permissions) > 0 {
+			printKV("Permissions", strings.Join(claims.Permissions, ", "))
+		}
+
+		resolved := authtoken.ResolvePermissions(claims.Roles, claims.Permissions, nil)
+		effectivePerms := make([]string, 0, len(resolved))
+		for p := range resolved {
+			effectivePerms = append(effectivePerms, p)
+		}
+		printKV("Effective Permissions", strings.Join(effectivePerms, ", "))
+
 		printKV("Audience", strings.Join(claims.Audience, ", "))
 		printKV("Issued", claims.IssuedAt.Format(time.RFC3339),
 			"Expires", claims.ExpiresAt.Format(time.RFC3339),

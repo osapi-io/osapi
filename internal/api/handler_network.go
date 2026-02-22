@@ -47,6 +47,7 @@ func (s *Server) GetNetworkHandler(
 					tokenManager,
 					s.appConfig.API.Server.Security.SigningKey,
 					networkGen.BearerAuthScopes,
+					s.customRoles,
 				)
 			},
 		},

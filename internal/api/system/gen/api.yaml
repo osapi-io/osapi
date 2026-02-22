@@ -39,7 +39,7 @@ paths:
         - system_status
       security:
         - BearerAuth:
-            - read
+            - system:read
       parameters:
         - name: target_hostname
           in: query
@@ -89,7 +89,7 @@ paths:
         - system_operations
       security:
         - BearerAuth:
-            - read
+            - system:read
       parameters:
         - name: target_hostname
           in: query
