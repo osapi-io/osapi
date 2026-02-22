@@ -73,6 +73,12 @@ func (f *fakeAuditStore) List(
 	return nil, 0, nil
 }
 
+func (f *fakeAuditStore) ListAll(
+	_ context.Context,
+) ([]audit.Entry, error) {
+	return nil, nil
+}
+
 func (f *fakeAuditStore) getEntries() []audit.Entry {
 	f.mu.Lock()
 	defer f.mu.Unlock()

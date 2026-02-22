@@ -18,34 +18,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit
+package export
 
-import "context"
+import (
+	"context"
 
-// Store defines the interface for audit log persistence.
-type Store interface {
-	// Write persists an audit entry.
-	Write(
-		ctx context.Context,
-		entry Entry,
-	) error
+	gen "github.com/retr0h/osapi/internal/client/gen"
+)
 
-	// Get retrieves a single audit entry by ID.
-	Get(
-		ctx context.Context,
-		id string,
-	) (*Entry, error)
+// Exporter writes audit entries to a backend.
+type Exporter interface {
+	Open(ctx context.Context) error
+	Write(ctx context.Context, entry gen.AuditEntry) error
+	Close(ctx context.Context) error
+}
 
-	// List retrieves audit entries with pagination.
-	// Returns the entries, total count, and any error.
-	List(
-		ctx context.Context,
-		limit int,
-		offset int,
-	) ([]Entry, int, error)
+// Fetcher retrieves a page of audit entries.
+// Returns the entries, total count, and any error.
+type Fetcher func(
+	ctx context.Context,
+	limit int,
+	offset int,
+) ([]gen.AuditEntry, int, error)
 
-	// ListAll retrieves all audit entries without pagination.
-	ListAll(
-		ctx context.Context,
-	) ([]Entry, error)
+// Result holds export outcome.
+type Result struct {
+	TotalEntries    int
+	ExportedEntries int
 }

@@ -54,6 +54,10 @@ func (f *fakeAuditStore) List(_ context.Context, _ int, _ int) ([]auditstore.Ent
 	return nil, 0, nil
 }
 
+func (f *fakeAuditStore) ListAll(_ context.Context) ([]auditstore.Entry, error) {
+	return nil, nil
+}
+
 type HandlerPublicTestSuite struct {
 	suite.Suite
 
@@ -304,6 +308,20 @@ func (s *HandlerPublicTestSuite) TestGetAuditHandler() {
 				s.NotEmpty(e.Routes())
 
 				req := httptest.NewRequest(http.MethodGet, "/audit", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+		{
+			name: "closure registers export route and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/audit/export", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},

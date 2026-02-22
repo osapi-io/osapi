@@ -713,6 +713,27 @@ func (s *ClientPublicTestSuite) TestGetAuditLogs() {
 	}
 }
 
+func (s *ClientPublicTestSuite) TestGetAuditExport() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns audit export response",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+
+			resp, err := s.sut.GetAuditExport(ctx)
+
+			s.NoError(err)
+			s.NotNil(resp)
+		})
+	}
+}
+
 func (s *ClientPublicTestSuite) TestGetAuditLogByID() {
 	tests := []struct {
 		name    string

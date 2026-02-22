@@ -147,3 +147,46 @@ func (s *KVStore) List(
 
 	return entries, total, nil
 }
+
+// ListAll retrieves all audit entries without pagination.
+func (s *KVStore) ListAll(
+	_ context.Context,
+) ([]Entry, error) {
+	keys, err := s.kv.Keys()
+	if err != nil {
+		if err == nats.ErrNoKeysFound {
+			return []Entry{}, nil
+		}
+		return nil, fmt.Errorf("list audit keys: %w", err)
+	}
+
+	// Sort descending (newest first)
+	sort.Sort(sort.Reverse(sort.StringSlice(keys)))
+
+	entries := make([]Entry, 0, len(keys))
+	for _, key := range keys {
+		kve, err := s.kv.Get(key)
+		if err != nil {
+			s.logger.Warn(
+				"failed to get audit entry",
+				slog.String("key", key),
+				slog.String("error", err.Error()),
+			)
+			continue
+		}
+
+		var entry Entry
+		if err := json.Unmarshal(kve.Value(), &entry); err != nil {
+			s.logger.Warn(
+				"failed to unmarshal audit entry",
+				slog.String("key", key),
+				slog.String("error", err.Error()),
+			)
+			continue
+		}
+
+		entries = append(entries, entry)
+	}
+
+	return entries, nil
+}

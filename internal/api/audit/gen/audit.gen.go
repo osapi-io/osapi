@@ -85,6 +85,9 @@ type ServerInterface interface {
 	// List audit log entries
 	// (GET /audit)
 	GetAuditLogs(ctx echo.Context, params GetAuditLogsParams) error
+	// Export all audit log entries
+	// (GET /audit/export)
+	GetAuditExport(ctx echo.Context) error
 	// Get a single audit log entry
 	// (GET /audit/{id})
 	GetAuditLogByID(ctx echo.Context, id openapi_types.UUID) error
@@ -119,6 +122,17 @@ func (w *ServerInterfaceWrapper) GetAuditLogs(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetAuditLogs(ctx, params)
+	return err
+}
+
+// GetAuditExport converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAuditExport(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"audit:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAuditExport(ctx)
 	return err
 }
 
@@ -169,6 +183,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/audit", wrapper.GetAuditLogs)
+	router.GET(baseURL+"/audit/export", wrapper.GetAuditExport)
 	router.GET(baseURL+"/audit/:id", wrapper.GetAuditLogByID)
 
 }
@@ -220,6 +235,49 @@ func (response GetAuditLogs403JSONResponse) VisitGetAuditLogsResponse(w http.Res
 type GetAuditLogs500JSONResponse externalRef0.ErrorResponse
 
 func (response GetAuditLogs500JSONResponse) VisitGetAuditLogsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAuditExportRequestObject struct {
+}
+
+type GetAuditExportResponseObject interface {
+	VisitGetAuditExportResponse(w http.ResponseWriter) error
+}
+
+type GetAuditExport200JSONResponse ListAuditResponse
+
+func (response GetAuditExport200JSONResponse) VisitGetAuditExportResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAuditExport401JSONResponse externalRef0.ErrorResponse
+
+func (response GetAuditExport401JSONResponse) VisitGetAuditExportResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAuditExport403JSONResponse externalRef0.ErrorResponse
+
+func (response GetAuditExport403JSONResponse) VisitGetAuditExportResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAuditExport500JSONResponse externalRef0.ErrorResponse
+
+func (response GetAuditExport500JSONResponse) VisitGetAuditExportResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -284,6 +342,9 @@ type StrictServerInterface interface {
 	// List audit log entries
 	// (GET /audit)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
+	// Export all audit log entries
+	// (GET /audit/export)
+	GetAuditExport(ctx context.Context, request GetAuditExportRequestObject) (GetAuditExportResponseObject, error)
 	// Get a single audit log entry
 	// (GET /audit/{id})
 	GetAuditLogByID(ctx context.Context, request GetAuditLogByIDRequestObject) (GetAuditLogByIDResponseObject, error)
@@ -320,6 +381,29 @@ func (sh *strictHandler) GetAuditLogs(ctx echo.Context, params GetAuditLogsParam
 		return err
 	} else if validResponse, ok := response.(GetAuditLogsResponseObject); ok {
 		return validResponse.VisitGetAuditLogsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAuditExport operation middleware
+func (sh *strictHandler) GetAuditExport(ctx echo.Context) error {
+	var request GetAuditExportRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAuditExport(ctx.Request().Context(), request.(GetAuditExportRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAuditExport")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetAuditExportResponseObject); ok {
+		return validResponse.VisitGetAuditExportResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

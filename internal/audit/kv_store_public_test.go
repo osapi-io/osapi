@@ -319,6 +319,104 @@ func (s *KVStorePublicTestSuite) TestList() {
 	}
 }
 
+func (s *KVStorePublicTestSuite) TestListAll() {
+	entry1 := s.newEntry("aaa")
+	entry2 := s.newEntry("bbb")
+	entry3 := s.newEntry("ccc")
+	data1, _ := json.Marshal(entry1)
+	data2, _ := json.Marshal(entry2)
+	data3, _ := json.Marshal(entry3)
+
+	tests := []struct {
+		name      string
+		setupMock func()
+		validate  func([]audit.Entry, error)
+	}{
+		{
+			name: "returns all entries sorted descending",
+			setupMock: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb", "ccc"}, nil)
+				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
+				me1.EXPECT().Value().Return(data3)
+				me2 := mocks.NewMockKeyValueEntry(s.ctrl)
+				me2.EXPECT().Value().Return(data2)
+				me3 := mocks.NewMockKeyValueEntry(s.ctrl)
+				me3.EXPECT().Value().Return(data1)
+				s.mockKV.EXPECT().Get("ccc").Return(me1, nil)
+				s.mockKV.EXPECT().Get("bbb").Return(me2, nil)
+				s.mockKV.EXPECT().Get("aaa").Return(me3, nil)
+			},
+			validate: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Len(entries, 3)
+				s.Equal("ccc", entries[0].ID)
+				s.Equal("bbb", entries[1].ID)
+				s.Equal("aaa", entries[2].ID)
+			},
+		},
+		{
+			name: "returns empty for empty bucket",
+			setupMock: func() {
+				s.mockKV.EXPECT().Keys().Return(nil, nats.ErrNoKeysFound)
+			},
+			validate: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Empty(entries)
+			},
+		},
+		{
+			name: "returns error when keys fails",
+			setupMock: func() {
+				s.mockKV.EXPECT().Keys().Return(nil, fmt.Errorf("connection error"))
+			},
+			validate: func(entries []audit.Entry, err error) {
+				s.Error(err)
+				s.Nil(entries)
+			},
+		},
+		{
+			name: "skips entry when individual get fails",
+			setupMock: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
+				me1.EXPECT().Value().Return(data1)
+				s.mockKV.EXPECT().Get("bbb").Return(nil, fmt.Errorf("get error"))
+				s.mockKV.EXPECT().Get("aaa").Return(me1, nil)
+			},
+			validate: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Len(entries, 1)
+				s.Equal("aaa", entries[0].ID)
+			},
+		},
+		{
+			name: "skips entry when unmarshal fails",
+			setupMock: func() {
+				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				badEntry := mocks.NewMockKeyValueEntry(s.ctrl)
+				badEntry.EXPECT().Value().Return([]byte("not-json"))
+				goodEntry := mocks.NewMockKeyValueEntry(s.ctrl)
+				goodEntry.EXPECT().Value().Return(data1)
+				s.mockKV.EXPECT().Get("bbb").Return(badEntry, nil)
+				s.mockKV.EXPECT().Get("aaa").Return(goodEntry, nil)
+			},
+			validate: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Len(entries, 1)
+				s.Equal("aaa", entries[0].ID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+			entries, err := s.store.ListAll(context.Background())
+			tt.validate(entries, err)
+		})
+	}
+}
+
 func TestKVStorePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(KVStorePublicTestSuite))
 }
