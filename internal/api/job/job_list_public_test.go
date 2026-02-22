@@ -83,6 +83,36 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			},
 		},
 		{
+			name: "returns 400 when limit is negative",
+			request: func() gen.GetJobRequestObject {
+				l := -1
+				return gen.GetJobRequestObject{
+					Params: gen.GetJobParams{Limit: &l},
+				}
+			}(),
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob400JSONResponse)
+				s.True(ok)
+				s.NotNil(r.Error)
+			},
+		},
+		{
+			name: "returns 400 when offset is negative",
+			request: func() gen.GetJobRequestObject {
+				o := -1
+				return gen.GetJobRequestObject{
+					Params: gen.GetJobParams{Offset: &o},
+				}
+			}(),
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob400JSONResponse)
+				s.True(ok)
+				s.NotNil(r.Error)
+			},
+		},
+		{
 			name: "success with filter",
 			request: gen.GetJobRequestObject{
 				Params: gen.GetJobParams{Status: &completedStatus},

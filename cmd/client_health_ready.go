@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -40,7 +41,7 @@ var clientHealthReadyCmd = &cobra.Command{
 		healthHandler := handler.(client.HealthHandler)
 		resp, err := healthHandler.GetHealthReady(ctx)
 		if err != nil {
-			logFatal("failed to get health ready endpoint", err)
+			cli.LogFatal(logger, "failed to get health ready endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -51,11 +52,11 @@ var clientHealthReadyCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("health ready response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("health ready response was nil"))
 			}
 
 			fmt.Println()
-			printKV("Status", resp.JSON200.Status)
+			cli.PrintKV("Status", resp.JSON200.Status)
 
 		case http.StatusServiceUnavailable:
 			if jsonOutput {
@@ -64,17 +65,17 @@ var clientHealthReadyCmd = &cobra.Command{
 			}
 
 			if resp.JSON503 == nil {
-				logFatal("failed response", fmt.Errorf("health ready response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("health ready response was nil"))
 			}
 
 			fmt.Println()
-			printKV("Status", resp.JSON503.Status)
+			cli.PrintKV("Status", resp.JSON503.Status)
 			if resp.JSON503.Error != nil {
-				printKV("Error", *resp.JSON503.Error)
+				cli.PrintKV("Error", *resp.JSON503.Error)
 			}
 
 		default:
-			handleUnknownError(nil, resp.StatusCode(), logger)
+			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
 		}
 	},
 }

@@ -23,6 +23,7 @@ package cmd
 import (
 	"log/slog"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -32,7 +33,7 @@ var jobWorkerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "The worker subcommand",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		validateDistribution()
+		cli.ValidateDistribution(logger)
 
 		logger.Debug(
 			"job worker configuration",

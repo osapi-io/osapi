@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -41,7 +42,7 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 		systemHandler := handler.(client.SystemHandler)
 		resp, err := systemHandler.GetSystemHostname(ctx, host)
 		if err != nil {
-			logFatal("failed to get system status endpoint", err)
+			cli.LogFatal(logger, "failed to get system status endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -52,33 +53,33 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("system data response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("system data response was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {
 				fmt.Println()
-				printKV("Job ID", resp.JSON200.JobId.String())
+				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			results := make([]resultRow, 0, len(resp.JSON200.Results))
+			results := make([]cli.ResultRow, 0, len(resp.JSON200.Results))
 			for _, h := range resp.JSON200.Results {
-				results = append(results, resultRow{
+				results = append(results, cli.ResultRow{
 					Hostname: h.Hostname,
 					Error:    h.Error,
-					Fields:   []string{formatLabels(h.Labels)},
+					Fields:   []string{cli.FormatLabels(h.Labels)},
 				})
 			}
-			headers, rows := buildBroadcastTable(results, []string{"LABELS"})
-			printStyledTable([]section{{Headers: headers, Rows: rows}})
+			headers, rows := cli.BuildBroadcastTable(results, []string{"LABELS"})
+			cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

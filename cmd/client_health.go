@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -42,7 +43,7 @@ Running without a subcommand performs a liveness probe.
 		healthHandler := handler.(client.HealthHandler)
 		resp, err := healthHandler.GetHealth(ctx)
 		if err != nil {
-			logFatal("failed to get health endpoint", err)
+			cli.LogFatal(logger, "failed to get health endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -53,14 +54,14 @@ Running without a subcommand performs a liveness probe.
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("health response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("health response was nil"))
 			}
 
 			fmt.Println()
-			printKV("Status", resp.JSON200.Status)
+			cli.PrintKV("Status", resp.JSON200.Status)
 
 		default:
-			handleUnknownError(nil, resp.StatusCode(), logger)
+			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
 		}
 	},
 }

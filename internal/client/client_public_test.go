@@ -715,10 +715,18 @@ func (s *ClientPublicTestSuite) TestGetAuditLogs() {
 
 func (s *ClientPublicTestSuite) TestGetAuditLogByID() {
 	tests := []struct {
-		name string
+		name    string
+		id      string
+		wantErr string
 	}{
 		{
 			name: "returns audit log entry response",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+		},
+		{
+			name:    "returns error for invalid uuid",
+			id:      "not-a-uuid",
+			wantErr: "invalid UUID",
 		},
 	}
 
@@ -726,10 +734,15 @@ func (s *ClientPublicTestSuite) TestGetAuditLogByID() {
 		s.Run(tt.name, func() {
 			ctx := context.Background()
 
-			resp, err := s.sut.GetAuditLogByID(ctx, "550e8400-e29b-41d4-a716-446655440000")
+			resp, err := s.sut.GetAuditLogByID(ctx, tt.id)
 
-			s.NoError(err)
-			s.NotNil(resp)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				s.Nil(resp)
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+			}
 		})
 	}
 }

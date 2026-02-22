@@ -29,6 +29,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -44,7 +45,7 @@ var clientJobDeleteCmd = &cobra.Command{
 		jobHandler := handler.(client.JobHandler)
 		resp, err := jobHandler.DeleteJobByID(ctx, jobID)
 		if err != nil {
-			logFatal("failed to delete job", err)
+			cli.LogFatal(logger, "failed to delete job", err)
 		}
 
 		switch resp.StatusCode() {
@@ -61,21 +62,21 @@ var clientJobDeleteCmd = &cobra.Command{
 			}
 
 			fmt.Println()
-			printKV("Job ID", jobID, "Status", "Deleted")
+			cli.PrintKV("Job ID", jobID, "Status", "Deleted")
 
 			logger.Info("job deleted successfully",
 				slog.String("job_id", jobID),
 			)
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusNotFound:
-			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

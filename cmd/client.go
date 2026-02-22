@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
@@ -41,7 +42,7 @@ var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "The client subcommand",
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		validateDistribution()
+		cli.ValidateDistribution(logger)
 
 		var err error
 		tracerShutdown, err = telemetry.InitTracer(
@@ -50,7 +51,7 @@ var clientCmd = &cobra.Command{
 			appConfig.Telemetry.Tracing,
 		)
 		if err != nil {
-			logFatal("failed to initialize tracer", err)
+			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
 		logger.Debug(
@@ -62,7 +63,7 @@ var clientCmd = &cobra.Command{
 
 		cwr, err := client.NewClientWithResponses(logger, appConfig)
 		if err != nil {
-			logFatal("failed to create http client", err)
+			cli.LogFatal(logger, "failed to create http client", err)
 		}
 
 		handler = client.New(

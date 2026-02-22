@@ -29,6 +29,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 	"github.com/retr0h/osapi/internal/client/gen"
 )
@@ -49,19 +50,19 @@ var clientJobListCmd = &cobra.Command{
 		// Get jobs list (server-side pagination)
 		jobsResp, err := jobHandler.GetJobs(ctx, statusFilter, limitFlag, offsetFlag)
 		if err != nil {
-			logFatal("failed to list jobs", err)
+			cli.LogFatal(logger, "failed to list jobs", err)
 		}
 
 		if jobsResp.StatusCode() != http.StatusOK {
 			switch jobsResp.StatusCode() {
 			case http.StatusBadRequest:
-				handleUnknownError(jobsResp.JSON400, jobsResp.StatusCode(), logger)
+				cli.HandleUnknownError(jobsResp.JSON400, jobsResp.StatusCode(), logger)
 			case http.StatusUnauthorized:
-				handleAuthError(jobsResp.JSON401, jobsResp.StatusCode(), logger)
+				cli.HandleAuthError(jobsResp.JSON401, jobsResp.StatusCode(), logger)
 			case http.StatusForbidden:
-				handleAuthError(jobsResp.JSON403, jobsResp.StatusCode(), logger)
+				cli.HandleAuthError(jobsResp.JSON403, jobsResp.StatusCode(), logger)
 			default:
-				handleUnknownError(jobsResp.JSON500, jobsResp.StatusCode(), logger)
+				cli.HandleUnknownError(jobsResp.JSON500, jobsResp.StatusCode(), logger)
 			}
 			return
 		}
@@ -69,11 +70,11 @@ var clientJobListCmd = &cobra.Command{
 		// Get queue stats for summary
 		statsResp, err := jobHandler.GetJobQueueStats(ctx)
 		if err != nil {
-			logFatal("failed to get queue stats", err)
+			cli.LogFatal(logger, "failed to get queue stats", err)
 		}
 
 		if statsResp.StatusCode() != http.StatusOK {
-			handleUnknownError(statsResp.JSON500, statsResp.StatusCode(), logger)
+			cli.HandleUnknownError(statsResp.JSON500, statsResp.StatusCode(), logger)
 			return
 		}
 
@@ -88,102 +89,133 @@ var clientJobListCmd = &cobra.Command{
 			totalItems = *jobsResp.JSON200.TotalItems
 		}
 
-		stats := statsResp.JSON200
+		statusCounts := extractStatusCounts(statsResp.JSON200)
 
 		if jsonOutput {
-			statusCounts := map[string]int{}
-			if stats != nil && stats.StatusCounts != nil {
-				statusCounts = *stats.StatusCounts
-			}
-
-			result := map[string]interface{}{
-				"total_jobs":     totalItems,
-				"displayed_jobs": len(jobs),
-				"status_counts":  statusCounts,
-				"filter_applied": statusFilter != "",
-				"limit_applied":  limitFlag > 0,
-				"offset_applied": offsetFlag,
-				"jobs":           jobs,
-			}
-			resultJSON, _ := json.Marshal(result)
-			fmt.Println(string(resultJSON))
+			displayJobListJSON(jobs, totalItems, statusCounts, statusFilter, limitFlag, offsetFlag)
 			return
 		}
 
-		// Display summary
-		statusCounts := map[string]int{}
-		if stats != nil {
-			if stats.StatusCounts != nil {
-				statusCounts = *stats.StatusCounts
-			}
-		}
-
-		// Summary header
-		showing := "All jobs"
-		if statusFilter != "" {
-			showing = fmt.Sprintf("%s (%d)", statusFilter, totalItems)
-		}
-		fmt.Println()
-		printKV("Total", fmt.Sprintf("%d", totalItems), "Showing", showing)
-		printKV(
-			"Submitted", fmt.Sprintf("%d", statusCounts["submitted"]),
-			"Completed", fmt.Sprintf("%d", statusCounts["completed"]),
-			"Failed", fmt.Sprintf("%d", statusCounts["failed"]),
-			"Partial", fmt.Sprintf("%d", statusCounts["partial_failure"]),
+		displayJobListSummary(
+			totalItems,
+			statusCounts,
+			statusFilter,
+			limitFlag,
+			offsetFlag,
+			len(jobs),
 		)
-		if offsetFlag > 0 || (limitFlag > 0 && len(jobs) >= limitFlag) {
-			parts := []string{}
-			if offsetFlag > 0 {
-				parts = append(parts, fmt.Sprintf("offset %d", offsetFlag))
-			}
-			if limitFlag > 0 && len(jobs) >= limitFlag {
-				parts = append(parts, fmt.Sprintf("limit %d", limitFlag))
-			}
-			printKV("Filter", dimStyle.Render(strings.Join(parts, ", ")))
-		}
-
-		if len(jobs) > 0 {
-			jobRows := [][]string{}
-			for _, j := range jobs {
-				created := safeString(j.Created)
-				if t, err := time.Parse(time.RFC3339, created); err == nil {
-					created = t.Format("2006-01-02 15:04")
-				}
-
-				operationSummary := "Unknown"
-				if j.Operation != nil {
-					if operationType, ok := (*j.Operation)["type"].(string); ok {
-						operationSummary = operationType
-					}
-				}
-
-				target := safeString(j.Hostname)
-
-				jobRows = append(jobRows, []string{
-					safeUUID(j.Id),
-					safeString(j.Status),
-					created,
-					target,
-					operationSummary,
-				})
-			}
-
-			sections := []section{
-				{
-					Title: "Jobs",
-					Headers: []string{
-						"JOB ID",
-						"STATUS",
-						"CREATED",
-						"TARGET",
-						"OPERATION",
-					},
-					Rows: jobRows,
-				},
-			}
-			printStyledTable(sections)
-		}
+		displayJobListTable(jobs)
 	},
+}
+
+func extractStatusCounts(
+	stats *gen.QueueStatsResponse,
+) map[string]int {
+	if stats != nil && stats.StatusCounts != nil {
+		return *stats.StatusCounts
+	}
+	return map[string]int{}
+}
+
+func displayJobListJSON(
+	jobs []gen.JobDetailResponse,
+	totalItems int,
+	statusCounts map[string]int,
+	statusFilter string,
+	limitFlag int,
+	offsetFlag int,
+) {
+	result := map[string]interface{}{
+		"total_jobs":     totalItems,
+		"displayed_jobs": len(jobs),
+		"status_counts":  statusCounts,
+		"filter_applied": statusFilter != "",
+		"limit_applied":  limitFlag > 0,
+		"offset_applied": offsetFlag,
+		"jobs":           jobs,
+	}
+	resultJSON, _ := json.Marshal(result)
+	fmt.Println(string(resultJSON))
+}
+
+func displayJobListSummary(
+	totalItems int,
+	statusCounts map[string]int,
+	statusFilter string,
+	limitFlag int,
+	offsetFlag int,
+	jobCount int,
+) {
+	showing := "All jobs"
+	if statusFilter != "" {
+		showing = fmt.Sprintf("%s (%d)", statusFilter, totalItems)
+	}
+	fmt.Println()
+	cli.PrintKV("Total", fmt.Sprintf("%d", totalItems), "Showing", showing)
+	cli.PrintKV(
+		"Submitted", fmt.Sprintf("%d", statusCounts["submitted"]),
+		"Completed", fmt.Sprintf("%d", statusCounts["completed"]),
+		"Failed", fmt.Sprintf("%d", statusCounts["failed"]),
+		"Partial", fmt.Sprintf("%d", statusCounts["partial_failure"]),
+	)
+	if offsetFlag > 0 || (limitFlag > 0 && jobCount >= limitFlag) {
+		parts := []string{}
+		if offsetFlag > 0 {
+			parts = append(parts, fmt.Sprintf("offset %d", offsetFlag))
+		}
+		if limitFlag > 0 && jobCount >= limitFlag {
+			parts = append(parts, fmt.Sprintf("limit %d", limitFlag))
+		}
+		cli.PrintKV("Filter", cli.DimStyle.Render(strings.Join(parts, ", ")))
+	}
+}
+
+func displayJobListTable(
+	jobs []gen.JobDetailResponse,
+) {
+	if len(jobs) == 0 {
+		return
+	}
+
+	jobRows := [][]string{}
+	for _, j := range jobs {
+		created := cli.SafeString(j.Created)
+		if t, err := time.Parse(time.RFC3339, created); err == nil {
+			created = t.Format("2006-01-02 15:04")
+		}
+
+		operationSummary := "Unknown"
+		if j.Operation != nil {
+			if operationType, ok := (*j.Operation)["type"].(string); ok {
+				operationSummary = operationType
+			}
+		}
+
+		target := cli.SafeString(j.Hostname)
+
+		jobRows = append(jobRows, []string{
+			cli.SafeUUID(j.Id),
+			cli.SafeString(j.Status),
+			created,
+			target,
+			operationSummary,
+		})
+	}
+
+	sections := []cli.Section{
+		{
+			Title: "Jobs",
+			Headers: []string{
+				"JOB ID",
+				"STATUS",
+				"CREATED",
+				"TARGET",
+				"OPERATION",
+			},
+			Rows: jobRows,
+		},
+	}
+	cli.PrintStyledTable(sections)
 }
 
 func init() {

@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -41,7 +42,7 @@ Returns the raw Prometheus exposition text.
 		metricsHandler := handler.(client.MetricsHandler)
 		body, err := metricsHandler.GetMetrics(ctx)
 		if err != nil {
-			logFatal("failed to get metrics endpoint", err)
+			cli.LogFatal(logger, "failed to get metrics endpoint", err)
 		}
 
 		fmt.Print(body)

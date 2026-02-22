@@ -54,6 +54,9 @@ type NATSClient interface {
 	CreateKVBucket(
 		bucketName string,
 	) (nats.KeyValue, error)
+	CreateKVBucketWithConfig(
+		config *nats.KeyValueConfig,
+	) (nats.KeyValue, error)
 	KVPut(
 		bucket string,
 		key string,

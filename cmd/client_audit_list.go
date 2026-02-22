@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -49,7 +50,7 @@ response status, and duration. Requires audit:read permission.
 		auditHandler := handler.(client.AuditHandler)
 		resp, err := auditHandler.GetAuditLogs(ctx, auditListLimit, auditListOffset)
 		if err != nil {
-			logFatal("failed to get audit logs", err)
+			cli.LogFatal(logger, "failed to get audit logs", err)
 		}
 
 		switch resp.StatusCode() {
@@ -60,11 +61,11 @@ response status, and duration. Requires audit:read permission.
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("audit list response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("audit list response was nil"))
 			}
 
 			fmt.Println()
-			printKV("Total", strconv.Itoa(resp.JSON200.TotalItems))
+			cli.PrintKV("Total", strconv.Itoa(resp.JSON200.TotalItems))
 
 			if len(resp.JSON200.Items) == 0 {
 				fmt.Println("  No audit entries found.")
@@ -84,7 +85,7 @@ response status, and duration. Requires audit:read permission.
 				})
 			}
 
-			printStyledTable([]section{
+			cli.PrintStyledTable([]cli.Section{
 				{
 					Title: "Audit Entries",
 					Headers: []string{
@@ -101,13 +102,13 @@ response status, and duration. Requires audit:read permission.
 			})
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

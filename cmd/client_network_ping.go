@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -43,7 +44,7 @@ var clientNetworkPingCmd = &cobra.Command{
 		networkHandler := handler.(client.NetworkHandler)
 		resp, err := networkHandler.PostNetworkPing(ctx, host, address)
 		if err != nil {
-			logFatal("failed to post network ping endpoint", err)
+			cli.LogFatal(logger, "failed to post network ping endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -54,30 +55,30 @@ var clientNetworkPingCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("post network ping was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("post network ping was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {
 				fmt.Println()
-				printKV("Job ID", resp.JSON200.JobId.String())
+				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			results := make([]resultRow, 0, len(resp.JSON200.Results))
+			results := make([]cli.ResultRow, 0, len(resp.JSON200.Results))
 			for _, r := range resp.JSON200.Results {
-				results = append(results, resultRow{
+				results = append(results, cli.ResultRow{
 					Hostname: r.Hostname,
 					Error:    r.Error,
 					Fields: []string{
-						safeString(r.AvgRtt),
-						safeString(r.MaxRtt),
-						safeString(r.MinRtt),
-						float64ToSafeString(r.PacketLoss),
-						intToSafeString(r.PacketsReceived),
-						intToSafeString(r.PacketsSent),
+						cli.SafeString(r.AvgRtt),
+						cli.SafeString(r.MaxRtt),
+						cli.SafeString(r.MinRtt),
+						cli.Float64ToSafeString(r.PacketLoss),
+						cli.IntToSafeString(r.PacketsReceived),
+						cli.IntToSafeString(r.PacketsSent),
 					},
 				})
 			}
-			headers, rows := buildBroadcastTable(results, []string{
+			headers, rows := cli.BuildBroadcastTable(results, []string{
 				"AVG RTT",
 				"MAX RTT",
 				"MIN RTT",
@@ -85,20 +86,20 @@ var clientNetworkPingCmd = &cobra.Command{
 				"PACKETS RECEIVED",
 				"PACKETS SENT",
 			})
-			printStyledTable([]section{{
+			cli.PrintStyledTable([]cli.Section{{
 				Title:   "Ping Response",
 				Headers: headers,
 				Rows:    rows,
 			}})
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

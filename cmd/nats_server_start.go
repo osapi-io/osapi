@@ -31,6 +31,7 @@ import (
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -63,36 +64,8 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		// Initialize subject namespace
 		job.Init(namespace)
 
-		serverOpts := &natsserver.Options{
-			Host:      host,
-			Port:      port,
-			JetStream: true,
-			StoreDir:  storeDir,
-			NoSigs:    true,
-			NoLog:     false,
-		}
-
-		// Configure server-side authentication
 		serverAuth := appConfig.NATS.Server.Auth
-		switch serverAuth.Type {
-		case "user_pass":
-			users := make([]*natsserver.User, 0, len(serverAuth.Users))
-			for _, u := range serverAuth.Users {
-				users = append(users, &natsserver.User{
-					Username: u.Username,
-					Password: u.Password,
-				})
-			}
-			serverOpts.Users = users
-		case "nkey":
-			nkeys := make([]*natsserver.NkeyUser, 0, len(serverAuth.NKeys))
-			for _, nk := range serverAuth.NKeys {
-				nkeys = append(nkeys, &natsserver.NkeyUser{
-					Nkey: nk,
-				})
-			}
-			serverOpts.Nkeys = nkeys
-		}
+		serverOpts := buildNATSServerOpts(host, port, storeDir, serverAuth)
 
 		opts := &natsembedded.Options{
 			Options:      serverOpts,
@@ -101,12 +74,12 @@ Configures streams, consumers, and KV buckets needed by the job system.
 
 		s := natsembedded.New(logger, opts)
 		if err := s.Start(); err != nil {
-			logFatal("failed to start embedded NATS server", err)
+			cli.LogFatal(logger, "failed to start embedded NATS server", err)
 		}
 
 		if err := setupJetStream(ctx, host, port, namespace, serverAuth); err != nil {
 			s.Stop()
-			logFatal("failed to setup JetStream infrastructure", err)
+			cli.LogFatal(logger, "failed to setup JetStream infrastructure", err)
 		}
 
 		logger.Info(
@@ -118,8 +91,8 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			"auth.type", serverAuth.Type,
 		)
 
-		var ns Lifecycle = &natsLifecycle{server: s}
-		runServer(ctx, ns)
+		var ns cli.Lifecycle = &natsLifecycle{server: s}
+		cli.RunServer(ctx, ns)
 	},
 }
 
@@ -130,39 +103,17 @@ func setupJetStream(
 	namespace string,
 	serverAuth config.NATSServerAuth,
 ) error {
-	// Build auth options for the setup client from the server auth config.
-	// Use the first configured user for user_pass auth.
-	var setupAuth natsclient.AuthOptions
-	switch serverAuth.Type {
-	case "user_pass":
-		if len(serverAuth.Users) > 0 {
-			setupAuth = natsclient.AuthOptions{
-				AuthType: natsclient.UserPassAuth,
-				Username: serverAuth.Users[0].Username,
-				Password: serverAuth.Users[0].Password,
-			}
-		}
-	default:
-		setupAuth = natsclient.AuthOptions{
-			AuthType: natsclient.NoAuth,
-		}
-	}
-
 	var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 		Host: host,
 		Port: port,
-		Auth: setupAuth,
+		Auth: buildSetupAuth(serverAuth),
 		Name: "osapi-nats-setup",
 	})
 
 	if err := nc.Connect(); err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}
-	defer func() {
-		if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
-			natsConn.NC.Close()
-		}
-	}()
+	defer cli.CloseNATSClient(nc)
 
 	// Apply namespace to infrastructure names
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -172,12 +123,7 @@ func setupJetStream(
 
 	// Create JOBS stream
 	streamMaxAge, _ := time.ParseDuration(appConfig.NATS.Stream.MaxAge)
-	var streamStorage nats.StorageType
-	if appConfig.NATS.Stream.Storage == "memory" {
-		streamStorage = nats.MemoryStorage
-	} else {
-		streamStorage = nats.FileStorage
-	}
+	streamStorage := cli.ParseStorageType(appConfig.NATS.Stream.Storage)
 
 	var streamDiscard nats.DiscardPolicy
 	if appConfig.NATS.Stream.Discard == "new" {
@@ -209,22 +155,17 @@ func setupJetStream(
 		return fmt.Errorf("create KV bucket %s: %w", kvResponseBucket, err)
 	}
 
-	// Create audit KV bucket
+	// Create audit KV bucket with configured settings
 	if appConfig.NATS.Audit.Bucket != "" {
-		auditBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Audit.Bucket)
-		if _, err := nc.CreateKVBucket(auditBucket); err != nil {
-			return fmt.Errorf("create audit KV bucket %s: %w", auditBucket, err)
+		auditKVConfig := cli.BuildAuditKVConfig(namespace, appConfig.NATS.Audit)
+		if _, err := nc.CreateKVBucketWithConfig(auditKVConfig); err != nil {
+			return fmt.Errorf("create audit KV bucket %s: %w", auditKVConfig.Bucket, err)
 		}
 	}
 
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
-	var dlqStorage nats.StorageType
-	if appConfig.NATS.DLQ.Storage == "memory" {
-		dlqStorage = nats.MemoryStorage
-	} else {
-		dlqStorage = nats.FileStorage
-	}
+	dlqStorage := cli.ParseStorageType(appConfig.NATS.DLQ.Storage)
 
 	dlqStreamConfig := &nats.StreamConfig{
 		Name: streamName + "-DLQ",
@@ -247,6 +188,60 @@ func setupJetStream(
 	logger.Info("JetStream infrastructure configured successfully")
 
 	return nil
+}
+
+func buildNATSServerOpts(
+	host string,
+	port int,
+	storeDir string,
+	serverAuth config.NATSServerAuth,
+) *natsserver.Options {
+	opts := &natsserver.Options{
+		Host:      host,
+		Port:      port,
+		JetStream: true,
+		StoreDir:  storeDir,
+		NoSigs:    true,
+		NoLog:     false,
+	}
+
+	switch serverAuth.Type {
+	case "user_pass":
+		users := make([]*natsserver.User, 0, len(serverAuth.Users))
+		for _, u := range serverAuth.Users {
+			users = append(users, &natsserver.User{
+				Username: u.Username,
+				Password: u.Password,
+			})
+		}
+		opts.Users = users
+	case "nkey":
+		nkeys := make([]*natsserver.NkeyUser, 0, len(serverAuth.NKeys))
+		for _, nk := range serverAuth.NKeys {
+			nkeys = append(nkeys, &natsserver.NkeyUser{
+				Nkey: nk,
+			})
+		}
+		opts.Nkeys = nkeys
+	}
+
+	return opts
+}
+
+func buildSetupAuth(
+	serverAuth config.NATSServerAuth,
+) natsclient.AuthOptions {
+	if serverAuth.Type == "user_pass" && len(serverAuth.Users) > 0 {
+		return natsclient.AuthOptions{
+			AuthType: natsclient.UserPassAuth,
+			Username: serverAuth.Users[0].Username,
+			Password: serverAuth.Users[0].Password,
+		}
+	}
+
+	return natsclient.AuthOptions{
+		AuthType: natsclient.NoAuth,
+	}
 }
 
 func init() {

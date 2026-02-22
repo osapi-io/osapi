@@ -33,6 +33,9 @@ import (
 // ensure KVStore implements Store at compile time.
 var _ Store = (*KVStore)(nil)
 
+// marshalJSON is a package-level variable for testing the marshal error path.
+var marshalJSON = json.Marshal
+
 // KVStore implements Store backed by a NATS KeyValue bucket.
 type KVStore struct {
 	kv     nats.KeyValue
@@ -55,7 +58,7 @@ func (s *KVStore) Write(
 	_ context.Context,
 	entry Entry,
 ) error {
-	data, err := json.Marshal(entry)
+	data, err := marshalJSON(entry)
 	if err != nil {
 		return fmt.Errorf("marshal audit entry: %w", err)
 	}
