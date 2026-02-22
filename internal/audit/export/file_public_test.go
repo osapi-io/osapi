@@ -127,7 +127,7 @@ func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 	}
 }
 
-func (suite *FileExporterPublicTestSuite) TestOpenError() {
+func (suite *FileExporterPublicTestSuite) TestOpen() {
 	tests := []struct {
 		name         string
 		path         string
@@ -152,16 +152,53 @@ func (suite *FileExporterPublicTestSuite) TestOpenError() {
 	}
 }
 
-func (suite *FileExporterPublicTestSuite) TestWriteWithoutOpen() {
+func (suite *FileExporterPublicTestSuite) TestWrite() {
 	tests := []struct {
 		name         string
+		setupWriter  func() (cleanup func())
+		writeCount   int
 		validateFunc func(err error)
 	}{
 		{
-			name: "when exporter not opened returns error",
+			name:        "when exporter not opened returns error",
+			setupWriter: nil,
+			writeCount:  1,
 			validateFunc: func(err error) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "exporter not opened")
+			},
+		},
+		{
+			name: "when marshal fails returns error",
+			setupWriter: func() (cleanup func()) {
+				orig := export.MarshalJSONFunc()
+				export.SetMarshalJSONFunc(func(_ any) ([]byte, error) {
+					return nil, fmt.Errorf("marshal error")
+				})
+				return func() { export.SetMarshalJSONFunc(orig) }
+			},
+			writeCount: 1,
+			validateFunc: func(err error) {
+				suite.Error(err)
+				suite.Contains(err.Error(), "marshaling entry")
+			},
+		},
+		{
+			name: "when underlying writer fails on buffer flush returns write error",
+			setupWriter: func() (cleanup func()) {
+				orig := export.OpenFileFunc()
+				export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
+					return &failWriter{}, nil
+				})
+				return func() { export.SetOpenFileFunc(orig) }
+			},
+			// Each entry is ~200 bytes; 30 writes (~6KB) overflows
+			// the 4096-byte bufio buffer, triggering a flush to the
+			// underlying failWriter.
+			writeCount: 30,
+			validateFunc: func(err error) {
+				suite.Error(err)
+				suite.Contains(err.Error(), "writ")
 			},
 		},
 	}
@@ -169,77 +206,68 @@ func (suite *FileExporterPublicTestSuite) TestWriteWithoutOpen() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			sut := export.NewFileExporter("unused.jsonl")
-			err := sut.Write(suite.ctx, suite.newEntry("test@example.com"))
-			tc.validateFunc(err)
+
+			if tc.setupWriter != nil {
+				cleanup := tc.setupWriter()
+				defer cleanup()
+
+				err := sut.Open(suite.ctx)
+				suite.Require().NoError(err)
+			}
+
+			var writeErr error
+			for i := range tc.writeCount {
+				writeErr = sut.Write(suite.ctx, suite.newEntry(
+					fmt.Sprintf("user%d@example.com", i),
+				))
+				if writeErr != nil {
+					break
+				}
+			}
+			tc.validateFunc(writeErr)
 		})
 	}
 }
 
-func (suite *FileExporterPublicTestSuite) TestCloseWithoutOpen() {
+func (suite *FileExporterPublicTestSuite) TestClose() {
 	tests := []struct {
 		name         string
+		setupWriter  func() (cleanup func())
+		writeEntry   bool
 		validateFunc func(err error)
 	}{
 		{
-			name: "when exporter not opened returns error",
+			name:        "when exporter not opened returns error",
+			setupWriter: nil,
 			validateFunc: func(err error) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "exporter not opened")
 			},
 		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			sut := export.NewFileExporter("unused.jsonl")
-			err := sut.Close(suite.ctx)
-			tc.validateFunc(err)
-		})
-	}
-}
-
-func (suite *FileExporterPublicTestSuite) TestFlushError() {
-	tests := []struct {
-		name         string
-		validateFunc func(err error)
-	}{
 		{
 			name: "when underlying writer fails on flush returns error",
+			setupWriter: func() (cleanup func()) {
+				orig := export.OpenFileFunc()
+				export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
+					return &failWriter{}, nil
+				})
+				return func() { export.SetOpenFileFunc(orig) }
+			},
+			writeEntry: true,
 			validateFunc: func(err error) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "flushing writer")
 			},
 		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			origOpenFile := export.OpenFileFunc()
-			export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
-				return &failWriter{}, nil
-			})
-			defer export.SetOpenFileFunc(origOpenFile)
-
-			sut := export.NewFileExporter("unused.jsonl")
-			err := sut.Open(suite.ctx)
-			suite.Require().NoError(err)
-
-			err = sut.Write(suite.ctx, suite.newEntry("test@example.com"))
-			suite.Require().NoError(err)
-
-			err = sut.Close(suite.ctx)
-			tc.validateFunc(err)
-		})
-	}
-}
-
-func (suite *FileExporterPublicTestSuite) TestCloseFileError() {
-	tests := []struct {
-		name         string
-		validateFunc func(err error)
-	}{
 		{
 			name: "when file close fails returns error",
+			setupWriter: func() (cleanup func()) {
+				orig := export.OpenFileFunc()
+				export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
+					return &failCloseWriter{}, nil
+				})
+				return func() { export.SetOpenFileFunc(orig) }
+			},
 			validateFunc: func(err error) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "closing file")
@@ -249,17 +277,22 @@ func (suite *FileExporterPublicTestSuite) TestCloseFileError() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			origOpenFile := export.OpenFileFunc()
-			export.SetOpenFileFunc(func(_ string) (io.WriteCloser, error) {
-				return &failCloseWriter{}, nil
-			})
-			defer export.SetOpenFileFunc(origOpenFile)
-
 			sut := export.NewFileExporter("unused.jsonl")
-			err := sut.Open(suite.ctx)
-			suite.Require().NoError(err)
 
-			err = sut.Close(suite.ctx)
+			if tc.setupWriter != nil {
+				cleanup := tc.setupWriter()
+				defer cleanup()
+
+				err := sut.Open(suite.ctx)
+				suite.Require().NoError(err)
+
+				if tc.writeEntry {
+					err = sut.Write(suite.ctx, suite.newEntry("test@example.com"))
+					suite.Require().NoError(err)
+				}
+			}
+
+			err := sut.Close(suite.ctx)
 			tc.validateFunc(err)
 		})
 	}

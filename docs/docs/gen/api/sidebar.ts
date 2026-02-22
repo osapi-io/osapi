@@ -22,6 +22,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/get-audit-export",
+          label: "Export all audit log entries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-audit-log-by-id",
           label: "Get a single audit log entry",
           className: "api-method get",

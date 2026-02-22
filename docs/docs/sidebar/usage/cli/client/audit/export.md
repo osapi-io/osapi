@@ -1,7 +1,7 @@
 # Export
 
-Export all audit log entries to a file for long-term retention. Paginates
-through all entries via the REST API and writes each entry as a JSON line
+Export all audit log entries to a file for long-term retention. Fetches all
+entries via the REST API export endpoint and writes each entry as a JSON line
 (JSONL format). Requires `audit:read` permission (admin role by default).
 
 ```bash
@@ -13,20 +13,10 @@ $ osapi client audit export --output audit.jsonl
 
 ## Options
 
-| Flag           | Default | Description                     |
-| -------------- | ------- | ------------------------------- |
-| `--output`     | —       | Output file path (**required**) |
-| `--type`       | `file`  | Export backend type             |
-| `--batch-size` | `100`   | Number of entries per API call  |
-
-## Custom batch size
-
-Use `--batch-size` to control how many entries are fetched per API call.
-Larger values reduce the number of requests but use more memory per batch:
-
-```bash
-$ osapi client audit export --output audit.jsonl --batch-size 50
-```
+| Flag       | Default | Description                     |
+| ---------- | ------- | ------------------------------- |
+| `--output` | —       | Output file path (**required**) |
+| `--type`   | `file`  | Export backend type             |
 
 ## Output format
 

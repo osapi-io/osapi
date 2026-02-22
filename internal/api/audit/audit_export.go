@@ -20,32 +20,35 @@
 
 package audit
 
-import "context"
+import (
+	"context"
+	"log/slog"
 
-// Store defines the interface for audit log persistence.
-type Store interface {
-	// Write persists an audit entry.
-	Write(
-		ctx context.Context,
-		entry Entry,
-	) error
+	"github.com/retr0h/osapi/internal/api/audit/gen"
+)
 
-	// Get retrieves a single audit entry by ID.
-	Get(
-		ctx context.Context,
-		id string,
-	) (*Entry, error)
+// GetAuditExport returns all audit log entries without pagination.
+func (a *Audit) GetAuditExport(
+	ctx context.Context,
+	_ gen.GetAuditExportRequestObject,
+) (gen.GetAuditExportResponseObject, error) {
+	entries, err := a.Store.ListAll(ctx)
+	if err != nil {
+		a.logger.Error(
+			"failed to list all audit entries",
+			slog.String("error", err.Error()),
+		)
+		errMsg := "failed to list all audit entries"
+		return gen.GetAuditExport500JSONResponse{Error: &errMsg}, nil
+	}
 
-	// List retrieves audit entries with pagination.
-	// Returns the entries, total count, and any error.
-	List(
-		ctx context.Context,
-		limit int,
-		offset int,
-	) ([]Entry, int, error)
+	items := make([]gen.AuditEntry, 0, len(entries))
+	for _, e := range entries {
+		items = append(items, mapEntryToGen(e))
+	}
 
-	// ListAll retrieves all audit entries without pagination.
-	ListAll(
-		ctx context.Context,
-	) ([]Entry, error)
+	return gen.GetAuditExport200JSONResponse{
+		TotalItems: len(entries),
+		Items:      items,
+	}, nil
 }

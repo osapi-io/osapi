@@ -35,9 +35,8 @@ import (
 )
 
 var (
-	auditExportOutput    string
-	auditExportType      string
-	auditExportBatchSize int
+	auditExportOutput string
+	auditExportType   string
 )
 
 // clientAuditExportCmd represents the clientAuditExport command.
@@ -46,83 +45,74 @@ var clientAuditExportCmd = &cobra.Command{
 	Short: "Export audit log entries to a file",
 	Long: `Export all audit log entries to a file for long-term retention.
 
-Paginates through all entries via the REST API and writes each entry
-as a JSON line (JSONL format). Requires audit:read permission.
+Fetches all entries via the REST API export endpoint and writes each
+entry as a JSON line (JSONL format). Requires audit:read permission.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		auditHandler := handler.(client.AuditHandler)
 
-		fetcher := func(
-			ctx context.Context,
-			limit int,
-			offset int,
-		) ([]gen.AuditEntry, int, error) {
-			resp, err := auditHandler.GetAuditLogs(ctx, limit, offset)
-			if err != nil {
-				return nil, 0, fmt.Errorf("API request failed: %w", err)
-			}
-
-			switch resp.StatusCode() {
-			case http.StatusOK:
-				if resp.JSON200 == nil {
-					return nil, 0, fmt.Errorf("response was nil")
-				}
-				return resp.JSON200.Items, resp.JSON200.TotalItems, nil
-			case http.StatusUnauthorized:
-				cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-				return nil, 0, fmt.Errorf("unauthorized")
-			case http.StatusForbidden:
-				cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-				return nil, 0, fmt.Errorf("forbidden")
-			case http.StatusBadRequest:
-				cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-				return nil, 0, fmt.Errorf("bad request")
-			default:
-				cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
-				return nil, 0, fmt.Errorf("server error (status %d)", resp.StatusCode())
-			}
-		}
-
-		var exporter export.Exporter
-		switch auditExportType {
-		case "file":
-			exporter = export.NewFileExporter(auditExportOutput)
-		default:
-			cli.LogFatal(
-				logger,
-				"unsupported export type",
-				fmt.Errorf("type %q is not supported, use \"file\"", auditExportType),
-			)
-		}
-
-		onProgress := func(exported int, total int) {
-			logger.Debug(
-				"export progress",
-				"exported", exported,
-				"total", total,
-			)
-		}
-
-		result, err := export.Run(
-			ctx,
-			logger,
-			fetcher,
-			exporter,
-			auditExportBatchSize,
-			onProgress,
-		)
+		resp, err := auditHandler.GetAuditExport(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "export failed", err)
+			cli.LogFatal(logger, "API request failed", err)
 		}
 
-		fmt.Println()
-		cli.PrintKV(
-			"Exported", strconv.Itoa(result.ExportedEntries),
-			"Total", strconv.Itoa(result.TotalEntries),
-		)
-		cli.PrintKV("Output", auditExportOutput)
+		switch resp.StatusCode() {
+		case http.StatusOK:
+			if resp.JSON200 == nil {
+				cli.LogFatal(logger, "export failed", fmt.Errorf("response was nil"))
+			}
+
+			writeExport(ctx, resp.JSON200.Items, resp.JSON200.TotalItems)
+		case http.StatusUnauthorized:
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
+		case http.StatusForbidden:
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
+		default:
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		}
 	},
+}
+
+func writeExport(
+	ctx context.Context,
+	items []gen.AuditEntry,
+	totalItems int,
+) {
+	var exporter export.Exporter
+	switch auditExportType {
+	case "file":
+		exporter = export.NewFileExporter(auditExportOutput)
+	default:
+		cli.LogFatal(
+			logger,
+			"unsupported export type",
+			fmt.Errorf("type %q is not supported, use \"file\"", auditExportType),
+		)
+	}
+
+	if err := exporter.Open(ctx); err != nil {
+		cli.LogFatal(logger, "opening exporter", err)
+	}
+
+	defer func() {
+		if closeErr := exporter.Close(ctx); closeErr != nil {
+			logger.Error("closing exporter", "error", closeErr)
+		}
+	}()
+
+	for _, item := range items {
+		if err := exporter.Write(ctx, item); err != nil {
+			cli.LogFatal(logger, "writing entry", err)
+		}
+	}
+
+	fmt.Println()
+	cli.PrintKV(
+		"Exported", strconv.Itoa(len(items)),
+		"Total", strconv.Itoa(totalItems),
+	)
+	cli.PrintKV("Output", auditExportOutput)
 }
 
 func init() {
@@ -131,7 +121,5 @@ func init() {
 		StringVar(&auditExportOutput, "output", "", "Output file path (required)")
 	clientAuditExportCmd.Flags().
 		StringVar(&auditExportType, "type", "file", "Export backend type")
-	clientAuditExportCmd.Flags().
-		IntVar(&auditExportBatchSize, "batch-size", 100, "Number of entries per API call")
 	_ = clientAuditExportCmd.MarkFlagRequired("output")
 }

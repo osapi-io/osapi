@@ -41,6 +41,10 @@ type fakeStore struct {
 	listEntries []auditstore.Entry
 	listTotal   int
 	listErr     error
+
+	// ListAll
+	listAllEntries []auditstore.Entry
+	listAllErr     error
 }
 
 func (f *fakeStore) Write(
@@ -65,6 +69,12 @@ func (f *fakeStore) List(
 	return f.listEntries, f.listTotal, f.listErr
 }
 
+func (f *fakeStore) ListAll(
+	_ context.Context,
+) ([]auditstore.Entry, error) {
+	return f.listAllEntries, f.listAllErr
+}
+
 func (f *fakeStore) reset() {
 	f.writeErr = nil
 	f.getEntry = nil
@@ -72,6 +82,8 @@ func (f *fakeStore) reset() {
 	f.listEntries = nil
 	f.listTotal = 0
 	f.listErr = nil
+	f.listAllEntries = nil
+	f.listAllErr = nil
 }
 
 // newTestAuditHandler creates an audit handler for integration tests.

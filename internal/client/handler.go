@@ -49,6 +49,10 @@ type AuditHandler interface {
 		ctx context.Context,
 		id string,
 	) (*gen.GetAuditLogByIDResponse, error)
+	// GetAuditExport get all audit log entries for export.
+	GetAuditExport(
+		ctx context.Context,
+	) (*gen.GetAuditExportResponse, error)
 }
 
 // MetricsHandler defines an interface for fetching Prometheus metrics.

@@ -140,6 +140,12 @@ func (f *serverTestAuditStore) List(
 	return nil, 0, nil
 }
 
+func (f *serverTestAuditStore) ListAll(
+	_ context.Context,
+) ([]auditstore.Entry, error) {
+	return nil, nil
+}
+
 func (s *ServerPublicTestSuite) TestStartAndStop() {
 	tests := []struct {
 		name string

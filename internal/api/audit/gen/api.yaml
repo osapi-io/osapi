@@ -91,6 +91,41 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /audit/export:
+    get:
+      operationId: GetAuditExport
+      summary: Export all audit log entries
+      description: Returns all audit log entries without pagination for export.
+      tags:
+        - audit
+      security:
+        - BearerAuth:
+            - audit:read
+      responses:
+        '200':
+          description: All audit entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuditResponse'
+        '401':
+          description: Unauthorized - API key required.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
   /audit/{id}:
     get:
       operationId: GetAuditLogByID

@@ -31,6 +31,21 @@ import (
 	gen "github.com/retr0h/osapi/internal/client/gen"
 )
 
+// marshalJSON is a package-level variable for testing the marshal error path.
+var marshalJSON = json.Marshal
+
+// MarshalJSONFunc returns the current JSON marshaler for test inspection.
+func MarshalJSONFunc() func(any) ([]byte, error) {
+	return marshalJSON
+}
+
+// SetMarshalJSONFunc replaces the JSON marshaler. Used by tests.
+func SetMarshalJSONFunc(
+	fn func(any) ([]byte, error),
+) {
+	marshalJSON = fn
+}
+
 // OpenFileFunc returns the current file opener for test inspection.
 func OpenFileFunc() func(string) (io.WriteCloser, error) {
 	return openFile
@@ -90,7 +105,7 @@ func (e *FileExporter) Write(
 		return fmt.Errorf("exporter not opened")
 	}
 
-	data, err := json.Marshal(entry)
+	data, err := marshalJSON(entry)
 	if err != nil {
 		return fmt.Errorf("marshaling entry: %w", err)
 	}
