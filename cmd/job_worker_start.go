@@ -74,7 +74,7 @@ It processes jobs as they become available.
 		}
 
 		// Create/get the jobs KV bucket
-		jobsKV, err := nc.CreateKVBucket(kvBucket)
+		jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
 		if err != nil {
 			cli.LogFatal(logger, "failed to create KV bucket", err)
 		}

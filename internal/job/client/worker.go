@@ -140,13 +140,13 @@ func (c *Client) ConsumeJobs(
 
 // GetJobData retrieves raw job data from the KV store.
 func (c *Client) GetJobData(
-	_ context.Context,
+	ctx context.Context,
 	jobKey string,
 ) ([]byte, error) {
 	c.logger.Debug("kv.get",
 		slog.String("key", jobKey),
 	)
-	entry, err := c.kv.Get(jobKey)
+	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job data for key %s: %w", jobKey, err)
 	}

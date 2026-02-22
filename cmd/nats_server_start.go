@@ -147,18 +147,18 @@ func setupJetStream(
 	}
 
 	// Create KV buckets
-	if _, err := nc.CreateKVBucket(kvBucket); err != nil {
+	if _, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket); err != nil {
 		return fmt.Errorf("create KV bucket %s: %w", kvBucket, err)
 	}
 
-	if _, err := nc.CreateKVBucket(kvResponseBucket); err != nil {
+	if _, err := nc.CreateOrUpdateKVBucket(ctx, kvResponseBucket); err != nil {
 		return fmt.Errorf("create KV bucket %s: %w", kvResponseBucket, err)
 	}
 
 	// Create audit KV bucket with configured settings
 	if appConfig.NATS.Audit.Bucket != "" {
 		auditKVConfig := cli.BuildAuditKVConfig(namespace, appConfig.NATS.Audit)
-		if _, err := nc.CreateKVBucketWithConfig(auditKVConfig); err != nil {
+		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, auditKVConfig); err != nil {
 			return fmt.Errorf("create audit KV bucket %s: %w", auditKVConfig.Bucket, err)
 		}
 	}

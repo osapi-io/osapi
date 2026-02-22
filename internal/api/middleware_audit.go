@@ -21,6 +21,7 @@
 package api
 
 import (
+	"context"
 	"log/slog"
 	"strings"
 	"time"
@@ -77,8 +78,10 @@ func auditMiddleware(
 				DurationMs:   time.Since(start).Milliseconds(),
 			}
 
+			// Use Background context because this goroutine runs after the HTTP
+			// response is sent, at which point the request context is canceled.
 			go func() {
-				if writeErr := store.Write(c.Request().Context(), entry); writeErr != nil {
+				if writeErr := store.Write(context.Background(), entry); writeErr != nil {
 					logger.Warn(
 						"failed to write audit entry",
 						slog.String("error", writeErr.Error()),

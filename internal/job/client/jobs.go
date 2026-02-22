@@ -23,12 +23,14 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/job"
 )
@@ -99,7 +101,7 @@ func (c *Client) CreateJob(
 		slog.String("job_id", jobID),
 	)
 
-	revision, err := c.kv.Put(kvKey, jobWithStatusJSON)
+	revision, err := c.kv.Put(ctx, kvKey, jobWithStatusJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
@@ -118,7 +120,7 @@ func (c *Client) CreateJob(
 		},
 	}
 	statusEventJSON, _ := json.Marshal(statusEvent)
-	if _, err := c.kv.Put(statusKey, statusEventJSON); err != nil {
+	if _, err := c.kv.Put(ctx, statusKey, statusEventJSON); err != nil {
 		c.logger.ErrorContext(
 			ctx,
 			"failed to write submitted event",
@@ -156,9 +158,9 @@ func (c *Client) GetQueueStats(
 		slog.String("operation", "get_queue_stats"),
 	)
 	// Get all job keys from KV store
-	keys, err := c.kv.Keys()
+	keys, err := c.kv.Keys(ctx)
 	if err != nil {
-		if err.Error() == "nats: no keys found" {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return &job.QueueStats{
 				TotalJobs: 0,
 				StatusCounts: map[string]int{
@@ -192,7 +194,7 @@ func (c *Client) GetQueueStats(
 			continue
 		}
 
-		entry, err := c.kv.Get(key)
+		entry, err := c.kv.Get(ctx, key)
 		if err != nil {
 			continue
 		}
@@ -206,7 +208,7 @@ func (c *Client) GetQueueStats(
 		jobCount++
 
 		// Compute status from events (reuse already-fetched keys)
-		computedStatus := c.computeStatusFromEvents(keys, jobID)
+		computedStatus := c.computeStatusFromEvents(ctx, keys, jobID)
 		statusCounts[computedStatus.Status]++
 
 		// Track operation type
@@ -238,7 +240,7 @@ func (c *Client) GetQueueStats(
 
 // GetJobStatus returns information about a specific job.
 func (c *Client) GetJobStatus(
-	_ context.Context,
+	ctx context.Context,
 	jobID string,
 ) (*job.QueuedJob, error) {
 	// Get the immutable job data
@@ -246,7 +248,7 @@ func (c *Client) GetJobStatus(
 	c.logger.Debug("kv.get",
 		slog.String("key", jobKey),
 	)
-	entry, err := c.kv.Get(jobKey)
+	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %s", jobID)
 	}
@@ -257,16 +259,16 @@ func (c *Client) GetJobStatus(
 	}
 
 	// Get all status events for this job
-	statusKeys, err := c.kv.Keys()
-	if err != nil && err.Error() != "nats: no keys found" {
+	statusKeys, err := c.kv.Keys(ctx)
+	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
 		return nil, fmt.Errorf("failed to get status events: %w", err)
 	}
 
 	// Compute current status from events
-	computedStatus := c.computeStatusFromEvents(statusKeys, jobID)
+	computedStatus := c.computeStatusFromEvents(ctx, statusKeys, jobID)
 
 	// Get response data for this job
-	responses := c.getJobResponses(statusKeys, jobID)
+	responses := c.getJobResponses(ctx, statusKeys, jobID)
 
 	queuedJob := &job.QueuedJob{
 		ID:           jobID,
@@ -300,7 +302,7 @@ func (c *Client) GetJobStatus(
 // limit=0 means no limit. offset=0 means start from beginning.
 // Jobs are returned newest-first (reverse insertion order).
 func (c *Client) ListJobs(
-	_ context.Context,
+	ctx context.Context,
 	statusFilter string,
 	limit int,
 	offset int,
@@ -311,9 +313,9 @@ func (c *Client) ListJobs(
 		slog.Int("limit", limit),
 		slog.Int("offset", offset),
 	)
-	allKeys, err := c.kv.Keys()
+	allKeys, err := c.kv.Keys(ctx)
 	if err != nil {
-		if err.Error() == "nats: no keys found" {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return &ListJobsResult{
 				Jobs:       []*job.QueuedJob{},
 				TotalCount: 0,
@@ -345,15 +347,16 @@ func (c *Client) ListJobs(
 
 	// No status filter: we know the total count immediately
 	if statusFilter == "" {
-		return c.listJobsNoFilter(allKeys, jobKeys, limit, offset), nil
+		return c.listJobsNoFilter(ctx, allKeys, jobKeys, limit, offset), nil
 	}
 
 	// With status filter: scan all jobs to count matches and collect page
-	return c.listJobsWithFilter(allKeys, jobKeys, statusFilter, limit, offset), nil
+	return c.listJobsWithFilter(ctx, allKeys, jobKeys, statusFilter, limit, offset), nil
 }
 
 // listJobsNoFilter handles pagination when no status filter is applied.
 func (c *Client) listJobsNoFilter(
+	ctx context.Context,
 	allKeys []string,
 	jobKeys []string,
 	limit int,
@@ -378,7 +381,7 @@ func (c *Client) listJobsNoFilter(
 	var jobs []*job.QueuedJob
 	for _, key := range jobKeys {
 		jobID := strings.TrimPrefix(key, "jobs.")
-		jobInfo, err := c.getJobStatusFromKeys(allKeys, key, jobID)
+		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, key, jobID)
 		if err != nil {
 			c.logger.Debug("failed to get job status during list",
 				slog.String("job_id", jobID),
@@ -401,6 +404,7 @@ func (c *Client) listJobsNoFilter(
 
 // listJobsWithFilter handles pagination when a status filter is applied.
 func (c *Client) listJobsWithFilter(
+	ctx context.Context,
 	allKeys []string,
 	jobKeys []string,
 	statusFilter string,
@@ -413,7 +417,7 @@ func (c *Client) listJobsWithFilter(
 
 	for _, key := range jobKeys {
 		jobID := strings.TrimPrefix(key, "jobs.")
-		jobInfo, err := c.getJobStatusFromKeys(allKeys, key, jobID)
+		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, key, jobID)
 		if err != nil {
 			c.logger.Debug("failed to get job status during list",
 				slog.String("job_id", jobID),
@@ -452,11 +456,12 @@ func (c *Client) listJobsWithFilter(
 
 // getJobStatusFromKeys builds a QueuedJob using pre-fetched keys (no inner kv.Keys() call).
 func (c *Client) getJobStatusFromKeys(
+	ctx context.Context,
 	allKeys []string,
 	jobKey string,
 	jobID string,
 ) (*job.QueuedJob, error) {
-	entry, err := c.kv.Get(jobKey)
+	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %s", jobID)
 	}
@@ -466,8 +471,8 @@ func (c *Client) getJobStatusFromKeys(
 		return nil, fmt.Errorf("failed to parse job data: %w", err)
 	}
 
-	computedStatus := c.computeStatusFromEvents(allKeys, jobID)
-	responses := c.getJobResponses(allKeys, jobID)
+	computedStatus := c.computeStatusFromEvents(ctx, allKeys, jobID)
+	responses := c.getJobResponses(ctx, allKeys, jobID)
 
 	queuedJob := &job.QueuedJob{
 		ID:           jobID,
@@ -509,6 +514,7 @@ func getStringField(
 
 // computeStatusFromEvents computes the current job status from status events
 func (c *Client) computeStatusFromEvents(
+	ctx context.Context,
 	eventKeys []string,
 	jobID string,
 ) computedJobStatus {
@@ -543,7 +549,7 @@ func (c *Client) computeStatusFromEvents(
 
 	// Process each event
 	for _, key := range relevantKeys {
-		entry, err := c.kv.Get(key)
+		entry, err := c.kv.Get(ctx, key)
 		if err != nil {
 			continue
 		}
@@ -717,7 +723,7 @@ func (c *Client) RetryJob(
 		slog.String("operation", "retry_job"),
 	)
 
-	entry, err := c.kv.Get(jobKey)
+	entry, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %s", jobID)
 	}
@@ -753,7 +759,7 @@ func (c *Client) RetryJob(
 		},
 	}
 	retriedEventJSON, _ := json.Marshal(retriedEvent)
-	if _, err := c.kv.Put(retriedKey, retriedEventJSON); err != nil {
+	if _, err := c.kv.Put(ctx, retriedKey, retriedEventJSON); err != nil {
 		c.logger.Error("failed to write retried event",
 			slog.String("error", err.Error()),
 		)
@@ -770,19 +776,19 @@ func (c *Client) RetryJob(
 
 // DeleteJob deletes a job from the KV store by its ID.
 func (c *Client) DeleteJob(
-	_ context.Context,
+	ctx context.Context,
 	jobID string,
 ) error {
 	jobKey := "jobs." + jobID
 	c.logger.Debug("kv.delete",
 		slog.String("key", jobKey),
 	)
-	_, err := c.kv.Get(jobKey)
+	_, err := c.kv.Get(ctx, jobKey)
 	if err != nil {
 		return fmt.Errorf("job not found: %s", jobID)
 	}
 
-	if err := c.kv.Delete(jobKey); err != nil {
+	if err := c.kv.Delete(ctx, jobKey); err != nil {
 		return fmt.Errorf("failed to delete job: %w", err)
 	}
 
@@ -791,6 +797,7 @@ func (c *Client) DeleteJob(
 
 // getJobResponses retrieves response data for a specific job
 func (c *Client) getJobResponses(
+	ctx context.Context,
 	allKeys []string,
 	jobID string,
 ) map[string]job.Response {
@@ -803,7 +810,7 @@ func (c *Client) getJobResponses(
 			continue
 		}
 
-		entry, err := c.kv.Get(key)
+		entry, err := c.kv.Get(ctx, key)
 		if err != nil {
 			continue
 		}

@@ -128,6 +128,36 @@ func (mr *MockNATSClientMockRecorder) CreateOrUpdateJetStreamWithConfig(arg0, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateJetStreamWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateJetStreamWithConfig), varargs...)
 }
 
+// CreateOrUpdateKVBucket mocks base method.
+func (m *MockNATSClient) CreateOrUpdateKVBucket(arg0 context.Context, arg1 string) (jetstream.KeyValue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrUpdateKVBucket", arg0, arg1)
+	ret0, _ := ret[0].(jetstream.KeyValue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrUpdateKVBucket indicates an expected call of CreateOrUpdateKVBucket.
+func (mr *MockNATSClientMockRecorder) CreateOrUpdateKVBucket(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateKVBucket", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateKVBucket), arg0, arg1)
+}
+
+// CreateOrUpdateKVBucketWithConfig mocks base method.
+func (m *MockNATSClient) CreateOrUpdateKVBucketWithConfig(arg0 context.Context, arg1 jetstream.KeyValueConfig) (jetstream.KeyValue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrUpdateKVBucketWithConfig", arg0, arg1)
+	ret0, _ := ret[0].(jetstream.KeyValue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrUpdateKVBucketWithConfig indicates an expected call of CreateOrUpdateKVBucketWithConfig.
+func (mr *MockNATSClientMockRecorder) CreateOrUpdateKVBucketWithConfig(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateKVBucketWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateKVBucketWithConfig), arg0, arg1)
+}
+
 // CreateOrUpdateStreamWithConfig mocks base method.
 func (m *MockNATSClient) CreateOrUpdateStreamWithConfig(arg0 context.Context, arg1 *nats.StreamConfig) error {
 	m.ctrl.T.Helper()

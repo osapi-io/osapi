@@ -22,7 +22,7 @@ package client_test
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -91,14 +91,14 @@ func setupPublishAndCollectMocks(
 ) {
 	if opts.mockError != nil && opts.errorMode == errorOnKVPut {
 		mockKV.EXPECT().
-			Put(gomock.Any(), gomock.Any()).
+			Put(gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(uint64(0), opts.mockError)
 		return
 	}
 
 	// kv.Put succeeds
 	mockKV.EXPECT().
-		Put(gomock.Any(), gomock.Any()).
+		Put(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(uint64(1), nil)
 
 	if opts.mockError != nil && opts.errorMode == errorOnPublish {
@@ -115,21 +115,21 @@ func setupPublishAndCollectMocks(
 
 	if opts.mockError != nil && opts.errorMode == errorOnWatch {
 		mockKV.EXPECT().
-			Watch(gomock.Any()).
+			Watch(gomock.Any(), gomock.Any()).
 			Return(nil, opts.mockError)
 		return
 	}
 
 	if opts.mockError != nil && opts.errorMode == errorOnTimeout {
 		// Return a channel that never sends anything, causing timeout with 0 responses
-		ch := make(chan nats.KeyValueEntry)
+		ch := make(chan jetstream.KeyValueEntry)
 
 		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
 		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
 		mockWatcher.EXPECT().Stop().Return(nil)
 
 		mockKV.EXPECT().
-			Watch(gomock.Any()).
+			Watch(gomock.Any(), gomock.Any()).
 			Return(mockWatcher, nil)
 		return
 	}
@@ -139,7 +139,7 @@ func setupPublishAndCollectMocks(
 	if opts.sendNilFirst {
 		bufSize++
 	}
-	ch := make(chan nats.KeyValueEntry, bufSize)
+	ch := make(chan jetstream.KeyValueEntry, bufSize)
 	if opts.sendNilFirst {
 		ch <- nil
 	}
@@ -159,7 +159,7 @@ func setupPublishAndCollectMocks(
 
 	// kv.Watch returns the mock watcher
 	mockKV.EXPECT().
-		Watch(gomock.Any()).
+		Watch(gomock.Any(), gomock.Any()).
 		Return(mockWatcher, nil)
 }
 
@@ -173,14 +173,14 @@ func setupPublishAndWaitMocksWithOpts(
 ) {
 	if opts.mockError != nil && opts.errorMode == errorOnKVPut {
 		mockKV.EXPECT().
-			Put(gomock.Any(), gomock.Any()).
+			Put(gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(uint64(0), opts.mockError)
 		return
 	}
 
 	// kv.Put succeeds
 	mockKV.EXPECT().
-		Put(gomock.Any(), gomock.Any()).
+		Put(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(uint64(1), nil)
 
 	if opts.mockError != nil && opts.errorMode == errorOnPublish {
@@ -197,21 +197,21 @@ func setupPublishAndWaitMocksWithOpts(
 
 	if opts.mockError != nil && opts.errorMode == errorOnWatch {
 		mockKV.EXPECT().
-			Watch(gomock.Any()).
+			Watch(gomock.Any(), gomock.Any()).
 			Return(nil, opts.mockError)
 		return
 	}
 
 	if opts.mockError != nil && opts.errorMode == errorOnTimeout {
 		// Return a channel that never sends anything, causing timeout
-		ch := make(chan nats.KeyValueEntry)
+		ch := make(chan jetstream.KeyValueEntry)
 
 		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
 		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
 		mockWatcher.EXPECT().Stop().Return(nil)
 
 		mockKV.EXPECT().
-			Watch(gomock.Any()).
+			Watch(gomock.Any(), gomock.Any()).
 			Return(mockWatcher, nil)
 		return
 	}
@@ -225,7 +225,7 @@ func setupPublishAndWaitMocksWithOpts(
 	if opts.sendNilFirst {
 		bufSize = 2
 	}
-	ch := make(chan nats.KeyValueEntry, bufSize)
+	ch := make(chan jetstream.KeyValueEntry, bufSize)
 	if opts.sendNilFirst {
 		ch <- nil
 	}
@@ -238,6 +238,6 @@ func setupPublishAndWaitMocksWithOpts(
 
 	// kv.Watch returns the mock watcher
 	mockKV.EXPECT().
-		Watch(gomock.Any()).
+		Watch(gomock.Any(), gomock.Any()).
 		Return(mockWatcher, nil)
 }

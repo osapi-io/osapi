@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -41,6 +42,17 @@ func ParseStorageType(
 	}
 
 	return nats.FileStorage
+}
+
+// ParseJetstreamStorageType maps "memory"/"file" strings to jetstream.StorageType.
+func ParseJetstreamStorageType(
+	s string,
+) jetstream.StorageType {
+	if s == "memory" {
+		return jetstream.MemoryStorage
+	}
+
+	return jetstream.FileStorage
 }
 
 // CloseNATSClient safely closes a NATS client connection.
@@ -75,19 +87,19 @@ func BuildNATSAuthOptions(
 	}
 }
 
-// BuildAuditKVConfig builds a nats.KeyValueConfig from audit config values.
+// BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
 func BuildAuditKVConfig(
 	namespace string,
 	auditCfg config.NATSAudit,
-) *nats.KeyValueConfig {
+) jetstream.KeyValueConfig {
 	auditBucket := job.ApplyNamespaceToInfraName(namespace, auditCfg.Bucket)
 	auditTTL, _ := time.ParseDuration(auditCfg.TTL)
 
-	return &nats.KeyValueConfig{
+	return jetstream.KeyValueConfig{
 		Bucket:   auditBucket,
 		TTL:      auditTTL,
 		MaxBytes: auditCfg.MaxBytes,
-		Storage:  ParseStorageType(auditCfg.Storage),
+		Storage:  ParseJetstreamStorageType(auditCfg.Storage),
 		Replicas: auditCfg.Replicas,
 	}
 }
