@@ -98,6 +98,15 @@ func (suite *SystemHostnameGetIntegrationTestSuite) TestGetSystemHostnameValidat
 			wantBody: `{"error":"assert.AnError general error for testing"}`,
 		},
 		{
+			name: "when empty target_hostname returns 400",
+			path: "/system/hostname?target_hostname=",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name: "when broadcast all",
 			path: "/system/hostname?target_hostname=_all",
 			setupJobMock: func() *jobmocks.MockJobClient {

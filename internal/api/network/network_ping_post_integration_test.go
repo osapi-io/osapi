@@ -112,6 +112,16 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPingValidation(
 			wantContains: []string{`"error"`, "Address", "ip"},
 		},
 		{
+			name: "when empty target_hostname returns 400",
+			path: "/network/ping?target_hostname=",
+			body: `{"address":"1.1.1.1"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name: "when broadcast all",
 			path: "/network/ping?target_hostname=_all",
 			body: `{"address":"1.1.1.1"}`,

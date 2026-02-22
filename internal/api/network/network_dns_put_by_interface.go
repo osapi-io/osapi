@@ -43,13 +43,8 @@ func (n Network) PutNetworkDNS(
 		}, nil
 	}
 
-	if request.Params.TargetHostname != nil {
-		th := struct {
-			TargetHostname string `validate:"min=1"`
-		}{TargetHostname: *request.Params.TargetHostname}
-		if errMsg, ok := validation.Struct(th); !ok {
-			return gen.PutNetworkDNS400JSONResponse{Error: &errMsg}, nil
-		}
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.PutNetworkDNS400JSONResponse{Error: &errMsg}, nil
 	}
 
 	var servers []string

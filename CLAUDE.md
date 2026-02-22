@@ -81,39 +81,40 @@ input must be validated, and the spec must declare how:
         type: string
         format: uuid
   ```
-- **Query parameters**: `x-oapi-codegen-extra-tags` does NOT generate
-  validate tags for query params (oapi-codegen limitation). Add them
-  in the spec as documentation, but **validate manually in the handler**
-  using a temporary struct with validate tags. Use `enum` for
-  constrained string values.
+- **Query parameters**: Place `x-oapi-codegen-extra-tags` at the
+  **parameter level** (sibling of `name`/`in`/`schema`), NOT inside
+  `schema:`. At parameter level, oapi-codegen generates `validate:`
+  tags on the `*Params` struct fields. Use `enum` for constrained
+  string values (generates `oneof` validation).
   ```yaml
   parameters:
     - name: limit
       in: query
       required: false
+      x-oapi-codegen-extra-tags:
+        validate: omitempty,min=1,max=100
       schema:
         type: integer
         default: 20
         minimum: 1
         maximum: 100
-        x-oapi-codegen-extra-tags:
-          validate: omitempty,min=1,max=100
   ```
-  Then in the handler:
+  Then in the handler, validate with a single call:
   ```go
-  params := struct {
-      Limit  int `validate:"min=1,max=100"`
-      Offset int `validate:"min=0"`
-  }{Limit: limit, Offset: offset}
-  if errMsg, ok := validation.Struct(params); !ok {
+  if errMsg, ok := validation.Struct(request.Params); !ok {
       return gen.GetFoo400JSONResponse{Error: &errMsg}, nil
   }
   ```
+  **NOTE:** `x-oapi-codegen-extra-tags` on **path parameters** does
+  NOT generate tags on request object structs. Path params that need
+  validation beyond `format: uuid` (e.g., alphanum checks) still
+  require manual validation with a temporary struct.
 
 **IMPORTANT — every endpoint with user input MUST have:**
 1. `x-oapi-codegen-extra-tags` with `validate:` tags on all request
    body properties and query params in the OpenAPI spec
-2. Manual `validation.Struct()` calls in the handler for query params
+2. `validation.Struct(request.Params)` in the handler for query params,
+   `validation.Struct(request.Body)` for request bodies
 3. A `400` response defined in the OpenAPI spec for endpoints that
    accept user input
 4. An integration test (`*_integration_test.go`) that sends raw HTTP

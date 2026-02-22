@@ -99,6 +99,15 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 			wantContains: []string{`"error"`, "InterfaceName", "alphanum"},
 		},
 		{
+			name: "when empty target_hostname returns 400",
+			path: "/network/dns/eth0?target_hostname=",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name: "when broadcast all",
 			path: "/network/dns/eth0?target_hostname=_all",
 			setupJobMock: func() *jobmocks.MockJobClient {

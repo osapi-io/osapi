@@ -43,13 +43,8 @@ func (n Network) GetNetworkDNSByInterface(
 		return gen.GetNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if request.Params.TargetHostname != nil {
-		th := struct {
-			TargetHostname string `validate:"min=1"`
-		}{TargetHostname: *request.Params.TargetHostname}
-		if errMsg, ok := validation.Struct(th); !ok {
-			return gen.GetNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
-		}
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.GetNetworkDNSByInterface400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := job.AnyHost

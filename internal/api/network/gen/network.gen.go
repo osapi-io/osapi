@@ -117,13 +117,13 @@ type PingResponse struct {
 // PutNetworkDNSParams defines parameters for PutNetworkDNS.
 type PutNetworkDNSParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // GetNetworkDNSByInterfaceParams defines parameters for GetNetworkDNSByInterface.
 type GetNetworkDNSByInterfaceParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // PostNetworkPingJSONBody defines parameters for PostNetworkPing.
@@ -135,7 +135,7 @@ type PostNetworkPingJSONBody struct {
 // PostNetworkPingParams defines parameters for PostNetworkPing.
 type PostNetworkPingParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty"`
+	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1"`
 }
 
 // PutNetworkDNSJSONRequestBody defines body for PutNetworkDNS for application/json ContentType.

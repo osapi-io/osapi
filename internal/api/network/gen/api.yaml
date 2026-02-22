@@ -45,6 +45,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -113,16 +115,18 @@ paths:
         - name: interfaceName
           in: path
           required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,alphanum
           schema:
             type: string
-            x-oapi-codegen-extra-tags:
-              validate: required,alphanum
           description: >
             The name of the network interface to retrieve DNS configuration for.
             Must only contain letters and numbers.
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any
@@ -176,6 +180,8 @@ paths:
         - name: target_hostname
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
           schema:
             type: string
             default: _any

@@ -109,7 +109,7 @@ func (suite *JobListIntegrationTestSuite) TestListJobsValidation() {
 				return jobmocks.NewMockJobClient(suite.ctrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "invalid status filter"},
+			wantContains: []string{`"error"`, "'oneof'"},
 		},
 		{
 			name:  "when negative limit returns 400",
