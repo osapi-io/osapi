@@ -4,9 +4,6 @@ Work is tracked as markdown files organized by status.
 
 ## Directory Structure
 
-Task files live in `docs/docs/sidebar/development/tasks/` so they are published
-on the documentation site. The directories are:
-
 ```
 docs/docs/sidebar/development/tasks/
 ├── backlog/          # Tasks not yet started
@@ -68,7 +65,7 @@ Brief overview of what was accomplished.
 
 ## Workflow
 
-1. New work goes in `docs/docs/sidebar/development/tasks/backlog/`
+1. New work goes in `backlog/`
 2. Move file to `in-progress/` when starting
 3. Move file to `done/` when complete
 4. Log each Claude Code session in `sessions/`

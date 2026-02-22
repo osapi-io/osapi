@@ -24,19 +24,20 @@ them to be used as appliances.
 
 | | |
 |---|---|
-| **System & Network** | Hostname, uptime, OS info, disk, memory, load, DNS read/update, ping |
-| **Async Job System** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
-| **Health & Metrics** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
-| **Audit Logging** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |
-| **Auth & RBAC** | JWT with fine-grained `resource:verb` permissions, built-in and custom roles, direct permission grants |
-| **Distributed Tracing** | OpenTelemetry with trace context propagation across HTTP and NATS |
-| **CLI Parity** | Every API operation has a CLI equivalent with `--json` for scripting |
-| **Multi-Tenant** | Namespace isolation lets multiple deployments share a single NATS cluster |
+| 🖥️ **System & Network** | Hostname, uptime, OS info, disk, memory, load, DNS read/update, ping |
+| ⚡ **Async Job System** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
+| 💚 **Health & Metrics** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
+| 📋 **Audit Logging** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |
+| 🔐 **Auth & RBAC** | JWT with fine-grained `resource:verb` permissions, built-in and custom roles, direct permission grants |
+| 🔍 **Distributed Tracing** | OpenTelemetry with trace context propagation across HTTP and NATS |
+| 🖥️ **CLI Parity** | Every API operation has a CLI equivalent with `--json` for scripting |
+| 🏢 **Multi-Tenant** | Namespace isolation lets multiple deployments share a single NATS cluster |
 
 ## Documentation
 
-[Architecture][] | [Getting Started][] | [API][] | [Usage][] | [Roadmap][]
+[Features][] | [Architecture][] | [Getting Started][] | [API][] | [Usage][] | [Roadmap][]
 
+[Features]: https://osapi-io.github.io/osapi/sidebar/features
 [Architecture]: https://osapi-io.github.io/osapi/sidebar/architecture
 [Getting Started]: https://osapi-io.github.io/osapi/
 [API]: https://osapi-io.github.io/osapi/category/api

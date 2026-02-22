@@ -12,7 +12,8 @@ const config: Config = {
   tagline: 'OSAPI is cool',
   favicon: 'img/favicon.ico',
   markdown: {
-    mermaid: true
+    mermaid: true,
+    format: 'detect'
   },
 
   // Set the production url of your site here
@@ -73,6 +74,59 @@ const config: Config = {
           label: 'Getting Started',
           position: 'left',
           to: '/osapi'
+        },
+        {
+          type: 'dropdown',
+          label: 'Features',
+          position: 'left',
+          items: [
+            {
+              type: 'doc',
+              label: 'System Management',
+              docId: 'sidebar/features/system-management'
+            },
+            {
+              type: 'doc',
+              label: 'Network Management',
+              docId: 'sidebar/features/network-management'
+            },
+            {
+              type: 'doc',
+              label: 'Job System',
+              docId: 'sidebar/features/job-system'
+            },
+            {
+              type: 'doc',
+              label: 'Audit Logging',
+              docId: 'sidebar/features/audit-logging'
+            },
+            {
+              type: 'doc',
+              label: 'Health Checks',
+              docId: 'sidebar/features/health-checks'
+            },
+            {
+              type: 'doc',
+              label: 'Authentication & RBAC',
+              docId: 'sidebar/features/authentication'
+            },
+            {
+              type: 'doc',
+              label: 'Distributed Tracing',
+              docId: 'sidebar/features/distributed-tracing'
+            },
+            {
+              type: 'doc',
+              label: 'Metrics',
+              docId: 'sidebar/features/metrics'
+            }
+          ]
+        },
+        {
+          type: 'doc',
+          label: 'Usage',
+          position: 'left',
+          docId: 'sidebar/usage/usage'
         },
         {
           label: 'API',

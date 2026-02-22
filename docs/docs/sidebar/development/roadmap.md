@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 5
 ---
 
 # Roadmap
@@ -10,25 +10,31 @@ priority tier.
 
 ## Current Capabilities
 
-These features are implemented and available today:
+These features are implemented and available today. See
+[Features](../features/system-management.md) for detailed documentation on each.
 
-- **System** — hostname, status, uptime, OS info, disk, memory, load
-- **Network** — DNS get/update, ping
-- **Job system** — async job processing via NATS JetStream with KV-first
-  architecture, broadcast/load-balanced/label-based routing
-- **Health** — liveness (`/health`), readiness (`/health/ready`), system status
-  with component metrics (`/health/status`)
-- **Audit logging** — structured API operation audit trail stored in NATS KV
-  with 30-day retention, read-only API, admin-only access
-- **Authentication** — JWT bearer tokens with HS256 signing
-- **Authorization** — fine-grained `resource:verb` RBAC with built-in roles
+- [System Management](../features/system-management.md) — hostname, status,
+  uptime, OS info, disk, memory, load
+- [Network Management](../features/network-management.md) — DNS get/update, ping
+- [Job System](../features/job-system.md) — async job processing via NATS
+  JetStream with KV-first architecture, broadcast/load-balanced/label-based
+  routing
+- [Health Checks](../features/health-checks.md) — liveness, readiness, system
+  status with component metrics
+- [Audit Logging](../features/audit-logging.md) — structured API operation audit
+  trail stored in NATS KV with 30-day retention, export, admin-only access
+- [Authentication & RBAC](../features/authentication.md) — JWT bearer tokens
+  with HS256 signing, fine-grained `resource:verb` permissions, built-in roles
   (admin/write/read), custom roles, and direct permission grants
-- **Metrics** — Prometheus endpoint (`/metrics`)
-- **Distributed tracing** — OpenTelemetry with stdout and OTLP exporters, trace
-  context propagation across HTTP and NATS
+- [Metrics](../features/metrics.md) — Prometheus endpoint (`/metrics`)
+- [Distributed Tracing](../features/distributed-tracing.md) — OpenTelemetry with
+  stdout and OTLP exporters, trace context propagation across HTTP and NATS
 - **Namespace support** — multi-tenant NATS subject and infrastructure prefixing
   for shared clusters
 - **CLI** — full parity with the REST API, `--json` output on all commands
+
+Individual task tracking for planned features is in the
+[Task Backlog](tasks/README.md).
 
 ## Tier 1 — Core Appliance
 
@@ -91,8 +97,9 @@ Each new feature follows the same architecture:
 7. CLI commands with `--json` output
 8. Tests (provider, client, handler, integration)
 
-See [Job System Architecture](architecture/job-architecture.md) for details on
-the provider and worker pipeline.
+See [Architecture](../architecture/architecture.md) for the system overview, and
+[Job Architecture](../architecture/job-architecture.md) for the provider and
+worker pipeline.
 
 ## Contributing
 

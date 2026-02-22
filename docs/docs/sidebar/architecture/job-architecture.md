@@ -711,7 +711,7 @@ header, and the worker extracts it to continue the trace. This means a single
 
 Enable tracing with `--debug` or `telemetry.tracing.enabled: true`, then filter
 logs by `trace_id` to see the complete flow of any job. See the
-[Architecture Overview](architecture.md#distributed-tracing) for setup details.
+[Distributed Tracing](../features/distributed-tracing.md) for setup details.
 
 **Complete Event Timeline:**
 

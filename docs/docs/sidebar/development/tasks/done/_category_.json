@@ -1,0 +1,8 @@
+{
+  "label": "Done",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "title": "Completed Tasks"
+  }
+}

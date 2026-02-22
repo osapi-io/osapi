@@ -76,7 +76,7 @@ subpackages:
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
-envelope documented in the [API Design Guidelines](../api-guidelines.md).
+envelope documented in the [API Design Guidelines](api-guidelines.md).
 
 ### Job System (`internal/job/`)
 
@@ -118,8 +118,8 @@ Configuration is managed by [Viper][] and loaded from an `osapi.yaml` file.
 Environment variables override file values using the `OSAPI_` prefix with
 underscore-separated keys (e.g., `OSAPI_API_SERVER_PORT`).
 
-Minimal configuration skeleton (see [Configuration](../configuration.md) for the
-full reference):
+Minimal configuration skeleton (see [Configuration](../usage/configuration.md)
+for the full reference):
 
 ```yaml
 api:
@@ -305,10 +305,11 @@ CORS headers entirely.
 
 - [Job System Architecture](job-architecture.md) — deep dive into the KV-first
   job system, subject routing, and worker pipeline
-- [API Design Guidelines](../api-guidelines.md) — REST conventions, collection
+- [API Design Guidelines](api-guidelines.md) — REST conventions, collection
   envelopes, and endpoint patterns
-- [Guiding Principles](../principles.md) — design philosophy and project values
-- [Development](../development.md) — setup, building, testing, and contributing
+- [Guiding Principles](principles.md) — design philosophy and project values
+- [Development](../development/development.md) — setup, building, testing, and
+  contributing
 
 <!-- prettier-ignore-start -->
 [Cobra]: https://github.com/spf13/cobra

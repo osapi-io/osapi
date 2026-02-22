@@ -10,12 +10,12 @@ OSAPI is a Linux system management REST API and CLI written in Go 1.25. It uses 
 
 For setup, building, testing, and contributing, see the Docusaurus docs:
 
-- @docs/docs/sidebar/development.md - Prerequisites, setup, code style, testing, commit conventions
-- @docs/docs/sidebar/contributing.md - PR workflow and contribution guidelines
-- @docs/docs/sidebar/testing.md - How to run tests and list just recipes
-- @docs/docs/sidebar/principles.md - Guiding principles (simplicity, minimalism, design philosophy)
-- @docs/docs/sidebar/api-guidelines.md - API design guidelines (REST conventions, endpoint structure)
-- @docs/docs/sidebar/configuration.md - Configuration reference (osapi.yaml, env overrides)
+- @docs/docs/sidebar/development/development.md - Prerequisites, setup, code style, testing, commit conventions
+- @docs/docs/sidebar/development/contributing.md - PR workflow and contribution guidelines
+- @docs/docs/sidebar/development/testing.md - How to run tests and list just recipes
+- @docs/docs/sidebar/architecture/principles.md - Guiding principles (simplicity, minimalism, design philosophy)
+- @docs/docs/sidebar/architecture/api-guidelines.md - API design guidelines (REST conventions, endpoint structure)
+- @docs/docs/sidebar/usage/configuration.md - Configuration reference (osapi.yaml, env overrides)
 - @docs/docs/sidebar/architecture/architecture.md - Architecture overview (links to system and job architecture)
 
 Quick reference for common commands:
@@ -193,13 +193,17 @@ Run `just generate` which:
 
 ### Step 8: Documentation
 
+- `docs/docs/sidebar/features/{domain}.md` — feature page describing
+  what the domain manages, how it works, configuration, permissions,
+  and links to CLI, API, and architecture docs. Follow the consistent
+  template used by existing feature pages (see `features/` directory).
 - `docs/docs/sidebar/usage/cli/client/{domain}/{domain}.md` — parent
   page with `<DocCardList />` for sidebar navigation
 - `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
   per CLI subcommand with usage examples and `--json` output
-- Update `docs/docs/sidebar/architecture/architecture.md` — add domain to
-  the "What It Can Do Today" table
-- Update `docs/docs/sidebar/configuration.md` — add any new config
+- Update `docs/docusaurus.config.ts` — add the new feature to the
+  "Features" navbar dropdown
+- Update `docs/docs/sidebar/usage/configuration.md` — add any new config
   sections (env vars, YAML reference, section reference table)
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
@@ -247,7 +251,7 @@ golangci-lint with: errcheck, errname, goimports, govet, prealloc, predeclared, 
 
 ### Branching
 
-See @docs/docs/sidebar/development.md#branching for full conventions.
+See @docs/docs/sidebar/development/development.md#branching for full conventions.
 
 When committing changes via `/commit`, create a feature branch first if
 currently on `main`. Branch names use the pattern `type/short-description`
@@ -255,7 +259,7 @@ currently on `main`. Branch names use the pattern `type/short-description`
 
 ### Commit Messages
 
-See @docs/docs/sidebar/development.md#commit-messages for full conventions.
+See @docs/docs/sidebar/development/development.md#commit-messages for full conventions.
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) with the
 50/72 rule. Format: `type(scope): description`.
@@ -266,10 +270,12 @@ When committing via Claude Code, end with:
 
 ## Task Tracking
 
-Work is tracked as markdown files in `.tasks/`. See @.tasks/README.md for format details.
+Work is tracked as markdown files in `docs/docs/sidebar/development/tasks/`. These
+render on the documentation site. See
+@docs/docs/sidebar/development/tasks/README.md for format details.
 
 ```
-.tasks/
+docs/docs/sidebar/development/tasks/
 ├── backlog/          # Tasks not yet started
 ├── in-progress/      # Tasks actively being worked on
 ├── done/             # Completed tasks
@@ -277,7 +283,7 @@ Work is tracked as markdown files in `.tasks/`. See @.tasks/README.md for format
 ```
 
 When starting a session:
-1. Check `.tasks/in-progress/` for ongoing work
-2. Check `.tasks/backlog/` for next tasks
+1. Check `docs/docs/sidebar/development/tasks/in-progress/` for ongoing work
+2. Check `docs/docs/sidebar/development/tasks/backlog/` for next tasks
 3. Move task files between directories as status changes
-4. Log session work in `.tasks/sessions/YYYY-MM-DD.md`
+4. Log session work in `docs/docs/sidebar/development/tasks/sessions/YYYY-MM-DD.md`
