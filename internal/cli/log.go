@@ -18,59 +18,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package cli
 
 import (
+	"log/slog"
 	"os"
-	"strings"
-
-	"github.com/shirou/gopsutil/v4/host"
 )
 
-var supportedVersions = []struct {
-	Distribution string
-	Version      string
-}{
-	{"ubuntu", "20.04"},
-	{"ubuntu", "22.04"},
-	{"ubuntu", "24.04"},
-}
+// osExit allows tests to override os.Exit.
+var osExit = os.Exit
 
-// IsLinuxVersionSupported checks if the given distribution and version are supported.
-func IsLinuxVersionSupported(
-	distro string,
-	version string,
-) bool {
-	// Convert both distro and version to lowercase to make the check case-insensitive
-	distro = strings.ToLower(distro)
-
-	for _, supported := range supportedVersions {
-		if strings.ToLower(supported.Distribution) == distro && supported.Version == version {
-			return true
-		}
-	}
-	return false
-}
-
-// validateDistribution checks if the CLI is being run on the correct Linux distribution.
-func validateDistribution() {
-	info, err := host.Info()
+// LogFatal logs a fatal error message along with optional structured data
+// and then exits the program with a status code of 1.
+func LogFatal(
+	logger *slog.Logger,
+	message string,
+	err error,
+	kvPairs ...any,
+) {
 	if err != nil {
-		logFatal("failed to get host info", err)
+		kvPairs = append(kvPairs, "error", err)
 	}
+	logger.Error(
+		message,
+		kvPairs...,
+	)
 
-	if os.Getenv("IGNORE_LINUX") != "" {
-		return
-	}
-
-	if !IsLinuxVersionSupported(info.Platform, info.PlatformVersion) {
-		logFatal(
-			"distro not supported",
-			nil,
-			"distro",
-			info.Platform,
-			"version",
-			info.PlatformVersion,
-		)
-	}
+	osExit(1)
 }

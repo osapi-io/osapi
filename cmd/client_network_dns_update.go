@@ -28,6 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -62,7 +63,7 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 			interfaceName,
 		)
 		if err != nil {
-			logFatal("failed to update network dns endpoint", err)
+			cli.LogFatal(logger, "failed to update network dns endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -74,20 +75,20 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 
 			if resp.JSON202 != nil && resp.JSON202.JobId != nil {
 				fmt.Println()
-				printKV("Job ID", resp.JSON202.JobId.String())
+				cli.PrintKV("Job ID", resp.JSON202.JobId.String())
 			}
 
 			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
-				results := make([]mutationResultRow, 0, len(resp.JSON202.Results))
+				results := make([]cli.MutationResultRow, 0, len(resp.JSON202.Results))
 				for _, r := range resp.JSON202.Results {
-					results = append(results, mutationResultRow{
+					results = append(results, cli.MutationResultRow{
 						Hostname: r.Hostname,
 						Status:   string(r.Status),
 						Error:    r.Error,
 					})
 				}
-				headers, rows := buildMutationTable(results, nil)
-				printStyledTable([]section{{Headers: headers, Rows: rows}})
+				headers, rows := cli.BuildMutationTable(results, nil)
+				cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
 			} else {
 				logger.Info(
 					"network dns put",
@@ -99,13 +100,13 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 			}
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

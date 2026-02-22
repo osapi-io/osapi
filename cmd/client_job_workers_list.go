@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -41,7 +42,7 @@ and collecting responses. Shows each worker's hostname.`,
 		jobHandler := handler.(client.JobHandler)
 		resp, err := jobHandler.GetJobWorkers(ctx)
 		if err != nil {
-			logFatal("failed to list workers", err)
+			cli.LogFatal(logger, "failed to list workers", err)
 		}
 
 		switch resp.StatusCode() {
@@ -52,7 +53,7 @@ and collecting responses. Shows each worker's hostname.`,
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("workers response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("workers response was nil"))
 			}
 
 			workers := resp.JSON200.Workers
@@ -66,20 +67,20 @@ and collecting responses. Shows each worker's hostname.`,
 				rows = append(rows, []string{w.Hostname})
 			}
 
-			sections := []section{
+			sections := []cli.Section{
 				{
 					Title:   fmt.Sprintf("Active Workers (%d)", resp.JSON200.Total),
 					Headers: []string{"HOSTNAME"},
 					Rows:    rows,
 				},
 			}
-			printStyledTable(sections)
+			cli.PrintStyledTable(sections)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

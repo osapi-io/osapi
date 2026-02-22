@@ -80,6 +80,21 @@ func (mr *MockNATSClientMockRecorder) CreateKVBucket(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKVBucket", reflect.TypeOf((*MockNATSClient)(nil).CreateKVBucket), arg0)
 }
 
+// CreateKVBucketWithConfig mocks base method.
+func (m *MockNATSClient) CreateKVBucketWithConfig(arg0 *nats.KeyValueConfig) (nats.KeyValue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateKVBucketWithConfig", arg0)
+	ret0, _ := ret[0].(nats.KeyValue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateKVBucketWithConfig indicates an expected call of CreateKVBucketWithConfig.
+func (mr *MockNATSClientMockRecorder) CreateKVBucketWithConfig(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKVBucketWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateKVBucketWithConfig), arg0)
+}
+
 // CreateOrUpdateConsumerWithConfig mocks base method.
 func (m *MockNATSClient) CreateOrUpdateConsumerWithConfig(arg0 context.Context, arg1 string, arg2 jetstream.ConsumerConfig) error {
 	m.ctrl.T.Helper()

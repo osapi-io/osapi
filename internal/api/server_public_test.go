@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
+	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
 )
 
@@ -44,6 +45,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 	tests := []struct {
 		name      string
 		appConfig config.Config
+		opts      []api.Option
 	}{
 		{
 			name: "creates server with default config",
@@ -75,6 +77,21 @@ func (s *ServerPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "creates server with audit store option",
+			appConfig: config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			},
+			opts: []api.Option{
+				api.WithAuditStore(&serverTestAuditStore{}),
+			},
+		},
+		{
 			name: "creates server with CORS origins",
 			appConfig: config.Config{
 				API: config.API{
@@ -96,12 +113,31 @@ func (s *ServerPublicTestSuite) TestNew() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			server := api.New(tt.appConfig, slog.Default())
+			server := api.New(tt.appConfig, slog.Default(), tt.opts...)
 
 			s.NotNil(server)
 			s.NotNil(server.Echo)
 		})
 	}
+}
+
+// serverTestAuditStore implements audit.Store for server option tests.
+type serverTestAuditStore struct{}
+
+func (f *serverTestAuditStore) Write(_ context.Context, _ auditstore.Entry) error {
+	return nil
+}
+
+func (f *serverTestAuditStore) Get(_ context.Context, _ string) (*auditstore.Entry, error) {
+	return nil, nil
+}
+
+func (f *serverTestAuditStore) List(
+	_ context.Context,
+	_ int,
+	_ int,
+) ([]auditstore.Entry, int, error) {
+	return nil, 0, nil
 }
 
 func (s *ServerPublicTestSuite) TestStartAndStop() {

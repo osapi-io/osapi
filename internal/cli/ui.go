@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package cli
 
 import (
 	"encoding/json"
@@ -36,39 +36,43 @@ import (
 	"github.com/retr0h/osapi/internal/client/gen"
 )
 
-// TODO(retr0h): consider moving out of global scope
+// Theme colors for terminal UI rendering.
 var (
-	purple    = lipgloss.Color("99")
-	gray      = lipgloss.Color("245")
-	lightGray = lipgloss.Color("241")
-	white     = lipgloss.Color("15")
-	teal      = lipgloss.Color("#06ffa5") // Soft teal for values/highlights
-
-	// Reusable inline styles for compact key-value output.
-	labelStyle = lipgloss.NewStyle().Bold(true).Foreground(purple)
-	valueStyle = lipgloss.NewStyle().Foreground(teal)
-	dimStyle   = lipgloss.NewStyle().Foreground(gray)
+	Purple    = lipgloss.Color("99")
+	Gray      = lipgloss.Color("245")
+	LightGray = lipgloss.Color("241")
+	White     = lipgloss.Color("15")
+	Teal      = lipgloss.Color("#06ffa5")
 )
 
-// section represents a header with its corresponding rows.
-type section struct {
+// Reusable inline styles for compact key-value output.
+var (
+	labelStyle = lipgloss.NewStyle().Bold(true).Foreground(Purple)
+	valueStyle = lipgloss.NewStyle().Foreground(Teal)
+
+	// DimStyle is a muted style for secondary text.
+	DimStyle = lipgloss.NewStyle().Foreground(Gray)
+)
+
+// Section represents a header with its corresponding rows.
+type Section struct {
 	Title   string
 	Headers []string
 	Rows    [][]string
 }
 
-// resultRow is a per-host broadcast result used by buildBroadcastTable.
-type resultRow struct {
+// ResultRow is a per-host broadcast result used by BuildBroadcastTable.
+type ResultRow struct {
 	Hostname string
 	Error    *string
 	Fields   []string
 }
 
-// buildBroadcastTable builds headers and rows for a broadcast result table.
+// BuildBroadcastTable builds headers and rows for a broadcast result table.
 // It prepends HOSTNAME to every row and conditionally inserts STATUS and ERROR
 // columns when any result carries an error.
-func buildBroadcastTable(
-	results []resultRow,
+func BuildBroadcastTable(
+	results []ResultRow,
 	fieldHeaders []string,
 ) ([]string, [][]string) {
 	hasErrors := false
@@ -104,19 +108,19 @@ func buildBroadcastTable(
 	return headers, rows
 }
 
-// mutationResultRow is a per-host mutation result used by buildMutationTable.
-type mutationResultRow struct {
+// MutationResultRow is a per-host mutation result used by BuildMutationTable.
+type MutationResultRow struct {
 	Hostname string
 	Status   string
 	Error    *string
 	Fields   []string
 }
 
-// buildMutationTable builds headers and rows for a mutation broadcast table.
-// Unlike buildBroadcastTable, STATUS and ERROR columns are always shown because
+// BuildMutationTable builds headers and rows for a mutation broadcast table.
+// Unlike BuildBroadcastTable, STATUS and ERROR columns are always shown because
 // mutation results carry an explicit status field.
-func buildMutationTable(
-	results []mutationResultRow,
+func BuildMutationTable(
+	results []MutationResultRow,
 	fieldHeaders []string,
 ) ([]string, [][]string) {
 	headers := make([]string, 0, 3+len(fieldHeaders))
@@ -138,9 +142,9 @@ func buildMutationTable(
 	return headers, rows
 }
 
-// printStyledTable renders a styled table with dynamic column widths.
-func printStyledTable(
-	sections []section,
+// PrintStyledTable renders a styled table with dynamic column widths.
+func PrintStyledTable(
+	sections []Section,
 ) {
 	re := lipgloss.NewRenderer(os.Stdout)
 
@@ -152,7 +156,7 @@ func printStyledTable(
 
 	for _, section := range sections {
 		// Calculate optimal width for each column
-		columnWidths := calculateColumnWidths(section.Headers, section.Rows, 1)
+		columnWidths := CalculateColumnWidths(section.Headers, section.Rows, 1)
 
 		// Check if total table width exceeds terminal width
 		totalWidth := 0
@@ -175,13 +179,13 @@ func printStyledTable(
 		}
 
 		var (
-			HeaderStyle  = re.NewStyle().Foreground(white).Bold(true).Align(lipgloss.Center)
+			HeaderStyle  = re.NewStyle().Foreground(White).Bold(true).Align(lipgloss.Center)
 			CellStyle    = re.NewStyle().PaddingLeft(1)
-			OddRowStyle  = CellStyle.Foreground(gray)
-			EvenRowStyle = CellStyle.Foreground(lightGray)
-			BorderStyle  = re.NewStyle().Foreground(purple)
+			OddRowStyle  = CellStyle.Foreground(Gray)
+			EvenRowStyle = CellStyle.Foreground(LightGray)
+			BorderStyle  = re.NewStyle().Foreground(Purple)
 			PaddingStyle = re.NewStyle().Padding(0, 2)
-			TitleStyle   = re.NewStyle().Bold(true).Foreground(purple).PaddingLeft(2).PaddingTop(1)
+			TitleStyle   = re.NewStyle().Bold(true).Foreground(Purple).PaddingLeft(2).PaddingTop(1)
 			ColonStyle   = re.NewStyle().Bold(false)
 		)
 
@@ -230,14 +234,14 @@ func printStyledTable(
 	}
 }
 
-// kvMinColWidth is the minimum visual width for each key-value column.
-// A consistent minimum ensures columns align across consecutive printKV calls.
-const kvMinColWidth = 20
+// KVMinColWidth is the minimum visual width for each key-value column.
+// A consistent minimum ensures columns align across consecutive PrintKV calls.
+const KVMinColWidth = 20
 
-// printKV prints labeled key-value pairs on a single indented line.
+// PrintKV prints labeled key-value pairs on a single indented line.
 // Pairs are padded to equal column widths for alignment.
 // Arguments alternate between labels and values: label1, val1, label2, val2, ...
-func printKV(
+func PrintKV(
 	pairs ...string,
 ) {
 	if len(pairs)%2 != 0 || len(pairs) == 0 {
@@ -245,7 +249,7 @@ func printKV(
 	}
 
 	rendered := make([]string, 0, len(pairs)/2)
-	maxWidth := kvMinColWidth
+	maxWidth := KVMinColWidth
 	for i := 0; i < len(pairs); i += 2 {
 		pair := labelStyle.Render(pairs[i]+":") + " " + valueStyle.Render(pairs[i+1])
 		rendered = append(rendered, pair)
@@ -266,8 +270,8 @@ func printKV(
 	fmt.Println(line.String())
 }
 
-// formatList helper function to convert []string to a formatted string.
-func formatList(
+// FormatList helper function to convert []string to a formatted string.
+func FormatList(
 	list []string,
 ) string {
 	if len(list) == 0 {
@@ -276,8 +280,8 @@ func formatList(
 	return strings.Join(list, ", ")
 }
 
-// formatLabels formats a label map as "key:value, key:value" sorted by key.
-func formatLabels(
+// FormatLabels formats a label map as "key:value, key:value" sorted by key.
+func FormatLabels(
 	labels *map[string]string,
 ) string {
 	if labels == nil || len(*labels) == 0 {
@@ -297,8 +301,8 @@ func formatLabels(
 	return strings.Join(parts, ", ")
 }
 
-// calculateColumnWidths calculates the optimal width for each column based on content
-func calculateColumnWidths(
+// CalculateColumnWidths calculates the optimal width for each column based on content.
+func CalculateColumnWidths(
 	headers []string,
 	rows [][]string,
 	minPadding int,
@@ -319,7 +323,7 @@ func calculateColumnWidths(
 		for i, cell := range row {
 			if i < len(widths) {
 				// For multi-line content, use the width of the longest line
-				maxLineWidth := getMaxLineWidth(cell)
+				maxLineWidth := GetMaxLineWidth(cell)
 				if maxLineWidth > widths[i] {
 					widths[i] = maxLineWidth
 				}
@@ -335,8 +339,8 @@ func calculateColumnWidths(
 	return widths
 }
 
-// getMaxLineWidth returns the width of the longest line in a multi-line string
-func getMaxLineWidth(
+// GetMaxLineWidth returns the width of the longest line in a multi-line string.
+func GetMaxLineWidth(
 	text string,
 ) int {
 	lines := strings.Split(text, "\n")
@@ -349,8 +353,8 @@ func getMaxLineWidth(
 	return maxWidth
 }
 
-// safeString function to safely dereference string pointers
-func safeString(
+// SafeString function to safely dereference string pointers.
+func SafeString(
 	s *string,
 ) string {
 	if s != nil {
@@ -359,8 +363,8 @@ func safeString(
 	return ""
 }
 
-// safeUUID converts a *uuid.UUID to its string representation. Returns "" if nil.
-func safeUUID(
+// SafeUUID converts a *uuid.UUID to its string representation. Returns "" if nil.
+func SafeUUID(
 	u *uuid.UUID,
 ) string {
 	if u != nil {
@@ -369,8 +373,8 @@ func safeUUID(
 	return ""
 }
 
-// float64ToSafeString converts a *float64 to a string. Returns "N/A" if nil.
-func float64ToSafeString(
+// Float64ToSafeString converts a *float64 to a string. Returns "N/A" if nil.
+func Float64ToSafeString(
 	f *float64,
 ) string {
 	if f != nil {
@@ -379,8 +383,8 @@ func float64ToSafeString(
 	return "N/A"
 }
 
-// intToSafeString converts a *int to a string. Returns "N/A" if nil.
-func intToSafeString(
+// IntToSafeString converts a *int to a string. Returns "N/A" if nil.
+func IntToSafeString(
 	i *int,
 ) string {
 	if i != nil {
@@ -389,8 +393,8 @@ func intToSafeString(
 	return "N/A"
 }
 
-// handleAuthError handles authentication and authorization errors (401 and 403).
-func handleAuthError(
+// HandleAuthError handles authentication and authorization errors (401 and 403).
+func HandleAuthError(
 	jsonError *gen.ErrorResponse,
 	statusCode int,
 	logger *slog.Logger,
@@ -398,7 +402,7 @@ func handleAuthError(
 	errorMsg := "unknown error"
 
 	if jsonError != nil && jsonError.Error != nil {
-		errorMsg = safeString(jsonError.Error)
+		errorMsg = SafeString(jsonError.Error)
 	}
 
 	logger.Error(
@@ -408,8 +412,8 @@ func handleAuthError(
 	)
 }
 
-// handleUnknownError handles unexpected errors, such as 500 Internal Server Error.
-func handleUnknownError(
+// HandleUnknownError handles unexpected errors, such as 500 Internal Server Error.
+func HandleUnknownError(
 	json500 *gen.ErrorResponse,
 	statusCode int,
 	logger *slog.Logger,
@@ -417,7 +421,7 @@ func handleUnknownError(
 	errorMsg := "unknown error"
 
 	if json500 != nil && json500.Error != nil {
-		errorMsg = safeString(json500.Error)
+		errorMsg = SafeString(json500.Error)
 	}
 
 	logger.Error(
@@ -427,25 +431,25 @@ func handleUnknownError(
 	)
 }
 
-// displayJobDetailResponse displays detailed job information from a REST API response.
+// DisplayJobDetailResponse displays detailed job information from a REST API response.
 // Used by both job get and job run commands.
-func displayJobDetailResponse(
+func DisplayJobDetailResponse(
 	resp *gen.JobDetailResponse,
 ) {
 	// Display job metadata
 	fmt.Println()
-	printKV("Job ID", safeUUID(resp.Id), "Status", safeString(resp.Status))
+	PrintKV("Job ID", SafeUUID(resp.Id), "Status", SafeString(resp.Status))
 	if resp.Hostname != nil && *resp.Hostname != "" {
-		printKV("Hostname", *resp.Hostname)
+		PrintKV("Hostname", *resp.Hostname)
 	}
 	if resp.Created != nil {
-		printKV("Created", *resp.Created)
+		PrintKV("Created", *resp.Created)
 	}
 	if resp.UpdatedAt != nil && *resp.UpdatedAt != "" {
-		printKV("Updated At", *resp.UpdatedAt)
+		PrintKV("Updated At", *resp.UpdatedAt)
 	}
 	if resp.Error != nil && *resp.Error != "" {
-		printKV("Error", *resp.Error)
+		PrintKV("Error", *resp.Error)
 	}
 
 	// Add worker summary from worker_states
@@ -469,7 +473,7 @@ func displayJobDetailResponse(
 
 		total := len(*resp.WorkerStates)
 		if total > 1 {
-			printKV("Workers", fmt.Sprintf(
+			PrintKV("Workers", fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
 				total,
 				completed,
@@ -479,13 +483,13 @@ func displayJobDetailResponse(
 		}
 	}
 
-	var sections []section
+	var sections []Section
 
 	// Display the operation request
 	if resp.Operation != nil {
 		jobOperationJSON, _ := json.MarshalIndent(*resp.Operation, "", "  ")
 		operationRows := [][]string{{string(jobOperationJSON)}}
-		sections = append(sections, section{
+		sections = append(sections, Section{
 			Title:   "Job Request",
 			Headers: []string{"DATA"},
 			Rows:    operationRows,
@@ -496,7 +500,7 @@ func displayJobDetailResponse(
 	if resp.Responses != nil && len(*resp.Responses) > 0 {
 		responseRows := make([][]string, 0, len(*resp.Responses))
 		for hostname, response := range *resp.Responses {
-			status := safeString(response.Status)
+			status := SafeString(response.Status)
 			errMsg := ""
 			if response.Error != nil {
 				errMsg = *response.Error
@@ -514,7 +518,7 @@ func displayJobDetailResponse(
 			responseRows = append(responseRows, row)
 		}
 
-		sections = append(sections, section{
+		sections = append(sections, Section{
 			Title:   "Worker Responses",
 			Headers: []string{"HOSTNAME", "STATUS", "DATA", "ERROR"},
 			Rows:    responseRows,
@@ -525,8 +529,8 @@ func displayJobDetailResponse(
 	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
 		stateRows := make([][]string, 0, len(*resp.WorkerStates))
 		for hostname, state := range *resp.WorkerStates {
-			status := safeString(state.Status)
-			duration := safeString(state.Duration)
+			status := SafeString(state.Status)
+			duration := SafeString(state.Duration)
 			errMsg := ""
 			if state.Error != nil {
 				errMsg = *state.Error
@@ -535,7 +539,7 @@ func displayJobDetailResponse(
 			stateRows = append(stateRows, []string{hostname, status, duration, errMsg})
 		}
 
-		sections = append(sections, section{
+		sections = append(sections, Section{
 			Title:   "Worker States",
 			Headers: []string{"HOSTNAME", "STATUS", "DURATION", "ERROR"},
 			Rows:    stateRows,
@@ -546,10 +550,10 @@ func displayJobDetailResponse(
 	if resp.Timeline != nil && len(*resp.Timeline) > 0 {
 		timelineRows := make([][]string, 0, len(*resp.Timeline))
 		for _, te := range *resp.Timeline {
-			ts := safeString(te.Timestamp)
-			event := safeString(te.Event)
-			hostname := safeString(te.Hostname)
-			message := safeString(te.Message)
+			ts := SafeString(te.Timestamp)
+			event := SafeString(te.Event)
+			hostname := SafeString(te.Hostname)
+			message := SafeString(te.Message)
 			errMsg := ""
 			if te.Error != nil {
 				errMsg = *te.Error
@@ -557,7 +561,7 @@ func displayJobDetailResponse(
 			timelineRows = append(timelineRows, []string{ts, event, hostname, message, errMsg})
 		}
 
-		sections = append(sections, section{
+		sections = append(sections, Section{
 			Title:   "Timeline",
 			Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
 			Rows:    timelineRows,
@@ -568,7 +572,7 @@ func displayJobDetailResponse(
 	if resp.Result != nil {
 		resultJSON, _ := json.MarshalIndent(resp.Result, "", "  ")
 		resultRows := [][]string{{string(resultJSON)}}
-		sections = append(sections, section{
+		sections = append(sections, Section{
 			Title:   "Job Result",
 			Headers: []string{"DATA"},
 			Rows:    resultRows,
@@ -576,6 +580,6 @@ func displayJobDetailResponse(
 	}
 
 	for _, sec := range sections {
-		printStyledTable([]section{sec})
+		PrintStyledTable([]Section{sec})
 	}
 }

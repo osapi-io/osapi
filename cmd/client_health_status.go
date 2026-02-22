@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 	"github.com/retr0h/osapi/internal/client/gen"
 )
@@ -43,7 +44,7 @@ Requires authentication.
 		healthHandler := handler.(client.HealthHandler)
 		resp, err := healthHandler.GetHealthStatus(ctx)
 		if err != nil {
-			logFatal("failed to get health status endpoint", err)
+			cli.LogFatal(logger, "failed to get health status endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -54,7 +55,11 @@ Requires authentication.
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("health status response was nil"))
+				cli.LogFatal(
+					logger,
+					"failed response",
+					fmt.Errorf("health status response was nil"),
+				)
 			}
 
 			displayStatusHealth(resp.JSON200)
@@ -66,17 +71,21 @@ Requires authentication.
 			}
 
 			if resp.JSON503 == nil {
-				logFatal("failed response", fmt.Errorf("health status response was nil"))
+				cli.LogFatal(
+					logger,
+					"failed response",
+					fmt.Errorf("health status response was nil"),
+				)
 			}
 
 			displayStatusHealth(resp.JSON503)
 
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(nil, resp.StatusCode(), logger)
+			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
 		}
 	},
 }
@@ -86,18 +95,18 @@ func displayStatusHealth(
 	data *gen.StatusResponse,
 ) {
 	fmt.Println()
-	printKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
+	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
 
 	if data.Nats != nil {
 		natsVal := data.Nats.Url
 		if data.Nats.Version != "" {
-			natsVal += " " + dimStyle.Render("(v"+data.Nats.Version+")")
+			natsVal += " " + cli.DimStyle.Render("(v"+data.Nats.Version+")")
 		}
-		printKV("NATS", natsVal)
+		cli.PrintKV("NATS", natsVal)
 	}
 
 	if data.Jobs != nil {
-		printKV("Jobs", fmt.Sprintf(
+		cli.PrintKV("Jobs", fmt.Sprintf(
 			"%d total, %d completed, %d unprocessed, %d failed, %d dlq",
 			data.Jobs.Total, data.Jobs.Completed,
 			data.Jobs.Unprocessed, data.Jobs.Failed, data.Jobs.Dlq,
@@ -105,7 +114,7 @@ func displayStatusHealth(
 	}
 
 	// Tables only for genuinely multi-row data
-	var sections []section
+	var sections []cli.Section
 
 	componentRows := make([][]string, 0, len(data.Components))
 	for name, component := range data.Components {
@@ -115,7 +124,7 @@ func displayStatusHealth(
 		}
 		componentRows = append(componentRows, []string{name, component.Status, errMsg})
 	}
-	sections = append(sections, section{
+	sections = append(sections, cli.Section{
 		Title:   "Components",
 		Headers: []string{"COMPONENT", "STATUS", "ERROR"},
 		Rows:    componentRows,
@@ -131,7 +140,7 @@ func displayStatusHealth(
 				strconv.Itoa(s.Consumers),
 			})
 		}
-		sections = append(sections, section{
+		sections = append(sections, cli.Section{
 			Title:   "Streams",
 			Headers: []string{"NAME", "MESSAGES", "BYTES", "CONSUMERS"},
 			Rows:    streamRows,
@@ -147,14 +156,14 @@ func displayStatusHealth(
 				strconv.Itoa(b.Bytes),
 			})
 		}
-		sections = append(sections, section{
+		sections = append(sections, cli.Section{
 			Title:   "KV Buckets",
 			Headers: []string{"NAME", "KEYS", "BYTES"},
 			Rows:    kvRows,
 		})
 	}
 
-	printStyledTable(sections)
+	cli.PrintStyledTable(sections)
 }
 
 func init() {

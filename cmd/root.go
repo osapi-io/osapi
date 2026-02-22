@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
@@ -103,11 +104,11 @@ func initConfig() {
 	viper.SetConfigFile(viper.GetString("osapiFile"))
 
 	if err := viper.ReadInConfig(); err != nil {
-		logFatal("failed to read config", err, "osapiFile", viper.ConfigFileUsed())
+		cli.LogFatal(logger, "failed to read config", err, "osapiFile", viper.ConfigFileUsed())
 	}
 
 	if err := viper.Unmarshal(&appConfig); err != nil {
-		logFatal("failed to unmarshal config", err, "osapiFile", viper.ConfigFileUsed())
+		cli.LogFatal(logger, "failed to unmarshal config", err, "osapiFile", viper.ConfigFileUsed())
 	}
 
 	// Auto-enable tracing in debug mode so trace_id appears in log lines.
@@ -118,7 +119,7 @@ func initConfig() {
 
 	err := config.Validate(&appConfig)
 	if err != nil {
-		logFatal("validation failed", err, "osapiFile", viper.ConfigFileUsed())
+		cli.LogFatal(logger, "validation failed", err, "osapiFile", viper.ConfigFileUsed())
 	}
 }
 

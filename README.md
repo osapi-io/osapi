@@ -16,35 +16,22 @@
 *(OSAPI /ˈoʊsɑːpi/ - Oh-sah-pee)* A CRUD API for managing Linux systems.
 
 This project provides basic management capabilities to Linux systems, enabling
-them to be used as appliances. You install a single binary, point it at a config
-file, and get a REST API and CLI for querying and changing system
-configuration — hostname, DNS, disk usage, memory, load averages, and more.
-State-changing operations run asynchronously through a job queue so the API
-server itself never needs root privileges.
+them to be used as appliances.
 
 <br clear="left"/>
 
 ## Features
 
-- **System management** — query hostname, uptime, OS info, disk usage, memory,
-  and load averages via REST API or CLI
-- **Network management** — read and update DNS configuration, ping remote hosts
-- **Async job system** — state-changing operations run through NATS JetStream
-  with KV-first architecture, supporting broadcast, load-balanced, and
-  label-based routing across multi-host deployments
-- **Health checks** — liveness, readiness, and detailed system status endpoints
-  for load balancers and monitoring
-- **Audit logging** — structured audit trail of all API operations stored in
-  NATS KV with 30-day retention, admin-only read access
-- **Fine-grained RBAC** — `resource:verb` permissions with built-in roles
-  (admin/write/read), custom role definitions, and direct permission grants
-- **Prometheus metrics** — standard `/metrics` endpoint for monitoring
-- **Distributed tracing** — OpenTelemetry integration with trace context
-  propagation across HTTP and NATS boundaries
-- **CLI parity** — every API operation has an equivalent CLI command with
-  `--json` output for scripting
-- **Namespace isolation** — multiple OSAPI deployments can share a single NATS
-  cluster via subject and infrastructure prefixing
+| | |
+|---|---|
+| **System & Network** | Hostname, uptime, OS info, disk, memory, load, DNS read/update, ping |
+| **Async Job System** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
+| **Health & Metrics** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
+| **Audit Logging** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |
+| **Auth & RBAC** | JWT with fine-grained `resource:verb` permissions, built-in and custom roles, direct permission grants |
+| **Distributed Tracing** | OpenTelemetry with trace context propagation across HTTP and NATS |
+| **CLI Parity** | Every API operation has a CLI equivalent with `--json` for scripting |
+| **Multi-Tenant** | Namespace isolation lets multiple deployments share a single NATS cluster |
 
 ## Documentation
 

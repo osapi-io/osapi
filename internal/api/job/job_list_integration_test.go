@@ -112,6 +112,24 @@ func (suite *JobListIntegrationTestSuite) TestListJobsValidation() {
 			wantContains: []string{`"error"`, "invalid status filter"},
 		},
 		{
+			name:  "when negative limit returns 400",
+			query: "?limit=-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name:  "when negative offset returns 400",
+			query: "?offset=-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name:  "when valid limit and offset",
 			query: "?limit=5&offset=10",
 			setupJobMock: func() *jobmocks.MockJobClient {

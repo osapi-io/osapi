@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 )
 
@@ -36,17 +37,17 @@ var apiServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "The server subcommand",
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		validateDistribution()
+		cli.ValidateDistribution(logger)
 
 		masker := masker.NewMaskerMarshaler()
 		maskedConfig, err := masker.Struct(&appConfig)
 		if err != nil {
-			logFatal("failed to mask config", err)
+			cli.LogFatal(logger, "failed to mask config", err)
 		}
 
 		maskedAppConfig, ok := maskedConfig.(*config.Config)
 		if !ok {
-			logFatal("failed to type assert maskedConfig", nil)
+			cli.LogFatal(logger, "failed to type assert maskedConfig", nil)
 		}
 
 		logger.Debug(

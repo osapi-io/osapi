@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -43,7 +44,7 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 		networkHandler := handler.(client.NetworkHandler)
 		resp, err := networkHandler.GetNetworkDNSByInterface(ctx, host, interfaceName)
 		if err != nil {
-			logFatal("failed to get network dns endpoint", err)
+			cli.LogFatal(logger, "failed to get network dns endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -54,15 +55,15 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("get dns response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("get dns response was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {
 				fmt.Println()
-				printKV("Job ID", resp.JSON200.JobId.String())
+				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
 			}
 
-			results := make([]resultRow, 0, len(resp.JSON200.Results))
+			results := make([]cli.ResultRow, 0, len(resp.JSON200.Results))
 			for _, cfg := range resp.JSON200.Results {
 				var serversList, searchDomainsList []string
 				if cfg.Servers != nil {
@@ -71,29 +72,29 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				if cfg.SearchDomains != nil {
 					searchDomainsList = *cfg.SearchDomains
 				}
-				results = append(results, resultRow{
+				results = append(results, cli.ResultRow{
 					Hostname: cfg.Hostname,
 					Error:    cfg.Error,
 					Fields: []string{
-						formatList(serversList),
-						formatList(searchDomainsList),
+						cli.FormatList(serversList),
+						cli.FormatList(searchDomainsList),
 					},
 				})
 			}
-			headers, rows := buildBroadcastTable(results, []string{
+			headers, rows := cli.BuildBroadcastTable(results, []string{
 				"SERVERS",
 				"SEARCH DOMAINS",
 			})
-			printStyledTable([]section{{Headers: headers, Rows: rows}})
+			cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

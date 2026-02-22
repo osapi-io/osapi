@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -41,7 +42,7 @@ var clientJobGetCmd = &cobra.Command{
 		jobHandler := handler.(client.JobHandler)
 		resp, err := jobHandler.GetJobByID(ctx, jobID)
 		if err != nil {
-			logFatal("failed to get job", err)
+			cli.LogFatal(logger, "failed to get job", err)
 		}
 
 		switch resp.StatusCode() {
@@ -52,20 +53,20 @@ var clientJobGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("job detail response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("job detail response was nil"))
 			}
 
-			displayJobDetailResponse(resp.JSON200)
+			cli.DisplayJobDetailResponse(resp.JSON200)
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusNotFound:
-			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

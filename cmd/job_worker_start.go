@@ -27,6 +27,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/job/worker"
@@ -50,7 +51,7 @@ It processes jobs as they become available.
 			appConfig.Telemetry.Tracing,
 		)
 		if err != nil {
-			logFatal("failed to initialize tracer", err)
+			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
 		// Initialize subject namespace
@@ -63,19 +64,19 @@ It processes jobs as they become available.
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 			Host: appConfig.Job.Worker.NATS.Host,
 			Port: appConfig.Job.Worker.NATS.Port,
-			Auth: buildNATSAuthOptions(appConfig.Job.Worker.NATS.Auth),
+			Auth: cli.BuildNATSAuthOptions(appConfig.Job.Worker.NATS.Auth),
 			Name: appConfig.Job.Worker.NATS.ClientName,
 		})
 
 		err = nc.Connect()
 		if err != nil {
-			logFatal("failed to connect to NATS", err)
+			cli.LogFatal(logger, "failed to connect to NATS", err)
 		}
 
 		// Create/get the jobs KV bucket
 		jobsKV, err := nc.CreateKVBucket(kvBucket)
 		if err != nil {
-			logFatal("failed to create KV bucket", err)
+			cli.LogFatal(logger, "failed to create KV bucket", err)
 		}
 
 		// Create job client
@@ -86,14 +87,14 @@ It processes jobs as they become available.
 			StreamName: streamName,
 		})
 		if err != nil {
-			logFatal("failed to create job client", err)
+			cli.LogFatal(logger, "failed to create job client", err)
 		}
 
 		// Create provider factory and providers
 		providerFactory := worker.NewProviderFactory(logger)
 		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := providerFactory.CreateProviders()
 
-		var w Lifecycle = worker.New(
+		var w cli.Lifecycle = worker.New(
 			appFs,
 			appConfig,
 			logger,
@@ -108,11 +109,9 @@ It processes jobs as they become available.
 		)
 
 		w.Start()
-		runServer(ctx, w, func() {
+		cli.RunServer(ctx, w, func() {
 			_ = shutdownTracer(context.Background())
-			if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
-				natsConn.NC.Close()
-			}
+			cli.CloseNATSClient(nc)
 		})
 	},
 }

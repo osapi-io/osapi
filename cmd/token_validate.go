@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // TokenValidator parses and validates JWT tokens.
@@ -52,13 +53,13 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		var tm TokenValidator = authtoken.New(logger)
 		claims, err := tm.Validate(tokenString, signingKey)
 		if err != nil {
-			logFatal("failed to validate token", err)
+			cli.LogFatal(logger, "failed to validate token", err)
 		}
 
 		fmt.Println()
-		printKV("Subject", claims.Subject, "Roles", strings.Join(claims.Roles, ", "))
+		cli.PrintKV("Subject", claims.Subject, "Roles", strings.Join(claims.Roles, ", "))
 		if len(claims.Permissions) > 0 {
-			printKV("Permissions", strings.Join(claims.Permissions, ", "))
+			cli.PrintKV("Permissions", strings.Join(claims.Permissions, ", "))
 		}
 
 		resolved := authtoken.ResolvePermissions(claims.Roles, claims.Permissions, nil)
@@ -66,10 +67,10 @@ This command ensures that the token is authentic, has not expired, and conforms 
 		for p := range resolved {
 			effectivePerms = append(effectivePerms, p)
 		}
-		printKV("Effective Permissions", strings.Join(effectivePerms, ", "))
+		cli.PrintKV("Effective Permissions", strings.Join(effectivePerms, ", "))
 
-		printKV("Audience", strings.Join(claims.Audience, ", "))
-		printKV("Issued", claims.IssuedAt.Format(time.RFC3339),
+		cli.PrintKV("Audience", strings.Join(claims.Audience, ", "))
+		cli.PrintKV("Issued", claims.IssuedAt.Format(time.RFC3339),
 			"Expires", claims.ExpiresAt.Format(time.RFC3339),
 		)
 	},

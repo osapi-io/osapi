@@ -1,0 +1,93 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package cli
+
+import (
+	"bytes"
+	"fmt"
+	"log/slog"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+)
+
+type LogTestSuite struct {
+	suite.Suite
+}
+
+func TestLogTestSuite(t *testing.T) {
+	suite.Run(t, new(LogTestSuite))
+}
+
+func (suite *LogTestSuite) TestLogFatal() {
+	tests := []struct {
+		name      string
+		message   string
+		err       error
+		kvPairs   []any
+		wantInLog []string
+		wantCode  int
+	}{
+		{
+			name:      "when error is provided logs error",
+			message:   "something failed",
+			err:       fmt.Errorf("connection refused"),
+			wantInLog: []string{"something failed", "connection refused"},
+			wantCode:  1,
+		},
+		{
+			name:      "when error is nil logs without error key",
+			message:   "fatal event",
+			err:       nil,
+			wantInLog: []string{"fatal event"},
+			wantCode:  1,
+		},
+		{
+			name:      "when extra kv pairs are provided logs them",
+			message:   "startup failed",
+			err:       fmt.Errorf("bad config"),
+			kvPairs:   []any{"host", "localhost"},
+			wantInLog: []string{"startup failed", "bad config", "host", "localhost"},
+			wantCode:  1,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var exitCode int
+			originalExit := osExit
+			osExit = func(code int) { exitCode = code }
+			defer func() { osExit = originalExit }()
+
+			var buf bytes.Buffer
+			logger := slog.New(slog.NewTextHandler(&buf, nil))
+
+			LogFatal(logger, tc.message, tc.err, tc.kvPairs...)
+
+			assert.Equal(suite.T(), tc.wantCode, exitCode)
+			output := buf.String()
+			for _, want := range tc.wantInLog {
+				assert.Contains(suite.T(), output, want)
+			}
+		})
+	}
+}

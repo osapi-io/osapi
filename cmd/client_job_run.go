@@ -32,6 +32,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -56,18 +57,18 @@ This combines job submission and retrieval into a single command for convenience
 
 		file, err := os.Open(jsonFilePath)
 		if err != nil {
-			logFatal("failed to open file", err)
+			cli.LogFatal(logger, "failed to open file", err)
 		}
 		defer func() { _ = file.Close() }()
 
 		fileContents, err := io.ReadAll(file)
 		if err != nil {
-			logFatal("failed to read file", err)
+			cli.LogFatal(logger, "failed to read file", err)
 		}
 
 		var operationData map[string]interface{}
 		if err := json.Unmarshal(fileContents, &operationData); err != nil {
-			logFatal("failed to parse JSON operation file", err)
+			cli.LogFatal(logger, "failed to parse JSON operation file", err)
 		}
 
 		jobHandler := handler.(client.JobHandler)
@@ -143,7 +144,7 @@ func checkJobComplete(
 		return false
 	}
 
-	status := safeString(resp.JSON200.Status)
+	status := cli.SafeString(resp.JSON200.Status)
 	logger.Debug("job status check",
 		slog.String("job_id", jobID),
 		slog.String("status", status),
@@ -160,7 +161,7 @@ func checkJobComplete(
 			return true
 		}
 
-		displayJobDetailResponse(resp.JSON200)
+		cli.DisplayJobDetailResponse(resp.JSON200)
 		return true
 	}
 

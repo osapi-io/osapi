@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 	"github.com/retr0h/osapi/internal/client/gen"
 )
@@ -42,7 +43,7 @@ var clientSystemStatusGetCmd = &cobra.Command{
 		systemHandler := handler.(client.SystemHandler)
 		resp, err := systemHandler.GetSystemStatus(ctx, host)
 		if err != nil {
-			logFatal("failed to get system status endpoint", err)
+			cli.LogFatal(logger, "failed to get system status endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -53,24 +54,24 @@ var clientSystemStatusGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("system data response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("system data response was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {
 				fmt.Println()
-				printKV("Job ID", resp.JSON200.JobId.String())
+				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
 			}
 
 			displaySystemStatusCollection(host, resp.JSON200)
 
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }
@@ -88,7 +89,7 @@ func displaySystemStatusCollection(
 
 	fmt.Println()
 
-	results := make([]resultRow, 0, len(data.Results))
+	results := make([]cli.ResultRow, 0, len(data.Results))
 	for _, s := range data.Results {
 		uptime := ""
 		if s.Uptime != nil {
@@ -106,18 +107,18 @@ func displaySystemStatusCollection(
 				s.Memory.Total/1024/1024/1024,
 			)
 		}
-		results = append(results, resultRow{
+		results = append(results, cli.ResultRow{
 			Hostname: s.Hostname,
 			Error:    s.Error,
 			Fields:   []string{uptime, load, memory},
 		})
 	}
-	headers, rows := buildBroadcastTable(results, []string{
+	headers, rows := cli.BuildBroadcastTable(results, []string{
 		"UPTIME",
 		"LOAD (1m)",
 		"MEMORY USED",
 	})
-	printStyledTable([]section{{Headers: headers, Rows: rows}})
+	cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
 }
 
 // displaySystemStatusDetail renders a single system status response with full details.
@@ -131,19 +132,19 @@ func displaySystemStatusDetail(
 		kvArgs = append(
 			kvArgs,
 			"OS",
-			data.OsInfo.Distribution+" "+dimStyle.Render(data.OsInfo.Version),
+			data.OsInfo.Distribution+" "+cli.DimStyle.Render(data.OsInfo.Version),
 		)
 	}
-	printKV(kvArgs...)
+	cli.PrintKV(kvArgs...)
 
 	if data.LoadAverage != nil {
-		printKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
+		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
 			data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
-		)+" "+dimStyle.Render("(1m, 5m, 15m)"))
+		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
 	}
 
 	if data.Memory != nil {
-		printKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
+		cli.PrintKV("Memory", fmt.Sprintf("%d GB used / %d GB total / %d GB free",
 			data.Memory.Used/1024/1024/1024,
 			data.Memory.Total/1024/1024/1024,
 			data.Memory.Free/1024/1024/1024,
@@ -163,14 +164,14 @@ func displaySystemStatusDetail(
 		}
 	}
 
-	sections := []section{
+	sections := []cli.Section{
 		{
 			Title:   "Disks",
 			Headers: []string{"DISK NAME", "TOTAL", "USED", "FREE"},
 			Rows:    diskRows,
 		},
 	}
-	printStyledTable(sections)
+	cli.PrintStyledTable(sections)
 }
 
 func init() {

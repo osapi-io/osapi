@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package cli
 
 import (
 	"context"
@@ -33,9 +33,9 @@ type Lifecycle interface {
 	Stop(ctx context.Context)
 }
 
-// runServer blocks until ctx is cancelled, then shuts down the server
+// RunServer blocks until ctx is cancelled, then shuts down the server
 // with a timeout and runs cleanup functions.
-func runServer(
+func RunServer(
 	ctx context.Context,
 	server Lifecycle,
 	cleanupFns ...func(),

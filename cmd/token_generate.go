@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // TokenGenerator generates signed JWT tokens.
@@ -55,14 +56,14 @@ This command allows you to customize the token properties for various use cases.
 		var tm TokenGenerator = authtoken.New(logger)
 		tokin, err := tm.Generate(signingKey, roles, subject, permissions)
 		if err != nil {
-			logFatal("failed to generate token", err)
+			cli.LogFatal(logger, "failed to generate token", err)
 		}
 
 		fmt.Println()
-		printKV("Token", tokin)
-		printKV("Subject", subject, "Roles", strings.Join(roles, ", "))
+		cli.PrintKV("Token", tokin)
+		cli.PrintKV("Subject", subject, "Roles", strings.Join(roles, ", "))
 		if len(permissions) > 0 {
-			printKV("Permissions", strings.Join(permissions, ", "))
+			cli.PrintKV("Permissions", strings.Join(permissions, ", "))
 		}
 	},
 }
@@ -88,12 +89,12 @@ func init() {
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 
 		if err := validateRoles(roles); err != nil {
-			logFatal("invalid roles", err, "allowed", allowedRoles)
+			cli.LogFatal(logger, "invalid roles", err, "allowed", allowedRoles)
 		}
 
 		permissions, _ := cmd.Flags().GetStringSlice("permissions")
 		if err := validatePermissions(permissions); err != nil {
-			logFatal("invalid permissions", err, "allowed", authtoken.AllPermissions)
+			cli.LogFatal(logger, "invalid permissions", err, "allowed", authtoken.AllPermissions)
 		}
 	}
 }

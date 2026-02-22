@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetJob lists jobs, optionally filtered by status.
@@ -53,6 +54,15 @@ func (j *Job) GetJob(
 	offset := 0
 	if request.Params.Offset != nil {
 		offset = *request.Params.Offset
+	}
+
+	params := struct {
+		Limit  int `validate:"min=0"`
+		Offset int `validate:"min=0"`
+	}{Limit: limit, Offset: offset}
+
+	if errMsg, ok := validation.Struct(params); !ok {
+		return gen.GetJob400JSONResponse{Error: &errMsg}, nil
 	}
 
 	result, err := j.JobClient.ListJobs(ctx, statusFilter, limit, offset)

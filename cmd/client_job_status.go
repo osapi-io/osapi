@@ -32,6 +32,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -92,13 +93,13 @@ func (m jobsModel) Update(
 
 func (m jobsModel) View() string {
 	var (
-		titleStyle  = lipgloss.NewStyle().Bold(true).Foreground(purple)
-		timeStyle   = lipgloss.NewStyle().Foreground(lightGray).Italic(true)
+		titleStyle  = lipgloss.NewStyle().Bold(true).Foreground(cli.Purple)
+		timeStyle   = lipgloss.NewStyle().Foreground(cli.LightGray).Italic(true)
 		borderStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				Padding(1).
 				Margin(2).
-				BorderForeground(purple)
+				BorderForeground(cli.Purple)
 	)
 
 	title := titleStyle.Render("Jobs Queue Status")
@@ -119,9 +120,9 @@ func styleStatusText(
 	statusText string,
 ) string {
 	var (
-		keyStyle     = lipgloss.NewStyle().Foreground(gray)
-		valueStyle   = lipgloss.NewStyle().Foreground(teal)
-		sectionStyle = lipgloss.NewStyle().Foreground(gray)
+		keyStyle     = lipgloss.NewStyle().Foreground(cli.Gray)
+		valueStyle   = lipgloss.NewStyle().Foreground(cli.Teal)
+		sectionStyle = lipgloss.NewStyle().Foreground(cli.Gray)
 	)
 
 	lines := strings.Split(statusText, "\n")

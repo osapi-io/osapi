@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,26 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package mocks provides mock implementations for testing.
+package mocks
 
-import (
-	"os"
-)
-
-// logFatal logs a fatal error message along with optional structured data
-// and then exits the program with a status code of 1.
-func logFatal(
-	message string,
-	err error,
-	kvPairs ...any,
-) {
-	if err != nil {
-		kvPairs = append(kvPairs, "error", err)
-	}
-	logger.Error(
-		message,
-		kvPairs...,
-	)
-
-	os.Exit(1)
-}
+//go:generate go tool github.com/golang/mock/mockgen -destination=./nats_connector.gen.go -package=mocks github.com/osapi-io/nats-client/pkg/client NATSConnector

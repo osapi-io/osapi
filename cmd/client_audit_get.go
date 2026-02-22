@@ -28,6 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -46,7 +47,7 @@ Requires audit:read permission.
 		auditHandler := handler.(client.AuditHandler)
 		resp, err := auditHandler.GetAuditLogByID(ctx, auditID)
 		if err != nil {
-			logFatal("failed to get audit log entry", err)
+			cli.LogFatal(logger, "failed to get audit log entry", err)
 		}
 
 		switch resp.StatusCode() {
@@ -57,36 +58,36 @@ Requires audit:read permission.
 			}
 
 			if resp.JSON200 == nil {
-				logFatal("failed response", fmt.Errorf("audit entry response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("audit entry response was nil"))
 			}
 
 			entry := resp.JSON200.Entry
 
 			fmt.Println()
-			printKV("ID", entry.Id.String())
-			printKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
-			printKV("User", entry.User)
-			printKV("Roles", strings.Join(entry.Roles, ", "))
-			printKV("Method", entry.Method, "Path", entry.Path)
-			printKV(
+			cli.PrintKV("ID", entry.Id.String())
+			cli.PrintKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
+			cli.PrintKV("User", entry.User)
+			cli.PrintKV("Roles", strings.Join(entry.Roles, ", "))
+			cli.PrintKV("Method", entry.Method, "Path", entry.Path)
+			cli.PrintKV(
 				"Status",
 				strconv.Itoa(entry.ResponseCode),
 				"Duration",
 				strconv.FormatInt(entry.DurationMs, 10)+"ms",
 			)
-			printKV("Source IP", entry.SourceIp)
+			cli.PrintKV("Source IP", entry.SourceIp)
 			if entry.OperationId != nil {
-				printKV("Operation", *entry.OperationId)
+				cli.PrintKV("Operation", *entry.OperationId)
 			}
 
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		case http.StatusNotFound:
-			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }

@@ -18,33 +18,51 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package audit
 
 import (
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"testing"
 
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
-// buildNATSAuthOptions converts a config NATSAuth to natsclient.AuthOptions.
-func buildNATSAuthOptions(
-	auth config.NATSAuth,
-) natsclient.AuthOptions {
-	switch auth.Type {
-	case "user_pass":
-		return natsclient.AuthOptions{
-			AuthType: natsclient.UserPassAuth,
-			Username: auth.Username,
-			Password: auth.Password,
-		}
-	case "nkey":
-		return natsclient.AuthOptions{
-			AuthType: natsclient.NKeyAuth,
-			NKeyFile: auth.NKeyFile,
-		}
-	default:
-		return natsclient.AuthOptions{
-			AuthType: natsclient.NoAuth,
-		}
+type KVStoreInternalTestSuite struct {
+	suite.Suite
+
+	ctrl   *gomock.Controller
+	mockKV *mocks.MockKeyValue
+	store  *KVStore
+}
+
+func (s *KVStoreInternalTestSuite) SetupTest() {
+	s.ctrl = gomock.NewController(s.T())
+	s.mockKV = mocks.NewMockKeyValue(s.ctrl)
+	s.store = NewKVStore(slog.Default(), s.mockKV)
+}
+
+func (s *KVStoreInternalTestSuite) TearDownTest() {
+	s.ctrl.Finish()
+	marshalJSON = json.Marshal
+}
+
+func (s *KVStoreInternalTestSuite) TestWriteMarshalError() {
+	marshalJSON = func(_ interface{}) ([]byte, error) {
+		return nil, fmt.Errorf("marshal failure")
 	}
+
+	err := s.store.Write(context.Background(), Entry{ID: "test-id"})
+
+	s.Error(err)
+	s.Contains(err.Error(), "marshal audit entry")
+}
+
+func TestKVStoreInternalTestSuite(t *testing.T) {
+	suite.Run(t, new(KVStoreInternalTestSuite))
 }

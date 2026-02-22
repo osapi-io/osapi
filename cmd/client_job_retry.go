@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/client"
 )
 
@@ -43,7 +44,7 @@ var clientJobRetryCmd = &cobra.Command{
 		jobHandler := handler.(client.JobHandler)
 		resp, err := jobHandler.RetryJobByID(ctx, jobID, targetHostname)
 		if err != nil {
-			logFatal("failed to retry job", err)
+			cli.LogFatal(logger, "failed to retry job", err)
 		}
 
 		switch resp.StatusCode() {
@@ -54,13 +55,13 @@ var clientJobRetryCmd = &cobra.Command{
 			}
 
 			if resp.JSON201 == nil {
-				logFatal("failed response", fmt.Errorf("retry job response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("retry job response was nil"))
 			}
 
 			fmt.Println()
-			printKV("Job ID", resp.JSON201.JobId.String(), "Status", resp.JSON201.Status)
+			cli.PrintKV("Job ID", resp.JSON201.JobId.String(), "Status", resp.JSON201.Status)
 			if resp.JSON201.Revision != nil {
-				printKV("Revision", fmt.Sprintf("%d", *resp.JSON201.Revision))
+				cli.PrintKV("Revision", fmt.Sprintf("%d", *resp.JSON201.Revision))
 			}
 
 			logger.Info("job retried successfully",
@@ -69,15 +70,15 @@ var clientJobRetryCmd = &cobra.Command{
 				slog.String("target_hostname", targetHostname),
 			)
 		case http.StatusBadRequest:
-			handleUnknownError(resp.JSON400, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
 		case http.StatusNotFound:
-			handleUnknownError(resp.JSON404, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
 		case http.StatusUnauthorized:
-			handleAuthError(resp.JSON401, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
-			handleAuthError(resp.JSON403, resp.StatusCode(), logger)
+			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
 		default:
-			handleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
 }
