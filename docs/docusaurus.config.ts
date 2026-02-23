@@ -102,6 +102,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Command Execution',
+              docId: 'sidebar/features/command-execution'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },

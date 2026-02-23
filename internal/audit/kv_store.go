@@ -23,11 +23,12 @@ package audit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
 
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 // ensure KVStore implements Store at compile time.
@@ -38,14 +39,14 @@ var marshalJSON = json.Marshal
 
 // KVStore implements Store backed by a NATS KeyValue bucket.
 type KVStore struct {
-	kv     nats.KeyValue
+	kv     jetstream.KeyValue
 	logger *slog.Logger
 }
 
 // NewKVStore creates a new KVStore.
 func NewKVStore(
 	logger *slog.Logger,
-	kv nats.KeyValue,
+	kv jetstream.KeyValue,
 ) *KVStore {
 	return &KVStore{
 		kv:     kv,
@@ -55,7 +56,7 @@ func NewKVStore(
 
 // Write persists an audit entry to the KV bucket.
 func (s *KVStore) Write(
-	_ context.Context,
+	ctx context.Context,
 	entry Entry,
 ) error {
 	data, err := marshalJSON(entry)
@@ -63,7 +64,7 @@ func (s *KVStore) Write(
 		return fmt.Errorf("marshal audit entry: %w", err)
 	}
 
-	if _, err := s.kv.Put(entry.ID, data); err != nil {
+	if _, err := s.kv.Put(ctx, entry.ID, data); err != nil {
 		return fmt.Errorf("put audit entry: %w", err)
 	}
 
@@ -72,10 +73,10 @@ func (s *KVStore) Write(
 
 // Get retrieves a single audit entry by ID.
 func (s *KVStore) Get(
-	_ context.Context,
+	ctx context.Context,
 	id string,
 ) (*Entry, error) {
-	kve, err := s.kv.Get(id)
+	kve, err := s.kv.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get audit entry: %w", err)
 	}
@@ -90,14 +91,14 @@ func (s *KVStore) Get(
 
 // List retrieves audit entries with pagination.
 func (s *KVStore) List(
-	_ context.Context,
+	ctx context.Context,
 	limit int,
 	offset int,
 ) ([]Entry, int, error) {
-	keys, err := s.kv.Keys()
+	keys, err := s.kv.Keys(ctx)
 	if err != nil {
-		// nats.ErrNoKeysFound means the bucket is empty
-		if err == nats.ErrNoKeysFound {
+		// jetstream.ErrNoKeysFound means the bucket is empty
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return []Entry{}, 0, nil
 		}
 		return nil, 0, fmt.Errorf("list audit keys: %w", err)
@@ -122,7 +123,7 @@ func (s *KVStore) List(
 
 	entries := make([]Entry, 0, len(pageKeys))
 	for _, key := range pageKeys {
-		kve, err := s.kv.Get(key)
+		kve, err := s.kv.Get(ctx, key)
 		if err != nil {
 			s.logger.Warn(
 				"failed to get audit entry",
@@ -150,11 +151,11 @@ func (s *KVStore) List(
 
 // ListAll retrieves all audit entries without pagination.
 func (s *KVStore) ListAll(
-	_ context.Context,
+	ctx context.Context,
 ) ([]Entry, error) {
-	keys, err := s.kv.Keys()
+	keys, err := s.kv.Keys(ctx)
 	if err != nil {
-		if err == nats.ErrNoKeysFound {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return []Entry{}, nil
 		}
 		return nil, fmt.Errorf("list audit keys: %w", err)
@@ -165,7 +166,7 @@ func (s *KVStore) ListAll(
 
 	entries := make([]Entry, 0, len(keys))
 	for _, key := range keys {
-		kve, err := s.kv.Get(key)
+		kve, err := s.kv.Get(ctx, key)
 		if err != nil {
 			s.logger.Warn(
 				"failed to get audit entry",

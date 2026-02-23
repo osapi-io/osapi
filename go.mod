@@ -15,7 +15,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.12.4
 	github.com/nats-io/nats.go v1.48.0
 	github.com/oapi-codegen/runtime v1.1.2
-	github.com/osapi-io/nats-client v0.0.0-20260221001231-80144e1c7d21
+	github.com/osapi-io/nats-client v0.0.0-20260222233639-d0822e0a4b86
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2

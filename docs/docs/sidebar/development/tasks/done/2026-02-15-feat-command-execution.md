@@ -1,8 +1,8 @@
 ---
 title: Ad-hoc command execution
-status: backlog
+status: done
 created: 2026-02-15
-updated: 2026-02-15
+updated: 2026-02-22
 ---
 
 ## Objective
@@ -64,3 +64,20 @@ POST   /command/shell        - Execute via shell (supports pipes, etc.)
 - Set hard timeout limits (max 5 minutes?)
 - The existing `cmdexec.Manager` already provides safe execution
 - Long-running commands are a natural fit for the async job system
+
+## Outcome
+
+Implemented the full command execution domain:
+
+- **Provider**: `internal/provider/command/` with `Exec()` and `Shell()` methods
+  using the new `exec.RunCmdFull()` for separate stdout/stderr
+- **OpenAPI**: Two POST endpoints (`/command/exec`, `/command/shell`) with
+  validation, auth, and 202 async responses
+- **Job system**: Operation constants, data structs, job client methods
+  (single + broadcast), and worker processor dispatch
+- **Permissions**: `command:execute` permission, admin-only by default
+- **CLI**: `osapi client command exec` and `osapi client command shell` with
+  `--command`, `--args`, `--cwd`, `--timeout`, `--target`, `--json`
+- **Tests**: 22 new tests (unit + integration + RBAC), all passing
+- **Docs**: Feature page, CLI pages, config/permission updates
+- `run-as user` deferred (requires syscall.SysProcAttr, linux-only)

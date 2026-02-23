@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	exec "github.com/retr0h/osapi/internal/exec"
 )
 
 // MockManager is a mock of Manager interface.
@@ -46,4 +47,19 @@ func (m *MockManager) RunCmd(name string, args []string) (string, error) {
 func (mr *MockManagerMockRecorder) RunCmd(name, args interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmd", reflect.TypeOf((*MockManager)(nil).RunCmd), name, args)
+}
+
+// RunCmdFull mocks base method.
+func (m *MockManager) RunCmdFull(name string, args []string, cwd string, timeout int) (*exec.CmdResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunCmdFull", name, args, cwd, timeout)
+	ret0, _ := ret[0].(*exec.CmdResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunCmdFull indicates an expected call of RunCmdFull.
+func (mr *MockManagerMockRecorder) RunCmdFull(name, args, cwd, timeout interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmdFull", reflect.TypeOf((*MockManager)(nil).RunCmdFull), name, args, cwd, timeout)
 }

@@ -74,7 +74,7 @@ It processes jobs as they become available.
 		}
 
 		// Create/get the jobs KV bucket
-		jobsKV, err := nc.CreateKVBucket(kvBucket)
+		jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
 		if err != nil {
 			cli.LogFatal(logger, "failed to create KV bucket", err)
 		}
@@ -92,7 +92,7 @@ It processes jobs as they become available.
 
 		// Create provider factory and providers
 		providerFactory := worker.NewProviderFactory(logger)
-		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider := providerFactory.CreateProviders()
+		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := providerFactory.CreateProviders()
 
 		var w cli.Lifecycle = worker.New(
 			appFs,
@@ -106,6 +106,7 @@ It processes jobs as they become available.
 			loadProvider,
 			dnsProvider,
 			pingProvider,
+			commandProvider,
 		)
 
 		w.Start()

@@ -36,6 +36,28 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Command",
+      link: {
+        type: "doc",
+        id: "gen/api/command-execution-api-command-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-command-exec",
+          label: "Execute a command",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-command-shell",
+          label: "Execute a shell command",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Info",
       link: {
         type: "doc",

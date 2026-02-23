@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -55,28 +55,28 @@ func (w *Worker) writeStatusEvent(
 
 // handleJobMessage processes incoming job messages from NATS.
 func (w *Worker) handleJobMessage(
-	msg *nats.Msg,
+	msg jetstream.Msg,
 ) error {
 	// Extract the key (job ID) from the message data
-	jobKey := string(msg.Data)
+	jobKey := string(msg.Data())
 
 	w.logger.Info(
 		"received job notification",
-		slog.String("subject", msg.Subject),
+		slog.String("subject", msg.Subject()),
 		slog.String("job_key", jobKey),
 	)
 
 	w.logger.Debug(
 		"processing job message",
-		slog.String("subject", msg.Subject),
+		slog.String("subject", msg.Subject()),
 		slog.String("job_key", jobKey),
-		slog.String("raw_data", string(msg.Data)),
+		slog.String("raw_data", string(msg.Data())),
 	)
 
 	// Parse subject to extract prefix and hostname
-	prefix, _, err := job.ParseSubject(msg.Subject)
+	prefix, _, err := job.ParseSubject(msg.Subject())
 	if err != nil {
-		return fmt.Errorf("failed to parse subject %s: %w", msg.Subject, err)
+		return fmt.Errorf("failed to parse subject %s: %w", msg.Subject(), err)
 	}
 
 	// Get the immutable job data
@@ -93,7 +93,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Extract trace context from NATS message headers and create a processing span
-	ctx := telemetry.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Header))
+	ctx := telemetry.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Headers()))
 	ctx, span := otel.Tracer("osapi-worker").Start(ctx, "job.process")
 	defer span.End()
 
@@ -153,7 +153,7 @@ func (w *Worker) handleJobMessage(
 
 	// Write acknowledged event
 	if err := w.writeStatusEvent(ctx, jobKey, "acknowledged", map[string]interface{}{
-		"subject":   msg.Subject,
+		"subject":   msg.Subject(),
 		"category":  jobRequest.Category,
 		"operation": jobRequest.Operation,
 	}); err != nil {

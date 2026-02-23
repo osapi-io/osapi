@@ -29,6 +29,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/system/disk"
@@ -54,6 +55,9 @@ type Worker struct {
 	// Network providers
 	dnsProvider  dns.Provider
 	pingProvider ping.Provider
+
+	// Command provider
+	commandProvider command.Provider
 
 	// Lifecycle management
 	ctx    context.Context

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit"
@@ -82,7 +82,7 @@ func (s *KVStorePublicTestSuite) TestWrite() {
 			entry: s.newEntry("entry-1"),
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put("entry-1", gomock.Any()).
+					Put(gomock.Any(), "entry-1", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 			wantErr: false,
@@ -92,7 +92,7 @@ func (s *KVStorePublicTestSuite) TestWrite() {
 			entry: s.newEntry("entry-2"),
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put("entry-2", gomock.Any()).
+					Put(gomock.Any(), "entry-2", gomock.Any()).
 					Return(uint64(0), fmt.Errorf("kv error"))
 			},
 			wantErr: true,
@@ -128,7 +128,7 @@ func (s *KVStorePublicTestSuite) TestGet() {
 			setupMock: func() {
 				mockEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				mockEntry.EXPECT().Value().Return(data)
-				s.mockKV.EXPECT().Get("entry-1").Return(mockEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "entry-1").Return(mockEntry, nil)
 			},
 			validate: func(e *audit.Entry, err error) {
 				s.NoError(err)
@@ -141,7 +141,7 @@ func (s *KVStorePublicTestSuite) TestGet() {
 			name: "returns error when key not found",
 			id:   "missing",
 			setupMock: func() {
-				s.mockKV.EXPECT().Get("missing").Return(nil, nats.ErrKeyNotFound)
+				s.mockKV.EXPECT().Get(gomock.Any(), "missing").Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validate: func(e *audit.Entry, err error) {
 				s.Error(err)
@@ -154,7 +154,7 @@ func (s *KVStorePublicTestSuite) TestGet() {
 			setupMock: func() {
 				mockEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
-				s.mockKV.EXPECT().Get("bad-json").Return(mockEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bad-json").Return(mockEntry, nil)
 			},
 			validate: func(e *audit.Entry, err error) {
 				s.Error(err)
@@ -193,16 +193,16 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb", "ccc"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb", "ccc"}, nil)
 				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me1.EXPECT().Value().Return(data3)
 				me2 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me2.EXPECT().Value().Return(data2)
 				me3 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me3.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("ccc").Return(me1, nil)
-				s.mockKV.EXPECT().Get("bbb").Return(me2, nil)
-				s.mockKV.EXPECT().Get("aaa").Return(me3, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "ccc").Return(me1, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(me2, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(me3, nil)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -219,10 +219,10 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  1,
 			offset: 1,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb", "ccc"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb", "ccc"}, nil)
 				me := mocks.NewMockKeyValueEntry(s.ctrl)
 				me.EXPECT().Value().Return(data2)
-				s.mockKV.EXPECT().Get("bbb").Return(me, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(me, nil)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -236,7 +236,7 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 100,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa"}, nil)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -249,7 +249,7 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return(nil, nats.ErrNoKeysFound)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -262,7 +262,7 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return(nil, fmt.Errorf("connection error"))
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, fmt.Errorf("connection error"))
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.Error(err)
@@ -275,11 +275,11 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb"}, nil)
 				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me1.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("bbb").Return(nil, fmt.Errorf("get error"))
-				s.mockKV.EXPECT().Get("aaa").Return(me1, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(nil, fmt.Errorf("get error"))
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(me1, nil)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -293,13 +293,13 @@ func (s *KVStorePublicTestSuite) TestList() {
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb"}, nil)
 				badEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				badEntry.EXPECT().Value().Return([]byte("not-json"))
 				goodEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				goodEntry.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("bbb").Return(badEntry, nil)
-				s.mockKV.EXPECT().Get("aaa").Return(goodEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(badEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(goodEntry, nil)
 			},
 			validate: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -335,16 +335,16 @@ func (s *KVStorePublicTestSuite) TestListAll() {
 		{
 			name: "returns all entries sorted descending",
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb", "ccc"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb", "ccc"}, nil)
 				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me1.EXPECT().Value().Return(data3)
 				me2 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me2.EXPECT().Value().Return(data2)
 				me3 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me3.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("ccc").Return(me1, nil)
-				s.mockKV.EXPECT().Get("bbb").Return(me2, nil)
-				s.mockKV.EXPECT().Get("aaa").Return(me3, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "ccc").Return(me1, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(me2, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(me3, nil)
 			},
 			validate: func(entries []audit.Entry, err error) {
 				s.NoError(err)
@@ -357,7 +357,7 @@ func (s *KVStorePublicTestSuite) TestListAll() {
 		{
 			name: "returns empty for empty bucket",
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return(nil, nats.ErrNoKeysFound)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
 			},
 			validate: func(entries []audit.Entry, err error) {
 				s.NoError(err)
@@ -367,7 +367,7 @@ func (s *KVStorePublicTestSuite) TestListAll() {
 		{
 			name: "returns error when keys fails",
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return(nil, fmt.Errorf("connection error"))
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, fmt.Errorf("connection error"))
 			},
 			validate: func(entries []audit.Entry, err error) {
 				s.Error(err)
@@ -377,11 +377,11 @@ func (s *KVStorePublicTestSuite) TestListAll() {
 		{
 			name: "skips entry when individual get fails",
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb"}, nil)
 				me1 := mocks.NewMockKeyValueEntry(s.ctrl)
 				me1.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("bbb").Return(nil, fmt.Errorf("get error"))
-				s.mockKV.EXPECT().Get("aaa").Return(me1, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(nil, fmt.Errorf("get error"))
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(me1, nil)
 			},
 			validate: func(entries []audit.Entry, err error) {
 				s.NoError(err)
@@ -392,13 +392,13 @@ func (s *KVStorePublicTestSuite) TestListAll() {
 		{
 			name: "skips entry when unmarshal fails",
 			setupMock: func() {
-				s.mockKV.EXPECT().Keys().Return([]string{"aaa", "bbb"}, nil)
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"aaa", "bbb"}, nil)
 				badEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				badEntry.EXPECT().Value().Return([]byte("not-json"))
 				goodEntry := mocks.NewMockKeyValueEntry(s.ctrl)
 				goodEntry.EXPECT().Value().Return(data1)
-				s.mockKV.EXPECT().Get("bbb").Return(badEntry, nil)
-				s.mockKV.EXPECT().Get("aaa").Return(goodEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "bbb").Return(badEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "aaa").Return(goodEntry, nil)
 			},
 			validate: func(entries []audit.Entry, err error) {
 				s.NoError(err)

@@ -362,7 +362,7 @@ func (s *WorkerPublicTestSuite) TestGetJobData() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(`{"test": "data"}`))
-				s.mockKV.EXPECT().Get("jobs.job-123").Return(mockEntry, nil)
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
 			},
 			expectedData: []byte(`{"test": "data"}`),
 		},
@@ -371,7 +371,9 @@ func (s *WorkerPublicTestSuite) TestGetJobData() {
 			jobKey:      "jobs.nonexistent",
 			expectedErr: "failed to get job data for key jobs.nonexistent",
 			setupMocks: func() {
-				s.mockKV.EXPECT().Get("jobs.nonexistent").Return(nil, errors.New("key not found"))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "jobs.nonexistent").
+					Return(nil, errors.New("key not found"))
 			},
 		},
 	}

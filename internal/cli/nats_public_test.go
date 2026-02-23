@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -52,43 +52,6 @@ func (suite *NATSTestSuite) SetupTest() {
 
 func (suite *NATSTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
-}
-
-func (suite *NATSTestSuite) TestParseStorageType() {
-	tests := []struct {
-		name  string
-		input string
-		want  nats.StorageType
-	}{
-		{
-			name:  "when memory",
-			input: "memory",
-			want:  nats.MemoryStorage,
-		},
-		{
-			name:  "when file",
-			input: "file",
-			want:  nats.FileStorage,
-		},
-		{
-			name:  "when empty string defaults to file",
-			input: "",
-			want:  nats.FileStorage,
-		},
-		{
-			name:  "when unknown string defaults to file",
-			input: "unknown",
-			want:  nats.FileStorage,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			got := cli.ParseStorageType(tc.input)
-
-			assert.Equal(suite.T(), tc.want, got)
-		})
-	}
 }
 
 func (suite *NATSTestSuite) TestCloseNATSClient() {
@@ -201,7 +164,7 @@ func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
 		name       string
 		namespace  string
 		auditCfg   config.NATSAudit
-		validateFn func(*nats.KeyValueConfig)
+		validateFn func(jetstream.KeyValueConfig)
 	}{
 		{
 			name:      "when namespace is set",
@@ -213,11 +176,11 @@ func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
 				Storage:  "file",
 				Replicas: 1,
 			},
-			validateFn: func(cfg *nats.KeyValueConfig) {
+			validateFn: func(cfg jetstream.KeyValueConfig) {
 				assert.Equal(suite.T(), "osapi-audit-log", cfg.Bucket)
 				assert.Equal(suite.T(), 720*time.Hour, cfg.TTL)
 				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
-				assert.Equal(suite.T(), nats.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
 				assert.Equal(suite.T(), 1, cfg.Replicas)
 			},
 		},
@@ -231,11 +194,11 @@ func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
 				Storage:  "memory",
 				Replicas: 3,
 			},
-			validateFn: func(cfg *nats.KeyValueConfig) {
+			validateFn: func(cfg jetstream.KeyValueConfig) {
 				assert.Equal(suite.T(), "audit-log", cfg.Bucket)
 				assert.Equal(suite.T(), 24*time.Hour, cfg.TTL)
 				assert.Equal(suite.T(), int64(1048576), cfg.MaxBytes)
-				assert.Equal(suite.T(), nats.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
 				assert.Equal(suite.T(), 3, cfg.Replicas)
 			},
 		},
@@ -249,7 +212,7 @@ func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
 				Storage:  "file",
 				Replicas: 1,
 			},
-			validateFn: func(cfg *nats.KeyValueConfig) {
+			validateFn: func(cfg jetstream.KeyValueConfig) {
 				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
 			},
 		},

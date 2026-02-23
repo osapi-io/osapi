@@ -13,6 +13,7 @@ import (
 	client "github.com/osapi-io/nats-client/pkg/client"
 	job "github.com/retr0h/osapi/internal/job"
 	client0 "github.com/retr0h/osapi/internal/job/client"
+	command "github.com/retr0h/osapi/internal/provider/command"
 	dns "github.com/retr0h/osapi/internal/provider/network/dns"
 	ping "github.com/retr0h/osapi/internal/provider/network/ping"
 )
@@ -171,6 +172,74 @@ func (m *MockJobClient) ListWorkers(arg0 context.Context) (string, []job.WorkerI
 func (mr *MockJobClientMockRecorder) ListWorkers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWorkers", reflect.TypeOf((*MockJobClient)(nil).ListWorkers), arg0)
+}
+
+// ModifyCommandExec mocks base method.
+func (m *MockJobClient) ModifyCommandExec(arg0 context.Context, arg1, arg2 string, arg3 []string, arg4 string, arg5 int) (string, *command.Result, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyCommandExec", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*command.Result)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyCommandExec indicates an expected call of ModifyCommandExec.
+func (mr *MockJobClientMockRecorder) ModifyCommandExec(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandExec", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandExec), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
+// ModifyCommandExecBroadcast mocks base method.
+func (m *MockJobClient) ModifyCommandExecBroadcast(arg0 context.Context, arg1, arg2 string, arg3 []string, arg4 string, arg5 int) (string, map[string]*command.Result, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyCommandExecBroadcast", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*command.Result)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyCommandExecBroadcast indicates an expected call of ModifyCommandExecBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyCommandExecBroadcast(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandExecBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandExecBroadcast), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
+// ModifyCommandShell mocks base method.
+func (m *MockJobClient) ModifyCommandShell(arg0 context.Context, arg1, arg2, arg3 string, arg4 int) (string, *command.Result, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyCommandShell", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*command.Result)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyCommandShell indicates an expected call of ModifyCommandShell.
+func (mr *MockJobClientMockRecorder) ModifyCommandShell(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandShell", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandShell), arg0, arg1, arg2, arg3, arg4)
+}
+
+// ModifyCommandShellBroadcast mocks base method.
+func (m *MockJobClient) ModifyCommandShellBroadcast(arg0 context.Context, arg1, arg2, arg3 string, arg4 int) (string, map[string]*command.Result, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyCommandShellBroadcast", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*command.Result)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyCommandShellBroadcast indicates an expected call of ModifyCommandShellBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyCommandShellBroadcast(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandShellBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandShellBroadcast), arg0, arg1, arg2, arg3, arg4)
 }
 
 // ModifyNetworkDNS mocks base method.

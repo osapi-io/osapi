@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
@@ -59,6 +59,8 @@ type ServerManager interface {
 	) []func(e *echo.Echo)
 	// GetMetricsHandler returns Prometheus metrics handler for registration.
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
+	// GetCommandHandler returns command handler for registration.
+	GetCommandHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
@@ -91,7 +93,7 @@ var apiServerStartCmd = &cobra.Command{
 		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
-		nc, jobsKV := connectNATSAndKV(kvBucket)
+		nc, jobsKV := connectNATSAndKV(ctx, kvBucket)
 
 		jc, err := jobclient.New(logger, nc, &jobclient.Options{
 			Timeout:    30 * time.Second,
@@ -104,7 +106,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		checker := newHealthChecker(nc, jobsKV)
 		metricsProvider := newMetricsProvider(nc, jobsKV, streamName, jc)
-		auditStore, serverOpts := createAuditStore(nc, namespace)
+		auditStore, serverOpts := createAuditStore(ctx, nc, namespace)
 
 		var sm ServerManager = api.New(appConfig, logger, serverOpts...)
 
@@ -128,8 +130,9 @@ var apiServerStartCmd = &cobra.Command{
 }
 
 func connectNATSAndKV(
+	ctx context.Context,
 	kvBucket string,
-) (messaging.NATSClient, nats.KeyValue) {
+) (messaging.NATSClient, jetstream.KeyValue) {
 	var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
 		Host: appConfig.API.NATS.Host,
 		Port: appConfig.API.NATS.Port,
@@ -141,7 +144,7 @@ func connectNATSAndKV(
 		cli.LogFatal(logger, "failed to connect to NATS for job client", err)
 	}
 
-	jobsKV, err := nc.CreateKVBucket(kvBucket)
+	jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
 	if err != nil {
 		cli.LogFatal(logger, "failed to create KV bucket", err)
 	}
@@ -151,7 +154,7 @@ func connectNATSAndKV(
 
 func newHealthChecker(
 	nc messaging.NATSClient,
-	jobsKV nats.KeyValue,
+	jobsKV jetstream.KeyValue,
 ) *health.NATSChecker {
 	return &health.NATSChecker{
 		NATSCheck: func() error {
@@ -167,7 +170,7 @@ func newHealthChecker(
 			return nil
 		},
 		KVCheck: func() error {
-			_, err := jobsKV.Status()
+			_, err := jobsKV.Status(context.Background())
 			if err != nil {
 				return fmt.Errorf("KV bucket not accessible: %w", err)
 			}
@@ -179,7 +182,7 @@ func newHealthChecker(
 
 func newMetricsProvider(
 	nc messaging.NATSClient,
-	jobsKV nats.KeyValue,
+	jobsKV jetstream.KeyValue,
 	streamName string,
 	jc jobclient.JobClient,
 ) *health.ClosureMetricsProvider {
@@ -216,13 +219,13 @@ func newMetricsProvider(
 				},
 			}, nil
 		},
-		KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
-			status, err := jobsKV.Status()
+		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
+			status, err := jobsKV.Status(fnCtx)
 			if err != nil {
 				return nil, fmt.Errorf("KV status: %w", err)
 			}
 
-			keys, _ := jobsKV.Keys()
+			keys, _ := jobsKV.Keys(fnCtx)
 			keyCount := len(keys)
 
 			return []health.KVMetrics{
@@ -252,6 +255,7 @@ func newMetricsProvider(
 }
 
 func createAuditStore(
+	ctx context.Context,
 	nc messaging.NATSClient,
 	namespace string,
 ) (audit.Store, []api.Option) {
@@ -260,7 +264,7 @@ func createAuditStore(
 	}
 
 	auditKVConfig := cli.BuildAuditKVConfig(namespace, appConfig.NATS.Audit)
-	auditKV, err := nc.CreateKVBucketWithConfig(auditKVConfig)
+	auditKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, auditKVConfig)
 	if err != nil {
 		cli.LogFatal(logger, "failed to create audit KV bucket", err)
 	}
@@ -281,10 +285,11 @@ func registerAPIHandlers(
 ) {
 	startTime := time.Now()
 
-	handlers := make([]func(e *echo.Echo), 0, 6)
+	handlers := make([]func(e *echo.Echo), 0, 7)
 	handlers = append(handlers, sm.GetSystemHandler(jc)...)
 	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
+	handlers = append(handlers, sm.GetCommandHandler(jc)...)
 	handlers = append(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)

@@ -116,6 +116,12 @@ const (
 	OperationSystemReboot   = "system.reboot.execute"
 )
 
+// Command operations - execute arbitrary commands on workers
+const (
+	OperationCommandExecExecute  = "command.exec.execute"
+	OperationCommandShellExecute = "command.shell.execute"
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
@@ -205,6 +211,28 @@ type NetworkPingExecuteData struct {
 	// Count is the number of ping packets to send (optional, default: 4)
 	Count int `json:"count,omitempty"`
 	// Timeout is the timeout duration in seconds (optional, default: 5)
+	Timeout int `json:"timeout,omitempty"`
+}
+
+// CommandExecData represents data for direct command execution
+type CommandExecData struct {
+	// Command is the executable name or path
+	Command string `json:"command"`
+	// Args are the command arguments
+	Args []string `json:"args,omitempty"`
+	// Cwd is the optional working directory
+	Cwd string `json:"cwd,omitempty"`
+	// Timeout is the timeout in seconds
+	Timeout int `json:"timeout,omitempty"`
+}
+
+// CommandShellData represents data for shell command execution
+type CommandShellData struct {
+	// Command is the full shell command string
+	Command string `json:"command"`
+	// Cwd is the optional working directory
+	Cwd string `json:"cwd,omitempty"`
+	// Timeout is the timeout in seconds
 	Timeout int `json:"timeout,omitempty"`
 }
 

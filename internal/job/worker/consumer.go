@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -227,21 +226,11 @@ func (w *Worker) consumeModifyJobs(
 func (w *Worker) handleJobMessageJS(
 	msg jetstream.Msg,
 ) error {
-	// Convert JetStream message to NATS message for compatibility with existing handler
-	natsMsg := &nats.Msg{
-		Subject: msg.Subject(),
-		Data:    msg.Data(),
-		Header:  msg.Headers(),
-	}
-
-	// Call the handler and check if job processing actually succeeded
-	err := w.handleJobMessage(natsMsg)
+	err := w.handleJobMessage(msg)
 	if err != nil {
-		// Don't acknowledge - let it retry
 		return err
 	}
 
-	// Only acknowledge if job processing succeeded
 	return nil
 }
 

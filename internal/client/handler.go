@@ -29,6 +29,7 @@ import (
 // CombinedHandler is a superset of all smaller handler interfaces.
 type CombinedHandler interface {
 	AuditHandler
+	CommandHandler
 	HealthHandler
 	MetricsHandler
 	NetworkHandler
@@ -149,6 +150,27 @@ type NetworkHandler interface {
 		hostname string,
 		address string,
 	) (*gen.PostNetworkPingResponse, error)
+}
+
+// CommandHandler defines an interface for interacting with Command client operations.
+type CommandHandler interface {
+	// PostCommandExec post the command exec API endpoint.
+	PostCommandExec(
+		ctx context.Context,
+		hostname string,
+		command string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (*gen.PostCommandExecResponse, error)
+	// PostCommandShell post the command shell API endpoint.
+	PostCommandShell(
+		ctx context.Context,
+		hostname string,
+		command string,
+		cwd string,
+		timeout int,
+	) (*gen.PostCommandShellResponse, error)
 }
 
 // SystemHandler defines an interface for interacting with System client operations.

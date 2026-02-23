@@ -70,6 +70,7 @@ subpackages:
 | `internal/api/system/`  | System endpoints (hostname, status, uptime, disk, memory, load)  |
 | `internal/api/network/` | Network endpoints (DNS, ping)                                    |
 | `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
+| `internal/api/command/` | Command execution endpoints (exec, shell)                        |
 | `internal/api/health/`  | Health check endpoints (liveness, readiness, status)             |
 | `internal/api/common/`  | Shared middleware, error handling, collection responses          |
 | (metrics)               | Prometheus endpoint (`/metrics`) via OpenTelemetry               |
@@ -99,14 +100,16 @@ For the full deep dive see [Job System Architecture](job-architecture.md).
 Providers implement the actual system operations behind a common interface. Each
 provider is selected at runtime through a platform-aware factory pattern.
 
-| Domain         | Providers                      |
-| -------------- | ------------------------------ |
-| `system/host`  | Hostname, uptime, OS info      |
-| `system/disk`  | Disk usage statistics          |
-| `system/mem`   | Memory usage statistics        |
-| `system/load`  | Load average statistics        |
-| `network/dns`  | DNS configuration (get/update) |
-| `network/ping` | Ping execution and statistics  |
+| Domain          | Providers                      |
+| --------------- | ------------------------------ |
+| `system/host`   | Hostname, uptime, OS info      |
+| `system/disk`   | Disk usage statistics          |
+| `system/mem`    | Memory usage statistics        |
+| `system/load`   | Load average statistics        |
+| `network/dns`   | DNS configuration (get/update) |
+| `network/ping`  | Ping execution and statistics  |
+| `command/exec`  | Direct command execution       |
+| `command/shell` | Shell command execution        |
 
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the

@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
@@ -46,7 +45,7 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 	tests := []struct {
 		name         string
 		streamConfig *config.NATSStream
-		wantCheck    func(config *nats.StreamConfig)
+		wantCheck    func(config *jetstream.StreamConfig)
 	}{
 		{
 			name: "when using file storage and old discard policy",
@@ -59,15 +58,15 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 				Replicas: 1,
 				Discard:  "old",
 			},
-			wantCheck: func(config *nats.StreamConfig) {
+			wantCheck: func(config *jetstream.StreamConfig) {
 				suite.Equal("JOBS", config.Name)
 				suite.Equal("Stream for job request and processing", config.Description)
 				suite.Equal([]string{"job.>"}, config.Subjects)
-				suite.Equal(nats.FileStorage, config.Storage)
+				suite.Equal(jetstream.FileStorage, config.Storage)
 				suite.Equal(1, config.Replicas)
 				suite.Equal(24*time.Hour, config.MaxAge)
 				suite.Equal(int64(10000), config.MaxMsgs)
-				suite.Equal(nats.DiscardOld, config.Discard)
+				suite.Equal(jetstream.DiscardOld, config.Discard)
 			},
 		},
 		{
@@ -81,15 +80,15 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 				Replicas: 3,
 				Discard:  "new",
 			},
-			wantCheck: func(config *nats.StreamConfig) {
+			wantCheck: func(config *jetstream.StreamConfig) {
 				suite.Equal("JOBS_MEMORY", config.Name)
 				suite.Equal("Stream for job request and processing", config.Description)
 				suite.Equal([]string{"job.memory.>"}, config.Subjects)
-				suite.Equal(nats.MemoryStorage, config.Storage)
+				suite.Equal(jetstream.MemoryStorage, config.Storage)
 				suite.Equal(3, config.Replicas)
 				suite.Equal(1*time.Hour, config.MaxAge)
 				suite.Equal(int64(5000), config.MaxMsgs)
-				suite.Equal(nats.DiscardNew, config.Discard)
+				suite.Equal(jetstream.DiscardNew, config.Discard)
 			},
 		},
 		{
@@ -103,8 +102,8 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 				Replicas: 1,
 				Discard:  "old",
 			},
-			wantCheck: func(config *nats.StreamConfig) {
-				suite.Equal(nats.FileStorage, config.Storage)
+			wantCheck: func(config *jetstream.StreamConfig) {
+				suite.Equal(jetstream.FileStorage, config.Storage)
 			},
 		},
 		{
@@ -118,8 +117,8 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 				Replicas: 1,
 				Discard:  "unknown",
 			},
-			wantCheck: func(config *nats.StreamConfig) {
-				suite.Equal(nats.DiscardOld, config.Discard)
+			wantCheck: func(config *jetstream.StreamConfig) {
+				suite.Equal(jetstream.DiscardOld, config.Discard)
 			},
 		},
 	}
@@ -210,7 +209,7 @@ func (suite *ConfigPublicTestSuite) TestGetKVBucketConfig() {
 	tests := []struct {
 		name      string
 		kvConfig  *config.NATSKV
-		wantCheck func(config *nats.KeyValueConfig)
+		wantCheck func(config jetstream.KeyValueConfig)
 	}{
 		{
 			name: "when using file storage",
@@ -221,12 +220,12 @@ func (suite *ConfigPublicTestSuite) TestGetKVBucketConfig() {
 				Storage:        "file",
 				Replicas:       1,
 			},
-			wantCheck: func(config *nats.KeyValueConfig) {
+			wantCheck: func(config jetstream.KeyValueConfig) {
 				suite.Equal("job-responses", config.Bucket)
 				suite.Equal("Storage for job responses indexed by request ID", config.Description)
 				suite.Equal(1*time.Hour, config.TTL)
 				suite.Equal(int64(100*1024*1024), config.MaxBytes)
-				suite.Equal(nats.FileStorage, config.Storage)
+				suite.Equal(jetstream.FileStorage, config.Storage)
 				suite.Equal(1, config.Replicas)
 			},
 		},
@@ -239,12 +238,12 @@ func (suite *ConfigPublicTestSuite) TestGetKVBucketConfig() {
 				Storage:        "memory",
 				Replicas:       3,
 			},
-			wantCheck: func(config *nats.KeyValueConfig) {
+			wantCheck: func(config jetstream.KeyValueConfig) {
 				suite.Equal("job-memory", config.Bucket)
 				suite.Equal("Storage for job responses indexed by request ID", config.Description)
 				suite.Equal(30*time.Minute, config.TTL)
 				suite.Equal(int64(50*1024*1024), config.MaxBytes)
-				suite.Equal(nats.MemoryStorage, config.Storage)
+				suite.Equal(jetstream.MemoryStorage, config.Storage)
 				suite.Equal(3, config.Replicas)
 			},
 		},
@@ -257,8 +256,8 @@ func (suite *ConfigPublicTestSuite) TestGetKVBucketConfig() {
 				Storage:        "unknown",
 				Replicas:       1,
 			},
-			wantCheck: func(config *nats.KeyValueConfig) {
-				suite.Equal(nats.FileStorage, config.Storage)
+			wantCheck: func(config jetstream.KeyValueConfig) {
+				suite.Equal(jetstream.FileStorage, config.Storage)
 			},
 		},
 	}

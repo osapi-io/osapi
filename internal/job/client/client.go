@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -39,7 +39,7 @@ import (
 type Client struct {
 	logger             *slog.Logger
 	natsClient         messaging.NATSClient
-	kv                 nats.KeyValue
+	kv                 jetstream.KeyValue
 	timeout            time.Duration
 	broadcastQuietTime time.Duration
 	streamName         string
@@ -53,7 +53,7 @@ type Options struct {
 	// response before collection stops (default: 3s)
 	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
-	KVBucket nats.KeyValue
+	KVBucket jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
 }
@@ -126,7 +126,7 @@ func (c *Client) publishAndWait(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
+	if _, err := c.kv.Put(ctx, kvKey, jobJSON); err != nil {
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
@@ -144,7 +144,7 @@ func (c *Client) publishAndWait(
 
 	// Watch for worker response in KV
 	responsePattern := "responses." + jobID + ".>"
-	watcher, err := c.kv.Watch(responsePattern)
+	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
 	}
@@ -227,7 +227,7 @@ func (c *Client) publishAndCollect(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.kv.Put(kvKey, jobJSON); err != nil {
+	if _, err := c.kv.Put(ctx, kvKey, jobJSON); err != nil {
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
@@ -245,7 +245,7 @@ func (c *Client) publishAndCollect(
 
 	// Watch for worker responses in KV
 	responsePattern := "responses." + jobID + ".>"
-	watcher, err := c.kv.Watch(responsePattern)
+	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to create response watcher: %w", err)
 	}

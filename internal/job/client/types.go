@@ -27,6 +27,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
@@ -139,6 +140,38 @@ type JobClient interface {
 		target string,
 		address string,
 	) (string, map[string]*ping.Result, map[string]string, error)
+
+	// Command operations — all return (jobID, result..., error)
+	ModifyCommandExec(
+		ctx context.Context,
+		hostname string,
+		cmdName string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (string, *command.Result, string, error)
+	ModifyCommandExecBroadcast(
+		ctx context.Context,
+		target string,
+		cmdName string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (string, map[string]*command.Result, map[string]string, error)
+	ModifyCommandShell(
+		ctx context.Context,
+		hostname string,
+		cmdStr string,
+		cwd string,
+		timeout int,
+	) (string, *command.Result, string, error)
+	ModifyCommandShellBroadcast(
+		ctx context.Context,
+		target string,
+		cmdStr string,
+		cwd string,
+		timeout int,
+	) (string, map[string]*command.Result, map[string]string, error)
 
 	// Worker discovery
 	ListWorkers(
