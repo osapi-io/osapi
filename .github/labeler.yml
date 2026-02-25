@@ -1,34 +1,21 @@
 ---
-test/unit:
+github/action:
   - changed-files:
-    - any-glob-to-any-file: "**/*_test.go"
-
-test/integration:
-  - changed-files:
-    - any-glob-to-any-file: "tests/*"
-    - any-glob-to-any-file: "tests/*/**"
-
-kind/go:
-  - changed-files:
-    - any-glob-to-any-file: "**/*.go"
-
-kind/python:
-  - changed-files:
-    - any-glob-to-any-file: "python/*"
-
-kind/yaml:
-  - changed-files:
-    - any-glob-to-any-file: "**/*.yaml"
-    - any-glob-to-any-file: "**/*.yml"
+      - any-glob-to-any-file: ".github/**/*.yml"
 
 kind/docs:
   - changed-files:
-    - any-glob-to-any-file: "docs/*"
-    - any-glob-to-any-file: "docs/*/**"
+      - any-glob-to-any-file: "docs/**"
 
-github/action:
+kind/go:
   - changed-files:
-    - any-glob-to-any-file: ".github/**/*.yml"
+      - any-glob-to-any-file: "**/*.go"
 
-next:
-    - base-branch: 'main'
+kind/yaml:
+  - changed-files:
+      - any-glob-to-any-file: "**/*.yaml"
+      - any-glob-to-any-file: "**/*.yml"
+
+test/unit:
+  - changed-files:
+      - any-glob-to-any-file: "**/*_test.go"
