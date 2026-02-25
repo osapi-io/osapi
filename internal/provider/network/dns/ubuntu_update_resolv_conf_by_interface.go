@@ -23,6 +23,7 @@ package dns
 import (
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 )
 
@@ -55,7 +56,7 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
-) error {
+) (*Result, error) {
 	u.logger.Info(
 		"setting resolvectl configuration",
 		slog.String("servers", strings.Join(servers, ", ")),
@@ -63,12 +64,12 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 	)
 
 	if len(servers) == 0 && len(searchDomains) == 0 {
-		return fmt.Errorf("no DNS servers or search domains provided; nothing to update")
+		return nil, fmt.Errorf("no DNS servers or search domains provided; nothing to update")
 	}
 
 	existingConfig, err := u.GetResolvConfByInterface(interfaceName)
 	if err != nil {
-		return fmt.Errorf("failed to get current resolvectl configuration: %w", err)
+		return nil, fmt.Errorf("failed to get current resolvectl configuration: %w", err)
 	}
 
 	// Use existing values if new values are not provided
@@ -79,13 +80,24 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 		searchDomains = existingConfig.SearchDomains
 	}
 
+	// Compare desired config against existing to detect no-op
+	if slices.Equal(servers, existingConfig.DNSServers) &&
+		slices.Equal(searchDomains, existingConfig.SearchDomains) {
+		u.logger.Info("DNS configuration unchanged, skipping update")
+		return &Result{Changed: false}, nil
+	}
+
 	// Set DNS servers
 	if len(servers) > 0 {
 		cmd := "resolvectl"
 		args := append([]string{"dns", interfaceName}, servers...)
 		output, err := u.execManager.RunCmd(cmd, args)
 		if err != nil {
-			return fmt.Errorf("failed to set DNS servers with resolvectl: %w - %s", err, output)
+			return nil, fmt.Errorf(
+				"failed to set DNS servers with resolvectl: %w - %s",
+				err,
+				output,
+			)
 		}
 	}
 
@@ -100,9 +112,13 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 		args := append([]string{"domain", interfaceName}, filteredDomains...)
 		output, err := u.execManager.RunCmd(cmd, args)
 		if err != nil {
-			return fmt.Errorf("failed to set search domains with resolvectl: %w - %s", err, output)
+			return nil, fmt.Errorf(
+				"failed to set search domains with resolvectl: %w - %s",
+				err,
+				output,
+			)
 		}
 	}
 
-	return nil
+	return &Result{Changed: true}, nil
 }

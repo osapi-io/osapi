@@ -44,6 +44,9 @@ type CommandResultCollectionResponse struct {
 
 // CommandResultItem defines model for CommandResultItem.
 type CommandResultItem struct {
+	// Changed Whether the command modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// DurationMs Execution time in milliseconds.
 	DurationMs *int64 `json:"duration_ms,omitempty"`
 

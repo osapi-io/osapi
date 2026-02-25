@@ -27,11 +27,12 @@ type Provider interface {
 		interfaceName string,
 	) (*Config, error)
 	// UpdateResolvConfByInterface updates the DNS configuration.
+	// Returns a Result indicating whether the configuration was changed.
 	UpdateResolvConfByInterface(
 		servers []string,
 		searchDomains []string,
 		interfaceName string,
-	) error
+	) (*Result, error)
 }
 
 // Config represents the DNS configuration with servers and search domains.
@@ -40,4 +41,10 @@ type Config struct {
 	DNSServers []string
 	// List of search domains for DNS resolution
 	SearchDomains []string
+}
+
+// Result represents the outcome of a DNS update operation.
+type Result struct {
+	// Changed indicates whether the DNS configuration was actually modified.
+	Changed bool
 }

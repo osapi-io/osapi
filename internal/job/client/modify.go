@@ -35,7 +35,7 @@ func (c *Client) ModifyNetworkDNS(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) (string, string, error) {
+) (string, string, bool, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"servers":        servers,
 		"search_domains": searchDomains,
@@ -51,14 +51,15 @@ func (c *Client) ModifyNetworkDNS(
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, hostname)
 	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to publish and wait: %w", err)
+		return "", "", true, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
 	if resp.Status == "failed" {
-		return "", "", fmt.Errorf("job failed: %s", resp.Error)
+		return "", "", true, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	return jobID, resp.Hostname, nil
+	changed := resp.Changed == nil || *resp.Changed
+	return jobID, resp.Hostname, changed, nil
 }
 
 // ModifyNetworkDNSAny modifies DNS configuration on any available host.
@@ -67,7 +68,7 @@ func (c *Client) ModifyNetworkDNSAny(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) (string, string, error) {
+) (string, string, bool, error) {
 	return c.ModifyNetworkDNS(ctx, job.AnyHost, servers, searchDomains, iface)
 }
 
@@ -79,7 +80,7 @@ func (c *Client) ModifyNetworkDNSBroadcast(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) (string, map[string]error, error) {
+) (string, map[string]error, map[string]bool, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"servers":        servers,
 		"search_domains": searchDomains,
@@ -95,19 +96,22 @@ func (c *Client) ModifyNetworkDNSBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
 	results := make(map[string]error)
+	changedMap := make(map[string]bool)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
 			results[hostname] = fmt.Errorf("job failed: %s", resp.Error)
+			changedMap[hostname] = true
 		} else {
 			results[hostname] = nil
+			changedMap[hostname] = resp.Changed == nil || *resp.Changed
 		}
 	}
 
-	return jobID, results, nil
+	return jobID, results, changedMap, nil
 }
 
 // ModifyNetworkDNSAll modifies DNS configuration on all hosts.
@@ -116,6 +120,6 @@ func (c *Client) ModifyNetworkDNSAll(
 	servers []string,
 	searchDomains []string,
 	iface string,
-) (string, map[string]error, error) {
+) (string, map[string]error, map[string]bool, error) {
 	return c.ModifyNetworkDNSBroadcast(ctx, job.BroadcastHost, servers, searchDomains, iface)
 }

@@ -82,6 +82,7 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 					results = append(results, cli.MutationResultRow{
 						Hostname: r.Hostname,
 						Status:   string(r.Status),
+						Changed:  r.Changed,
 						Error:    r.Error,
 					})
 				}

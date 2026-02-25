@@ -91,6 +91,7 @@ func (c *Client) WriteJobResponse(
 	responseData []byte,
 	status string,
 	errorMsg string,
+	changed *bool,
 ) error {
 	// Create response key with timestamp to ensure uniqueness
 	responseKey := fmt.Sprintf("responses.%s.%s.%d",
@@ -101,6 +102,7 @@ func (c *Client) WriteJobResponse(
 		Status:    job.Status(status),
 		Data:      responseData,
 		Error:     errorMsg,
+		Changed:   changed,
 		Hostname:  hostname,
 		Timestamp: time.Now(),
 	}

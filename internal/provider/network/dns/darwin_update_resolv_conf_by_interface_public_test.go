@@ -49,13 +49,15 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		suite.Run(tc.name, func() {
 			darwin := dns.NewDarwinProvider()
 
-			err := darwin.UpdateResolvConfByInterface(
+			result, err := darwin.UpdateResolvConfByInterface(
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"en0",
 			)
 
 			suite.NoError(err)
+			suite.NotNil(result)
+			suite.False(result.Changed)
 		})
 	}
 }

@@ -50,11 +50,12 @@ func (mr *MockProviderMockRecorder) GetResolvConfByInterface(interfaceName inter
 }
 
 // UpdateResolvConfByInterface mocks base method.
-func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) error {
+func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) (*dns.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateResolvConfByInterface", servers, searchDomains, interfaceName)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*dns.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateResolvConfByInterface indicates an expected call of UpdateResolvConfByInterface.

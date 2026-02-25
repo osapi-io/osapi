@@ -80,6 +80,9 @@ type Response struct {
 	Data json.RawMessage `json:"data,omitempty"`
 	// Error contains error information if the job failed.
 	Error string `json:"error,omitempty"`
+	// Changed indicates whether the operation modified system state.
+	// Nil for query operations; set for mutation operations.
+	Changed *bool `json:"changed,omitempty"`
 	// Hostname identifies which worker processed this job.
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.

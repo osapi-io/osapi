@@ -212,12 +212,13 @@ DNS Servers: 8.8.8.8 9.9.9.9
 // NewSetResolvConfSetDNSDomainErrorMockManager creates a DNS Mock for SetResolvConf
 // when exec.RunCmd errors setting DNS Domain.
 func NewSetResolvConfSetDNSDomainErrorMockManager(ctrl *gomock.Controller) *MockManager {
+	// Initial state must differ from desired so the no-op check does not skip the update.
 	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 8.8.8.8
-DNS Servers: 8.8.8.8 9.9.9.9
-DNS Domain: foo.local bar.local
+Current DNS Server: 1.1.1.1
+DNS Servers: 1.1.1.1 2.2.2.2
+DNS Domain: old.local
 `
 
 	mock := NewMockManager(ctrl)
@@ -232,12 +233,13 @@ DNS Domain: foo.local bar.local
 // NewSetResolvConfSetDNSServersErrorMockManager creates a DNS Mock for SetResolvConf
 // when exec.RunCmd errors setting DNS Servers.
 func NewSetResolvConfSetDNSServersErrorMockManager(ctrl *gomock.Controller) *MockManager {
+	// Initial state must differ from desired so the no-op check does not skip the update.
 	output := `
 Current Scopes: DNS
 Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
-Current DNS Server: 8.8.8.8
-DNS Servers: 8.8.8.8 9.9.9.9
-DNS Domain: foo.local bar.local
+Current DNS Server: 1.1.1.1
+DNS Servers: 1.1.1.1 2.2.2.2
+DNS Domain: old.local
 `
 
 	mock := NewMockManager(ctrl)

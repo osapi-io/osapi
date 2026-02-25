@@ -86,7 +86,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
 		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(nil).
+		Return(&dns.Result{Changed: true}, nil).
 		AnyTimes()
 
 	// Use plain ping mock to avoid hardcoded address expectations
@@ -836,7 +836,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
 					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(errors.New("DNS update failed"))
+					Return(nil, errors.New("DNS update failed"))
 				return New(
 					afero.NewMemMapFs(),
 					config.Config{},

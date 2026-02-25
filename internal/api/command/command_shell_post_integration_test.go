@@ -82,11 +82,12 @@ func (suite *CommandShellPostIntegrationTestSuite) TestPostCommandShellValidatio
 						Stderr:     "",
 						ExitCode:   0,
 						DurationMs: 15,
+						Changed:    true,
 					}, "worker1", nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"worker1"`},
+			wantContains: []string{`"results"`, `"worker1"`, `"changed":true`},
 		},
 		{
 			name: "when missing command",
@@ -212,6 +213,7 @@ func (suite *CommandShellPostIntegrationTestSuite) TestPostCommandShellRBAC() {
 							Stderr:     "",
 							ExitCode:   0,
 							DurationMs: 10,
+							Changed:    true,
 						},
 						"worker1",
 						nil,
@@ -219,7 +221,7 @@ func (suite *CommandShellPostIntegrationTestSuite) TestPostCommandShellRBAC() {
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`},
+			wantContains: []string{`"results"`, `"changed":true`},
 		},
 	}
 

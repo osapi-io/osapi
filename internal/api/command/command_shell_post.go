@@ -91,6 +91,7 @@ func (c Command) PostCommandShell(
 	stderr := result.Stderr
 	exitCode := result.ExitCode
 	durationMs := result.DurationMs
+	changed := result.Changed
 
 	return gen.PostCommandShell202JSONResponse{
 		JobId: &jobUUID,
@@ -101,6 +102,7 @@ func (c Command) PostCommandShell(
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,
 				DurationMs: &durationMs,
+				Changed:    &changed,
 			},
 		},
 	}, nil
@@ -134,12 +136,14 @@ func (c Command) postCommandShellBroadcast(
 		stderr := result.Stderr
 		exitCode := result.ExitCode
 		durationMs := result.DurationMs
+		changed := result.Changed
 		responses = append(responses, gen.CommandResultItem{
 			Hostname:   host,
 			Stdout:     &stdout,
 			Stderr:     &stderr,
 			ExitCode:   &exitCode,
 			DurationMs: &durationMs,
+			Changed:    &changed,
 		})
 	}
 	for host, errMsg := range errs {

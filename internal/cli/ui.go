@@ -63,13 +63,14 @@ type Section struct {
 // ResultRow is a per-host broadcast result used by BuildBroadcastTable.
 type ResultRow struct {
 	Hostname string
+	Changed  *bool
 	Error    *string
 	Fields   []string
 }
 
 // BuildBroadcastTable builds headers and rows for a broadcast result table.
-// It prepends HOSTNAME to every row and conditionally inserts STATUS and ERROR
-// columns when any result carries an error.
+// It prepends HOSTNAME to every row and conditionally inserts STATUS, CHANGED,
+// and ERROR columns when any result carries an error.
 func BuildBroadcastTable(
 	results []ResultRow,
 	fieldHeaders []string,
@@ -82,9 +83,20 @@ func BuildBroadcastTable(
 		}
 	}
 
+	hasChanged := false
+	for _, r := range results {
+		if r.Changed != nil {
+			hasChanged = true
+			break
+		}
+	}
+
 	headers := []string{"HOSTNAME"}
 	if hasErrors {
 		headers = append(headers, "STATUS", "ERROR")
+	}
+	if hasChanged {
+		headers = append(headers, "CHANGED")
 	}
 	headers = append(headers, fieldHeaders...)
 
@@ -100,6 +112,13 @@ func BuildBroadcastTable(
 			}
 			row = append(row, status, errMsg)
 		}
+		if hasChanged {
+			changedStr := ""
+			if r.Changed != nil {
+				changedStr = fmt.Sprintf("%v", *r.Changed)
+			}
+			row = append(row, changedStr)
+		}
 		row = append(row, r.Fields...)
 		rows = append(rows, row)
 	}
@@ -111,6 +130,7 @@ func BuildBroadcastTable(
 type MutationResultRow struct {
 	Hostname string
 	Status   string
+	Changed  *bool
 	Error    *string
 	Fields   []string
 }
@@ -122,8 +142,8 @@ func BuildMutationTable(
 	results []MutationResultRow,
 	fieldHeaders []string,
 ) ([]string, [][]string) {
-	headers := make([]string, 0, 3+len(fieldHeaders))
-	headers = append(headers, "HOSTNAME", "STATUS", "ERROR")
+	headers := make([]string, 0, 4+len(fieldHeaders))
+	headers = append(headers, "HOSTNAME", "STATUS", "CHANGED", "ERROR")
 	headers = append(headers, fieldHeaders...)
 
 	rows := make([][]string, 0, len(results))
@@ -132,13 +152,27 @@ func BuildMutationTable(
 		if r.Error != nil {
 			errMsg = *r.Error
 		}
-		row := make([]string, 0, 3+len(r.Fields))
-		row = append(row, r.Hostname, r.Status, errMsg)
+		changedStr := ""
+		if r.Changed != nil {
+			changedStr = fmt.Sprintf("%v", *r.Changed)
+		}
+		row := make([]string, 0, 4+len(r.Fields))
+		row = append(row, r.Hostname, r.Status, changedStr, errMsg)
 		row = append(row, r.Fields...)
 		rows = append(rows, row)
 	}
 
 	return headers, rows
+}
+
+// BoolToSafeString converts a *bool to a string. Returns "" if nil.
+func BoolToSafeString(
+	b *bool,
+) string {
+	if b != nil {
+		return fmt.Sprintf("%v", *b)
+	}
+	return ""
 }
 
 // PrintStyledTable renders a styled table with dynamic column widths.

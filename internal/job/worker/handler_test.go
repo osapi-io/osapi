@@ -22,6 +22,7 @@ package worker
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"testing"
@@ -86,7 +87,7 @@ func (s *HandlerTestSuite) SetupTest() {
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
 		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(nil).
+		Return(&dns.Result{Changed: true}, nil).
 		AnyTimes()
 
 	// Use plain ping mock with appropriate expectations
@@ -239,7 +240,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(nil)
 			},
 			expectError: false,
@@ -277,7 +278,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 
 				// Mock response write for failed job
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), "failed", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			expectError: true,
@@ -427,7 +428,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(nil)
 			},
 			expectError: false,
@@ -462,7 +463,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(nil)
 			},
 			expectError: false,
@@ -497,7 +498,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return(errors.New("completed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(nil)
 			},
 			expectError: false,
@@ -532,7 +533,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return(errors.New("failed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			expectError: true,
@@ -570,7 +571,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 
 				// Mock response write failure
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(errors.New("storage failure"))
 			},
 			expectError: true,
@@ -640,7 +641,7 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 					AnyTimes()
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			expectError: false,
@@ -666,6 +667,55 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 		})
 	}
 }
+
+func (s *HandlerTestSuite) TestExtractChanged() {
+	tests := []struct {
+		name string
+		data json.RawMessage
+		want *bool
+	}{
+		{
+			name: "when empty data returns nil",
+			data: nil,
+			want: nil,
+		},
+		{
+			name: "when invalid JSON returns nil",
+			data: json.RawMessage(`not json`),
+			want: nil,
+		},
+		{
+			name: "when changed key missing returns nil",
+			data: json.RawMessage(`{"success":true}`),
+			want: nil,
+		},
+		{
+			name: "when changed is non-bool returns nil",
+			data: json.RawMessage(`{"changed":"yes"}`),
+			want: nil,
+		},
+		{
+			name: "when changed is true returns true",
+			data: json.RawMessage(`{"changed":true}`),
+			want: boolPtr(true),
+		},
+		{
+			name: "when changed is false returns false",
+			data: json.RawMessage(`{"changed":false}`),
+			want: boolPtr(false),
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			got := extractChanged(tt.data)
+
+			s.Equal(tt.want, got)
+		})
+	}
+}
+
+func boolPtr(b bool) *bool { return &b }
 
 func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))

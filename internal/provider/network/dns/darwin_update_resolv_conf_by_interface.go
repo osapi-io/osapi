@@ -25,6 +25,6 @@ func (d *Darwin) UpdateResolvConfByInterface(
 	_ []string,
 	_ []string,
 	_ string,
-) error {
-	return nil
+) (*Result, error) {
+	return &Result{Changed: false}, nil
 }
