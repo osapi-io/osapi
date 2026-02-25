@@ -28,7 +28,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobRetryCmd represents the clientJobRetry command.
@@ -41,8 +40,7 @@ var clientJobRetryCmd = &cobra.Command{
 		jobID, _ := cmd.Flags().GetString("job-id")
 		targetHostname, _ := cmd.Flags().GetString("target-hostname")
 
-		jobHandler := handler.(client.JobHandler)
-		resp, err := jobHandler.RetryJobByID(ctx, jobID, targetHostname)
+		resp, err := sdkClient.Job.Retry(ctx, jobID, targetHostname)
 		if err != nil {
 			cli.LogFatal(logger, "failed to retry job", err)
 		}

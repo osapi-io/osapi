@@ -25,11 +25,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
-	"github.com/retr0h/osapi/internal/client/gen"
 )
 
 // clientHealthStatusCmd represents the clientHealthStatus command.
@@ -41,8 +40,7 @@ Requires authentication.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		healthHandler := handler.(client.HealthHandler)
-		resp, err := healthHandler.GetHealthStatus(ctx)
+		resp, err := sdkClient.Health.Status(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get health status endpoint", err)
 		}

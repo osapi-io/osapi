@@ -24,11 +24,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
-	"github.com/retr0h/osapi/internal/client/gen"
 )
 
 // clientSystemStatusGetCmd represents the clientSystemStatusGet command.
@@ -40,8 +39,7 @@ var clientSystemStatusGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		systemHandler := handler.(client.SystemHandler)
-		resp, err := systemHandler.GetSystemStatus(ctx, host)
+		resp, err := sdkClient.System.Status(ctx, host)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get system status endpoint", err)
 		}

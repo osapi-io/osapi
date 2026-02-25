@@ -31,7 +31,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobAddCmd represents the clientJobAdd command.
@@ -61,8 +60,7 @@ var clientJobAddCmd = &cobra.Command{
 			cli.LogFatal(logger, "failed to parse JSON operation file", err)
 		}
 
-		jobHandler := handler.(client.JobHandler)
-		resp, err := jobHandler.PostJob(ctx, operationData, targetHostname)
+		resp, err := sdkClient.Job.Create(ctx, operationData, targetHostname)
 		if err != nil {
 			cli.LogFatal(logger, "failed to create job", err)
 		}

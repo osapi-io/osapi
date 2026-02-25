@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientNetworkDNSGetCmd represents the clientNetworkDNSGet command.
@@ -41,8 +40,7 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
-		networkHandler := handler.(client.NetworkHandler)
-		resp, err := networkHandler.GetNetworkDNSByInterface(ctx, host, interfaceName)
+		resp, err := sdkClient.Network.GetDNS(ctx, host, interfaceName)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get network dns endpoint", err)
 		}

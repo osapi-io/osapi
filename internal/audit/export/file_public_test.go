@@ -32,10 +32,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	gen "github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit/export"
-	gen "github.com/retr0h/osapi/internal/client/gen"
 )
 
 type FileExporterPublicTestSuite struct {

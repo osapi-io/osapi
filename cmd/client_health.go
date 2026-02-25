@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientHealthCmd represents the clientHealth command.
@@ -40,8 +39,7 @@ Running without a subcommand performs a liveness probe.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		healthHandler := handler.(client.HealthHandler)
-		resp, err := healthHandler.GetHealth(ctx)
+		resp, err := sdkClient.Health.Liveness(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get health endpoint", err)
 		}

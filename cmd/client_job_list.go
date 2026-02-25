@@ -27,11 +27,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
-	"github.com/retr0h/osapi/internal/client/gen"
 )
 
 // clientJobListCmd represents the clientJobsList command.
@@ -45,10 +45,12 @@ var clientJobListCmd = &cobra.Command{
 		limitFlag, _ := cmd.Flags().GetInt("limit")
 		offsetFlag, _ := cmd.Flags().GetInt("offset")
 
-		jobHandler := handler.(client.JobHandler)
-
 		// Get jobs list (server-side pagination)
-		jobsResp, err := jobHandler.GetJobs(ctx, statusFilter, limitFlag, offsetFlag)
+		jobsResp, err := sdkClient.Job.List(ctx, osapi.ListParams{
+			Status: statusFilter,
+			Limit:  limitFlag,
+			Offset: offsetFlag,
+		})
 		if err != nil {
 			cli.LogFatal(logger, "failed to list jobs", err)
 		}
@@ -68,7 +70,7 @@ var clientJobListCmd = &cobra.Command{
 		}
 
 		// Get queue stats for summary
-		statsResp, err := jobHandler.GetJobQueueStats(ctx)
+		statsResp, err := sdkClient.Job.QueueStats(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get queue stats", err)
 		}

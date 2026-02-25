@@ -23,7 +23,7 @@ package export
 import (
 	"context"
 
-	gen "github.com/retr0h/osapi/internal/client/gen"
+	gen "github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 )
 
 // Exporter writes audit entries to a backend.

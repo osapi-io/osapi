@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobGetCmd represents the clientJobsGet command.
@@ -39,8 +38,7 @@ var clientJobGetCmd = &cobra.Command{
 		ctx := cmd.Context()
 		jobID, _ := cmd.Flags().GetString("job-id")
 
-		jobHandler := handler.(client.JobHandler)
-		resp, err := jobHandler.GetJobByID(ctx, jobID)
+		resp, err := sdkClient.Job.Get(ctx, jobID)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get job", err)
 		}

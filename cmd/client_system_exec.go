@@ -25,10 +25,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 var clientSystemExecCmd = &cobra.Command{
@@ -51,15 +51,13 @@ var clientSystemExecCmd = &cobra.Command{
 			}
 		}
 
-		commandHandler := handler.(client.CommandHandler)
-		resp, err := commandHandler.PostCommandExec(
-			ctx,
-			host,
-			command,
-			args,
-			cwd,
-			timeout,
-		)
+		resp, err := sdkClient.Command.Exec(ctx, osapi.ExecRequest{
+			Command: command,
+			Args:    args,
+			Cwd:     cwd,
+			Timeout: timeout,
+			Target:  host,
+		})
 		if err != nil {
 			cli.LogFatal(logger, "failed to execute command", err)
 		}

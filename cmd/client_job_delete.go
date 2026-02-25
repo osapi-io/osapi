@@ -30,7 +30,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobDeleteCmd represents the clientJobsDelete command.
@@ -42,8 +41,7 @@ var clientJobDeleteCmd = &cobra.Command{
 		jobID, _ := cmd.Flags().GetString("job-id")
 		ctx := cmd.Context()
 
-		jobHandler := handler.(client.JobHandler)
-		resp, err := jobHandler.DeleteJobByID(ctx, jobID)
+		resp, err := sdkClient.Job.Delete(ctx, jobID)
 		if err != nil {
 			cli.LogFatal(logger, "failed to delete job", err)
 		}

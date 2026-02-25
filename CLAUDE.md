@@ -36,7 +36,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops, `worker/` for consumer/handler/processor pipeline
 - **`internal/provider/`** - Operation implementations: `system/{host,disk,mem,load}`, `network/{dns,ping}`
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`internal/client/`** - Generated REST API client
+- **`osapi-sdk`** - External SDK for programmatic REST API access (sibling repo, linked via `replace` in `go.mod`)
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 
 ## Adding a New API Domain
@@ -161,24 +161,17 @@ Create `internal/api/{domain}/`:
 - `cmd/api_server_start.go` — initialize the handler with real
   dependencies and pass `api.With{Domain}Handler(h)` to `api.New()`
 
-### Step 5: Generate Client Code
+### Step 5: Update SDK
 
-Run `just generate` which:
-1. `redocly join` merges all `internal/api/*/gen/api.yaml` into
-   `internal/client/gen/api.yaml`
-2. `go generate` creates `client.gen.go` with typed
-   `Get{Op}WithResponse()` methods
+The `osapi-sdk` (sibling repo) provides the generated HTTP client used by
+the CLI. When adding a new API domain:
 
-### Step 6: Client Wrappers
+1. Add the domain's `api.yaml` to `osapi-sdk/pkg/osapi/gen/{domain}/`
+2. Run `just generate` in the SDK repo to regenerate the merged spec and
+   client code
+3. Add a service wrapper in `osapi-sdk/pkg/osapi/{domain}.go`
 
-- `internal/client/handler.go` — add `{Domain}Handler` interface to
-  `CombinedHandler` composition
-- `internal/client/{domain}_{operation}.go` — thin wrapper per endpoint
-  calling `c.Client.Get{Op}WithResponse(ctx)`
-- `internal/client/client_public_test.go` — add test methods to existing
-  suite
-
-### Step 7: CLI Commands
+### Step 6: CLI Commands
 
 - `cmd/client_{domain}.go` — parent command registered under `clientCmd`
 - `cmd/client_{domain}_{operation}.go` — one subcommand per endpoint
@@ -192,7 +185,7 @@ Run `just generate` which:
   404 (`handleUnknownError`), 500 (`handleUnknownError`). Match the
   responses declared in the OpenAPI spec.
 
-### Step 8: Documentation
+### Step 7: Documentation
 
 - `docs/docs/sidebar/features/{domain}.md` — feature page describing
   what the domain manages, how it works, configuration, permissions,
@@ -209,7 +202,7 @@ Run `just generate` which:
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
 
-### Step 9: Verify
+### Step 8: Verify
 
 ```bash
 just generate        # regenerate specs + code

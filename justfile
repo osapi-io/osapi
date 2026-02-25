@@ -37,7 +37,6 @@ _bats-clean:
 
 # Generate code
 generate:
-    redocly join --prefix-tags-with-info-prop title -o internal/client/gen/api.yaml internal/api/*/gen/api.yaml
     just go::generate
     just docs::generate
 

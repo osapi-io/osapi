@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientMetricsCmd represents the clientMetrics command.
@@ -39,8 +38,7 @@ Returns the raw Prometheus exposition text.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		metricsHandler := handler.(client.MetricsHandler)
-		body, err := metricsHandler.GetMetrics(ctx)
+		body, err := sdkClient.Metrics.Get(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get metrics endpoint", err)
 		}
