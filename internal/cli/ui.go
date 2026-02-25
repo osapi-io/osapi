@@ -31,9 +31,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/google/uuid"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"golang.org/x/term"
-
-	"github.com/retr0h/osapi/internal/client/gen"
 )
 
 // Theme colors for terminal UI rendering.

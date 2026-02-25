@@ -24,10 +24,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 var clientSystemShellCmd = &cobra.Command{
@@ -49,14 +49,12 @@ var clientSystemShellCmd = &cobra.Command{
 			}
 		}
 
-		commandHandler := handler.(client.CommandHandler)
-		resp, err := commandHandler.PostCommandShell(
-			ctx,
-			host,
-			command,
-			cwd,
-			timeout,
-		)
+		resp, err := sdkClient.Command.Shell(ctx, osapi.ShellRequest{
+			Command: command,
+			Cwd:     cwd,
+			Timeout: timeout,
+			Target:  host,
+		})
 		if err != nil {
 			cli.LogFatal(logger, "failed to execute shell command", err)
 		}

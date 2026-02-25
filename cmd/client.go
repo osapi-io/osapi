@@ -24,16 +24,16 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
 var (
-	handler        client.CombinedHandler
+	sdkClient      *osapi.Client
 	tracerShutdown func(context.Context) error
 )
 
@@ -61,16 +61,14 @@ var clientCmd = &cobra.Command{
 			slog.String("api.client.url", appConfig.API.URL),
 		)
 
-		cwr, err := client.NewClientWithResponses(logger, appConfig)
-		if err != nil {
-			cli.LogFatal(logger, "failed to create http client", err)
-		}
-
-		handler = client.New(
-			logger,
-			appConfig,
-			cwr,
+		sdkClient, err = osapi.New(
+			appConfig.API.URL,
+			appConfig.API.Client.Security.BearerToken,
+			osapi.WithLogger(logger),
 		)
+		if err != nil {
+			cli.LogFatal(logger, "failed to create sdk client", err)
+		}
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
 		if tracerShutdown != nil {

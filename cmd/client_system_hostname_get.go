@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientSystemHostnameGetCmd represents the clientSystemHostnameGet command.
@@ -39,8 +38,7 @@ var clientSystemHostnameGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		systemHandler := handler.(client.SystemHandler)
-		resp, err := systemHandler.GetSystemHostname(ctx, host)
+		resp, err := sdkClient.System.Hostname(ctx, host)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get system status endpoint", err)
 		}

@@ -28,11 +28,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client/gen"
 )
 
 type UITestSuite struct {

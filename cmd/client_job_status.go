@@ -33,7 +33,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 type jobsModel struct {
@@ -156,8 +155,7 @@ func styleStatusText(
 }
 
 func fetchJobsStatus() string {
-	jobHandler := handler.(client.JobHandler)
-	resp, err := jobHandler.GetJobQueueStats(context.Background())
+	resp, err := sdkClient.Job.QueueStats(context.Background())
 	if err != nil {
 		return fmt.Sprintf("Error fetching jobs: %v", err)
 	}
@@ -207,8 +205,7 @@ func fetchJobsStatus() string {
 }
 
 func fetchJobsStatusJSON() string {
-	jobHandler := handler.(client.JobHandler)
-	resp, err := jobHandler.GetJobQueueStats(context.Background())
+	resp, err := sdkClient.Job.QueueStats(context.Background())
 	if err != nil {
 		errorResult := map[string]interface{}{
 			"error": fmt.Sprintf("Error fetching jobs: %v", err),

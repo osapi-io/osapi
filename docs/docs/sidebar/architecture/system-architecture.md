@@ -16,7 +16,7 @@ The system is organized into six layers, top to bottom:
 | Layer                           | Package                                      | Role                                              |
 | ------------------------------- | -------------------------------------------- | ------------------------------------------------- |
 | **CLI**                         | `cmd/`                                       | Cobra command tree (thin wiring)                  |
-| **Generated HTTP Client**       | `internal/client/`                           | OpenAPI-generated client used by CLI              |
+| **SDK Client**                  | `osapi-sdk` (external)                       | OpenAPI-generated client used by CLI              |
 | **REST API**                    | `internal/api/`                              | Echo server with JWT middleware                   |
 | **Job Client**                  | `internal/job/client/`                       | Business logic for job CRUD and status            |
 | **NATS JetStream**              | (external)                                   | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
@@ -24,18 +24,18 @@ The system is organized into six layers, top to bottom:
 
 ```mermaid
 graph TD
-    CLI["CLI (cmd/)"] --> Client["Generated HTTP Client (internal/client/)"]
-    Client --> API["REST API (internal/api/)"]
+    CLI["CLI (cmd/)"] --> SDK["SDK Client (osapi-sdk)"]
+    SDK --> API["REST API (internal/api/)"]
     API --> JobClient["Job Client (internal/job/client/)"]
     JobClient --> NATS["NATS JetStream"]
     NATS --> Worker["Job Worker (internal/job/worker/)"]
     Worker --> Provider["Provider Layer (internal/provider/)"]
 ```
 
-The CLI talks to the REST API through the generated HTTP client. The REST API
-delegates state-changing operations to the job client, which stores jobs in NATS
-KV and publishes notifications to the JOBS stream. Workers pick up
-notifications, execute the matching provider, and write results back to KV.
+The CLI talks to the REST API through the SDK client. The REST API delegates
+state-changing operations to the job client, which stores jobs in NATS KV and
+publishes notifications to the JOBS stream. Workers pick up notifications,
+execute the matching provider, and write results back to KV.
 
 ## Entry Points
 

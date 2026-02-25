@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientHealthReadyCmd represents the clientHealthReady command.
@@ -38,8 +37,7 @@ var clientHealthReadyCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		healthHandler := handler.(client.HealthHandler)
-		resp, err := healthHandler.GetHealthReady(ctx)
+		resp, err := sdkClient.Health.Ready(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get health ready endpoint", err)
 		}

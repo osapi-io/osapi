@@ -28,7 +28,7 @@ import (
 	"io"
 	"os"
 
-	gen "github.com/retr0h/osapi/internal/client/gen"
+	gen "github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.

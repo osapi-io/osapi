@@ -29,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientAuditGetCmd represents the clientAuditGet command.
@@ -44,8 +43,7 @@ Requires audit:read permission.
 		ctx := cmd.Context()
 		auditID, _ := cmd.Flags().GetString("audit-id")
 
-		auditHandler := handler.(client.AuditHandler)
-		resp, err := auditHandler.GetAuditLogByID(ctx, auditID)
+		resp, err := sdkClient.Audit.Get(ctx, auditID)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get audit log entry", err)
 		}

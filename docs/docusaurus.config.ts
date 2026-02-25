@@ -242,10 +242,10 @@ const config: Config = {
         docsPluginId: 'classic',
         config: {
           system: {
-            specPath: '../internal/client/gen/api.yaml',
+            specPath: '../../osapi-sdk/pkg/osapi/gen/api.yaml',
             outputDir: 'docs/gen/api',
             downloadUrl:
-              'https://github.com/retr0h/osapi/blob/main/internal/client/gen/api.yaml',
+              'https://github.com/osapi-io/osapi-sdk/blob/main/pkg/osapi/gen/api.yaml',
             sidebarOptions: {
               groupPathsBy: 'tag',
               categoryLinkSource: 'tag'

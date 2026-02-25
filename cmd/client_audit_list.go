@@ -28,7 +28,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 var (
@@ -47,8 +46,7 @@ response status, and duration. Requires audit:read permission.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		auditHandler := handler.(client.AuditHandler)
-		resp, err := auditHandler.GetAuditLogs(ctx, auditListLimit, auditListOffset)
+		resp, err := sdkClient.Audit.List(ctx, auditListLimit, auditListOffset)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get audit logs", err)
 		}

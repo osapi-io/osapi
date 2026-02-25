@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientNetworkPingCmd represents the clientNetworkPing command.
@@ -41,8 +40,7 @@ var clientNetworkPingCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		address, _ := cmd.Flags().GetString("address")
 
-		networkHandler := handler.(client.NetworkHandler)
-		resp, err := networkHandler.PostNetworkPing(ctx, host, address)
+		resp, err := sdkClient.Network.Ping(ctx, host, address)
 		if err != nil {
 			cli.LogFatal(logger, "failed to post network ping endpoint", err)
 		}

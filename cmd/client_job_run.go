@@ -30,10 +30,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobRunCmd represents the clientJobRun command.
@@ -71,10 +71,8 @@ This combines job submission and retrieval into a single command for convenience
 			cli.LogFatal(logger, "failed to parse JSON operation file", err)
 		}
 
-		jobHandler := handler.(client.JobHandler)
-
 		// Submit the job
-		resp, err := jobHandler.PostJob(ctx, operationData, targetHostname)
+		resp, err := sdkClient.Job.Create(ctx, operationData, targetHostname)
 		if err != nil {
 			logger.Error("failed to submit job", slog.String("error", err.Error()))
 			return
@@ -101,7 +99,7 @@ This combines job submission and retrieval into a single command for convenience
 		ticker := time.NewTicker(pollInterval)
 		defer ticker.Stop()
 
-		if checkJobComplete(ctx, jobHandler, jobID) {
+		if checkJobComplete(ctx, sdkClient.Job, jobID) {
 			return
 		}
 
@@ -114,7 +112,7 @@ This combines job submission and retrieval into a single command for convenience
 				)
 				return
 			case <-ticker.C:
-				if checkJobComplete(ctx, jobHandler, jobID) {
+				if checkJobComplete(ctx, sdkClient.Job, jobID) {
 					return
 				}
 			}
@@ -124,10 +122,10 @@ This combines job submission and retrieval into a single command for convenience
 
 func checkJobComplete(
 	ctx context.Context,
-	jobHandler client.JobHandler,
+	jobService *osapi.JobService,
 	jobID string,
 ) bool {
-	resp, err := jobHandler.GetJobByID(ctx, jobID)
+	resp, err := jobService.Get(ctx, jobID)
 	if err != nil {
 		logger.Error("failed to get job status",
 			slog.String("job_id", jobID),

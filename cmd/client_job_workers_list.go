@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
 )
 
 // clientJobWorkersListCmd represents the clientJobWorkersList command.
@@ -39,8 +38,7 @@ and collecting responses. Shows each worker's hostname.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		jobHandler := handler.(client.JobHandler)
-		resp, err := jobHandler.GetJobWorkers(ctx)
+		resp, err := sdkClient.Job.Workers(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to list workers", err)
 		}

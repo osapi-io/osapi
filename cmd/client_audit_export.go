@@ -26,12 +26,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/audit/export"
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/client"
-	gen "github.com/retr0h/osapi/internal/client/gen"
 )
 
 var (
@@ -50,9 +49,7 @@ entry as a JSON line (JSONL format). Requires audit:read permission.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
-		auditHandler := handler.(client.AuditHandler)
-
-		resp, err := auditHandler.GetAuditExport(ctx)
+		resp, err := sdkClient.Audit.Export(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "API request failed", err)
 		}
