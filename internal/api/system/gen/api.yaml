@@ -45,7 +45,7 @@ paths:
           in: query
           required: false
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
+            validate: omitempty,min=1,valid_target
           schema:
             type: string
             default: _any
@@ -97,7 +97,7 @@ paths:
           in: query
           required: false
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
+            validate: omitempty,min=1,valid_target
           schema:
             type: string
             default: _any

@@ -34,6 +34,7 @@ import (
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type NetworkPingPostPublicTestSuite struct {
@@ -43,6 +44,15 @@ type NetworkPingPostPublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apinetwork.Network
 	ctx           context.Context
+}
+
+func (s *NetworkPingPostPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *NetworkPingPostPublicTestSuite) SetupTest() {

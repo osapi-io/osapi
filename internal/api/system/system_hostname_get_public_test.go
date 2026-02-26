@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/api/system/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type SystemHostnameGetPublicTestSuite struct {
@@ -42,6 +43,15 @@ type SystemHostnameGetPublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apisystem.System
 	ctx           context.Context
+}
+
+func (s *SystemHostnameGetPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *SystemHostnameGetPublicTestSuite) SetupTest() {

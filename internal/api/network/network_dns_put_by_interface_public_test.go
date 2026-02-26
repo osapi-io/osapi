@@ -33,6 +33,7 @@ import (
 	apinetwork "github.com/retr0h/osapi/internal/api/network"
 	"github.com/retr0h/osapi/internal/api/network/gen"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type NetworkDNSPutByInterfacePublicTestSuite struct {
@@ -42,6 +43,15 @@ type NetworkDNSPutByInterfacePublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apinetwork.Network
 	ctx           context.Context
+}
+
+func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupTest() {
@@ -123,6 +133,25 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "TargetHostname")
 				s.Contains(*r.Error, "min")
+			},
+		},
+		{
+			name: "validation error unknown target_hostname",
+			request: gen.PutNetworkDNSRequestObject{
+				Body: &gen.PutNetworkDNSJSONRequestBody{
+					Servers:       &servers,
+					SearchDomains: &searchDomains,
+					InterfaceName: interfaceName,
+				},
+				Params: gen.PutNetworkDNSParams{TargetHostname: strPtr("nonexistent")},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNetworkDNS400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "valid_target")
+				s.Contains(*r.Error, "not found")
 			},
 		},
 		{
