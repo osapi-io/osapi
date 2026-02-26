@@ -181,6 +181,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 		responseData []byte
 		status       string
 		errorMsg     string
+		changed      *bool
 		kvError      error
 		expectError  bool
 		errorText    string
@@ -252,6 +253,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 				tt.responseData,
 				tt.status,
 				tt.errorMsg,
+				tt.changed,
 			)
 
 			if tt.expectError {

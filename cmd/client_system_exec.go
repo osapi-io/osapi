@@ -79,6 +79,7 @@ var clientSystemExecCmd = &cobra.Command{
 				for _, r := range resp.JSON202.Results {
 					results = append(results, cli.ResultRow{
 						Hostname: r.Hostname,
+						Changed:  r.Changed,
 						Error:    r.Error,
 						Fields: []string{
 							cli.SafeString(r.Stdout),

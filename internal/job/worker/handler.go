@@ -38,6 +38,29 @@ import (
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
+// extractChanged parses the processor result JSON and extracts the "changed"
+// boolean field. Returns nil if the field is absent.
+func extractChanged(
+	data json.RawMessage,
+) *bool {
+	if len(data) == 0 {
+		return nil
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil
+	}
+	v, ok := m["changed"]
+	if !ok {
+		return nil
+	}
+	b, ok := v.(bool)
+	if !ok {
+		return nil
+	}
+	return &b
+}
+
 // writeStatusEvent writes an append-only status event for a job.
 // This eliminates race conditions by never updating existing keys.
 func (w *Worker) writeStatusEvent(
@@ -227,6 +250,11 @@ func (w *Worker) handleJobMessage(
 		response.Status = job.StatusCompleted
 		response.Data = result
 
+		// Extract "changed" from result data for mutation operations
+		if jobRequest.Type == job.TypeModify {
+			response.Changed = extractChanged(result)
+		}
+
 		// Write completed event
 		if err := w.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
 			"duration_ms": time.Since(startTime).Milliseconds(),
@@ -245,7 +273,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	err = w.jobClient.WriteJobResponse(ctx, jobKey, hostname,
-		response.Data, string(response.Status), errorMsg)
+		response.Data, string(response.Status), errorMsg, response.Changed)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}

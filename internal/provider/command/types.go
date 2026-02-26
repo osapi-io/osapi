@@ -60,4 +60,6 @@ type Result struct {
 	ExitCode int `json:"exit_code"`
 	// DurationMs is the execution time in milliseconds.
 	DurationMs int64 `json:"duration_ms"`
+	// Changed indicates whether the command modified system state.
+	Changed bool `json:"changed"`
 }

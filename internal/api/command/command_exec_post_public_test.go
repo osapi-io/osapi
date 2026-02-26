@@ -82,6 +82,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExec() {
 						Stderr:     "",
 						ExitCode:   0,
 						DurationMs: 42,
+						Changed:    true,
 					}, "worker1", nil)
 			},
 			validateFunc: func(resp gen.PostCommandExecResponseObject) {
@@ -93,6 +94,8 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExec() {
 				s.Equal("file1\nfile2", *r.Results[0].Stdout)
 				s.Require().NotNil(r.Results[0].ExitCode)
 				s.Equal(0, *r.Results[0].ExitCode)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -181,11 +184,13 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExec() {
 							Stdout:     "output1",
 							ExitCode:   0,
 							DurationMs: 10,
+							Changed:    true,
 						},
 						"server2": {
 							Stdout:     "output2",
 							ExitCode:   0,
 							DurationMs: 20,
+							Changed:    true,
 						},
 					}, map[string]string{}, nil)
 			},
@@ -194,6 +199,10 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExec() {
 				s.True(ok)
 				s.NotNil(r)
 				s.Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.True(*result.Changed)
+				}
 			},
 		},
 		{

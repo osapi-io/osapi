@@ -243,13 +243,14 @@ func (mr *MockJobClientMockRecorder) ModifyCommandShellBroadcast(arg0, arg1, arg
 }
 
 // ModifyNetworkDNS mocks base method.
-func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, string, error) {
+func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNS", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ModifyNetworkDNS indicates an expected call of ModifyNetworkDNS.
@@ -259,13 +260,14 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNS(arg0, arg1, arg2, arg3, ar
 }
 
 // ModifyNetworkDNSAll mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSAll(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, map[string]error, error) {
+func (m *MockJobClient) ModifyNetworkDNSAll(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, map[string]error, map[string]bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSAll", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(map[string]error)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(map[string]bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ModifyNetworkDNSAll indicates an expected call of ModifyNetworkDNSAll.
@@ -275,13 +277,14 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAll(arg0, arg1, arg2, arg3 
 }
 
 // ModifyNetworkDNSAny mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, string, error) {
+func (m *MockJobClient) ModifyNetworkDNSAny(arg0 context.Context, arg1, arg2 []string, arg3 string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSAny", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ModifyNetworkDNSAny indicates an expected call of ModifyNetworkDNSAny.
@@ -291,13 +294,14 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSAny(arg0, arg1, arg2, arg3 
 }
 
 // ModifyNetworkDNSBroadcast mocks base method.
-func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, map[string]error, error) {
+func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, map[string]error, map[string]bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyNetworkDNSBroadcast", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(map[string]error)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(map[string]bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ModifyNetworkDNSBroadcast indicates an expected call of ModifyNetworkDNSBroadcast.
@@ -558,17 +562,17 @@ func (mr *MockJobClientMockRecorder) RetryJob(arg0, arg1, arg2 interface{}) *gom
 }
 
 // WriteJobResponse mocks base method.
-func (m *MockJobClient) WriteJobResponse(arg0 context.Context, arg1, arg2 string, arg3 []byte, arg4, arg5 string) error {
+func (m *MockJobClient) WriteJobResponse(arg0 context.Context, arg1, arg2 string, arg3 []byte, arg4, arg5 string, arg6 *bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteJobResponse", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "WriteJobResponse", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteJobResponse indicates an expected call of WriteJobResponse.
-func (mr *MockJobClientMockRecorder) WriteJobResponse(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockJobClientMockRecorder) WriteJobResponse(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // WriteStatusEvent mocks base method.

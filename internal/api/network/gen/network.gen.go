@@ -69,6 +69,8 @@ type DNSUpdateCollectionResponse struct {
 
 // DNSUpdateResultItem defines model for DNSUpdateResultItem.
 type DNSUpdateResultItem struct {
+	// Changed Whether the DNS configuration was actually modified.
+	Changed  *bool                     `json:"changed,omitempty"`
 	Error    *string                   `json:"error,omitempty"`
 	Hostname string                    `json:"hostname"`
 	Status   DNSUpdateResultItemStatus `json:"status"`

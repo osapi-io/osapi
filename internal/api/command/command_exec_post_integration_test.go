@@ -82,11 +82,12 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 						Stderr:     "",
 						ExitCode:   0,
 						DurationMs: 42,
+						Changed:    true,
 					}, "worker1", nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"worker1"`},
+			wantContains: []string{`"results"`, `"worker1"`, `"changed":true`},
 		},
 		{
 			name: "when missing command",
@@ -212,6 +213,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecRBAC() {
 							Stderr:     "",
 							ExitCode:   0,
 							DurationMs: 10,
+							Changed:    true,
 						},
 						"worker1",
 						nil,
@@ -219,7 +221,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecRBAC() {
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`},
+			wantContains: []string{`"results"`, `"changed":true`},
 		},
 	}
 

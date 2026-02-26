@@ -549,7 +549,7 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), "completed", "").
+					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(nil)
 			},
 			expectErr: false,

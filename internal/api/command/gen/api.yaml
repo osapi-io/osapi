@@ -244,6 +244,9 @@ components:
           type: integer
           format: int64
           description: Execution time in milliseconds.
+        changed:
+          type: boolean
+          description: Whether the command modified system state.
         error:
           type: string
           description: >

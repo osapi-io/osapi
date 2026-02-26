@@ -270,13 +270,18 @@ func (w *Worker) processNetworkDNS(
 		slog.Int("servers", len(serverStrings)),
 	)
 	dnsProvider := w.getDNSProvider()
-	err := dnsProvider.UpdateResolvConfByInterface(serverStrings, searchStrings, interfaceName)
+	dnsResult, err := dnsProvider.UpdateResolvConfByInterface(
+		serverStrings,
+		searchStrings,
+		interfaceName,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set DNS config: %w", err)
 	}
 
 	result := map[string]interface{}{
 		"success": true,
+		"changed": dnsResult.Changed,
 		"message": "DNS configuration updated successfully",
 	}
 

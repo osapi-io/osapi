@@ -248,7 +248,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			mock := tc.setupMock()
 
 			net := dns.NewUbuntuProvider(suite.logger, mock)
-			err := net.UpdateResolvConfByInterface(
+			result, err := net.UpdateResolvConfByInterface(
 				tc.servers,
 				tc.searchDomains,
 				tc.interfaceName,
@@ -256,9 +256,11 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 
 			if tc.wantErr {
 				suite.Error(err)
+				suite.Nil(result)
 				suite.Contains(err.Error(), tc.wantErrType.Error())
 			} else {
 				suite.NoError(err)
+				suite.NotNil(result)
 
 				got, err := net.GetResolvConfByInterface(tc.interfaceName)
 				suite.Equal(tc.want, got)

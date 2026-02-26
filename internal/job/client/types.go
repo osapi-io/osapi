@@ -102,26 +102,26 @@ type JobClient interface {
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) (string, string, error)
+	) (string, string, bool, error)
 	ModifyNetworkDNSAny(
 		ctx context.Context,
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) (string, string, error)
+	) (string, string, bool, error)
 	ModifyNetworkDNSAll(
 		ctx context.Context,
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) (string, map[string]error, error)
+	) (string, map[string]error, map[string]bool, error)
 	ModifyNetworkDNSBroadcast(
 		ctx context.Context,
 		target string,
 		servers []string,
 		searchDomains []string,
 		iface string,
-	) (string, map[string]error, error)
+	) (string, map[string]error, map[string]bool, error)
 	QueryNetworkPing(
 		ctx context.Context,
 		hostname string,
@@ -206,6 +206,7 @@ type JobClient interface {
 		responseData []byte,
 		status string,
 		errorMsg string,
+		changed *bool,
 	) error
 	ConsumeJobs(
 		ctx context.Context,

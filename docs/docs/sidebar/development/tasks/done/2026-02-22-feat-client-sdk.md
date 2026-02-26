@@ -1,7 +1,18 @@
-t --- title: Client SDK for programmatic automation status: backlog created:
-2026-02-22 updated: 2026-02-22
-
 ---
+title: Client SDK for programmatic automation
+status: done
+created: 2026-02-22
+updated: 2026-02-25
+---
+
+## Outcome
+
+Created `osapi-sdk` as a separate sibling repo with generated HTTP client,
+service wrappers (`Command`, `Network`, `Health`, `Job`, `Audit`, `System`,
+`Metrics`), and connection management. Migrated all CLI commands from
+`internal/client/` to the SDK and deleted the internal package entirely.
+Declarative engine/playbook support tracked in
+[backlog](../backlog/2026-02-25-feat-declarative-playbook-engine.md).
 
 ## Objective
 

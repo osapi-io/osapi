@@ -53,8 +53,9 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 			servers := []string{}
 			searchDomains := []string{}
 			interfaceName := ""
-			err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
+			result, err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
 
+			suite.Nil(result)
 			suite.EqualError(
 				err,
 				"UpdateResolvConfByInterface is not implemented for LinuxProvider",

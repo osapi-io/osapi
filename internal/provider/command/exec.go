@@ -51,5 +51,6 @@ func (c *Executor) Exec(
 		Stderr:     cmdResult.Stderr,
 		ExitCode:   cmdResult.ExitCode,
 		DurationMs: cmdResult.DurationMs,
+		Changed:    true,
 	}, nil
 }

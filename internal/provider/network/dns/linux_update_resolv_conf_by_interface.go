@@ -32,6 +32,6 @@ func (l *Linux) UpdateResolvConfByInterface(
 	_ []string,
 	_ []string,
 	_ string,
-) error {
-	return fmt.Errorf("UpdateResolvConfByInterface is not implemented for LinuxProvider")
+) (*Result, error) {
+	return nil, fmt.Errorf("UpdateResolvConfByInterface is not implemented for LinuxProvider")
 }

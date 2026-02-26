@@ -63,13 +63,14 @@ func (s *LinuxTestSuite) TestUpdateResolvConfByInterface() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			l := &Linux{}
-			err := l.UpdateResolvConfByInterface(
+			result, err := l.UpdateResolvConfByInterface(
 				[]string{"8.8.8.8"},
 				[]string{"example.com"},
 				"eth0",
 			)
 
 			s.Error(err)
+			s.Nil(result)
 			s.Contains(err.Error(), "not implemented for LinuxProvider")
 		})
 	}

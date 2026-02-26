@@ -74,7 +74,7 @@ func (n Network) PutNetworkDNS(
 		return n.putNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
 	}
 
-	jobID, workerHostname, err := n.JobClient.ModifyNetworkDNS(
+	jobID, workerHostname, changed, err := n.JobClient.ModifyNetworkDNS(
 		ctx,
 		hostname,
 		servers,
@@ -95,6 +95,7 @@ func (n Network) PutNetworkDNS(
 			{
 				Hostname: workerHostname,
 				Status:   gen.Ok,
+				Changed:  &changed,
 			},
 		},
 	}, nil
@@ -108,7 +109,7 @@ func (n Network) putNetworkDNSBroadcast(
 	searchDomains []string,
 	interfaceName string,
 ) (gen.PutNetworkDNSResponseObject, error) {
-	jobID, results, err := n.JobClient.ModifyNetworkDNSBroadcast(
+	jobID, results, changedMap, err := n.JobClient.ModifyNetworkDNSBroadcast(
 		ctx,
 		target,
 		servers,
@@ -124,9 +125,11 @@ func (n Network) putNetworkDNSBroadcast(
 
 	var responses []gen.DNSUpdateResultItem
 	for host, hostErr := range results {
+		c := changedMap[host]
 		item := gen.DNSUpdateResultItem{
 			Hostname: host,
 			Status:   gen.Ok,
+			Changed:  &c,
 		}
 		if hostErr != nil {
 			item.Status = gen.Failed
