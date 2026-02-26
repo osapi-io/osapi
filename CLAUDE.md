@@ -165,12 +165,28 @@ Create `internal/api/{domain}/`:
 ### Step 5: Update SDK
 
 The `osapi-sdk` (sibling repo) provides the generated HTTP client used by
-the CLI. When adding a new API domain:
+the CLI. The SDK syncs its `api.yaml` files from this repo via `gilt`
+overlay (configured in `osapi-sdk/.gilt.yml`). When `just generate` runs
+in the SDK, gilt pulls the latest specs from osapi's `main` branch and
+regenerates the client code.
+
+**When adding a new API domain:**
 
 1. Add the domain's `api.yaml` to `osapi-sdk/pkg/osapi/gen/{domain}/`
 2. Run `just generate` in the SDK repo to regenerate the merged spec and
    client code
 3. Add a service wrapper in `osapi-sdk/pkg/osapi/{domain}.go`
+
+**When modifying existing API specs** (adding responses, parameters, or
+schemas to existing endpoints):
+
+1. Make changes to `internal/api/{domain}/gen/api.yaml` in this repo
+2. Run `just generate` here to regenerate server code
+3. After merging to `main`, run `just generate` in `osapi-sdk` — gilt
+   will pull the updated specs and regenerate the client
+4. Update the SDK service wrappers and CLI switch blocks if new response
+   codes were added (e.g., adding a 404 response requires a
+   `case http.StatusNotFound:` in the CLI)
 
 ### Step 6: CLI Commands
 

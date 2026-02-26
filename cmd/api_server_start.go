@@ -39,6 +39,7 @@ import (
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // ServerManager responsible for Server operations.
@@ -103,6 +104,23 @@ var apiServerStartCmd = &cobra.Command{
 		if err != nil {
 			cli.LogFatal(logger, "failed to create job client", err)
 		}
+
+		validation.RegisterTargetValidator(
+			func(ctx context.Context) ([]validation.WorkerTarget, error) {
+				_, workers, err := jc.ListWorkers(ctx)
+				if err != nil {
+					return nil, err
+				}
+				targets := make([]validation.WorkerTarget, 0, len(workers))
+				for _, w := range workers {
+					targets = append(targets, validation.WorkerTarget{
+						Hostname: w.Hostname,
+						Labels:   w.Labels,
+					})
+				}
+				return targets, nil
+			},
+		)
 
 		checker := newHealthChecker(nc, jobsKV)
 		metricsProvider := newMetricsProvider(nc, jobsKV, streamName, jc)

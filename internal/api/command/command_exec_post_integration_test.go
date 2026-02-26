@@ -21,6 +21,7 @@
 package command_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type CommandExecPostIntegrationTestSuite struct {
@@ -47,6 +49,15 @@ type CommandExecPostIntegrationTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+}
+
+func (suite *CommandExecPostIntegrationTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (suite *CommandExecPostIntegrationTestSuite) SetupTest() {
@@ -118,6 +129,16 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`},
+		},
+		{
+			name: "when target worker not found",
+			path: "/command/exec?target_hostname=nonexistent",
+			body: `{"command":"ls"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "valid_target", "not found"},
 		},
 	}
 

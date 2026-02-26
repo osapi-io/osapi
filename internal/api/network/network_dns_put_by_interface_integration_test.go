@@ -21,6 +21,7 @@
 package network_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type NetworkDNSPutByInterfaceIntegrationTestSuite struct {
@@ -46,6 +48,15 @@ type NetworkDNSPutByInterfaceIntegrationTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+}
+
+func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) SetupTest() {
@@ -131,6 +142,16 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSVali
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`},
+		},
+		{
+			name: "when target worker not found",
+			path: "/network/dns?target_hostname=nonexistent",
+			body: `{"servers":["1.1.1.1"],"interface_name":"eth0"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(suite.ctrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "valid_target", "not found"},
 		},
 		{
 			name: "when broadcast all",

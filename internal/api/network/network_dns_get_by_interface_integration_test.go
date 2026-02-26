@@ -21,6 +21,7 @@
 package network_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type NetworkDNSGetByInterfaceIntegrationTestSuite struct {
@@ -46,6 +48,15 @@ type NetworkDNSGetByInterfaceIntegrationTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+}
+
+func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) SetupTest() {

@@ -22,10 +22,20 @@
 package validation
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 )
 
 var instance = validator.New()
+
+// customHints maps validator tags to a hint appended to the default error.
+var customHints = map[string]func(fe validator.FieldError) string{
+	"valid_target": func(fe validator.FieldError) string {
+		return fmt.Sprintf("target worker %q not found", fe.Value())
+	},
+}
 
 // Struct validates a struct and returns the error message and false if invalid.
 func Struct(
@@ -33,10 +43,27 @@ func Struct(
 ) (string, bool) {
 	if err := instance.Struct(v); err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return validationErrors.Error(), false
+		return formatErrors(validationErrors), false
 	}
 
 	return "", true
+}
+
+// formatErrors builds the error string, appending a custom hint for known
+// tags while keeping the standard validator prefix.
+func formatErrors(
+	errs validator.ValidationErrors,
+) string {
+	msgs := make([]string, 0, len(errs))
+	for _, fe := range errs {
+		msg := fe.Error()
+		if fn, ok := customHints[fe.Tag()]; ok {
+			msg = fmt.Sprintf("%s: %s", msg, fn(fe))
+		}
+		msgs = append(msgs, msg)
+	}
+
+	return strings.Join(msgs, "; ")
 }
 
 // Instance returns the shared validator for registering custom validators.

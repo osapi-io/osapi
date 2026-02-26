@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/api/command/gen"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type CommandExecPostPublicTestSuite struct {
@@ -42,6 +43,15 @@ type CommandExecPostPublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apicommand.Command
 	ctx           context.Context
+}
+
+func (s *CommandExecPostPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *CommandExecPostPublicTestSuite) SetupTest() {
@@ -147,6 +157,23 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExec() {
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "TargetHostname")
 				s.Contains(*r.Error, "min")
+			},
+		},
+		{
+			name: "validation error unknown target_hostname",
+			request: gen.PostCommandExecRequestObject{
+				Body: &gen.PostCommandExecJSONRequestBody{
+					Command: "ls",
+				},
+				Params: gen.PostCommandExecParams{TargetHostname: strPtr("nonexistent")},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostCommandExecResponseObject) {
+				r, ok := resp.(gen.PostCommandExec400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "valid_target")
+				s.Contains(*r.Error, "not found")
 			},
 		},
 		{

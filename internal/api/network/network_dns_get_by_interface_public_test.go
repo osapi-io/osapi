@@ -31,9 +31,9 @@ import (
 
 	apinetwork "github.com/retr0h/osapi/internal/api/network"
 	"github.com/retr0h/osapi/internal/api/network/gen"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type NetworkDNSGetByInterfacePublicTestSuite struct {
@@ -43,6 +43,15 @@ type NetworkDNSGetByInterfacePublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apinetwork.Network
 	ctx           context.Context
+}
+
+func (s *NetworkDNSGetByInterfacePublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *NetworkDNSGetByInterfacePublicTestSuite) SetupTest() {

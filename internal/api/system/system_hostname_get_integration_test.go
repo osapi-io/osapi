@@ -21,6 +21,7 @@
 package system_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type SystemHostnameGetIntegrationTestSuite struct {
@@ -47,6 +49,15 @@ type SystemHostnameGetIntegrationTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+}
+
+func (suite *SystemHostnameGetIntegrationTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
+		return []validation.WorkerTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (suite *SystemHostnameGetIntegrationTestSuite) SetupTest() {
