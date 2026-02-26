@@ -1,0 +1,32 @@
+{
+  "org": "osapi-io",
+  "repos": [
+    "osapi",
+    "osapi-sdk",
+    "nats-client",
+    "nats-server",
+    "osapi-io-justfiles"
+  ],
+  "settings": {
+    "has_issues": true,
+    "has_wiki": false,
+    "has_projects": false,
+    "delete_branch_on_merge": true,
+    "allow_merge_commit": false,
+    "allow_squash_merge": true,
+    "allow_rebase_merge": true,
+    "allow_auto_merge": true,
+    "web_commit_signoff_required": false
+  },
+  "branch_protection": {
+    "branch": "main",
+    "enforce_admins": true,
+    "required_status_checks": { "strict": true },
+    "required_pull_request_reviews": { "required_approving_review_count": 0 },
+    "required_conversation_resolution": true,
+    "allow_force_pushes": false,
+    "allow_deletions": false,
+    "block_creations": true,
+    "restrictions": { "users": ["retr0h"], "teams": [], "apps": [] }
+  }
+}

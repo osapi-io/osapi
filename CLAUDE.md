@@ -38,6 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
 - **`osapi-sdk`** - External SDK for programmatic REST API access (sibling repo, linked via `replace` in `go.mod`)
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
+- **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
 ## Adding a New API Domain
 
