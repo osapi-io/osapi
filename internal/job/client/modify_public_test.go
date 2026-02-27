@@ -171,7 +171,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 			servers:       []string{"invalid.ip"},
 			searchDomains: []string{"example.com"},
 			iface:         "eth0",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},

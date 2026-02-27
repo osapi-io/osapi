@@ -53,8 +53,8 @@ func (s *AgentTestSuite) TestSanitizeKeyForNATS() {
 		},
 		{
 			name:     "hostname with special characters",
-			input:    "worker.host-name@domain.com",
-			expected: "worker_host-name_domain_com",
+			input:    "agent.host-name@domain.com",
+			expected: "agent_host-name_domain_com",
 		},
 		{
 			name:     "email-like string",
@@ -63,13 +63,13 @@ func (s *AgentTestSuite) TestSanitizeKeyForNATS() {
 		},
 		{
 			name:     "string with spaces",
-			input:    "worker node 1",
-			expected: "worker_node_1",
+			input:    "agent node 1",
+			expected: "agent_node_1",
 		},
 		{
 			name:     "string with mixed special characters",
-			input:    "worker#1!@#$%^&*()",
-			expected: "worker_1__________",
+			input:    "agent#1!@#$%^&*()",
+			expected: "agent_1__________",
 		},
 		{
 			name:     "empty string",

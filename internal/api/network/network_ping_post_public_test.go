@@ -90,7 +90,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 						MinRTT:          10 * time.Millisecond,
 						AvgRTT:          15 * time.Millisecond,
 						MaxRTT:          20 * time.Millisecond,
-					}, "worker1", nil)
+					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.PostNetworkPingResponseObject) {
 				r, ok := resp.(gen.PostNetworkPing200JSONResponse)
@@ -99,7 +99,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPing() {
 				s.Equal(3, *r.Results[0].PacketsSent)
 				s.Equal(3, *r.Results[0].PacketsReceived)
 				s.Equal(0.0, *r.Results[0].PacketLoss)
-				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 			},
 		},
 		{

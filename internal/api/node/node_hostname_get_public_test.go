@@ -79,7 +79,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostname(gomock.Any(), gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", &job.AgentInfo{
-						Hostname: "worker1",
+						Hostname: "agent1",
 						Labels:   map[string]string{"group": "web"},
 					}, nil)
 			},
@@ -99,14 +99,14 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostname(gomock.Any(), gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", "", &job.AgentInfo{
-						Hostname: "worker1",
+						Hostname: "agent1",
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
 				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 			},
 		},
 		{

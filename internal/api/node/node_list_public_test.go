@@ -72,10 +72,9 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 				r, ok := resp.(gen.GetNode200JSONResponse)
 				s.True(ok)
 				s.Equal(2, r.Total)
-				s.Require().NotNil(r.Agents)
-				s.Len(*r.Agents, 2)
-				s.Equal("server1", (*r.Agents)[0].Hostname)
-				s.Equal("server2", (*r.Agents)[1].Hostname)
+				s.Len(r.Agents, 2)
+				s.Equal("server1", r.Agents[0].Hostname)
+				s.Equal("server2", r.Agents[1].Hostname)
 			},
 		},
 		{
@@ -85,8 +84,7 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 				r, ok := resp.(gen.GetNode200JSONResponse)
 				s.True(ok)
 				s.Equal(0, r.Total)
-				s.Require().NotNil(r.Agents)
-				s.Empty(*r.Agents)
+				s.Empty(r.Agents)
 			},
 		},
 		{

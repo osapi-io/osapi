@@ -505,7 +505,7 @@ components:
                   completed, failed, retried).
               hostname:
                 type: string
-                description: Worker or source that generated the event.
+                description: Agent or source that generated the event.
               message:
                 type: string
                 description: Human-readable description of the event.

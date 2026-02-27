@@ -56,19 +56,19 @@ type HostnameCollectionResponse struct {
 
 // HostnameResponse The hostname of the system.
 type HostnameResponse struct {
-	// Error Error message if the worker failed to process the request.
+	// Error Error message if the agent failed to process the request.
 	Error *string `json:"error,omitempty"`
 
 	// Hostname The system's hostname.
 	Hostname string `json:"hostname"`
 
-	// Labels Key-value labels configured on the worker.
+	// Labels Key-value labels configured on the agent.
 	Labels *map[string]string `json:"labels,omitempty"`
 }
 
 // ListAgentsResponse defines model for ListAgentsResponse.
 type ListAgentsResponse struct {
-	Agents *[]AgentInfo `json:"agents,omitempty"`
+	Agents []AgentInfo `json:"agents"`
 
 	// Total Total number of active agents.
 	Total int `json:"total"`
@@ -110,7 +110,7 @@ type NodeStatusResponse struct {
 	// Disks List of local disk usage information.
 	Disks *DisksResponse `json:"disks,omitempty"`
 
-	// Error Error message if the worker failed to process the request.
+	// Error Error message if the agent failed to process the request.
 	Error *string `json:"error,omitempty"`
 
 	// Hostname The hostname of the system.

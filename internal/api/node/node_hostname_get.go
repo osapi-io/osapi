@@ -54,7 +54,7 @@ func (s *Node) GetNodeHostname(
 		return s.getNodeHostnameBroadcast(ctx, hostname)
 	}
 
-	jobID, result, worker, err := s.JobClient.QueryNodeHostname(ctx, hostname)
+	jobID, result, agent, err := s.JobClient.QueryNodeHostname(ctx, hostname)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeHostname500JSONResponse{
@@ -63,13 +63,13 @@ func (s *Node) GetNodeHostname(
 	}
 
 	displayHostname := result
-	if displayHostname == "" && worker != nil {
-		displayHostname = worker.Hostname
+	if displayHostname == "" && agent != nil {
+		displayHostname = agent.Hostname
 	}
 
 	resp := gen.HostnameResponse{Hostname: displayHostname}
-	if worker != nil && len(worker.Labels) > 0 {
-		resp.Labels = &worker.Labels
+	if agent != nil && len(agent.Labels) > 0 {
+		resp.Labels = &agent.Labels
 	}
 
 	jobUUID := uuid.MustParse(jobID)

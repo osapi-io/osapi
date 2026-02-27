@@ -102,7 +102,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				Created:   "2025-06-14T10:00:00Z",
 				Operation: map[string]interface{}{"type": "node.hostname.get"},
 				Error:     "disk full",
-				Hostname:  "worker-1",
+				Hostname:  "agent-1",
 				UpdatedAt: "2025-06-14T10:05:00Z",
 				Result:    json.RawMessage(`{"hostname":"server-01"}`),
 			},
@@ -117,7 +117,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.NotNil(r.Error)
 				s.Equal("disk full", *r.Error)
 				s.NotNil(r.Hostname)
-				s.Equal("worker-1", *r.Hostname)
+				s.Equal("agent-1", *r.Hostname)
 				s.NotNil(r.UpdatedAt)
 				s.Equal("2025-06-14T10:05:00Z", *r.UpdatedAt)
 				s.NotNil(r.Result)
@@ -218,7 +218,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
-			name: "worker states with errors",
+			name: "agent states with errors",
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("bb0e8400-e29b-41d4-a716-446655440000"),
 			},
@@ -280,14 +280,14 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 					{
 						Timestamp: time.Date(2026, 2, 19, 10, 0, 1, 0, time.UTC),
 						Event:     "acknowledged",
-						Hostname:  "worker-1",
-						Message:   "Job acknowledged by worker worker-1",
+						Hostname:  "agent-1",
+						Message:   "Job acknowledged by agent agent-1",
 					},
 					{
 						Timestamp: time.Date(2026, 2, 19, 10, 0, 3, 0, time.UTC),
 						Event:     "failed",
-						Hostname:  "worker-1",
-						Message:   "Job failed on worker-1",
+						Hostname:  "agent-1",
+						Message:   "Job failed on agent-1",
 						Error:     "timeout",
 					},
 					{
@@ -314,7 +314,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.Nil(tl[0].Error)
 
 				s.Equal("acknowledged", *tl[1].Event)
-				s.Equal("worker-1", *tl[1].Hostname)
+				s.Equal("agent-1", *tl[1].Hostname)
 
 				s.Equal("failed", *tl[2].Event)
 				s.NotNil(tl[2].Error)

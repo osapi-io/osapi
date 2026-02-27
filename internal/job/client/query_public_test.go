@@ -199,13 +199,13 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 			hostname: "server1",
 			responseData: `{
 				"status": "completed",
-				"hostname": "worker1",
+				"hostname": "agent1",
 				"data": {"hostname": "server1.example.com", "labels": {"group": "web", "env": "prod"}}
 			}`,
 			validateFunc: func(result string, agent *job.AgentInfo) {
 				s.Equal("server1.example.com", result)
 				s.Require().NotNil(agent)
-				s.Equal("worker1", agent.Hostname)
+				s.Equal("agent1", agent.Hostname)
 				s.Equal(map[string]string{"group": "web", "env": "prod"}, agent.Labels)
 			},
 		},
@@ -512,7 +512,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 		{
 			name:          "publish error",
 			address:       "unreachable.host",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},
@@ -565,7 +565,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeStatusAny() {
 		},
 		{
 			name:          "publish error",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},

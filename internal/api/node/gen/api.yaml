@@ -60,7 +60,7 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
-          description: Error discovering workers.
+          description: Error discovering agents.
           content:
             application/json:
               schema:
@@ -192,7 +192,7 @@ components:
           type: integer
           description: Total number of active agents.
       required:
-        - workers
+        - agents
         - total
 
     AgentInfo:
@@ -299,7 +299,7 @@ components:
           $ref: '#/components/schemas/OSInfoResponse'
         error:
           type: string
-          description: Error message if the worker failed to process the request.
+          description: Error message if the agent failed to process the request.
       required:
         - hostname
 
@@ -315,10 +315,10 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Key-value labels configured on the worker.
+          description: Key-value labels configured on the agent.
         error:
           type: string
-          description: Error message if the worker failed to process the request.
+          description: Error message if the agent failed to process the request.
       required:
         - hostname
 

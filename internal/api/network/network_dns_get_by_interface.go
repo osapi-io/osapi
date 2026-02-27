@@ -61,7 +61,7 @@ func (n Network) GetNetworkDNSByInterface(
 		return n.getNetworkDNSBroadcast(ctx, hostname, request.InterfaceName)
 	}
 
-	jobID, dnsConfig, workerHostname, err := n.JobClient.QueryNetworkDNS(
+	jobID, dnsConfig, agentHostname, err := n.JobClient.QueryNetworkDNS(
 		ctx,
 		hostname,
 		request.InterfaceName,
@@ -81,7 +81,7 @@ func (n Network) GetNetworkDNSByInterface(
 		JobId: &jobUUID,
 		Results: []gen.DNSConfigResponse{
 			{
-				Hostname:      workerHostname,
+				Hostname:      agentHostname,
 				Servers:       &servers,
 				SearchDomains: &searchDomains,
 			},

@@ -87,11 +87,11 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSVali
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "worker1", true, nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"worker1"`, `"ok"`, `"changed":true`},
+			wantContains: []string{`"results"`, `"agent1"`, `"ok"`, `"changed":true`},
 		},
 		{
 			name: "when missing interface name",
@@ -144,7 +144,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSVali
 			wantContains: []string{`"error"`},
 		},
 		{
-			name: "when target worker not found",
+			name: "when target agent not found",
 			path: "/network/dns?target_hostname=nonexistent",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth0"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -260,7 +260,7 @@ func (suite *NetworkDNSPutByInterfaceIntegrationTestSuite) TestPutNetworkDNSRBAC
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"worker1",
+						"agent1",
 						true,
 						nil,
 					)

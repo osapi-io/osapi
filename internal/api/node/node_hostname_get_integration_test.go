@@ -88,7 +88,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 				mock.EXPECT().
 					QueryNodeHostname(gomock.Any(), job.AnyHost).
 					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", &job.AgentInfo{
-						Hostname: "worker1",
+						Hostname: "agent1",
 					}, nil)
 				return mock
 			},
@@ -221,7 +221,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameRBAC() {
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						"test-host",
-						&job.AgentInfo{Hostname: "worker1"},
+						&job.AgentInfo{Hostname: "agent1"},
 						nil,
 					)
 				return mock

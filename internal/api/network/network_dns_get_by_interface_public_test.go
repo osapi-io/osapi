@@ -81,7 +81,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 					Return("550e8400-e29b-41d4-a716-446655440000", &dns.Config{
 						DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
 						SearchDomains: []string{"example.com", "local.lan"},
-					}, "worker1", nil)
+					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.GetNetworkDNSByInterfaceResponseObject) {
 				r, ok := resp.(gen.GetNetworkDNSByInterface200JSONResponse)
@@ -89,7 +89,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterface()
 				s.Require().Len(r.Results, 1)
 				s.Equal([]string{"192.168.1.1", "8.8.8.8"}, *r.Results[0].Servers)
 				s.Equal([]string{"example.com", "local.lan"}, *r.Results[0].SearchDomains)
-				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 			},
 		},
 		{

@@ -94,11 +94,11 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 						ExitCode:   0,
 						DurationMs: 42,
 						Changed:    true,
-					}, "worker1", nil)
+					}, "agent1", nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"worker1"`, `"changed":true`},
+			wantContains: []string{`"results"`, `"agent1"`, `"changed":true`},
 		},
 		{
 			name: "when missing command",
@@ -131,7 +131,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 			wantContains: []string{`"error"`},
 		},
 		{
-			name: "when target worker not found",
+			name: "when target agent not found",
 			path: "/command/exec?target_hostname=nonexistent",
 			body: `{"command":"ls"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -236,7 +236,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecRBAC() {
 							DurationMs: 10,
 							Changed:    true,
 						},
-						"worker1",
+						"agent1",
 						nil,
 					)
 				return mock

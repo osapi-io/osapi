@@ -49,7 +49,7 @@ func (s *Node) GetNode(
 	total := len(agentInfos)
 
 	return gen.GetNode200JSONResponse{
-		Agents: &agentInfos,
+		Agents: agentInfos,
 		Total:  total,
 	}, nil
 }

@@ -91,13 +91,13 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShell() {
 						ExitCode:   0,
 						DurationMs: 42,
 						Changed:    true,
-					}, "worker1", nil)
+					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.PostCommandShellResponseObject) {
 				r, ok := resp.(gen.PostCommandShell202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Stdout)
 				s.Equal("file1\nfile2", *r.Results[0].Stdout)
 				s.Require().NotNil(r.Results[0].ExitCode)
@@ -286,7 +286,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShell() {
 					Return("550e8400-e29b-41d4-a716-446655440000", &command.Result{
 						Stdout:   "output",
 						ExitCode: 0,
-					}, "worker1", nil)
+					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.PostCommandShellResponseObject) {
 				_, ok := resp.(gen.PostCommandShell202JSONResponse)

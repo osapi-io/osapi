@@ -162,7 +162,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 						Created:   "2025-06-14T10:00:00Z",
 						Operation: map[string]interface{}{"type": "network.dns.get"},
 						Error:     "timeout",
-						Hostname:  "worker-2",
+						Hostname:  "agent-2",
 						UpdatedAt: "2025-06-14T10:05:00Z",
 						Result:    json.RawMessage(`{"servers":["8.8.8.8"]}`),
 					},
@@ -180,7 +180,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 				s.NotNil(item.Error)
 				s.Equal("timeout", *item.Error)
 				s.NotNil(item.Hostname)
-				s.Equal("worker-2", *item.Hostname)
+				s.Equal("agent-2", *item.Hostname)
 				s.NotNil(item.UpdatedAt)
 				s.NotNil(item.Result)
 			},

@@ -88,13 +88,13 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					ModifyNetworkDNS(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "worker1", true, nil)
+					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
 			},
 			validateFunc: func(resp gen.PutNetworkDNSResponseObject) {
 				r, ok := resp.(gen.PutNetworkDNS202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal("worker1", r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal(gen.Ok, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)

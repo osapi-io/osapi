@@ -142,7 +142,7 @@ func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
 		{
 			name: "when using instant replay policy",
 			consumerConfig: &config.NodeAgentConsumer{
-				Name:          "jobs-worker",
+				Name:          "jobs-agent",
 				MaxDeliver:    5,
 				AckWait:       "30s",
 				MaxAckPending: 100,
@@ -150,9 +150,9 @@ func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
 			},
 			streamSubjects: "job.>",
 			wantCheck: func(config jetstream.ConsumerConfig) {
-				suite.Equal("jobs-worker", config.Name)
+				suite.Equal("jobs-agent", config.Name)
 				suite.Equal("Consumer for processing job requests", config.Description)
-				suite.Equal("jobs-worker", config.Durable)
+				suite.Equal("jobs-agent", config.Durable)
 				suite.Equal(jetstream.AckExplicitPolicy, config.AckPolicy)
 				suite.Equal(5, config.MaxDeliver)
 				suite.Equal(30*time.Second, config.AckWait)

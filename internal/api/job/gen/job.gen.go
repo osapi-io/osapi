@@ -103,7 +103,7 @@ type JobDetailResponse struct {
 		// Event Event type (submitted, acknowledged, started, completed, failed, retried).
 		Event *string `json:"event,omitempty"`
 
-		// Hostname Worker or source that generated the event.
+		// Hostname Agent or source that generated the event.
 		Hostname *string `json:"hostname,omitempty"`
 
 		// Message Human-readable description of the event.

@@ -96,7 +96,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPingValidation(
 						MinRTT:          10 * time.Millisecond,
 						AvgRTT:          15 * time.Millisecond,
 						MaxRTT:          20 * time.Millisecond,
-					}, "worker1", nil)
+					}, "agent1", nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -252,7 +252,7 @@ func (suite *NetworkPingPostIntegrationTestSuite) TestPostNetworkPingRBAC() {
 							AvgRTT:          15 * time.Millisecond,
 							MaxRTT:          20 * time.Millisecond,
 						},
-						"worker1",
+						"agent1",
 						nil,
 					)
 				return mock

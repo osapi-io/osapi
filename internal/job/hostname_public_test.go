@@ -61,11 +61,11 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 	}{
 		{
 			name:               "configured hostname takes precedence",
-			configuredHostname: "configured-worker",
+			configuredHostname: "configured-agent",
 			expectError:        false,
-			expectedResult:     "configured-worker",
+			expectedResult:     "configured-agent",
 			validateFunc: func(hostname string) {
-				s.Equal("configured-worker", hostname)
+				s.Equal("configured-agent", hostname)
 			},
 		},
 		{
@@ -143,9 +143,9 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 	}{
 		{
 			name:               "configured hostname bypasses provider",
-			configuredHostname: "configured-worker",
+			configuredHostname: "configured-agent",
 			provider:           &mockHostnameProvider{hostname: "system-host", err: nil},
-			expectedHostname:   "configured-worker",
+			expectedHostname:   "configured-agent",
 			expectError:        false,
 		},
 		{
