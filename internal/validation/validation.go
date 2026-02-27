@@ -33,7 +33,7 @@ var instance = validator.New()
 // customHints maps validator tags to a hint appended to the default error.
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
-		return fmt.Sprintf("target worker %q not found", fe.Value())
+		return fmt.Sprintf("target agent %q not found", fe.Value())
 	},
 }
 

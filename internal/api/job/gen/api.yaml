@@ -459,27 +459,27 @@ components:
           description: Error message if failed.
         hostname:
           type: string
-          description: Worker hostname that processed the job.
+          description: Agent hostname that processed the job.
         updated_at:
           type: string
           description: Last update timestamp.
         responses:
           type: object
-          description: Per-worker response data for broadcast jobs.
+          description: Per-agent response data for broadcast jobs.
           additionalProperties:
             type: object
             properties:
               status:
                 type: string
               data:
-                description: Worker result data.
+                description: Agent result data.
               error:
                 type: string
               hostname:
                 type: string
-        worker_states:
+        agent_states:
           type: object
-          description: Per-worker processing state for broadcast jobs.
+          description: Per-agent processing state for broadcast jobs.
           additionalProperties:
             type: object
             properties:

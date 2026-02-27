@@ -58,13 +58,13 @@ func (s *NodeListPublicTestSuite) TearDownTest() {
 func (s *NodeListPublicTestSuite) TestGetNode() {
 	tests := []struct {
 		name         string
-		mockWorkers  []jobtypes.AgentInfo
+		mockAgents   []jobtypes.AgentInfo
 		mockError    error
 		validateFunc func(resp gen.GetNodeResponseObject)
 	}{
 		{
-			name: "success with workers",
-			mockWorkers: []jobtypes.AgentInfo{
+			name: "success with agents",
+			mockAgents: []jobtypes.AgentInfo{
 				{Hostname: "server1"},
 				{Hostname: "server2"},
 			},
@@ -72,19 +72,21 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 				r, ok := resp.(gen.GetNode200JSONResponse)
 				s.True(ok)
 				s.Equal(2, r.Total)
-				s.Len(r.Workers, 2)
-				s.Equal("server1", r.Workers[0].Hostname)
-				s.Equal("server2", r.Workers[1].Hostname)
+				s.Require().NotNil(r.Agents)
+				s.Len(*r.Agents, 2)
+				s.Equal("server1", (*r.Agents)[0].Hostname)
+				s.Equal("server2", (*r.Agents)[1].Hostname)
 			},
 		},
 		{
-			name:        "success with no workers",
-			mockWorkers: []jobtypes.AgentInfo{},
+			name:       "success with no agents",
+			mockAgents: []jobtypes.AgentInfo{},
 			validateFunc: func(resp gen.GetNodeResponseObject) {
 				r, ok := resp.(gen.GetNode200JSONResponse)
 				s.True(ok)
 				s.Equal(0, r.Total)
-				s.Empty(r.Workers)
+				s.Require().NotNil(r.Agents)
+				s.Empty(*r.Agents)
 			},
 		},
 		{
@@ -101,7 +103,7 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
 				ListAgents(gomock.Any()).
-				Return(tt.mockWorkers, tt.mockError)
+				Return(tt.mockAgents, tt.mockError)
 
 			resp, err := s.handler.GetNode(s.ctx, gen.GetNodeRequestObject{})
 			s.NoError(err)

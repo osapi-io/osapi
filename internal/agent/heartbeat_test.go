@@ -110,7 +110,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			name: "when Put fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
@@ -118,7 +118,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			name: "when Put succeeds writes registration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 		},
@@ -130,7 +130,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			s.agent.writeRegistration(context.Background(), "test-worker")
+			s.agent.writeRegistration(context.Background(), "test-agent")
 		})
 	}
 }
@@ -144,7 +144,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 			name: "when Delete fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_worker").
+					Delete(gomock.Any(), "agents.test_agent").
 					Return(errors.New("delete failed"))
 			},
 		},
@@ -152,7 +152,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 			name: "when Delete succeeds logs deregistration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_worker").
+					Delete(gomock.Any(), "agents.test_agent").
 					Return(nil)
 			},
 		},
@@ -161,7 +161,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			s.agent.deregister("test-worker")
+			s.agent.deregister("test-agent")
 		})
 	}
 }
@@ -176,13 +176,13 @@ func (s *HeartbeatTestSuite) TestStartHeartbeatRefresh() {
 			setupMock: func() {
 				// Initial write + at least 1 ticker refresh
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 
 				// Deregister on cancel
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_worker").
+					Delete(gomock.Any(), "agents.test_agent").
 					Return(nil).
 					Times(1)
 			},
@@ -196,7 +196,7 @@ func (s *HeartbeatTestSuite) TestStartHeartbeatRefresh() {
 			heartbeatInterval = 10 * time.Millisecond
 
 			ctx, cancel := context.WithCancel(context.Background())
-			s.agent.startHeartbeat(ctx, "test-worker")
+			s.agent.startHeartbeat(ctx, "test-agent")
 
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)

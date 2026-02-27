@@ -20,6 +20,12 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AgentInfo defines model for AgentInfo.
+type AgentInfo struct {
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+}
+
 // DiskResponse Local disk usage information.
 type DiskResponse struct {
 	// Free Free disk space in bytes.
@@ -62,9 +68,10 @@ type HostnameResponse struct {
 
 // ListAgentsResponse defines model for ListAgentsResponse.
 type ListAgentsResponse struct {
-	// Total Total number of active workers.
-	Total   int          `json:"total"`
-	Workers []AgentInfo `json:"workers"`
+	Agents *[]AgentInfo `json:"agents,omitempty"`
+
+	// Total Total number of active agents.
+	Total int `json:"total"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
@@ -131,12 +138,6 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
-// AgentInfo defines model for AgentInfo.
-type AgentInfo struct {
-	// Hostname The hostname of the worker.
-	Hostname string `json:"hostname"`
-}
-
 // GetNodeHostnameParams defines parameters for GetNodeHostname.
 type GetNodeHostnameParams struct {
 	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
@@ -151,7 +152,7 @@ type GetNodeStatusParams struct {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// List active workers
+	// List active agents
 	// (GET /node)
 	GetNode(ctx echo.Context) error
 	// Retrieve node hostname
@@ -403,7 +404,7 @@ func (response GetNodeStatus500JSONResponse) VisitGetNodeStatusResponse(w http.R
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// List active workers
+	// List active agents
 	// (GET /node)
 	GetNode(ctx context.Context, request GetNodeRequestObject) (GetNodeResponseObject, error)
 	// Retrieve node hostname

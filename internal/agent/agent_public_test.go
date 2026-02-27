@@ -30,9 +30,9 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/agent"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
@@ -64,7 +64,7 @@ func (s *AgentPublicTestSuite) SetupTest() {
 		},
 		Node: config.Node{
 			Agent: config.NodeAgent{
-				Hostname:   "test-worker",
+				Hostname:   "test-agent",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
 				Consumer: config.NodeAgentConsumer{

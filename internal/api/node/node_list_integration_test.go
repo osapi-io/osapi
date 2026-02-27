@@ -68,7 +68,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 		wantContains []string
 	}{
 		{
-			name: "when workers exist returns worker list",
+			name: "when agents exist returns agent list",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
@@ -83,7 +83,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 			wantContains: []string{`"total":2`, `"server1"`, `"server2"`},
 		},
 		{
-			name: "when no workers returns empty list",
+			name: "when no agents returns empty list",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().

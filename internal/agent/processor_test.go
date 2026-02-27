@@ -64,7 +64,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		},
 		Node: config.Node{
 			Agent: config.NodeAgent{
-				Hostname:   "test-worker",
+				Hostname:   "test-agent",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
 			},
@@ -625,9 +625,9 @@ func (s *ProcessorTestSuite) TestProviderFactoryMethods() {
 
 func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 	tests := []struct {
-		name         string
-		operation    string
-		errorMsg     string
+		name        string
+		operation   string
+		errorMsg    string
 		createAgent func() *Agent
 	}{
 		{
@@ -799,11 +799,11 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 
 func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 	tests := []struct {
-		name         string
-		operation    string
-		jobType      job.Type
-		data         string
-		errorMsg     string
+		name        string
+		operation   string
+		jobType     job.Type
+		data        string
+		errorMsg    string
 		createAgent func() *Agent
 	}{
 		{

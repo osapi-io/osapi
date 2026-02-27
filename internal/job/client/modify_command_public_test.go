@@ -285,14 +285,14 @@ func (s *ModifyCommandPublicTestSuite) TestModifyCommandExecBroadcast() {
 			errorContains: "failed to collect broadcast responses",
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 		{
 			name:    "unmarshal error in broadcast response",

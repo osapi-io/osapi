@@ -39,7 +39,7 @@ import (
 // factoryHostInfoFn is the function used to get host info (injectable for testing).
 var factoryHostInfoFn = host.Info
 
-// ProviderFactory creates platform-specific providers for the worker.
+// ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
 }
@@ -53,7 +53,7 @@ func NewProviderFactory(
 	}
 }
 
-// CreateProviders creates all providers needed for the worker.
+// CreateProviders creates all providers needed for the agent.
 func (f *ProviderFactory) CreateProviders() (
 	nodeHost.Provider,
 	disk.Provider,

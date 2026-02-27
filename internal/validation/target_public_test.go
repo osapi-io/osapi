@@ -110,7 +110,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			wantOK: true,
 		},
 		{
-			name: "when target label does not match any worker",
+			name: "when target label does not match any agent",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
 					func(_ context.Context) ([]validation.AgentTarget, error) {
@@ -200,7 +200,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			wantOK: false,
 		},
 		{
-			name: "when target is a known worker hostname",
+			name: "when target is a known agent hostname",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
 					func(_ context.Context) ([]validation.AgentTarget, error) {
@@ -228,7 +228,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			},
 			input:    targetInput{Target: "nonexistent"},
 			wantOK:   false,
-			contains: []string{"valid_target", "target worker", "nonexistent", "not found"},
+			contains: []string{"valid_target", "target agent", "nonexistent", "not found"},
 		},
 		{
 			name: "when lister returns error for hostname",

@@ -184,7 +184,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 		mockError     error
 		expectError   bool
 		errorContains string
-		validateFunc  func(result string, worker *job.AgentInfo)
+		validateFunc  func(result string, agent *job.AgentInfo)
 	}{
 		{
 			name:     "success",
@@ -202,11 +202,11 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 				"hostname": "worker1",
 				"data": {"hostname": "server1.example.com", "labels": {"group": "web", "env": "prod"}}
 			}`,
-			validateFunc: func(result string, worker *job.AgentInfo) {
+			validateFunc: func(result string, agent *job.AgentInfo) {
 				s.Equal("server1.example.com", result)
-				s.Require().NotNil(worker)
-				s.Equal("worker1", worker.Hostname)
-				s.Equal(map[string]string{"group": "web", "env": "prod"}, worker.Labels)
+				s.Require().NotNil(agent)
+				s.Equal("worker1", agent.Hostname)
+				s.Equal(map[string]string{"group": "web", "env": "prod"}, agent.Labels)
 			},
 		},
 		{
@@ -260,12 +260,12 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 				tt.mockError,
 			)
 
-			_, result, worker, err := s.jobsClient.QueryNodeHostname(s.ctx, tt.hostname)
+			_, result, agent, err := s.jobsClient.QueryNodeHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
-				s.Nil(worker)
+				s.Nil(agent)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}
@@ -274,7 +274,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 			}
 
 			if tt.validateFunc != nil {
-				tt.validateFunc(result, worker)
+				tt.validateFunc(result, agent)
 			}
 		})
 	}
@@ -668,12 +668,12 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				tt.opts,
 			)
 
-			_, result, worker, err := jobsClient.QueryNodeHostname(s.ctx, "server1")
+			_, result, agent, err := jobsClient.QueryNodeHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
-				s.Nil(worker)
+				s.Nil(agent)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}
@@ -716,14 +716,14 @@ func (s *QueryPublicTestSuite) TestQueryNodeStatusAll() {
 			expectedCount: 1,
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 		{
 			name: "KV put fails",
@@ -898,14 +898,14 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostnameAll() {
 			errorContains: "failed to collect broadcast responses",
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 	}
 
@@ -1155,7 +1155,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			expectedCount: 0,
 		},
 		{
-			name:          "when workers exist returns worker list",
+			name:          "when agents exist returns agent list",
 			useRegistryKV: true,
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().

@@ -32,15 +32,15 @@ import (
 // clientNodeListCmd represents the clientNodeList command.
 var clientNodeListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List active workers",
-	Long: `Discover all active workers by broadcasting a hostname query
-and collecting responses. Shows each worker's hostname.`,
+	Short: "List active agents",
+	Long: `Discover all active agents by broadcasting a hostname query
+and collecting responses. Shows each agent's hostname.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Node.Workers(ctx)
+		resp, err := sdkClient.Node.Agents(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to list workers", err)
+			cli.LogFatal(logger, "failed to list agents", err)
 		}
 
 		switch resp.StatusCode() {
@@ -51,23 +51,23 @@ and collecting responses. Shows each worker's hostname.`,
 			}
 
 			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("workers response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("agents response was nil"))
 			}
 
-			workers := resp.JSON200.Workers
-			if len(workers) == 0 {
-				fmt.Println("No active workers found.")
+			agents := resp.JSON200.Agents
+			if len(agents) == 0 {
+				fmt.Println("No active agents found.")
 				return
 			}
 
-			rows := make([][]string, 0, len(workers))
-			for _, w := range workers {
-				rows = append(rows, []string{w.Hostname})
+			rows := make([][]string, 0, len(agents))
+			for _, a := range agents {
+				rows = append(rows, []string{a.Hostname})
 			}
 
 			sections := []cli.Section{
 				{
-					Title:   fmt.Sprintf("Active Workers (%d)", resp.JSON200.Total),
+					Title:   fmt.Sprintf("Active Agents (%d)", resp.JSON200.Total),
 					Headers: []string{"HOSTNAME"},
 					Rows:    rows,
 				},

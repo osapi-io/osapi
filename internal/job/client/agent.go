@@ -84,7 +84,7 @@ func (c *Client) WriteStatusEvent(
 	return nil
 }
 
-// WriteJobResponse stores worker response data for a job.
+// WriteJobResponse stores agent response data for a job.
 func (c *Client) WriteJobResponse(
 	_ context.Context,
 	jobID, hostname string,

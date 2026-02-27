@@ -66,7 +66,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		},
 		Node: config.Node{
 			Agent: config.NodeAgent{
-				Hostname:   "test-worker",
+				Hostname:   "test-agent",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
 			},
@@ -135,7 +135,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 			name:  "successful status event write",
 			jobID: "test-job-123",
 			event: "started",
-			data:  map[string]interface{}{"worker_version": "1.0.0", "pid": 12345},
+			data:  map[string]interface{}{"agent_version": "1.0.0", "pid": 12345},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), "test-job-123", "started", gomock.Any(), gomock.Any()).
@@ -211,7 +211,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "successful job processing",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("test-job-123"),
 			},
 			setupMocks: func() {
@@ -249,7 +249,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "job processing with failure",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("test-job-456"),
 			},
 			setupMocks: func() {
@@ -300,7 +300,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "job not found",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("nonexistent-job"),
 			},
 			setupMocks: func() {
@@ -314,7 +314,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "invalid job data format",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("invalid-job"),
 			},
 			setupMocks: func() {
@@ -328,7 +328,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "missing job ID",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("missing-id-job"),
 			},
 			setupMocks: func() {
@@ -347,7 +347,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "missing operation",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("missing-op-job"),
 			},
 			setupMocks: func() {
@@ -363,7 +363,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "missing operation type",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("missing-type-job"),
 			},
 			setupMocks: func() {
@@ -382,7 +382,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "invalid operation type format",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("invalid-type-job"),
 			},
 			setupMocks: func() {
@@ -402,7 +402,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "acknowledged write error logged",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("ack-err-job"),
 			},
 			setupMocks: func() {
@@ -437,7 +437,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "started write error logged",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("start-err-job"),
 			},
 			setupMocks: func() {
@@ -472,7 +472,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "completed write error logged",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("comp-err-job"),
 			},
 			setupMocks: func() {
@@ -507,7 +507,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "failed write error logged",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("fail-err-job"),
 			},
 			setupMocks: func() {
@@ -543,7 +543,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		{
 			name: "response storage failure",
 			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-worker",
+				subject: "jobs.query.test-agent",
 				data:    []byte("storage-fail-job"),
 			},
 			setupMocks: func() {
@@ -608,7 +608,7 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 	}{
 		{
 			name:    "modify job type identification",
-			subject: "jobs.modify.test-worker",
+			subject: "jobs.modify.test-agent",
 			jobData: `{
 				"id": "modify-job-123",
 				"operation": {

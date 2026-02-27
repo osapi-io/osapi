@@ -83,7 +83,7 @@ type Response struct {
 	// Changed indicates whether the operation modified system state.
 	// Nil for query operations; set for mutation operations.
 	Changed *bool `json:"changed,omitempty"`
-	// Hostname identifies which worker processed this job.
+	// Hostname identifies which agent processed this job.
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
 	Timestamp time.Time `json:"timestamp"`
@@ -119,7 +119,7 @@ const (
 	OperationNodeReboot   = "node.reboot.execute"
 )
 
-// Command operations - execute arbitrary commands on workers
+// Command operations - execute arbitrary commands on agents
 const (
 	OperationCommandExecExecute  = "command.exec.execute"
 	OperationCommandShellExecute = "command.shell.execute"
@@ -152,19 +152,19 @@ type QueuedJob struct {
 	Result json.RawMessage `json:"result,omitempty"`
 	// Error contains error details if the job failed (optional)
 	Error string `json:"error,omitempty"`
-	// Hostname identifies which worker processed this job (optional)
+	// Hostname identifies which agent processed this job (optional)
 	Hostname string `json:"hostname,omitempty"`
 	// UpdatedAt is the timestamp when the job was last updated (optional)
 	UpdatedAt string `json:"updated_at,omitempty"`
-	// AgentStates contains detailed state for each worker that processed this job
-	AgentStates map[string]AgentState `json:"worker_states,omitempty"`
+	// AgentStates contains detailed state for each agent that processed this job
+	AgentStates map[string]AgentState `json:"agent_states,omitempty"`
 	// Timeline contains the chronological sequence of events for this job
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
-	// Responses contains the actual response data from each worker
+	// Responses contains the actual response data from each agent
 	Responses map[string]Response `json:"responses,omitempty"`
 }
 
-// AgentState represents the state of a specific worker processing a job
+// AgentState represents the state of a specific agent processing a job
 type AgentState struct {
 	Status    string    `json:"status"`
 	Error     string    `json:"error,omitempty"`
@@ -249,21 +249,21 @@ type NodeShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
-// AgentRegistration represents a worker's registration entry in the KV registry.
+// AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
-	// Hostname is the hostname of the worker.
+	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
-	// Labels are the key-value labels configured on the worker.
+	// Labels are the key-value labels configured on the agent.
 	Labels map[string]string `json:"labels,omitempty"`
-	// RegisteredAt is the timestamp when the worker last registered.
+	// RegisteredAt is the timestamp when the agent last registered.
 	RegisteredAt time.Time `json:"registered_at"`
 }
 
-// AgentInfo represents basic information about an active worker.
+// AgentInfo represents basic information about an active agent.
 type AgentInfo struct {
-	// Hostname is the hostname of the worker.
+	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
-	// Labels are the key-value labels configured on the worker.
+	// Labels are the key-value labels configured on the agent.
 	Labels map[string]string `json:"labels,omitempty"`
 }
 

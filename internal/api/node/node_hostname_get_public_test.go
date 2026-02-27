@@ -93,7 +93,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
-			name:    "empty hostname falls back to worker hostname",
+			name:    "empty hostname falls back to agent hostname",
 			request: gen.GetNodeHostnameRequestObject{},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().

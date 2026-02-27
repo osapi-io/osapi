@@ -26,12 +26,12 @@ import (
 	"github.com/retr0h/osapi/internal/api/node/gen"
 )
 
-// GetNode discovers all active workers in the fleet.
+// GetNode discovers all active agents in the fleet.
 func (s *Node) GetNode(
 	ctx context.Context,
 	_ gen.GetNodeRequestObject,
 ) (gen.GetNodeResponseObject, error) {
-	workers, err := s.JobClient.ListAgents(ctx)
+	agents, err := s.JobClient.ListAgents(ctx)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNode500JSONResponse{
@@ -39,17 +39,17 @@ func (s *Node) GetNode(
 		}, nil
 	}
 
-	workerInfos := make([]gen.AgentInfo, 0, len(workers))
-	for _, w := range workers {
-		workerInfos = append(workerInfos, gen.AgentInfo{
-			Hostname: w.Hostname,
+	agentInfos := make([]gen.AgentInfo, 0, len(agents))
+	for _, a := range agents {
+		agentInfos = append(agentInfos, gen.AgentInfo{
+			Hostname: a.Hostname,
 		})
 	}
 
-	total := len(workerInfos)
+	total := len(agentInfos)
 
 	return gen.GetNode200JSONResponse{
-		Workers: workerInfos,
-		Total:   total,
+		Agents: &agentInfos,
+		Total:  total,
 	}, nil
 }

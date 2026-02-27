@@ -272,7 +272,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 		expectedErr    string
 		expectedStatus string
 		expectedError  string
-		workerCount    int
+		agentCount     int
 		responseCount  int
 		setupMocks     func()
 		validateFunc   func(qj *job.QueuedJob)
@@ -315,7 +315,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			},
 		},
 		{
-			name:  "completed worker with response",
+			name:  "completed agent with response",
 			jobID: "job-1",
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -367,11 +367,11 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(respEntry, nil)
 			},
 			expectedStatus: "completed",
-			workerCount:    1,
+			agentCount:     1,
 			responseCount:  1,
 		},
 		{
-			name:  "failed worker with error",
+			name:  "failed agent with error",
 			jobID: "job-1",
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -405,10 +405,10 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			},
 			expectedStatus: "failed",
 			expectedError:  "disk full",
-			workerCount:    1,
+			agentCount:     1,
 		},
 		{
-			name:  "partial failure with multiple workers",
+			name:  "partial failure with multiple agents",
 			jobID: "job-1",
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -441,7 +441,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(failEntry, nil)
 			},
 			expectedStatus: "partial_failure",
-			workerCount:    2,
+			agentCount:     2,
 		},
 		{
 			name:  "processing state",
@@ -477,7 +477,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(startEntry, nil)
 			},
 			expectedStatus: "processing",
-			workerCount:    1,
+			agentCount:     1,
 		},
 		{
 			name:  "event get error skipped gracefully",
@@ -611,10 +611,10 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(startEntry, nil)
 			},
 			expectedStatus: "processing",
-			workerCount:    1,
+			agentCount:     1,
 		},
 		{
-			name:  "acknowledged only worker shows processing",
+			name:  "acknowledged only agent shows processing",
 			jobID: "job-1",
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -637,7 +637,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(ackEntry, nil)
 			},
 			expectedStatus: "processing",
-			workerCount:    1,
+			agentCount:     1,
 		},
 		{
 			name:  "redelivered job has positive duration",
@@ -693,7 +693,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			},
 			expectedStatus: "failed",
 			expectedError:  "attempt 2",
-			workerCount:    1,
+			agentCount:     1,
 			validateFunc: func(qj *job.QueuedJob) {
 				ws := qj.AgentStates["worker1"]
 				// Duration should span from first start to last failure (60s)
@@ -736,7 +736,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(compEntry, nil)
 			},
 			expectedStatus: "completed",
-			workerCount:    1,
+			agentCount:     1,
 			validateFunc: func(qj *job.QueuedJob) {
 				ws := qj.AgentStates["worker1"]
 				s.Equal("45ms", ws.Duration)
@@ -786,8 +786,8 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				if tt.expectedError != "" {
 					s.Equal(tt.expectedError, jobStatus.Error)
 				}
-				if tt.workerCount > 0 {
-					s.Len(jobStatus.AgentStates, tt.workerCount)
+				if tt.agentCount > 0 {
+					s.Len(jobStatus.AgentStates, tt.agentCount)
 				}
 				if tt.responseCount > 0 {
 					s.Len(jobStatus.Responses, tt.responseCount)

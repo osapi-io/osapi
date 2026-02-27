@@ -90,12 +90,12 @@ func (c *Client) QueryNodeHostname(
 		return "", "", nil, fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	worker := &job.AgentInfo{
+	agent := &job.AgentInfo{
 		Hostname: resp.Hostname,
 		Labels:   result.Labels,
 	}
 
-	return jobID, result.Hostname, worker, nil
+	return jobID, result.Hostname, agent, nil
 }
 
 // QueryNetworkDNS queries DNS configuration from a specific hostname.
@@ -399,7 +399,7 @@ func (c *Client) ListAgents(
 		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
-	workers := make([]job.AgentInfo, 0, len(keys))
+	agents := make([]job.AgentInfo, 0, len(keys))
 	for _, key := range keys {
 		entry, err := c.registryKV.Get(ctx, key)
 		if err != nil {
@@ -411,11 +411,11 @@ func (c *Client) ListAgents(
 			continue
 		}
 
-		workers = append(workers, job.AgentInfo{
+		agents = append(agents, job.AgentInfo{
 			Hostname: reg.Hostname,
 			Labels:   reg.Labels,
 		})
 	}
 
-	return workers, nil
+	return agents, nil
 }

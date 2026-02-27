@@ -271,16 +271,16 @@ func (c *Client) GetJobStatus(
 	responses := c.getJobResponses(ctx, statusKeys, jobID)
 
 	queuedJob := &job.QueuedJob{
-		ID:           jobID,
-		Status:       computedStatus.Status,
-		Created:      getStringField(jobData, "created"),
-		Subject:      getStringField(jobData, "subject"),
-		Hostname:     computedStatus.Hostname,
-		Error:        computedStatus.Error,
-		UpdatedAt:    computedStatus.UpdatedAt,
+		ID:          jobID,
+		Status:      computedStatus.Status,
+		Created:     getStringField(jobData, "created"),
+		Subject:     getStringField(jobData, "subject"),
+		Hostname:    computedStatus.Hostname,
+		Error:       computedStatus.Error,
+		UpdatedAt:   computedStatus.UpdatedAt,
 		AgentStates: computedStatus.AgentStates,
-		Timeline:     computedStatus.Timeline,
-		Responses:    responses,
+		Timeline:    computedStatus.Timeline,
+		Responses:   responses,
 	}
 
 	if operation, ok := jobData["operation"].(map[string]interface{}); ok {
@@ -475,16 +475,16 @@ func (c *Client) getJobStatusFromKeys(
 	responses := c.getJobResponses(ctx, allKeys, jobID)
 
 	queuedJob := &job.QueuedJob{
-		ID:           jobID,
-		Status:       computedStatus.Status,
-		Created:      getStringField(jobData, "created"),
-		Subject:      getStringField(jobData, "subject"),
-		Hostname:     computedStatus.Hostname,
-		Error:        computedStatus.Error,
-		UpdatedAt:    computedStatus.UpdatedAt,
+		ID:          jobID,
+		Status:      computedStatus.Status,
+		Created:     getStringField(jobData, "created"),
+		Subject:     getStringField(jobData, "subject"),
+		Hostname:    computedStatus.Hostname,
+		Error:       computedStatus.Error,
+		UpdatedAt:   computedStatus.UpdatedAt,
 		AgentStates: computedStatus.AgentStates,
-		Timeline:     computedStatus.Timeline,
-		Responses:    responses,
+		Timeline:    computedStatus.Timeline,
+		Responses:   responses,
 	}
 
 	if operation, ok := jobData["operation"].(map[string]interface{}); ok {
@@ -519,9 +519,9 @@ func (c *Client) computeStatusFromEvents(
 	jobID string,
 ) computedJobStatus {
 	result := computedJobStatus{
-		Status:       "submitted", // Default if no events
+		Status:      "submitted", // Default if no events
 		AgentStates: make(map[string]job.AgentState),
-		Timeline:     []job.TimelineEvent{},
+		Timeline:    []job.TimelineEvent{},
 	}
 
 	// Filter keys to only status events for this job

@@ -33,8 +33,8 @@ tags:
 paths:
   /node:
     get:
-      summary: List active workers
-      description: Discover all active workers in the fleet.
+      summary: List active agents
+      description: Discover all active agents in the fleet.
       tags:
         - node_operations
       security:
@@ -42,11 +42,11 @@ paths:
             - node:read
       responses:
         '200':
-          description: List of active workers.
+          description: List of active agents.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListWorkersResponse'
+                $ref: '#/components/schemas/ListAgentsResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -181,26 +181,26 @@ components:
     ErrorResponse:
       $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-    ListWorkersResponse:
+    ListAgentsResponse:
       type: object
       properties:
-        workers:
+        agents:
           type: array
           items:
-            $ref: '#/components/schemas/WorkerInfo'
+            $ref: '#/components/schemas/AgentInfo'
         total:
           type: integer
-          description: Total number of active workers.
+          description: Total number of active agents.
       required:
         - workers
         - total
 
-    WorkerInfo:
+    AgentInfo:
       type: object
       properties:
         hostname:
           type: string
-          description: The hostname of the worker.
+          description: The hostname of the agent.
       required:
         - hostname
 

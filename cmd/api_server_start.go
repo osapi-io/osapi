@@ -96,7 +96,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		nc, jobsKV := connectNATSAndKV(ctx, kvBucket)
 
-		// Create registry KV bucket for worker discovery
+		// Create registry KV bucket for agent discovery
 		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
 		registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
 		if err != nil {
@@ -115,15 +115,15 @@ var apiServerStartCmd = &cobra.Command{
 
 		validation.RegisterTargetValidator(
 			func(ctx context.Context) ([]validation.AgentTarget, error) {
-				workers, err := jc.ListAgents(ctx)
+				agents, err := jc.ListAgents(ctx)
 				if err != nil {
 					return nil, err
 				}
-				targets := make([]validation.AgentTarget, 0, len(workers))
-				for _, w := range workers {
+				targets := make([]validation.AgentTarget, 0, len(agents))
+				for _, a := range agents {
 					targets = append(targets, validation.AgentTarget{
-						Hostname: w.Hostname,
-						Labels:   w.Labels,
+						Hostname: a.Hostname,
+						Labels:   a.Labels,
 					})
 				}
 				return targets, nil

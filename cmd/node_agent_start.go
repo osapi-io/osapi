@@ -27,10 +27,10 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
+	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/telemetry"
 )

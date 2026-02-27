@@ -173,7 +173,7 @@ type JobClient interface {
 		timeout int,
 	) (string, map[string]*command.Result, map[string]string, error)
 
-	// Worker discovery
+	// Agent discovery
 	ListAgents(
 		ctx context.Context,
 	) ([]job.AgentInfo, error)
@@ -191,7 +191,7 @@ type JobClient interface {
 		targetHostname string,
 	) (*CreateJobResult, error)
 
-	// Worker operations - used by job workers for processing
+	// Agent operations - used by agents for processing
 	WriteStatusEvent(
 		ctx context.Context,
 		jobID string,
@@ -242,12 +242,12 @@ type ListJobsResult struct {
 
 // computedJobStatus represents the computed status from events
 type computedJobStatus struct {
-	Status       string
-	Error        string
-	Hostname     string
-	UpdatedAt    string
+	Status      string
+	Error       string
+	Hostname    string
+	UpdatedAt   string
 	AgentStates map[string]job.AgentState
-	Timeline     []job.TimelineEvent
+	Timeline    []job.TimelineEvent
 }
 
 // Ensure Client implements JobClient interface

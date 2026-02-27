@@ -65,7 +65,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		},
 		Node: config.Node{
 			Agent: config.NodeAgent{
-				Hostname:   "test-worker",
+				Hostname:   "test-agent",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
 				Consumer: config.NodeAgentConsumer{
@@ -118,7 +118,7 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 	}{
 		{
 			name:     "successful query job consumption",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// Expect consumer creation for all 3 query patterns
 				s.mockJobClient.EXPECT().
@@ -136,7 +136,7 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 		},
 		{
 			name:     "consumer creation failure",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// Fail all consumer creations
 				s.mockJobClient.EXPECT().
@@ -150,7 +150,7 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 		},
 		{
 			name:     "partial consumer creation failure",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// First consumer succeeds
 				s.mockJobClient.EXPECT().
@@ -190,7 +190,7 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 		},
 		{
 			name:     "consume error logged",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
@@ -206,7 +206,7 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 		},
 		{
 			name:     "with labels creates extra consumers",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
 				s.mockJobClient.EXPECT().
@@ -262,7 +262,7 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 	}{
 		{
 			name:     "successful modify job consumption",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// Expect consumer creation for all 3 modify patterns
 				s.mockJobClient.EXPECT().
@@ -280,7 +280,7 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 		},
 		{
 			name:     "consumer creation failure",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// Fail all consumer creations
 				s.mockJobClient.EXPECT().
@@ -292,7 +292,7 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 		},
 		{
 			name:     "hostname with special characters",
-			hostname: "test-worker.domain.com",
+			hostname: "test-agent.domain.com",
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
@@ -308,7 +308,7 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 		},
 		{
 			name:     "consume error logged",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
@@ -324,7 +324,7 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 		},
 		{
 			name:     "with labels creates extra consumers",
-			hostname: "test-worker",
+			hostname: "test-agent",
 			setupMocks: func() {
 				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
 				s.mockJobClient.EXPECT().
@@ -488,7 +488,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			// Update worker config for this test
+			// Update agent config for this test
 			s.agent.appConfig.Node.Agent.Consumer = tt.config
 
 			tt.setupMocks()
@@ -522,7 +522,7 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 		{
 			name:       "successful message handling",
 			msgData:    []byte("test-job-key"),
-			msgSubject: "jobs.query.test-worker",
+			msgSubject: "jobs.query.test-agent",
 			setupMocks: func() {
 				// Mock successful job data retrieval and processing
 				s.mockJobClient.EXPECT().
@@ -558,7 +558,7 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 		{
 			name:       "job processing failure",
 			msgData:    []byte("failed-job-key"),
-			msgSubject: "jobs.query.test-worker",
+			msgSubject: "jobs.query.test-agent",
 			setupMocks: func() {
 				// Mock job data retrieval failure
 				s.mockJobClient.EXPECT().

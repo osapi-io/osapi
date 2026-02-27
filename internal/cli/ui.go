@@ -486,12 +486,12 @@ func DisplayJobDetailResponse(
 	}
 
 	// Add agent summary from agent_states
-	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
+	if resp.AgentStates != nil && len(*resp.AgentStates) > 0 {
 		completed := 0
 		failed := 0
 		processing := 0
 
-		for _, state := range *resp.WorkerStates {
+		for _, state := range *resp.AgentStates {
 			if state.Status != nil {
 				switch *state.Status {
 				case "completed":
@@ -504,7 +504,7 @@ func DisplayJobDetailResponse(
 			}
 		}
 
-		total := len(*resp.WorkerStates)
+		total := len(*resp.AgentStates)
 		if total > 1 {
 			PrintKV("Agents", fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
@@ -552,16 +552,16 @@ func DisplayJobDetailResponse(
 		}
 
 		sections = append(sections, Section{
-			Title:   "Worker Responses",
+			Title:   "Agent Responses",
 			Headers: []string{"HOSTNAME", "STATUS", "DATA", "ERROR"},
 			Rows:    responseRows,
 		})
 	}
 
 	// Display agent states (for broadcast jobs)
-	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
-		stateRows := make([][]string, 0, len(*resp.WorkerStates))
-		for hostname, state := range *resp.WorkerStates {
+	if resp.AgentStates != nil && len(*resp.AgentStates) > 0 {
+		stateRows := make([][]string, 0, len(*resp.AgentStates))
+		for hostname, state := range *resp.AgentStates {
 			status := SafeString(state.Status)
 			duration := SafeString(state.Duration)
 			errMsg := ""
@@ -573,7 +573,7 @@ func DisplayJobDetailResponse(
 		}
 
 		sections = append(sections, Section{
-			Title:   "Worker States",
+			Title:   "Agent States",
 			Headers: []string{"HOSTNAME", "STATUS", "DURATION", "ERROR"},
 			Rows:    stateRows,
 		})
