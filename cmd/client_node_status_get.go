@@ -52,7 +52,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("system data response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("node status response was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {

@@ -51,7 +51,7 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 			}
 
 			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("system data response was nil"))
+				cli.LogFatal(logger, "failed response", fmt.Errorf("node hostname response was nil"))
 			}
 
 			if resp.JSON200.JobId != nil {

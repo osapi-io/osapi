@@ -93,7 +93,7 @@ func (s *HandlerPublicTestSuite) TestGetNodeHandler() {
 		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name: "returns system handler functions",
+			name: "returns handler functions",
 			validate: func(handlers []func(e *echo.Echo)) {
 				s.NotEmpty(handlers)
 			},
