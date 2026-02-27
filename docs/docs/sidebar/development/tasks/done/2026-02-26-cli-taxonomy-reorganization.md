@@ -1,8 +1,9 @@
 ---
 title: CLI taxonomy reorganization
-status: backlog
+status: done
 created: 2026-02-26
 updated: 2026-02-26
+completed: 2026-02-26
 ---
 
 ## Objective
