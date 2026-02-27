@@ -217,11 +217,11 @@ components:
         path:
           type: string
           description: Request URL path.
-          example: "/system/hostname"
+          example: "/node/hostname"
         operation_id:
           type: string
           description: OpenAPI operation ID.
-          example: "GetSystemHostname"
+          example: "GetNodeHostname"
         source_ip:
           type: string
           description: Client IP address.

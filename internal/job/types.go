@@ -267,9 +267,9 @@ type WorkerInfo struct {
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
-// SystemStatusResponse aggregates system status information from multiple providers.
+// NodeStatusResponse aggregates system status information from multiple providers.
 // This represents the response for node.status.get operations in the job queue.
-type SystemStatusResponse struct {
+type NodeStatusResponse struct {
 	// Hostname from the host provider
 	Hostname string `json:"hostname"`
 	// Uptime from the host provider

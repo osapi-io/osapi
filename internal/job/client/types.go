@@ -58,17 +58,17 @@ type JobClient interface {
 	QueryNodeStatus(
 		ctx context.Context,
 		hostname string,
-	) (string, *job.SystemStatusResponse, error)
+	) (string, *job.NodeStatusResponse, error)
 	QueryNodeStatusAny(
 		ctx context.Context,
-	) (string, *job.SystemStatusResponse, error)
+	) (string, *job.NodeStatusResponse, error)
 	QueryNodeStatusAll(
 		ctx context.Context,
-	) (string, []*job.SystemStatusResponse, map[string]string, error)
+	) (string, []*job.NodeStatusResponse, map[string]string, error)
 	QueryNodeStatusBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, []*job.SystemStatusResponse, map[string]string, error)
+	) (string, []*job.NodeStatusResponse, map[string]string, error)
 	QueryNodeHostname(
 		ctx context.Context,
 		hostname string,

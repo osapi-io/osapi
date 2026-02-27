@@ -91,24 +91,15 @@ type MemoryResponse struct {
 	Used int `json:"used"`
 }
 
-// OSInfoResponse Operating system information.
-type OSInfoResponse struct {
-	// Distribution The name of the Linux distribution.
-	Distribution string `json:"distribution"`
-
-	// Version The version of the Linux distribution.
-	Version string `json:"version"`
-}
-
-// SystemStatusCollectionResponse defines model for SystemStatusCollectionResponse.
-type SystemStatusCollectionResponse struct {
+// NodeStatusCollectionResponse defines model for NodeStatusCollectionResponse.
+type NodeStatusCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
-	Results []SystemStatusResponse `json:"results"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []NodeStatusResponse `json:"results"`
 }
 
-// SystemStatusResponse defines model for SystemStatusResponse.
-type SystemStatusResponse struct {
+// NodeStatusResponse defines model for NodeStatusResponse.
+type NodeStatusResponse struct {
 	// Disks List of local disk usage information.
 	Disks *DisksResponse `json:"disks,omitempty"`
 
@@ -129,6 +120,15 @@ type SystemStatusResponse struct {
 
 	// Uptime The uptime of the system.
 	Uptime *string `json:"uptime,omitempty"`
+}
+
+// OSInfoResponse Operating system information.
+type OSInfoResponse struct {
+	// Distribution The name of the Linux distribution.
+	Distribution string `json:"distribution"`
+
+	// Version The version of the Linux distribution.
+	Version string `json:"version"`
 }
 
 // WorkerInfo defines model for WorkerInfo.
@@ -356,7 +356,7 @@ type GetNodeStatusResponseObject interface {
 	VisitGetNodeStatusResponse(w http.ResponseWriter) error
 }
 
-type GetNodeStatus200JSONResponse SystemStatusCollectionResponse
+type GetNodeStatus200JSONResponse NodeStatusCollectionResponse
 
 func (response GetNodeStatus200JSONResponse) VisitGetNodeStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

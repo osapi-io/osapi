@@ -92,7 +92,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemStatusCollectionResponse'
+                $ref: '#/components/schemas/NodeStatusCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -278,7 +278,7 @@ components:
       items:
         $ref: '#/components/schemas/DiskResponse'
 
-    SystemStatusResponse:
+    NodeStatusResponse:
       type: object
       properties:
         hostname:
@@ -322,7 +322,7 @@ components:
       required:
         - hostname
 
-    SystemStatusCollectionResponse:
+    NodeStatusCollectionResponse:
       type: object
       properties:
         job_id:
@@ -333,7 +333,7 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/SystemStatusResponse'
+            $ref: '#/components/schemas/NodeStatusResponse'
       required:
         - results
 

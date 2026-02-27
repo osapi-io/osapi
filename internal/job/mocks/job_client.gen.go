@@ -480,11 +480,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeHostnameBroadcast(arg0, arg1 inter
 }
 
 // QueryNodeStatus mocks base method.
-func (m *MockJobClient) QueryNodeStatus(arg0 context.Context, arg1 string) (string, *job.SystemStatusResponse, error) {
+func (m *MockJobClient) QueryNodeStatus(arg0 context.Context, arg1 string) (string, *job.NodeStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeStatus", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret1, _ := ret[1].(*job.NodeStatusResponse)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -496,11 +496,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeStatus(arg0, arg1 interface{}) *go
 }
 
 // QueryNodeStatusAll mocks base method.
-func (m *MockJobClient) QueryNodeStatusAll(arg0 context.Context) (string, []*job.SystemStatusResponse, map[string]string, error) {
+func (m *MockJobClient) QueryNodeStatusAll(arg0 context.Context) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeStatusAll", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret1, _ := ret[1].([]*job.NodeStatusResponse)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -513,11 +513,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeStatusAll(arg0 interface{}) *gomoc
 }
 
 // QueryNodeStatusAny mocks base method.
-func (m *MockJobClient) QueryNodeStatusAny(arg0 context.Context) (string, *job.SystemStatusResponse, error) {
+func (m *MockJobClient) QueryNodeStatusAny(arg0 context.Context) (string, *job.NodeStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeStatusAny", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret1, _ := ret[1].(*job.NodeStatusResponse)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -529,11 +529,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeStatusAny(arg0 interface{}) *gomoc
 }
 
 // QueryNodeStatusBroadcast mocks base method.
-func (m *MockJobClient) QueryNodeStatusBroadcast(arg0 context.Context, arg1 string) (string, []*job.SystemStatusResponse, map[string]string, error) {
+func (m *MockJobClient) QueryNodeStatusBroadcast(arg0 context.Context, arg1 string) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeStatusBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret1, _ := ret[1].([]*job.NodeStatusResponse)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3

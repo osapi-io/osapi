@@ -2,6 +2,8 @@ module github.com/retr0h/osapi
 
 go 1.25.0
 
+replace github.com/osapi-io/osapi-sdk => ../osapi-sdk
+
 require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0

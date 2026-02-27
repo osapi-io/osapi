@@ -58,12 +58,12 @@ func (s *Node) GetNodeStatus(
 		}, nil
 	}
 
-	resp := buildSystemStatusResponse(status)
+	resp := buildNodeStatusResponse(status)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeStatus200JSONResponse{
 		JobId:   &jobUUID,
-		Results: []gen.SystemStatusResponse{*resp},
+		Results: []gen.NodeStatusResponse{*resp},
 	}, nil
 }
 
@@ -80,13 +80,13 @@ func (s *Node) getNodeStatusBroadcast(
 		}, nil
 	}
 
-	var responses []gen.SystemStatusResponse
+	var responses []gen.NodeStatusResponse
 	for _, status := range results {
-		responses = append(responses, *buildSystemStatusResponse(status))
+		responses = append(responses, *buildNodeStatusResponse(status))
 	}
 	for host, errMsg := range errs {
 		e := errMsg
-		responses = append(responses, gen.SystemStatusResponse{
+		responses = append(responses, gen.NodeStatusResponse{
 			Hostname: host,
 			Error:    &e,
 		})
@@ -99,10 +99,10 @@ func (s *Node) getNodeStatusBroadcast(
 	}, nil
 }
 
-// buildSystemStatusResponse converts a job.SystemStatusResponse to the API response.
-func buildSystemStatusResponse(
-	status *job.SystemStatusResponse,
-) *gen.SystemStatusResponse {
+// buildNodeStatusResponse converts a job.NodeStatusResponse to the API response.
+func buildNodeStatusResponse(
+	status *job.NodeStatusResponse,
+) *gen.NodeStatusResponse {
 	disksSlice := make(gen.DisksResponse, 0, len(status.DiskUsage))
 	for _, d := range status.DiskUsage {
 		disk := gen.DiskResponse{
@@ -115,7 +115,7 @@ func buildSystemStatusResponse(
 	}
 
 	uptime := formatDuration(status.Uptime)
-	resp := gen.SystemStatusResponse{
+	resp := gen.NodeStatusResponse{
 		Hostname: status.Hostname,
 		Uptime:   &uptime,
 		Disks:    &disksSlice,

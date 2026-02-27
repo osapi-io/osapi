@@ -38,7 +38,7 @@ and collecting responses. Shows each worker's hostname.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Job.Workers(ctx)
+		resp, err := sdkClient.Node.Workers(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to list workers", err)
 		}

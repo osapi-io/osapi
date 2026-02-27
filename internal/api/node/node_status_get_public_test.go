@@ -79,7 +79,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeStatus(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.NodeStatusResponse{
 						Hostname: "test-host",
 						Uptime:   time.Hour,
 					}, nil)
@@ -124,7 +124,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 						{Hostname: "server2", Uptime: 2 * time.Hour},
 					}, map[string]string{}, nil)
@@ -141,7 +141,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 					}, map[string]string{
 						"server2": "disk full",

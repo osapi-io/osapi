@@ -92,7 +92,7 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusValidation() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNodeStatus(gomock.Any(), job.AnyHost).
-					Return("550e8400-e29b-41d4-a716-446655440000", &job.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.NodeStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
 						OSInfo: &host.OSInfo{
@@ -184,7 +184,7 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusValidation() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", []*job.SystemStatusResponse{
+					Return("550e8400-e29b-41d4-a716-446655440000", []*job.NodeStatusResponse{
 						{
 							Hostname: "server1",
 							Uptime:   time.Hour,
@@ -286,7 +286,7 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusRBAC() {
 					QueryNodeStatus(gomock.Any(), job.AnyHost).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&job.SystemStatusResponse{
+						&job.NodeStatusResponse{
 							Hostname: "default-hostname",
 							Uptime:   5 * time.Hour,
 							OSInfo: &host.OSInfo{

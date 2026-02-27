@@ -38,7 +38,7 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		resp, err := sdkClient.System.Hostname(ctx, host)
+		resp, err := sdkClient.Node.Hostname(ctx, host)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get system status endpoint", err)
 		}

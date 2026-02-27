@@ -34,7 +34,7 @@ import (
 func (c *Client) QueryNodeStatus(
 	ctx context.Context,
 	hostname string,
-) (string, *job.SystemStatusResponse, error) {
+) (string, *job.NodeStatusResponse, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -52,7 +52,7 @@ func (c *Client) QueryNodeStatus(
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result job.SystemStatusResponse
+	var result job.NodeStatusResponse
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, fmt.Errorf("failed to unmarshal status response: %w", err)
 	}
@@ -135,7 +135,7 @@ func (c *Client) QueryNetworkDNS(
 // QueryNodeStatusAny queries system status from any available host.
 func (c *Client) QueryNodeStatusAny(
 	ctx context.Context,
-) (string, *job.SystemStatusResponse, error) {
+) (string, *job.NodeStatusResponse, error) {
 	return c.QueryNodeStatus(ctx, job.AnyHost)
 }
 
@@ -144,7 +144,7 @@ func (c *Client) QueryNodeStatusAny(
 func (c *Client) QueryNodeStatusBroadcast(
 	ctx context.Context,
 	target string,
-) (string, []*job.SystemStatusResponse, map[string]string, error) {
+) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -158,7 +158,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	var results []*job.SystemStatusResponse
+	var results []*job.NodeStatusResponse
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -166,7 +166,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 			continue
 		}
 
-		var result job.SystemStatusResponse
+		var result job.NodeStatusResponse
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
@@ -184,7 +184,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 // QueryNodeStatusAll queries system status from all hosts.
 func (c *Client) QueryNodeStatusAll(
 	ctx context.Context,
-) (string, []*job.SystemStatusResponse, map[string]string, error) {
+) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	return c.QueryNodeStatusBroadcast(ctx, job.BroadcastHost)
 }
 
