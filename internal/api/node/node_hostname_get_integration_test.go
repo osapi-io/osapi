@@ -87,7 +87,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNodeHostname(gomock.Any(), job.AnyHost).
-					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", &job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", &job.AgentInfo{
 						Hostname: "worker1",
 					}, nil)
 				return mock
@@ -124,7 +124,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1"},
 						"server2": {Hostname: "host2"},
 					}, map[string]string{}, nil)
@@ -221,7 +221,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameRBAC() {
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						"test-host",
-						&job.WorkerInfo{Hostname: "worker1"},
+						&job.AgentInfo{Hostname: "worker1"},
 						nil,
 					)
 				return mock

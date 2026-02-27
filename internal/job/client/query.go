@@ -64,7 +64,7 @@ func (c *Client) QueryNodeStatus(
 func (c *Client) QueryNodeHostname(
 	ctx context.Context,
 	hostname string,
-) (string, string, *job.WorkerInfo, error) {
+) (string, string, *job.AgentInfo, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -90,7 +90,7 @@ func (c *Client) QueryNodeHostname(
 		return "", "", nil, fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	worker := &job.WorkerInfo{
+	worker := &job.AgentInfo{
 		Hostname: resp.Hostname,
 		Labels:   result.Labels,
 	}
@@ -235,7 +235,7 @@ func (c *Client) QueryNetworkPingAny(
 func (c *Client) QueryNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -249,7 +249,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*job.WorkerInfo)
+	results := make(map[string]*job.AgentInfo)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -265,7 +265,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 			continue
 		}
 
-		results[hostname] = &job.WorkerInfo{
+		results[hostname] = &job.AgentInfo{
 			Hostname: result.Hostname,
 			Labels:   result.Labels,
 		}
@@ -277,7 +277,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 // QueryNodeHostnameAll queries hostname from all hosts.
 func (c *Client) QueryNodeHostnameAll(
 	ctx context.Context,
-) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	return c.QueryNodeHostnameBroadcast(ctx, job.BroadcastHost)
 }
 
@@ -381,37 +381,37 @@ func (c *Client) QueryNetworkPingAll(
 	return c.QueryNetworkPingBroadcast(ctx, job.BroadcastHost, address)
 }
 
-// ListWorkers reads the worker registry KV bucket and returns all registered
-// workers. Workers register via heartbeat, so only live workers appear.
-func (c *Client) ListWorkers(
+// ListAgents reads the agent registry KV bucket and returns all registered
+// agents. Agents register via heartbeat, so only live agents appear.
+func (c *Client) ListAgents(
 	ctx context.Context,
-) ([]job.WorkerInfo, error) {
+) ([]job.AgentInfo, error) {
 	if c.registryKV == nil {
-		return nil, fmt.Errorf("worker registry not configured")
+		return nil, fmt.Errorf("agent registry not configured")
 	}
 
 	keys, err := c.registryKV.Keys(ctx)
 	if err != nil {
 		// Keys returns jetstream.ErrNoKeysFound when the bucket is empty.
 		if err.Error() == "nats: no keys found" {
-			return []job.WorkerInfo{}, nil
+			return []job.AgentInfo{}, nil
 		}
 		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
-	workers := make([]job.WorkerInfo, 0, len(keys))
+	workers := make([]job.AgentInfo, 0, len(keys))
 	for _, key := range keys {
 		entry, err := c.registryKV.Get(ctx, key)
 		if err != nil {
 			continue
 		}
 
-		var reg job.WorkerRegistration
+		var reg job.AgentRegistration
 		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
 			continue
 		}
 
-		workers = append(workers, job.WorkerInfo{
+		workers = append(workers, job.AgentInfo{
 			Hostname: reg.Hostname,
 			Labels:   reg.Labels,
 		})

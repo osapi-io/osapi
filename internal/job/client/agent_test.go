@@ -26,11 +26,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type WorkerTestSuite struct {
+type AgentTestSuite struct {
 	suite.Suite
 }
 
-func (s *WorkerTestSuite) TestSanitizeKeyForNATS() {
+func (s *AgentTestSuite) TestSanitizeKeyForNATS() {
 	tests := []struct {
 		name     string
 		input    string
@@ -96,6 +96,6 @@ func (s *WorkerTestSuite) TestSanitizeKeyForNATS() {
 	}
 }
 
-func TestWorkerTestSuite(t *testing.T) {
-	suite.Run(t, new(WorkerTestSuite))
+func TestAgentTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentTestSuite))
 }

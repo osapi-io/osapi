@@ -46,10 +46,10 @@ func (p gopsutilHostnameProvider) Hostname() (string, error) {
 // defaultHostnameProvider is the default provider using gopsutil
 var defaultHostnameProvider HostnameProvider = gopsutilHostnameProvider{}
 
-// GetWorkerHostname returns the hostname that should be used by workers.
+// GetAgentHostname returns the hostname that should be used by agents.
 // It first checks the configured hostname, then falls back to system hostname using gopsutil.
 // This function respects configuration while using gopsutil for system detection.
-func GetWorkerHostname(
+func GetAgentHostname(
 	configuredHostname string,
 ) (string, error) {
 	// If hostname is explicitly configured, use it
@@ -66,9 +66,9 @@ func GetWorkerHostname(
 	return hostname, nil
 }
 
-// GetWorkerHostnameWithProvider returns the hostname using the provided provider.
+// GetAgentHostnameWithProvider returns the hostname using the provided provider.
 // This allows for testing with mock providers.
-func GetWorkerHostnameWithProvider(
+func GetAgentHostnameWithProvider(
 	configuredHostname string,
 	provider HostnameProvider,
 ) (string, error) {

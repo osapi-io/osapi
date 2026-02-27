@@ -60,11 +60,11 @@ type HostnameResponse struct {
 	Labels *map[string]string `json:"labels,omitempty"`
 }
 
-// ListWorkersResponse defines model for ListWorkersResponse.
-type ListWorkersResponse struct {
+// ListAgentsResponse defines model for ListAgentsResponse.
+type ListAgentsResponse struct {
 	// Total Total number of active workers.
 	Total   int          `json:"total"`
-	Workers []WorkerInfo `json:"workers"`
+	Workers []AgentInfo `json:"workers"`
 }
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
@@ -131,8 +131,8 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
-// WorkerInfo defines model for WorkerInfo.
-type WorkerInfo struct {
+// AgentInfo defines model for AgentInfo.
+type AgentInfo struct {
 	// Hostname The hostname of the worker.
 	Hostname string `json:"hostname"`
 }
@@ -259,7 +259,7 @@ type GetNodeResponseObject interface {
 	VisitGetNodeResponse(w http.ResponseWriter) error
 }
 
-type GetNode200JSONResponse ListWorkersResponse
+type GetNode200JSONResponse ListAgentsResponse
 
 func (response GetNode200JSONResponse) VisitGetNodeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

@@ -126,7 +126,7 @@ func (s *HostnameTestSuite) TestGopsutilHostnameProviderError() {
 	}
 }
 
-func (s *HostnameTestSuite) TestGetWorkerHostnameProviderError() {
+func (s *HostnameTestSuite) TestGetAgentHostnameProviderError() {
 	tests := []struct {
 		name string
 	}{
@@ -145,7 +145,7 @@ func (s *HostnameTestSuite) TestGetWorkerHostnameProviderError() {
 				err:      errors.New("provider error"),
 			}
 
-			hostname, err := GetWorkerHostname("")
+			hostname, err := GetAgentHostname("")
 
 			s.NoError(err)
 			s.Equal("unknown", hostname)

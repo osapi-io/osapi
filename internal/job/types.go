@@ -156,16 +156,16 @@ type QueuedJob struct {
 	Hostname string `json:"hostname,omitempty"`
 	// UpdatedAt is the timestamp when the job was last updated (optional)
 	UpdatedAt string `json:"updated_at,omitempty"`
-	// WorkerStates contains detailed state for each worker that processed this job
-	WorkerStates map[string]WorkerState `json:"worker_states,omitempty"`
+	// AgentStates contains detailed state for each worker that processed this job
+	AgentStates map[string]AgentState `json:"worker_states,omitempty"`
 	// Timeline contains the chronological sequence of events for this job
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
 	// Responses contains the actual response data from each worker
 	Responses map[string]Response `json:"responses,omitempty"`
 }
 
-// WorkerState represents the state of a specific worker processing a job
-type WorkerState struct {
+// AgentState represents the state of a specific worker processing a job
+type AgentState struct {
 	Status    string    `json:"status"`
 	Error     string    `json:"error,omitempty"`
 	Duration  string    `json:"duration,omitempty"`
@@ -249,8 +249,8 @@ type NodeShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
-// WorkerRegistration represents a worker's registration entry in the KV registry.
-type WorkerRegistration struct {
+// AgentRegistration represents a worker's registration entry in the KV registry.
+type AgentRegistration struct {
 	// Hostname is the hostname of the worker.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the worker.
@@ -259,8 +259,8 @@ type WorkerRegistration struct {
 	RegisteredAt time.Time `json:"registered_at"`
 }
 
-// WorkerInfo represents basic information about an active worker.
-type WorkerInfo struct {
+// AgentInfo represents basic information about an active worker.
+type AgentInfo struct {
 	// Hostname is the hostname of the worker.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the worker.

@@ -278,7 +278,7 @@ func (c *Client) GetJobStatus(
 		Hostname:     computedStatus.Hostname,
 		Error:        computedStatus.Error,
 		UpdatedAt:    computedStatus.UpdatedAt,
-		WorkerStates: computedStatus.WorkerStates,
+		AgentStates: computedStatus.AgentStates,
 		Timeline:     computedStatus.Timeline,
 		Responses:    responses,
 	}
@@ -287,7 +287,7 @@ func (c *Client) GetJobStatus(
 		queuedJob.Operation = operation
 	}
 
-	// Populate Result from single-worker response
+	// Populate Result from single-agent response
 	if len(responses) == 1 {
 		for _, resp := range responses {
 			queuedJob.Result = resp.Data
@@ -482,7 +482,7 @@ func (c *Client) getJobStatusFromKeys(
 		Hostname:     computedStatus.Hostname,
 		Error:        computedStatus.Error,
 		UpdatedAt:    computedStatus.UpdatedAt,
-		WorkerStates: computedStatus.WorkerStates,
+		AgentStates: computedStatus.AgentStates,
 		Timeline:     computedStatus.Timeline,
 		Responses:    responses,
 	}
@@ -520,7 +520,7 @@ func (c *Client) computeStatusFromEvents(
 ) computedJobStatus {
 	result := computedJobStatus{
 		Status:       "submitted", // Default if no events
-		WorkerStates: make(map[string]job.WorkerState),
+		AgentStates: make(map[string]job.AgentState),
 		Timeline:     []job.TimelineEvent{},
 	}
 
@@ -538,11 +538,11 @@ func (c *Client) computeStatusFromEvents(
 		return result
 	}
 
-	// Track status by worker
-	workerStates := make(map[string]string)
-	workerStartTimes := make(map[string]time.Time)
-	workerEndTimes := make(map[string]time.Time)
-	workerErrors := make(map[string]string)
+	// Track status by agent
+	agentStates := make(map[string]string)
+	agentStartTimes := make(map[string]time.Time)
+	agentEndTimes := make(map[string]time.Time)
+	agentErrors := make(map[string]string)
 	var latestEvent time.Time
 	var latestError string
 	var timeline []job.TimelineEvent
@@ -581,7 +581,7 @@ func (c *Client) computeStatusFromEvents(
 		case "submitted":
 			timelineEvent.Message = "Job submitted to queue"
 		case "acknowledged":
-			timelineEvent.Message = fmt.Sprintf("Job acknowledged by worker %s", hostname)
+			timelineEvent.Message = fmt.Sprintf("Job acknowledged by agent %s", hostname)
 		case "started":
 			timelineEvent.Message = fmt.Sprintf("Job processing started on %s", hostname)
 		case "completed":
@@ -591,7 +591,7 @@ func (c *Client) computeStatusFromEvents(
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if errMsg, ok := data["error"].(string); ok {
 					timelineEvent.Error = errMsg
-					workerErrors[hostname] = errMsg
+					agentErrors[hostname] = errMsg
 					latestError = errMsg
 				}
 			}
@@ -608,20 +608,20 @@ func (c *Client) computeStatusFromEvents(
 
 		timeline = append(timeline, timelineEvent)
 
-		// Track worker state
+		// Track agent state
 		if hostname != "" && hostname != "_api" {
-			workerStates[hostname] = eventType
+			agentStates[hostname] = eventType
 
 			// Track first start time for duration calculation
 			if eventType == "started" {
-				if _, exists := workerStartTimes[hostname]; !exists {
-					workerStartTimes[hostname] = t
+				if _, exists := agentStartTimes[hostname]; !exists {
+					agentStartTimes[hostname] = t
 				}
 			}
 
 			// Track last end time for duration calculation
 			if eventType == "completed" || eventType == "failed" {
-				workerEndTimes[hostname] = t
+				agentEndTimes[hostname] = t
 				result.Hostname = hostname
 			}
 		}
@@ -643,38 +643,38 @@ func (c *Client) computeStatusFromEvents(
 	}
 	result.Timeline = timeline
 
-	// Build WorkerStates with detailed information
-	for hostname, state := range workerStates {
-		workerState := job.WorkerState{
+	// Build agent states with detailed information
+	for hostname, state := range agentStates {
+		agentState := job.AgentState{
 			Status: state,
 		}
 
-		// Add error if worker failed
-		if errorMsg, hasError := workerErrors[hostname]; hasError {
-			workerState.Error = errorMsg
+		// Add error if agent failed
+		if errorMsg, hasError := agentErrors[hostname]; hasError {
+			agentState.Error = errorMsg
 		}
 
 		// Calculate duration from first start to last end
-		if startTime, hasStart := workerStartTimes[hostname]; hasStart {
-			workerState.StartTime = startTime
+		if startTime, hasStart := agentStartTimes[hostname]; hasStart {
+			agentState.StartTime = startTime
 
-			if endTime, hasEnd := workerEndTimes[hostname]; hasEnd {
-				workerState.EndTime = endTime
+			if endTime, hasEnd := agentEndTimes[hostname]; hasEnd {
+				agentState.EndTime = endTime
 				duration := endTime.Sub(startTime)
-				workerState.Duration = duration.String()
+				agentState.Duration = duration.String()
 			}
 		}
 
-		result.WorkerStates[hostname] = workerState
+		result.AgentStates[hostname] = agentState
 	}
 
-	// Compute overall status based on worker states
+	// Compute overall status based on agent states
 	completed := 0
 	failed := 0
 	processing := 0
 	acknowledged := 0
 
-	for _, state := range workerStates {
+	for _, state := range agentStates {
 		switch state {
 		case "completed":
 			completed++
@@ -687,14 +687,14 @@ func (c *Client) computeStatusFromEvents(
 		}
 	}
 
-	totalWorkers := len(workerStates)
+	totalAgents := len(agentStates)
 
 	// Determine overall status
-	if totalWorkers == 0 {
+	if totalAgents == 0 {
 		result.Status = "submitted"
 	} else if processing > 0 || acknowledged > 0 {
 		result.Status = "processing"
-	} else if completed+failed == totalWorkers {
+	} else if completed+failed == totalAgents {
 		if failed > 0 && completed > 0 {
 			result.Status = "partial_failure"
 		} else if failed > 0 {

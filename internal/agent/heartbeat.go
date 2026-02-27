@@ -88,7 +88,7 @@ func (a *Agent) writeRegistration(
 	ctx context.Context,
 	hostname string,
 ) {
-	reg := job.WorkerRegistration{
+	reg := job.AgentRegistration{
 		Hostname:     hostname,
 		Labels:       a.appConfig.Node.Agent.Labels,
 		RegisteredAt: time.Now(),

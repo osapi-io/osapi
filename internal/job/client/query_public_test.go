@@ -184,7 +184,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 		mockError     error
 		expectError   bool
 		errorContains string
-		validateFunc  func(result string, worker *job.WorkerInfo)
+		validateFunc  func(result string, worker *job.AgentInfo)
 	}{
 		{
 			name:     "success",
@@ -202,7 +202,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 				"hostname": "worker1",
 				"data": {"hostname": "server1.example.com", "labels": {"group": "web", "env": "prod"}}
 			}`,
-			validateFunc: func(result string, worker *job.WorkerInfo) {
+			validateFunc: func(result string, worker *job.AgentInfo) {
 				s.Equal("server1.example.com", result)
 				s.Require().NotNil(worker)
 				s.Equal("worker1", worker.Hostname)
@@ -1129,7 +1129,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestListWorkers() {
+func (s *QueryPublicTestSuite) TestListAgents() {
 	tests := []struct {
 		name          string
 		setupMockKV   func(*jobmocks.MockKeyValue)
@@ -1142,7 +1142,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			name:          "when registryKV is nil returns error",
 			useRegistryKV: false,
 			expectError:   true,
-			errorContains: "worker registry not configured",
+			errorContains: "agent registry not configured",
 		},
 		{
 			name:          "when bucket is empty returns empty list",
@@ -1261,7 +1261,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 
-			result, err := jobsClient.ListWorkers(s.ctx)
+			result, err := jobsClient.ListAgents(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)

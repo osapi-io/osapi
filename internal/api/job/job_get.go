@@ -134,13 +134,13 @@ func (j *Job) GetJobByID(
 	}
 
 	// Expose worker states
-	if len(qj.WorkerStates) > 0 {
+	if len(qj.AgentStates) > 0 {
 		wsMap := make(map[string]struct {
 			Duration *string `json:"duration,omitempty"`
 			Error    *string `json:"error,omitempty"`
 			Status   *string `json:"status,omitempty"`
 		})
-		for hostname, ws := range qj.WorkerStates {
+		for hostname, ws := range qj.AgentStates {
 			entry := struct {
 				Duration *string `json:"duration,omitempty"`
 				Error    *string `json:"error,omitempty"`
@@ -156,7 +156,7 @@ func (j *Job) GetJobByID(
 			}
 			wsMap[hostname] = entry
 		}
-		resp.WorkerStates = &wsMap
+		resp.AgentStates = &wsMap
 	}
 
 	return resp, nil

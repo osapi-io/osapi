@@ -78,7 +78,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostname(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", &job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", &job.AgentInfo{
 						Hostname: "worker1",
 						Labels:   map[string]string{"group": "web"},
 					}, nil)
@@ -98,7 +98,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostname(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "", &job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", "", &job.AgentInfo{
 						Hostname: "worker1",
 					}, nil)
 			},
@@ -144,7 +144,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1", Labels: map[string]string{"group": "web"}},
 						"server2": {Hostname: "host2"},
 					}, map[string]string{}, nil)
@@ -161,7 +161,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.WorkerInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1"},
 					}, map[string]string{
 						"server2": "interface not found",

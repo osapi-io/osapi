@@ -168,7 +168,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 						Data:     json.RawMessage(`{"hostname":"server2"}`),
 					},
 				},
-				WorkerStates: map[string]jobtypes.WorkerState{
+				AgentStates: map[string]jobtypes.AgentState{
 					"server1": {
 						Status:   "completed",
 						Duration: "1.5s",
@@ -187,8 +187,8 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.Equal("completed", *r.Status)
 				s.NotNil(r.Responses)
 				s.Len(*r.Responses, 2)
-				s.NotNil(r.WorkerStates)
-				s.Len(*r.WorkerStates, 2)
+				s.NotNil(r.AgentStates)
+				s.Len(*r.AgentStates, 2)
 			},
 		},
 		{
@@ -238,7 +238,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 						Error:    "disk full",
 					},
 				},
-				WorkerStates: map[string]jobtypes.WorkerState{
+				AgentStates: map[string]jobtypes.AgentState{
 					"server1": {
 						Status:   "completed",
 						Duration: "1.5s",
@@ -255,8 +255,8 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.True(ok)
 				s.NotNil(r.Responses)
 				s.Len(*r.Responses, 2)
-				s.NotNil(r.WorkerStates)
-				ws := *r.WorkerStates
+				s.NotNil(r.AgentStates)
+				ws := *r.AgentStates
 				s.NotNil(ws["server2"].Error)
 				s.Equal("disk full", *ws["server2"].Error)
 			},

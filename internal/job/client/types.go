@@ -72,14 +72,14 @@ type JobClient interface {
 	QueryNodeHostname(
 		ctx context.Context,
 		hostname string,
-	) (string, string, *job.WorkerInfo, error)
+	) (string, string, *job.AgentInfo, error)
 	QueryNodeHostnameAll(
 		ctx context.Context,
-	) (string, map[string]*job.WorkerInfo, map[string]string, error)
+	) (string, map[string]*job.AgentInfo, map[string]string, error)
 	QueryNodeHostnameBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]*job.WorkerInfo, map[string]string, error)
+	) (string, map[string]*job.AgentInfo, map[string]string, error)
 	QueryNetworkDNS(
 		ctx context.Context,
 		hostname string,
@@ -174,9 +174,9 @@ type JobClient interface {
 	) (string, map[string]*command.Result, map[string]string, error)
 
 	// Worker discovery
-	ListWorkers(
+	ListAgents(
 		ctx context.Context,
-	) ([]job.WorkerInfo, error)
+	) ([]job.AgentInfo, error)
 
 	// Job deletion
 	DeleteJob(
@@ -246,7 +246,7 @@ type computedJobStatus struct {
 	Error        string
 	Hostname     string
 	UpdatedAt    string
-	WorkerStates map[string]job.WorkerState
+	AgentStates map[string]job.AgentState
 	Timeline     []job.TimelineEvent
 }
 

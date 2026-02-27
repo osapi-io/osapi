@@ -58,13 +58,13 @@ func (s *NodeListPublicTestSuite) TearDownTest() {
 func (s *NodeListPublicTestSuite) TestGetNode() {
 	tests := []struct {
 		name         string
-		mockWorkers  []jobtypes.WorkerInfo
+		mockWorkers  []jobtypes.AgentInfo
 		mockError    error
 		validateFunc func(resp gen.GetNodeResponseObject)
 	}{
 		{
 			name: "success with workers",
-			mockWorkers: []jobtypes.WorkerInfo{
+			mockWorkers: []jobtypes.AgentInfo{
 				{Hostname: "server1"},
 				{Hostname: "server2"},
 			},
@@ -79,7 +79,7 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 		},
 		{
 			name:        "success with no workers",
-			mockWorkers: []jobtypes.WorkerInfo{},
+			mockWorkers: []jobtypes.AgentInfo{},
 			validateFunc: func(resp gen.GetNodeResponseObject) {
 				r, ok := resp.(gen.GetNode200JSONResponse)
 				s.True(ok)
@@ -100,7 +100,7 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
-				ListWorkers(gomock.Any()).
+				ListAgents(gomock.Any()).
 				Return(tt.mockWorkers, tt.mockError)
 
 			resp, err := s.handler.GetNode(s.ctx, gen.GetNodeRequestObject{})

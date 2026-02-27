@@ -31,7 +31,7 @@ func (s *Node) GetNode(
 	ctx context.Context,
 	_ gen.GetNodeRequestObject,
 ) (gen.GetNodeResponseObject, error) {
-	workers, err := s.JobClient.ListWorkers(ctx)
+	workers, err := s.JobClient.ListAgents(ctx)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNode500JSONResponse{
@@ -39,9 +39,9 @@ func (s *Node) GetNode(
 		}, nil
 	}
 
-	workerInfos := make([]gen.WorkerInfo, 0, len(workers))
+	workerInfos := make([]gen.AgentInfo, 0, len(workers))
 	for _, w := range workers {
-		workerInfos = append(workerInfos, gen.WorkerInfo{
+		workerInfos = append(workerInfos, gen.AgentInfo{
 			Hostname: w.Hostname,
 		})
 	}

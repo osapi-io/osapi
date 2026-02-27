@@ -695,7 +695,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			expectedError:  "attempt 2",
 			workerCount:    1,
 			validateFunc: func(qj *job.QueuedJob) {
-				ws := qj.WorkerStates["worker1"]
+				ws := qj.AgentStates["worker1"]
 				// Duration should span from first start to last failure (60s)
 				// and must be positive (not negative like the old bug)
 				s.Equal("1m0s", ws.Duration)
@@ -738,7 +738,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			expectedStatus: "completed",
 			workerCount:    1,
 			validateFunc: func(qj *job.QueuedJob) {
-				ws := qj.WorkerStates["worker1"]
+				ws := qj.AgentStates["worker1"]
 				s.Equal("45ms", ws.Duration)
 			},
 		},
@@ -787,7 +787,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					s.Equal(tt.expectedError, jobStatus.Error)
 				}
 				if tt.workerCount > 0 {
-					s.Len(jobStatus.WorkerStates, tt.workerCount)
+					s.Len(jobStatus.AgentStates, tt.workerCount)
 				}
 				if tt.responseCount > 0 {
 					s.Len(jobStatus.Responses, tt.responseCount)

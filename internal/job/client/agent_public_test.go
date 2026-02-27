@@ -37,7 +37,7 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
-type WorkerPublicTestSuite struct {
+type AgentPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl       *gomock.Controller
@@ -47,7 +47,7 @@ type WorkerPublicTestSuite struct {
 	ctx            context.Context
 }
 
-func (s *WorkerPublicTestSuite) SetupTest() {
+func (s *AgentPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockNATSClient = jobmocks.NewMockNATSClient(s.mockCtrl)
 	s.mockKV = jobmocks.NewMockKeyValue(s.mockCtrl)
@@ -62,11 +62,11 @@ func (s *WorkerPublicTestSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
-func (s *WorkerPublicTestSuite) TearDownTest() {
+func (s *AgentPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
+func (s *AgentPublicTestSuite) TestWriteStatusEvent() {
 	tests := []struct {
 		name        string
 		jobID       string
@@ -82,7 +82,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:     "successful status event with data",
 			jobID:    "job-123",
 			event:    "started",
-			hostname: "worker-1",
+			hostname: "agent-1",
 			data:     map[string]interface{}{"key": "value", "count": 42},
 			setupMocks: func() {
 				s.mockKV.EXPECT().Bucket().Return("test-bucket")
@@ -95,7 +95,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:     "successful status event without data",
 			jobID:    "job-456",
 			event:    "completed",
-			hostname: "worker-2",
+			hostname: "agent-2",
 			data:     nil,
 			setupMocks: func() {
 				s.mockKV.EXPECT().Bucket().Return("test-bucket")
@@ -108,7 +108,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:     "hostname with special characters",
 			jobID:    "job-789",
 			event:    "failed",
-			hostname: "worker.host-name@domain.com",
+			hostname: "agent.host-name@domain.com",
 			data:     map[string]interface{}{"error": "timeout"},
 			setupMocks: func() {
 				s.mockKV.EXPECT().Bucket().Return("test-bucket")
@@ -121,7 +121,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:        "KV put error",
 			jobID:       "job-error",
 			event:       "started",
-			hostname:    "worker-1",
+			hostname:    "agent-1",
 			data:        map[string]interface{}{"key": "value"},
 			expectError: true,
 			errorMsg:    "failed to write status event",
@@ -136,7 +136,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:     "empty job ID",
 			jobID:    "",
 			event:    "started",
-			hostname: "worker-1",
+			hostname: "agent-1",
 			data:     map[string]interface{}{"key": "value"},
 			setupMocks: func() {
 				s.mockKV.EXPECT().Bucket().Return("test-bucket")
@@ -149,7 +149,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 			name:        "unmarshalable data",
 			jobID:       "job-marshal",
 			event:       "started",
-			hostname:    "worker-1",
+			hostname:    "agent-1",
 			data:        map[string]interface{}{"fn": make(chan int)},
 			expectError: true,
 			errorMsg:    "failed to marshal status event",
@@ -173,7 +173,7 @@ func (s *WorkerPublicTestSuite) TestWriteStatusEvent() {
 	}
 }
 
-func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
+func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 	tests := []struct {
 		name         string
 		jobID        string
@@ -189,14 +189,14 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 		{
 			name:         "successful job response completed",
 			jobID:        "job-123",
-			hostname:     "worker-1",
+			hostname:     "agent-1",
 			responseData: []byte(`{"result": "success", "count": 42}`),
 			status:       "completed",
 		},
 		{
 			name:         "successful job response with error",
 			jobID:        "job-456",
-			hostname:     "worker-2",
+			hostname:     "agent-2",
 			responseData: []byte(`{"error": "processing failed"}`),
 			status:       "failed",
 			errorMsg:     "job execution failed",
@@ -204,21 +204,21 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 		{
 			name:         "empty response data",
 			jobID:        "job-789",
-			hostname:     "worker-3",
+			hostname:     "agent-3",
 			responseData: []byte{},
 			status:       "completed",
 		},
 		{
 			name:         "hostname with special characters",
 			jobID:        "job-special",
-			hostname:     "worker.host-name@domain.com",
+			hostname:     "agent.host-name@domain.com",
 			responseData: []byte(`{"data": "test"}`),
 			status:       "completed",
 		},
 		{
 			name:         "KV put error",
 			jobID:        "job-error",
-			hostname:     "worker-1",
+			hostname:     "agent-1",
 			responseData: []byte(`{"result": "success"}`),
 			status:       "completed",
 			kvError:      errors.New("storage failure"),
@@ -228,7 +228,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 		{
 			name:     "large response data",
 			jobID:    "job-large",
-			hostname: "worker-1",
+			hostname: "agent-1",
 			responseData: []byte(
 				`{"data": "large_data_payload_with_repeated_content_` + strings.Repeat(
 					"x",
@@ -266,7 +266,7 @@ func (s *WorkerPublicTestSuite) TestWriteJobResponse() {
 	}
 }
 
-func (s *WorkerPublicTestSuite) TestConsumeJobs() {
+func (s *AgentPublicTestSuite) TestConsumeJobs() {
 	tests := []struct {
 		name          string
 		streamName    string
@@ -290,7 +290,7 @@ func (s *WorkerPublicTestSuite) TestConsumeJobs() {
 		{
 			name:         "successful job consumption with options",
 			streamName:   "jobs-stream",
-			consumerName: "worker-consumer",
+			consumerName: "agent-consumer",
 			handler: func(_ jetstream.Msg) error {
 				return nil
 			},
@@ -350,7 +350,7 @@ func (s *WorkerPublicTestSuite) TestConsumeJobs() {
 	}
 }
 
-func (s *WorkerPublicTestSuite) TestGetJobData() {
+func (s *AgentPublicTestSuite) TestGetJobData() {
 	tests := []struct {
 		name         string
 		jobKey       string
@@ -397,7 +397,7 @@ func (s *WorkerPublicTestSuite) TestGetJobData() {
 	}
 }
 
-func (s *WorkerPublicTestSuite) TestCreateOrUpdateConsumer() {
+func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
 	tests := []struct {
 		name           string
 		streamName     string
@@ -444,6 +444,6 @@ func (s *WorkerPublicTestSuite) TestCreateOrUpdateConsumer() {
 	}
 }
 
-func TestWorkerPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(WorkerPublicTestSuite))
+func TestAgentPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentPublicTestSuite))
 }

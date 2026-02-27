@@ -115,7 +115,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		validation.RegisterTargetValidator(
 			func(ctx context.Context) ([]validation.WorkerTarget, error) {
-				workers, err := jc.ListWorkers(ctx)
+				workers, err := jc.ListAgents(ctx)
 				if err != nil {
 					return nil, err
 				}

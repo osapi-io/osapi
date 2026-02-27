@@ -485,7 +485,7 @@ func DisplayJobDetailResponse(
 		PrintKV("Error", *resp.Error)
 	}
 
-	// Add worker summary from worker_states
+	// Add agent summary from agent_states
 	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
 		completed := 0
 		failed := 0
@@ -506,7 +506,7 @@ func DisplayJobDetailResponse(
 
 		total := len(*resp.WorkerStates)
 		if total > 1 {
-			PrintKV("Workers", fmt.Sprintf(
+			PrintKV("Agents", fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
 				total,
 				completed,
@@ -529,7 +529,7 @@ func DisplayJobDetailResponse(
 		})
 	}
 
-	// Display worker responses (for broadcast jobs)
+	// Display agent responses (for broadcast jobs)
 	if resp.Responses != nil && len(*resp.Responses) > 0 {
 		responseRows := make([][]string, 0, len(*resp.Responses))
 		for hostname, response := range *resp.Responses {
@@ -558,7 +558,7 @@ func DisplayJobDetailResponse(
 		})
 	}
 
-	// Display worker states (for broadcast jobs)
+	// Display agent states (for broadcast jobs)
 	if resp.WorkerStates != nil && len(*resp.WorkerStates) > 0 {
 		stateRows := make([][]string, 0, len(*resp.WorkerStates))
 		for hostname, state := range *resp.WorkerStates {

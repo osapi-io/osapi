@@ -51,7 +51,7 @@ func (s *HostnamePublicTestSuite) TearDownTest() {
 	// Cleanup after each test
 }
 
-func (s *HostnamePublicTestSuite) TestGetWorkerHostname() {
+func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 	tests := []struct {
 		name               string
 		configuredHostname string
@@ -85,7 +85,7 @@ func (s *HostnamePublicTestSuite) TestGetWorkerHostname() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			hostname, err := job.GetWorkerHostname(tt.configuredHostname)
+			hostname, err := job.GetAgentHostname(tt.configuredHostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -133,7 +133,7 @@ func (s *HostnamePublicTestSuite) TestGetLocalHostname() {
 	}
 }
 
-func (s *HostnamePublicTestSuite) TestGetWorkerHostnameWithProvider() {
+func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 	tests := []struct {
 		name               string
 		configuredHostname string
@@ -176,7 +176,7 @@ func (s *HostnamePublicTestSuite) TestGetWorkerHostnameWithProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			hostname, err := job.GetWorkerHostnameWithProvider(tt.configuredHostname, tt.provider)
+			hostname, err := job.GetAgentHostnameWithProvider(tt.configuredHostname, tt.provider)
 
 			if tt.expectError {
 				s.Error(err)

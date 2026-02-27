@@ -143,6 +143,21 @@ func (mr *MockJobClientMockRecorder) GetQueueStats(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueStats", reflect.TypeOf((*MockJobClient)(nil).GetQueueStats), arg0)
 }
 
+// ListAgents mocks base method.
+func (m *MockJobClient) ListAgents(arg0 context.Context) ([]job.AgentInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAgents", arg0)
+	ret0, _ := ret[0].([]job.AgentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAgents indicates an expected call of ListAgents.
+func (mr *MockJobClientMockRecorder) ListAgents(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAgents", reflect.TypeOf((*MockJobClient)(nil).ListAgents), arg0)
+}
+
 // ListJobs mocks base method.
 func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string, arg2, arg3 int) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()
@@ -156,21 +171,6 @@ func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string, arg2, arg3 i
 func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), arg0, arg1, arg2, arg3)
-}
-
-// ListWorkers mocks base method.
-func (m *MockJobClient) ListWorkers(arg0 context.Context) ([]job.WorkerInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListWorkers", arg0)
-	ret0, _ := ret[0].([]job.WorkerInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListWorkers indicates an expected call of ListWorkers.
-func (mr *MockJobClientMockRecorder) ListWorkers(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWorkers", reflect.TypeOf((*MockJobClient)(nil).ListWorkers), arg0)
 }
 
 // ModifyCommandExec mocks base method.
@@ -429,12 +429,12 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingBroadcast(arg0, arg1, arg2 
 }
 
 // QueryNodeHostname mocks base method.
-func (m *MockJobClient) QueryNodeHostname(arg0 context.Context, arg1 string) (string, string, *job.WorkerInfo, error) {
+func (m *MockJobClient) QueryNodeHostname(arg0 context.Context, arg1 string) (string, string, *job.AgentInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeHostname", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(*job.WorkerInfo)
+	ret2, _ := ret[2].(*job.AgentInfo)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
@@ -446,11 +446,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeHostname(arg0, arg1 interface{}) *
 }
 
 // QueryNodeHostnameAll mocks base method.
-func (m *MockJobClient) QueryNodeHostnameAll(arg0 context.Context) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+func (m *MockJobClient) QueryNodeHostnameAll(arg0 context.Context) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeHostnameAll", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
+	ret1, _ := ret[1].(map[string]*job.AgentInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -463,11 +463,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeHostnameAll(arg0 interface{}) *gom
 }
 
 // QueryNodeHostnameBroadcast mocks base method.
-func (m *MockJobClient) QueryNodeHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+func (m *MockJobClient) QueryNodeHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeHostnameBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
+	ret1, _ := ret[1].(map[string]*job.AgentInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3

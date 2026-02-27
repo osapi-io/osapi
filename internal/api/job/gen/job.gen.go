@@ -109,8 +109,8 @@ type JobDetailResponse struct {
 	// UpdatedAt Last update timestamp.
 	UpdatedAt *string `json:"updated_at,omitempty"`
 
-	// WorkerStates Per-worker processing state for broadcast jobs.
-	WorkerStates *map[string]struct {
+	// AgentStates Per-worker processing state for broadcast jobs.
+	AgentStates *map[string]struct {
 		Duration *string `json:"duration,omitempty"`
 		Error    *string `json:"error,omitempty"`
 		Status   *string `json:"status,omitempty"`

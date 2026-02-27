@@ -33,8 +33,8 @@ func (a *Agent) Start() {
 
 	a.logger.Info("starting node agent")
 
-	// Determine agent hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(a.appConfig.Node.Agent.Hostname)
+	// Determine agent hostname (GetAgentHostname always succeeds)
+	hostname, _ := job.GetAgentHostname(a.appConfig.Node.Agent.Hostname)
 
 	a.logger.Info(
 		"agent configuration",

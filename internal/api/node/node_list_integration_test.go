@@ -72,8 +72,8 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListWorkers(gomock.Any()).
-					Return([]jobtypes.WorkerInfo{
+					ListAgents(gomock.Any()).
+					Return([]jobtypes.AgentInfo{
 						{Hostname: "server1"},
 						{Hostname: "server2"},
 					}, nil)
@@ -87,8 +87,8 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListWorkers(gomock.Any()).
-					Return([]jobtypes.WorkerInfo{}, nil)
+					ListAgents(gomock.Any()).
+					Return([]jobtypes.AgentInfo{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -99,7 +99,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListWorkers(gomock.Any()).
+					ListAgents(gomock.Any()).
 					Return(nil, assert.AnError)
 				return mock
 			},
@@ -187,8 +187,8 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListWorkers(gomock.Any()).
-					Return([]jobtypes.WorkerInfo{
+					ListAgents(gomock.Any()).
+					Return([]jobtypes.AgentInfo{
 						{Hostname: "server1"},
 						{Hostname: "server2"},
 					}, nil)
