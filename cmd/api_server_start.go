@@ -45,6 +45,8 @@ import (
 // ServerManager responsible for Server operations.
 type ServerManager interface {
 	cli.Lifecycle
+	// GetAgentHandler returns agent handler for registration.
+	GetAgentHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNodeHandler returns node handler for registration.
 	GetNodeHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNetworkHandler returns network handler for registration.
@@ -131,8 +133,8 @@ var apiServerStartCmd = &cobra.Command{
 		)
 
 		checker := newHealthChecker(nc, jobsKV)
-		metricsProvider := newMetricsProvider(nc, jobsKV, streamName, jc)
-		auditStore, serverOpts := createAuditStore(ctx, nc, namespace)
+		auditStore, auditKV, serverOpts := createAuditStore(ctx, nc, namespace)
+		metricsProvider := newMetricsProvider(nc, jobsKV, registryKV, auditKV, streamName, jc)
 
 		var sm ServerManager = api.New(appConfig, logger, serverOpts...)
 
@@ -209,6 +211,8 @@ func newHealthChecker(
 func newMetricsProvider(
 	nc messaging.NATSClient,
 	jobsKV jetstream.KeyValue,
+	registryKV jetstream.KeyValue,
+	auditKV jetstream.KeyValue,
 	streamName string,
 	jc jobclient.JobClient,
 ) *health.ClosureMetricsProvider {
@@ -246,24 +250,60 @@ func newMetricsProvider(
 			}, nil
 		},
 		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
-			status, err := jobsKV.Status(fnCtx)
-			if err != nil {
-				return nil, fmt.Errorf("KV status: %w", err)
+			buckets := []jetstream.KeyValue{jobsKV, registryKV, auditKV}
+			results := make([]health.KVMetrics, 0, len(buckets))
+
+			for _, kv := range buckets {
+				if kv == nil {
+					continue
+				}
+
+				status, err := kv.Status(fnCtx)
+				if err != nil {
+					continue
+				}
+
+				results = append(results, health.KVMetrics{
+					Name:  status.Bucket(),
+					Keys:  int(status.Values()),
+					Bytes: status.Bytes(),
+				})
 			}
 
-			keys, _ := jobsKV.Keys(fnCtx)
-			keyCount := len(keys)
+			return results, nil
+		},
+		ConsumerStatsFn: func(fnCtx context.Context) (*health.ConsumerMetrics, error) {
+			natsConn, ok := nc.(*natsclient.Client)
+			if !ok || natsConn.ExtJS == nil {
+				return nil, fmt.Errorf("JetStream client unavailable")
+			}
 
-			return []health.KVMetrics{
-				{
-					Name:  status.Bucket(),
-					Keys:  keyCount,
-					Bytes: status.Bytes(),
-				},
+			stream, err := natsConn.ExtJS.Stream(fnCtx, streamName)
+			if err != nil {
+				return nil, fmt.Errorf("stream: %w", err)
+			}
+
+			var details []health.ConsumerDetail
+			lister := stream.ListConsumers(fnCtx)
+			for ci := range lister.Info() {
+				details = append(details, health.ConsumerDetail{
+					Name:        ci.Name,
+					Pending:     ci.NumPending,
+					AckPending:  ci.NumAckPending,
+					Redelivered: ci.NumRedelivered,
+				})
+			}
+			if lister.Err() != nil {
+				return nil, fmt.Errorf("list consumers: %w", lister.Err())
+			}
+
+			return &health.ConsumerMetrics{
+				Total:     len(details),
+				Consumers: details,
 			}, nil
 		},
 		JobStatsFn: func(fnCtx context.Context) (*health.JobMetrics, error) {
-			stats, err := jc.GetQueueStats(fnCtx)
+			stats, err := jc.GetQueueSummary(fnCtx)
 			if err != nil {
 				return nil, fmt.Errorf("job stats: %w", err)
 			}
@@ -283,9 +323,27 @@ func newMetricsProvider(
 				return nil, fmt.Errorf("agent stats: %w", err)
 			}
 
+			details := make([]health.AgentDetail, 0, len(agents))
+			for _, a := range agents {
+				labels := ""
+				for k, v := range a.Labels {
+					if labels != "" {
+						labels += ", "
+					}
+					labels += k + "=" + v
+				}
+				registered := cli.FormatAge(time.Since(a.RegisteredAt)) + " ago"
+				details = append(details, health.AgentDetail{
+					Hostname:   a.Hostname,
+					Labels:     labels,
+					Registered: registered,
+				})
+			}
+
 			return &health.AgentMetrics{
-				Total: len(agents),
-				Ready: len(agents), // presence in KV = Ready
+				Total:  len(agents),
+				Ready:  len(agents), // presence in KV = Ready
+				Agents: details,
 			}, nil
 		},
 	}
@@ -295,9 +353,9 @@ func createAuditStore(
 	ctx context.Context,
 	nc messaging.NATSClient,
 	namespace string,
-) (audit.Store, []api.Option) {
+) (audit.Store, jetstream.KeyValue, []api.Option) {
 	if appConfig.NATS.Audit.Bucket == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	auditKVConfig := cli.BuildAuditKVConfig(namespace, appConfig.NATS.Audit)
@@ -308,7 +366,7 @@ func createAuditStore(
 
 	store := audit.NewKVStore(logger, auditKV)
 
-	return store, []api.Option{api.WithAuditStore(store)}
+	return store, auditKV, []api.Option{api.WithAuditStore(store)}
 }
 
 func registerAPIHandlers(
@@ -322,7 +380,8 @@ func registerAPIHandlers(
 ) {
 	startTime := time.Now()
 
-	handlers := make([]func(e *echo.Echo), 0, 7)
+	handlers := make([]func(e *echo.Echo), 0, 8)
+	handlers = append(handlers, sm.GetAgentHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeHandler(jc)...)
 	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)

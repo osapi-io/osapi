@@ -30,16 +30,16 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientNodeListCmd represents the clientNodeList command.
-var clientNodeListCmd = &cobra.Command{
+// clientAgentListCmd represents the clientAgentList command.
+var clientAgentListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List active agents",
-	Long: `Discover all active agents by broadcasting a hostname query
-and collecting responses. Shows each agent's hostname.`,
+	Long: `Discover all active agents by querying the agent registry.
+Shows each agent's hostname, status, labels, age, load, and OS.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Node.Agents(ctx)
+		resp, err := sdkClient.Agent.List(ctx)
 		if err != nil {
 			cli.LogFatal(logger, "failed to list agents", err)
 		}
@@ -105,5 +105,5 @@ and collecting responses. Shows each agent's hostname.`,
 }
 
 func init() {
-	clientNodeCmd.AddCommand(clientNodeListCmd)
+	clientAgentCmd.AddCommand(clientAgentListCmd)
 }

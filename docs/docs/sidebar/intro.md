@@ -26,8 +26,8 @@ osapi nats server start &
 # Start the API server
 osapi api server start &
 
-# Start a node agent
-osapi node agent start &
+# Start an agent
+osapi agent start &
 ```
 
 Generate a token and configure the CLI:

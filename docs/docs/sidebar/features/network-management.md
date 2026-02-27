@@ -32,7 +32,7 @@ endpoints.
 
 Network management uses the general job infrastructure. No domain-specific
 configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, node agent, and authentication settings.
+NATS, agent, and authentication settings.
 
 ## Permissions
 

@@ -251,9 +251,73 @@ components:
           type: integer
           description: Number of agents with Ready status.
           example: 5
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentDetail'
+          description: Per-agent registration details.
       required:
         - total
         - ready
+
+    AgentDetail:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: Agent hostname.
+          example: "web-01"
+        labels:
+          type: string
+          description: Formatted label string.
+          example: "group=web.prod"
+        registered:
+          type: string
+          description: Time since last heartbeat registration.
+          example: "15s ago"
+      required:
+        - hostname
+        - registered
+
+    ConsumerStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of JetStream consumers.
+          example: 2
+        consumers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsumerDetail'
+          description: Per-consumer details.
+      required:
+        - total
+
+    ConsumerDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Consumer name.
+          example: "query_any_web_01"
+        pending:
+          type: integer
+          description: Messages not yet delivered.
+          example: 0
+        ack_pending:
+          type: integer
+          description: Messages delivered but not yet acknowledged.
+          example: 3
+        redelivered:
+          type: integer
+          description: Messages redelivered and not yet acknowledged.
+          example: 0
+      required:
+        - name
+        - pending
+        - ack_pending
+        - redelivered
 
     StatusResponse:
       type: object
@@ -291,6 +355,8 @@ components:
           $ref: '#/components/schemas/JobStats'
         agents:
           $ref: '#/components/schemas/AgentStats'
+        consumers:
+          $ref: '#/components/schemas/ConsumerStats'
       required:
         - status
         - components

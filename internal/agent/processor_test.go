@@ -62,12 +62,10 @@ func (s *ProcessorTestSuite) SetupTest() {
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
 		},
-		Node: config.Node{
-			Agent: config.NodeAgent{
-				Hostname:   "test-agent",
-				QueueGroup: "test-queue",
-				MaxJobs:    5,
-			},
+		Agent: config.AgentConfig{
+			Hostname:   "test-agent",
+			QueueGroup: "test-queue",
+			MaxJobs:    5,
 		},
 	}
 
@@ -473,7 +471,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.agent.appConfig.Node.Agent.Labels = tt.labels
+			s.agent.appConfig.Agent.Labels = tt.labels
 
 			request := job.Request{
 				Type:      job.TypeQuery,

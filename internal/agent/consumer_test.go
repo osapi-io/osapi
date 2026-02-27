@@ -63,18 +63,16 @@ func (s *ConsumerTestSuite) SetupTest() {
 				Name: "test-stream",
 			},
 		},
-		Node: config.Node{
-			Agent: config.NodeAgent{
-				Hostname:   "test-agent",
-				QueueGroup: "test-queue",
-				MaxJobs:    5,
-				Consumer: config.NodeAgentConsumer{
-					AckWait:       "30s",
-					BackOff:       []string{"1s", "2s"},
-					MaxDeliver:    3,
-					MaxAckPending: 10,
-					ReplayPolicy:  "instant",
-				},
+		Agent: config.AgentConfig{
+			Hostname:   "test-agent",
+			QueueGroup: "test-queue",
+			MaxJobs:    5,
+			Consumer: config.AgentConsumer{
+				AckWait:       "30s",
+				BackOff:       []string{"1s", "2s"},
+				MaxDeliver:    3,
+				MaxAckPending: 10,
+				ReplayPolicy:  "instant",
 			},
 		},
 	}
@@ -230,11 +228,11 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 
 			// Set labels for the label-specific test case
 			if tt.name == "with labels creates extra consumers" {
-				s.agent.appConfig.Node.Agent.Labels = map[string]string{
+				s.agent.appConfig.Agent.Labels = map[string]string{
 					"group": "web.dev.us-east",
 				}
 			} else {
-				s.agent.appConfig.Node.Agent.Labels = nil
+				s.agent.appConfig.Agent.Labels = nil
 			}
 
 			tt.setupMocks()
@@ -348,11 +346,11 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 
 			// Set labels for the label-specific test case
 			if tt.name == "with labels creates extra consumers" {
-				s.agent.appConfig.Node.Agent.Labels = map[string]string{
+				s.agent.appConfig.Agent.Labels = map[string]string{
 					"group": "web.dev.us-east",
 				}
 			} else {
-				s.agent.appConfig.Node.Agent.Labels = nil
+				s.agent.appConfig.Agent.Labels = nil
 			}
 
 			tt.setupMocks()
@@ -377,7 +375,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 		streamName    string
 		consumerName  string
 		filterSubject string
-		config        config.NodeAgentConsumer
+		config        config.AgentConsumer
 		setupMocks    func()
 		expectErr     bool
 		errorMsg      string
@@ -387,7 +385,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.NodeAgentConsumer{
+			config: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s", "5s"},
 				MaxDeliver:    3,
@@ -417,7 +415,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer-orig",
 			filterSubject: "jobs.modify._any",
-			config: config.NodeAgentConsumer{
+			config: config.AgentConsumer{
 				AckWait:       "60s",
 				BackOff:       []string{"2s"},
 				MaxDeliver:    5,
@@ -445,7 +443,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.NodeAgentConsumer{
+			config: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s"},
 				MaxDeliver:    3,
@@ -465,7 +463,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
-			config: config.NodeAgentConsumer{
+			config: config.AgentConsumer{
 				AckWait:       "invalid-duration",
 				BackOff:       []string{"invalid", "2s"},
 				MaxDeliver:    3,
@@ -489,7 +487,7 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			// Update agent config for this test
-			s.agent.appConfig.Node.Agent.Consumer = tt.config
+			s.agent.appConfig.Agent.Consumer = tt.config
 
 			tt.setupMocks()
 

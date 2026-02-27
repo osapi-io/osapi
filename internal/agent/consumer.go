@@ -53,7 +53,7 @@ func (a *Agent) consumeQueryJobs(
 		{
 			name:       "query_any_" + sanitizedHostname,
 			filter:     job.JobsQueryPrefix + "._any",
-			queueGroup: a.appConfig.Node.Agent.QueueGroup,
+			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
 			name:   "query_all_" + sanitizedHostname,
@@ -70,7 +70,7 @@ func (a *Agent) consumeQueryJobs(
 	//   jobs.query.label.group.web
 	//   jobs.query.label.group.web.dev
 	//   jobs.query.label.group.web.dev.us-east
-	for key, value := range a.appConfig.Node.Agent.Labels {
+	for key, value := range a.appConfig.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -113,7 +113,7 @@ func (a *Agent) consumeQueryJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: a.appConfig.Node.Agent.MaxJobs,
+				MaxInFlight: a.appConfig.Agent.MaxJobs,
 			}
 
 			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
@@ -149,7 +149,7 @@ func (a *Agent) consumeModifyJobs(
 		{
 			name:       "modify_any_" + sanitizedHostname,
 			filter:     job.JobsModifyPrefix + "._any",
-			queueGroup: a.appConfig.Node.Agent.QueueGroup,
+			queueGroup: a.appConfig.Agent.QueueGroup,
 		},
 		{
 			name:   "modify_all_" + sanitizedHostname,
@@ -162,7 +162,7 @@ func (a *Agent) consumeModifyJobs(
 	}
 
 	// Add label-based consumers with hierarchical prefix subscriptions.
-	for key, value := range a.appConfig.Node.Agent.Labels {
+	for key, value := range a.appConfig.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -205,7 +205,7 @@ func (a *Agent) consumeModifyJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: a.appConfig.Node.Agent.MaxJobs,
+				MaxInFlight: a.appConfig.Agent.MaxJobs,
 			}
 
 			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
@@ -240,11 +240,11 @@ func (a *Agent) createConsumer(
 	streamName, consumerName, filterSubject string,
 ) error {
 	// Parse AckWait duration from config
-	ackWait, _ := time.ParseDuration(a.appConfig.Node.Agent.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(a.appConfig.Agent.Consumer.AckWait)
 
 	// Parse BackOff durations from config
 	var backOff []time.Duration
-	for _, duration := range a.appConfig.Node.Agent.Consumer.BackOff {
+	for _, duration := range a.appConfig.Agent.Consumer.BackOff {
 		if d, err := time.ParseDuration(duration); err == nil {
 			backOff = append(backOff, d)
 		}
@@ -252,7 +252,7 @@ func (a *Agent) createConsumer(
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if a.appConfig.Node.Agent.Consumer.ReplayPolicy == "original" {
+	if a.appConfig.Agent.Consumer.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
@@ -263,10 +263,10 @@ func (a *Agent) createConsumer(
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    a.appConfig.Node.Agent.Consumer.MaxDeliver,
+		MaxDeliver:    a.appConfig.Agent.Consumer.MaxDeliver,
 		AckWait:       ackWait,
 		BackOff:       backOff,
-		MaxAckPending: a.appConfig.Node.Agent.Consumer.MaxAckPending,
+		MaxAckPending: a.appConfig.Agent.Consumer.MaxAckPending,
 		ReplayPolicy:  replayPolicy,
 	}
 

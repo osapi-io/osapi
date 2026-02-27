@@ -126,6 +126,5 @@ osapi client status   # One-stop: API health + agent fleet + job summary
   output without broadcasting.
 - The `changed` field was added to mutation CLI output in #188 but the CLI docs
   (dns/update, exec, shell) were not updated.
-- Labels are already configured on agents via `node.agent.labels` in
-  `osapi.yaml` and stored in the registry. They just aren't surfaced in the CLI
-  output yet.
+- Labels are already configured on agents via `agent.labels` in `osapi.yaml` and
+  stored in the registry. They just aren't surfaced in the CLI output yet.

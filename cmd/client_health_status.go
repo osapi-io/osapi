@@ -136,6 +136,21 @@ func displayStatusHealth(
 			"%d total, %d ready",
 			data.Agents.Total, data.Agents.Ready,
 		))
+		if data.Agents.Agents != nil {
+			rows := make([][]string, 0, len(*data.Agents.Agents))
+			for _, a := range *data.Agents.Agents {
+				labels := ""
+				if a.Labels != nil {
+					labels = *a.Labels
+				}
+				rows = append(rows, []string{a.Hostname, labels, a.Registered})
+			}
+			cli.PrintCompactTable([]cli.Section{{
+				Headers: []string{"HOSTNAME", "LABELS", "REGISTERED"},
+				Rows:    rows,
+			}})
+			fmt.Println()
+		}
 	}
 
 	if data.Jobs != nil {
@@ -163,6 +178,27 @@ func displayStatusHealth(
 				"%s "+cli.DimStyle.Render("(%d keys, %s)"),
 				b.Name, b.Keys, cli.FormatBytes(b.Bytes),
 			))
+		}
+	}
+
+	// Consumers last — the table can be long with many agents
+	if data.Consumers != nil {
+		fmt.Println()
+		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
+		if data.Consumers.Consumers != nil {
+			rows := make([][]string, 0, len(*data.Consumers.Consumers))
+			for _, c := range *data.Consumers.Consumers {
+				rows = append(rows, []string{
+					c.Name,
+					fmt.Sprintf("%d", c.Pending),
+					fmt.Sprintf("%d", c.AckPending),
+					fmt.Sprintf("%d", c.Redelivered),
+				})
+			}
+			cli.PrintCompactTable([]cli.Section{{
+				Headers: []string{"NAME", "PENDING", "ACK PENDING", "REDELIVERED"},
+				Rows:    rows,
+			}})
 		}
 	}
 }

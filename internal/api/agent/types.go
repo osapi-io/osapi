@@ -18,34 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package agent
 
 import (
-	"context"
-	"strings"
+	"log/slog"
 
-	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetNodeDetails retrieves detailed information about a specific agent.
-func (s *Node) GetNodeDetails(
-	ctx context.Context,
-	request gen.GetNodeDetailsRequestObject,
-) (gen.GetNodeDetailsResponseObject, error) {
-	agent, err := s.JobClient.GetAgent(ctx, request.Hostname)
-	if err != nil {
-		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
-			return gen.GetNodeDetails404JSONResponse{
-				Error: &errMsg,
-			}, nil
-		}
-		return gen.GetNodeDetails500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	info := buildAgentInfo(agent)
-
-	return gen.GetNodeDetails200JSONResponse(info), nil
+// Agent implementation of the Agent APIs operations.
+type Agent struct {
+	// JobClient provides job-based operations for agent queries.
+	JobClient client.JobClient
+	logger    *slog.Logger
 }

@@ -36,14 +36,14 @@ func (a *Agent) Start() {
 	a.logger.Info("starting node agent")
 
 	// Determine agent hostname (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
 
 	a.logger.Info(
 		"agent configuration",
 		slog.String("hostname", hostname),
-		slog.String("queue_group", a.appConfig.Node.Agent.QueueGroup),
-		slog.Int("max_jobs", a.appConfig.Node.Agent.MaxJobs),
-		slog.Any("labels", a.appConfig.Node.Agent.Labels),
+		slog.String("queue_group", a.appConfig.Agent.QueueGroup),
+		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
+		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
 	// Register in agent registry and start heartbeat keepalive.

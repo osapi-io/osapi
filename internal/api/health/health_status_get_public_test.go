@@ -180,6 +180,15 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 10, Bytes: 2048},
 					}, nil
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{
+						Total: 2,
+						Consumers: []health.ConsumerDetail{
+							{Name: "query_any_web_01", Pending: 0, AckPending: 3, Redelivered: 0},
+							{Name: "modify_any_web_01", Pending: 1, AckPending: 0, Redelivered: 1},
+						},
+					}, nil
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
 						Total: 100, Unprocessed: 5, Processing: 2,
@@ -187,7 +196,15 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 					}, nil
 				},
 				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
-					return &health.AgentMetrics{Total: 3, Ready: 3}, nil
+					return &health.AgentMetrics{
+						Total: 3,
+						Ready: 3,
+						Agents: []health.AgentDetail{
+							{Hostname: "web-01", Labels: "group=web.prod", Registered: "15s ago"},
+							{Hostname: "web-02", Labels: "group=web.prod", Registered: "8s ago"},
+							{Hostname: "db-01", Labels: "", Registered: "2m ago"},
+						},
+					}, nil
 				},
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
@@ -208,6 +225,16 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("job-queue", (*r.KvBuckets)[0].Name)
 				s.Equal(10, (*r.KvBuckets)[0].Keys)
 
+				s.Require().NotNil(r.Consumers)
+				s.Equal(2, r.Consumers.Total)
+				s.Require().NotNil(r.Consumers.Consumers)
+				s.Len(*r.Consumers.Consumers, 2)
+				s.Equal("query_any_web_01", (*r.Consumers.Consumers)[0].Name)
+				s.Equal(0, (*r.Consumers.Consumers)[0].Pending)
+				s.Equal(3, (*r.Consumers.Consumers)[0].AckPending)
+				s.Equal(1, (*r.Consumers.Consumers)[1].Pending)
+				s.Equal(1, (*r.Consumers.Consumers)[1].Redelivered)
+
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
 				s.Equal(5, r.Jobs.Unprocessed)
@@ -216,6 +243,15 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(r.Agents)
 				s.Equal(3, r.Agents.Total)
 				s.Equal(3, r.Agents.Ready)
+				s.Require().NotNil(r.Agents.Agents)
+				s.Len(*r.Agents.Agents, 3)
+				s.Equal("web-01", (*r.Agents.Agents)[0].Hostname)
+				s.Require().NotNil((*r.Agents.Agents)[0].Labels)
+				s.Equal("group=web.prod", *(*r.Agents.Agents)[0].Labels)
+				s.Equal("15s ago", (*r.Agents.Agents)[0].Registered)
+				s.Equal("db-01", (*r.Agents.Agents)[2].Hostname)
+				s.Nil((*r.Agents.Agents)[2].Labels)
+				s.Equal("2m ago", (*r.Agents.Agents)[2].Registered)
 			},
 		},
 		{
@@ -236,6 +272,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 5, Bytes: 512},
 					}, nil
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return nil, fmt.Errorf("consumer stats unavailable")
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
@@ -251,6 +290,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Streams)
 				s.Require().NotNil(r.KvBuckets)
 				s.Len(*r.KvBuckets, 1)
+				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},
@@ -271,6 +311,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
 					return nil, fmt.Errorf("KV info unavailable")
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return nil, fmt.Errorf("consumer stats unavailable")
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
@@ -285,6 +328,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Nats)
 				s.Nil(r.Streams)
 				s.Nil(r.KvBuckets)
+				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},

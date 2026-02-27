@@ -1,8 +1,8 @@
 ---
 title: Enhance health status with agents and consumers
-status: backlog
+status: done
 created: 2026-02-26
-updated: 2026-02-26
+updated: 2026-02-27
 ---
 
 ## Objective
@@ -58,15 +58,19 @@ Consumer details are useful for debugging but may be noisy with many agents.
 
 The agent summary line (`Agents: 2 total, 2 ready`) was implemented as part of
 the heartbeat enrichment work (Phase 5). The `AgentStats` schema and
-`GetAgentStats` provider are wired in. What remains:
+`GetAgentStats` provider are wired in.
+
+Completed:
 
 - Per-agent table in health status output (hostname, labels, registered)
 - Registry bucket visibility in KV Buckets section
-- Consumer details (stretch)
+- Per-consumer details (name, pending, ack_pending, redelivered)
+- `AgentDetail` and `ConsumerDetail` OpenAPI schemas added
+- `ConsumerStatsFn` uses `stream.ListConsumers()` for real data
+- CLI renders tables with `PrintCompactTable`
 
-## Notes
+## Outcome
 
-- The health status API response schema will need new fields for the per-agent
-  list and optionally consumers
-- The SDK and CLI will need updates to render the new sections
-- Consider adding a `--verbose` flag to show consumers only when requested
+All items completed including the stretch goal (per-consumer details). Also
+added `GetQueueSummary()` key-name-only fast path and concurrent metrics
+fetching, reducing health status response from ~15s to ~600ms.

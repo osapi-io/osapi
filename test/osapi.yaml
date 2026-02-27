@@ -67,27 +67,26 @@ nats:
     storage: file
     replicas: 1
 
-node:
-  agent:
-    nats:
-      host: localhost
-      port: 4222
-      client_name: osapi-node-agent-test
-      namespace: ""
-      auth:
-        type: none
-    consumer:
-      name: jobs-agent
-      max_deliver: 5
-      ack_wait: 2m
-      max_ack_pending: 1000
-      replay_policy: instant
-      back_off:
-        - 30s
-        - 2m
-        - 5m
-        - 15m
-        - 30m
-    queue_group: job-agents
-    hostname: ""
-    max_jobs: 10
+agent:
+  nats:
+    host: localhost
+    port: 4222
+    client_name: osapi-agent-test
+    namespace: ""
+    auth:
+      type: none
+  consumer:
+    name: jobs-agent
+    max_deliver: 5
+    ack_wait: 2m
+    max_ack_pending: 1000
+    replay_policy: instant
+    back_off:
+      - 30s
+      - 2m
+      - 5m
+      - 15m
+      - 30m
+  queue_group: job-agents
+  hostname: ""
+  max_jobs: 10

@@ -42,7 +42,7 @@ actual system operations (reading hostname, querying DNS, checking disk usage,
 etc.). Agents run with whatever privileges they have — if an agent can't read
 something due to permissions, it reports the error rather than failing silently.
 
-Start it with `osapi node agent start`.
+Start it with `osapi agent start`.
 
 ## Deployment Models
 

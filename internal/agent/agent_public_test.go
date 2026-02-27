@@ -62,18 +62,16 @@ func (s *AgentPublicTestSuite) SetupTest() {
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
 		},
-		Node: config.Node{
-			Agent: config.NodeAgent{
-				Hostname:   "test-agent",
-				QueueGroup: "test-queue",
-				MaxJobs:    5,
-				Consumer: config.NodeAgentConsumer{
-					AckWait:       "30s",
-					BackOff:       []string{"1s", "2s", "5s"},
-					MaxDeliver:    3,
-					MaxAckPending: 10,
-					ReplayPolicy:  "instant",
-				},
+		Agent: config.AgentConfig{
+			Hostname:   "test-agent",
+			QueueGroup: "test-queue",
+			MaxJobs:    5,
+			Consumer: config.AgentConsumer{
+				AckWait:       "30s",
+				BackOff:       []string{"1s", "2s", "5s"},
+				MaxDeliver:    3,
+				MaxAckPending: 10,
+				ReplayPolicy:  "instant",
 			},
 		},
 	}

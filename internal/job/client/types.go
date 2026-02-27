@@ -43,6 +43,9 @@ type JobClient interface {
 	GetQueueStats(
 		ctx context.Context,
 	) (*job.QueueStats, error)
+	GetQueueSummary(
+		ctx context.Context,
+	) (*job.QueueStats, error)
 	GetJobStatus(
 		ctx context.Context,
 		jobID string,

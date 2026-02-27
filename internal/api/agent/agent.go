@@ -18,21 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package agent provides agent-related API handlers.
+package agent
 
 import (
-	"github.com/spf13/cobra"
+	"log/slog"
+
+	"github.com/retr0h/osapi/internal/api/agent/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// nodeCmd represents the node command.
-var nodeCmd = &cobra.Command{
-	Use:   "node",
-	Short: "The node subcommand for node agent operations",
-	Long: `The node subcommand provides node agent operations for fleet management.
-The node agent runs on each managed host, processes jobs, and reports status
-back to the control plane.`,
-}
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
+var _ gen.StrictServerInterface = (*Agent)(nil)
 
-func init() {
-	rootCmd.AddCommand(nodeCmd)
+// New factory to create a new instance.
+func New(
+	logger *slog.Logger,
+	jobClient client.JobClient,
+) *Agent {
+	return &Agent{
+		JobClient: jobClient,
+		logger:    logger,
+	}
 }
