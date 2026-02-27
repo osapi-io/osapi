@@ -30,7 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/job/worker"
+	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
@@ -99,10 +99,10 @@ It processes jobs as they become available.
 		}
 
 		// Create provider factory and providers
-		providerFactory := worker.NewProviderFactory(logger)
+		providerFactory := agent.NewProviderFactory(logger)
 		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := providerFactory.CreateProviders()
 
-		var w cli.Lifecycle = worker.New(
+		var a cli.Lifecycle = agent.New(
 			appFs,
 			appConfig,
 			logger,
@@ -118,8 +118,8 @@ It processes jobs as they become available.
 			registryKV,
 		)
 
-		w.Start()
-		cli.RunServer(ctx, w, func() {
+		a.Start()
+		cli.RunServer(ctx, a, func() {
 			_ = shutdownTracer(context.Background())
 			cli.CloseNATSClient(nc)
 		})

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,66 +18,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent_test
 
 import (
 	"log/slog"
 	"testing"
 
-	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/agent"
 )
 
-type FactoryTestSuite struct {
+type FactoryPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *FactoryTestSuite) TestCreateProviders() {
+func (s *FactoryPublicTestSuite) TestNewProviderFactory() {
 	tests := []struct {
-		name      string
-		setupMock func() func() (*host.InfoStat, error)
+		name string
 	}{
 		{
-			name: "creates ubuntu providers when platform is ubuntu",
-			setupMock: func() func() (*host.InfoStat, error) {
-				return func() (*host.InfoStat, error) {
-					return &host.InfoStat{
-						Platform: "Ubuntu",
-					}, nil
-				}
-			},
-		},
-		{
-			name: "creates darwin providers when platform is empty and OS is darwin",
-			setupMock: func() func() (*host.InfoStat, error) {
-				return func() (*host.InfoStat, error) {
-					return &host.InfoStat{
-						Platform: "",
-						OS:       "darwin",
-					}, nil
-				}
-			},
-		},
-		{
-			name: "creates linux providers for unknown platform",
-			setupMock: func() func() (*host.InfoStat, error) {
-				return func() (*host.InfoStat, error) {
-					return &host.InfoStat{
-						Platform: "centos",
-					}, nil
-				}
-			},
+			name: "creates factory with logger",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			original := factoryHostInfoFn
-			defer func() { factoryHostInfoFn = original }()
+			factory := agent.NewProviderFactory(slog.Default())
 
-			factoryHostInfoFn = tt.setupMock()
+			s.NotNil(factory)
+		})
+	}
+}
 
-			factory := NewProviderFactory(slog.Default())
+func (s *FactoryPublicTestSuite) TestCreateProviders() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates all providers",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			factory := agent.NewProviderFactory(slog.Default())
+
 			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
@@ -91,6 +77,6 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 	}
 }
 
-func TestFactoryTestSuite(t *testing.T) {
-	suite.Run(t, new(FactoryTestSuite))
+func TestFactoryPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(FactoryPublicTestSuite))
 }

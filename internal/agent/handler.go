@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -63,33 +63,33 @@ func extractChanged(
 
 // writeStatusEvent writes an append-only status event for a job.
 // This eliminates race conditions by never updating existing keys.
-func (w *Worker) writeStatusEvent(
+func (a *Agent) writeStatusEvent(
 	ctx context.Context,
 	jobID string,
 	event string,
 	data map[string]interface{},
 ) error {
 	// Get hostname for this agent (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetWorkerHostname(a.appConfig.Node.Agent.Hostname)
 
 	// Use job client to write status event
-	return w.jobClient.WriteStatusEvent(ctx, jobID, event, hostname, data)
+	return a.jobClient.WriteStatusEvent(ctx, jobID, event, hostname, data)
 }
 
 // handleJobMessage processes incoming job messages from NATS.
-func (w *Worker) handleJobMessage(
+func (a *Agent) handleJobMessage(
 	msg jetstream.Msg,
 ) error {
 	// Extract the key (job ID) from the message data
 	jobKey := string(msg.Data())
 
-	w.logger.Info(
+	a.logger.Info(
 		"received job notification",
 		slog.String("subject", msg.Subject()),
 		slog.String("job_key", jobKey),
 	)
 
-	w.logger.Debug(
+	a.logger.Debug(
 		"processing job message",
 		slog.String("subject", msg.Subject()),
 		slog.String("job_key", jobKey),
@@ -104,7 +104,7 @@ func (w *Worker) handleJobMessage(
 
 	// Get the immutable job data
 	jobDataKey := "jobs." + jobKey
-	jobDataBytes, err := w.jobClient.GetJobData(context.Background(), jobDataKey)
+	jobDataBytes, err := a.jobClient.GetJobData(context.Background(), jobDataKey)
 	if err != nil {
 		return fmt.Errorf("job not found: %s", jobKey)
 	}
@@ -117,7 +117,7 @@ func (w *Worker) handleJobMessage(
 
 	// Extract trace context from NATS message headers and create a processing span
 	ctx := telemetry.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Headers()))
-	ctx, span := otel.Tracer("osapi-worker").Start(ctx, "job.process")
+	ctx, span := otel.Tracer("osapi-agent").Start(ctx, "job.process")
 	defer span.End()
 
 	// Extract the job ID from top-level job data
@@ -175,12 +175,12 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Write acknowledged event
-	if err := w.writeStatusEvent(ctx, jobKey, "acknowledged", map[string]interface{}{
+	if err := a.writeStatusEvent(ctx, jobKey, "acknowledged", map[string]interface{}{
 		"subject":   msg.Subject(),
 		"category":  jobRequest.Category,
 		"operation": jobRequest.Operation,
 	}); err != nil {
-		w.logger.ErrorContext(
+		a.logger.ErrorContext(
 			ctx,
 			"failed to write acknowledged event",
 			slog.String("error", err.Error()),
@@ -188,7 +188,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Process the job
-	w.logger.InfoContext(
+	a.logger.InfoContext(
 		ctx,
 		"processing job",
 		slog.String("job_id", jobKey),
@@ -199,11 +199,11 @@ func (w *Worker) handleJobMessage(
 
 	// Write started event
 	startTime := time.Now()
-	if err := w.writeStatusEvent(ctx, jobKey, "started", map[string]interface{}{
-		"worker_version": "1.0.0", // TODO: get from config or build info
+	if err := a.writeStatusEvent(ctx, jobKey, "started", map[string]interface{}{
+		"agent_version": "1.0.0", // TODO: get from config or build info
 		"pid":            os.Getpid(),
 	}); err != nil {
-		w.logger.ErrorContext(
+		a.logger.ErrorContext(
 			ctx,
 			"failed to write started event",
 			slog.String("error", err.Error()),
@@ -211,7 +211,7 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Get agent hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetWorkerHostname(a.appConfig.Node.Agent.Hostname)
 
 	// Create job response
 	response := job.Response{
@@ -222,9 +222,9 @@ func (w *Worker) handleJobMessage(
 	}
 
 	// Process based on category and operation
-	result, err := w.processJobOperation(jobRequest)
+	result, err := a.processJobOperation(jobRequest)
 	if err != nil {
-		w.logger.ErrorContext(
+		a.logger.ErrorContext(
 			ctx,
 			"job processing failed",
 			slog.String("job_id", jobKey),
@@ -236,11 +236,11 @@ func (w *Worker) handleJobMessage(
 		response.Error = err.Error()
 
 		// Write failed event
-		if err := w.writeStatusEvent(ctx, jobKey, "failed", map[string]interface{}{
+		if err := a.writeStatusEvent(ctx, jobKey, "failed", map[string]interface{}{
 			"error":       err.Error(),
 			"duration_ms": time.Since(startTime).Milliseconds(),
 		}); err != nil {
-			w.logger.ErrorContext(
+			a.logger.ErrorContext(
 				ctx,
 				"failed to write failed event",
 				slog.String("error", err.Error()),
@@ -256,11 +256,11 @@ func (w *Worker) handleJobMessage(
 		}
 
 		// Write completed event
-		if err := w.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
+		if err := a.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
 			"duration_ms": time.Since(startTime).Milliseconds(),
 			"result_size": len(result),
 		}); err != nil {
-			w.logger.ErrorContext(ctx, "failed to write completed event", slog.String("error", err.Error()))
+			a.logger.ErrorContext(ctx, "failed to write completed event", slog.String("error", err.Error()))
 		}
 	}
 
@@ -272,7 +272,7 @@ func (w *Worker) handleJobMessage(
 		errorMsg = response.Error
 	}
 
-	err = w.jobClient.WriteJobResponse(ctx, jobKey, hostname,
+	err = a.jobClient.WriteJobResponse(ctx, jobKey, hostname,
 		response.Data, string(response.Status), errorMsg, response.Changed)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
@@ -281,7 +281,7 @@ func (w *Worker) handleJobMessage(
 	// NOTE: We no longer update the original job - it remains immutable.
 	// Status is now tracked through append-only events to avoid race conditions.
 
-	w.logger.InfoContext(
+	a.logger.InfoContext(
 		ctx,
 		"job processing completed",
 		slog.String("job_id", jobKey),

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"encoding/json"
@@ -59,9 +59,9 @@ func (s *ProcessorCommandTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ProcessorCommandTestSuite) newWorkerWithCommandMock(
+func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
 	cmdMock command.Provider,
-) *Worker {
+) *Agent {
 	return New(
 		afero.NewMemMapFs(),
 		config.Config{},
@@ -227,8 +227,8 @@ func (s *ProcessorCommandTestSuite) TestProcessCommandOperation() {
 			cmdMock := commandMocks.NewMockProvider(s.mockCtrl)
 			tt.setupMock(cmdMock)
 
-			w := s.newWorkerWithCommandMock(cmdMock)
-			result, err := w.processCommandOperation(tt.jobRequest)
+			a := s.newAgentWithCommandMock(cmdMock)
+			result, err := a.processCommandOperation(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -257,9 +257,9 @@ func (s *ProcessorCommandTestSuite) TestGetCommandProvider() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			cmdMock := commandMocks.NewPlainMockProvider(s.mockCtrl)
-			w := s.newWorkerWithCommandMock(cmdMock)
+			a := s.newAgentWithCommandMock(cmdMock)
 
-			provider := w.getCommandProvider()
+			provider := a.getCommandProvider()
 
 			s.NotNil(provider)
 		})

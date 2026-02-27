@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -50,7 +50,7 @@ type HeartbeatTestSuite struct {
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 	mockKV        *mocks.MockKeyValue
-	worker        *Worker
+	agent         *Agent
 }
 
 func (s *HeartbeatTestSuite) SetupTest() {
@@ -66,7 +66,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		},
 	}
 
-	s.worker = New(
+	s.agent = New(
 		afero.NewMemMapFs(),
 		appConfig,
 		slog.Default(),
@@ -130,7 +130,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			if tt.teardownMock != nil {
 				defer tt.teardownMock()
 			}
-			s.worker.writeRegistration(context.Background(), "test-worker")
+			s.agent.writeRegistration(context.Background(), "test-worker")
 		})
 	}
 }
@@ -161,7 +161,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			s.worker.deregister("test-worker")
+			s.agent.deregister("test-worker")
 		})
 	}
 }
@@ -196,14 +196,14 @@ func (s *HeartbeatTestSuite) TestStartHeartbeatRefresh() {
 			heartbeatInterval = 10 * time.Millisecond
 
 			ctx, cancel := context.WithCancel(context.Background())
-			s.worker.startHeartbeat(ctx, "test-worker")
+			s.agent.startHeartbeat(ctx, "test-worker")
 
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)
 			cancel()
 
 			// Wait for goroutine to finish
-			s.worker.wg.Wait()
+			s.agent.wg.Wait()
 		})
 	}
 }

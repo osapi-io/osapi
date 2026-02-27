@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -49,7 +49,7 @@ type ConsumerTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	worker        *Worker
+	agent         *Agent
 }
 
 func (s *ConsumerTestSuite) SetupTest() {
@@ -88,7 +88,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 	pingMock := pingMocks.NewDefaultMockProvider(s.mockCtrl)
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	s.worker = New(
+	s.agent = New(
 		appFs,
 		appConfig,
 		slog.Default(),
@@ -230,16 +230,16 @@ func (s *ConsumerTestSuite) TestConsumeQueryJobs() {
 
 			// Set labels for the label-specific test case
 			if tt.name == "with labels creates extra consumers" {
-				s.worker.appConfig.Node.Agent.Labels = map[string]string{
+				s.agent.appConfig.Node.Agent.Labels = map[string]string{
 					"group": "web.dev.us-east",
 				}
 			} else {
-				s.worker.appConfig.Node.Agent.Labels = nil
+				s.agent.appConfig.Node.Agent.Labels = nil
 			}
 
 			tt.setupMocks()
 
-			err := s.worker.consumeQueryJobs(ctx, tt.hostname)
+			err := s.agent.consumeQueryJobs(ctx, tt.hostname)
 
 			if tt.expectErr {
 				s.Error(err)
@@ -348,16 +348,16 @@ func (s *ConsumerTestSuite) TestConsumeModifyJobs() {
 
 			// Set labels for the label-specific test case
 			if tt.name == "with labels creates extra consumers" {
-				s.worker.appConfig.Node.Agent.Labels = map[string]string{
+				s.agent.appConfig.Node.Agent.Labels = map[string]string{
 					"group": "web.dev.us-east",
 				}
 			} else {
-				s.worker.appConfig.Node.Agent.Labels = nil
+				s.agent.appConfig.Node.Agent.Labels = nil
 			}
 
 			tt.setupMocks()
 
-			err := s.worker.consumeModifyJobs(ctx, tt.hostname)
+			err := s.agent.consumeModifyJobs(ctx, tt.hostname)
 
 			if tt.expectErr {
 				s.Error(err)
@@ -489,11 +489,11 @@ func (s *ConsumerTestSuite) TestCreateConsumer() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			// Update worker config for this test
-			s.worker.appConfig.Node.Agent.Consumer = tt.config
+			s.agent.appConfig.Node.Agent.Consumer = tt.config
 
 			tt.setupMocks()
 
-			err := s.worker.createConsumer(
+			err := s.agent.createConsumer(
 				context.Background(),
 				tt.streamName,
 				tt.consumerName,
@@ -590,7 +590,7 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 				data:    tt.msgData,
 			}
 
-			err := s.worker.handleJobMessageJS(mockMsg)
+			err := s.agent.handleJobMessageJS(mockMsg)
 
 			if tt.expectErr {
 				s.Error(err)

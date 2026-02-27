@@ -18,10 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
+	"context"
 	"log/slog"
+	"sync"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
@@ -37,35 +39,44 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-// New creates a new job worker instance.
-func New(
-	appFs afero.Fs,
-	appConfig config.Config,
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	streamName string,
-	hostProvider host.Provider,
-	diskProvider disk.Provider,
-	memProvider mem.Provider,
-	loadProvider load.Provider,
-	dnsProvider dns.Provider,
-	pingProvider ping.Provider,
-	commandProvider command.Provider,
-	registryKV jetstream.KeyValue,
-) *Worker {
-	return &Worker{
-		logger:          logger,
-		appConfig:       appConfig,
-		appFs:           appFs,
-		jobClient:       jobClient,
-		streamName:      streamName,
-		hostProvider:    hostProvider,
-		diskProvider:    diskProvider,
-		memProvider:     memProvider,
-		loadProvider:    loadProvider,
-		dnsProvider:     dnsProvider,
-		pingProvider:    pingProvider,
-		commandProvider: commandProvider,
-		registryKV:      registryKV,
-	}
+// Agent implements job processing with clean lifecycle management.
+type Agent struct {
+	logger     *slog.Logger
+	appConfig  config.Config
+	appFs      afero.Fs
+	jobClient  client.JobClient
+	streamName string
+
+	// System providers
+	hostProvider host.Provider
+	diskProvider disk.Provider
+	memProvider  mem.Provider
+	loadProvider load.Provider
+
+	// Network providers
+	dnsProvider  dns.Provider
+	pingProvider ping.Provider
+
+	// Command provider
+	commandProvider command.Provider
+
+	// Registry KV for heartbeat registration
+	registryKV jetstream.KeyValue
+
+	// Lifecycle management
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
+}
+
+// JobContext contains the context and data for a single job execution.
+type JobContext struct {
+	// JobID from the original job request
+	JobID string
+	// AgentHostname identifies which agent is processing this job
+	AgentHostname string
+	// JobData contains the raw job request data
+	JobData []byte
+	// ResponseKV is the key-value bucket for storing responses
+	ResponseKV string
 }

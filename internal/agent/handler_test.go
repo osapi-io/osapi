@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -50,7 +50,7 @@ type HandlerTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	worker        *Worker
+	agent         *Agent
 }
 
 func (s *HandlerTestSuite) SetupTest() {
@@ -100,7 +100,7 @@ func (s *HandlerTestSuite) SetupTest() {
 
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	s.worker = New(
+	s.agent = New(
 		appFs,
 		appConfig,
 		slog.Default(),
@@ -186,7 +186,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			err := s.worker.writeStatusEvent(context.Background(), tt.jobID, tt.event, tt.data)
+			err := s.agent.writeStatusEvent(context.Background(), tt.jobID, tt.event, tt.data)
 
 			if tt.expectError {
 				s.Error(err)
@@ -584,7 +584,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			err := s.worker.handleJobMessage(tt.msg)
+			err := s.agent.handleJobMessage(tt.msg)
 
 			if tt.expectError {
 				s.Error(err)
@@ -658,7 +658,7 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 				data:    []byte("modify-job-123"),
 			}
 
-			err := s.worker.handleJobMessage(msg)
+			err := s.agent.handleJobMessage(msg)
 
 			if tt.expectError {
 				s.Error(err)

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -27,52 +27,52 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// Start starts the worker without blocking. Call Stop to shut down.
-func (w *Worker) Start() {
-	w.ctx, w.cancel = context.WithCancel(context.Background())
+// Start starts the agent without blocking. Call Stop to shut down.
+func (a *Agent) Start() {
+	a.ctx, a.cancel = context.WithCancel(context.Background())
 
-	w.logger.Info("starting node agent")
+	a.logger.Info("starting node agent")
 
 	// Determine agent hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetWorkerHostname(a.appConfig.Node.Agent.Hostname)
 
-	w.logger.Info(
+	a.logger.Info(
 		"agent configuration",
 		slog.String("hostname", hostname),
-		slog.String("queue_group", w.appConfig.Node.Agent.QueueGroup),
-		slog.Int("max_jobs", w.appConfig.Node.Agent.MaxJobs),
-		slog.Any("labels", w.appConfig.Node.Agent.Labels),
+		slog.String("queue_group", a.appConfig.Node.Agent.QueueGroup),
+		slog.Int("max_jobs", a.appConfig.Node.Agent.MaxJobs),
+		slog.Any("labels", a.appConfig.Node.Agent.Labels),
 	)
 
 	// Register in agent registry and start heartbeat keepalive.
-	w.startHeartbeat(w.ctx, hostname)
+	a.startHeartbeat(a.ctx, hostname)
 
 	// Start consuming messages for different job types.
-	// Each consume function spawns goroutines tracked by w.wg.
-	_ = w.consumeQueryJobs(w.ctx, hostname)
-	_ = w.consumeModifyJobs(w.ctx, hostname)
+	// Each consume function spawns goroutines tracked by a.wg.
+	_ = a.consumeQueryJobs(a.ctx, hostname)
+	_ = a.consumeModifyJobs(a.ctx, hostname)
 
-	w.logger.Info("node agent started successfully")
+	a.logger.Info("node agent started successfully")
 }
 
 // Stop gracefully shuts down the agent, waiting for in-flight jobs
 // to finish or the context deadline to expire.
-func (w *Worker) Stop(
+func (a *Agent) Stop(
 	ctx context.Context,
 ) {
-	w.logger.Info("node agent shutting down")
-	w.cancel()
+	a.logger.Info("node agent shutting down")
+	a.cancel()
 
 	done := make(chan struct{})
 	go func() {
-		w.wg.Wait()
+		a.wg.Wait()
 		close(done)
 	}()
 
 	select {
 	case <-done:
-		w.logger.Info("node agent stopped gracefully")
+		a.logger.Info("node agent stopped gracefully")
 	case <-ctx.Done():
-		w.logger.Warn("node agent shutdown timed out")
+		a.logger.Warn("node agent shutdown timed out")
 	}
 }

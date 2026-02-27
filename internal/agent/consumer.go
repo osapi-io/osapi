@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package worker provides the job worker implementation.
-package worker
+// Package agent provides the node agent implementation.
+package agent
 
 import (
 	"context"
@@ -35,11 +35,11 @@ import (
 )
 
 // consumeQueryJobs handles read-only job operations using JetStream consumers.
-func (w *Worker) consumeQueryJobs(
+func (a *Agent) consumeQueryJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.streamName
+	streamName := a.streamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -53,7 +53,7 @@ func (w *Worker) consumeQueryJobs(
 		{
 			name:       "query_any_" + sanitizedHostname,
 			filter:     job.JobsQueryPrefix + "._any",
-			queueGroup: w.appConfig.Node.Agent.QueueGroup,
+			queueGroup: a.appConfig.Node.Agent.QueueGroup,
 		},
 		{
 			name:   "query_all_" + sanitizedHostname,
@@ -70,7 +70,7 @@ func (w *Worker) consumeQueryJobs(
 	//   jobs.query.label.group.web
 	//   jobs.query.label.group.web.dev
 	//   jobs.query.label.group.web.dev.us-east
-	for key, value := range w.appConfig.Node.Agent.Labels {
+	for key, value := range a.appConfig.Node.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -93,8 +93,8 @@ func (w *Worker) consumeQueryJobs(
 
 	for _, consumer := range consumers {
 		// Create the consumer first
-		if err := w.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
-			w.logger.Error(
+		if err := a.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
+			a.logger.Error(
 				"failed to create query consumer",
 				slog.String("consumer", consumer.name),
 				slog.String("error", err.Error()),
@@ -102,23 +102,23 @@ func (w *Worker) consumeQueryJobs(
 			continue
 		}
 
-		w.wg.Add(1)
+		a.wg.Add(1)
 		go func(c struct {
 			name       string
 			filter     string
 			queueGroup string
 		},
 		) {
-			defer w.wg.Done()
+			defer a.wg.Done()
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Node.Agent.MaxJobs,
+				MaxInFlight: a.appConfig.Node.Agent.MaxJobs,
 			}
 
-			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
+			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
 			if err != nil && err != context.Canceled {
-				w.logger.Error(
+				a.logger.Error(
 					"error consuming query messages",
 					slog.String("consumer", c.name),
 					slog.String("error", err.Error()),
@@ -131,11 +131,11 @@ func (w *Worker) consumeQueryJobs(
 }
 
 // consumeModifyJobs handles write job operations using JetStream consumers.
-func (w *Worker) consumeModifyJobs(
+func (a *Agent) consumeModifyJobs(
 	ctx context.Context,
 	hostname string,
 ) error {
-	streamName := w.streamName
+	streamName := a.streamName
 
 	// Sanitize hostname for consumer names (alphanumeric and underscores only)
 	sanitizedHostname := job.SanitizeHostname(hostname)
@@ -149,7 +149,7 @@ func (w *Worker) consumeModifyJobs(
 		{
 			name:       "modify_any_" + sanitizedHostname,
 			filter:     job.JobsModifyPrefix + "._any",
-			queueGroup: w.appConfig.Node.Agent.QueueGroup,
+			queueGroup: a.appConfig.Node.Agent.QueueGroup,
 		},
 		{
 			name:   "modify_all_" + sanitizedHostname,
@@ -162,7 +162,7 @@ func (w *Worker) consumeModifyJobs(
 	}
 
 	// Add label-based consumers with hierarchical prefix subscriptions.
-	for key, value := range w.appConfig.Node.Agent.Labels {
+	for key, value := range a.appConfig.Node.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -185,8 +185,8 @@ func (w *Worker) consumeModifyJobs(
 
 	for _, consumer := range consumers {
 		// Create the consumer first
-		if err := w.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
-			w.logger.Error(
+		if err := a.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
+			a.logger.Error(
 				"failed to create modify consumer",
 				slog.String("consumer", consumer.name),
 				slog.String("error", err.Error()),
@@ -194,23 +194,23 @@ func (w *Worker) consumeModifyJobs(
 			continue
 		}
 
-		w.wg.Add(1)
+		a.wg.Add(1)
 		go func(c struct {
 			name       string
 			filter     string
 			queueGroup string
 		},
 		) {
-			defer w.wg.Done()
+			defer a.wg.Done()
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Node.Agent.MaxJobs,
+				MaxInFlight: a.appConfig.Node.Agent.MaxJobs,
 			}
 
-			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
+			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
 			if err != nil && err != context.Canceled {
-				w.logger.Error(
+				a.logger.Error(
 					"error consuming modify messages",
 					slog.String("consumer", c.name),
 					slog.String("error", err.Error()),
@@ -223,10 +223,10 @@ func (w *Worker) consumeModifyJobs(
 }
 
 // handleJobMessageJS wraps the existing handleJobMessage for JetStream compatibility.
-func (w *Worker) handleJobMessageJS(
+func (a *Agent) handleJobMessageJS(
 	msg jetstream.Msg,
 ) error {
-	err := w.handleJobMessage(msg)
+	err := a.handleJobMessage(msg)
 	if err != nil {
 		return err
 	}
@@ -235,16 +235,16 @@ func (w *Worker) handleJobMessageJS(
 }
 
 // createConsumer creates a durable JetStream consumer for the agent.
-func (w *Worker) createConsumer(
+func (a *Agent) createConsumer(
 	ctx context.Context,
 	streamName, consumerName, filterSubject string,
 ) error {
 	// Parse AckWait duration from config
-	ackWait, _ := time.ParseDuration(w.appConfig.Node.Agent.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(a.appConfig.Node.Agent.Consumer.AckWait)
 
 	// Parse BackOff durations from config
 	var backOff []time.Duration
-	for _, duration := range w.appConfig.Node.Agent.Consumer.BackOff {
+	for _, duration := range a.appConfig.Node.Agent.Consumer.BackOff {
 		if d, err := time.ParseDuration(duration); err == nil {
 			backOff = append(backOff, d)
 		}
@@ -252,7 +252,7 @@ func (w *Worker) createConsumer(
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if w.appConfig.Node.Agent.Consumer.ReplayPolicy == "original" {
+	if a.appConfig.Node.Agent.Consumer.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
@@ -263,12 +263,12 @@ func (w *Worker) createConsumer(
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    w.appConfig.Node.Agent.Consumer.MaxDeliver,
+		MaxDeliver:    a.appConfig.Node.Agent.Consumer.MaxDeliver,
 		AckWait:       ackWait,
 		BackOff:       backOff,
-		MaxAckPending: w.appConfig.Node.Agent.Consumer.MaxAckPending,
+		MaxAckPending: a.appConfig.Node.Agent.Consumer.MaxAckPending,
 		ReplayPolicy:  replayPolicy,
 	}
 
-	return w.jobClient.CreateOrUpdateConsumer(ctx, streamName, consumerConfig)
+	return a.jobClient.CreateOrUpdateConsumer(ctx, streamName, consumerConfig)
 }

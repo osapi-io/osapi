@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"context"
@@ -37,29 +37,29 @@ var marshalJSON = json.Marshal
 
 // startHeartbeat writes the initial registration, spawns a goroutine that
 // refreshes the entry on a ticker, and deregisters on ctx.Done().
-func (w *Worker) startHeartbeat(
+func (a *Agent) startHeartbeat(
 	ctx context.Context,
 	hostname string,
 ) {
-	if w.registryKV == nil {
+	if a.registryKV == nil {
 		return
 	}
 
-	ttl := w.appConfig.NATS.Registry.TTL
+	ttl := a.appConfig.NATS.Registry.TTL
 	key := registryKey(hostname)
 
-	w.writeRegistration(ctx, hostname)
+	a.writeRegistration(ctx, hostname)
 
-	w.logger.Info(
+	a.logger.Info(
 		"registered in agent registry",
 		slog.String("hostname", hostname),
 		slog.String("key", key),
 		slog.String("ttl", ttl),
 	)
 
-	w.wg.Add(1)
+	a.wg.Add(1)
 	go func() {
-		defer w.wg.Done()
+		defer a.wg.Done()
 
 		ticker := time.NewTicker(heartbeatInterval)
 		defer ticker.Stop()
@@ -67,12 +67,12 @@ func (w *Worker) startHeartbeat(
 		for {
 			select {
 			case <-ctx.Done():
-				w.deregister(hostname)
+				a.deregister(hostname)
 				return
 			case <-ticker.C:
-				w.writeRegistration(ctx, hostname)
+				a.writeRegistration(ctx, hostname)
 
-				w.logger.Info(
+				a.logger.Info(
 					"heartbeat refreshed",
 					slog.String("hostname", hostname),
 					slog.String("key", key),
@@ -84,19 +84,19 @@ func (w *Worker) startHeartbeat(
 }
 
 // writeRegistration marshals an agent registration and puts it to the registry KV.
-func (w *Worker) writeRegistration(
+func (a *Agent) writeRegistration(
 	ctx context.Context,
 	hostname string,
 ) {
 	reg := job.WorkerRegistration{
 		Hostname:     hostname,
-		Labels:       w.appConfig.Node.Agent.Labels,
+		Labels:       a.appConfig.Node.Agent.Labels,
 		RegisteredAt: time.Now(),
 	}
 
 	data, err := marshalJSON(reg)
 	if err != nil {
-		w.logger.Warn(
+		a.logger.Warn(
 			"failed to marshal agent registration",
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
@@ -105,8 +105,8 @@ func (w *Worker) writeRegistration(
 	}
 
 	key := registryKey(hostname)
-	if _, err := w.registryKV.Put(ctx, key, data); err != nil {
-		w.logger.Warn(
+	if _, err := a.registryKV.Put(ctx, key, data); err != nil {
+		a.logger.Warn(
 			"failed to write agent registration",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
@@ -116,12 +116,12 @@ func (w *Worker) writeRegistration(
 }
 
 // deregister deletes the agent's registration key on clean shutdown.
-func (w *Worker) deregister(
+func (a *Agent) deregister(
 	hostname string,
 ) {
 	key := registryKey(hostname)
-	if err := w.registryKV.Delete(context.Background(), key); err != nil {
-		w.logger.Warn(
+	if err := a.registryKV.Delete(context.Background(), key); err != nil {
+		a.logger.Warn(
 			"failed to deregister agent",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
@@ -130,7 +130,7 @@ func (w *Worker) deregister(
 		return
 	}
 
-	w.logger.Info(
+	a.logger.Info(
 		"agent deregistered",
 		slog.String("hostname", hostname),
 		slog.String("key", key),

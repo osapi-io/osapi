@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"encoding/json"
@@ -50,7 +50,7 @@ type ProcessorTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	worker        *Worker
+	agent         *Agent
 }
 
 func (s *ProcessorTestSuite) SetupTest() {
@@ -105,7 +105,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	s.worker = New(
+	s.agent = New(
 		appFs,
 		appConfig,
 		slog.Default(),
@@ -399,7 +399,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result, err := s.worker.processJobOperation(tt.jobRequest)
+			result, err := s.agent.processJobOperation(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -473,7 +473,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.worker.appConfig.Node.Agent.Labels = tt.labels
+			s.agent.appConfig.Node.Agent.Labels = tt.labels
 
 			request := job.Request{
 				Type:      job.TypeQuery,
@@ -482,7 +482,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				Data:      json.RawMessage(`{}`),
 			}
 
-			result, err := s.worker.processNodeOperation(request)
+			result, err := s.agent.processNodeOperation(request)
 
 			if tt.expectError {
 				s.Error(err)
@@ -564,7 +564,7 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 				Data:      json.RawMessage(tt.data),
 			}
 
-			result, err := s.worker.processNetworkOperation(request)
+			result, err := s.agent.processNetworkOperation(request)
 
 			if tt.expectError {
 				s.Error(err)
@@ -587,31 +587,31 @@ func (s *ProcessorTestSuite) TestProviderFactoryMethods() {
 	}{
 		{
 			name:        "getHostProvider",
-			getProvider: func() interface{} { return s.worker.getHostProvider() },
+			getProvider: func() interface{} { return s.agent.getHostProvider() },
 		},
 		{
 			name:        "getDiskProvider",
-			getProvider: func() interface{} { return s.worker.getDiskProvider() },
+			getProvider: func() interface{} { return s.agent.getDiskProvider() },
 		},
 		{
 			name:        "getMemProvider",
-			getProvider: func() interface{} { return s.worker.getMemProvider() },
+			getProvider: func() interface{} { return s.agent.getMemProvider() },
 		},
 		{
 			name:        "getLoadProvider",
-			getProvider: func() interface{} { return s.worker.getLoadProvider() },
+			getProvider: func() interface{} { return s.agent.getLoadProvider() },
 		},
 		{
 			name:        "getDNSProvider",
-			getProvider: func() interface{} { return s.worker.getDNSProvider() },
+			getProvider: func() interface{} { return s.agent.getDNSProvider() },
 		},
 		{
 			name:        "getPingProvider",
-			getProvider: func() interface{} { return s.worker.getPingProvider() },
+			getProvider: func() interface{} { return s.agent.getPingProvider() },
 		},
 		{
 			name:        "getCommandProvider",
-			getProvider: func() interface{} { return s.worker.getCommandProvider() },
+			getProvider: func() interface{} { return s.agent.getCommandProvider() },
 		},
 	}
 
@@ -628,13 +628,13 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 		name         string
 		operation    string
 		errorMsg     string
-		createWorker func() *Worker
+		createAgent func() *Agent
 	}{
 		{
 			name:      "hostname provider error",
 			operation: "hostname.get",
 			errorMsg:  "failed to get hostname",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
 				return New(
@@ -658,7 +658,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			name:      "uptime provider error",
 			operation: "uptime.get",
 			errorMsg:  "failed to get uptime",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().
 					GetUptime().
@@ -684,7 +684,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			name:      "OS info provider error",
 			operation: "os.get",
 			errorMsg:  "failed to get OS info",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
 				return New(
@@ -708,7 +708,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			name:      "disk provider error",
 			operation: "disk.get",
 			errorMsg:  "failed to get disk usage",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
 				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
 				return New(
@@ -732,7 +732,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			name:      "memory provider error",
 			operation: "memory.get",
 			errorMsg:  "failed to get memory stats",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
 				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
 				return New(
@@ -756,7 +756,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			name:      "load provider error",
 			operation: "load.get",
 			errorMsg:  "failed to get load averages",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
 				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
 				return New(
@@ -780,7 +780,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			w := tt.createWorker()
+			a := tt.createAgent()
 			request := job.Request{
 				Type:      job.TypeQuery,
 				Category:  "node",
@@ -788,7 +788,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				Data:      json.RawMessage(`{}`),
 			}
 
-			result, err := w.processNodeOperation(request)
+			result, err := a.processNodeOperation(request)
 
 			s.Error(err)
 			s.Contains(err.Error(), tt.errorMsg)
@@ -804,7 +804,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 		jobType      job.Type
 		data         string
 		errorMsg     string
-		createWorker func() *Worker
+		createAgent func() *Agent
 	}{
 		{
 			name:      "DNS get error",
@@ -812,7 +812,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 			jobType:   job.TypeQuery,
 			data:      `{"interface": "eth0"}`,
 			errorMsg:  "failed to get DNS config",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
 					GetResolvConfByInterface("eth0").
@@ -840,7 +840,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 			jobType:   job.TypeModify,
 			data:      `{"servers": ["8.8.8.8"], "search_domains": ["example.com"], "interface": "eth0"}`,
 			errorMsg:  "failed to set DNS config",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
 					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -868,7 +868,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 			jobType:   job.TypeQuery,
 			data:      `{"address": "8.8.8.8"}`,
 			errorMsg:  "ping failed",
-			createWorker: func() *Worker {
+			createAgent: func() *Agent {
 				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 				pingMock.EXPECT().Do("8.8.8.8").Return(nil, errors.New("ping timeout"))
 				return New(
@@ -892,7 +892,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			w := tt.createWorker()
+			a := tt.createAgent()
 			request := job.Request{
 				Type:      tt.jobType,
 				Category:  "network",
@@ -900,7 +900,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 				Data:      json.RawMessage(tt.data),
 			}
 
-			result, err := w.processNetworkOperation(request)
+			result, err := a.processNetworkOperation(request)
 
 			s.Error(err)
 			s.Contains(err.Error(), tt.errorMsg)

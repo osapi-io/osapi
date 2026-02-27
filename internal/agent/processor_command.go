@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ import (
 )
 
 // processCommandOperation handles command-related operations.
-func (w *Worker) processCommandOperation(
+func (a *Agent) processCommandOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "exec.execute" -> "exec")
@@ -38,16 +38,16 @@ func (w *Worker) processCommandOperation(
 
 	switch baseOperation {
 	case "exec":
-		return w.processCommandExec(jobRequest)
+		return a.processCommandExec(jobRequest)
 	case "shell":
-		return w.processCommandShell(jobRequest)
+		return a.processCommandShell(jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported command operation: %s", jobRequest.Operation)
 	}
 }
 
 // processCommandExec handles direct command execution.
-func (w *Worker) processCommandExec(
+func (a *Agent) processCommandExec(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var execData job.CommandExecData
@@ -55,7 +55,7 @@ func (w *Worker) processCommandExec(
 		return nil, fmt.Errorf("failed to parse command exec data: %w", err)
 	}
 
-	commandProvider := w.getCommandProvider()
+	commandProvider := a.getCommandProvider()
 	result, err := commandProvider.Exec(command.ExecParams{
 		Command: execData.Command,
 		Args:    execData.Args,
@@ -70,7 +70,7 @@ func (w *Worker) processCommandExec(
 }
 
 // processCommandShell handles shell command execution.
-func (w *Worker) processCommandShell(
+func (a *Agent) processCommandShell(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var shellData job.CommandShellData
@@ -78,7 +78,7 @@ func (w *Worker) processCommandShell(
 		return nil, fmt.Errorf("failed to parse command shell data: %w", err)
 	}
 
-	commandProvider := w.getCommandProvider()
+	commandProvider := a.getCommandProvider()
 	result, err := commandProvider.Shell(command.ShellParams{
 		Command: shellData.Command,
 		Cwd:     shellData.Cwd,

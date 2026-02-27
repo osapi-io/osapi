@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package worker
+package agent
 
 import (
 	"encoding/json"
@@ -37,28 +37,28 @@ import (
 )
 
 // processJobOperation handles the actual job processing based on category and operation.
-func (w *Worker) processJobOperation(
+func (a *Agent) processJobOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	w.logger.Debug("dispatching to provider",
+	a.logger.Debug("dispatching to provider",
 		slog.String("category", jobRequest.Category),
 		slog.String("operation", jobRequest.Operation),
 	)
 
 	switch jobRequest.Category {
 	case "node":
-		return w.processNodeOperation(jobRequest)
+		return a.processNodeOperation(jobRequest)
 	case "network":
-		return w.processNetworkOperation(jobRequest)
+		return a.processNetworkOperation(jobRequest)
 	case "command":
-		return w.processCommandOperation(jobRequest)
+		return a.processCommandOperation(jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported job category: %s", jobRequest.Category)
 	}
 }
 
 // processNodeOperation handles system-related operations.
-func (w *Worker) processNodeOperation(
+func (a *Agent) processNodeOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
@@ -66,26 +66,26 @@ func (w *Worker) processNodeOperation(
 
 	switch baseOperation {
 	case "hostname":
-		return w.getNodeHostname()
+		return a.getNodeHostname()
 	case "status":
-		return w.getNodeStatus()
+		return a.getNodeStatus()
 	case "uptime":
-		return w.getNodeUptime()
+		return a.getNodeUptime()
 	case "os", "osinfo":
-		return w.getNodeOSInfo()
+		return a.getNodeOSInfo()
 	case "disk":
-		return w.getNodeDisk()
+		return a.getNodeDisk()
 	case "memory", "mem":
-		return w.getNodeMemory()
+		return a.getNodeMemory()
 	case "load":
-		return w.getNodeLoad()
+		return a.getNodeLoad()
 	default:
 		return nil, fmt.Errorf("unsupported node operation: %s", jobRequest.Operation)
 	}
 }
 
 // processNetworkOperation handles network-related operations.
-func (w *Worker) processNetworkOperation(
+func (a *Agent) processNetworkOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
@@ -93,18 +93,18 @@ func (w *Worker) processNetworkOperation(
 
 	switch baseOperation {
 	case "dns":
-		return w.processNetworkDNS(jobRequest)
+		return a.processNetworkDNS(jobRequest)
 	case "ping":
-		return w.processNetworkPing(jobRequest)
+		return a.processNetworkPing(jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported network operation: %s", jobRequest.Operation)
 	}
 }
 
 // getNodeHostname retrieves the node hostname and agent labels.
-func (w *Worker) getNodeHostname() (json.RawMessage, error) {
-	w.logger.Debug("executing host.GetHostname")
-	hostProvider := w.getHostProvider()
+func (a *Agent) getNodeHostname() (json.RawMessage, error) {
+	a.logger.Debug("executing host.GetHostname")
+	hostProvider := a.getHostProvider()
 	hostname, err := hostProvider.GetHostname()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hostname: %w", err)
@@ -114,20 +114,20 @@ func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 		"hostname": hostname,
 	}
 
-	if len(w.appConfig.Node.Agent.Labels) > 0 {
-		result["labels"] = w.appConfig.Node.Agent.Labels
+	if len(a.appConfig.Node.Agent.Labels) > 0 {
+		result["labels"] = a.appConfig.Node.Agent.Labels
 	}
 
 	return json.Marshal(result)
 }
 
 // getNodeStatus retrieves comprehensive node status.
-func (w *Worker) getNodeStatus() (json.RawMessage, error) {
-	w.logger.Debug("executing node.GetStatus")
-	hostProvider := w.getHostProvider()
-	diskProvider := w.getDiskProvider()
-	memProvider := w.getMemProvider()
-	loadProvider := w.getLoadProvider()
+func (a *Agent) getNodeStatus() (json.RawMessage, error) {
+	a.logger.Debug("executing node.GetStatus")
+	hostProvider := a.getHostProvider()
+	diskProvider := a.getDiskProvider()
+	memProvider := a.getMemProvider()
+	loadProvider := a.getLoadProvider()
 
 	// Get all node information
 	hostname, _ := hostProvider.GetHostname()
@@ -150,9 +150,9 @@ func (w *Worker) getNodeStatus() (json.RawMessage, error) {
 }
 
 // getNodeUptime retrieves the system uptime.
-func (w *Worker) getNodeUptime() (json.RawMessage, error) {
-	w.logger.Debug("executing host.GetUptime")
-	hostProvider := w.getHostProvider()
+func (a *Agent) getNodeUptime() (json.RawMessage, error) {
+	a.logger.Debug("executing host.GetUptime")
+	hostProvider := a.getHostProvider()
 	uptime, err := hostProvider.GetUptime()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get uptime: %w", err)
@@ -167,9 +167,9 @@ func (w *Worker) getNodeUptime() (json.RawMessage, error) {
 }
 
 // getNodeOSInfo retrieves the operating system information.
-func (w *Worker) getNodeOSInfo() (json.RawMessage, error) {
-	w.logger.Debug("executing host.GetOSInfo")
-	hostProvider := w.getHostProvider()
+func (a *Agent) getNodeOSInfo() (json.RawMessage, error) {
+	a.logger.Debug("executing host.GetOSInfo")
+	hostProvider := a.getHostProvider()
 	osInfo, err := hostProvider.GetOSInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OS info: %w", err)
@@ -179,9 +179,9 @@ func (w *Worker) getNodeOSInfo() (json.RawMessage, error) {
 }
 
 // getNodeDisk retrieves disk usage statistics.
-func (w *Worker) getNodeDisk() (json.RawMessage, error) {
-	w.logger.Debug("executing disk.GetLocalUsageStats")
-	diskProvider := w.getDiskProvider()
+func (a *Agent) getNodeDisk() (json.RawMessage, error) {
+	a.logger.Debug("executing disk.GetLocalUsageStats")
+	diskProvider := a.getDiskProvider()
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get disk usage: %w", err)
@@ -195,9 +195,9 @@ func (w *Worker) getNodeDisk() (json.RawMessage, error) {
 }
 
 // getNodeMemory retrieves memory statistics.
-func (w *Worker) getNodeMemory() (json.RawMessage, error) {
-	w.logger.Debug("executing mem.GetStats")
-	memProvider := w.getMemProvider()
+func (a *Agent) getNodeMemory() (json.RawMessage, error) {
+	a.logger.Debug("executing mem.GetStats")
+	memProvider := a.getMemProvider()
 	memInfo, err := memProvider.GetStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get memory stats: %w", err)
@@ -207,9 +207,9 @@ func (w *Worker) getNodeMemory() (json.RawMessage, error) {
 }
 
 // getNodeLoad retrieves load average statistics.
-func (w *Worker) getNodeLoad() (json.RawMessage, error) {
-	w.logger.Debug("executing load.GetAverageStats")
-	loadProvider := w.getLoadProvider()
+func (a *Agent) getNodeLoad() (json.RawMessage, error) {
+	a.logger.Debug("executing load.GetAverageStats")
+	loadProvider := a.getLoadProvider()
 	loadAvg, err := loadProvider.GetAverageStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get load averages: %w", err)
@@ -219,7 +219,7 @@ func (w *Worker) getNodeLoad() (json.RawMessage, error) {
 }
 
 // processNetworkDNS handles DNS configuration operations.
-func (w *Worker) processNetworkDNS(
+func (a *Agent) processNetworkDNS(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var dnsData map[string]interface{}
@@ -234,10 +234,10 @@ func (w *Worker) processNetworkDNS(
 			interfaceName = "eth0" // Default interface
 		}
 
-		w.logger.Debug("executing dns.GetResolvConfByInterface",
+		a.logger.Debug("executing dns.GetResolvConfByInterface",
 			slog.String("interface", interfaceName),
 		)
-		dnsProvider := w.getDNSProvider()
+		dnsProvider := a.getDNSProvider()
 		config, err := dnsProvider.GetResolvConfByInterface(interfaceName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get DNS config: %w", err)
@@ -265,11 +265,11 @@ func (w *Worker) processNetworkDNS(
 		}
 	}
 
-	w.logger.Debug("executing dns.UpdateResolvConfByInterface",
+	a.logger.Debug("executing dns.UpdateResolvConfByInterface",
 		slog.String("interface", interfaceName),
 		slog.Int("servers", len(serverStrings)),
 	)
-	dnsProvider := w.getDNSProvider()
+	dnsProvider := a.getDNSProvider()
 	dnsResult, err := dnsProvider.UpdateResolvConfByInterface(
 		serverStrings,
 		searchStrings,
@@ -289,7 +289,7 @@ func (w *Worker) processNetworkDNS(
 }
 
 // processNetworkPing handles ping operations.
-func (w *Worker) processNetworkPing(
+func (a *Agent) processNetworkPing(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var pingData map[string]interface{}
@@ -302,10 +302,10 @@ func (w *Worker) processNetworkPing(
 		return nil, fmt.Errorf("missing ping address")
 	}
 
-	w.logger.Debug("executing ping.Do",
+	a.logger.Debug("executing ping.Do",
 		slog.String("address", address),
 	)
-	pingProvider := w.getPingProvider()
+	pingProvider := a.getPingProvider()
 	result, err := pingProvider.Do(address)
 	if err != nil {
 		return nil, fmt.Errorf("ping failed: %w", err)
@@ -315,30 +315,30 @@ func (w *Worker) processNetworkPing(
 }
 
 // Provider accessor methods that return the injected providers
-func (w *Worker) getHostProvider() nodeHost.Provider {
-	return w.hostProvider
+func (a *Agent) getHostProvider() nodeHost.Provider {
+	return a.hostProvider
 }
 
-func (w *Worker) getDiskProvider() disk.Provider {
-	return w.diskProvider
+func (a *Agent) getDiskProvider() disk.Provider {
+	return a.diskProvider
 }
 
-func (w *Worker) getMemProvider() mem.Provider {
-	return w.memProvider
+func (a *Agent) getMemProvider() mem.Provider {
+	return a.memProvider
 }
 
-func (w *Worker) getLoadProvider() load.Provider {
-	return w.loadProvider
+func (a *Agent) getLoadProvider() load.Provider {
+	return a.loadProvider
 }
 
-func (w *Worker) getDNSProvider() dns.Provider {
-	return w.dnsProvider
+func (a *Agent) getDNSProvider() dns.Provider {
+	return a.dnsProvider
 }
 
-func (w *Worker) getPingProvider() ping.Provider {
-	return w.pingProvider
+func (a *Agent) getPingProvider() ping.Provider {
+	return a.pingProvider
 }
 
-func (w *Worker) getCommandProvider() command.Provider {
-	return w.commandProvider
+func (a *Agent) getCommandProvider() command.Provider {
+	return a.commandProvider
 }
