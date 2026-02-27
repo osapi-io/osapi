@@ -45,10 +45,10 @@ var workerLister WorkerLister
 var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 var (
-	cacheMu      sync.Mutex
+	cacheMu       sync.Mutex
 	cachedWorkers []WorkerTarget
-	cacheExpiry  time.Time
-	cacheTTL     = 5 * time.Second
+	cacheExpiry   time.Time
+	cacheTTL      = 5 * time.Second
 )
 
 // RegisterTargetValidator registers the valid_target custom validator and

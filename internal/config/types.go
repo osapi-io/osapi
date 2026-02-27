@@ -108,7 +108,7 @@ type NATSAudit struct {
 type NATSRegistry struct {
 	// Bucket is the KV bucket name for worker registration entries.
 	Bucket   string `mapstructure:"bucket"`
-	TTL      string `mapstructure:"ttl"` // e.g. "30s"
+	TTL      string `mapstructure:"ttl"`     // e.g. "30s"
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }

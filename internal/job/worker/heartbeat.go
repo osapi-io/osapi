@@ -30,7 +30,10 @@ import (
 )
 
 // heartbeatInterval is the interval between heartbeat refreshes.
-const heartbeatInterval = 10 * time.Second
+var heartbeatInterval = 10 * time.Second
+
+// marshalJSON is a package-level variable for testing the marshal error path.
+var marshalJSON = json.Marshal
 
 // startHeartbeat writes the initial registration, spawns a goroutine that
 // refreshes the entry on a ticker, and deregisters on ctx.Done().
@@ -91,7 +94,7 @@ func (w *Worker) writeRegistration(
 		RegisteredAt: time.Now(),
 	}
 
-	data, err := json.Marshal(reg)
+	data, err := marshalJSON(reg)
 	if err != nil {
 		w.logger.Warn(
 			"failed to marshal worker registration",

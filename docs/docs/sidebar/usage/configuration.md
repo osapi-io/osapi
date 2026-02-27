@@ -446,12 +446,12 @@ job:
 
 ### `nats.registry`
 
-| Key        | Type   | Description                                |
-| ---------- | ------ | ------------------------------------------ |
-| `bucket`   | string | KV bucket for worker heartbeat entries     |
-| `ttl`      | string | Entry time-to-live / liveness timeout      |
-| `storage`  | string | `"file"` or `"memory"`                     |
-| `replicas` | int    | Number of KV replicas                      |
+| Key        | Type   | Description                            |
+| ---------- | ------ | -------------------------------------- |
+| `bucket`   | string | KV bucket for worker heartbeat entries |
+| `ttl`      | string | Entry time-to-live / liveness timeout  |
+| `storage`  | string | `"file"` or `"memory"`                 |
+| `replicas` | int    | Number of KV replicas                  |
 
 ### `nats.dlq`
 

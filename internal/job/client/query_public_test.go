@@ -1164,7 +1164,9 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
-					[]byte(`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`),
+					[]byte(
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
 				)
 				kv.EXPECT().
 					Get(gomock.Any(), "workers.server1").
@@ -1172,7 +1174,9 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return(
-					[]byte(`{"hostname":"server2","labels":{"group":"db"},"registered_at":"2026-01-01T00:00:00Z"}`),
+					[]byte(
+						`{"hostname":"server2","labels":{"group":"db"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
 				)
 				kv.EXPECT().
 					Get(gomock.Any(), "workers.server2").

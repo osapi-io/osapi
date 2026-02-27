@@ -113,15 +113,16 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					Return(nil).
 					Times(1)
 
+					// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
-					Times(6)
+					Times(8)
 
 				s.mockJobClient.EXPECT().
 					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(context.Canceled).
-					Times(6)
+					Times(8)
 
 				return worker.New(
 					s.appFs,
@@ -149,15 +150,16 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 		{
 			name: "when registryKV is nil skips heartbeat",
 			setupFunc: func() *worker.Worker {
+				// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
-					Times(6)
+					Times(8)
 
 				s.mockJobClient.EXPECT().
 					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(context.Canceled).
-					Times(6)
+					Times(8)
 
 				return worker.New(
 					s.appFs,
