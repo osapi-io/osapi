@@ -30,5 +30,5 @@ import (
 func (l *Linux) GetResolvConfByInterface(
 	_ string,
 ) (*Config, error) {
-	return nil, fmt.Errorf("GetResolvConfByInterface is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("getResolvConfByInterface is not implemented for LinuxProvider")
 }

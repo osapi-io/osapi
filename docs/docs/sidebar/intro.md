@@ -17,16 +17,17 @@ file, and get a REST API and CLI for querying and changing system configuration
 
 ## Quickstart
 
-Install OSAPI and start all three processes:
+Install OSAPI and start all three components in a single process:
 
 ```bash
-# Start the embedded NATS server
+osapi start
+```
+
+Or start each component separately:
+
+```bash
 osapi nats server start &
-
-# Start the API server
 osapi api server start &
-
-# Start an agent
 osapi agent start &
 ```
 

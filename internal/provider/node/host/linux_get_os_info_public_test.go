@@ -52,7 +52,7 @@ func (suite *LinuxGetOSInfoPublicTestSuite) TestGetOSInfo() {
 			got, err := linux.GetOSInfo()
 
 			suite.Nil(got)
-			suite.EqualError(err, "GetOSInfo is not implemented for LinuxProvider")
+			suite.EqualError(err, "getOSInfo is not implemented for LinuxProvider")
 		})
 	}
 }

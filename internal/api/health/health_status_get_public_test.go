@@ -77,7 +77,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "NATS unhealthy returns 503",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS not connected") },
+				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
 				KVCheck:   func() error { return nil },
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
@@ -86,7 +86,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("degraded", r.Status)
 				s.Equal("error", r.Components["nats"].Status)
 				s.Require().NotNil(r.Components["nats"].Error)
-				s.Contains(*r.Components["nats"].Error, "NATS not connected")
+				s.Contains(*r.Components["nats"].Error, "nats not connected")
 				s.Equal("ok", r.Components["kv"].Status)
 			},
 		},
@@ -94,7 +94,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			name: "KV unhealthy returns 503",
 			checker: &health.NATSChecker{
 				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return fmt.Errorf("KV bucket not accessible") },
+				KVCheck:   func() error { return fmt.Errorf("kv bucket not accessible") },
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
@@ -103,14 +103,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("ok", r.Components["nats"].Status)
 				s.Equal("error", r.Components["kv"].Status)
 				s.Require().NotNil(r.Components["kv"].Error)
-				s.Contains(*r.Components["kv"].Error, "KV bucket not accessible")
+				s.Contains(*r.Components["kv"].Error, "kv bucket not accessible")
 			},
 		},
 		{
 			name: "both unhealthy returns 503",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS down") },
-				KVCheck:   func() error { return fmt.Errorf("KV down") },
+				NATSCheck: func() error { return fmt.Errorf("nats down") },
+				KVCheck:   func() error { return fmt.Errorf("kv down") },
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
@@ -262,7 +262,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
-					return nil, fmt.Errorf("NATS info unavailable")
+					return nil, fmt.Errorf("nats info unavailable")
 				},
 				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
 					return nil, fmt.Errorf("stream info unavailable")
@@ -303,13 +303,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
-					return nil, fmt.Errorf("NATS info unavailable")
+					return nil, fmt.Errorf("nats info unavailable")
 				},
 				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
 					return nil, fmt.Errorf("stream info unavailable")
 				},
 				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
-					return nil, fmt.Errorf("KV info unavailable")
+					return nil, fmt.Errorf("kv info unavailable")
 				},
 				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
 					return nil, fmt.Errorf("consumer stats unavailable")

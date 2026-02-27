@@ -22,16 +22,11 @@ package cmd
 
 import (
 	"context"
-	"time"
 
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/spf13/cobra"
 
-	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
@@ -54,74 +49,15 @@ It processes jobs as they become available.
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
-		// Initialize subject namespace
-		namespace := appConfig.Agent.NATS.Namespace
-		job.Init(namespace)
-		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
-		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
+		job.Init(appConfig.Agent.NATS.Namespace)
 
-		// Create NATS client using the nats-client package
-		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Agent.NATS.Host,
-			Port: appConfig.Agent.NATS.Port,
-			Auth: cli.BuildNATSAuthOptions(appConfig.Agent.NATS.Auth),
-			Name: appConfig.Agent.NATS.ClientName,
-		})
-
-		err = nc.Connect()
-		if err != nil {
-			cli.LogFatal(logger, "failed to connect to NATS", err)
-		}
-
-		// Create/get the jobs KV bucket
-		jobsKV, err := nc.CreateOrUpdateKVBucket(ctx, kvBucket)
-		if err != nil {
-			cli.LogFatal(logger, "failed to create KV bucket", err)
-		}
-
-		// Create registry KV bucket for agent heartbeat
-		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
-		registryKV, registryErr := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
-		if registryErr != nil {
-			cli.LogFatal(logger, "failed to create registry KV bucket", registryErr)
-		}
-
-		// Create job client
-		var jc client.JobClient
-		jc, err = client.New(logger, nc, &client.Options{
-			Timeout:    30 * time.Second, // Default timeout
-			KVBucket:   jobsKV,
-			RegistryKV: registryKV,
-			StreamName: streamName,
-		})
-		if err != nil {
-			cli.LogFatal(logger, "failed to create job client", err)
-		}
-
-		// Create provider factory and providers
-		providerFactory := agent.NewProviderFactory(logger)
-		hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := providerFactory.CreateProviders()
-
-		var a cli.Lifecycle = agent.New(
-			appFs,
-			appConfig,
-			logger,
-			jc,
-			streamName,
-			hostProvider,
-			diskProvider,
-			memProvider,
-			loadProvider,
-			dnsProvider,
-			pingProvider,
-			commandProvider,
-			registryKV,
-		)
+		log := logger.With("component", "agent")
+		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
 
 		a.Start()
 		cli.RunServer(ctx, a, func() {
 			_ = shutdownTracer(context.Background())
-			cli.CloseNATSClient(nc)
+			cli.CloseNATSClient(b.nc)
 		})
 	},
 }

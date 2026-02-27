@@ -71,7 +71,7 @@ func New(
 		return nil, fmt.Errorf("options cannot be nil")
 	}
 	if opts.KVBucket == nil {
-		return nil, fmt.Errorf("KVBucket cannot be nil")
+		return nil, fmt.Errorf("kvBucket cannot be nil")
 	}
 
 	quietPeriod := opts.BroadcastQuietPeriod

@@ -58,29 +58,29 @@ func (s *CheckerPublicTestSuite) TestCheckHealth() {
 		{
 			name: "NATS check fails",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS error") },
+				NATSCheck: func() error { return fmt.Errorf("nats error") },
 				KVCheck:   func() error { return nil },
 			},
 			expectErr: true,
-			errMsg:    "NATS error",
+			errMsg:    "nats error",
 		},
 		{
 			name: "KV check fails",
 			checker: &health.NATSChecker{
 				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return fmt.Errorf("KV error") },
+				KVCheck:   func() error { return fmt.Errorf("kv error") },
 			},
 			expectErr: true,
-			errMsg:    "KV error",
+			errMsg:    "kv error",
 		},
 		{
 			name: "both checks fail",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS error") },
-				KVCheck:   func() error { return fmt.Errorf("KV error") },
+				NATSCheck: func() error { return fmt.Errorf("nats error") },
+				KVCheck:   func() error { return fmt.Errorf("kv error") },
 			},
 			expectErr: true,
-			errMsg:    "NATS error",
+			errMsg:    "nats error",
 		},
 		{
 			name:      "nil checks pass",
@@ -119,7 +119,7 @@ func (s *CheckerPublicTestSuite) TestCheckNATS() {
 		{
 			name: "NATS check fails",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS error") },
+				NATSCheck: func() error { return fmt.Errorf("nats error") },
 			},
 			expectErr: true,
 		},
@@ -159,7 +159,7 @@ func (s *CheckerPublicTestSuite) TestCheckKV() {
 		{
 			name: "KV check fails",
 			checker: &health.NATSChecker{
-				KVCheck: func() error { return fmt.Errorf("KV error") },
+				KVCheck: func() error { return fmt.Errorf("kv error") },
 			},
 			expectErr: true,
 		},

@@ -53,7 +53,7 @@ func (suite *LinuxGetUptimePublicTestSuite) TestGetUptime() {
 			got, err := linux.GetUptime()
 
 			suite.Equal(time.Duration(0), got)
-			suite.EqualError(err, "GetUptime is not implemented for LinuxProvider")
+			suite.EqualError(err, "getUptime is not implemented for LinuxProvider")
 		})
 	}
 }

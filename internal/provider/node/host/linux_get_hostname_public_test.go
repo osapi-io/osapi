@@ -52,7 +52,7 @@ func (suite *LinuxGetHostnamePublicTestSuite) TestGetHostname() {
 			got, err := linux.GetHostname()
 
 			suite.Empty(got)
-			suite.EqualError(err, "GetHostname is not implemented for LinuxProvider")
+			suite.EqualError(err, "getHostname is not implemented for LinuxProvider")
 		})
 	}
 }

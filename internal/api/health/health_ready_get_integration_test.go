@@ -68,7 +68,7 @@ func (suite *HealthReadyGetIntegrationTestSuite) TestGetHealthReady() {
 		{
 			name: "when NATS check fails returns not ready",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS not connected") },
+				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
 				KVCheck:   func() error { return nil },
 			},
 			wantCode:     http.StatusServiceUnavailable,
