@@ -87,6 +87,42 @@ func (s *HandlerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *HandlerPublicTestSuite) TestGetAgentHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/agent", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetAgentHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
 func (s *HandlerPublicTestSuite) TestGetNodeHandler() {
 	tests := []struct {
 		name     string
@@ -387,7 +423,8 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 		s.Run(tt.name, func() {
 			checker := &health.NATSChecker{}
 
-			handlers := make([]func(e *echo.Echo), 0, 4)
+			handlers := make([]func(e *echo.Echo), 0, 5)
+			handlers = append(handlers, s.server.GetAgentHandler(s.mockJobClient)...)
 			handlers = append(handlers, s.server.GetNodeHandler(s.mockJobClient)...)
 			handlers = append(handlers, s.server.GetNetworkHandler(s.mockJobClient)...)
 			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)

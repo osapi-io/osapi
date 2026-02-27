@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package agent_test
 
 import (
 	"fmt"
@@ -33,15 +33,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	"github.com/retr0h/osapi/internal/api/node"
-	nodeGen "github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/api/agent"
+	agentGen "github.com/retr0h/osapi/internal/api/agent/gen"
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
-type NodeListIntegrationTestSuite struct {
+type AgentListIntegrationTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 
@@ -49,18 +49,18 @@ type NodeListIntegrationTestSuite struct {
 	logger    *slog.Logger
 }
 
-func (suite *NodeListIntegrationTestSuite) SetupTest() {
+func (suite *AgentListIntegrationTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 
 	suite.appConfig = config.Config{}
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *NodeListIntegrationTestSuite) TearDownTest() {
+func (suite *AgentListIntegrationTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
+func (suite *AgentListIntegrationTestSuite) TestGetAgentValidation() {
 	tests := []struct {
 		name         string
 		setupJobMock func() *jobmocks.MockJobClient
@@ -112,13 +112,13 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 		suite.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := node.New(suite.logger, jobMock)
-			strictHandler := nodeGen.NewStrictHandler(nodeHandler, nil)
+			agentHandler := agent.New(suite.logger, jobMock)
+			strictHandler := agentGen.NewStrictHandler(agentHandler, nil)
 
 			a := api.New(suite.appConfig, suite.logger)
-			nodeGen.RegisterHandlers(a.Echo, strictHandler)
+			agentGen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/node", nil)
+			req := httptest.NewRequest(http.MethodGet, "/agent", nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -131,9 +131,9 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 	}
 }
 
-const rbacNodeListTestSigningKey = "test-signing-key-for-rbac-node-list"
+const rbacAgentListTestSigningKey = "test-signing-key-for-rbac-agent-list"
 
-func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
+func (suite *AgentListIntegrationTestSuite) TestGetAgentRBAC() {
 	tokenManager := authtoken.New(suite.logger)
 
 	tests := []struct {
@@ -158,7 +158,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacNodeListTestSigningKey,
+					rbacAgentListTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"network:read"},
@@ -173,10 +173,10 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			wantContains: []string{"Insufficient permissions"},
 		},
 		{
-			name: "when valid token with node:read returns 200",
+			name: "when valid token with agent:read returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacNodeListTestSigningKey,
+					rbacAgentListTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -207,19 +207,19 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 				API: config.API{
 					Server: config.Server{
 						Security: config.ServerSecurity{
-							SigningKey: rbacNodeListTestSigningKey,
+							SigningKey: rbacAgentListTestSigningKey,
 						},
 					},
 				},
 			}
 
 			server := api.New(appConfig, suite.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetAgentHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node",
+				"/agent",
 				nil,
 			)
 			tc.setupAuth(req)
@@ -235,6 +235,6 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 	}
 }
 
-func TestNodeListIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(NodeListIntegrationTestSuite))
+func TestAgentListIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentListIntegrationTestSuite))
 }

@@ -255,6 +255,16 @@ components:
         - total
         - ready
 
+    ConsumerStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of JetStream consumers.
+          example: 2
+      required:
+        - total
+
     StatusResponse:
       type: object
       properties:
@@ -291,6 +301,8 @@ components:
           $ref: '#/components/schemas/JobStats'
         agents:
           $ref: '#/components/schemas/AgentStats'
+        consumers:
+          $ref: '#/components/schemas/ConsumerStats'
       required:
         - status
         - components

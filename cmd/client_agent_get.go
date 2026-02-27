@@ -32,8 +32,8 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientNodeGetCmd represents the clientNodeGet command.
-var clientNodeGetCmd = &cobra.Command{
+// clientAgentGetCmd represents the clientAgentGet command.
+var clientAgentGetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get agent details",
 	Long:  `Get detailed information about a specific agent by hostname.`,
@@ -41,7 +41,7 @@ var clientNodeGetCmd = &cobra.Command{
 		ctx := cmd.Context()
 		hostname, _ := cmd.Flags().GetString("hostname")
 
-		resp, err := sdkClient.Node.Get(ctx, hostname)
+		resp, err := sdkClient.Agent.Get(ctx, hostname)
 		if err != nil {
 			cli.LogFatal(logger, "failed to get agent details", err)
 		}
@@ -57,7 +57,7 @@ var clientNodeGetCmd = &cobra.Command{
 				cli.LogFatal(logger, "failed response", fmt.Errorf("agent response was nil"))
 			}
 
-			displayNodeGetDetail(resp.JSON200)
+			displayAgentGetDetail(resp.JSON200)
 		case http.StatusUnauthorized:
 			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:
@@ -70,8 +70,8 @@ var clientNodeGetCmd = &cobra.Command{
 	},
 }
 
-// displayNodeGetDetail renders detailed agent information in PrintKV style.
-func displayNodeGetDetail(
+// displayAgentGetDetail renders detailed agent information in PrintKV style.
+func displayAgentGetDetail(
 	data *gen.AgentInfo,
 ) {
 	fmt.Println()
@@ -116,7 +116,7 @@ func displayNodeGetDetail(
 }
 
 func init() {
-	clientNodeCmd.AddCommand(clientNodeGetCmd)
-	clientNodeGetCmd.Flags().String("hostname", "", "Hostname of the agent to retrieve")
-	_ = clientNodeGetCmd.MarkFlagRequired("hostname")
+	clientAgentCmd.AddCommand(clientAgentGetCmd)
+	clientAgentGetCmd.Flags().String("hostname", "", "Hostname of the agent to retrieve")
+	_ = clientAgentGetCmd.MarkFlagRequired("hostname")
 }

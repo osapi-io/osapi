@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package agent_test
 
 import (
 	"context"
@@ -30,8 +30,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	apinode "github.com/retr0h/osapi/internal/api/node"
-	"github.com/retr0h/osapi/internal/api/node/gen"
+	apiagent "github.com/retr0h/osapi/internal/api/agent"
+	"github.com/retr0h/osapi/internal/api/agent/gen"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -39,33 +39,33 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type NodeGetPublicTestSuite struct {
+type AgentGetPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *apiagent.Agent
 	ctx           context.Context
 }
 
-func (s *NodeGetPublicTestSuite) SetupTest() {
+func (s *AgentGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 
-func (s *NodeGetPublicTestSuite) TearDownTest() {
+func (s *AgentGetPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
+func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 	tests := []struct {
 		name         string
 		hostname     string
 		mockAgent    *jobtypes.AgentInfo
 		mockError    error
-		validateFunc func(resp gen.GetNodeDetailsResponseObject)
+		validateFunc func(resp gen.GetAgentDetailsResponseObject)
 	}{
 		{
 			name:     "success returns agent details",
@@ -80,8 +80,8 @@ func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 				LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
 				MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
 			},
-			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
-				r, ok := resp.(gen.GetNodeDetails200JSONResponse)
+			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
+				r, ok := resp.(gen.GetAgentDetails200JSONResponse)
 				s.True(ok)
 				s.Equal("server1", r.Hostname)
 				s.Equal(gen.Ready, r.Status)
@@ -97,8 +97,8 @@ func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 			name:      "agent not found returns 404",
 			hostname:  "unknown",
 			mockError: fmt.Errorf("agent not found: unknown"),
-			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
-				_, ok := resp.(gen.GetNodeDetails404JSONResponse)
+			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
+				_, ok := resp.(gen.GetAgentDetails404JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -106,8 +106,8 @@ func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 			name:      "client error returns 500",
 			hostname:  "server1",
 			mockError: fmt.Errorf("connection failed"),
-			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
-				_, ok := resp.(gen.GetNodeDetails500JSONResponse)
+			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
+				_, ok := resp.(gen.GetAgentDetails500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -119,7 +119,7 @@ func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 				GetAgent(gomock.Any(), tt.hostname).
 				Return(tt.mockAgent, tt.mockError)
 
-			resp, err := s.handler.GetNodeDetails(s.ctx, gen.GetNodeDetailsRequestObject{
+			resp, err := s.handler.GetAgentDetails(s.ctx, gen.GetAgentDetailsRequestObject{
 				Hostname: tt.hostname,
 			})
 			s.NoError(err)
@@ -128,6 +128,6 @@ func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 	}
 }
 
-func TestNodeGetPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(NodeGetPublicTestSuite))
+func TestAgentGetPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentGetPublicTestSuite))
 }

@@ -331,6 +331,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace github.com/osapi-io/osapi-sdk => ../osapi-sdk
+
 tool (
 	github.com/boumenot/gocover-cobertura
 	github.com/golang/mock/mockgen

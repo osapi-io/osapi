@@ -18,36 +18,38 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package agent
 
 import (
 	"context"
+	"fmt"
+	"time"
 
-	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/api/agent/gen"
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// GetNode discovers all active agents in the fleet.
-func (s *Node) GetNode(
+// GetAgent discovers all active agents in the fleet.
+func (a *Agent) GetAgent(
 	ctx context.Context,
-	_ gen.GetNodeRequestObject,
-) (gen.GetNodeResponseObject, error) {
-	agents, err := s.JobClient.ListAgents(ctx)
+	_ gen.GetAgentRequestObject,
+) (gen.GetAgentResponseObject, error) {
+	agents, err := a.JobClient.ListAgents(ctx)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNode500JSONResponse{
+		return gen.GetAgent500JSONResponse{
 			Error: &errMsg,
 		}, nil
 	}
 
 	agentInfos := make([]gen.AgentInfo, 0, len(agents))
-	for _, a := range agents {
-		agentInfos = append(agentInfos, buildAgentInfo(&a))
+	for _, ag := range agents {
+		agentInfos = append(agentInfos, buildAgentInfo(&ag))
 	}
 
 	total := len(agentInfos)
 
-	return gen.GetNode200JSONResponse{
+	return gen.GetAgent200JSONResponse{
 		Agents: agentInfos,
 		Total:  total,
 	}, nil
@@ -105,4 +107,41 @@ func buildAgentInfo(
 	}
 
 	return info
+}
+
+func formatDuration(
+	d time.Duration,
+) string {
+	totalMinutes := int(d.Minutes())
+	days := totalMinutes / (24 * 60)
+	hours := (totalMinutes % (24 * 60)) / 60
+	minutes := totalMinutes % 60
+
+	dayStr := "day"
+	if days != 1 {
+		dayStr = "days"
+	}
+
+	hourStr := "hour"
+	if hours != 1 {
+		hourStr = "hours"
+	}
+
+	minuteStr := "minute"
+	if minutes != 1 {
+		minuteStr = "minutes"
+	}
+
+	return fmt.Sprintf("%d %s, %d %s, %d %s", days, dayStr, hours, hourStr, minutes, minuteStr)
+}
+
+// uint64ToInt convert uint64 to int, with overflow protection.
+func uint64ToInt(
+	value uint64,
+) int {
+	maxInt := int(^uint(0) >> 1)
+	if value > uint64(maxInt) {
+		return maxInt
+	}
+	return int(value)
 }

@@ -1,0 +1,231 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Agent Management API
+  version: 1.0.0
+tags:
+  - name: agent_operations
+    x-displayName: Agent
+    description: Operations related to agent discovery and details.
+paths:
+  /agent:
+    get:
+      summary: List active agents
+      description: Discover all active agents in the fleet.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:read
+      responses:
+        '200':
+          description: List of active agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAgentsResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error discovering agents.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /agent/{hostname}:
+    get:
+      summary: Get agent details
+      description: Get detailed information about a specific agent by hostname.
+      operationId: getAgentDetails
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:read
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The hostname of the agent to retrieve.
+      responses:
+        '200':
+          description: Agent details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInfo'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving agent details.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    ListAgentsResponse:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentInfo'
+        total:
+          type: integer
+          description: Total number of active agents.
+      required:
+        - agents
+        - total
+
+    AgentInfo:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum: [Ready, NotReady]
+          description: The current status of the agent.
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: Key-value labels configured on the agent.
+        registered_at:
+          type: string
+          format: date-time
+          description: When the agent last refreshed its heartbeat.
+        started_at:
+          type: string
+          format: date-time
+          description: When the agent process started.
+        os_info:
+          $ref: '#/components/schemas/OSInfoResponse'
+        uptime:
+          type: string
+          description: The system uptime.
+        load_average:
+          $ref: '#/components/schemas/LoadAverageResponse'
+        memory:
+          $ref: '#/components/schemas/MemoryResponse'
+      required:
+        - hostname
+        - status
+
+    LoadAverageResponse:
+      type: object
+      description: The system load averages for 1, 5, and 15 minutes.
+      properties:
+        1min:
+          type: number
+          description: Load average for the last 1 minute.
+          example: 0.32
+        5min:
+          type: number
+          description: Load average for the last 5 minutes.
+          example: 0.28
+        15min:
+          type: number
+          description: Load average for the last 15 minutes.
+          example: 0.25
+      required:
+        - 1min
+        - 5min
+        - 15min
+
+    MemoryResponse:
+      type: object
+      description: Memory usage information.
+      properties:
+        total:
+          type: integer
+          description: Total memory in bytes.
+          example: 8388608
+        free:
+          type: integer
+          description: Free memory in bytes.
+          example: 2097152
+        used:
+          type: integer
+          description: Used memory in bytes.
+          example: 4194304
+      required:
+        - total
+        - free
+        - used
+
+    OSInfoResponse:
+      type: object
+      description: Operating system information.
+      properties:
+        distribution:
+          type: string
+          description: The name of the Linux distribution.
+          example: "Ubuntu"
+        version:
+          type: string
+          description: The version of the Linux distribution.
+          example: "20.04"
+      required:
+        - distribution
+        - version

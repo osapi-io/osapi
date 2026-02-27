@@ -18,34 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+// Package agent provides agent-related API handlers.
+package agent
 
 import (
-	"context"
-	"strings"
+	"log/slog"
 
-	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/api/agent/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetNodeDetails retrieves detailed information about a specific agent.
-func (s *Node) GetNodeDetails(
-	ctx context.Context,
-	request gen.GetNodeDetailsRequestObject,
-) (gen.GetNodeDetailsResponseObject, error) {
-	agent, err := s.JobClient.GetAgent(ctx, request.Hostname)
-	if err != nil {
-		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
-			return gen.GetNodeDetails404JSONResponse{
-				Error: &errMsg,
-			}, nil
-		}
-		return gen.GetNodeDetails500JSONResponse{
-			Error: &errMsg,
-		}, nil
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
+var _ gen.StrictServerInterface = (*Agent)(nil)
+
+// New factory to create a new instance.
+func New(
+	logger *slog.Logger,
+	jobClient client.JobClient,
+) *Agent {
+	return &Agent{
+		JobClient: jobClient,
+		logger:    logger,
 	}
-
-	info := buildAgentInfo(agent)
-
-	return gen.GetNodeDetails200JSONResponse(info), nil
 }

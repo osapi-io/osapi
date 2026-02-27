@@ -180,6 +180,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 10, Bytes: 2048},
 					}, nil
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{Total: 2}, nil
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
 						Total: 100, Unprocessed: 5, Processing: 2,
@@ -207,6 +210,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Len(*r.KvBuckets, 1)
 				s.Equal("job-queue", (*r.KvBuckets)[0].Name)
 				s.Equal(10, (*r.KvBuckets)[0].Keys)
+
+				s.Require().NotNil(r.Consumers)
+				s.Equal(2, r.Consumers.Total)
 
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
@@ -236,6 +242,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 5, Bytes: 512},
 					}, nil
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return nil, fmt.Errorf("consumer stats unavailable")
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
@@ -251,6 +260,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Streams)
 				s.Require().NotNil(r.KvBuckets)
 				s.Len(*r.KvBuckets, 1)
+				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},
@@ -271,6 +281,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
 					return nil, fmt.Errorf("KV info unavailable")
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return nil, fmt.Errorf("consumer stats unavailable")
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
@@ -285,6 +298,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Nats)
 				s.Nil(r.Streams)
 				s.Nil(r.KvBuckets)
+				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},

@@ -138,6 +138,10 @@ func displayStatusHealth(
 		))
 	}
 
+	if data.Consumers != nil {
+		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
+	}
+
 	if data.Jobs != nil {
 		cli.PrintKV("Jobs", fmt.Sprintf(
 			"%d total, %d completed, %d unprocessed, %d failed, %d dlq",

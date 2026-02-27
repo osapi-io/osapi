@@ -36,6 +36,12 @@ type ComponentHealth struct {
 	Status string `json:"status"`
 }
 
+// ConsumerStats defines model for ConsumerStats.
+type ConsumerStats struct {
+	// Total Total number of JetStream consumers.
+	Total int `json:"total"`
+}
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
@@ -102,6 +108,7 @@ type StatusResponse struct {
 
 	// Components Per-component health status.
 	Components map[string]ComponentHealth `json:"components"`
+	Consumers  *ConsumerStats             `json:"consumers,omitempty"`
 	Jobs       *JobStats                  `json:"jobs,omitempty"`
 
 	// KvBuckets KV bucket statistics.

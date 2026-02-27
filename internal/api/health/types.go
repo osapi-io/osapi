@@ -36,6 +36,7 @@ type MetricsProvider interface {
 	GetNATSInfo(ctx context.Context) (*NATSMetrics, error)
 	GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
 	GetKVInfo(ctx context.Context) ([]KVMetrics, error)
+	GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
 	GetJobStats(ctx context.Context) (*JobMetrics, error)
 	GetAgentStats(ctx context.Context) (*AgentMetrics, error)
 }
@@ -61,6 +62,11 @@ type KVMetrics struct {
 	Bytes uint64
 }
 
+// ConsumerMetrics holds JetStream consumer statistics.
+type ConsumerMetrics struct {
+	Total int
+}
+
 // JobMetrics holds job queue statistics.
 type JobMetrics struct {
 	Total       int
@@ -79,11 +85,12 @@ type AgentMetrics struct {
 
 // ClosureMetricsProvider implements MetricsProvider using function closures.
 type ClosureMetricsProvider struct {
-	NATSInfoFn   func(ctx context.Context) (*NATSMetrics, error)
-	StreamInfoFn func(ctx context.Context) ([]StreamMetrics, error)
-	KVInfoFn     func(ctx context.Context) ([]KVMetrics, error)
-	JobStatsFn   func(ctx context.Context) (*JobMetrics, error)
-	AgentStatsFn func(ctx context.Context) (*AgentMetrics, error)
+	NATSInfoFn      func(ctx context.Context) (*NATSMetrics, error)
+	StreamInfoFn    func(ctx context.Context) ([]StreamMetrics, error)
+	KVInfoFn        func(ctx context.Context) ([]KVMetrics, error)
+	ConsumerStatsFn func(ctx context.Context) (*ConsumerMetrics, error)
+	JobStatsFn      func(ctx context.Context) (*JobMetrics, error)
+	AgentStatsFn    func(ctx context.Context) (*AgentMetrics, error)
 }
 
 // GetNATSInfo delegates to the NATSInfoFn closure.
@@ -105,6 +112,13 @@ func (p *ClosureMetricsProvider) GetKVInfo(
 	ctx context.Context,
 ) ([]KVMetrics, error) {
 	return p.KVInfoFn(ctx)
+}
+
+// GetConsumerStats delegates to the ConsumerStatsFn closure.
+func (p *ClosureMetricsProvider) GetConsumerStats(
+	ctx context.Context,
+) (*ConsumerMetrics, error) {
+	return p.ConsumerStatsFn(ctx)
 }
 
 // GetJobStats delegates to the JobStatsFn closure.

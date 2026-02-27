@@ -79,6 +79,9 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 						{Name: "job-queue", Keys: 10, Bytes: 2048},
 					}, nil
 				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{Total: 2}, nil
+				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
 						Total: 100, Unprocessed: 5, Processing: 2,
@@ -97,6 +100,7 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 				`"nats"`,
 				`"streams"`,
 				`"kv_buckets"`,
+				`"consumers"`,
 				`"jobs"`,
 				`"agents"`,
 			},
@@ -208,6 +212,9 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusRBAC() {
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
+				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{}, nil
 				},
 				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
 					return &health.AgentMetrics{}, nil

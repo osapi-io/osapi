@@ -3,7 +3,7 @@
 Get detailed information about a specific agent by hostname:
 
 ```bash
-$ osapi client node get --hostname web-01
+$ osapi client agent get --hostname web-01
 
   Hostname: web-01                       Status: Ready
   Labels: group:web.dev.us-east
@@ -15,7 +15,7 @@ $ osapi client node get --hostname web-01
   Memory: 32.0 GB total, 19.2 GB used, 12.8 GB free
 ```
 
-This command reads directly from the agent heartbeat registry — no job is
+This command reads directly from the agent heartbeat registry -- no job is
 created. The data comes from the agent's most recent heartbeat write.
 
 | Field     | Description                           |
@@ -30,11 +30,11 @@ created. The data comes from the agent's most recent heartbeat write.
 | Load      | 1-, 5-, and 15-minute load averages   |
 | Memory    | Total, used, and free RAM             |
 
-:::tip node get vs. node status
+:::tip agent get vs. node status
 
-`node get` shows lightweight data from the heartbeat registry (instant, no job).
-`node status` runs a full system inspection via the job system (includes disk
-usage, deeper metrics).
+`agent get` shows lightweight data from the heartbeat registry (instant, no
+job). `node status` runs a full system inspection via the job system (includes
+disk usage, deeper metrics).
 
 :::
 
