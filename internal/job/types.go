@@ -96,14 +96,14 @@ type Response struct {
 // This complements the existing JobType (query/modify) with specific operations.
 type OperationType string
 
-// System operations - read-only operations that query system state
+// Node operations - read-only operations that query node state
 const (
-	OperationSystemHostnameGet = "system.hostname.get"
-	OperationSystemStatusGet   = "system.status.get"
-	OperationSystemUptimeGet   = "system.uptime.get"
-	OperationSystemLoadGet     = "system.load.get"
-	OperationSystemMemoryGet   = "system.memory.get"
-	OperationSystemDiskGet     = "system.disk.get"
+	OperationNodeHostnameGet = "node.hostname.get"
+	OperationNodeStatusGet   = "node.status.get"
+	OperationNodeUptimeGet   = "node.uptime.get"
+	OperationNodeLoadGet     = "node.load.get"
+	OperationNodeMemoryGet   = "node.memory.get"
+	OperationNodeDiskGet     = "node.disk.get"
 )
 
 // Network operations - operations that can modify network configuration
@@ -113,10 +113,10 @@ const (
 	OperationNetworkPingDo    = "network.ping.do"
 )
 
-// System operations - operations that can modify system state
+// Node operations - operations that can modify node state
 const (
-	OperationSystemShutdown = "system.shutdown.execute"
-	OperationSystemReboot   = "system.reboot.execute"
+	OperationNodeShutdown = "node.shutdown.execute"
+	OperationNodeReboot   = "node.reboot.execute"
 )
 
 // Command operations - execute arbitrary commands on workers
@@ -128,7 +128,7 @@ const (
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
-	// (e.g., "system.hostname.get", "network.dns.update")
+	// (e.g., "node.hostname.get", "network.dns.update")
 	Type OperationType `json:"type"`
 	// Data contains the operation-specific data as raw JSON
 	Data json.RawMessage `json:"data"`
@@ -268,7 +268,7 @@ type WorkerInfo struct {
 }
 
 // SystemStatusResponse aggregates system status information from multiple providers.
-// This represents the response for system.status.get operations in the job queue.
+// This represents the response for node.status.get operations in the job queue.
 type SystemStatusResponse struct {
 	// Hostname from the host provider
 	Hostname string `json:"hostname"`

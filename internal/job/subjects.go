@@ -85,14 +85,14 @@ const (
 
 // Subject categories for different operations
 const (
-	SubjectCategorySystem  = "system"
+	SubjectCategoryNode    = "node"
 	SubjectCategoryNetwork = "network"
 )
 
-// System operation types
+// Node operation types
 const (
-	SystemOperationHostname = "hostname"
-	SystemOperationStatus   = "status"
+	NodeOperationHostname = "hostname"
+	NodeOperationStatus   = "status"
 )
 
 // Network operation types

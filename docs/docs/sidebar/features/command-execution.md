@@ -39,8 +39,8 @@ Command execution follows the same request flow as all OSAPI operations:
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label. When targeting `_all`, the CLI prompts for confirmation before
-proceeding. See [CLI Reference](../usage/cli/client/system/system.mdx) for usage
-and examples, or the
+proceeding. See [CLI Reference](../usage/cli/client/command/command.mdx) for
+usage and examples, or the
 [API Reference](/gen/api/command-execution-api-command-operations) for the REST
 endpoints.
 
@@ -69,7 +69,7 @@ api:
         ops:
           permissions:
             - command:execute
-            - system:read
+            - node:read
             - health:read
 ```
 
@@ -84,7 +84,7 @@ osapi token generate -r read -u user@example.com \
 
 Command execution uses the general job infrastructure. No domain-specific
 configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, job worker, and authentication settings.
+NATS, node agent, and authentication settings.
 
 ## Permissions
 
@@ -98,8 +98,8 @@ roles or tokens explicitly when needed.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/system/system.mdx) -- system commands
-  (exec, shell)
+- [CLI Reference](../usage/cli/client/command/command.mdx) -- command execution
+  commands (exec, shell)
 - [API Reference](/gen/api/command-execution-api-command-operations) -- REST API
   documentation
 - [Job System](job-system.md) -- how async job processing works

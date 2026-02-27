@@ -138,7 +138,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system hostname operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "hostname.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -155,7 +155,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system status operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "status.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -171,7 +171,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system uptime operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "uptime.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -188,7 +188,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system OS info operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "osinfo.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -204,7 +204,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system disk operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "disk.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -220,7 +220,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system memory operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "memory.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -235,7 +235,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			name: "successful system load operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "load.get",
 				Data:      json.RawMessage(`{}`),
 			},
@@ -341,15 +341,15 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			errorMsg:    "unsupported job category: unsupported",
 		},
 		{
-			name: "unsupported system operation",
+			name: "unsupported node operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: "unsupported.get",
 				Data:      json.RawMessage(`{}`),
 			},
 			expectError: true,
-			errorMsg:    "unsupported system operation: unsupported.get",
+			errorMsg:    "unsupported node operation: unsupported.get",
 		},
 		{
 			name: "unsupported network operation",
@@ -477,12 +477,12 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 
 			request := job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: tt.operation,
 				Data:      json.RawMessage(`{}`),
 			}
 
-			result, err := s.worker.processSystemOperation(request)
+			result, err := s.worker.processNodeOperation(request)
 
 			if tt.expectError {
 				s.Error(err)
@@ -783,12 +783,12 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 			w := tt.createWorker()
 			request := job.Request{
 				Type:      job.TypeQuery,
-				Category:  "system",
+				Category:  "node",
 				Operation: tt.operation,
 				Data:      json.RawMessage(`{}`),
 			}
 
-			result, err := w.processSystemOperation(request)
+			result, err := w.processNodeOperation(request)
 
 			s.Error(err)
 			s.Contains(err.Error(), tt.errorMsg)

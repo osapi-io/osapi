@@ -130,7 +130,7 @@ type suffix:
   - `.read` - Read configuration
   - `.status` - Get status information
   - `.do` - Perform read-only actions (e.g., ping)
-  - `system.*` - All system operations are read-only
+  - `node.*` - All node operations are read-only
 
 - **Modify operations** (state-changing) → `jobs.modify.{target}`:
   - `.update` - Update configuration
@@ -198,13 +198,13 @@ same pattern.
 
 All system operations are routed to `jobs.query.*` subjects:
 
-- **`system.hostname.get`** - Get system hostname
-- **`system.status.get`** - Get comprehensive system status (all providers)
-- **`system.uptime.get`** - Get system uptime
-- **`system.os.get`** - Get operating system information
-- **`system.disk.get`** - Get disk usage statistics
-- **`system.memory.get`** - Get memory statistics
-- **`system.load.get`** - Get load average statistics
+- **`node.hostname.get`** - Get system hostname
+- **`node.status.get`** - Get comprehensive system status (all providers)
+- **`node.uptime.get`** - Get system uptime
+- **`node.os.get`** - Get operating system information
+- **`node.disk.get`** - Get disk usage statistics
+- **`node.memory.get`** - Get memory statistics
+- **`node.load.get`** - Get load average statistics
 
 ### Network Operations
 
@@ -231,12 +231,12 @@ All system operations are routed to `jobs.query.*` subjects:
 ```go
 // System operations - read-only
 const (
-    OperationSystemHostnameGet = "system.hostname.get"
-    OperationSystemStatusGet   = "system.status.get"
-    OperationSystemUptimeGet   = "system.uptime.get"
-    OperationSystemLoadGet     = "system.load.get"
-    OperationSystemMemoryGet   = "system.memory.get"
-    OperationSystemDiskGet     = "system.disk.get"
+    OperationNodeHostnameGet = "node.hostname.get"
+    OperationNodeStatusGet   = "node.status.get"
+    OperationNodeUptimeGet   = "node.uptime.get"
+    OperationNodeLoadGet     = "node.load.get"
+    OperationNodeMemoryGet   = "node.memory.get"
+    OperationNodeDiskGet     = "node.disk.get"
 )
 
 // Network operations
@@ -246,10 +246,10 @@ const (
     OperationNetworkPingExecute = "network.ping.execute"
 )
 
-// System operations - state-changing
+// Node operations - state-changing
 const (
-    OperationSystemShutdown = "system.shutdown.execute"
-    OperationSystemReboot   = "system.reboot.execute"
+    OperationNodeShutdown = "node.shutdown.execute"
+    OperationNodeReboot   = "node.reboot.execute"
 )
 ```
 
@@ -345,8 +345,8 @@ GET /api/v1/jobs/{job-id}
     "failed": 5
   },
   "operation_counts": {
-    "system.hostname.get": 15,
-    "system.status.get": 19,
+    "node.hostname.get": 15,
+    "node.status.get": 19,
     "network.dns.get": 8,
     "network.ping.do": 23
   }
@@ -460,19 +460,19 @@ default:
 ```json
 // Get hostname
 {
-  "type": "system.hostname.get",
+  "type": "node.hostname.get",
   "data": {}
 }
 
 // Get system status
 {
-  "type": "system.status.get",
+  "type": "node.status.get",
   "data": {}
 }
 
 // Get uptime
 {
-  "type": "system.uptime.get",
+  "type": "node.uptime.get",
   "data": {}
 }
 ```
@@ -513,7 +513,7 @@ POST /api/jobs
 Content-Type: application/json
 
 {
-  "type": "system.hostname.get",
+  "type": "node.hostname.get",
   "data": {},
   "target_hostname": "_any"
 }
@@ -564,7 +564,7 @@ GET /api/jobs/{job_id}
   "status": "processing",
   "created": "2025-06-14T10:00:00Z",
   "operation": {
-    "type": "system.hostname.get",
+    "type": "node.hostname.get",
     "data": {}
   }
 }
@@ -578,7 +578,7 @@ GET /api/jobs/{job_id}
   "status": "completed",
   "created": "2025-06-14T10:00:00Z",
   "operation": {
-    "type": "system.hostname.get",
+    "type": "node.hostname.get",
     "data": {}
   },
   "result": {

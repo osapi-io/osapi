@@ -55,28 +55,28 @@ type JobClient interface {
 	) (*ListJobsResult, error)
 
 	// Query operations — all return (jobID, result..., error)
-	QuerySystemStatus(
+	QueryNodeStatus(
 		ctx context.Context,
 		hostname string,
 	) (string, *job.SystemStatusResponse, error)
-	QuerySystemStatusAny(
+	QueryNodeStatusAny(
 		ctx context.Context,
 	) (string, *job.SystemStatusResponse, error)
-	QuerySystemStatusAll(
+	QueryNodeStatusAll(
 		ctx context.Context,
 	) (string, []*job.SystemStatusResponse, map[string]string, error)
-	QuerySystemStatusBroadcast(
+	QueryNodeStatusBroadcast(
 		ctx context.Context,
 		target string,
 	) (string, []*job.SystemStatusResponse, map[string]string, error)
-	QuerySystemHostname(
+	QueryNodeHostname(
 		ctx context.Context,
 		hostname string,
 	) (string, string, *job.WorkerInfo, error)
-	QuerySystemHostnameAll(
+	QueryNodeHostnameAll(
 		ctx context.Context,
 	) (string, map[string]*job.WorkerInfo, map[string]string, error)
-	QuerySystemHostnameBroadcast(
+	QueryNodeHostnameBroadcast(
 		ctx context.Context,
 		target string,
 	) (string, map[string]*job.WorkerInfo, map[string]string, error)

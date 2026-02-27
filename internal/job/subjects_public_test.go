@@ -366,9 +366,9 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerQueueGroup() {
 		want     string
 	}{
 		{
-			name:     "when building queue group for system category",
-			category: "system",
-			want:     "workers.system",
+			name:     "when building queue group for node category",
+			category: "node",
+			want:     "workers.node",
 		},
 		{
 			name:     "when building queue group for network category",

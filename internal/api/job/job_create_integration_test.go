@@ -70,7 +70,7 @@ func (suite *JobCreateIntegrationTestSuite) TestPostJobValidation() {
 	}{
 		{
 			name: "when valid request",
-			body: `{"operation":{"type":"system.hostname.get"},"target_hostname":"_any"}`,
+			body: `{"operation":{"type":"node.hostname.get"},"target_hostname":"_any"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().

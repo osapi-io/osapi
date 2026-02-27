@@ -100,7 +100,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				ID:        "660e8400-e29b-41d4-a716-446655440000",
 				Status:    "failed",
 				Created:   "2025-06-14T10:00:00Z",
-				Operation: map[string]interface{}{"type": "system.hostname.get"},
+				Operation: map[string]interface{}{"type": "node.hostname.get"},
 				Error:     "disk full",
 				Hostname:  "worker-1",
 				UpdatedAt: "2025-06-14T10:05:00Z",
@@ -113,7 +113,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.Equal("660e8400-e29b-41d4-a716-446655440000", r.Id.String())
 				s.Equal("failed", *r.Status)
 				s.NotNil(r.Operation)
-				s.Equal("system.hostname.get", (*r.Operation)["type"])
+				s.Equal("node.hostname.get", (*r.Operation)["type"])
 				s.NotNil(r.Error)
 				s.Equal("disk full", *r.Error)
 				s.NotNil(r.Hostname)

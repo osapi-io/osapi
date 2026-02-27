@@ -21,7 +21,7 @@ $ osapi client job add \
 
 ```json
 {
-  "type": "system.hostname.get",
+  "type": "node.hostname.get",
   "data": {}
 }
 ```

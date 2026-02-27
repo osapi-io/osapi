@@ -221,7 +221,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "test-job-123",
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)
@@ -259,7 +259,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "test-job-456",
 						"operation": {
-							"type": "system.unsupported.get",
+							"type": "node.unsupported.get",
 							"data": {}
 						}
 					}`), nil)
@@ -336,7 +336,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					GetJobData(gomock.Any(), "jobs.missing-id-job").
 					Return([]byte(`{
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)
@@ -411,7 +411,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "ack-err-job",
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)
@@ -446,7 +446,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "start-err-job",
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)
@@ -481,7 +481,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "comp-err-job",
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)
@@ -516,7 +516,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fail-err-job",
 						"operation": {
-							"type": "system.unsupported.get",
+							"type": "node.unsupported.get",
 							"data": {}
 						}
 					}`), nil)
@@ -553,7 +553,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "storage-fail-job",
 						"operation": {
-							"type": "system.hostname.get",
+							"type": "node.hostname.get",
 							"data": {}
 						}
 					}`), nil)

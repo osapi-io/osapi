@@ -124,9 +124,9 @@ of permissions:
 
 | Role    | Permissions                                                                                                             |
 | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
-| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
-| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                                                                |
+| `admin` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
+| `write` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
+| `read`  | `node:read`, `network:read`, `job:read`, `health:read`                                                                |
 
 ### Custom Roles
 
@@ -141,7 +141,7 @@ api:
       roles:
         ops:
           permissions:
-            - system:read
+            - node:read
             - health:read
         netadmin:
           permissions:
@@ -158,7 +158,7 @@ token's roles. Generate a token with direct permissions:
 
 ```bash
 osapi token generate -r admin -u user@example.com \
-  -p system:read -p health:read
+  -p node:read -p health:read
 ```
 
 ## Namespace
@@ -221,13 +221,13 @@ api:
           - 'http://localhost:3001'
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
-      # Permissions: system:read, network:read, network:write,
+      # Permissions: node:read, network:read, network:write,
       #              job:read, job:write, health:read, audit:read,
       #              command:execute
       # roles:
       #   ops:
       #     permissions:
-      #       - system:read
+      #       - node:read
       #       - health:read
 
 nats:

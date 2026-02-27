@@ -29,8 +29,8 @@ var jobCmd = &cobra.Command{
 	Use:   "job",
 	Short: "The job subcommand for job processing",
 	Long: `The job subcommand provides job processing capabilities using the modern
-NATS-based job infrastructure. This includes both worker and server operations
-for distributed job processing.`,
+NATS-based job infrastructure. Use this for job CRUD operations (list, get,
+cancel, retry).`,
 }
 
 func init() {

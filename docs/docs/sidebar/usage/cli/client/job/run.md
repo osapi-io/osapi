@@ -20,7 +20,7 @@ $ osapi client job run \
   ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ {                               ┃
   ┃   "data": {},                   ┃
-  ┃   "type": "system.hostname.get" ┃
+  ┃   "type": "node.hostname.get" ┃
   ┃ }                               ┃
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 

@@ -46,8 +46,8 @@ func (w *Worker) processJobOperation(
 	)
 
 	switch jobRequest.Category {
-	case "system":
-		return w.processSystemOperation(jobRequest)
+	case "node":
+		return w.processNodeOperation(jobRequest)
 	case "network":
 		return w.processNetworkOperation(jobRequest)
 	case "command":
@@ -57,8 +57,8 @@ func (w *Worker) processJobOperation(
 	}
 }
 
-// processSystemOperation handles system-related operations.
-func (w *Worker) processSystemOperation(
+// processNodeOperation handles system-related operations.
+func (w *Worker) processNodeOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
@@ -66,21 +66,21 @@ func (w *Worker) processSystemOperation(
 
 	switch baseOperation {
 	case "hostname":
-		return w.getSystemHostname()
+		return w.getNodeHostname()
 	case "status":
-		return w.getSystemStatus()
+		return w.getNodeStatus()
 	case "uptime":
-		return w.getSystemUptime()
+		return w.getNodeUptime()
 	case "os", "osinfo":
-		return w.getSystemOSInfo()
+		return w.getNodeOSInfo()
 	case "disk":
-		return w.getSystemDisk()
+		return w.getNodeDisk()
 	case "memory", "mem":
-		return w.getSystemMemory()
+		return w.getNodeMemory()
 	case "load":
-		return w.getSystemLoad()
+		return w.getNodeLoad()
 	default:
-		return nil, fmt.Errorf("unsupported system operation: %s", jobRequest.Operation)
+		return nil, fmt.Errorf("unsupported node operation: %s", jobRequest.Operation)
 	}
 }
 
@@ -101,8 +101,8 @@ func (w *Worker) processNetworkOperation(
 	}
 }
 
-// getSystemHostname retrieves the system hostname and worker labels.
-func (w *Worker) getSystemHostname() (json.RawMessage, error) {
+// getNodeHostname retrieves the system hostname and worker labels.
+func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 	w.logger.Debug("executing host.GetHostname")
 	hostProvider := w.getHostProvider()
 	hostname, err := hostProvider.GetHostname()
@@ -121,8 +121,8 @@ func (w *Worker) getSystemHostname() (json.RawMessage, error) {
 	return json.Marshal(result)
 }
 
-// getSystemStatus retrieves comprehensive system status.
-func (w *Worker) getSystemStatus() (json.RawMessage, error) {
+// getNodeStatus retrieves comprehensive system status.
+func (w *Worker) getNodeStatus() (json.RawMessage, error) {
 	w.logger.Debug("executing system.GetStatus")
 	hostProvider := w.getHostProvider()
 	diskProvider := w.getDiskProvider()
@@ -149,8 +149,8 @@ func (w *Worker) getSystemStatus() (json.RawMessage, error) {
 	return json.Marshal(result)
 }
 
-// getSystemUptime retrieves the system uptime.
-func (w *Worker) getSystemUptime() (json.RawMessage, error) {
+// getNodeUptime retrieves the system uptime.
+func (w *Worker) getNodeUptime() (json.RawMessage, error) {
 	w.logger.Debug("executing host.GetUptime")
 	hostProvider := w.getHostProvider()
 	uptime, err := hostProvider.GetUptime()
@@ -166,8 +166,8 @@ func (w *Worker) getSystemUptime() (json.RawMessage, error) {
 	return json.Marshal(result)
 }
 
-// getSystemOSInfo retrieves the operating system information.
-func (w *Worker) getSystemOSInfo() (json.RawMessage, error) {
+// getNodeOSInfo retrieves the operating system information.
+func (w *Worker) getNodeOSInfo() (json.RawMessage, error) {
 	w.logger.Debug("executing host.GetOSInfo")
 	hostProvider := w.getHostProvider()
 	osInfo, err := hostProvider.GetOSInfo()
@@ -178,8 +178,8 @@ func (w *Worker) getSystemOSInfo() (json.RawMessage, error) {
 	return json.Marshal(osInfo)
 }
 
-// getSystemDisk retrieves disk usage statistics.
-func (w *Worker) getSystemDisk() (json.RawMessage, error) {
+// getNodeDisk retrieves disk usage statistics.
+func (w *Worker) getNodeDisk() (json.RawMessage, error) {
 	w.logger.Debug("executing disk.GetLocalUsageStats")
 	diskProvider := w.getDiskProvider()
 	diskUsage, err := diskProvider.GetLocalUsageStats()
@@ -194,8 +194,8 @@ func (w *Worker) getSystemDisk() (json.RawMessage, error) {
 	return json.Marshal(result)
 }
 
-// getSystemMemory retrieves memory statistics.
-func (w *Worker) getSystemMemory() (json.RawMessage, error) {
+// getNodeMemory retrieves memory statistics.
+func (w *Worker) getNodeMemory() (json.RawMessage, error) {
 	w.logger.Debug("executing mem.GetStats")
 	memProvider := w.getMemProvider()
 	memInfo, err := memProvider.GetStats()
@@ -206,8 +206,8 @@ func (w *Worker) getSystemMemory() (json.RawMessage, error) {
 	return json.Marshal(memInfo)
 }
 
-// getSystemLoad retrieves load average statistics.
-func (w *Worker) getSystemLoad() (json.RawMessage, error) {
+// getNodeLoad retrieves load average statistics.
+func (w *Worker) getNodeLoad() (json.RawMessage, error) {
 	w.logger.Debug("executing load.GetAverageStats")
 	loadProvider := w.getLoadProvider()
 	loadAvg, err := loadProvider.GetAverageStats()

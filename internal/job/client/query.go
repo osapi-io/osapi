@@ -30,14 +30,14 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-// QuerySystemStatus queries system status from a specific hostname.
-func (c *Client) QuerySystemStatus(
+// QueryNodeStatus queries system status from a specific hostname.
+func (c *Client) QueryNodeStatus(
 	ctx context.Context,
 	hostname string,
 ) (string, *job.SystemStatusResponse, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "status.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -60,14 +60,14 @@ func (c *Client) QuerySystemStatus(
 	return jobID, &result, nil
 }
 
-// QuerySystemHostname queries hostname from a specific hostname.
-func (c *Client) QuerySystemHostname(
+// QueryNodeHostname queries hostname from a specific hostname.
+func (c *Client) QueryNodeHostname(
 	ctx context.Context,
 	hostname string,
 ) (string, string, *job.WorkerInfo, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "hostname.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -132,22 +132,22 @@ func (c *Client) QueryNetworkDNS(
 	return jobID, &result, resp.Hostname, nil
 }
 
-// QuerySystemStatusAny queries system status from any available host.
-func (c *Client) QuerySystemStatusAny(
+// QueryNodeStatusAny queries system status from any available host.
+func (c *Client) QueryNodeStatusAny(
 	ctx context.Context,
 ) (string, *job.SystemStatusResponse, error) {
-	return c.QuerySystemStatus(ctx, job.AnyHost)
+	return c.QueryNodeStatus(ctx, job.AnyHost)
 }
 
-// QuerySystemStatusBroadcast queries system status from a broadcast target
+// QueryNodeStatusBroadcast queries system status from a broadcast target
 // (_all or a label target like role:web).
-func (c *Client) QuerySystemStatusBroadcast(
+func (c *Client) QueryNodeStatusBroadcast(
 	ctx context.Context,
 	target string,
 ) (string, []*job.SystemStatusResponse, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "status.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -181,11 +181,11 @@ func (c *Client) QuerySystemStatusBroadcast(
 	return jobID, results, errs, nil
 }
 
-// QuerySystemStatusAll queries system status from all hosts.
-func (c *Client) QuerySystemStatusAll(
+// QueryNodeStatusAll queries system status from all hosts.
+func (c *Client) QueryNodeStatusAll(
 	ctx context.Context,
 ) (string, []*job.SystemStatusResponse, map[string]string, error) {
-	return c.QuerySystemStatusBroadcast(ctx, job.BroadcastHost)
+	return c.QueryNodeStatusBroadcast(ctx, job.BroadcastHost)
 }
 
 // QueryNetworkPing pings a host from a specific hostname.
@@ -230,15 +230,15 @@ func (c *Client) QueryNetworkPingAny(
 	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }
 
-// QuerySystemHostnameBroadcast queries hostname from a broadcast target
+// QueryNodeHostnameBroadcast queries hostname from a broadcast target
 // (_all or a label target like role:web).
-func (c *Client) QuerySystemHostnameBroadcast(
+func (c *Client) QueryNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (string, map[string]*job.WorkerInfo, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "hostname.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -274,11 +274,11 @@ func (c *Client) QuerySystemHostnameBroadcast(
 	return jobID, results, errs, nil
 }
 
-// QuerySystemHostnameAll queries hostname from all hosts.
-func (c *Client) QuerySystemHostnameAll(
+// QueryNodeHostnameAll queries hostname from all hosts.
+func (c *Client) QueryNodeHostnameAll(
 	ctx context.Context,
 ) (string, map[string]*job.WorkerInfo, map[string]string, error) {
-	return c.QuerySystemHostnameBroadcast(ctx, job.BroadcastHost)
+	return c.QueryNodeHostnameBroadcast(ctx, job.BroadcastHost)
 }
 
 // QueryNetworkDNSBroadcast queries DNS configuration from a broadcast target

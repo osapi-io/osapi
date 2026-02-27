@@ -25,7 +25,7 @@ type Permission = string
 
 // Permission constants using resource:verb format.
 const (
-	PermSystemRead     Permission = "system:read"
+	PermNodeRead       Permission = "node:read"
 	PermNetworkRead    Permission = "network:read"
 	PermNetworkWrite   Permission = "network:write"
 	PermJobRead        Permission = "job:read"
@@ -37,7 +37,7 @@ const (
 
 // AllPermissions is the full set of known permissions.
 var AllPermissions = []Permission{
-	PermSystemRead,
+	PermNodeRead,
 	PermNetworkRead,
 	PermNetworkWrite,
 	PermJobRead,
@@ -50,7 +50,7 @@ var AllPermissions = []Permission{
 // DefaultRolePermissions maps built-in role names to their granted permissions.
 var DefaultRolePermissions = map[string][]Permission{
 	"admin": {
-		PermSystemRead,
+		PermNodeRead,
 		PermNetworkRead,
 		PermNetworkWrite,
 		PermJobRead,
@@ -60,7 +60,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermCommandExecute,
 	},
 	"write": {
-		PermSystemRead,
+		PermNodeRead,
 		PermNetworkRead,
 		PermNetworkWrite,
 		PermJobRead,
@@ -68,7 +68,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermHealthRead,
 	},
 	"read": {
-		PermSystemRead,
+		PermNodeRead,
 		PermNetworkRead,
 		PermJobRead,
 		PermHealthRead,

@@ -43,12 +43,12 @@ The `osapi` binary exposes four top-level command groups:
 
 - **`osapi api server start`** — starts the REST API server (Echo + JWT
   middleware)
-- **`osapi job worker start`** — starts a job worker that subscribes to NATS
+- **`osapi node agent start`** — starts a node agent that subscribes to NATS
   subjects and processes operations
 - **`osapi nats server start`** — starts an embedded NATS server with JetStream
   enabled
-- **`osapi client`** — CLI client that talks to the REST API (system, network,
-  job, and health subcommands)
+- **`osapi client`** — CLI client that talks to the REST API (node, command,
+  network, job, and health subcommands)
 
 ## Layers
 
@@ -67,9 +67,9 @@ subpackages:
 
 | Package                 | Responsibility                                                   |
 | ----------------------- | ---------------------------------------------------------------- |
-| `internal/api/system/`  | System endpoints (hostname, status, uptime, disk, memory, load)  |
-| `internal/api/network/` | Network endpoints (DNS, ping)                                    |
-| `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status, workers) |
+| `internal/api/node/`    | Node endpoints (hostname, status, list, uptime, disk, memory, load) |
+| `internal/api/network/` | Network endpoints (DNS, ping)                                       |
+| `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status)             |
 | `internal/api/command/` | Command execution endpoints (exec, shell)                        |
 | `internal/api/health/`  | Health check endpoints (liveness, readiness, status)             |
 | `internal/api/common/`  | Shared middleware, error handling, collection responses          |
@@ -233,7 +233,7 @@ osapi client health status       # system status with metrics (requires auth)
 
 ## Request Flow
 
-A typical operation (e.g., `system.hostname.get`) follows these steps:
+A typical operation (e.g., `node.hostname.get`) follows these steps:
 
 ```mermaid
 sequenceDiagram

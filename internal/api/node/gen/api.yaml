@@ -1,0 +1,369 @@
+# Copyright (c) 2024 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Node Management API
+  version: 1.0.0
+tags:
+  - name: node_operations
+    x-displayName: Node
+    description: Operations related to the node endpoint.
+  - name: node_status
+    x-displayName: Node/Status
+    description: Operations related to node status endpoint.
+paths:
+  /node:
+    get:
+      summary: List active workers
+      description: Discover all active workers in the fleet.
+      tags:
+        - node_operations
+      security:
+        - BearerAuth:
+            - node:read
+      responses:
+        '200':
+          description: List of active workers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWorkersResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error discovering workers.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /node/status:
+    get:
+      summary: Retrieve node status
+      description: Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
+      tags:
+        - node_status
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,valid_target
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
+      responses:
+        '200':
+          description: A JSON object containing the node's status information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatusCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving node status.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /node/hostname:
+    get:
+      summary: Retrieve node hostname
+      description: Get the current hostname of the node.
+      tags:
+        - node_operations
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - name: target_hostname
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,valid_target
+          schema:
+            type: string
+            default: _any
+          description: >
+            Target: _any (load-balanced), _all (broadcast), hostname
+            (direct), or key:value (label group, e.g., group:web.dev).
+      responses:
+        '200':
+          description: A JSON object containing the node's hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    ListWorkersResponse:
+      type: object
+      properties:
+        workers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerInfo'
+        total:
+          type: integer
+          description: Total number of active workers.
+      required:
+        - workers
+        - total
+
+    WorkerInfo:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the worker.
+      required:
+        - hostname
+
+    LoadAverageResponse:
+      type: object
+      description: The system load averages for 1, 5, and 15 minutes.
+      properties:
+        1min:
+          type: number
+          description: Load average for the last 1 minute.
+          example: 0.32
+        5min:
+          type: number
+          description: Load average for the last 5 minutes.
+          example: 0.28
+        15min:
+          type: number
+          description: Load average for the last 15 minutes.
+          example: 0.25
+      required:
+        - 1min
+        - 5min
+        - 15min
+
+    MemoryResponse:
+      type: object
+      description: Memory usage information.
+      properties:
+        total:
+          type: integer
+          description: Total memory in bytes.
+          example: 8388608
+        free:
+          type: integer
+          description: Free memory in bytes.
+          example: 2097152
+        used:
+          type: integer
+          description: Used memory in bytes.
+          example: 4194304
+      required:
+        - total
+        - free
+        - used
+
+    DiskResponse:
+      type: object
+      description: Local disk usage information.
+      properties:
+        name:
+          type: string
+          description: Disk identifier, e.g., "/dev/sda1".
+          example: "/dev/sda1"
+        total:
+          type: integer
+          description: Total disk space in bytes.
+          example: 500000000000
+        used:
+          type: integer
+          description: Used disk space in bytes.
+          example: 250000000000
+        free:
+          type: integer
+          description: Free disk space in bytes.
+          example: 250000000000
+      required:
+        - name
+        - total
+        - used
+        - free
+
+    DisksResponse:
+      type: array
+      description: List of local disk usage information.
+      items:
+        $ref: '#/components/schemas/DiskResponse'
+
+    SystemStatusResponse:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the system.
+          example: "my-linux-server"
+        uptime:
+          type: string
+          description: The uptime of the system.
+          example: "0 days, 4 hours, 1 minute"
+        load_average:
+          $ref: '#/components/schemas/LoadAverageResponse'
+        memory:
+          $ref: '#/components/schemas/MemoryResponse'
+        disks:
+          $ref: '#/components/schemas/DisksResponse'
+        os_info:
+          $ref: '#/components/schemas/OSInfoResponse'
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
+      required:
+        - hostname
+
+    HostnameResponse:
+      type: object
+      description: The hostname of the system.
+      properties:
+        hostname:
+          type: string
+          description: The system's hostname.
+          example: "my-linux-server"
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: Key-value labels configured on the worker.
+        error:
+          type: string
+          description: Error message if the worker failed to process the request.
+      required:
+        - hostname
+
+    SystemStatusCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemStatusResponse'
+      required:
+        - results
+
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
+
+    OSInfoResponse:
+      type: object
+      description: Operating system information.
+      properties:
+        distribution:
+          type: string
+          description: The name of the Linux distribution.
+          example: "Ubuntu"
+        version:
+          type: string
+          description: The version of the Linux distribution.
+          example: "20.04"
+      required:
+        - distribution
+        - version

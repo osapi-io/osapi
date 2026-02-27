@@ -786,7 +786,7 @@ func (suite *UITestSuite) TestDisplayJobDetailResponse() {
 				created := "2026-01-01T00:00:00Z"
 				updatedAt := "2026-01-01T00:01:00Z"
 				errMsg := "timeout"
-				operation := map[string]interface{}{"type": "system.hostname"}
+				operation := map[string]interface{}{"type": "node.hostname"}
 				result := map[string]interface{}{"hostname": "web-01"}
 				event := "completed"
 				timestamp := "2026-01-01T00:01:00Z"

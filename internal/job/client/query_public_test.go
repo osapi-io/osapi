@@ -64,7 +64,7 @@ func (s *QueryPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatus() {
 	tests := []struct {
 		name          string
 		hostname      string
@@ -160,7 +160,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 				tt.mockError,
 			)
 
-			_, result, err := s.jobsClient.QuerySystemStatus(s.ctx, tt.hostname)
+			_, result, err := s.jobsClient.QueryNodeStatus(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -176,7 +176,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
+func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 	tests := []struct {
 		name          string
 		hostname      string
@@ -260,7 +260,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				tt.mockError,
 			)
 
-			_, result, worker, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
+			_, result, worker, err := s.jobsClient.QueryNodeHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -545,7 +545,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatusAny() {
 	tests := []struct {
 		name          string
 		responseData  string
@@ -582,7 +582,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 				tt.mockError,
 			)
 
-			_, result, err := s.jobsClient.QuerySystemStatusAny(s.ctx)
+			_, result, err := s.jobsClient.QueryNodeStatusAny(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -668,7 +668,7 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				tt.opts,
 			)
 
-			_, result, worker, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+			_, result, worker, err := jobsClient.QueryNodeHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
@@ -684,7 +684,7 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatusAll() {
 	tests := []struct {
 		name          string
 		timeout       time.Duration
@@ -830,7 +830,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 				tt.opts,
 			)
 
-			_, result, _, err := jobsClient.QuerySystemStatusAll(s.ctx)
+			_, result, _, err := jobsClient.QueryNodeStatusAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -846,7 +846,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
+func (s *QueryPublicTestSuite) TestQueryNodeHostnameAll() {
 	tests := []struct {
 		name          string
 		timeout       time.Duration
@@ -931,7 +931,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 				tt.opts,
 			)
 
-			_, result, _, err := jobsClient.QuerySystemHostnameAll(s.ctx)
+			_, result, _, err := jobsClient.QueryNodeHostnameAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)

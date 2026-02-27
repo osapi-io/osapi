@@ -45,8 +45,8 @@ import (
 // ServerManager responsible for Server operations.
 type ServerManager interface {
 	cli.Lifecycle
-	// GetSystemHandler returns system handler for registration.
-	GetSystemHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetNodeHandler returns node handler for registration.
+	GetNodeHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNetworkHandler returns network handler for registration.
 	GetNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetJobHandler returns job handler for registration.
@@ -312,7 +312,7 @@ func registerAPIHandlers(
 	startTime := time.Now()
 
 	handlers := make([]func(e *echo.Echo), 0, 7)
-	handlers = append(handlers, sm.GetSystemHandler(jc)...)
+	handlers = append(handlers, sm.GetNodeHandler(jc)...)
 	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
 	handlers = append(handlers, sm.GetCommandHandler(jc)...)

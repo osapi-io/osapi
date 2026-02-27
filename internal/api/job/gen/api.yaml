@@ -185,41 +185,6 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /job/workers:
-    get:
-      summary: List active workers
-      description: Discover all active workers in the fleet by broadcasting a hostname query.
-      tags:
-        - job_operations
-      security:
-        - BearerAuth:
-            - job:read
-      responses:
-        '200':
-          description: List of active workers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListWorkersResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '500':
-          description: Error discovering workers.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-
   /job/{id}:
     get:
       summary: Get job detail
@@ -547,29 +512,6 @@ components:
               error:
                 type: string
                 description: Error details if applicable.
-
-    ListWorkersResponse:
-      type: object
-      properties:
-        workers:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkerInfo'
-        total:
-          type: integer
-          description: Total number of active workers.
-      required:
-        - workers
-        - total
-
-    WorkerInfo:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the worker.
-      required:
-        - hostname
 
     QueueStatsResponse:
       type: object

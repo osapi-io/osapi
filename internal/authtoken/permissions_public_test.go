@@ -51,7 +51,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "write role gets write permissions but not audit",
 			roles: []string{"write"},
 			expectPerms: []string{
-				authtoken.PermSystemRead,
+				authtoken.PermNodeRead,
 				authtoken.PermNetworkRead,
 				authtoken.PermNetworkWrite,
 				authtoken.PermJobRead,
@@ -66,7 +66,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "read role gets read-only permissions",
 			roles: []string{"read"},
 			expectPerms: []string{
-				authtoken.PermSystemRead,
+				authtoken.PermNodeRead,
 				authtoken.PermNetworkRead,
 				authtoken.PermJobRead,
 				authtoken.PermHealthRead,
@@ -98,8 +98,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		{
 			name:              "direct permissions override roles",
 			roles:             []string{"admin"},
-			directPermissions: []string{authtoken.PermSystemRead},
-			expectPerms:       []string{authtoken.PermSystemRead},
+			directPermissions: []string{authtoken.PermNodeRead},
+			expectPerms:       []string{authtoken.PermNodeRead},
 			expectMissing: []string{
 				authtoken.PermNetworkRead,
 				authtoken.PermNetworkWrite,
@@ -113,10 +113,10 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "custom role overrides default",
 			roles: []string{"ops"},
 			customRoles: map[string][]string{
-				"ops": {authtoken.PermSystemRead, authtoken.PermHealthRead},
+				"ops": {authtoken.PermNodeRead, authtoken.PermHealthRead},
 			},
 			expectPerms: []string{
-				authtoken.PermSystemRead,
+				authtoken.PermNodeRead,
 				authtoken.PermHealthRead,
 			},
 			expectMissing: []string{
@@ -134,7 +134,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			},
 			expectPerms: []string{authtoken.PermHealthRead},
 			expectMissing: []string{
-				authtoken.PermSystemRead,
+				authtoken.PermNodeRead,
 				authtoken.PermNetworkRead,
 			},
 		},
@@ -142,7 +142,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "multiple roles merge permissions",
 			roles: []string{"read", "write"},
 			expectPerms: []string{
-				authtoken.PermSystemRead,
+				authtoken.PermNodeRead,
 				authtoken.PermNetworkRead,
 				authtoken.PermNetworkWrite,
 				authtoken.PermJobRead,
@@ -179,26 +179,26 @@ func (s *PermissionsPublicTestSuite) TestHasPermission() {
 	}{
 		{
 			name:     "present permission returns true",
-			resolved: map[string]bool{authtoken.PermSystemRead: true},
-			required: authtoken.PermSystemRead,
+			resolved: map[string]bool{authtoken.PermNodeRead: true},
+			required: authtoken.PermNodeRead,
 			expected: true,
 		},
 		{
 			name:     "absent permission returns false",
-			resolved: map[string]bool{authtoken.PermSystemRead: true},
+			resolved: map[string]bool{authtoken.PermNodeRead: true},
 			required: authtoken.PermJobWrite,
 			expected: false,
 		},
 		{
 			name:     "empty resolved set returns false",
 			resolved: map[string]bool{},
-			required: authtoken.PermSystemRead,
+			required: authtoken.PermNodeRead,
 			expected: false,
 		},
 		{
 			name:     "nil resolved set returns false",
 			resolved: nil,
-			required: authtoken.PermSystemRead,
+			required: authtoken.PermNodeRead,
 			expected: false,
 		},
 	}

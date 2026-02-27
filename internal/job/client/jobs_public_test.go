@@ -119,7 +119,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "successful job creation",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": map[string]string{"param": "value"},
 			},
 			targetHost: "server1",
@@ -146,7 +146,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "KV storage error",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": map[string]string{"param": "value"},
 			},
 			targetHost:  "server1",
@@ -179,7 +179,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "empty target hostname defaults to any",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": map[string]string{},
 			},
 			targetHost: "",
@@ -197,7 +197,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "publish notification error",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": map[string]string{},
 			},
 			targetHost:  "server1",
@@ -216,7 +216,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "unmarshalable operation data",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": make(chan int),
 			},
 			targetHost:  "server1",
@@ -226,7 +226,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 		{
 			name: "status event put error is logged not returned",
 			operationData: map[string]interface{}{
-				"type": "system.hostname.get",
+				"type": "node.hostname.get",
 				"data": map[string]string{},
 			},
 			targetHost: "server1",
@@ -287,7 +287,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					"status": "completed",
 					"created": "2024-01-01T00:00:00Z",
 					"subject": "jobs.query.server1",
-					"operation": {"type": "system.hostname.get"}
+					"operation": {"type": "node.hostname.get"}
 				}`))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
 				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{}, nil)
@@ -320,7 +320,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z","subject":"jobs.query.server1"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z","subject":"jobs.query.server1"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -376,7 +376,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -413,7 +413,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -449,7 +449,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -485,7 +485,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -505,7 +505,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -528,7 +528,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -541,7 +541,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -564,7 +564,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -585,7 +585,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -619,7 +619,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -645,7 +645,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -710,7 +710,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -748,7 +748,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -858,7 +858,7 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"}}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"}}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
 
@@ -926,13 +926,13 @@ func (s *JobsPublicTestSuite) TestGetQueueStats() {
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().
 					Value().
-					Return([]byte(`{"id":"job-1","operation":{"type":"system.hostname.get"}}`))
+					Return([]byte(`{"id":"job-1","operation":{"type":"node.hostname.get"}}`))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().
 					Value().
-					Return([]byte(`{"id":"job-2","operation":{"type":"system.status.get"}}`))
+					Return([]byte(`{"id":"job-2","operation":{"type":"node.status.get"}}`))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
 
 				s.mockNATSClient.EXPECT().
@@ -1055,13 +1055,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
 			},
@@ -1076,7 +1076,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
 			},
@@ -1119,7 +1119,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
@@ -1153,7 +1153,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				// Only job-2 is fetched (newest-first, limit 1)
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry, nil)
 			},
@@ -1171,7 +1171,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				// After reversing: [job-2, job-1], offset 1 skips job-2, returns job-1
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
 			},
@@ -1201,19 +1201,19 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				// Reversed: job-3, job-2, job-1 — all submitted
 				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry3.EXPECT().Value().Return([]byte(
-					`{"id":"job-3","operation":{"type":"system.status.get"},"created":"2024-01-03T00:00:00Z"}`,
+					`{"id":"job-3","operation":{"type":"node.status.get"},"created":"2024-01-03T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-3").Return(mockEntry3, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 			},
@@ -1232,13 +1232,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				// Reversed: job-2, job-1 — both submitted
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 			},
@@ -1260,7 +1260,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-bad","operation":{"type":"system.status.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-bad","operation":{"type":"node.status.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bad").Return(mockEntry, nil)
 			},
@@ -1291,19 +1291,19 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				// Reversed: job-3, job-2, job-1
 				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry3.EXPECT().Value().Return([]byte(
-					`{"id":"job-3","operation":{"type":"system.status.get"},"created":"2024-01-03T00:00:00Z"}`,
+					`{"id":"job-3","operation":{"type":"node.status.get"},"created":"2024-01-03T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-3").Return(mockEntry3, nil)
 
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"system.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
 
 				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 			},
@@ -1409,7 +1409,7 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-original","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-original","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original").Return(mockJobEntry, nil)
 
@@ -1467,7 +1467,7 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-original-2","operation":{"type":"system.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+					`{"id":"job-original-2","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original-2").Return(mockJobEntry, nil)
 
@@ -1520,7 +1520,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 				// Read original job
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-123","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+					`{"id":"job-123","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
 
@@ -1583,7 +1583,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-456","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+					`{"id":"job-456","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-456").Return(mockEntry, nil)
 
@@ -1601,7 +1601,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-789","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+					`{"id":"job-789","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-789").Return(mockEntry, nil)
 
@@ -1628,7 +1628,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			setupMocks: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-empty-target","operation":{"type":"system.hostname.get","data":{}},"subject":"jobs.query._any"}`,
+					`{"id":"job-empty-target","operation":{"type":"node.hostname.get","data":{}},"subject":"jobs.query._any"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-empty-target").Return(mockEntry, nil)
 

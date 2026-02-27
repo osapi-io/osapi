@@ -39,7 +39,7 @@ so `grep trace_id=<hex>` shows the complete end-to-end flow.
 To trace a request end-to-end:
 
 1. Run all three processes with `--debug` (or `telemetry.tracing.enabled: true`)
-2. Execute a command: `osapi client system hostname`
+2. Execute a command: `osapi client node hostname`
 3. Find the `trace_id` in any component's log output
 4. Filter all logs: `grep trace_id=<hex>` across API server and worker output
 

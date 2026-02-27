@@ -43,7 +43,7 @@ actual system operations (reading hostname, querying DNS, checking disk usage,
 etc.). Workers run with whatever privileges they have — if a worker can't read
 something due to permissions, it reports the error rather than failing silently.
 
-Start it with `osapi job worker start`.
+Start it with `osapi node agent start`.
 
 ## Deployment Models
 
@@ -102,7 +102,7 @@ You can target jobs to specific hosts, broadcast to all, or route by label:
 
 ## How a Request Flows
 
-When you run a command like `osapi client system hostname`:
+When you run a command like `osapi client node hostname`:
 
 ```mermaid
 sequenceDiagram
@@ -132,7 +132,7 @@ coordination layer between clients and workers.
 For details on individual features — what they do, how they work, and how to
 configure them — see the Features section:
 
-- [System Management](../features/system-management.md) — hostname, disk,
+- [Node Management](../features/node-management.md) — hostname, disk,
   memory, load
 - [Network Management](../features/network-management.md) — DNS, ping
 - [Command Execution](../features/command-execution.md) — exec, shell

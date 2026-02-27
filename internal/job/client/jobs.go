@@ -60,7 +60,7 @@ func (c *Client) CreateJob(
 		strings.HasSuffix(operationType, ".read") ||
 		strings.HasSuffix(operationType, ".status") ||
 		strings.HasSuffix(operationType, ".do") ||
-		strings.HasPrefix(operationType, "system.") {
+		strings.HasPrefix(operationType, "node.") {
 		prefix = job.JobsQueryPrefix
 	} else {
 		prefix = job.JobsModifyPrefix

@@ -28,12 +28,13 @@ api:
       # Custom roles with fine-grained permissions.
       # Built-in roles (admin, write, read) expand to default permissions
       # unless overridden here. Permissions use resource:verb format.
-      # Available: system:read, network:read, network:write,
-      #            job:read, job:write, health:read, audit:read
+      # Available: node:read, network:read, network:write,
+      #            job:read, job:write, health:read, audit:read,
+      #            command:execute
       # roles:
       #   ops:
       #     permissions:
-      #       - system:read
+      #       - node:read
       #       - health:read
       #   netadmin:
       #     permissions:

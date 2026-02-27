@@ -71,7 +71,7 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatus() {
 					"failed":    5,
 				},
 				OperationCounts: map[string]int{
-					"system.hostname.get": 15,
+					"node.hostname.get": 15,
 				},
 				DLQCount: 2,
 			},
