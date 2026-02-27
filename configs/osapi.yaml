@@ -85,6 +85,12 @@ nats:
     storage: file
     replicas: 1
 
+  registry:
+    bucket: worker-registry
+    ttl: 30s
+    storage: file
+    replicas: 1
+
 telemetry:
   tracing:
     enabled: true

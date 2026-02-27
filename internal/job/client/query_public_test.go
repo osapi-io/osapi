@@ -1132,51 +1132,112 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 func (s *QueryPublicTestSuite) TestListWorkers() {
 	tests := []struct {
 		name          string
-		timeout       time.Duration
-		opts          *publishAndCollectMockOpts
+		setupMockKV   func(*jobmocks.MockKeyValue)
+		useRegistryKV bool
 		expectError   bool
 		errorContains string
 		expectedCount int
 	}{
 		{
-			name:    "multiple workers discovered",
-			timeout: 50 * time.Millisecond,
-			opts: &publishAndCollectMockOpts{
-				responseEntries: []string{
-					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
-					`{"status":"completed","hostname":"server2","data":{"hostname":"worker2"}}`,
-				},
+			name:          "when registryKV is nil returns error",
+			useRegistryKV: false,
+			expectError:   true,
+			errorContains: "worker registry not configured",
+		},
+		{
+			name:          "when bucket is empty returns empty list",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+			},
+			expectedCount: 0,
+		},
+		{
+			name:          "when workers exist returns worker list",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"workers.server1", "workers.server2"}, nil)
+
+				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry1.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server1").
+					Return(entry1, nil)
+
+				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry2.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server2","labels":{"group":"db"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server2").
+					Return(entry2, nil)
 			},
 			expectedCount: 2,
 		},
 		{
-			name: "broadcast error",
-			opts: &publishAndCollectMockOpts{
-				mockError: errors.New("publish error"),
-				errorMode: errorOnPublish,
+			name:          "when Keys fails returns error",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("connection failed"))
 			},
 			expectError:   true,
-			errorContains: "failed to discover workers",
+			errorContains: "failed to list registry keys",
 		},
 		{
-			name:    "failed workers skipped",
-			timeout: 50 * time.Millisecond,
-			opts: &publishAndCollectMockOpts{
-				responseEntries: []string{
-					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
-					`{"status":"failed","hostname":"server2","error":"crash"}`,
-				},
+			name:          "when Get fails for a key skips it",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"workers.server1", "workers.server2"}, nil)
+
+				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry1.EXPECT().Value().Return(
+					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server1").
+					Return(entry1, nil)
+
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server2").
+					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 1,
 		},
 		{
-			name:    "unmarshal error in worker data skipped",
-			timeout: 50 * time.Millisecond,
-			opts: &publishAndCollectMockOpts{
-				responseEntries: []string{
-					`{"status":"completed","hostname":"server1","data":{"hostname":"worker1"}}`,
-					`{"status":"completed","hostname":"server2","data":"not_an_object"}`,
-				},
+			name:          "when unmarshal fails for a key skips it",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"workers.server1", "workers.server2"}, nil)
+
+				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry1.EXPECT().Value().Return(
+					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server1").
+					Return(entry1, nil)
+
+				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry2.EXPECT().Value().Return([]byte(`invalid json`))
+				kv.EXPECT().
+					Get(gomock.Any(), "workers.server2").
+					Return(entry2, nil)
 			},
 			expectedCount: 1,
 		},
@@ -1184,27 +1245,23 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			timeout := tt.timeout
-			if timeout == 0 {
-				timeout = 30 * time.Second
+			registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+			if tt.setupMockKV != nil {
+				tt.setupMockKV(registryKV)
 			}
 
 			opts := &client.Options{
-				Timeout:  timeout,
+				Timeout:  30 * time.Second,
 				KVBucket: s.mockKV,
 			}
+			if tt.useRegistryKV {
+				opts.RegistryKV = registryKV
+			}
+
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 
-			setupPublishAndCollectMocks(
-				s.mockCtrl,
-				s.mockKV,
-				s.mockNATSClient,
-				"jobs.query._all",
-				tt.opts,
-			)
-
-			_, result, err := jobsClient.ListWorkers(s.ctx)
+			result, err := jobsClient.ListWorkers(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)

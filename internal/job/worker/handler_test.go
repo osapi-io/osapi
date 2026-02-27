@@ -113,6 +113,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		dnsMock,
 		pingMock,
 		commandMock,
+		nil,
 	)
 }
 

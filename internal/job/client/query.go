@@ -381,43 +381,41 @@ func (c *Client) QueryNetworkPingAll(
 	return c.QueryNetworkPingBroadcast(ctx, job.BroadcastHost, address)
 }
 
-// ListWorkers discovers all active workers by broadcasting a hostname query
-// and collecting responses. Each responding worker is returned as a WorkerInfo.
+// ListWorkers reads the worker registry KV bucket and returns all registered
+// workers. Workers register via heartbeat, so only live workers appear.
 func (c *Client) ListWorkers(
 	ctx context.Context,
-) (string, []job.WorkerInfo, error) {
-	req := &job.Request{
-		Type:      job.TypeQuery,
-		Category:  "system",
-		Operation: "hostname.get",
-		Data:      json.RawMessage(`{}`),
+) ([]job.WorkerInfo, error) {
+	if c.registryKV == nil {
+		return nil, fmt.Errorf("worker registry not configured")
 	}
 
-	subject := job.BuildQuerySubject(job.BroadcastHost)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	keys, err := c.registryKV.Keys(ctx)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to discover workers: %w", err)
+		// Keys returns jetstream.ErrNoKeysFound when the bucket is empty.
+		if err.Error() == "nats: no keys found" {
+			return []job.WorkerInfo{}, nil
+		}
+		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
-	workers := make([]job.WorkerInfo, 0, len(responses))
-	for _, resp := range responses {
-		if resp.Status == "failed" {
+	workers := make([]job.WorkerInfo, 0, len(keys))
+	for _, key := range keys {
+		entry, err := c.registryKV.Get(ctx, key)
+		if err != nil {
 			continue
 		}
 
-		var result struct {
-			Hostname string            `json:"hostname"`
-			Labels   map[string]string `json:"labels,omitempty"`
-		}
-		if err := json.Unmarshal(resp.Data, &result); err != nil {
+		var reg job.WorkerRegistration
+		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
 			continue
 		}
 
 		workers = append(workers, job.WorkerInfo{
-			Hostname: result.Hostname,
-			Labels:   result.Labels,
+			Hostname: reg.Hostname,
+			Labels:   reg.Labels,
 		})
 	}
 
-	return jobID, workers, nil
+	return workers, nil
 }

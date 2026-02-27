@@ -23,6 +23,7 @@ package worker
 import (
 	"log/slog"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -50,6 +51,7 @@ func New(
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
 	commandProvider command.Provider,
+	registryKV jetstream.KeyValue,
 ) *Worker {
 	return &Worker{
 		logger:          logger,
@@ -64,5 +66,6 @@ func New(
 		dnsProvider:     dnsProvider,
 		pingProvider:    pingProvider,
 		commandProvider: commandProvider,
+		registryKV:      registryKV,
 	}
 }

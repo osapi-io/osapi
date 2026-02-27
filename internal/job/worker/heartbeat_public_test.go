@@ -1,4 +1,4 @@
-// Copyright (c) 2025 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -42,31 +42,40 @@ import (
 	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
 )
 
-type WorkerPublicTestSuite struct {
+type HeartbeatPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
+	mockKV        *mocks.MockKeyValue
 	appFs         afero.Fs
 	appConfig     config.Config
 	logger        *slog.Logger
 }
 
-func (s *WorkerPublicTestSuite) SetupTest() {
+func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	s.mockKV = mocks.NewMockKeyValue(s.mockCtrl)
 	s.appFs = afero.NewMemMapFs()
 	s.logger = slog.Default()
 
 	s.appConfig = config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
+			Registry: config.NATSRegistry{
+				Bucket:   "worker-registry",
+				TTL:      "30s",
+				Storage:  "file",
+				Replicas: 1,
+			},
 		},
 		Job: config.Job{
 			Worker: config.JobWorker{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
+				Labels:     map[string]string{"group": "web"},
 				Consumer: config.JobWorkerConsumer{
 					AckWait:       "30s",
 					BackOff:       []string{"1s", "2s", "5s"},
@@ -79,60 +88,78 @@ func (s *WorkerPublicTestSuite) SetupTest() {
 	}
 }
 
-func (s *WorkerPublicTestSuite) TearDownTest() {
+func (s *HeartbeatPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *WorkerPublicTestSuite) TestNew() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "creates worker with all providers",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			w := worker.New(
-				s.appFs,
-				s.appConfig,
-				s.logger,
-				s.mockJobClient,
-				"test-stream",
-				hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-				pingMocks.NewDefaultMockProvider(s.mockCtrl),
-				commandMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-			)
-
-			s.NotNil(w)
-		})
-	}
-}
-
-func (s *WorkerPublicTestSuite) TestStart() {
+func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 	tests := []struct {
 		name      string
 		setupFunc func() *worker.Worker
 		stopFunc  func(w *worker.Worker)
 	}{
 		{
-			name: "starts and stops gracefully",
+			name: "when registryKV is set registers and deregisters",
 			setupFunc: func() *worker.Worker {
+				// Heartbeat initial write
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "workers.test_worker", gomock.Any()).
+					Return(uint64(1), nil).
+					MinTimes(1)
+
+				// Deregister on stop
+				s.mockKV.EXPECT().
+					Delete(gomock.Any(), "workers.test_worker").
+					Return(nil).
+					Times(1)
+
+					// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
-					Times(6)
+					Times(8)
 
 				s.mockJobClient.EXPECT().
 					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(context.Canceled).
-					Times(6)
+					Times(8)
+
+				return worker.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					"test-stream",
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					s.mockKV,
+				)
+			},
+			stopFunc: func(w *worker.Worker) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				w.Stop(stopCtx)
+			},
+		},
+		{
+			name: "when registryKV is nil skips heartbeat",
+			setupFunc: func() *worker.Worker {
+				// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(8)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(8)
 
 				return worker.New(
 					s.appFs,
@@ -157,61 +184,6 @@ func (s *WorkerPublicTestSuite) TestStart() {
 				w.Stop(stopCtx)
 			},
 		},
-		{
-			name: "stop times out when workers are slow to finish",
-			setupFunc: func() *worker.Worker {
-				blockCh := make(chan struct{})
-
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(6)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(
-						_ context.Context,
-						_ string,
-						_ string,
-						_ interface{},
-						_ interface{},
-					) error {
-						<-blockCh
-						return nil
-					}).
-					Times(6)
-
-				w := worker.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-				)
-
-				// Schedule cleanup after Stop returns
-				s.T().Cleanup(func() {
-					close(blockCh)
-					time.Sleep(10 * time.Millisecond)
-				})
-
-				return w
-			},
-			stopFunc: func(w *worker.Worker) {
-				stopCtx, cancel := context.WithCancel(context.Background())
-				cancel()
-
-				w.Stop(stopCtx)
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -223,6 +195,6 @@ func (s *WorkerPublicTestSuite) TestStart() {
 	}
 }
 
-func TestWorkerPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(WorkerPublicTestSuite))
+func TestHeartbeatPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(HeartbeatPublicTestSuite))
 }

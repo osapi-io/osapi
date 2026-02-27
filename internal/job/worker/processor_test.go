@@ -118,6 +118,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		dnsMock,
 		pingMock,
 		commandMock,
+		nil,
 	)
 }
 
@@ -649,6 +650,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -674,6 +676,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -697,6 +700,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -720,6 +724,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -743,6 +748,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -766,6 +772,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -823,6 +830,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -850,6 +858,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},
@@ -875,6 +884,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMock,
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 				)
 			},
 		},

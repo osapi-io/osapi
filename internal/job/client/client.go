@@ -40,6 +40,7 @@ type Client struct {
 	logger             *slog.Logger
 	natsClient         messaging.NATSClient
 	kv                 jetstream.KeyValue
+	registryKV         jetstream.KeyValue
 	timeout            time.Duration
 	broadcastQuietTime time.Duration
 	streamName         string
@@ -54,6 +55,8 @@ type Options struct {
 	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
 	KVBucket jetstream.KeyValue
+	// RegistryKV is the KV bucket for worker registry (optional).
+	RegistryKV jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
 }
@@ -80,6 +83,7 @@ func New(
 		logger:             logger,
 		natsClient:         natsClient,
 		kv:                 opts.KVBucket,
+		registryKV:         opts.RegistryKV,
 		streamName:         opts.StreamName,
 		timeout:            opts.Timeout,
 		broadcastQuietTime: quietPeriod,

@@ -24,6 +24,8 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -42,6 +44,13 @@ var workerLister WorkerLister
 // labelSegmentRe matches NATS subject-safe segments (same as job.labelSegmentRegex).
 var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+var (
+	cacheMu       sync.Mutex
+	cachedWorkers []WorkerTarget
+	cacheExpiry   time.Time
+	cacheTTL      = 5 * time.Second
+)
+
 // RegisterTargetValidator registers the valid_target custom validator and
 // sets the WorkerLister it uses. Call this at API server startup after the
 // job client is created, or in test SetupSuite to inject a mock.
@@ -51,6 +60,34 @@ func RegisterTargetValidator(
 	// Cannot error: tag is non-empty and function is non-nil.
 	_ = instance.RegisterValidation("valid_target", validTarget)
 	workerLister = lister
+	// Reset cache so the new lister is used immediately.
+	cacheMu.Lock()
+	cacheExpiry = time.Time{}
+	cacheMu.Unlock()
+}
+
+// getWorkers returns the cached worker list, refreshing from NATS when
+// the cache has expired.
+func getWorkers() ([]WorkerTarget, error) {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
+	if time.Now().Before(cacheExpiry) {
+		return cachedWorkers, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	workers, err := workerLister(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cachedWorkers = workers
+	cacheExpiry = time.Now().Add(cacheTTL)
+
+	return workers, nil
 }
 
 // validTarget checks whether the target is a valid routing pattern
@@ -102,7 +139,7 @@ func isValidLabelFormat(
 func matchesLabel(
 	key, value string,
 ) bool {
-	workers, err := workerLister(context.Background())
+	workers, err := getWorkers()
 	if err != nil {
 		return false
 	}
@@ -122,7 +159,7 @@ func matchesLabel(
 func matchesHostname(
 	target string,
 ) bool {
-	workers, err := workerLister(context.Background())
+	workers, err := getWorkers()
 	if err != nil {
 		return false
 	}
