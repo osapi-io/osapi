@@ -28,104 +28,106 @@ import (
 	"github.com/spf13/viper"
 )
 
-// nodeAgentCmd represents the nodeAgent command.
-var nodeAgentCmd = &cobra.Command{
+// agentCmd represents the agent command.
+var agentCmd = &cobra.Command{
 	Use:   "agent",
-	Short: "The agent subcommand",
+	Short: "Manage the agent process",
+	Long: `Manage the node agent process. The agent runs on each managed host,
+processes jobs, and reports status back to the control plane.`,
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		cli.ValidateDistribution(logger)
 
 		logger.Debug(
-			"node agent configuration",
+			"agent configuration",
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("node.agent.nats.host", appConfig.Node.Agent.NATS.Host),
-			slog.Int("node.agent.nats.port", appConfig.Node.Agent.NATS.Port),
-			slog.String("node.agent.nats.client_name", appConfig.Node.Agent.NATS.ClientName),
-			slog.String("node.agent.nats.namespace", appConfig.Node.Agent.NATS.Namespace),
-			slog.String("node.agent.nats.auth.type", appConfig.Node.Agent.NATS.Auth.Type),
-			slog.String("node.agent.queue_group", appConfig.Node.Agent.QueueGroup),
-			slog.String("node.agent.hostname", appConfig.Node.Agent.Hostname),
-			slog.Int("node.agent.max_jobs", appConfig.Node.Agent.MaxJobs),
-			slog.String("node.agent.consumer.name", appConfig.Node.Agent.Consumer.Name),
+			slog.String("agent.nats.host", appConfig.Agent.NATS.Host),
+			slog.Int("agent.nats.port", appConfig.Agent.NATS.Port),
+			slog.String("agent.nats.client_name", appConfig.Agent.NATS.ClientName),
+			slog.String("agent.nats.namespace", appConfig.Agent.NATS.Namespace),
+			slog.String("agent.nats.auth.type", appConfig.Agent.NATS.Auth.Type),
+			slog.String("agent.queue_group", appConfig.Agent.QueueGroup),
+			slog.String("agent.hostname", appConfig.Agent.Hostname),
+			slog.Int("agent.max_jobs", appConfig.Agent.MaxJobs),
+			slog.String("agent.consumer.name", appConfig.Agent.Consumer.Name),
 		)
 	},
 }
 
 func init() {
-	nodeCmd.AddCommand(nodeAgentCmd)
+	rootCmd.AddCommand(agentCmd)
 
 	// Agent configuration flags
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		StringP("agent-host", "", "localhost", "NATS server hostname for agent")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		IntP("agent-port", "", 4222, "NATS server port for agent")
-	nodeAgentCmd.PersistentFlags().
-		StringP("agent-client-name", "", "osapi-node-agent", "NATS client name for agent")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
+		StringP("agent-client-name", "", "osapi-agent", "NATS client name for agent")
+	agentCmd.PersistentFlags().
 		StringP("agent-queue-group", "", "job-agents", "NATS queue group for load balancing")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		StringP("agent-hostname", "", "", "Agent hostname (defaults to system hostname)")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		IntP("agent-max-jobs", "", 10, "Maximum concurrent jobs per agent")
 
 	// Consumer configuration flags
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		IntP("consumer-max-deliver", "", 5, "Maximum delivery attempts before DLQ")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		StringP("consumer-ack-wait", "", "2m", "Time to wait for acknowledgment before retry")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		IntP("consumer-max-ack-pending", "", 1000, "Maximum unacknowledged messages")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		StringP("consumer-replay-policy", "", "instant", "Replay policy: instant or original")
-	nodeAgentCmd.PersistentFlags().
+	agentCmd.PersistentFlags().
 		StringSliceP("consumer-back-off", "", []string{"30s", "2m", "5m", "15m", "30m"}, "Retry backoff intervals")
 
 	// Bind flags to viper config
 	_ = viper.BindPFlag(
-		"node.agent.nats.host",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-host"),
+		"agent.nats.host",
+		agentCmd.PersistentFlags().Lookup("agent-host"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.nats.port",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-port"),
+		"agent.nats.port",
+		agentCmd.PersistentFlags().Lookup("agent-port"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.nats.client_name",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-client-name"),
+		"agent.nats.client_name",
+		agentCmd.PersistentFlags().Lookup("agent-client-name"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.queue_group",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-queue-group"),
+		"agent.queue_group",
+		agentCmd.PersistentFlags().Lookup("agent-queue-group"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.hostname",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-hostname"),
+		"agent.hostname",
+		agentCmd.PersistentFlags().Lookup("agent-hostname"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.max_jobs",
-		nodeAgentCmd.PersistentFlags().Lookup("agent-max-jobs"),
+		"agent.max_jobs",
+		agentCmd.PersistentFlags().Lookup("agent-max-jobs"),
 	)
 
 	// Bind consumer configuration flags
 	_ = viper.BindPFlag(
-		"node.agent.consumer.max_deliver",
-		nodeAgentCmd.PersistentFlags().Lookup("consumer-max-deliver"),
+		"agent.consumer.max_deliver",
+		agentCmd.PersistentFlags().Lookup("consumer-max-deliver"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.consumer.ack_wait",
-		nodeAgentCmd.PersistentFlags().Lookup("consumer-ack-wait"),
+		"agent.consumer.ack_wait",
+		agentCmd.PersistentFlags().Lookup("consumer-ack-wait"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.consumer.max_ack_pending",
-		nodeAgentCmd.PersistentFlags().Lookup("consumer-max-ack-pending"),
+		"agent.consumer.max_ack_pending",
+		agentCmd.PersistentFlags().Lookup("consumer-max-ack-pending"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.consumer.replay_policy",
-		nodeAgentCmd.PersistentFlags().Lookup("consumer-replay-policy"),
+		"agent.consumer.replay_policy",
+		agentCmd.PersistentFlags().Lookup("consumer-replay-policy"),
 	)
 	_ = viper.BindPFlag(
-		"node.agent.consumer.back_off",
-		nodeAgentCmd.PersistentFlags().Lookup("consumer-back-off"),
+		"agent.consumer.back_off",
+		agentCmd.PersistentFlags().Lookup("consumer-back-off"),
 	)
 }

@@ -70,19 +70,17 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 				Replicas: 1,
 			},
 		},
-		Node: config.Node{
-			Agent: config.NodeAgent{
-				Hostname:   "test-agent",
-				QueueGroup: "test-queue",
-				MaxJobs:    5,
-				Labels:     map[string]string{"group": "web"},
-				Consumer: config.NodeAgentConsumer{
-					AckWait:       "30s",
-					BackOff:       []string{"1s", "2s", "5s"},
-					MaxDeliver:    3,
-					MaxAckPending: 10,
-					ReplayPolicy:  "instant",
-				},
+		Agent: config.AgentConfig{
+			Hostname:   "test-agent",
+			QueueGroup: "test-queue",
+			MaxJobs:    5,
+			Labels:     map[string]string{"group": "web"},
+			Consumer: config.AgentConsumer{
+				AckWait:       "30s",
+				BackOff:       []string{"1s", "2s", "5s"},
+				MaxDeliver:    3,
+				MaxAckPending: 10,
+				ReplayPolicy:  "instant",
 			},
 		},
 	}

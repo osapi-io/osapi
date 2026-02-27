@@ -84,7 +84,7 @@ osapi token generate -r read -u user@example.com \
 
 Command execution uses the general job infrastructure. No domain-specific
 configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, node agent, and authentication settings.
+NATS, agent, and authentication settings.
 
 ## Permissions
 

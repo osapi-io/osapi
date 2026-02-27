@@ -64,12 +64,10 @@ func (s *HandlerTestSuite) SetupTest() {
 				Name: "test-stream",
 			},
 		},
-		Node: config.Node{
-			Agent: config.NodeAgent{
-				Hostname:   "test-agent",
-				QueueGroup: "test-queue",
-				MaxJobs:    5,
-			},
+		Agent: config.AgentConfig{
+			Hostname:   "test-agent",
+			QueueGroup: "test-queue",
+			MaxJobs:    5,
 		},
 	}
 

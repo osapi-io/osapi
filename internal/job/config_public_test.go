@@ -135,13 +135,13 @@ func (suite *ConfigPublicTestSuite) TestGetJobsStreamConfig() {
 func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
 	tests := []struct {
 		name           string
-		consumerConfig *config.NodeAgentConsumer
+		consumerConfig *config.AgentConsumer
 		streamSubjects string
 		wantCheck      func(config jetstream.ConsumerConfig)
 	}{
 		{
 			name: "when using instant replay policy",
-			consumerConfig: &config.NodeAgentConsumer{
+			consumerConfig: &config.AgentConsumer{
 				Name:          "jobs-agent",
 				MaxDeliver:    5,
 				AckWait:       "30s",
@@ -163,7 +163,7 @@ func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
 		},
 		{
 			name: "when using original replay policy",
-			consumerConfig: &config.NodeAgentConsumer{
+			consumerConfig: &config.AgentConsumer{
 				Name:          "test-consumer",
 				MaxDeliver:    3,
 				AckWait:       "60s",
@@ -183,7 +183,7 @@ func (suite *ConfigPublicTestSuite) TestGetJobsConsumerConfig() {
 		},
 		{
 			name: "when using unknown replay policy defaults to instant",
-			consumerConfig: &config.NodeAgentConsumer{
+			consumerConfig: &config.AgentConsumer{
 				Name:          "unknown-consumer",
 				MaxDeliver:    1,
 				AckWait:       "10s",

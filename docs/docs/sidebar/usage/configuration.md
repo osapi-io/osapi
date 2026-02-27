@@ -53,12 +53,12 @@ uppercased:
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
-| `node.agent.nats.host`             | `OSAPI_NODE_AGENT_NATS_HOST`             |
-| `node.agent.nats.port`             | `OSAPI_NODE_AGENT_NATS_PORT`             |
-| `node.agent.nats.client_name`      | `OSAPI_NODE_AGENT_NATS_CLIENT_NAME`      |
-| `node.agent.nats.namespace`        | `OSAPI_NODE_AGENT_NATS_NAMESPACE`        |
-| `node.agent.nats.auth.type`        | `OSAPI_NODE_AGENT_NATS_AUTH_TYPE`        |
-| `node.agent.hostname`              | `OSAPI_NODE_AGENT_HOSTNAME`              |
+| `agent.nats.host`                  | `OSAPI_AGENT_NATS_HOST`                  |
+| `agent.nats.port`                  | `OSAPI_AGENT_NATS_PORT`                  |
+| `agent.nats.client_name`           | `OSAPI_AGENT_NATS_CLIENT_NAME`           |
+| `agent.nats.namespace`             | `OSAPI_AGENT_NATS_NAMESPACE`             |
+| `agent.nats.auth.type`             | `OSAPI_AGENT_NATS_AUTH_TYPE`             |
+| `agent.hostname`                   | `OSAPI_AGENT_HOSTNAME`                   |
 
 Environment variables take precedence over file values.
 
@@ -79,7 +79,7 @@ Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 
 Each NATS connection supports pluggable authentication. Set the `auth.type`
 field in the relevant section (`nats.server`, `api.server.nats`, or
-`node.agent.nats`):
+`agent.nats`):
 
 | Type        | Description                          | Extra Fields           |
 | ----------- | ------------------------------------ | ---------------------- |
@@ -104,7 +104,7 @@ nats:
 ### Client-Side Auth
 
 API server and agent connections (`api.server.nats.auth`,
-`node.agent.nats.auth`) authenticate as a single identity:
+`agent.nats.auth`) authenticate as a single identity:
 
 ```yaml
 api:
@@ -174,7 +174,7 @@ NATS cluster without collisions.
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
 Set the same namespace value in `nats.server.namespace`,
-`api.server.nats.namespace`, and `node.agent.nats.namespace` so all components
+`api.server.nats.namespace`, and `agent.nats.namespace` so all components
 agree on naming. An empty string disables prefixing.
 
 ## Full Reference
@@ -328,50 +328,49 @@ telemetry:
     # gRPC endpoint for OTLP exporter (e.g., Jaeger, Tempo).
     # otlp_endpoint: localhost:4317
 
-node:
-  agent:
-    nats:
-      # NATS server hostname for the agent.
-      host: 'localhost'
-      # NATS server port for the agent.
-      port: 4222
-      # Client name sent to NATS for identification.
-      client_name: 'osapi-node-agent'
-      # Subject namespace prefix. Must match nats.server.namespace.
-      namespace: 'osapi'
-      auth:
-        # Authentication type: "none", "user_pass", or "nkey".
-        type: 'none'
-    consumer:
-      # Durable consumer name.
-      name: 'jobs-agent'
-      # Maximum redelivery attempts before sending to DLQ.
-      max_deliver: 5
-      # Time to wait for an ACK before redelivering.
-      ack_wait: '2m'
-      # Maximum outstanding unacknowledged messages.
-      max_ack_pending: 1000
-      # Replay policy: "instant" or "original".
-      replay_policy: 'instant'
-      # Backoff durations between redelivery attempts.
-      back_off:
-        - '30s'
-        - '2m'
-        - '5m'
-        - '15m'
-        - '30m'
-    # Queue group for load-balanced (_any) subscriptions.
-    queue_group: 'job-agents'
-    # Agent hostname for direct routing. Defaults to the
-    # system hostname when empty.
-    hostname: ''
-    # Maximum number of concurrent jobs to process.
-    max_jobs: 10
-    # Key-value labels for label-based routing.
-    # Values can be hierarchical with dot separators.
-    # See Job System Architecture for details.
-    labels:
-      group: 'web.dev.us-east'
+agent:
+  nats:
+    # NATS server hostname for the agent.
+    host: 'localhost'
+    # NATS server port for the agent.
+    port: 4222
+    # Client name sent to NATS for identification.
+    client_name: 'osapi-agent'
+    # Subject namespace prefix. Must match nats.server.namespace.
+    namespace: 'osapi'
+    auth:
+      # Authentication type: "none", "user_pass", or "nkey".
+      type: 'none'
+  consumer:
+    # Durable consumer name.
+    name: 'jobs-agent'
+    # Maximum redelivery attempts before sending to DLQ.
+    max_deliver: 5
+    # Time to wait for an ACK before redelivering.
+    ack_wait: '2m'
+    # Maximum outstanding unacknowledged messages.
+    max_ack_pending: 1000
+    # Replay policy: "instant" or "original".
+    replay_policy: 'instant'
+    # Backoff durations between redelivery attempts.
+    back_off:
+      - '30s'
+      - '2m'
+      - '5m'
+      - '15m'
+      - '30m'
+  # Queue group for load-balanced (_any) subscriptions.
+  queue_group: 'job-agents'
+  # Agent hostname for direct routing. Defaults to the
+  # system hostname when empty.
+  hostname: ''
+  # Maximum number of concurrent jobs to process.
+  max_jobs: 10
+  # Key-value labels for label-based routing.
+  # Values can be hierarchical with dot separators.
+  # See Job System Architecture for details.
+  labels:
+    group: 'web.dev.us-east'
 ```
 
 ## Section Reference
@@ -470,7 +469,7 @@ node:
 | `exporter`      | string | `"stdout"`, `"otlp"`, or unset (log correlation only, no span export)  |
 | `otlp_endpoint` | string | gRPC endpoint for OTLP exporter (required when `exporter` is `"otlp"`) |
 
-### `node.agent`
+### `agent`
 
 | Key                        | Type              | Description                              |
 | -------------------------- | ----------------- | ---------------------------------------- |

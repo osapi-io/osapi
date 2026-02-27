@@ -724,7 +724,7 @@ logs by `trace_id` to see the complete flow of any job. See the
 
 ```bash
 # Start an agent
-osapi node agent start
+osapi agent start
 
 # Agent will:
 # - Connect to NATS

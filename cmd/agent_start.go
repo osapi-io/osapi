@@ -35,11 +35,11 @@ import (
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
-// nodeAgentStartCmd represents the nodeAgentStart command.
-var nodeAgentStartCmd = &cobra.Command{
+// agentStartCmd represents the agentStart command.
+var agentStartCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start the node agent",
-	Long: `Start the node agent.
+	Short: "Start the agent",
+	Long: `Start the agent process.
 It processes jobs as they become available.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
@@ -55,17 +55,17 @@ It processes jobs as they become available.
 		}
 
 		// Initialize subject namespace
-		namespace := appConfig.Node.Agent.NATS.Namespace
+		namespace := appConfig.Agent.NATS.Namespace
 		job.Init(namespace)
 		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Node.Agent.NATS.Host,
-			Port: appConfig.Node.Agent.NATS.Port,
-			Auth: cli.BuildNATSAuthOptions(appConfig.Node.Agent.NATS.Auth),
-			Name: appConfig.Node.Agent.NATS.ClientName,
+			Host: appConfig.Agent.NATS.Host,
+			Port: appConfig.Agent.NATS.Port,
+			Auth: cli.BuildNATSAuthOptions(appConfig.Agent.NATS.Auth),
+			Name: appConfig.Agent.NATS.ClientName,
 		})
 
 		err = nc.Connect()
@@ -127,5 +127,5 @@ It processes jobs as they become available.
 }
 
 func init() {
-	nodeAgentCmd.AddCommand(nodeAgentStartCmd)
+	agentCmd.AddCommand(agentStartCmd)
 }

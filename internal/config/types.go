@@ -23,10 +23,10 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API       API       `mapstructure:"api"       mask:"struct"`
-	Node      Node      `mapstructure:"node"`
-	NATS      NATS      `mapstructure:"nats"`
-	Telemetry Telemetry `mapstructure:"telemetry"`
+	API       API         `mapstructure:"api"       mask:"struct"`
+	Agent     AgentConfig `mapstructure:"agent,omitempty"`
+	NATS      NATS        `mapstructure:"nats"`
+	Telemetry Telemetry   `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
 }
@@ -226,13 +226,8 @@ type CORS struct {
 	AllowOrigins []string `mapstructure:"allow_origins,omitempty"`
 }
 
-// Node configuration settings.
-type Node struct {
-	Agent NodeAgent `mapstructure:"agent,omitempty"`
-}
-
-// NodeAgentConsumer configuration for the agent's JetStream consumer settings.
-type NodeAgentConsumer struct {
+// AgentConsumer configuration for the agent's JetStream consumer settings.
+type AgentConsumer struct {
 	// Name is the durable consumer name.
 	Name string `mapstructure:"name"`
 	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
@@ -247,12 +242,12 @@ type NodeAgentConsumer struct {
 	BackOff []string `mapstructure:"back_off"` // e.g. ["30s", "2m", "5m"]
 }
 
-// NodeAgent configuration settings.
-type NodeAgent struct {
+// AgentConfig configuration settings.
+type AgentConfig struct {
 	// NATS connection settings for the agent.
 	NATS NATSConnection `mapstructure:"nats"`
 	// Consumer settings for the agent's JetStream consumer.
-	Consumer NodeAgentConsumer `mapstructure:"consumer,omitempty"`
+	Consumer AgentConsumer `mapstructure:"consumer,omitempty"`
 	// QueueGroup for load balancing multiple agents.
 	QueueGroup string `mapstructure:"queue_group"`
 	// Hostname identifies this agent instance for routing.

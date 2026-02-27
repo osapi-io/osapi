@@ -43,8 +43,8 @@ The `osapi` binary exposes four top-level command groups:
 
 - **`osapi api server start`** — starts the REST API server (Echo + JWT
   middleware)
-- **`osapi node agent start`** — starts a node agent that subscribes to NATS
-  subjects and processes operations
+- **`osapi agent start`** — starts an agent that subscribes to NATS subjects and
+  processes operations
 - **`osapi nats server start`** — starts an embedded NATS server with JetStream
   enabled
 - **`osapi client`** — CLI client that talks to the REST API (node, command,
@@ -153,15 +153,14 @@ job:
   kv_response_bucket: 'job-responses'
   consumer_name: 'jobs-agent'
 
-node:
-  agent:
-    nats:
-      host: 'localhost'
-      port: 4222
-      client_name: 'osapi-node-agent'
-    hostname: 'web-01'
-    labels:
-      group: 'web.dev'
+agent:
+  nats:
+    host: 'localhost'
+    port: 4222
+    client_name: 'osapi-agent'
+  hostname: 'web-01'
+  labels:
+    group: 'web.dev'
 ```
 
 ## Health Checks (`internal/api/health/`)

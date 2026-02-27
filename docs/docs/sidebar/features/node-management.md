@@ -33,7 +33,7 @@ OSAPI separates agent fleet discovery from node system queries:
 ## How It Works
 
 Node queries are submitted as jobs. The CLI posts a job to the API server, the
-API server publishes it to NATS, a node agent picks it up and reads the
+API server publishes it to NATS, a agent picks it up and reads the
 requested system information, then writes the result back to NATS KV. The CLI
 polls for the result and displays it.
 
@@ -48,7 +48,7 @@ endpoints.
 
 Node management uses the general job infrastructure. No domain-specific
 configuration is required. See [Configuration](../usage/configuration.md) for
-NATS, node agent, and authentication settings.
+NATS, agent, and authentication settings.
 
 ## Permissions
 

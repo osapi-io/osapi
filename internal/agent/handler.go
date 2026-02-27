@@ -70,7 +70,7 @@ func (a *Agent) writeStatusEvent(
 	data map[string]interface{},
 ) error {
 	// Get hostname for this agent (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
 
 	// Use job client to write status event
 	return a.jobClient.WriteStatusEvent(ctx, jobID, event, hostname, data)
@@ -211,7 +211,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Get agent hostname (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Node.Agent.Hostname)
+	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
 
 	// Create job response
 	response := job.Response{

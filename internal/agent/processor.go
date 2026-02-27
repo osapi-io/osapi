@@ -114,8 +114,8 @@ func (a *Agent) getNodeHostname() (json.RawMessage, error) {
 		"hostname": hostname,
 	}
 
-	if len(a.appConfig.Node.Agent.Labels) > 0 {
-		result["labels"] = a.appConfig.Node.Agent.Labels
+	if len(a.appConfig.Agent.Labels) > 0 {
+		result["labels"] = a.appConfig.Agent.Labels
 	}
 
 	return json.Marshal(result)
