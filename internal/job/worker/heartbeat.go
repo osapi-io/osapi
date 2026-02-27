@@ -51,7 +51,7 @@ func (w *Worker) startHeartbeat(
 	w.writeRegistration(ctx, hostname)
 
 	w.logger.Info(
-		"registered in worker registry",
+		"registered in agent registry",
 		slog.String("hostname", hostname),
 		slog.String("key", key),
 		slog.String("ttl", ttl),
@@ -83,21 +83,21 @@ func (w *Worker) startHeartbeat(
 	}()
 }
 
-// writeRegistration marshals a WorkerRegistration and puts it to the registry KV.
+// writeRegistration marshals an agent registration and puts it to the registry KV.
 func (w *Worker) writeRegistration(
 	ctx context.Context,
 	hostname string,
 ) {
 	reg := job.WorkerRegistration{
 		Hostname:     hostname,
-		Labels:       w.appConfig.Job.Worker.Labels,
+		Labels:       w.appConfig.Node.Agent.Labels,
 		RegisteredAt: time.Now(),
 	}
 
 	data, err := marshalJSON(reg)
 	if err != nil {
 		w.logger.Warn(
-			"failed to marshal worker registration",
+			"failed to marshal agent registration",
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
 		)
@@ -107,7 +107,7 @@ func (w *Worker) writeRegistration(
 	key := registryKey(hostname)
 	if _, err := w.registryKV.Put(ctx, key, data); err != nil {
 		w.logger.Warn(
-			"failed to write worker registration",
+			"failed to write agent registration",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
 			slog.String("error", err.Error()),
@@ -115,14 +115,14 @@ func (w *Worker) writeRegistration(
 	}
 }
 
-// deregister deletes the worker's registration key on clean shutdown.
+// deregister deletes the agent's registration key on clean shutdown.
 func (w *Worker) deregister(
 	hostname string,
 ) {
 	key := registryKey(hostname)
 	if err := w.registryKV.Delete(context.Background(), key); err != nil {
 		w.logger.Warn(
-			"failed to deregister worker",
+			"failed to deregister agent",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
 			slog.String("error", err.Error()),
@@ -131,13 +131,13 @@ func (w *Worker) deregister(
 	}
 
 	w.logger.Info(
-		"worker deregistered",
+		"agent deregistered",
 		slog.String("hostname", hostname),
 		slog.String("key", key),
 	)
 }
 
-// registryKey returns the KV key for a worker's registration entry.
+// registryKey returns the KV key for an agent's registration entry.
 func registryKey(
 	hostname string,
 ) string {

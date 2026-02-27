@@ -66,7 +66,7 @@ func GetJobsStreamConfig(
 
 // GetJobsConsumerConfig returns the consumer configuration for processing job requests.
 func GetJobsConsumerConfig(
-	consumerConfig *config.JobWorkerConsumer,
+	consumerConfig *config.NodeAgentConsumer,
 	streamSubjects string,
 ) jetstream.ConsumerConfig {
 	// Parse duration string to time.Duration

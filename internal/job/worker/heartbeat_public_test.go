@@ -64,19 +64,19 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
 			Registry: config.NATSRegistry{
-				Bucket:   "worker-registry",
+				Bucket:   "agent-registry",
 				TTL:      "30s",
 				Storage:  "file",
 				Replicas: 1,
 			},
 		},
-		Job: config.Job{
-			Worker: config.JobWorker{
+		Node: config.Node{
+			Agent: config.NodeAgent{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
 				Labels:     map[string]string{"group": "web"},
-				Consumer: config.JobWorkerConsumer{
+				Consumer: config.NodeAgentConsumer{
 					AckWait:       "30s",
 					BackOff:       []string{"1s", "2s", "5s"},
 					MaxDeliver:    3,

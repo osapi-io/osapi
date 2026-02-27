@@ -28,5 +28,5 @@ $ osapi token generate --subject svc@example.com --roles=read \
 | `-u, --subject`     | Subject for the token (e.g., user ID)          | required |
 | `-p, --permissions` | Direct permissions (overrides role expansion)  | optional |
 
-Available permissions: `node:read`, `network:read`, `network:write`,
-`job:read`, `job:write`, `health:read`.
+Available permissions: `node:read`, `network:read`, `network:write`, `job:read`,
+`job:write`, `health:read`.

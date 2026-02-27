@@ -14,14 +14,14 @@ they become available. It uses platform-specific providers to execute operations
 
 Agent behavior is configured via `osapi.yaml` or CLI flags:
 
-| Flag                   | Description                         | Default            |
-| ---------------------- | ----------------------------------- | ------------------ |
-| `--worker-host`        | NATS server hostname                | `localhost`        |
-| `--worker-port`        | NATS server port                    | `4222`             |
-| `--worker-client-name` | NATS client name for identification | `osapi-job-worker` |
-| `--worker-queue-group` | Queue group for load balancing      | `job-workers`      |
-| `--worker-hostname`    | Agent hostname for routing          | system hostname    |
-| `--worker-max-jobs`    | Maximum concurrent jobs             | `10`               |
+| Flag                  | Description                         | Default            |
+| --------------------- | ----------------------------------- | ------------------ |
+| `--agent-host`        | NATS server hostname                | `localhost`        |
+| `--agent-port`        | NATS server port                    | `4222`             |
+| `--agent-client-name` | NATS client name for identification | `osapi-node-agent` |
+| `--agent-queue-group` | Queue group for load balancing      | `job-workers`      |
+| `--agent-hostname`    | Agent hostname for routing          | system hostname    |
+| `--agent-max-jobs`    | Maximum concurrent jobs             | `10`               |
 
 ## Consumer Settings
 

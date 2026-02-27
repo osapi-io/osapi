@@ -55,17 +55,17 @@ It processes jobs as they become available.
 		}
 
 		// Initialize subject namespace
-		namespace := appConfig.Job.Worker.NATS.Namespace
+		namespace := appConfig.Node.Agent.NATS.Namespace
 		job.Init(namespace)
 		streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 		kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
 		// Create NATS client using the nats-client package
 		var nc messaging.NATSClient = natsclient.New(logger, &natsclient.Options{
-			Host: appConfig.Job.Worker.NATS.Host,
-			Port: appConfig.Job.Worker.NATS.Port,
-			Auth: cli.BuildNATSAuthOptions(appConfig.Job.Worker.NATS.Auth),
-			Name: appConfig.Job.Worker.NATS.ClientName,
+			Host: appConfig.Node.Agent.NATS.Host,
+			Port: appConfig.Node.Agent.NATS.Port,
+			Auth: cli.BuildNATSAuthOptions(appConfig.Node.Agent.NATS.Auth),
+			Name: appConfig.Node.Agent.NATS.ClientName,
 		})
 
 		err = nc.Connect()
@@ -79,7 +79,7 @@ It processes jobs as they become available.
 			cli.LogFatal(logger, "failed to create KV bucket", err)
 		}
 
-		// Create registry KV bucket for worker heartbeat
+		// Create registry KV bucket for agent heartbeat
 		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
 		registryKV, registryErr := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
 		if registryErr != nil {

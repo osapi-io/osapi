@@ -53,12 +53,12 @@ uppercased:
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
-| `job.worker.nats.host`             | `OSAPI_JOB_WORKER_NATS_HOST`             |
-| `job.worker.nats.port`             | `OSAPI_JOB_WORKER_NATS_PORT`             |
-| `job.worker.nats.client_name`      | `OSAPI_JOB_WORKER_NATS_CLIENT_NAME`      |
-| `job.worker.nats.namespace`        | `OSAPI_JOB_WORKER_NATS_NAMESPACE`        |
-| `job.worker.nats.auth.type`        | `OSAPI_JOB_WORKER_NATS_AUTH_TYPE`        |
-| `job.worker.hostname`              | `OSAPI_JOB_WORKER_HOSTNAME`              |
+| `node.agent.nats.host`             | `OSAPI_NODE_AGENT_NATS_HOST`             |
+| `node.agent.nats.port`             | `OSAPI_NODE_AGENT_NATS_PORT`             |
+| `node.agent.nats.client_name`      | `OSAPI_NODE_AGENT_NATS_CLIENT_NAME`      |
+| `node.agent.nats.namespace`        | `OSAPI_NODE_AGENT_NATS_NAMESPACE`        |
+| `node.agent.nats.auth.type`        | `OSAPI_NODE_AGENT_NATS_AUTH_TYPE`        |
+| `node.agent.hostname`              | `OSAPI_NODE_AGENT_HOSTNAME`              |
 
 Environment variables take precedence over file values.
 
@@ -79,7 +79,7 @@ Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 
 Each NATS connection supports pluggable authentication. Set the `auth.type`
 field in the relevant section (`nats.server`, `api.server.nats`, or
-`job.worker.nats`):
+`node.agent.nats`):
 
 | Type        | Description                          | Extra Fields           |
 | ----------- | ------------------------------------ | ---------------------- |
@@ -103,8 +103,8 @@ nats:
 
 ### Client-Side Auth
 
-API server and worker connections (`api.server.nats.auth`,
-`job.worker.nats.auth`) authenticate as a single identity:
+API server and agent connections (`api.server.nats.auth`,
+`node.agent.nats.auth`) authenticate as a single identity:
 
 ```yaml
 api:
@@ -122,8 +122,8 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                             |
-| ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Role    | Permissions                                                                                                           |
+| ------- | --------------------------------------------------------------------------------------------------------------------- |
 | `admin` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
 | `write` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
 | `read`  | `node:read`, `network:read`, `job:read`, `health:read`                                                                |
@@ -174,7 +174,7 @@ NATS cluster without collisions.
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
 Set the same namespace value in `nats.server.namespace`,
-`api.server.nats.namespace`, and `job.worker.nats.namespace` so all components
+`api.server.nats.namespace`, and `node.agent.nats.namespace` so all components
 agree on naming. An empty string disables prefixing.
 
 ## Full Reference
@@ -272,7 +272,7 @@ nats:
   kv:
     # KV bucket for immutable job definitions and status events.
     bucket: 'job-queue'
-    # KV bucket for worker result storage.
+    # KV bucket for agent result storage.
     response_bucket: 'job-responses'
     # TTL for KV entries (Go duration).
     ttl: '1h'
@@ -296,11 +296,11 @@ nats:
     # Number of KV replicas.
     replicas: 1
 
-  # ── Worker registry KV bucket ─────────────────────────────
+  # ── Agent registry KV bucket ──────────────────────────────
   registry:
-    # KV bucket for worker heartbeat registration.
-    bucket: 'worker-registry'
-    # TTL for registry entries (Go duration). Workers refresh
+    # KV bucket for agent heartbeat registration.
+    bucket: 'agent-registry'
+    # TTL for registry entries (Go duration). Agents refresh
     # every 10s; the TTL acts as a liveness timeout.
     ttl: '30s'
     # Storage backend: "file" or "memory".
@@ -328,15 +328,15 @@ telemetry:
     # gRPC endpoint for OTLP exporter (e.g., Jaeger, Tempo).
     # otlp_endpoint: localhost:4317
 
-job:
-  worker:
+node:
+  agent:
     nats:
-      # NATS server hostname for the worker.
+      # NATS server hostname for the agent.
       host: 'localhost'
-      # NATS server port for the worker.
+      # NATS server port for the agent.
       port: 4222
       # Client name sent to NATS for identification.
-      client_name: 'osapi-job-worker'
+      client_name: 'osapi-node-agent'
       # Subject namespace prefix. Must match nats.server.namespace.
       namespace: 'osapi'
       auth:
@@ -362,7 +362,7 @@ job:
         - '30m'
     # Queue group for load-balanced (_any) subscriptions.
     queue_group: 'job-workers'
-    # Worker hostname for direct routing. Defaults to the
+    # Agent hostname for direct routing. Defaults to the
     # system hostname when empty.
     hostname: ''
     # Maximum number of concurrent jobs to process.
@@ -428,7 +428,7 @@ job:
 | Key               | Type   | Description                              |
 | ----------------- | ------ | ---------------------------------------- |
 | `bucket`          | string | KV bucket for job definitions and events |
-| `response_bucket` | string | KV bucket for worker results             |
+| `response_bucket` | string | KV bucket for agent results              |
 | `ttl`             | string | Entry time-to-live (Go duration)         |
 | `max_bytes`       | int    | Maximum bucket size in bytes             |
 | `storage`         | string | `"file"` or `"memory"`                   |
@@ -446,12 +446,12 @@ job:
 
 ### `nats.registry`
 
-| Key        | Type   | Description                            |
-| ---------- | ------ | -------------------------------------- |
-| `bucket`   | string | KV bucket for worker heartbeat entries |
-| `ttl`      | string | Entry time-to-live / liveness timeout  |
-| `storage`  | string | `"file"` or `"memory"`                 |
-| `replicas` | int    | Number of KV replicas                  |
+| Key        | Type   | Description                           |
+| ---------- | ------ | ------------------------------------- |
+| `bucket`   | string | KV bucket for agent heartbeat entries |
+| `ttl`      | string | Entry time-to-live / liveness timeout |
+| `storage`  | string | `"file"` or `"memory"`                |
+| `replicas` | int    | Number of KV replicas                 |
 
 ### `nats.dlq`
 
@@ -470,24 +470,24 @@ job:
 | `exporter`      | string | `"stdout"`, `"otlp"`, or unset (log correlation only, no span export)  |
 | `otlp_endpoint` | string | gRPC endpoint for OTLP exporter (required when `exporter` is `"otlp"`) |
 
-### `job.worker`
+### `node.agent`
 
-| Key                        | Type              | Description                               |
-| -------------------------- | ----------------- | ----------------------------------------- |
-| `nats.host`                | string            | NATS server hostname                      |
-| `nats.port`                | int               | NATS server port                          |
-| `nats.client_name`         | string            | NATS client identification name           |
-| `nats.namespace`           | string            | Subject namespace prefix                  |
-| `nats.auth.type`           | string            | Auth type: `none`, `user_pass`            |
-| `nats.auth.username`       | string            | Username for `user_pass` auth             |
-| `nats.auth.password`       | string            | Password for `user_pass` auth             |
-| `consumer.name`            | string            | Durable consumer name                     |
-| `consumer.max_deliver`     | int               | Max redelivery attempts before DLQ        |
-| `consumer.ack_wait`        | string            | ACK timeout (Go duration)                 |
-| `consumer.max_ack_pending` | int               | Max outstanding unacknowledged msgs       |
-| `consumer.replay_policy`   | string            | `"instant"` or `"original"`               |
-| `consumer.back_off`        | []string          | Backoff durations between redeliveries    |
-| `queue_group`              | string            | Queue group for load-balanced routing     |
-| `hostname`                 | string            | Worker hostname (defaults to OS hostname) |
-| `max_jobs`                 | int               | Max concurrent jobs                       |
-| `labels`                   | map[string]string | Key-value pairs for label-based routing   |
+| Key                        | Type              | Description                              |
+| -------------------------- | ----------------- | ---------------------------------------- |
+| `nats.host`                | string            | NATS server hostname                     |
+| `nats.port`                | int               | NATS server port                         |
+| `nats.client_name`         | string            | NATS client identification name          |
+| `nats.namespace`           | string            | Subject namespace prefix                 |
+| `nats.auth.type`           | string            | Auth type: `none`, `user_pass`           |
+| `nats.auth.username`       | string            | Username for `user_pass` auth            |
+| `nats.auth.password`       | string            | Password for `user_pass` auth            |
+| `consumer.name`            | string            | Durable consumer name                    |
+| `consumer.max_deliver`     | int               | Max redelivery attempts before DLQ       |
+| `consumer.ack_wait`        | string            | ACK timeout (Go duration)                |
+| `consumer.max_ack_pending` | int               | Max outstanding unacknowledged msgs      |
+| `consumer.replay_policy`   | string            | `"instant"` or `"original"`              |
+| `consumer.back_off`        | []string          | Backoff durations between redeliveries   |
+| `queue_group`              | string            | Queue group for load-balanced routing    |
+| `hostname`                 | string            | Agent hostname (defaults to OS hostname) |
+| `max_jobs`                 | int               | Max concurrent jobs                      |
+| `labels`                   | map[string]string | Key-value pairs for label-based routing  |

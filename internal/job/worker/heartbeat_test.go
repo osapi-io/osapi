@@ -59,8 +59,8 @@ func (s *HeartbeatTestSuite) SetupTest() {
 	s.mockKV = mocks.NewMockKeyValue(s.mockCtrl)
 
 	appConfig := config.Config{
-		Job: config.Job{
-			Worker: config.JobWorker{
+		Node: config.Node{
+			Agent: config.NodeAgent{
 				Labels: map[string]string{"group": "web"},
 			},
 		},

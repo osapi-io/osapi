@@ -31,20 +31,20 @@ import (
 func (w *Worker) Start() {
 	w.ctx, w.cancel = context.WithCancel(context.Background())
 
-	w.logger.Info("starting job worker")
+	w.logger.Info("starting node agent")
 
-	// Determine worker hostname (GetWorkerHostname always succeeds)
-	hostname, _ := job.GetWorkerHostname(w.appConfig.Job.Worker.Hostname)
+	// Determine agent hostname (GetWorkerHostname always succeeds)
+	hostname, _ := job.GetWorkerHostname(w.appConfig.Node.Agent.Hostname)
 
 	w.logger.Info(
-		"worker configuration",
+		"agent configuration",
 		slog.String("hostname", hostname),
-		slog.String("queue_group", w.appConfig.Job.Worker.QueueGroup),
-		slog.Int("max_jobs", w.appConfig.Job.Worker.MaxJobs),
-		slog.Any("labels", w.appConfig.Job.Worker.Labels),
+		slog.String("queue_group", w.appConfig.Node.Agent.QueueGroup),
+		slog.Int("max_jobs", w.appConfig.Node.Agent.MaxJobs),
+		slog.Any("labels", w.appConfig.Node.Agent.Labels),
 	)
 
-	// Register in worker registry and start heartbeat keepalive.
+	// Register in agent registry and start heartbeat keepalive.
 	w.startHeartbeat(w.ctx, hostname)
 
 	// Start consuming messages for different job types.
@@ -52,15 +52,15 @@ func (w *Worker) Start() {
 	_ = w.consumeQueryJobs(w.ctx, hostname)
 	_ = w.consumeModifyJobs(w.ctx, hostname)
 
-	w.logger.Info("job worker started successfully")
+	w.logger.Info("node agent started successfully")
 }
 
-// Stop gracefully shuts down the worker, waiting for in-flight jobs
+// Stop gracefully shuts down the agent, waiting for in-flight jobs
 // to finish or the context deadline to expire.
 func (w *Worker) Stop(
 	ctx context.Context,
 ) {
-	w.logger.Info("job worker shutting down")
+	w.logger.Info("node agent shutting down")
 	w.cancel()
 
 	done := make(chan struct{})
@@ -71,8 +71,8 @@ func (w *Worker) Stop(
 
 	select {
 	case <-done:
-		w.logger.Info("job worker stopped gracefully")
+		w.logger.Info("node agent stopped gracefully")
 	case <-ctx.Done():
-		w.logger.Warn("job worker shutdown timed out")
+		w.logger.Warn("node agent shutdown timed out")
 	}
 }

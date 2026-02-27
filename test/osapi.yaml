@@ -56,7 +56,7 @@ nats:
     replicas: 1
 
   registry:
-    bucket: worker-registry
+    bucket: agent-registry
     ttl: 30s
     storage: file
     replicas: 1
@@ -67,12 +67,12 @@ nats:
     storage: file
     replicas: 1
 
-job:
-  worker:
+node:
+  agent:
     nats:
       host: localhost
       port: 4222
-      client_name: osapi-job-worker-test
+      client_name: osapi-node-agent-test
       namespace: ""
       auth:
         type: none

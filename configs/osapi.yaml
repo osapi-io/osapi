@@ -87,7 +87,7 @@ nats:
     replicas: 1
 
   registry:
-    bucket: worker-registry
+    bucket: agent-registry
     ttl: 30s
     storage: file
     replicas: 1
@@ -100,12 +100,12 @@ telemetry:
   metrics:
     path: /metrics
 
-job:
-  worker:
+node:
+  agent:
     nats:
       host: localhost
       port: 4222
-      client_name: osapi-job-worker
+      client_name: osapi-node-agent
       namespace: osapi
       auth:
         type: none

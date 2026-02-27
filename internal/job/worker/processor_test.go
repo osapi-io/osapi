@@ -62,8 +62,8 @@ func (s *ProcessorTestSuite) SetupTest() {
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
 		},
-		Job: config.Job{
-			Worker: config.JobWorker{
+		Node: config.Node{
+			Agent: config.NodeAgent{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,
@@ -473,7 +473,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.worker.appConfig.Job.Worker.Labels = tt.labels
+			s.worker.appConfig.Node.Agent.Labels = tt.labels
 
 			request := job.Request{
 				Type:      job.TypeQuery,

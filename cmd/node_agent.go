@@ -39,15 +39,15 @@ var nodeAgentCmd = &cobra.Command{
 			"node agent configuration",
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("job.worker.nats.host", appConfig.Job.Worker.NATS.Host),
-			slog.Int("job.worker.nats.port", appConfig.Job.Worker.NATS.Port),
-			slog.String("job.worker.nats.client_name", appConfig.Job.Worker.NATS.ClientName),
-			slog.String("job.worker.nats.namespace", appConfig.Job.Worker.NATS.Namespace),
-			slog.String("job.worker.nats.auth.type", appConfig.Job.Worker.NATS.Auth.Type),
-			slog.String("job.worker.queue_group", appConfig.Job.Worker.QueueGroup),
-			slog.String("job.worker.hostname", appConfig.Job.Worker.Hostname),
-			slog.Int("job.worker.max_jobs", appConfig.Job.Worker.MaxJobs),
-			slog.String("job.worker.consumer.name", appConfig.Job.Worker.Consumer.Name),
+			slog.String("node.agent.nats.host", appConfig.Node.Agent.NATS.Host),
+			slog.Int("node.agent.nats.port", appConfig.Node.Agent.NATS.Port),
+			slog.String("node.agent.nats.client_name", appConfig.Node.Agent.NATS.ClientName),
+			slog.String("node.agent.nats.namespace", appConfig.Node.Agent.NATS.Namespace),
+			slog.String("node.agent.nats.auth.type", appConfig.Node.Agent.NATS.Auth.Type),
+			slog.String("node.agent.queue_group", appConfig.Node.Agent.QueueGroup),
+			slog.String("node.agent.hostname", appConfig.Node.Agent.Hostname),
+			slog.Int("node.agent.max_jobs", appConfig.Node.Agent.MaxJobs),
+			slog.String("node.agent.consumer.name", appConfig.Node.Agent.Consumer.Name),
 		)
 	},
 }
@@ -55,19 +55,19 @@ var nodeAgentCmd = &cobra.Command{
 func init() {
 	nodeCmd.AddCommand(nodeAgentCmd)
 
-	// Worker configuration flags
+	// Agent configuration flags
 	nodeAgentCmd.PersistentFlags().
-		StringP("worker-host", "", "localhost", "NATS server hostname for agent")
+		StringP("agent-host", "", "localhost", "NATS server hostname for agent")
 	nodeAgentCmd.PersistentFlags().
-		IntP("worker-port", "", 4222, "NATS server port for agent")
+		IntP("agent-port", "", 4222, "NATS server port for agent")
 	nodeAgentCmd.PersistentFlags().
-		StringP("worker-client-name", "", "osapi-job-worker", "NATS client name for agent")
+		StringP("agent-client-name", "", "osapi-node-agent", "NATS client name for agent")
 	nodeAgentCmd.PersistentFlags().
-		StringP("worker-queue-group", "", "job-workers", "NATS queue group for load balancing")
+		StringP("agent-queue-group", "", "job-workers", "NATS queue group for load balancing")
 	nodeAgentCmd.PersistentFlags().
-		StringP("worker-hostname", "", "", "Agent hostname (defaults to system hostname)")
+		StringP("agent-hostname", "", "", "Agent hostname (defaults to system hostname)")
 	nodeAgentCmd.PersistentFlags().
-		IntP("worker-max-jobs", "", 10, "Maximum concurrent jobs per agent")
+		IntP("agent-max-jobs", "", 10, "Maximum concurrent jobs per agent")
 
 	// Consumer configuration flags
 	nodeAgentCmd.PersistentFlags().
@@ -83,49 +83,49 @@ func init() {
 
 	// Bind flags to viper config
 	_ = viper.BindPFlag(
-		"job.worker.nats.host",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-host"),
+		"node.agent.nats.host",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-host"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.nats.port",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-port"),
+		"node.agent.nats.port",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-port"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.nats.client_name",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-client-name"),
+		"node.agent.nats.client_name",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-client-name"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.queue_group",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-queue-group"),
+		"node.agent.queue_group",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-queue-group"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.hostname",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-hostname"),
+		"node.agent.hostname",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-hostname"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.max_jobs",
-		nodeAgentCmd.PersistentFlags().Lookup("worker-max-jobs"),
+		"node.agent.max_jobs",
+		nodeAgentCmd.PersistentFlags().Lookup("agent-max-jobs"),
 	)
 
 	// Bind consumer configuration flags
 	_ = viper.BindPFlag(
-		"job.worker.consumer.max_deliver",
+		"node.agent.consumer.max_deliver",
 		nodeAgentCmd.PersistentFlags().Lookup("consumer-max-deliver"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.consumer.ack_wait",
+		"node.agent.consumer.ack_wait",
 		nodeAgentCmd.PersistentFlags().Lookup("consumer-ack-wait"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.consumer.max_ack_pending",
+		"node.agent.consumer.max_ack_pending",
 		nodeAgentCmd.PersistentFlags().Lookup("consumer-max-ack-pending"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.consumer.replay_policy",
+		"node.agent.consumer.replay_policy",
 		nodeAgentCmd.PersistentFlags().Lookup("consumer-replay-policy"),
 	)
 	_ = viper.BindPFlag(
-		"job.worker.consumer.back_off",
+		"node.agent.consumer.back_off",
 		nodeAgentCmd.PersistentFlags().Lookup("consumer-back-off"),
 	)
 }

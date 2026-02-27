@@ -64,8 +64,8 @@ func (s *HandlerTestSuite) SetupTest() {
 				Name: "test-stream",
 			},
 		},
-		Job: config.Job{
-			Worker: config.JobWorker{
+		Node: config.Node{
+			Agent: config.NodeAgent{
 				Hostname:   "test-worker",
 				QueueGroup: "test-queue",
 				MaxJobs:    5,

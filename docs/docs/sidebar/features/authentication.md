@@ -60,8 +60,8 @@ flowchart TD
 
 Built-in roles expand to these default permissions:
 
-| Role    | Permissions                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------- |
+| Role    | Permissions                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------------- |
 | `admin` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read` |
 | `write` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`               |
 | `read`  | `node:read`, `network:read`, `job:read`, `health:read`                                             |

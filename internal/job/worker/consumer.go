@@ -53,7 +53,7 @@ func (w *Worker) consumeQueryJobs(
 		{
 			name:       "query_any_" + sanitizedHostname,
 			filter:     job.JobsQueryPrefix + "._any",
-			queueGroup: w.appConfig.Job.Worker.QueueGroup,
+			queueGroup: w.appConfig.Node.Agent.QueueGroup,
 		},
 		{
 			name:   "query_all_" + sanitizedHostname,
@@ -70,7 +70,7 @@ func (w *Worker) consumeQueryJobs(
 	//   jobs.query.label.group.web
 	//   jobs.query.label.group.web.dev
 	//   jobs.query.label.group.web.dev.us-east
-	for key, value := range w.appConfig.Job.Worker.Labels {
+	for key, value := range w.appConfig.Node.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -113,7 +113,7 @@ func (w *Worker) consumeQueryJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Job.Worker.MaxJobs,
+				MaxInFlight: w.appConfig.Node.Agent.MaxJobs,
 			}
 
 			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
@@ -149,7 +149,7 @@ func (w *Worker) consumeModifyJobs(
 		{
 			name:       "modify_any_" + sanitizedHostname,
 			filter:     job.JobsModifyPrefix + "._any",
-			queueGroup: w.appConfig.Job.Worker.QueueGroup,
+			queueGroup: w.appConfig.Node.Agent.QueueGroup,
 		},
 		{
 			name:   "modify_all_" + sanitizedHostname,
@@ -162,7 +162,7 @@ func (w *Worker) consumeModifyJobs(
 	}
 
 	// Add label-based consumers with hierarchical prefix subscriptions.
-	for key, value := range w.appConfig.Job.Worker.Labels {
+	for key, value := range w.appConfig.Node.Agent.Labels {
 		segments := strings.Split(value, ".")
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
@@ -205,7 +205,7 @@ func (w *Worker) consumeModifyJobs(
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
-				MaxInFlight: w.appConfig.Job.Worker.MaxJobs,
+				MaxInFlight: w.appConfig.Node.Agent.MaxJobs,
 			}
 
 			err := w.jobClient.ConsumeJobs(ctx, streamName, c.name, w.handleJobMessageJS, opts)
@@ -234,17 +234,17 @@ func (w *Worker) handleJobMessageJS(
 	return nil
 }
 
-// createConsumer creates a durable JetStream consumer for the worker.
+// createConsumer creates a durable JetStream consumer for the agent.
 func (w *Worker) createConsumer(
 	ctx context.Context,
 	streamName, consumerName, filterSubject string,
 ) error {
 	// Parse AckWait duration from config
-	ackWait, _ := time.ParseDuration(w.appConfig.Job.Worker.Consumer.AckWait)
+	ackWait, _ := time.ParseDuration(w.appConfig.Node.Agent.Consumer.AckWait)
 
 	// Parse BackOff durations from config
 	var backOff []time.Duration
-	for _, duration := range w.appConfig.Job.Worker.Consumer.BackOff {
+	for _, duration := range w.appConfig.Node.Agent.Consumer.BackOff {
 		if d, err := time.ParseDuration(duration); err == nil {
 			backOff = append(backOff, d)
 		}
@@ -252,7 +252,7 @@ func (w *Worker) createConsumer(
 
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
-	if w.appConfig.Job.Worker.Consumer.ReplayPolicy == "original" {
+	if w.appConfig.Node.Agent.Consumer.ReplayPolicy == "original" {
 		replayPolicy = jetstream.ReplayOriginalPolicy
 	} else {
 		replayPolicy = jetstream.ReplayInstantPolicy
@@ -263,10 +263,10 @@ func (w *Worker) createConsumer(
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    w.appConfig.Job.Worker.Consumer.MaxDeliver,
+		MaxDeliver:    w.appConfig.Node.Agent.Consumer.MaxDeliver,
 		AckWait:       ackWait,
 		BackOff:       backOff,
-		MaxAckPending: w.appConfig.Job.Worker.Consumer.MaxAckPending,
+		MaxAckPending: w.appConfig.Node.Agent.Consumer.MaxAckPending,
 		ReplayPolicy:  replayPolicy,
 	}
 

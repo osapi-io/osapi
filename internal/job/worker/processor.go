@@ -101,7 +101,7 @@ func (w *Worker) processNetworkOperation(
 	}
 }
 
-// getNodeHostname retrieves the system hostname and worker labels.
+// getNodeHostname retrieves the system hostname and agent labels.
 func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 	w.logger.Debug("executing host.GetHostname")
 	hostProvider := w.getHostProvider()
@@ -114,8 +114,8 @@ func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 		"hostname": hostname,
 	}
 
-	if len(w.appConfig.Job.Worker.Labels) > 0 {
-		result["labels"] = w.appConfig.Job.Worker.Labels
+	if len(w.appConfig.Node.Agent.Labels) > 0 {
+		result["labels"] = w.appConfig.Node.Agent.Labels
 	}
 
 	return json.Marshal(result)

@@ -132,8 +132,8 @@ coordination layer between clients and workers.
 For details on individual features — what they do, how they work, and how to
 configure them — see the Features section:
 
-- [Node Management](../features/node-management.md) — hostname, disk,
-  memory, load
+- [Node Management](../features/node-management.md) — hostname, disk, memory,
+  load
 - [Network Management](../features/network-management.md) — DNS, ping
 - [Command Execution](../features/command-execution.md) — exec, shell
 - [Job System](../features/job-system.md) — async job processing and routing

@@ -15,7 +15,7 @@ command.
 
 ### Show registered workers
 
-Read the `worker-registry` KV bucket and display a Workers section:
+Read the `agent-registry` KV bucket and display a Workers section:
 
 ```
   Workers: 3 registered
@@ -34,7 +34,7 @@ The registry KV bucket uses a 30s TTL, so only live workers appear. The
 
 ### Show registry bucket in KV Buckets table
 
-The `worker-registry` bucket should appear alongside `job-queue` in the existing
+The `agent-registry` bucket should appear alongside `job-queue` in the existing
 KV Buckets table. Investigate why it currently does not — the health endpoint
 may be filtering to specific bucket names rather than listing all buckets.
 
