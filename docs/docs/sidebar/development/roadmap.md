@@ -11,10 +11,10 @@ priority tier.
 ## Current Capabilities
 
 These features are implemented and available today. See
-[Features](../features/system-management.md) for detailed documentation on each.
+[Features](../features/node-management.md) for detailed documentation on each.
 
-- [System Management](../features/system-management.md) — hostname, status,
-  uptime, OS info, disk, memory, load
+- [Node Management](../features/node-management.md) — hostname, status, uptime,
+  OS info, disk, memory, load
 - [Network Management](../features/network-management.md) — DNS get/update, ping
 - [Job System](../features/job-system.md) — async job processing via NATS
   JetStream with KV-first architecture, broadcast/load-balanced/label-based
