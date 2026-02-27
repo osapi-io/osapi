@@ -1,11 +1,11 @@
 ---
-id: retrieve-system-hostname
-title: "Retrieve system hostname"
-description: "Get the current hostname of the system."
-sidebar_label: "Retrieve system hostname"
+id: retrieve-node-status
+title: "Retrieve node status"
+description: "Get the current status of the node including hostname, uptime, load averages, memory, and disk usage."
+sidebar_label: "Retrieve node status"
 hide_title: true
 hide_table_of_contents: true
-api: eJztV9tu4zYQ/RViXpoAkqNsnbQV0Ae33WyzvQWbLPqQBgYljmUmEqklR964hv69GMoXOVbQFuiiLZAnW9TM8MycQ2pmBQp97nRN2hpI4Q2SoDmKvHEODYm59WRkhcLOwrpfesJqBBGQLDykt3AdVqY/SSMLrNDQdHJ1Oe3sprZGJzm0h7sIPOaN07SE9HYF36B06CYNzTlKZ586lAru2rsIaulkhYTOB2vGACmQdAXSdIMKItCM+kODbgkROPzQaIcK0pksPUbwGFtZ6zi3Cgs0MT6Sk3GHfAULWWoliePaShNWNS2jSpuvT6PwatrtBm0EPp9jJdmJljU7eHLaFBCBwplsSoIUptIs2Xa/oDchRir4rTgqrVRxJktpclTHkZjKshRHmbNS5dLTcbQr+JHSDnNesk484DJdyLJBcVTKDEtRONvUkcBRMYq6h/QjZiOFi+PRbwa4gg59bY3HkOurJOGffWwT8fb6l5+Fze4xJ5FbQ1IbbYoe05/5LSImnW3QEIeSdV3qPJB7cu853uqwTF1oiKB2LAXSHZp7m021GirnzLpKcjWbRis4KOYcxb3NxOV3ovGoBFlRO5uj94Lm2gvmHz0xUnyUVV1y7LOzBL8cJ0mMr77K4vGpGsfyi9PzeDw+Pz87G4+TJEmYN4e+Kcn3UEnnJMuKteGHsjpE9/x52a/AVsGDknoadZCLXYbVMi61aR5jj26BjpMJKhnELJXSHFqWV3uI9lEc6PgHXMadArvQLJeZLhqHSlgTcv1o3QO6Efuic9b9eW6v2UxU6L0sUOhZL4yYSV0+pRh3DLdt/7jf7gp6FwFpCnX5fr32bn0SoH3qteF8wOlbW5aYM9C+exvBeOgoXZpwZWzwid319Q8em79Y1YnoPW+EGHwFzSUJm4fbXe2L6GJbb4fkNC5QeJLU+FEnBpK6HBDKweZbeYm1j5CZbWgHYnBb1SBvbZCYfkG6QttQ2Jov796+2hAW6AbPSZckO+xtcpYkTNyG4aC6A1JPD0l9b2RDc+v076hELCZXl3wRi62AXoj9PxD7+SGxF9ZlWik0IhaXxjezmc41tzs1ukp7HxqWF3b/++yeDd3F3VdlXQ5uZz5BB/PC6SfitI2gQppbBSlw882TAI8IcNI1QSe93r9rd3hA6A0X18xgR1J/xNiCnhPVsO7o+TkLRhCt/1xsGtC3v96EJkObmQ3ua8iTRmkSP9qCvwcQASPo0j4dJaPQSdbWUyWDntZzy7stjyEJ0Utir3SrnT7/zijWZUb4SCd1KbVhEI0rOV5Xvc2ABdFeo8T/+eVqlUmP713ZtrzcjVM8dintZVb2Bqpn0f47c84zuT/gcnBYDKEhhTAfLaTTnBzLp41gjlKhC1l37pM8x5p6Xgf3BUfZivXN6xvurvfF9kRcIfpmuDDLXuzVqrO4sQ9o2ha2OfAztHdt2/4B+v5wQw==
+api: eJztWNtu2zgQ/RWCL5sCsiMndpoK2AfvtilS9IYmwT60gUGJY5uJRKrkyI1r6N8XI8q2LDuJgy52t0Dz4kgiz1zO0XA0Cy7BJVblqIzmEX8NyHAKLCmsBY3MocDCMTOu7mojgSmdpIVUesKmxqEWGQSsyFHRb2qEZGIGVkzABSyDzNh5wISWTCp3ywonJtDlAUcxcTz6zN8bCaN3QosJZKBxNPx4PiIrI2+YXwfcQVJYhXMefV7wP0BYsMMCp7SbVkYWhOTX5XXAc2FFBgjWVWvJNR5xFHYCOFo6ywOuKNKvBdg5D7iFr4WyIHk0FqmDgN91jMhVJzESJqA7cIdWdLy/Cz4TqZICCddkCiHLcR5kSv/eC6pHI2+NlwF3yRQyQZtwntMGh1bpCQ+4hLEoUuQRHwk9p7WbJFxWGBGjp+yActqJRSp0AvJZwEYiTdlBbI2QiXD4LFjxwA6kspDQLWPZLcyjmUgLYAepiCFlE2uKPGDQnXQDfxF9g7grYfas+0VzyqAFlxvtoIr1KAzpZ9O3IXtz8eE9M/ENJMgSo1EoTWJY6uM3txSN0mNjM0EbiXJaCxoJUuR5qpLqyeGNI9zFdrq8CR7w3JocLCrv1Y2JR0ruSqu3xiNeFEryraROgd2YmJ2/ZIUDydCw3JoEnGM4VY6RDsAheQp3IstTwh4MQjjth2EHjl7EnX5P9jviee+k0++fnAwG/X4YhiHxZ8EVKbqGV8JaQfIijbjHo1qpc6dc2nGsCK/fSzd3CNmm69m8kypd3HUc2BlY8tK/pfuZ8GsfMhAyKeYuYH02NYV1AeuxTOkCgUyRaEd1IdgV/bZBb2KzgrCxsawXsIEvIb1BbcF1txLYy5RuGNJFFoPdMvS2gV6BU3CpcLhyfiPGsHt8VAZ88IPYG243wI9Oy4D3fhS9dy/8oCyb9e2zT1Idz9LydcBRYcUo2Rh6E5/qQkBc+ir+OIvvqnW+xrdf/k2y0KBIG4BKI0x2BH1J6+pThCnN4nk7ytPj09OTkPI4tgB7QJ5ZgAcRj8IXz3sDop3KxB6IV1RNHkLs9170j8N+mwyfhNrx2lqDDJ/NJg90gu4qMS2hKIf02qYmEWnj1G0zcm9hauvuYZhNYvcrYS8JTUnQqMYK7PJI+sIPJcwOnRS9L3yz1qweUB6epp7KdZeLBHazMwjXf08k/THoo8EG9FMU+iTolrDqLmepryqi2npDX0RCU13N+675wLgRcf64VD7kYAVSL1DX8gelIhWpIy785n2OpOaJ95aONtbE2BTMVVxoLMj9GVi3t4l68b5WjsJu2Oft/G9EtnagkfsPF+d6bJpJBmuNfdzHV7SMZeD8q+i9FBPq1MdCpe22BtZdTdvJVcPRcIua8Yuqd1u71t637HR2bvvTpCkk5GsToAx4f1crea6rlnnpI1u37/9gu7hnYoescb2kv9rLcCqQmaT6IpKb/J+tcm4BrYIZ1L1v1zf1KFTq9jAupaJ/qVr5PUzEpsC1EzvNygLItAb8Zuwto37NFFiZpo+XfSrkKkja0C6LZaMqVMLbIrW3TeqVFgVOjVXfQbIOG348pw8RtpLQL2J/BmKPt4k9MzZWUoJmHXauXTEeq0RR4cnBZspRiXO/2P0J2B3sqsX+YKnTQUd4NepZZuUXrf93WqvPNJwaySNO8ycahtGMjB8SkYf1NI2GaTQMoPlYY7J2Qex5gprztZXDU8Sc1wMtuo6rRTyo/zlbzl3e/HVZ9RmrdrF2d1hIheytmdBx0OiIIt7rht1qgJIbh5nQ628I/mnJYUOJ7ZQt1rr89yaXPicId3iYp0LparJiqw8Sn3M/l6SErWaYZI8eLBaxcHBl07Kk234GSbNKqZyI08YU8t44/5vh4D1x38J854S1guYRr4aKM2EVBUeiKwM+BSHBVlH77cMkgRwbu7YqDKGs5P361SUPuNiUaEuSFfryM1nPG9iLhV9xaW5BlyVfxUDXvLwuy/Jvlajs8Q==
 sidebar_class_name: "get api-method"
 info_path: gen/api/audit-log-api
 custom_edit_url: null
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Retrieve system hostname"}
+  children={"Retrieve node status"}
 >
 </Heading>
 
 <MethodEndpoint
   method={"get"}
-  path={"/system/hostname"}
+  path={"/node/status"}
 >
   
 </MethodEndpoint>
 
 
 
-Get the current hostname of the system.
+Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
 
 <Heading
   id={"request"}
@@ -87,7 +87,7 @@ Get the current hostname of the system.
         <div>
           
           
-          A JSON object containing the system's hostname.
+          A JSON object containing the node's status information.
           
           
         </div><div>
@@ -182,7 +182,16 @@ Get the current hostname of the system.
                               required={true}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The system's hostname.","example":"my-linux-server"}}
+                              schema={{"type":"string","description":"The hostname of the system.","example":"my-linux-server"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"uptime"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"The uptime of the system.","example":"0 days, 4 hours, 1 minute"}}
                             >
                               
                             </SchemaItem><SchemaItem
@@ -202,7 +211,7 @@ Get the current hostname of the system.
                                     <strong
                                       className={"openapi-schema__property"}
                                     >
-                                      labels
+                                      load_average
                                     </strong><span
                                       className={"openapi-schema__name"}
                                     >
@@ -217,17 +226,241 @@ Get the current hostname of the system.
                                   >
                                     
                                     
-                                    Key-value labels configured on the worker.
+                                    The system load averages for 1, 5, and 15 minutes.
                                     
                                     
                                   </div><SchemaItem
-                                    name={"property name*"}
-                                    required={false}
+                                    collapsible={false}
+                                    name={"1min"}
+                                    required={true}
+                                    schemaName={"number"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"number","description":"Load average for the last 1 minute.","example":0.32}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"5min"}
+                                    required={true}
+                                    schemaName={"number"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"number","description":"Load average for the last 5 minutes.","example":0.28}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"15min"}
+                                    required={true}
+                                    schemaName={"number"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"number","description":"Load average for the last 15 minutes.","example":0.25}}
+                                  >
+                                    
+                                  </SchemaItem>
+                                </div>
+                              </details>
+                            </SchemaItem><SchemaItem
+                              collapsible={true}
+                              className={"schemaItem"}
+                            >
+                              <details
+                                style={{}}
+                                className={"openapi-markdown__details"}
+                              >
+                                <summary
+                                  style={{}}
+                                >
+                                  <span
+                                    className={"openapi-schema__container"}
+                                  >
+                                    <strong
+                                      className={"openapi-schema__property"}
+                                    >
+                                      memory
+                                    </strong><span
+                                      className={"openapi-schema__name"}
+                                    >
+                                       object
+                                    </span>
+                                  </span>
+                                </summary><div
+                                  style={{"marginLeft":"1rem"}}
+                                >
+                                  <div
+                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                                  >
+                                    
+                                    
+                                    Memory usage information.
+                                    
+                                    
+                                  </div><SchemaItem
+                                    collapsible={false}
+                                    name={"total"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Total memory in bytes.","example":8388608}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"free"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Free memory in bytes.","example":2097152}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"used"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Used memory in bytes.","example":4194304}}
+                                  >
+                                    
+                                  </SchemaItem>
+                                </div>
+                              </details>
+                            </SchemaItem><SchemaItem
+                              collapsible={true}
+                              className={"schemaItem"}
+                            >
+                              <details
+                                style={{}}
+                                className={"openapi-markdown__details"}
+                              >
+                                <summary
+                                  style={{}}
+                                >
+                                  <span
+                                    className={"openapi-schema__container"}
+                                  >
+                                    <strong
+                                      className={"openapi-schema__property"}
+                                    >
+                                      disks
+                                    </strong><span
+                                      className={"openapi-schema__name"}
+                                    >
+                                       object[]
+                                    </span>
+                                  </span>
+                                </summary><div
+                                  style={{"marginLeft":"1rem"}}
+                                >
+                                  <div
+                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                                  >
+                                    
+                                    
+                                    List of local disk usage information.
+                                    
+                                    
+                                  </div><li>
+                                    <div
+                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                                    >
+                                      Array [
+                                    </div>
+                                  </li><SchemaItem
+                                    collapsible={false}
+                                    name={"name"}
+                                    required={true}
                                     schemaName={"string"}
                                     qualifierMessage={undefined}
-                                    schema={{"type":"string"}}
+                                    schema={{"type":"string","description":"Disk identifier, e.g., \"/dev/sda1\".","example":"/dev/sda1"}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
                                     collapsible={false}
-                                    discriminator={false}
+                                    name={"total"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Total disk space in bytes.","example":500000000000}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"used"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Used disk space in bytes.","example":250000000000}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"free"}
+                                    required={true}
+                                    schemaName={"integer"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"integer","description":"Free disk space in bytes.","example":250000000000}}
+                                  >
+                                    
+                                  </SchemaItem><li>
+                                    <div
+                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                                    >
+                                      ]
+                                    </div>
+                                  </li>
+                                </div>
+                              </details>
+                            </SchemaItem><SchemaItem
+                              collapsible={true}
+                              className={"schemaItem"}
+                            >
+                              <details
+                                style={{}}
+                                className={"openapi-markdown__details"}
+                              >
+                                <summary
+                                  style={{}}
+                                >
+                                  <span
+                                    className={"openapi-schema__container"}
+                                  >
+                                    <strong
+                                      className={"openapi-schema__property"}
+                                    >
+                                      os_info
+                                    </strong><span
+                                      className={"openapi-schema__name"}
+                                    >
+                                       object
+                                    </span>
+                                  </span>
+                                </summary><div
+                                  style={{"marginLeft":"1rem"}}
+                                >
+                                  <div
+                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                                  >
+                                    
+                                    
+                                    Operating system information.
+                                    
+                                    
+                                  </div><SchemaItem
+                                    collapsible={false}
+                                    name={"distribution"}
+                                    required={true}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The name of the Linux distribution.","example":"Ubuntu"}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"version"}
+                                    required={true}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The version of the Linux distribution.","example":"20.04"}}
                                   >
                                     
                                   </SchemaItem>
@@ -239,7 +472,7 @@ Get the current hostname of the system.
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Error message if the worker failed to process the request."}}
+                              schema={{"type":"string","description":"Error message if the agent failed to process the request."}}
                             >
                               
                             </SchemaItem><li>
@@ -259,7 +492,7 @@ Get the current hostname of the system.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"my-linux-server\",\n      \"labels\": {},\n      \"error\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"my-linux-server\",\n      \"uptime\": \"0 days, 4 hours, 1 minute\",\n      \"load_average\": {\n        \"1min\": 0.32,\n        \"5min\": 0.28,\n        \"15min\": 0.25\n      },\n      \"memory\": {\n        \"total\": 8388608,\n        \"free\": 2097152,\n        \"used\": 4194304\n      },\n      \"disks\": [\n        {\n          \"name\": \"/dev/sda1\",\n          \"total\": 500000000000,\n          \"used\": 250000000000,\n          \"free\": 250000000000\n        }\n      ],\n      \"os_info\": {\n        \"distribution\": \"Ubuntu\",\n        \"version\": \"20.04\"\n      },\n      \"error\": \"string\"\n    }\n  ]\n}"}
                     language={"json"}
                   >
                     
@@ -549,7 +782,7 @@ Get the current hostname of the system.
         <div>
           
           
-          Error retrieving hostname.
+          Error retrieving node status.
           
           
         </div><div>

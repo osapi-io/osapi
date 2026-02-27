@@ -1,11 +1,11 @@
 ---
-id: list-active-workers
-title: "List active workers"
-description: "Discover all active workers in the fleet by broadcasting a hostname query."
-sidebar_label: "List active workers"
+id: list-active-agents
+title: "List active agents"
+description: "Discover all active agents in the fleet."
+sidebar_label: "List active agents"
 hide_title: true
 hide_table_of_contents: true
-api: eJztVk1v2zAM/SsCz26b7uPiW4a1Q4sNGLYWOxRBQVtMrNSWPIrOmhn+7wPlJE3TAtuhA3bYKXZC8pHvKXrswVIs2bXigocc3rtYhhWxwbo2WIpbkfkR+I44GueNVGTmNZGYYm0KDmhLjOL8wqCpQhSPDZnvHfH6GDIQXETIb+AyFLef0OOCGvJyO/18cbsMxW1oiVFxI8wyiFR27GQN+U0P7wiZeNpJpfnLUORMaGE2zDJgim3wkSLkPbyaTPTj8RAfXRQT5gf9a0dl8EJeNAXbtnZlwj9ZRs3rIZYVNahPsm4JcgjFkkqBDFrWbsWNqJuKe4HIjGvIwAk18fcFtlztRUZh5xeQHcxyVdEDs2GeFBjhj2EYlI3vnWOyytOu6iwDcVJr2W8p9sLPQwqXIFjvoTovtCB+CqtxxndNQfwclYfQW0a2CHsdqBpjF/HLRjoYBi3wZnL6VLxrj51Ugd1PsubITD9fmDtamx3Yi4lIzIF/L8DU7L1vFUi5RioUE8qyYyarx4vusWnT0OfoarJGgmESdrQiEwWlU+oUQdDV8Q/ArXX6iLXZ5BgsQicPTTwLaztSaE+iuhhxDYVOEnQZLP2J/rshNeERyNvJJJ2kjbxnGvVE2NdPhT0PXDhryZsjc+FjN5+70pEX0xI3LsZ0EfxX999X9+1zd24KNHZjH+oIL3/t/tf0L2k6ZNCQVMFCDgtKxKNaL5wsQ3HycLdH4lXyvZs9w/6q6o0C7dv2ruFKpNXcFAY5FCkIss3DeeAGBXK4/HaVbMWpV2n6pt1pZ52Yj2GhXgAZaAfjyKfHk+OJUtSGKA2mszS66rgCPDatQ8b6h2P5wmvPOLfQvZy0NTqvLXacbHfkNa00kO1cc5Yl79Yf+r7ASNdcD4N+nYqOfK+QHRZKyc1syKAitMRpW7qjtfJUltSqdiusu7STHP7VdHva6fzh7AoywMdaHWiTqm83HL/eq933Y8RVuCM/DJBtmhB9h2E2DMMvAVCaiw==
+api: eJztVk1v2zAM/SsCz16a7uPiW4atQ4dtKLYUOxRBwVhMrNaWPIrOmhn+7wPlJEvSAtuADtihp0gGyUe+p+ipA0uxYNeICx5yeONiEVbEBqvKYCFuRQaX5CUa542UZBYVkYwgA8FlhPwKPgVL1x/R45Jq8nI9uTi/9votNMSodSPMMohUtOxkDflVB68JmXjSSqkVNDpnQguzfpYBU2yCjxQh7+D5eKw/h11+cFFMWBw2qD0VwQt50QxsmsoVCf/kJmpaB7EoqUZdybohyCHMb6gQyKBh7VbcADoU3ItDZlxDBk6ojr/PL0MUjzXtRUZh55eQHU0yLclso3UiZTihj6DvlYpvrWOyytKu6CwDcVJp1YmGnvtFSNESBKs9TOeFlsT3QTXO+LaeEz9A4zHwho1t/T141SG1ED9vNIO+1/SX49P7ql16bKUM7H6QNc/M5OLc3NLa7KAeTT5iDvx77idmb78lP+UaKVFMKIqWmaweLLrDukkzn6GryBoJhknY0YpMFJRWiVMEQVfFPwC31ukSK7PJMTgPrfxq4kFY25JCe5LvgW+NuJpCKwm6CJb+RPzdkJpwAPJqPE7HaKPuW426J+yL+8KeBZ47a8mbZ+bcx3axcIUjL6Yhrl2M6Qp4Uvf/V/fVQ5dtCjR2YwzOLx//vn2S9B9J2mdQk5TBQg5LSsSjei6cqOeCujKviNXH9yz6i8o2KLNv1LtOS5FGc1MY5DBPQZBtFmeBaxTI4f3XaTITpwal6VvXaq0T8yEs1QMgA+1gmPV0NB6NlZsmRKkxHaLBSAfPP3CqY6a6X8fxr94xw1BCd3LSVOi84recjHRga3ihqPGpB+u+6+YY6ZKrvtfP31ri9cDhCtnhXMe8mvUZlISWOL15bmmtsxcFNSrECqs2PS2O/zf6BNqJ9u7tFDLAQ/6P+E7Vtw8Vv96r3XVDxDTcku97yDZNiO6hn/V9/xNO/Xcs
 sidebar_class_name: "get api-method"
 info_path: gen/api/audit-log-api
 custom_edit_url: null
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"List active workers"}
+  children={"List active agents"}
 >
 </Heading>
 
 <MethodEndpoint
   method={"get"}
-  path={"/job/workers"}
+  path={"/node"}
 >
   
 </MethodEndpoint>
 
 
 
-Discover all active workers in the fleet by broadcasting a hostname query.
+Discover all active agents in the fleet.
 
 <div>
   <div>
@@ -55,7 +55,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
         <div>
           
           
-          List of active workers.
+          List of active agents.
           
           
         </div><div>
@@ -111,7 +111,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
                               <strong
                                 className={"openapi-schema__property"}
                               >
-                                workers
+                                agents
                               </strong><span
                                 className={"openapi-schema__name"}
                               >
@@ -141,7 +141,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
                               required={true}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The hostname of the worker."}}
+                              schema={{"type":"string","description":"The hostname of the agent."}}
                             >
                               
                             </SchemaItem><li>
@@ -159,7 +159,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
                         required={true}
                         schemaName={"integer"}
                         qualifierMessage={undefined}
-                        schema={{"type":"integer","description":"Total number of active workers."}}
+                        schema={{"type":"integer","description":"Total number of active agents."}}
                       >
                         
                       </SchemaItem>
@@ -170,7 +170,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"workers\": [\n    {\n      \"hostname\": \"string\"\n    }\n  ],\n  \"total\": 0\n}"}
+                    responseExample={"{\n  \"agents\": [\n    {\n      \"hostname\": \"string\"\n    }\n  ],\n  \"total\": 0\n}"}
                     language={"json"}
                   >
                     
@@ -369,7 +369,7 @@ Discover all active workers in the fleet by broadcasting a hostname query.
         <div>
           
           
-          Error discovering workers.
+          Error discovering agents.
           
           
         </div><div>

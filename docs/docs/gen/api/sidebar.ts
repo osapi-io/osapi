@@ -128,12 +128,6 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/list-active-workers",
-          label: "List active workers",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "gen/api/get-job-by-id",
           label: "Get job detail",
           className: "api-method get",
@@ -192,32 +186,38 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "System",
+      label: "Node",
       link: {
         type: "doc",
-        id: "gen/api/system-management-api-system-operations",
+        id: "gen/api/node-management-api-node-operations",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/retrieve-system-hostname",
-          label: "Retrieve system hostname",
+          id: "gen/api/list-active-agents",
+          label: "List active agents",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/retrieve-node-hostname",
+          label: "Retrieve node hostname",
           className: "api-method get",
         },
       ],
     },
     {
       type: "category",
-      label: "System/Status",
+      label: "Node/Status",
       link: {
         type: "doc",
-        id: "gen/api/system-management-api-system-status",
+        id: "gen/api/node-management-api-node-status",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/retrieve-system-status",
-          label: "Retrieve system status",
+          id: "gen/api/retrieve-node-status",
+          label: "Retrieve node status",
           className: "api-method get",
         },
       ],
