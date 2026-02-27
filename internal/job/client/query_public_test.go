@@ -1137,6 +1137,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 		expectError   bool
 		errorContains string
 		expectedCount int
+		validateFunc  func([]job.AgentInfo)
 	}{
 		{
 			name:          "when registryKV is nil returns error",
@@ -1155,7 +1156,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			expectedCount: 0,
 		},
 		{
-			name:          "when agents exist returns agent list",
+			name:          "when agents exist returns agent list with enriched fields",
 			useRegistryKV: true,
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
@@ -1165,7 +1166,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					[]byte(
-						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`,
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z","started_at":"2025-12-31T00:00:00Z","os_info":{"Distribution":"Ubuntu","Version":"24.04"},"uptime":18000000000000,"load_averages":{"Load1":0.5,"Load5":0.3,"Load15":0.2},"memory_stats":{"Total":8388608,"Free":4194304,"Cached":2097152}}`,
 					),
 				)
 				kv.EXPECT().
@@ -1183,6 +1184,16 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Return(entry2, nil)
 			},
 			expectedCount: 2,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+				s.NotZero(agents[0].RegisteredAt)
+				s.NotZero(agents[0].StartedAt)
+				s.NotNil(agents[0].OSInfo)
+				s.Equal("Ubuntu", agents[0].OSInfo.Distribution)
+				s.NotNil(agents[0].LoadAverages)
+				s.NotNil(agents[0].MemoryStats)
+				s.NotZero(agents[0].Uptime)
+			},
 		},
 		{
 			name:          "when Keys fails returns error",
@@ -1272,6 +1283,115 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			} else {
 				s.NoError(err)
 				s.Len(result, tt.expectedCount)
+				if tt.validateFunc != nil {
+					tt.validateFunc(result)
+				}
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestGetAgent() {
+	tests := []struct {
+		name          string
+		hostname      string
+		setupMockKV   func(*jobmocks.MockKeyValue)
+		useRegistryKV bool
+		expectError   bool
+		errorContains string
+		validateFunc  func(*job.AgentInfo)
+	}{
+		{
+			name:          "when registryKV is nil returns error",
+			hostname:      "server1",
+			useRegistryKV: false,
+			expectError:   true,
+			errorContains: "agent registry not configured",
+		},
+		{
+			name:          "when agent found returns agent info",
+			hostname:      "server1",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z","started_at":"2025-12-31T00:00:00Z","os_info":{"Distribution":"Ubuntu","Version":"24.04"}}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Equal(map[string]string{"group": "web"}, info.Labels)
+				s.NotZero(info.RegisteredAt)
+				s.NotZero(info.StartedAt)
+				s.NotNil(info.OSInfo)
+				s.Equal("Ubuntu", info.OSInfo.Distribution)
+			},
+		},
+		{
+			name:          "when agent not found returns error",
+			hostname:      "unknown",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.unknown").
+					Return(nil, errors.New("key not found"))
+			},
+			expectError:   true,
+			errorContains: "agent not found",
+		},
+		{
+			name:          "when unmarshal fails returns error",
+			hostname:      "server1",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return([]byte(`invalid json`))
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			expectError:   true,
+			errorContains: "failed to unmarshal",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+			if tt.setupMockKV != nil {
+				tt.setupMockKV(registryKV)
+			}
+
+			opts := &client.Options{
+				Timeout:  30 * time.Second,
+				KVBucket: s.mockKV,
+			}
+			if tt.useRegistryKV {
+				opts.RegistryKV = registryKV
+			}
+
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			result, err := jobsClient.GetAgent(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+				if tt.validateFunc != nil {
+					tt.validateFunc(result)
+				}
 			}
 		})
 	}

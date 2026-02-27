@@ -37,6 +37,7 @@ type MetricsProvider interface {
 	GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
 	GetKVInfo(ctx context.Context) ([]KVMetrics, error)
 	GetJobStats(ctx context.Context) (*JobMetrics, error)
+	GetAgentStats(ctx context.Context) (*AgentMetrics, error)
 }
 
 // NATSMetrics holds NATS connection information.
@@ -70,12 +71,19 @@ type JobMetrics struct {
 	DLQ         int
 }
 
+// AgentMetrics holds agent fleet statistics.
+type AgentMetrics struct {
+	Total int
+	Ready int
+}
+
 // ClosureMetricsProvider implements MetricsProvider using function closures.
 type ClosureMetricsProvider struct {
 	NATSInfoFn   func(ctx context.Context) (*NATSMetrics, error)
 	StreamInfoFn func(ctx context.Context) ([]StreamMetrics, error)
 	KVInfoFn     func(ctx context.Context) ([]KVMetrics, error)
 	JobStatsFn   func(ctx context.Context) (*JobMetrics, error)
+	AgentStatsFn func(ctx context.Context) (*AgentMetrics, error)
 }
 
 // GetNATSInfo delegates to the NATSInfoFn closure.
@@ -104,6 +112,13 @@ func (p *ClosureMetricsProvider) GetJobStats(
 	ctx context.Context,
 ) (*JobMetrics, error) {
 	return p.JobStatsFn(ctx)
+}
+
+// GetAgentStats delegates to the AgentStatsFn closure.
+func (p *ClosureMetricsProvider) GetAgentStats(
+	ctx context.Context,
+) (*AgentMetrics, error) {
+	return p.AgentStatsFn(ctx)
 }
 
 // Health implementation of the Health APIs operations.

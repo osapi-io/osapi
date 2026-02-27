@@ -19,13 +19,11 @@ Read the `agent-registry` KV bucket and display an Agents section:
 
 ```
   Agents: 3 registered
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-  ┃ HOSTNAME                  ┃ LABELS          ┃ REGISTERED ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━┫
-  ┃ web-01                    ┃ group=web.prod  ┃ 15s ago    ┃
-  ┃ web-02                    ┃ group=web.prod  ┃ 8s ago     ┃
-  ┃ db-01                     ┃ group=db        ┃ 2m ago     ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━┛
+
+  HOSTNAME  LABELS          REGISTERED
+  web-01    group=web.prod  15s ago
+  web-02    group=web.prod  8s ago
+  db-01     group=db        2m ago
 ```
 
 The registry KV bucket uses a 30s TTL, so only live agents appear. The
@@ -46,21 +44,29 @@ consumers are lagging:
 
 ```
   Consumers (osapi-JOBS):
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ NAME                      ┃ PENDING  ┃ ACKED   ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ query_any_web_01          ┃ 0        ┃ 142     ┃
-  ┃ query_direct_web_01       ┃ 0        ┃ 38      ┃
-  ┃ modify_any_web_01         ┃ 1        ┃ 15      ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
+
+  NAME                 PENDING  ACKED
+  query_any_web_01     0        142
+  query_direct_web_01  0        38
+  modify_any_web_01    1        15
 ```
 
 This is lower priority — the agent list covers the main operational need.
 Consumer details are useful for debugging but may be noisy with many agents.
 
+## Progress
+
+The agent summary line (`Agents: 2 total, 2 ready`) was implemented as part of
+the heartbeat enrichment work (Phase 5). The `AgentStats` schema and
+`GetAgentStats` provider are wired in. What remains:
+
+- Per-agent table in health status output (hostname, labels, registered)
+- Registry bucket visibility in KV Buckets section
+- Consumer details (stretch)
+
 ## Notes
 
-- The health status API response schema will need new fields for agents and
-  optionally consumers
+- The health status API response schema will need new fields for the per-agent
+  list and optionally consumers
 - The SDK and CLI will need updates to render the new sections
 - Consider adding a `--verbose` flag to show consumers only when requested

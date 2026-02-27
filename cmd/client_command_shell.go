@@ -92,7 +92,7 @@ var clientCommandShellCmd = &cobra.Command{
 					"EXIT CODE",
 					"DURATION",
 				})
-				cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
+				cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 			}
 
 		case http.StatusBadRequest:

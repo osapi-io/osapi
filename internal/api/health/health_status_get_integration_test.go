@@ -85,6 +85,9 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 						Completed: 90, Failed: 3, DLQ: 0,
 					}, nil
 				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{Total: 3, Ready: 3}, nil
+				},
 			},
 			wantCode: http.StatusOK,
 			wantContains: []string{
@@ -95,6 +98,7 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 				`"streams"`,
 				`"kv_buckets"`,
 				`"jobs"`,
+				`"agents"`,
 			},
 		},
 		{
@@ -204,6 +208,9 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusRBAC() {
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{}, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{}, nil
 				},
 			}
 

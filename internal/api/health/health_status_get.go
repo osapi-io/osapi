@@ -147,4 +147,13 @@ func (h *Health) populateMetrics(
 			Dlq:         jobStats.DLQ,
 		}
 	}
+
+	if agentStats, err := h.Metrics.GetAgentStats(ctx); err != nil {
+		h.logger.Warn("failed to get agent stats for status", "error", err)
+	} else {
+		resp.Agents = &gen.AgentStats{
+			Total: agentStats.Total,
+			Ready: agentStats.Ready,
+		}
+	}
 }

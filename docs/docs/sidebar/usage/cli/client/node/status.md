@@ -12,12 +12,9 @@ $ osapi client node status
   Memory: 19 GB used / 31 GB total / 10 GB free
 
   Disks:
-  ┏━━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━┓
-  ┃ DISK NAME ┃ TOTAL ┃ USED  ┃ FREE  ┃
-  ┣━━━━━━━━━━━╋━━━━━━━╋━━━━━━━╋━━━━━━━┫
-  ┃ /         ┃ 97 GB ┃ 56 GB ┃ 36 GB ┃
-  ┃ /boot     ┃ 1 GB  ┃ 0 GB  ┃ 1 GB  ┃
-  ┗━━━━━━━━━━━┻━━━━━━━┻━━━━━━━┻━━━━━━━┛
+  DISK NAME  TOTAL  USED   FREE
+  /          97 GB  56 GB  36 GB
+  /boot      1 GB   0 GB   1 GB
 ```
 
 When targeting all hosts, a summary table is shown:
@@ -27,12 +24,9 @@ $ osapi client node status --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
-  ┃ HOSTNAME ┃ UPTIME                         ┃ LOAD (1m) ┃ MEMORY USED   ┃
-  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━━━━━┫
-  ┃ server1  ┃ 64 days, 11 hours, 20 minutes  ┃ 1.83      ┃ 19 GB / 31 GB ┃
-  ┃ server2  ┃ 12 days, 3 hours, 45 minutes   ┃ 0.45      ┃ 8 GB / 16 GB  ┃
-  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━━━━━┛
+  HOSTNAME  UPTIME                          LOAD (1m)  MEMORY USED
+  server1   64 days, 11 hours, 20 minutes   1.83       19 GB / 31 GB
+  server2   12 days, 3 hours, 45 minutes    0.45       8 GB / 16 GB
 ```
 
 Target by label to query a group of servers:

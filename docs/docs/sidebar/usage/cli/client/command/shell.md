@@ -8,12 +8,12 @@ $ osapi client command shell --command "ls -la /tmp | grep log"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ STDOUT                        ┃ STDERR ┃ EXIT CODE ┃ DURATION ┃ CHANGED ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ -rw-r--r-- 1 root root 4096  ┃        ┃ 0         ┃ 15ms     ┃ false   ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
+  server1   false    -rw-r--r-- 1 root root 4096 …           0          15ms
 ```
+
+Long output is truncated in the table view. Use `--json` for the full response
+data.
 
 Use shell syntax like pipes and redirects:
 
@@ -40,12 +40,9 @@ $ osapi client command shell --command "hostname -f" --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ HOSTNAME ┃ STDOUT                ┃ STDERR ┃ EXIT CODE ┃ DURATION ┃ CHANGED ┃
-  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ server1  ┃ server1.example.com   ┃        ┃ 0         ┃ 5ms      ┃ false   ┃
-  ┃ server2  ┃ server2.example.com   ┃        ┃ 0         ┃ 7ms      ┃ false   ┃
-  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  CHANGED  STDOUT                 STDERR  EXIT CODE  DURATION
+  server1   false    server1.example.com            0          5ms
+  server2   false    server2.example.com            0          7ms
 ```
 
 Target by label to execute on a group of servers:
@@ -58,7 +55,7 @@ $ osapi client command shell \
 
 ## JSON Output
 
-Use `--json` to get the raw API response:
+Use `--json` to get the full untruncated API response:
 
 ```bash
 $ osapi client command shell --command "uname -r" --json
@@ -72,4 +69,4 @@ $ osapi client command shell --command "uname -r" --json
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `--json`       | Output raw JSON response                                 |         |
+| `-j, --json`   | Output raw JSON response                                 |         |

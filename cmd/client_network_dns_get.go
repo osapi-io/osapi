@@ -83,7 +83,7 @@ var clientNetworkDNSGetCmd = &cobra.Command{
 				"SERVERS",
 				"SEARCH DOMAINS",
 			})
-			cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
+			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 
 		case http.StatusBadRequest:
 			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)

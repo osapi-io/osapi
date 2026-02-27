@@ -14,25 +14,12 @@ $ osapi client job run \
   Updated At: 2026-02-16T13:21:06Z
 
   Job Request:
-
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-  ┃ DATA                            ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-  ┃ {                               ┃
-  ┃   "data": {},                   ┃
-  ┃   "type": "node.hostname.get" ┃
-  ┃ }                               ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  DATA
+  { "data": {}, "type": "node.hostname.get" }
 
   Job Result:
-
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-  ┃ DATA                      ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-  ┃ {                         ┃
-  ┃   "hostname": "server1"   ┃
-  ┃ }                         ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  DATA
+  { "hostname": "server1" }
 ```
 
 ## Flags

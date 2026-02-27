@@ -22,12 +22,12 @@ package node_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	apinode "github.com/retr0h/osapi/internal/api/node"
@@ -39,7 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type NodeListPublicTestSuite struct {
+type NodeGetPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -48,73 +48,66 @@ type NodeListPublicTestSuite struct {
 	ctx           context.Context
 }
 
-func (s *NodeListPublicTestSuite) SetupTest() {
+func (s *NodeGetPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apinode.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 }
 
-func (s *NodeListPublicTestSuite) TearDownTest() {
+func (s *NodeGetPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *NodeListPublicTestSuite) TestGetNode() {
+func (s *NodeGetPublicTestSuite) TestGetNodeDetails() {
 	tests := []struct {
 		name         string
-		mockAgents   []jobtypes.AgentInfo
+		hostname     string
+		mockAgent    *jobtypes.AgentInfo
 		mockError    error
-		validateFunc func(resp gen.GetNodeResponseObject)
+		validateFunc func(resp gen.GetNodeDetailsResponseObject)
 	}{
 		{
-			name: "success with agents",
-			mockAgents: []jobtypes.AgentInfo{
-				{
-					Hostname:     "server1",
-					Labels:       map[string]string{"group": "web"},
-					RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-					StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-					OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
-					Uptime:       5 * time.Hour,
-					LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-					MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
-				},
-				{Hostname: "server2"},
+			name:     "success returns agent details",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname:     "server1",
+				Labels:       map[string]string{"group": "web"},
+				RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
+				OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
+				Uptime:       5 * time.Hour,
+				LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
+				MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
 			},
-			validateFunc: func(resp gen.GetNodeResponseObject) {
-				r, ok := resp.(gen.GetNode200JSONResponse)
+			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
+				r, ok := resp.(gen.GetNodeDetails200JSONResponse)
 				s.True(ok)
-				s.Equal(2, r.Total)
-				s.Len(r.Agents, 2)
-				s.Equal("server1", r.Agents[0].Hostname)
-				s.Equal(gen.Ready, r.Agents[0].Status)
-				s.NotNil(r.Agents[0].Labels)
-				s.NotNil(r.Agents[0].RegisteredAt)
-				s.NotNil(r.Agents[0].StartedAt)
-				s.NotNil(r.Agents[0].OsInfo)
-				s.Equal("Ubuntu", r.Agents[0].OsInfo.Distribution)
-				s.NotNil(r.Agents[0].LoadAverage)
-				s.NotNil(r.Agents[0].Memory)
-				s.NotNil(r.Agents[0].Uptime)
-				s.Equal("server2", r.Agents[1].Hostname)
-				s.Equal(gen.Ready, r.Agents[1].Status)
+				s.Equal("server1", r.Hostname)
+				s.Equal(gen.Ready, r.Status)
+				s.NotNil(r.Labels)
+				s.NotNil(r.OsInfo)
+				s.Equal("Ubuntu", r.OsInfo.Distribution)
+				s.NotNil(r.LoadAverage)
+				s.NotNil(r.Memory)
+				s.NotNil(r.Uptime)
 			},
 		},
 		{
-			name:       "success with no agents",
-			mockAgents: []jobtypes.AgentInfo{},
-			validateFunc: func(resp gen.GetNodeResponseObject) {
-				r, ok := resp.(gen.GetNode200JSONResponse)
+			name:      "agent not found returns 404",
+			hostname:  "unknown",
+			mockError: fmt.Errorf("agent not found: unknown"),
+			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
+				_, ok := resp.(gen.GetNodeDetails404JSONResponse)
 				s.True(ok)
-				s.Equal(0, r.Total)
-				s.Empty(r.Agents)
 			},
 		},
 		{
-			name:      "job client error",
-			mockError: assert.AnError,
-			validateFunc: func(resp gen.GetNodeResponseObject) {
-				_, ok := resp.(gen.GetNode500JSONResponse)
+			name:      "client error returns 500",
+			hostname:  "server1",
+			mockError: fmt.Errorf("connection failed"),
+			validateFunc: func(resp gen.GetNodeDetailsResponseObject) {
+				_, ok := resp.(gen.GetNodeDetails500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -123,16 +116,18 @@ func (s *NodeListPublicTestSuite) TestGetNode() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
-				ListAgents(gomock.Any()).
-				Return(tt.mockAgents, tt.mockError)
+				GetAgent(gomock.Any(), tt.hostname).
+				Return(tt.mockAgent, tt.mockError)
 
-			resp, err := s.handler.GetNode(s.ctx, gen.GetNodeRequestObject{})
+			resp, err := s.handler.GetNodeDetails(s.ctx, gen.GetNodeDetailsRequestObject{
+				Hostname: tt.hostname,
+			})
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func TestNodeListPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(NodeListPublicTestSuite))
+func TestNodeGetPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(NodeGetPublicTestSuite))
 }

@@ -240,6 +240,21 @@ components:
         - failed
         - dlq
 
+    AgentStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of registered agents.
+          example: 5
+        ready:
+          type: integer
+          description: Number of agents with Ready status.
+          example: 5
+      required:
+        - total
+        - ready
+
     StatusResponse:
       type: object
       properties:
@@ -274,6 +289,8 @@ components:
           description: KV bucket statistics.
         jobs:
           $ref: '#/components/schemas/JobStats'
+        agents:
+          $ref: '#/components/schemas/AgentStats'
       required:
         - status
         - components

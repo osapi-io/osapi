@@ -25,7 +25,9 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
@@ -689,18 +691,11 @@ func (suite *UITestSuite) TestPrintKV() {
 	}
 }
 
-func (suite *UITestSuite) TestPrintStyledTable() {
-	wideRow := []string{
-		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-		"ccccccccccccccccccccccccccccccc",
-		"ddddddddddddddddddddddddddddd",
-		"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-	}
-
+func (suite *UITestSuite) TestPrintCompactTable() {
 	tests := []struct {
-		name     string
-		sections []cli.Section
+		name        string
+		sections    []cli.Section
+		wantHeaders []string
 	}{
 		{
 			name: "when section with title renders table",
@@ -711,6 +706,7 @@ func (suite *UITestSuite) TestPrintStyledTable() {
 					Rows:    [][]string{{"a", "b"}},
 				},
 			},
+			wantHeaders: []string{"COL1", "COL2"},
 		},
 		{
 			name: "when section without title renders table",
@@ -720,45 +716,176 @@ func (suite *UITestSuite) TestPrintStyledTable() {
 					Rows:    [][]string{{"a"}},
 				},
 			},
+			wantHeaders: []string{"COL1"},
 		},
 		{
-			name: "when table exceeds terminal width scales columns",
+			name: "when wide data aligns columns",
 			sections: []cli.Section{
 				{
 					Title:   "Wide",
 					Headers: []string{"A", "B", "C", "D", "E"},
-					Rows:    [][]string{wideRow},
+					Rows: [][]string{{
+						"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+						"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+						"ccccccccccccccccccccccccccccccc",
+						"ddddddddddddddddddddddddddddd",
+						"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+					}},
 				},
 			},
+			wantHeaders: []string{"A", "B", "C", "D", "E"},
 		},
 		{
-			name: "when scaled column drops below minimum enforces floor",
+			name: "when many columns renders all headers",
 			sections: []cli.Section{
 				{
 					Headers: []string{
 						"X", "Y", "Z",
 						"LONG-HEADER-1", "LONG-HEADER-2",
-						"LONG-HEADER-3", "LONG-HEADER-4",
-						"LONG-HEADER-5", "LONG-HEADER-6",
 					},
 					Rows: [][]string{{
 						"a", "b", "c",
 						"aaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbb",
-						"cccccccccccccccccccc", "dddddddddddddddddddd",
-						"eeeeeeeeeeeeeeeeeeee", "ffffffffffffffffffff",
 					}},
 				},
 			},
+			wantHeaders: []string{"X", "Y", "Z", "LONG-HEADER-1", "LONG-HEADER-2"},
+		},
+		{
+			name: "when multiple rows alternates colors",
+			sections: []cli.Section{
+				{
+					Headers: []string{"NAME", "VALUE"},
+					Rows: [][]string{
+						{"row0", "even"},
+						{"row1", "odd"},
+						{"row2", "even"},
+					},
+				},
+			},
+			wantHeaders: []string{"NAME", "VALUE"},
+		},
+		{
+			name: "when column exceeds max width truncates to cap",
+			sections: []cli.Section{
+				{
+					Headers: []string{"A", "B"},
+					Rows: [][]string{{
+						strings.Repeat("x", 60),
+						"short",
+					}},
+				},
+			},
+			wantHeaders: []string{"A", "B"},
+		},
+		{
+			name: "when cell exceeds column width shows ellipsis",
+			sections: []cli.Section{
+				{
+					Headers: []string{"A"},
+					Rows: [][]string{
+						{strings.Repeat("x", 60)},
+					},
+				},
+			},
+			wantHeaders: []string{"A"},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			output := captureStdout(func() {
-				cli.PrintStyledTable(tc.sections)
+				cli.PrintCompactTable(tc.sections)
 			})
 
 			assert.NotEmpty(suite.T(), output)
+			for _, h := range tc.wantHeaders {
+				assert.Contains(suite.T(), output, h)
+			}
+		})
+	}
+}
+
+func (suite *UITestSuite) TestFormatAge() {
+	tests := []struct {
+		name string
+		d    time.Duration
+		want string
+	}{
+		{
+			name: "when zero returns empty",
+			d:    0,
+			want: "",
+		},
+		{
+			name: "when negative returns empty",
+			d:    -1 * time.Hour,
+			want: "",
+		},
+		{
+			name: "when days and hours formats as days",
+			d:    3*24*time.Hour + 4*time.Hour,
+			want: "3d 4h",
+		},
+		{
+			name: "when hours and minutes formats as hours",
+			d:    12*time.Hour + 30*time.Minute,
+			want: "12h 30m",
+		},
+		{
+			name: "when only minutes formats as minutes",
+			d:    45 * time.Minute,
+			want: "45m",
+		},
+		{
+			name: "when only seconds formats as seconds",
+			d:    30 * time.Second,
+			want: "30s",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.FormatAge(tc.d)
+
+			assert.Equal(suite.T(), tc.want, got)
+		})
+	}
+}
+
+func (suite *UITestSuite) TestFormatBytes() {
+	tests := []struct {
+		name string
+		b    int
+		want string
+	}{
+		{
+			name: "when bytes returns bytes",
+			b:    512,
+			want: "512 B",
+		},
+		{
+			name: "when kilobytes returns KB",
+			b:    5 * 1024,
+			want: "5.0 KB",
+		},
+		{
+			name: "when megabytes returns MB",
+			b:    3 * 1024 * 1024,
+			want: "3.0 MB",
+		},
+		{
+			name: "when gigabytes returns GB",
+			b:    2 * 1024 * 1024 * 1024,
+			want: "2.0 GB",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.FormatBytes(tc.b)
+
+			assert.Equal(suite.T(), tc.want, got)
 		})
 	}
 }

@@ -177,6 +177,10 @@ type JobClient interface {
 	ListAgents(
 		ctx context.Context,
 	) ([]job.AgentInfo, error)
+	GetAgent(
+		ctx context.Context,
+		hostname string,
+	) (*job.AgentInfo, error)
 
 	// Job deletion
 	DeleteJob(

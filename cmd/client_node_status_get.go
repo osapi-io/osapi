@@ -116,7 +116,7 @@ func displayNodeStatusCollection(
 		"LOAD (1m)",
 		"MEMORY USED",
 	})
-	cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
+	cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 }
 
 // displayNodeStatusDetail renders a single node status response with full details.
@@ -169,7 +169,7 @@ func displayNodeStatusDetail(
 			Rows:    diskRows,
 		},
 	}
-	cli.PrintStyledTable(sections)
+	cli.PrintCompactTable(sections)
 }
 
 func init() {

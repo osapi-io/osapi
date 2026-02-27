@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -62,17 +63,37 @@ and collecting responses. Shows each agent's hostname.`,
 
 			rows := make([][]string, 0, len(agents))
 			for _, a := range agents {
-				rows = append(rows, []string{a.Hostname})
+				labels := cli.FormatLabels(a.Labels)
+				age := ""
+				if a.StartedAt != nil {
+					age = cli.FormatAge(time.Since(*a.StartedAt))
+				}
+				loadStr := ""
+				if a.LoadAverage != nil {
+					loadStr = fmt.Sprintf("%.2f", a.LoadAverage.N1min)
+				}
+				osStr := ""
+				if a.OsInfo != nil {
+					osStr = a.OsInfo.Distribution + " " + a.OsInfo.Version
+				}
+				rows = append(rows, []string{
+					a.Hostname,
+					string(a.Status),
+					labels,
+					age,
+					loadStr,
+					osStr,
+				})
 			}
 
 			sections := []cli.Section{
 				{
 					Title:   fmt.Sprintf("Active Agents (%d)", resp.JSON200.Total),
-					Headers: []string{"HOSTNAME"},
+					Headers: []string{"HOSTNAME", "STATUS", "LABELS", "AGE", "LOAD (1m)", "OS"},
 					Rows:    rows,
 				},
 			}
-			cli.PrintStyledTable(sections)
+			cli.PrintCompactTable(sections)
 		case http.StatusUnauthorized:
 			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
 		case http.StatusForbidden:

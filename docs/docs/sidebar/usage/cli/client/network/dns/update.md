@@ -10,11 +10,8 @@ $ osapi client network dns update \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━━━┓
-  ┃ HOSTNAME ┃ STATUS ┃ ERROR ┃ CHANGED ┃
-  ┣━━━━━━━━━━╋━━━━━━━━╋━━━━━━━╋━━━━━━━━━┫
-  ┃ server1  ┃ ok     ┃       ┃ true    ┃
-  ┗━━━━━━━━━━┻━━━━━━━━┻━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  STATUS  CHANGED  ERROR
+  server1   ok      true
 ```
 
 When targeting all hosts, a confirmation prompt is shown first:
@@ -29,12 +26,9 @@ This will modify DNS on ALL hosts. Continue? [y/N] y
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ HOSTNAME ┃ STATUS ┃ ERROR     ┃ CHANGED ┃
-  ┣━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ server1  ┃ ok     ┃           ┃ true    ┃
-  ┃ server2  ┃ failed ┃ disk full ┃         ┃
-  ┗━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  STATUS  CHANGED  ERROR
+  server1   ok      true
+  server2   failed           disk full
 ```
 
 Target by label to update a group of servers:

@@ -24,6 +24,7 @@ import (
 	"context"
 
 	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // GetNode discovers all active agents in the fleet.
@@ -41,9 +42,7 @@ func (s *Node) GetNode(
 
 	agentInfos := make([]gen.AgentInfo, 0, len(agents))
 	for _, a := range agents {
-		agentInfos = append(agentInfos, gen.AgentInfo{
-			Hostname: a.Hostname,
-		})
+		agentInfos = append(agentInfos, buildAgentInfo(&a))
 	}
 
 	total := len(agentInfos)
@@ -52,4 +51,58 @@ func (s *Node) GetNode(
 		Agents: agentInfos,
 		Total:  total,
 	}, nil
+}
+
+// buildAgentInfo maps a job.AgentInfo to the API gen.AgentInfo response.
+func buildAgentInfo(
+	a *job.AgentInfo,
+) gen.AgentInfo {
+	status := gen.Ready
+	info := gen.AgentInfo{
+		Hostname: a.Hostname,
+		Status:   status,
+	}
+
+	if len(a.Labels) > 0 {
+		labels := a.Labels
+		info.Labels = &labels
+	}
+
+	if !a.RegisteredAt.IsZero() {
+		info.RegisteredAt = &a.RegisteredAt
+	}
+
+	if !a.StartedAt.IsZero() {
+		info.StartedAt = &a.StartedAt
+	}
+
+	if a.Uptime > 0 {
+		uptime := formatDuration(a.Uptime)
+		info.Uptime = &uptime
+	}
+
+	if a.OSInfo != nil {
+		info.OsInfo = &gen.OSInfoResponse{
+			Distribution: a.OSInfo.Distribution,
+			Version:      a.OSInfo.Version,
+		}
+	}
+
+	if a.LoadAverages != nil {
+		info.LoadAverage = &gen.LoadAverageResponse{
+			N1min:  a.LoadAverages.Load1,
+			N5min:  a.LoadAverages.Load5,
+			N15min: a.LoadAverages.Load15,
+		}
+	}
+
+	if a.MemoryStats != nil {
+		info.Memory = &gen.MemoryResponse{
+			Total: uint64ToInt(a.MemoryStats.Total),
+			Free:  uint64ToInt(a.MemoryStats.Free),
+			Used:  uint64ToInt(a.MemoryStats.Cached),
+		}
+	}
+
+	return info
 }

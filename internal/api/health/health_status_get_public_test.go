@@ -186,6 +186,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						Completed: 90, Failed: 3, DLQ: 0,
 					}, nil
 				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{Total: 3, Ready: 3}, nil
+				},
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
@@ -209,6 +212,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal(100, r.Jobs.Total)
 				s.Equal(5, r.Jobs.Unprocessed)
 				s.Equal(90, r.Jobs.Completed)
+
+				s.Require().NotNil(r.Agents)
+				s.Equal(3, r.Agents.Total)
+				s.Equal(3, r.Agents.Ready)
 			},
 		},
 		{
@@ -232,6 +239,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return nil, fmt.Errorf("agent stats unavailable")
+				},
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
@@ -242,6 +252,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(r.KvBuckets)
 				s.Len(*r.KvBuckets, 1)
 				s.Nil(r.Jobs)
+				s.Nil(r.Agents)
 			},
 		},
 		{
@@ -263,6 +274,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return nil, fmt.Errorf("job stats unavailable")
 				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return nil, fmt.Errorf("agent stats unavailable")
+				},
 			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
@@ -272,6 +286,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Streams)
 				s.Nil(r.KvBuckets)
 				s.Nil(r.Jobs)
+				s.Nil(r.Agents)
 			},
 		},
 	}

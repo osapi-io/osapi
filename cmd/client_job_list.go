@@ -217,7 +217,7 @@ func displayJobListTable(
 			Rows: jobRows,
 		},
 	}
-	cli.PrintStyledTable(sections)
+	cli.PrintCompactTable(sections)
 }
 
 func init() {

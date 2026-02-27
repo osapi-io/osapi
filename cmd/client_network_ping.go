@@ -84,7 +84,7 @@ var clientNetworkPingCmd = &cobra.Command{
 				"PACKETS RECEIVED",
 				"PACKETS SENT",
 			})
-			cli.PrintStyledTable([]cli.Section{{
+			cli.PrintCompactTable([]cli.Section{{
 				Title:   "Ping Response",
 				Headers: headers,
 				Rows:    rows,

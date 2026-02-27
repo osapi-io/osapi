@@ -98,6 +98,21 @@ func (mr *MockJobClientMockRecorder) DeleteJob(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJob", reflect.TypeOf((*MockJobClient)(nil).DeleteJob), arg0, arg1)
 }
 
+// GetAgent mocks base method.
+func (m *MockJobClient) GetAgent(arg0 context.Context, arg1 string) (*job.AgentInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAgent", arg0, arg1)
+	ret0, _ := ret[0].(*job.AgentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAgent indicates an expected call of GetAgent.
+func (mr *MockJobClientMockRecorder) GetAgent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgent", reflect.TypeOf((*MockJobClient)(nil).GetAgent), arg0, arg1)
+}
+
 // GetJobData mocks base method.
 func (m *MockJobClient) GetJobData(arg0 context.Context, arg1 string) ([]byte, error) {
 	m.ctrl.T.Helper()

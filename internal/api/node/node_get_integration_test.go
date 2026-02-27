@@ -27,9 +27,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
@@ -39,9 +39,12 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type NodeListIntegrationTestSuite struct {
+type NodeGetIntegrationTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 
@@ -49,58 +52,68 @@ type NodeListIntegrationTestSuite struct {
 	logger    *slog.Logger
 }
 
-func (suite *NodeListIntegrationTestSuite) SetupTest() {
+func (suite *NodeGetIntegrationTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 
 	suite.appConfig = config.Config{}
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *NodeListIntegrationTestSuite) TearDownTest() {
+func (suite *NodeGetIntegrationTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
+func (suite *NodeGetIntegrationTestSuite) TestGetNodeDetailsValidation() {
 	tests := []struct {
 		name         string
+		hostname     string
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
 		wantContains []string
 	}{
 		{
-			name: "when agents exist returns agent list",
+			name:     "when agent exists returns details",
+			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListAgents(gomock.Any()).
-					Return([]jobtypes.AgentInfo{
-						{Hostname: "server1"},
-						{Hostname: "server2"},
+					GetAgent(gomock.Any(), "server1").
+					Return(&jobtypes.AgentInfo{
+						Hostname:     "server1",
+						Labels:       map[string]string{"group": "web"},
+						RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
+						OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
+						Uptime:       5 * time.Hour,
+						LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
+						MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
 					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"total":2`, `"server1"`, `"server2"`, `"status":"Ready"`},
+			wantContains: []string{`"server1"`, `"Ready"`, `"Ubuntu"`},
 		},
 		{
-			name: "when no agents returns empty list",
+			name:     "when agent not found returns 404",
+			hostname: "unknown",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListAgents(gomock.Any()).
-					Return([]jobtypes.AgentInfo{}, nil)
+					GetAgent(gomock.Any(), "unknown").
+					Return(nil, fmt.Errorf("agent not found: unknown"))
 				return mock
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"total":0`},
+			wantCode:     http.StatusNotFound,
+			wantContains: []string{`"error"`},
 		},
 		{
-			name: "when job client errors returns 500",
+			name:     "when client error returns 500",
+			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListAgents(gomock.Any()).
-					Return(nil, assert.AnError)
+					GetAgent(gomock.Any(), "server1").
+					Return(nil, fmt.Errorf("connection failed"))
 				return mock
 			},
 			wantCode:     http.StatusInternalServerError,
@@ -118,7 +131,11 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 			a := api.New(suite.appConfig, suite.logger)
 			nodeGen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodGet, "/node", nil)
+			req := httptest.NewRequest(
+				http.MethodGet,
+				fmt.Sprintf("/node/%s", tc.hostname),
+				nil,
+			)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -131,9 +148,9 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeValidation() {
 	}
 }
 
-const rbacNodeListTestSigningKey = "test-signing-key-for-rbac-node-list"
+const rbacNodeGetTestSigningKey = "test-signing-key-for-rbac-node-get"
 
-func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
+func (suite *NodeGetIntegrationTestSuite) TestGetNodeDetailsRBAC() {
 	tokenManager := authtoken.New(suite.logger)
 
 	tests := []struct {
@@ -158,7 +175,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacNodeListTestSigningKey,
+					rbacNodeGetTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"network:read"},
@@ -176,7 +193,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			name: "when valid token with node:read returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacNodeListTestSigningKey,
+					rbacNodeGetTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -187,15 +204,14 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					ListAgents(gomock.Any()).
-					Return([]jobtypes.AgentInfo{
-						{Hostname: "server1"},
-						{Hostname: "server2"},
+					GetAgent(gomock.Any(), "server1").
+					Return(&jobtypes.AgentInfo{
+						Hostname: "server1",
 					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"total":2`, `"server1"`},
+			wantContains: []string{`"server1"`, `"Ready"`},
 		},
 	}
 
@@ -207,7 +223,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 				API: config.API{
 					Server: config.Server{
 						Security: config.ServerSecurity{
-							SigningKey: rbacNodeListTestSigningKey,
+							SigningKey: rbacNodeGetTestSigningKey,
 						},
 					},
 				},
@@ -219,7 +235,7 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node",
+				"/node/server1",
 				nil,
 			)
 			tc.setupAuth(req)
@@ -235,6 +251,6 @@ func (suite *NodeListIntegrationTestSuite) TestGetNodeRBAC() {
 	}
 }
 
-func TestNodeListIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(NodeListIntegrationTestSuite))
+func TestNodeGetIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(NodeGetIntegrationTestSuite))
 }

@@ -7,11 +7,8 @@ $ osapi client network dns get --interface-name eth0
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-  ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃
-  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┫
-  ┃ server1  ┃ 192.168.0.247, 2607:f428::1, 2607:f42::2 ┃ example.com    ┃
-  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━┛
+  HOSTNAME  SERVERS                              SEARCH DOMAINS
+  server1   192.168.0.247, 2607:f428::1          example.com
 ```
 
 When targeting all hosts:
@@ -21,12 +18,9 @@ $ osapi client network dns get --interface-name eth0 --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-  ┃ HOSTNAME ┃ SERVERS                                  ┃ SEARCH DOMAINS ┃
-  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┫
-  ┃ server1  ┃ 192.168.0.247, 2607:f428::1              ┃ example.com    ┃
-  ┃ server2  ┃ 8.8.8.8, 1.1.1.1                         ┃ local          ┃
-  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━┛
+  HOSTNAME  SERVERS                              SEARCH DOMAINS
+  server1   192.168.0.247, 2607:f428::1          example.com
+  server2   8.8.8.8, 1.1.1.1                     local
 ```
 
 Target by label to query a group of servers:

@@ -66,19 +66,20 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		},
 	}
 
+	// Use DefaultMockProviders so provider calls during writeRegistration are satisfied.
 	s.agent = New(
 		afero.NewMemMapFs(),
 		appConfig,
 		slog.Default(),
 		s.mockJobClient,
 		"test-stream",
-		hostMocks.NewPlainMockProvider(s.mockCtrl),
-		diskMocks.NewPlainMockProvider(s.mockCtrl),
-		memMocks.NewPlainMockProvider(s.mockCtrl),
-		loadMocks.NewPlainMockProvider(s.mockCtrl),
-		dnsMocks.NewPlainMockProvider(s.mockCtrl),
-		pingMocks.NewPlainMockProvider(s.mockCtrl),
-		commandMocks.NewPlainMockProvider(s.mockCtrl),
+		hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+		pingMocks.NewDefaultMockProvider(s.mockCtrl),
+		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		s.mockKV,
 	)
 }
