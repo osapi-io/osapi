@@ -6,13 +6,13 @@ List active nodes in the fleet:
 $ osapi client node list
 
 
-  Active Workers (2):
+  Active Agents (2):
 
   ┏━━━━━━━━━━━━━━━━━━━━┓
   ┃ HOSTNAME           ┃
   ┣━━━━━━━━━━━━━━━━━━━━┫
-  ┃ worker-node-1      ┃
-  ┃ worker-node-2      ┃
+  ┃ node-1             ┃
+  ┃ node-2             ┃
   ┗━━━━━━━━━━━━━━━━━━━━┛
 ```
 

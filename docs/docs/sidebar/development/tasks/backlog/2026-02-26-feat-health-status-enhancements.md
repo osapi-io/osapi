@@ -1,5 +1,5 @@
 ---
-title: Enhance health status with workers and consumers
+title: Enhance health status with agents and consumers
 status: backlog
 created: 2026-02-26
 updated: 2026-02-26
@@ -7,18 +7,18 @@ updated: 2026-02-26
 
 ## Objective
 
-Enrich the `client health status` output with worker registry and consumer
+Enrich the `client health status` output with agent registry and consumer
 information so operators get a complete operational overview from a single
 command.
 
 ## Changes
 
-### Show registered workers
+### Show registered agents
 
-Read the `agent-registry` KV bucket and display a Workers section:
+Read the `agent-registry` KV bucket and display an Agents section:
 
 ```
-  Workers: 3 registered
+  Agents: 3 registered
   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
   ┃ HOSTNAME                  ┃ LABELS          ┃ REGISTERED ┃
   ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━┫
@@ -28,9 +28,9 @@ Read the `agent-registry` KV bucket and display a Workers section:
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━┛
 ```
 
-The registry KV bucket uses a 30s TTL, so only live workers appear. The
+The registry KV bucket uses a 30s TTL, so only live agents appear. The
 `REGISTERED` column shows the age of `registered_at` from the
-`WorkerRegistration` entry.
+`AgentRegistration` entry.
 
 ### Show registry bucket in KV Buckets table
 
@@ -41,7 +41,7 @@ may be filtering to specific bucket names rather than listing all buckets.
 ### Show consumers (stretch)
 
 Add a Consumers section showing JetStream consumer details per stream. This
-would help operators see which workers have active subscriptions and whether
+would help operators see which agents have active subscriptions and whether
 consumers are lagging:
 
 ```
@@ -55,12 +55,12 @@ consumers are lagging:
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
 ```
 
-This is lower priority — the worker list covers the main operational need.
-Consumer details are useful for debugging but may be noisy with many workers.
+This is lower priority — the agent list covers the main operational need.
+Consumer details are useful for debugging but may be noisy with many agents.
 
 ## Notes
 
-- The health status API response schema will need new fields for workers and
+- The health status API response schema will need new fields for agents and
   optionally consumers
 - The SDK and CLI will need updates to render the new sections
 - Consider adding a `--verbose` flag to show consumers only when requested

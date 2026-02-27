@@ -25,7 +25,7 @@ This document applies to the [OSAPI][] repository.
   4. [API Design Guidelines](../architecture/api-guidelines.md) - REST
      conventions and endpoint structure
   5. [Job System Architecture](../architecture/job-architecture.md) - KV-first
-     job processing, subject routing, and worker pipeline
+     job processing, subject routing, and agent pipeline
 - **Check existing work** - Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.

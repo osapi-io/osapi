@@ -344,7 +344,7 @@ node:
         type: 'none'
     consumer:
       # Durable consumer name.
-      name: 'jobs-worker'
+      name: 'jobs-agent'
       # Maximum redelivery attempts before sending to DLQ.
       max_deliver: 5
       # Time to wait for an ACK before redelivering.
@@ -361,7 +361,7 @@ node:
         - '15m'
         - '30m'
     # Queue group for load-balanced (_any) subscriptions.
-    queue_group: 'job-workers'
+    queue_group: 'job-agents'
     # Agent hostname for direct routing. Defaults to the
     # system hostname when empty.
     hostname: ''

@@ -21,7 +21,7 @@ $ osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
   ┃ }                             ┃
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-  Worker States:
+  Agent States:
 
   ┏━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━┓
   ┃ HOSTNAME ┃ STATUS    ┃ DURATION ┃ ERROR ┃

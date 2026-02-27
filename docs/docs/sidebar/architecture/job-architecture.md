@@ -10,16 +10,16 @@ sidebar_position: 3
 
 The OSAPI Job System implements a **KV-first, stream-notification architecture**
 using NATS JetStream for distributed job processing. This system provides
-asynchronous operation execution with persistent job state, intelligent worker
+asynchronous operation execution with persistent job state, intelligent agent
 routing, and comprehensive job lifecycle management.
 
 ## Architecture Principles
 
 - **KV-First Storage**: Job state lives in NATS KV for persistence and direct
   access
-- **Stream Notifications**: Workers receive job notifications via JetStream
+- **Stream Notifications**: Agents receive job notifications via JetStream
   subjects
-- **Hierarchical Routing**: Operations use dot-notation for intelligent worker
+- **Hierarchical Routing**: Operations use dot-notation for intelligent agent
   targeting
 - **REST-Compatible**: Supports standard HTTP polling patterns for API
   integration
@@ -34,7 +34,7 @@ into NATS JetStream:
 
 - **REST API** — Creates jobs, queries status, returns results
 - **Jobs CLI** — Adds jobs, lists/inspects queue, monitors status
-- **Job Workers** — Processes jobs, updates status, stores results
+- **Agents** — Processes jobs, updates status, stores results
 
 All three use the **Job Client Layer** (`internal/job/client/`), which provides
 type-safe business logic operations (`CreateJob`, `GetQueueStats`,
@@ -45,8 +45,8 @@ type-safe business logic operations (`CreateJob`, `GetQueueStats`,
 | Store              | Purpose                                                     |
 | ------------------ | ----------------------------------------------------------- |
 | KV `job-queue`     | Job persistence (immutable job definitions + status events) |
-| Stream `JOBS`      | Worker notifications (subject-routed job IDs)               |
-| KV `job-responses` | Result storage (worker responses keyed by request ID)       |
+| Stream `JOBS`      | Agent notifications (subject-routed job IDs)                |
+| KV `job-responses` | Result storage (agent responses keyed by request ID)        |
 
 ### Job Flow
 
@@ -55,18 +55,18 @@ graph LR
     A["API / CLI"] -->|1. create| JC["Job Client"]
     JC -->|store job| KV["KV job-queue"]
     JC -->|publish notification| Stream["JOBS Stream"]
-    Stream -->|deliver| Worker
-    Worker -->|fetch job| KV
-    Worker -->|execute| Provider
-    Worker -->|write result| KVR["KV job-responses"]
+    Stream -->|deliver| Agent
+    Agent -->|fetch job| KV
+    Agent -->|execute| Provider
+    Agent -->|write result| KVR["KV job-responses"]
     A -->|3. poll status| KV
     A -->|3. read result| KVR
 ```
 
 1. **Job Creation** — API/CLI calls Job Client, which stores the job in KV and
    publishes a notification to the stream
-2. **Job Processing** — Worker receives notification from the stream, fetches
-   the immutable job from KV, writes status events, executes the operation, and
+2. **Job Processing** — Agent receives notification from the stream, fetches the
+   immutable job from KV, writes status events, executes the operation, and
    stores the result in KV
 3. **Status Query** — API/CLI reads computed status from KV events
 
@@ -84,7 +84,7 @@ graph LR
 2. **job-responses**: Result storage
    - Key format: `{sanitized_job_id}`
    - TTL: 24 hours
-   - Used for worker-to-client result passing
+   - Used for agent-to-client result passing
 
 ### JetStream Configuration
 
@@ -94,7 +94,7 @@ Subjects:
   - jobs.query.> # Read operations
   - jobs.modify.> # Write operations
 
-Consumer: jobs-worker
+Consumer: jobs-agent
 Durable: true
 AckPolicy: Explicit
 MaxDeliver: 3
@@ -144,29 +144,29 @@ payload, not the subject.
 
 ### Target Types
 
-- `_any`: Route to any available worker (load-balanced via queue group)
-- `_all`: Route to all workers (broadcast)
-- `{hostname}`: Route to a specific worker (e.g., `server1`)
-- `{key}:{value}`: Route to all workers with a matching label (e.g.,
-  `group:web`). Label targets use broadcast semantics — all matching workers
+- `_any`: Route to any available agent (load-balanced via queue group)
+- `_all`: Route to all agents (broadcast)
+- `{hostname}`: Route to a specific agent (e.g., `server1`)
+- `{key}:{value}`: Route to all agents with a matching label (e.g.,
+  `group:web`). Label targets use broadcast semantics — all matching agents
   receive the message. Values can be hierarchical with dot separators for prefix
   matching (e.g., `group:web.dev`).
 
 ### Label-Based Routing
 
-Workers can be configured with hierarchical labels for group targeting. Label
-values use dot-separated segments, and workers automatically subscribe to every
+Agents can be configured with hierarchical labels for group targeting. Label
+values use dot-separated segments, and agents automatically subscribe to every
 prefix level:
 
 ```yaml
-job:
-  worker:
+node:
+  agent:
     hostname: web-01
     labels:
       group: web.dev.us-east
 ```
 
-A worker with the above config subscribes to these NATS subjects:
+An agent with the above config subscribes to these NATS subjects:
 
 ```
 jobs.*.host.web-01                     — direct
@@ -187,7 +187,7 @@ Targeting examples:
 
 The dimension order in the label value determines the targeting hierarchy. Place
 the most commonly targeted broad dimension first (e.g., role before env before
-region). Label subscriptions have **no queue group** — all matching workers
+region). Label subscriptions have **no queue group** — all matching agents
 receive the message (broadcast within the label group). Label keys must match
 `[a-zA-Z0-9_-]+`, and each dot-separated segment of the value must match the
 same pattern.
@@ -286,17 +286,17 @@ stateDiagram-v2
 **State Transitions via Events:**
 
 - `submitted`: Job created by API/CLI
-- `acknowledged`: Worker receives job notification
-- `started`: Worker begins processing
-- `completed`: Worker finishes successfully
-- `failed`: Worker encounters error
+- `acknowledged`: Agent receives job notification
+- `started`: Agent begins processing
+- `completed`: Agent finishes successfully
+- `failed`: Agent encounters error
 
-**Multi-Worker States:**
+**Multi-Agent States:**
 
-- `processing`: One or more workers are active
-- `partial_failure`: Some workers completed, others failed
-- `completed`: All workers finished successfully
-- `failed`: All workers failed
+- `processing`: One or more agents are active
+- `partial_failure`: Some agents completed, others failed
+- `completed`: All agents finished successfully
+- `failed`: All agents failed
 
 ### 3. Job Polling
 
@@ -309,20 +309,20 @@ GET /api/v1/jobs/{job-id}
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
   "created": "2024-01-10T10:00:00Z",
-  "hostname": "worker-node-1",
+  "hostname": "agent-node-1",
   "updated_at": "2024-01-10T10:05:30Z",
   "operation": {...},
   "result": {...}
 }
 
-// For multi-worker jobs (_all targeting)
+// For multi-agent jobs (_all targeting)
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "partial_failure",
   "created": "2024-01-10T10:00:00Z",
-  "hostname": "worker-node-2", // Last responding worker
+  "hostname": "agent-node-2", // Last responding agent
   "updated_at": "2024-01-10T10:05:45Z",
-  "error": "disk full on worker-node-3",
+  "error": "disk full on agent-node-3",
   "operation": {...}
 }
 ```
@@ -331,7 +331,7 @@ GET /api/v1/jobs/{job-id}
 
 - Immutable job data (`jobs.{id}`)
 - Status events (`status.{id}.*`)
-- Worker responses (`responses.{id}.*`)
+- Agent responses (`responses.{id}.*`)
 
 ### Queue Statistics
 
@@ -353,27 +353,27 @@ GET /api/v1/jobs/{job-id}
 }
 ```
 
-## Worker Implementation
+## Agent Implementation
 
 ### Processing Flow
 
 ```mermaid
 sequenceDiagram
     participant JS as JetStream
-    participant Worker
+    participant Agent
     participant KV as KV job-queue
     participant Provider
     participant KVR as KV job-responses
 
-    JS->>Worker: deliver notification
-    Worker->>KV: fetch immutable job
-    Worker->>KV: write status: acknowledged
-    Worker->>KV: write status: started
-    Worker->>Provider: execute operation
-    Provider-->>Worker: result
-    Worker->>KV: write status: completed/failed
-    Worker->>KVR: store response
-    Worker->>JS: ACK message
+    JS->>Agent: deliver notification
+    Agent->>KV: fetch immutable job
+    Agent->>KV: write status: acknowledged
+    Agent->>KV: write status: started
+    Agent->>Provider: execute operation
+    Provider-->>Agent: result
+    Agent->>KV: write status: completed/failed
+    Agent->>KVR: store response
+    Agent->>JS: ACK message
 ```
 
 ### Append-Only Status Architecture
@@ -386,15 +386,15 @@ and provide complete audit trails:
 ```
 jobs.{job-id}                               # Immutable job definition
 status.{job-id}.{event}.{hostname}.{nano}   # Append-only status events
-responses.{job-id}.{hostname}.{nano}        # Worker responses
+responses.{job-id}.{hostname}.{nano}        # Agent responses
 ```
 
 **Status Event Timeline:**
 
 ```
 status.abc123.submitted._api.1640995200         # Job created by API
-status.abc123.acknowledged.server1.1640995201   # Server1 receives job
-status.abc123.acknowledged.server2.1640995202   # Server2 receives job
+status.abc123.acknowledged.server1.1640995201   # server1 receives job
+status.abc123.acknowledged.server2.1640995202   # server2 receives job
 status.abc123.started.server1.1640995205        # Server1 begins processing
 status.abc123.started.server2.1640995207        # Server2 begins processing
 status.abc123.completed.server1.1640995210      # Server1 finishes
@@ -407,14 +407,14 @@ The append-only architecture enables true broadcast job processing:
 
 **For `_any` jobs** (load balancing):
 
-- Multiple workers can acknowledge the job
+- Multiple agents can acknowledge the job
 - First to start wins, others see it's being processed
-- Automatic failover if processing worker fails
+- Automatic failover if processing agent fails
 
 **For `_all` jobs** (broadcast):
 
-- All targeted workers process the same immutable job
-- Each worker writes independent status events
+- All targeted agents process the same immutable job
+- Each agent writes independent status events
 - No race conditions or key conflicts
 - Complete tracking of which hosts responded
 
@@ -423,25 +423,25 @@ The append-only architecture enables true broadcast job processing:
 - Job status is computed from events in real-time
 - Supports rich states: `submitted`, `processing`, `completed`, `failed`,
   `partial_failure`
-- Client aggregates worker states to determine overall status
+- Client aggregates agent states to determine overall status
 
-### Worker Subscription Patterns
+### Agent Subscription Patterns
 
-Each worker creates JetStream consumers with these filter subjects:
+Each agent creates JetStream consumers with these filter subjects:
 
 - **Load-balanced** (queue group): `jobs.query._any`, `jobs.modify._any` — only
-  one worker in the queue group processes each message
+  one agent in the queue group processes each message
 - **Direct**: `jobs.query.host.{hostname}`, `jobs.modify.host.{hostname}` —
-  messages addressed to this specific worker
-- **Broadcast**: `jobs.query._all`, `jobs.modify._all` — all workers receive the
+  messages addressed to this specific agent
+- **Broadcast**: `jobs.query._all`, `jobs.modify._all` — all agents receive the
   message (no queue group)
 - **Label** (per prefix level, no queue group):
   `jobs.query.label.{key}.{prefix}`, `jobs.modify.label.{key}.{prefix}` — all
-  workers matching the label prefix receive the message
+  agents matching the label prefix receive the message
 
 ### Provider Pattern
 
-Workers use platform-specific providers:
+Agents use platform-specific providers:
 
 ```go
 // Provider selection based on platform
@@ -620,12 +620,12 @@ The `internal/job/` package contains shared domain types and two subpackages:
 
 **Root (`internal/job/`):**
 
-| File          | Purpose                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| `types.go`    | Core domain types (Request, Response, QueuedJob, QueueStats, WorkerState, TimelineEvent) |
-| `subjects.go` | Subject routing, target parsing, label validation                                        |
-| `hostname.go` | Local hostname resolution and caching                                                    |
-| `config.go`   | Configuration structures                                                                 |
+| File          | Purpose                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------- |
+| `types.go`    | Core domain types (Request, Response, QueuedJob, QueueStats, AgentState, TimelineEvent) |
+| `subjects.go` | Subject routing, target parsing, label validation                                       |
+| `hostname.go` | Local hostname resolution and caching                                                   |
+| `config.go`   | Configuration structures                                                                |
 
 **Client (`internal/job/client/`):**
 
@@ -635,26 +635,26 @@ The `internal/job/` package contains shared domain types and two subpackages:
 | `query.go`  | Query operations (system status, hostname, etc.) |
 | `modify.go` | Modify operations (DNS updates)                  |
 | `jobs.go`   | CreateJob, RetryJob, GetJobStatus, GetQueueStats |
-| `worker.go` | WriteStatusEvent, WriteJobResponse               |
+| `agent.go`  | WriteStatusEvent, WriteJobResponse               |
 | `types.go`  | Client-specific types and interfaces             |
 
-**Worker (`internal/job/worker/`):**
+**Agent (`internal/agent/`):**
 
-| File           | Purpose                                         |
-| -------------- | ----------------------------------------------- |
-| `worker.go`    | Worker implementation and lifecycle management  |
-| `server.go`    | Worker server (NATS connect, stream setup, run) |
-| `consumer.go`  | JetStream consumer creation and subscription    |
-| `handler.go`   | Job lifecycle handling with status events       |
-| `processor.go` | Provider dispatch and execution                 |
-| `factory.go`   | Worker creation                                 |
-| `types.go`     | Worker-specific types and context               |
+| File           | Purpose                                        |
+| -------------- | ---------------------------------------------- |
+| `agent.go`     | Agent implementation and lifecycle management  |
+| `server.go`    | Agent server (NATS connect, stream setup, run) |
+| `consumer.go`  | JetStream consumer creation and subscription   |
+| `handler.go`   | Job lifecycle handling with status events      |
+| `processor.go` | Provider dispatch and execution                |
+| `factory.go`   | Agent creation                                 |
+| `types.go`     | Agent-specific types and context               |
 
 ### Separation of Concerns
 
 - **`internal/job/`**: Core domain types shared across all components
 - **`internal/job/client/`**: High-level operations for API integration
-- **`internal/job/worker/`**: Job processing and worker lifecycle management
+- **`internal/agent/`**: Job processing and agent lifecycle management
 - **No type duplication**: All packages use shared types from main job package
 
 ## Architectural Benefits
@@ -663,8 +663,8 @@ The `internal/job/` package contains shared domain types and two subpackages:
 
 **Previous Issues:**
 
-- Multiple workers updating same job key simultaneously
-- Status transitions conflicting between workers
+- Multiple agents updating same job key simultaneously
+- Status transitions conflicting between agents
 - Response overwrites in multi-host scenarios
 - Timing issues with job state management
 
@@ -696,8 +696,8 @@ osapi client job add --target-hostname _all --json-file dns-update.json
 # Send to ANY available server
 osapi client job add --target-hostname _any --json-file system-check.json
 
-# Results: First available worker processes
-# Automatic failover if worker fails
+# Results: First available agent processes
+# Automatic failover if agent fails
 ```
 
 ### Observability & Debugging
@@ -706,8 +706,8 @@ osapi client job add --target-hostname _any --json-file system-check.json
 
 Every job carries an OpenTelemetry trace context through NATS message headers.
 The nats-client `Publish` method automatically injects the W3C `traceparent`
-header, and the worker extracts it to continue the trace. This means a single
-`trace_id` follows a request from the API server through NATS to the worker.
+header, and the agent extracts it to continue the trace. This means a single
+`trace_id` follows a request from the API server through NATS to the agent.
 
 Enable tracing with `--debug` or `telemetry.tracing.enabled: true`, then filter
 logs by `trace_id` to see the complete flow of any job. See the
@@ -715,18 +715,18 @@ logs by `trace_id` to see the complete flow of any job. See the
 
 **Complete Event Timeline:**
 
-- See exactly when each worker received job
-- Track processing duration per worker
+- See exactly when each agent received job
+- Track processing duration per agent
 - Identify bottlenecks and failures
 - Historical audit trail for compliance
 
-### Direct Worker Testing
+### Direct Agent Testing
 
 ```bash
-# Start a worker
-osapi worker start
+# Start an agent
+osapi node agent start
 
-# Worker will:
+# Agent will:
 # - Connect to NATS
 # - Subscribe to job streams
 # - Process jobs based on platform capabilities
@@ -735,16 +735,16 @@ osapi worker start
 ## Security Considerations
 
 1. **Authentication**: NATS authentication via environment variables
-2. **Authorization**: Subject-based permissions for workers
+2. **Authorization**: Subject-based permissions for agents
 3. **Input Validation**: All job data validated before processing
 4. **Result Sanitization**: Sensitive data filtered from responses
 
 ## Performance Optimizations
 
-1. **Batch Operations**: Workers can fetch multiple jobs per poll
+1. **Batch Operations**: Agents can fetch multiple jobs per poll
 2. **Connection Pooling**: Reuse NATS connections
 3. **KV Caching**: Local caching of frequently accessed jobs
-4. **Stream Filtering**: Workers only receive relevant job types
+4. **Stream Filtering**: Agents only receive relevant job types
 5. **Efficient Filtering**: Status-based key prefixes enable fast queries
 
 ## Error Handling
@@ -752,7 +752,7 @@ osapi worker start
 1. **Retry Logic**: Failed jobs retry up to MaxDeliver times
 2. **Dead Letter Queue**: Jobs failing after max retries
 3. **Timeout Handling**: Jobs timeout after AckWait period
-4. **Graceful Degradation**: Workers continue on provider errors
+4. **Graceful Degradation**: Agents continue on provider errors
 
 ## Monitoring
 
@@ -760,7 +760,7 @@ Key metrics to track:
 
 - Queue depth by status
 - Job processing time
-- Worker availability
+- Agent availability
 - DLQ message count
 - Stream consumer lag
 
@@ -779,5 +779,5 @@ Key metrics to track:
 2. **Scheduled Jobs**: Cron-like job scheduling
 3. **Job Priorities**: High/medium/low priority queues
 4. **Result Streaming**: Stream large results via NATS
-5. **Worker Autoscaling**: Dynamic worker pool sizing
+5. **Agent Autoscaling**: Dynamic agent pool sizing
 6. **Job Cancellation**: Ability to cancel running jobs

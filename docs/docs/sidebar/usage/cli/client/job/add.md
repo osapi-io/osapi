@@ -28,6 +28,6 @@ $ osapi client job add \
 
 ## Target Hostnames
 
-- `_any` - Route to any available worker (load balanced)
-- `_all` - Broadcast to all workers
-- `hostname` - Route to a specific worker by hostname
+- `_any` - Route to any available agent (load balanced)
+- `_all` - Broadcast to all agents
+- `hostname` - Route to a specific agent by hostname

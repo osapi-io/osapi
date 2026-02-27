@@ -90,7 +90,7 @@ Each new feature follows the same architecture:
 
 1. Provider interface + platform implementations
 2. Job operation types and subject routing
-3. Worker processor dispatch
+3. Agent processor dispatch
 4. Job client methods
 5. OpenAPI spec with strict-server + BearerAuth
 6. API handler with scope middleware
@@ -99,7 +99,7 @@ Each new feature follows the same architecture:
 
 See [Architecture](../architecture/architecture.md) for the system overview, and
 [Job Architecture](../architecture/job-architecture.md) for the provider and
-worker pipeline.
+agent pipeline.
 
 ## Contributing
 

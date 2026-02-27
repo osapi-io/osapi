@@ -19,7 +19,7 @@ Agent behavior is configured via `osapi.yaml` or CLI flags:
 | `--agent-host`        | NATS server hostname                | `localhost`        |
 | `--agent-port`        | NATS server port                    | `4222`             |
 | `--agent-client-name` | NATS client name for identification | `osapi-node-agent` |
-| `--agent-queue-group` | Queue group for load balancing      | `job-workers`      |
+| `--agent-queue-group` | Queue group for load balancing      | `job-agents`       |
 | `--agent-hostname`    | Agent hostname for routing          | system hostname    |
 | `--agent-max-jobs`    | Maximum concurrent jobs             | `10`               |
 

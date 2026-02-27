@@ -13,14 +13,14 @@ that can either hit the REST API directly or manage the job queue.
 
 The system is organized into six layers, top to bottom:
 
-| Layer                           | Package                                      | Role                                              |
-| ------------------------------- | -------------------------------------------- | ------------------------------------------------- |
-| **CLI**                         | `cmd/`                                       | Cobra command tree (thin wiring)                  |
-| **SDK Client**                  | `osapi-sdk` (external)                       | OpenAPI-generated client used by CLI              |
-| **REST API**                    | `internal/api/`                              | Echo server with JWT middleware                   |
-| **Job Client**                  | `internal/job/client/`                       | Business logic for job CRUD and status            |
-| **NATS JetStream**              | (external)                                   | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
-| **Job Worker / Provider Layer** | `internal/job/worker/`, `internal/provider/` | Consumes jobs from NATS and executes providers    |
+| Layer                      | Package                                 | Role                                              |
+| -------------------------- | --------------------------------------- | ------------------------------------------------- |
+| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                  |
+| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI              |
+| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                   |
+| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status            |
+| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
+| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs from NATS and executes providers    |
 
 ```mermaid
 graph TD
@@ -28,13 +28,13 @@ graph TD
     SDK --> API["REST API (internal/api/)"]
     API --> JobClient["Job Client (internal/job/client/)"]
     JobClient --> NATS["NATS JetStream"]
-    NATS --> Worker["Job Worker (internal/job/worker/)"]
-    Worker --> Provider["Provider Layer (internal/provider/)"]
+    NATS --> Agent["Agent (internal/agent/)"]
+    Agent --> Provider["Provider Layer (internal/provider/)"]
 ```
 
 The CLI talks to the REST API through the SDK client. The REST API delegates
 state-changing operations to the job client, which stores jobs in NATS KV and
-publishes notifications to the JOBS stream. Workers pick up notifications,
+publishes notifications to the JOBS stream. Agents pick up notifications,
 execute the matching provider, and write results back to KV.
 
 ## Entry Points
@@ -87,11 +87,11 @@ NATS JetStream. Core types live in `internal/job/`, with two subpackages:
 | Package                | Purpose                                        |
 | ---------------------- | ---------------------------------------------- |
 | `internal/job/client/` | High-level operations (create, status, query)  |
-| `internal/job/worker/` | Consumer pipeline (subscribe, handle, process) |
+| `internal/agent/`      | Consumer pipeline (subscribe, handle, process) |
 
 Subject routing uses dot-notation hierarchies (`jobs.query.*`, `jobs.modify.*`)
 with support for load-balanced (`_any`), broadcast (`_all`), direct-host, and
-label-based targeting.
+label-based targeting. The agent pipeline lives in `internal/agent/`.
 
 For the full deep dive see [Job System Architecture](job-architecture.md).
 
@@ -113,7 +113,7 @@ provider is selected at runtime through a platform-aware factory pattern.
 
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the
-provider interface and registering it in the worker's processor dispatch.
+provider interface and registering it in the agent's processor dispatch.
 
 ### Configuration (`internal/config/`)
 
@@ -151,13 +151,15 @@ job:
   stream_name: 'JOBS'
   kv_bucket: 'job-queue'
   kv_response_bucket: 'job-responses'
-  consumer_name: 'jobs-worker'
-  worker:
+  consumer_name: 'jobs-agent'
+
+node:
+  agent:
     nats:
       host: 'localhost'
       port: 4222
-      client_name: 'osapi-job-worker'
-    hostname: 'worker-01'
+      client_name: 'osapi-node-agent'
+    hostname: 'web-01'
     labels:
       group: 'web.dev'
 ```
@@ -241,7 +243,7 @@ sequenceDiagram
     participant API as REST API
     participant JC as Job Client
     participant NATS as NATS JetStream
-    participant Worker
+    participant Agent
     participant Provider
 
     CLI->>API: POST /api/v1/jobs
@@ -249,11 +251,11 @@ sequenceDiagram
     JC->>NATS: store job in KV (job-queue)
     JC->>NATS: publish notification to JOBS stream
     API-->>CLI: 201 (job_id)
-    NATS->>Worker: deliver stream notification
-    Worker->>NATS: fetch immutable job from KV
-    Worker->>Provider: execute operation
-    Provider-->>Worker: result
-    Worker->>NATS: write status events + result to KV
+    NATS->>Agent: deliver stream notification
+    Agent->>NATS: fetch immutable job from KV
+    Agent->>Provider: execute operation
+    Provider-->>Agent: result
+    Agent->>NATS: write status events + result to KV
     CLI->>API: GET /api/v1/jobs/{id}
     API->>NATS: read computed status from KV
     API-->>CLI: 200 (result)
@@ -307,7 +309,7 @@ CORS headers entirely.
 ## Further Reading
 
 - [Job System Architecture](job-architecture.md) — deep dive into the KV-first
-  job system, subject routing, and worker pipeline
+  job system, subject routing, and agent pipeline
 - [API Design Guidelines](api-guidelines.md) — REST conventions, collection
   envelopes, and endpoint patterns
 - [Guiding Principles](principles.md) — design philosophy and project values

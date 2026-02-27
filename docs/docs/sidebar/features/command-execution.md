@@ -6,7 +6,7 @@ sidebar_position: 3
 
 OSAPI can execute arbitrary commands on managed hosts. Command execution runs
 through the [job system](job-system.md), so the API server never runs commands
-directly -- workers handle all execution.
+directly -- agents handle all execution.
 
 ## What It Does
 
@@ -33,7 +33,7 @@ Command execution follows the same request flow as all OSAPI operations:
 
 1. The CLI (or API client) posts a request to the API server.
 2. The API server creates a job and publishes it to NATS.
-3. A worker picks up the job, executes the command, and writes the result back
+3. An agent picks up the job, executes the command, and writes the result back
    to NATS KV.
 4. The API server collects the result and returns it to the client.
 

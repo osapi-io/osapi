@@ -6,7 +6,7 @@ sidebar_position: 2
 
 OSAPI can query and update network configuration on managed hosts. Network
 operations run through the [job system](job-system.md), keeping the API server
-unprivileged while workers execute the actual changes.
+unprivileged while agents execute the actual changes.
 
 ## What It Manages
 
