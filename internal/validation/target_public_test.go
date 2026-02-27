@@ -280,6 +280,28 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 	}
 }
 
+func (s *TargetPublicTestSuite) TestValidTargetCacheHit() {
+	callCount := 0
+	validation.RegisterTargetValidator(
+		func(_ context.Context) ([]validation.WorkerTarget, error) {
+			callCount++
+			return []validation.WorkerTarget{
+				{Hostname: "server1"},
+			}, nil
+		},
+	)
+
+	// First call populates cache.
+	_, ok := validation.Struct(targetInput{Target: "server1"})
+	s.True(ok)
+	s.Equal(1, callCount)
+
+	// Second call should use cache, not call lister again.
+	_, ok = validation.Struct(targetInput{Target: "server1"})
+	s.True(ok)
+	s.Equal(1, callCount)
+}
+
 func TestTargetPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TargetPublicTestSuite))
 }

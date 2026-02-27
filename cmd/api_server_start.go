@@ -96,9 +96,17 @@ var apiServerStartCmd = &cobra.Command{
 
 		nc, jobsKV := connectNATSAndKV(ctx, kvBucket)
 
+		// Create registry KV bucket for worker discovery
+		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+		registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
+		if err != nil {
+			cli.LogFatal(logger, "failed to create registry KV bucket", err)
+		}
+
 		jc, err := jobclient.New(logger, nc, &jobclient.Options{
 			Timeout:    30 * time.Second,
 			KVBucket:   jobsKV,
+			RegistryKV: registryKV,
 			StreamName: streamName,
 		})
 		if err != nil {
@@ -107,7 +115,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		validation.RegisterTargetValidator(
 			func(ctx context.Context) ([]validation.WorkerTarget, error) {
-				_, workers, err := jc.ListWorkers(ctx)
+				workers, err := jc.ListWorkers(ctx)
 				if err != nil {
 					return nil, err
 				}
