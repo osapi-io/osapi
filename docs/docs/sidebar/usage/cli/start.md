@@ -26,7 +26,7 @@ cleaned up.
 ## Configuration
 
 The same `osapi.yaml` file configures all three components. See
-[Configuration](../../configuration.md) for the full reference.
+[Configuration](../configuration.md) for the full reference.
 
 ```bash
 $ osapi -f /path/to/osapi.yaml start

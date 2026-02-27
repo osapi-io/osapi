@@ -83,7 +83,7 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 	// Compare desired config against existing to detect no-op
 	if slices.Equal(servers, existingConfig.DNSServers) &&
 		slices.Equal(searchDomains, existingConfig.SearchDomains) {
-		u.logger.Info("DNS configuration unchanged, skipping update")
+		u.logger.Info("dns configuration unchanged, skipping update")
 		return &Result{Changed: false}, nil
 	}
 

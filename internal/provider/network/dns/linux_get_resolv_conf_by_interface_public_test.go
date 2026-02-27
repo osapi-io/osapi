@@ -54,7 +54,7 @@ func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByIn
 			got, err := linux.GetResolvConfByInterface(interfaceName)
 
 			suite.Nil(got)
-			suite.EqualError(err, "GetResolvConfByInterface is not implemented for LinuxProvider")
+			suite.EqualError(err, "getResolvConfByInterface is not implemented for LinuxProvider")
 		})
 	}
 }

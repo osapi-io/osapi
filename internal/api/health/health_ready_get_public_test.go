@@ -64,7 +64,7 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
 		{
 			name: "not ready when NATS check fails",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS not connected") },
+				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
 				KVCheck:   func() error { return nil },
 			},
 			validateFunc: func(resp gen.GetHealthReadyResponseObject) {
@@ -72,36 +72,36 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
 				s.True(ok)
 				s.Equal("not_ready", r.Status)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "NATS not connected")
+				s.Contains(*r.Error, "nats not connected")
 			},
 		},
 		{
 			name: "not ready when KV check fails",
 			checker: &health.NATSChecker{
 				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return fmt.Errorf("KV bucket not accessible") },
+				KVCheck:   func() error { return fmt.Errorf("kv bucket not accessible") },
 			},
 			validateFunc: func(resp gen.GetHealthReadyResponseObject) {
 				r, ok := resp.(gen.GetHealthReady503JSONResponse)
 				s.True(ok)
 				s.Equal("not_ready", r.Status)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "KV bucket not accessible")
+				s.Contains(*r.Error, "kv bucket not accessible")
 			},
 		},
 		{
 			name: "not ready when both checks fail",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("NATS down") },
-				KVCheck:   func() error { return fmt.Errorf("KV down") },
+				NATSCheck: func() error { return fmt.Errorf("nats down") },
+				KVCheck:   func() error { return fmt.Errorf("kv down") },
 			},
 			validateFunc: func(resp gen.GetHealthReadyResponseObject) {
 				r, ok := resp.(gen.GetHealthReady503JSONResponse)
 				s.True(ok)
 				s.Equal("not_ready", r.Status)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "NATS down")
-				s.Contains(*r.Error, "KV down")
+				s.Contains(*r.Error, "nats down")
+				s.Contains(*r.Error, "kv down")
 			},
 		},
 	}

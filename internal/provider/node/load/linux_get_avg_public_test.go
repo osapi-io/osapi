@@ -52,7 +52,7 @@ func (suite *LinuxGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 			got, err := linux.GetAverageStats()
 
 			suite.Nil(got)
-			suite.EqualError(err, "GetAverageStats is not implemented for LinuxProvider")
+			suite.EqualError(err, "getAverageStats is not implemented for LinuxProvider")
 		})
 	}
 }

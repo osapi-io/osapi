@@ -58,7 +58,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 			suite.Nil(result)
 			suite.EqualError(
 				err,
-				"UpdateResolvConfByInterface is not implemented for LinuxProvider",
+				"updateResolvConfByInterface is not implemented for LinuxProvider",
 			)
 		})
 	}

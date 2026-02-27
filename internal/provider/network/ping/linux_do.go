@@ -28,5 +28,5 @@ import (
 func (l *Linux) Do(
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("Do is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("do is not implemented for LinuxProvider")
 }

@@ -58,7 +58,7 @@ func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
 			got, err := linux.Do("1.1.1.1")
 
 			suite.Empty(got)
-			suite.EqualError(err, "Do is not implemented for LinuxProvider")
+			suite.EqualError(err, "do is not implemented for LinuxProvider")
 		})
 	}
 }

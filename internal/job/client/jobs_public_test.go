@@ -81,7 +81,7 @@ func (s *JobsPublicTestSuite) TestNew() {
 		{
 			name:        "nil KV bucket",
 			opts:        &client.Options{},
-			expectedErr: "KVBucket cannot be nil",
+			expectedErr: "kvBucket cannot be nil",
 		},
 		{
 			name: "valid options",

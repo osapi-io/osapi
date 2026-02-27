@@ -53,7 +53,7 @@ func (suite *LinuxGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 			got, err := linux.GetLocalUsageStats()
 
 			suite.Empty(got)
-			suite.EqualError(err, "GetLocalUsageStats is not implemented for LinuxProvider")
+			suite.EqualError(err, "getLocalUsageStats is not implemented for LinuxProvider")
 		})
 	}
 }

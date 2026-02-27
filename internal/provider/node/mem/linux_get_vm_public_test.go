@@ -52,7 +52,7 @@ func (suite *LinuxGetStatsPublicTestSuite) TestGetStats() {
 			got, err := linux.GetStats()
 
 			suite.Nil(got)
-			suite.EqualError(err, "GetStats is not implemented for LinuxProvider")
+			suite.EqualError(err, "getStats is not implemented for LinuxProvider")
 		})
 	}
 }
