@@ -18,8 +18,23 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AgentDetail defines model for AgentDetail.
+type AgentDetail struct {
+	// Hostname Agent hostname.
+	Hostname string `json:"hostname"`
+
+	// Labels Formatted label string.
+	Labels *string `json:"labels,omitempty"`
+
+	// Registered Time since last heartbeat registration.
+	Registered string `json:"registered"`
+}
+
 // AgentStats defines model for AgentStats.
 type AgentStats struct {
+	// Agents Per-agent registration details.
+	Agents *[]AgentDetail `json:"agents,omitempty"`
+
 	// Ready Number of agents with Ready status.
 	Ready int `json:"ready"`
 
@@ -36,8 +51,26 @@ type ComponentHealth struct {
 	Status string `json:"status"`
 }
 
+// ConsumerDetail defines model for ConsumerDetail.
+type ConsumerDetail struct {
+	// AckPending Messages delivered but not yet acknowledged.
+	AckPending int `json:"ack_pending"`
+
+	// Name Consumer name.
+	Name string `json:"name"`
+
+	// Pending Messages not yet delivered.
+	Pending int `json:"pending"`
+
+	// Redelivered Messages redelivered and not yet acknowledged.
+	Redelivered int `json:"redelivered"`
+}
+
 // ConsumerStats defines model for ConsumerStats.
 type ConsumerStats struct {
+	// Consumers Per-consumer details.
+	Consumers *[]ConsumerDetail `json:"consumers,omitempty"`
+
 	// Total Total number of JetStream consumers.
 	Total int `json:"total"`
 }

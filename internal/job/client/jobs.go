@@ -238,6 +238,94 @@ func (c *Client) GetQueueStats(
 	}, nil
 }
 
+// GetQueueSummary returns lightweight job queue statistics derived from KV key
+// names only — no entry reads. This is much faster than GetQueueStats for large
+// queues and suitable for health/status dashboards.
+func (c *Client) GetQueueSummary(
+	ctx context.Context,
+) (*job.QueueStats, error) {
+	keys, err := c.kv.Keys(ctx)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return &job.QueueStats{
+				StatusCounts: map[string]int{
+					"submitted":  0,
+					"processing": 0,
+					"completed":  0,
+					"failed":     0,
+				},
+			}, nil
+		}
+		return nil, fmt.Errorf("error fetching keys: %w", err)
+	}
+
+	// Collect job IDs and their highest-priority status from key names.
+	// Key format: status.<jobID>.<event>.<agent>.<timestamp>
+	// Status priority: completed > failed > started > acknowledged > submitted
+	statusPriority := map[string]int{
+		"submitted":    0,
+		"acknowledged": 1,
+		"started":      2,
+		"failed":       3,
+		"completed":    4,
+		"retried":      4,
+	}
+
+	jobStatuses := make(map[string]string) // jobID -> highest status
+	for _, key := range keys {
+		if !strings.HasPrefix(key, "status.") {
+			continue
+		}
+		parts := strings.SplitN(key, ".", 4)
+		if len(parts) < 3 {
+			continue
+		}
+		jobID := parts[1]
+		event := parts[2]
+
+		cur, exists := jobStatuses[jobID]
+		if !exists || statusPriority[event] > statusPriority[cur] {
+			jobStatuses[jobID] = event
+		}
+	}
+
+	statusCounts := map[string]int{
+		"submitted":  0,
+		"processing": 0,
+		"completed":  0,
+		"failed":     0,
+	}
+
+	for _, status := range jobStatuses {
+		switch status {
+		case "completed", "retried":
+			statusCounts["completed"]++
+		case "failed":
+			statusCounts["failed"]++
+		case "started", "acknowledged":
+			statusCounts["processing"]++
+		default:
+			statusCounts["submitted"]++
+		}
+	}
+
+	total := len(jobStatuses)
+
+	// DLQ count
+	dlqCount := 0
+	dlqName := c.streamName + "-DLQ"
+	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, dlqName)
+	if err == nil {
+		dlqCount = int(dlqInfo.State.Msgs)
+	}
+
+	return &job.QueueStats{
+		TotalJobs:    total,
+		StatusCounts: statusCounts,
+		DLQCount:     dlqCount,
+	}, nil
+}
+
 // GetJobStatus returns information about a specific job.
 func (c *Client) GetJobStatus(
 	ctx context.Context,

@@ -64,7 +64,16 @@ type KVMetrics struct {
 
 // ConsumerMetrics holds JetStream consumer statistics.
 type ConsumerMetrics struct {
-	Total int
+	Total     int
+	Consumers []ConsumerDetail
+}
+
+// ConsumerDetail holds per-consumer information.
+type ConsumerDetail struct {
+	Name        string
+	Pending     uint64
+	AckPending  int
+	Redelivered int
 }
 
 // JobMetrics holds job queue statistics.
@@ -79,8 +88,16 @@ type JobMetrics struct {
 
 // AgentMetrics holds agent fleet statistics.
 type AgentMetrics struct {
-	Total int
-	Ready int
+	Total  int
+	Ready  int
+	Agents []AgentDetail
+}
+
+// AgentDetail holds per-agent registration info.
+type AgentDetail struct {
+	Hostname   string
+	Labels     string
+	Registered string
 }
 
 // ClosureMetricsProvider implements MetricsProvider using function closures.

@@ -22,6 +22,7 @@ package health
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/retr0h/osapi/internal/api/health/gen"
@@ -91,24 +92,112 @@ func (h *Health) buildStatusResponse(
 	return gen.GetHealthStatus200JSONResponse(resp)
 }
 
-// populateMetrics enriches the response with system metrics. Each call is
-// independent — if one fails, log and skip it (graceful degradation).
+// populateMetrics enriches the response with system metrics. All calls run
+// concurrently since they are independent. If one fails, log and skip it.
 func (h *Health) populateMetrics(
 	ctx context.Context,
 	resp *gen.StatusResponse,
 ) {
-	if natsInfo, err := h.Metrics.GetNATSInfo(ctx); err != nil {
-		h.logger.Warn("failed to get NATS info for status", "error", err)
-	} else {
+	var (
+		mu            sync.Mutex
+		wg            sync.WaitGroup
+		natsInfo      *NATSMetrics
+		streams       []StreamMetrics
+		kvBuckets     []KVMetrics
+		jobStats      *JobMetrics
+		agentStats    *AgentMetrics
+		consumerStats *ConsumerMetrics
+	)
+
+	collect := func(
+		name string,
+		fn func(),
+	) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			fn()
+		}()
+		_ = name
+	}
+
+	collect("nats", func() {
+		info, err := h.Metrics.GetNATSInfo(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get NATS info for status", "error", err)
+			return
+		}
+		mu.Lock()
+		natsInfo = info
+		mu.Unlock()
+	})
+
+	collect("streams", func() {
+		s, err := h.Metrics.GetStreamInfo(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get stream info for status", "error", err)
+			return
+		}
+		mu.Lock()
+		streams = s
+		mu.Unlock()
+	})
+
+	collect("kv", func() {
+		b, err := h.Metrics.GetKVInfo(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get KV info for status", "error", err)
+			return
+		}
+		mu.Lock()
+		kvBuckets = b
+		mu.Unlock()
+	})
+
+	collect("jobs", func() {
+		j, err := h.Metrics.GetJobStats(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get job stats for status", "error", err)
+			return
+		}
+		mu.Lock()
+		jobStats = j
+		mu.Unlock()
+	})
+
+	collect("agents", func() {
+		a, err := h.Metrics.GetAgentStats(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get agent stats for status", "error", err)
+			return
+		}
+		mu.Lock()
+		agentStats = a
+		mu.Unlock()
+	})
+
+	collect("consumers", func() {
+		c, err := h.Metrics.GetConsumerStats(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get consumer stats for status", "error", err)
+			return
+		}
+		mu.Lock()
+		consumerStats = c
+		mu.Unlock()
+	})
+
+	wg.Wait()
+
+	// Map results to response (all writes happen after wg.Wait, no lock needed)
+	if natsInfo != nil {
 		resp.Nats = &gen.NATSInfo{
 			Url:     natsInfo.URL,
 			Version: natsInfo.Version,
 		}
 	}
 
-	if streams, err := h.Metrics.GetStreamInfo(ctx); err != nil {
-		h.logger.Warn("failed to get stream info for status", "error", err)
-	} else {
+	if streams != nil {
 		streamInfos := make([]gen.StreamInfo, 0, len(streams))
 		for _, s := range streams {
 			streamInfos = append(streamInfos, gen.StreamInfo{
@@ -121,9 +210,7 @@ func (h *Health) populateMetrics(
 		resp.Streams = &streamInfos
 	}
 
-	if kvBuckets, err := h.Metrics.GetKVInfo(ctx); err != nil {
-		h.logger.Warn("failed to get KV info for status", "error", err)
-	} else {
+	if kvBuckets != nil {
 		bucketInfos := make([]gen.KVBucketInfo, 0, len(kvBuckets))
 		for _, b := range kvBuckets {
 			bucketInfos = append(bucketInfos, gen.KVBucketInfo{
@@ -135,9 +222,7 @@ func (h *Health) populateMetrics(
 		resp.KvBuckets = &bucketInfos
 	}
 
-	if jobStats, err := h.Metrics.GetJobStats(ctx); err != nil {
-		h.logger.Warn("failed to get job stats for status", "error", err)
-	} else {
+	if jobStats != nil {
 		resp.Jobs = &gen.JobStats{
 			Total:       jobStats.Total,
 			Unprocessed: jobStats.Unprocessed,
@@ -148,20 +233,44 @@ func (h *Health) populateMetrics(
 		}
 	}
 
-	if agentStats, err := h.Metrics.GetAgentStats(ctx); err != nil {
-		h.logger.Warn("failed to get agent stats for status", "error", err)
-	} else {
-		resp.Agents = &gen.AgentStats{
+	if agentStats != nil {
+		stats := gen.AgentStats{
 			Total: agentStats.Total,
 			Ready: agentStats.Ready,
 		}
+		if len(agentStats.Agents) > 0 {
+			details := make([]gen.AgentDetail, 0, len(agentStats.Agents))
+			for _, a := range agentStats.Agents {
+				d := gen.AgentDetail{
+					Hostname:   a.Hostname,
+					Registered: a.Registered,
+				}
+				if a.Labels != "" {
+					d.Labels = &a.Labels
+				}
+				details = append(details, d)
+			}
+			stats.Agents = &details
+		}
+		resp.Agents = &stats
 	}
 
-	if consumerStats, err := h.Metrics.GetConsumerStats(ctx); err != nil {
-		h.logger.Warn("failed to get consumer stats for status", "error", err)
-	} else {
-		resp.Consumers = &gen.ConsumerStats{
+	if consumerStats != nil {
+		stats := gen.ConsumerStats{
 			Total: consumerStats.Total,
 		}
+		if len(consumerStats.Consumers) > 0 {
+			details := make([]gen.ConsumerDetail, 0, len(consumerStats.Consumers))
+			for _, c := range consumerStats.Consumers {
+				details = append(details, gen.ConsumerDetail{
+					Name:        c.Name,
+					Pending:     int(c.Pending),
+					AckPending:  c.AckPending,
+					Redelivered: c.Redelivered,
+				})
+			}
+			stats.Consumers = &details
+		}
+		resp.Consumers = &stats
 	}
 }

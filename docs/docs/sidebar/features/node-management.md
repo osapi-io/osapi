@@ -16,9 +16,9 @@ OSAPI separates agent fleet discovery from node system queries:
 - **Agent** commands (`agent list`, `agent get`) read directly from the NATS KV
   heartbeat registry. They show which agents are online, their labels, and
   lightweight metrics from the last heartbeat. No jobs are created.
-- **Node** commands (`node hostname`, `node status`) dispatch jobs to agents that
-  execute system commands and return detailed results (disk usage, full memory
-  breakdown, etc.).
+- **Node** commands (`node hostname`, `node status`) dispatch jobs to agents
+  that execute system commands and return detailed results (disk usage, full
+  memory breakdown, etc.).
 
 ## What It Manages
 
@@ -33,14 +33,14 @@ OSAPI separates agent fleet discovery from node system queries:
 ## How It Works
 
 Node queries are submitted as jobs. The CLI posts a job to the API server, the
-API server publishes it to NATS, a agent picks it up and reads the
-requested system information, then writes the result back to NATS KV. The CLI
-polls for the result and displays it.
+API server publishes it to NATS, a agent picks it up and reads the requested
+system information, then writes the result back to NATS KV. The CLI polls for
+the result and displays it.
 
 You can target a specific host, broadcast to all hosts, or route by label. See
 [Node CLI Reference](../usage/cli/client/node/node.mdx) for job-based commands
-and [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) for registry-based
-fleet discovery, or the
+and [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) for
+registry-based fleet discovery, or the
 [API Reference](/gen/api/node-management-api-node-operations) for the REST
 endpoints.
 

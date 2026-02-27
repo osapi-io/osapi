@@ -103,8 +103,8 @@ nats:
 
 ### Client-Side Auth
 
-API server and agent connections (`api.server.nats.auth`,
-`agent.nats.auth`) authenticate as a single identity:
+API server and agent connections (`api.server.nats.auth`, `agent.nats.auth`)
+authenticate as a single identity:
 
 ```yaml
 api:
@@ -122,8 +122,8 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                          |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Role    | Permissions                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `admin` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
 | `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
 | `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                |
@@ -174,8 +174,8 @@ NATS cluster without collisions.
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
 Set the same namespace value in `nats.server.namespace`,
-`api.server.nats.namespace`, and `agent.nats.namespace` so all components
-agree on naming. An empty string disables prefixing.
+`api.server.nats.namespace`, and `agent.nats.namespace` so all components agree
+on naming. An empty string disables prefixing.
 
 ## Full Reference
 

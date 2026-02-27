@@ -80,7 +80,12 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 					}, nil
 				},
 				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
-					return &health.ConsumerMetrics{Total: 2}, nil
+					return &health.ConsumerMetrics{
+						Total: 2,
+						Consumers: []health.ConsumerDetail{
+							{Name: "query_any_web_01", Pending: 0, AckPending: 3, Redelivered: 0},
+						},
+					}, nil
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
@@ -89,7 +94,13 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 					}, nil
 				},
 				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
-					return &health.AgentMetrics{Total: 3, Ready: 3}, nil
+					return &health.AgentMetrics{
+						Total: 3,
+						Ready: 3,
+						Agents: []health.AgentDetail{
+							{Hostname: "web-01", Labels: "group=web.prod", Registered: "15s ago"},
+						},
+					}, nil
 				},
 			},
 			wantCode: http.StatusOK,
@@ -103,6 +114,9 @@ func (suite *HealthStatusGetIntegrationTestSuite) TestGetHealthStatusValidation(
 				`"consumers"`,
 				`"jobs"`,
 				`"agents"`,
+				`"web-01"`,
+				`"group=web.prod"`,
+				`"query_any_web_01"`,
 			},
 		},
 		{

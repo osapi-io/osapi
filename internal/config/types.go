@@ -23,7 +23,7 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API       API         `mapstructure:"api"       mask:"struct"`
+	API       API         `mapstructure:"api"             mask:"struct"`
 	Agent     AgentConfig `mapstructure:"agent,omitempty"`
 	NATS      NATS        `mapstructure:"nats"`
 	Telemetry Telemetry   `mapstructure:"telemetry"`

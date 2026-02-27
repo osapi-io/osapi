@@ -263,10 +263,9 @@ func newMetricsProvider(
 					continue
 				}
 
-				keys, _ := kv.Keys(fnCtx)
 				results = append(results, health.KVMetrics{
 					Name:  status.Bucket(),
-					Keys:  len(keys),
+					Keys:  int(status.Values()),
 					Bytes: status.Bytes(),
 				})
 			}
@@ -274,17 +273,37 @@ func newMetricsProvider(
 			return results, nil
 		},
 		ConsumerStatsFn: func(fnCtx context.Context) (*health.ConsumerMetrics, error) {
-			info, err := nc.GetStreamInfo(fnCtx, streamName)
+			natsConn, ok := nc.(*natsclient.Client)
+			if !ok || natsConn.ExtJS == nil {
+				return nil, fmt.Errorf("JetStream client unavailable")
+			}
+
+			stream, err := natsConn.ExtJS.Stream(fnCtx, streamName)
 			if err != nil {
-				return nil, fmt.Errorf("stream info: %w", err)
+				return nil, fmt.Errorf("stream: %w", err)
+			}
+
+			var details []health.ConsumerDetail
+			lister := stream.ListConsumers(fnCtx)
+			for ci := range lister.Info() {
+				details = append(details, health.ConsumerDetail{
+					Name:        ci.Name,
+					Pending:     ci.NumPending,
+					AckPending:  ci.NumAckPending,
+					Redelivered: ci.NumRedelivered,
+				})
+			}
+			if lister.Err() != nil {
+				return nil, fmt.Errorf("list consumers: %w", lister.Err())
 			}
 
 			return &health.ConsumerMetrics{
-				Total: info.State.Consumers,
+				Total:     len(details),
+				Consumers: details,
 			}, nil
 		},
 		JobStatsFn: func(fnCtx context.Context) (*health.JobMetrics, error) {
-			stats, err := jc.GetQueueStats(fnCtx)
+			stats, err := jc.GetQueueSummary(fnCtx)
 			if err != nil {
 				return nil, fmt.Errorf("job stats: %w", err)
 			}
@@ -304,9 +323,27 @@ func newMetricsProvider(
 				return nil, fmt.Errorf("agent stats: %w", err)
 			}
 
+			details := make([]health.AgentDetail, 0, len(agents))
+			for _, a := range agents {
+				labels := ""
+				for k, v := range a.Labels {
+					if labels != "" {
+						labels += ", "
+					}
+					labels += k + "=" + v
+				}
+				registered := cli.FormatAge(time.Since(a.RegisteredAt)) + " ago"
+				details = append(details, health.AgentDetail{
+					Hostname:   a.Hostname,
+					Labels:     labels,
+					Registered: registered,
+				})
+			}
+
 			return &health.AgentMetrics{
-				Total: len(agents),
-				Ready: len(agents), // presence in KV = Ready
+				Total:  len(agents),
+				Ready:  len(agents), // presence in KV = Ready
+				Agents: details,
 			}, nil
 		},
 	}

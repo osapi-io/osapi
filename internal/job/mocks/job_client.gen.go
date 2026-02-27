@@ -158,6 +158,21 @@ func (mr *MockJobClientMockRecorder) GetQueueStats(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueStats", reflect.TypeOf((*MockJobClient)(nil).GetQueueStats), arg0)
 }
 
+// GetQueueSummary mocks base method.
+func (m *MockJobClient) GetQueueSummary(arg0 context.Context) (*job.QueueStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQueueSummary", arg0)
+	ret0, _ := ret[0].(*job.QueueStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQueueSummary indicates an expected call of GetQueueSummary.
+func (mr *MockJobClientMockRecorder) GetQueueSummary(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueSummary", reflect.TypeOf((*MockJobClient)(nil).GetQueueSummary), arg0)
+}
+
 // ListAgents mocks base method.
 func (m *MockJobClient) ListAgents(arg0 context.Context) ([]job.AgentInfo, error) {
 	m.ctrl.T.Helper()
