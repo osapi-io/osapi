@@ -18,6 +18,15 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AgentStats defines model for AgentStats.
+type AgentStats struct {
+	// Ready Number of agents with Ready status.
+	Ready int `json:"ready"`
+
+	// Total Total number of registered agents.
+	Total int `json:"total"`
+}
+
 // ComponentHealth defines model for ComponentHealth.
 type ComponentHealth struct {
 	// Error Error message when component is unhealthy.
@@ -89,6 +98,8 @@ type ReadyResponse struct {
 
 // StatusResponse defines model for StatusResponse.
 type StatusResponse struct {
+	Agents *AgentStats `json:"agents,omitempty"`
+
 	// Components Per-component health status.
 	Components map[string]ComponentHealth `json:"components"`
 	Jobs       *JobStats                  `json:"jobs,omitempty"`

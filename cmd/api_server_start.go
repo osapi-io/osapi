@@ -277,6 +277,17 @@ func newMetricsProvider(
 				DLQ:         stats.DLQCount,
 			}, nil
 		},
+		AgentStatsFn: func(fnCtx context.Context) (*health.AgentMetrics, error) {
+			agents, err := jc.ListAgents(fnCtx)
+			if err != nil {
+				return nil, fmt.Errorf("agent stats: %w", err)
+			}
+
+			return &health.AgentMetrics{
+				Total: len(agents),
+				Ready: len(agents), // presence in KV = Ready
+			}, nil
+		},
 	}
 }
 

@@ -24,15 +24,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 	"github.com/google/uuid"
 	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
-	"golang.org/x/term"
 )
 
 // Theme colors for terminal UI rendering.
@@ -175,95 +173,98 @@ func BoolToSafeString(
 	return ""
 }
 
-// PrintStyledTable renders a styled table with dynamic column widths.
-func PrintStyledTable(
+// compactMaxColWidth is the maximum column width before truncation.
+const compactMaxColWidth = 50
+
+// PrintCompactTable renders a compact column-aligned table (kubectl-style).
+// Headers are uppercase purple, data rows are teal, with 2-space indent.
+// Multi-line cell values are flattened to a single line and long values
+// are truncated with an ellipsis.
+func PrintCompactTable(
 	sections []Section,
 ) {
-	re := lipgloss.NewRenderer(os.Stdout)
+	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
+	evenStyle := lipgloss.NewStyle().Foreground(Teal)
+	oddStyle := lipgloss.NewStyle().Foreground(White)
+	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
 
-	// Get terminal width to constrain table if needed
-	termWidth, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		termWidth = 120 // Default to reasonable width if unable to get terminal size
-	}
+	const colGap = 2
 
 	for _, section := range sections {
-		// Calculate optimal width for each column
-		columnWidths := CalculateColumnWidths(section.Headers, section.Rows, 1)
-
-		// Check if total table width exceeds terminal width
-		totalWidth := 0
-		for _, width := range columnWidths {
-			totalWidth += width
-		}
-
-		// Add border/spacing overhead (rough estimate)
-		totalWidth += len(columnWidths) * 3 // borders and spacing
-
-		// If table is too wide, proportionally reduce column widths
-		if totalWidth > termWidth-4 { // leave some margin
-			scale := float64(termWidth-4) / float64(totalWidth)
-			for i := range columnWidths {
-				columnWidths[i] = int(float64(columnWidths[i]) * scale)
-				if columnWidths[i] < 8 { // minimum readable width
-					columnWidths[i] = 8
-				}
-			}
-		}
-
-		var (
-			HeaderStyle  = re.NewStyle().Foreground(White).Bold(true).Align(lipgloss.Center)
-			CellStyle    = re.NewStyle().PaddingLeft(1)
-			OddRowStyle  = CellStyle.Foreground(Gray)
-			EvenRowStyle = CellStyle.Foreground(LightGray)
-			BorderStyle  = re.NewStyle().Foreground(Purple)
-			PaddingStyle = re.NewStyle().Padding(0, 2)
-			TitleStyle   = re.NewStyle().Bold(true).Foreground(Purple).PaddingLeft(2).PaddingTop(1)
-			ColonStyle   = re.NewStyle().Bold(false)
-		)
-
 		if section.Title != "" {
-			titleWithColon := TitleStyle.Render(section.Title) + ColonStyle.Render(":")
-			fmt.Println(titleWithColon)
+			fmt.Printf("\n  %s:\n", titleStyle.Render(section.Title))
 		} else {
 			fmt.Println()
 		}
 
-		// Create the table and apply styles.
-		t := table.New().
-			Border(lipgloss.ThickBorder()).
-			BorderStyle(BorderStyle).
-			StyleFunc(func(
-				row int,
-				col int,
-			) lipgloss.Style {
-				// Determine base style based on row
-				var baseStyle lipgloss.Style
-				switch row % 2 {
-				case 0:
-					baseStyle = EvenRowStyle
-				default:
-					baseStyle = OddRowStyle
-				}
-
-				// Apply column-specific width if available
-				if col < len(columnWidths) {
-					baseStyle = baseStyle.Width(columnWidths[col])
-				}
-
-				return baseStyle
-			})
-
-		styledHeaders := make([]string, len(section.Headers))
-		for i, header := range section.Headers {
-			styledHeaders[i] = HeaderStyle.Render(header)
+		// Flatten multi-line cells to single lines for compact display
+		flatRows := make([][]string, len(section.Rows))
+		for r, row := range section.Rows {
+			flat := make([]string, len(row))
+			for c, cell := range row {
+				flat[c] = strings.Join(strings.Fields(cell), " ")
+			}
+			flatRows[r] = flat
 		}
-		t.Headers(styledHeaders...)
 
-		t.Rows(section.Rows...)
+		// Calculate column widths from headers and flattened data,
+		// capping at compactMaxColWidth to prevent blown-out columns.
+		widths := make([]int, len(section.Headers))
+		for i, h := range section.Headers {
+			widths[i] = len(h)
+		}
+		for _, row := range flatRows {
+			for i, cell := range row {
+				if i < len(widths) && len(cell) > widths[i] {
+					widths[i] = len(cell)
+				}
+			}
+		}
+		for i := range widths {
+			if widths[i] > compactMaxColWidth {
+				widths[i] = compactMaxColWidth
+			}
+		}
 
-		// Render the styled table.
-		fmt.Println(PaddingStyle.Render(t.String()))
+		// Build header line
+		var hdr strings.Builder
+		hdr.WriteString("  ")
+		for i, h := range section.Headers {
+			if i < len(section.Headers)-1 {
+				hdr.WriteString(
+					headerStyle.Render(fmt.Sprintf("%-*s", widths[i]+colGap, strings.ToUpper(h))),
+				)
+			} else {
+				hdr.WriteString(headerStyle.Render(strings.ToUpper(h)))
+			}
+		}
+		fmt.Println(hdr.String())
+
+		// Build data rows with alternating colors
+		for r, row := range flatRows {
+			rowStyle := evenStyle
+			if r%2 != 0 {
+				rowStyle = oddStyle
+			}
+			var line strings.Builder
+			line.WriteString("  ")
+			for i := range section.Headers {
+				cell := ""
+				if i < len(row) {
+					cell = row[i]
+				}
+				// Truncate cells that exceed the column width
+				if len(cell) > widths[i] {
+					cell = cell[:widths[i]-1] + "…"
+				}
+				if i < len(section.Headers)-1 {
+					line.WriteString(rowStyle.Render(fmt.Sprintf("%-*s", widths[i]+colGap, cell)))
+				} else {
+					line.WriteString(rowStyle.Render(cell))
+				}
+			}
+			fmt.Println(line.String())
+		}
 	}
 }
 
@@ -301,6 +302,53 @@ func PrintKV(
 		}
 	}
 	fmt.Println(line.String())
+}
+
+// FormatAge formats a duration as a human-readable age string.
+// Returns "3d 4h", "12h 30m", "45m", "30s" etc.
+func FormatAge(
+	d time.Duration,
+) string {
+	if d <= 0 {
+		return ""
+	}
+
+	days := int(d.Hours()) / 24
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+
+	switch {
+	case days > 0:
+		return fmt.Sprintf("%dd %dh", days, hours)
+	case hours > 0:
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	case minutes > 0:
+		return fmt.Sprintf("%dm", minutes)
+	default:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	}
+}
+
+// FormatBytes formats a byte count as a human-readable string (e.g., "5.2 KB", "1.0 MB").
+func FormatBytes(
+	b int,
+) string {
+	const (
+		kb = 1024
+		mb = kb * 1024
+		gb = mb * 1024
+	)
+
+	switch {
+	case b >= gb:
+		return fmt.Sprintf("%.1f GB", float64(b)/float64(gb))
+	case b >= mb:
+		return fmt.Sprintf("%.1f MB", float64(b)/float64(mb))
+	case b >= kb:
+		return fmt.Sprintf("%.1f KB", float64(b)/float64(kb))
+	default:
+		return fmt.Sprintf("%d B", b)
+	}
 }
 
 // FormatList helper function to convert []string to a formatted string.
@@ -613,6 +661,6 @@ func DisplayJobDetailResponse(
 	}
 
 	for _, sec := range sections {
-		PrintStyledTable([]Section{sec})
+		PrintCompactTable([]Section{sec})
 	}
 }

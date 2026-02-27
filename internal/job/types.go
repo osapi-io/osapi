@@ -257,14 +257,40 @@ type AgentRegistration struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// RegisteredAt is the timestamp when the agent last registered.
 	RegisteredAt time.Time `json:"registered_at"`
+	// StartedAt is the timestamp when the agent process started.
+	StartedAt time.Time `json:"started_at"`
+	// OSInfo contains operating system information.
+	OSInfo *host.OSInfo `json:"os_info,omitempty"`
+	// Uptime is the system uptime.
+	Uptime time.Duration `json:"uptime,omitempty"`
+	// LoadAverages contains the system load averages.
+	LoadAverages *load.AverageStats `json:"load_averages,omitempty"`
+	// MemoryStats contains memory usage information.
+	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
+	// AgentVersion is the version of the agent binary.
+	AgentVersion string `json:"agent_version,omitempty"`
 }
 
-// AgentInfo represents basic information about an active agent.
+// AgentInfo represents information about an active agent.
 type AgentInfo struct {
 	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
 	// Labels are the key-value labels configured on the agent.
 	Labels map[string]string `json:"labels,omitempty"`
+	// RegisteredAt is the timestamp when the agent last registered (heartbeat).
+	RegisteredAt time.Time `json:"registered_at"`
+	// StartedAt is the timestamp when the agent process started.
+	StartedAt time.Time `json:"started_at"`
+	// OSInfo contains operating system information.
+	OSInfo *host.OSInfo `json:"os_info,omitempty"`
+	// Uptime is the system uptime.
+	Uptime time.Duration `json:"uptime,omitempty"`
+	// LoadAverages contains the system load averages.
+	LoadAverages *load.AverageStats `json:"load_averages,omitempty"`
+	// MemoryStats contains memory usage information.
+	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
+	// AgentVersion is the version of the agent binary.
+	AgentVersion string `json:"agent_version,omitempty"`
 }
 
 // NodeStatusResponse aggregates node status information from multiple providers.

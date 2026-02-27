@@ -15,6 +15,12 @@ $ osapi client audit get --audit-id 550e8400-e29b-41d4-a716-446655440000
   Source IP: 127.0.0.1
 ```
 
+## Flags
+
+| Flag         | Description                | Default  |
+| ------------ | -------------------------- | -------- |
+| `--audit-id` | Audit entry ID to retrieve | required |
+
 Use `--json` for raw JSON output:
 
 ```bash

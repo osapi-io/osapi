@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
@@ -20,11 +21,44 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for AgentInfoStatus.
+const (
+	NotReady AgentInfoStatus = "NotReady"
+	Ready    AgentInfoStatus = "Ready"
+)
+
 // AgentInfo defines model for AgentInfo.
 type AgentInfo struct {
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
+
+	// Labels Key-value labels configured on the agent.
+	Labels *map[string]string `json:"labels,omitempty"`
+
+	// LoadAverage The system load averages for 1, 5, and 15 minutes.
+	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+
+	// Memory Memory usage information.
+	Memory *MemoryResponse `json:"memory,omitempty"`
+
+	// OsInfo Operating system information.
+	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
+
+	// RegisteredAt When the agent last refreshed its heartbeat.
+	RegisteredAt *time.Time `json:"registered_at,omitempty"`
+
+	// StartedAt When the agent process started.
+	StartedAt *time.Time `json:"started_at,omitempty"`
+
+	// Status The current status of the agent.
+	Status AgentInfoStatus `json:"status"`
+
+	// Uptime The system uptime.
+	Uptime *string `json:"uptime,omitempty"`
 }
+
+// AgentInfoStatus The current status of the agent.
+type AgentInfoStatus string
 
 // DiskResponse Local disk usage information.
 type DiskResponse struct {
@@ -161,6 +195,9 @@ type ServerInterface interface {
 	// Retrieve node status
 	// (GET /node/status)
 	GetNodeStatus(ctx echo.Context, params GetNodeStatusParams) error
+	// Get agent details
+	// (GET /node/{hostname})
+	GetNodeDetails(ctx echo.Context, hostname string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -219,6 +256,24 @@ func (w *ServerInterfaceWrapper) GetNodeStatus(ctx echo.Context) error {
 	return err
 }
 
+// GetNodeDetails converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeDetails(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeDetails(ctx, hostname)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -250,6 +305,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/node", wrapper.GetNode)
 	router.GET(baseURL+"/node/hostname", wrapper.GetNodeHostname)
 	router.GET(baseURL+"/node/status", wrapper.GetNodeStatus)
+	router.GET(baseURL+"/node/:hostname", wrapper.GetNodeDetails)
 
 }
 
@@ -402,6 +458,59 @@ func (response GetNodeStatus500JSONResponse) VisitGetNodeStatusResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetNodeDetailsRequestObject struct {
+	Hostname string `json:"hostname"`
+}
+
+type GetNodeDetailsResponseObject interface {
+	VisitGetNodeDetailsResponse(w http.ResponseWriter) error
+}
+
+type GetNodeDetails200JSONResponse AgentInfo
+
+func (response GetNodeDetails200JSONResponse) VisitGetNodeDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDetails401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDetails401JSONResponse) VisitGetNodeDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDetails403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDetails403JSONResponse) VisitGetNodeDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDetails404JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDetails404JSONResponse) VisitGetNodeDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDetails500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDetails500JSONResponse) VisitGetNodeDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List active agents
@@ -413,6 +522,9 @@ type StrictServerInterface interface {
 	// Retrieve node status
 	// (GET /node/status)
 	GetNodeStatus(ctx context.Context, request GetNodeStatusRequestObject) (GetNodeStatusResponseObject, error)
+	// Get agent details
+	// (GET /node/{hostname})
+	GetNodeDetails(ctx context.Context, request GetNodeDetailsRequestObject) (GetNodeDetailsResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -494,6 +606,31 @@ func (sh *strictHandler) GetNodeStatus(ctx echo.Context, params GetNodeStatusPar
 		return err
 	} else if validResponse, ok := response.(GetNodeStatusResponseObject); ok {
 		return validResponse.VisitGetNodeStatusResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeDetails operation middleware
+func (sh *strictHandler) GetNodeDetails(ctx echo.Context, hostname string) error {
+	var request GetNodeDetailsRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeDetails(ctx.Request().Context(), request.(GetNodeDetailsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeDetails")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeDetailsResponseObject); ok {
+		return validResponse.VisitGetNodeDetailsResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

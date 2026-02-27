@@ -11,7 +11,7 @@ $ osapi client audit export --output audit.jsonl
   Output: audit.jsonl
 ```
 
-## Options
+## Flags
 
 | Flag       | Default | Description                     |
 | ---------- | ------- | ------------------------------- |

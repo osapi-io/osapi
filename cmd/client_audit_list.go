@@ -83,7 +83,7 @@ response status, and duration. Requires audit:read permission.
 				})
 			}
 
-			cli.PrintStyledTable([]cli.Section{
+			cli.PrintCompactTable([]cli.Section{
 				{
 					Title: "Audit Entries",
 					Headers: []string{

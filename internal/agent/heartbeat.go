@@ -84,6 +84,7 @@ func (a *Agent) startHeartbeat(
 }
 
 // writeRegistration marshals an agent registration and puts it to the registry KV.
+// Provider errors are non-fatal; the heartbeat still writes with whatever data it gathered.
 func (a *Agent) writeRegistration(
 	ctx context.Context,
 	hostname string,
@@ -92,6 +93,23 @@ func (a *Agent) writeRegistration(
 		Hostname:     hostname,
 		Labels:       a.appConfig.Node.Agent.Labels,
 		RegisteredAt: time.Now(),
+		StartedAt:    a.startedAt,
+	}
+
+	if info, err := a.hostProvider.GetOSInfo(); err == nil {
+		reg.OSInfo = info
+	}
+
+	if uptime, err := a.hostProvider.GetUptime(); err == nil {
+		reg.Uptime = uptime
+	}
+
+	if avg, err := a.loadProvider.GetAverageStats(); err == nil {
+		reg.LoadAverages = avg
+	}
+
+	if stats, err := a.memProvider.GetStats(); err == nil {
+		reg.MemoryStats = stats
 	}
 
 	data, err := marshalJSON(reg)

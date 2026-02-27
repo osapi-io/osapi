@@ -8,13 +8,12 @@ $ osapi client command exec --command ls --args "-la,/tmp"
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ STDOUT                       ┃ STDERR ┃ EXIT CODE ┃ DURATION ┃ CHANGED ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ total 8                      ┃        ┃ 0         ┃ 12ms     ┃ false   ┃
-  ┃ drwxrwxrwt 10 root root 200  ┃        ┃           ┃          ┃         ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
+  server1   false    total 8 drwxrwxrwt 10 root r…           0          12ms
 ```
+
+Long output is truncated in the table view. Use `--json` for the full response
+data.
 
 Execute a command in a specific working directory with a custom timeout:
 
@@ -35,12 +34,9 @@ $ osapi client command exec --command uptime --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-  ┃ HOSTNAME ┃ STDOUT                          ┃ STDERR ┃ EXIT CODE ┃ DURATION ┃ CHANGED ┃
-  ┣━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━┫
-  ┃ server1  ┃ 13:21:06 up 42 days, 3:15, ... ┃        ┃ 0         ┃ 8ms      ┃ false   ┃
-  ┃ server2  ┃ 13:21:06 up 15 days, 1:02, ... ┃        ┃ 0         ┃ 11ms     ┃ false   ┃
-  ┗━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━┛
+  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
+  server1   false    13:21:06 up 42 days, 3:15, …            0          8ms
+  server2   false    13:21:06 up 15 days, 1:02, …            0          11ms
 ```
 
 Target by label to execute on a group of servers:
@@ -51,7 +47,7 @@ $ osapi client command exec --command whoami --target group:web
 
 ## JSON Output
 
-Use `--json` to get the raw API response:
+Use `--json` to get the full untruncated API response:
 
 ```bash
 $ osapi client command exec --command hostname --json
@@ -66,4 +62,4 @@ $ osapi client command exec --command hostname --json
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `--json`       | Output raw JSON response                                 |         |
+| `-j, --json`   | Output raw JSON response                                 |         |

@@ -87,7 +87,7 @@ var clientNetworkDNSUpdateCmd = &cobra.Command{
 					})
 				}
 				headers, rows := cli.BuildMutationTable(results, nil)
-				cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
+				cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 			} else {
 				logger.Info(
 					"network dns put",

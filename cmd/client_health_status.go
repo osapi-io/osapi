@@ -23,7 +23,6 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
@@ -95,12 +94,48 @@ func displayStatusHealth(
 	fmt.Println()
 	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
 
+	// NATS connection info (merged with component health)
 	if data.Nats != nil {
-		natsVal := data.Nats.Url
+		natsStatus := "ok"
+		if c, ok := data.Components["nats"]; ok && c.Status != "ok" {
+			natsStatus = c.Status
+			if c.Error != nil {
+				natsStatus += " " + cli.DimStyle.Render(*c.Error)
+			}
+		}
+		natsVal := natsStatus + " " + cli.DimStyle.Render(data.Nats.Url)
 		if data.Nats.Version != "" {
 			natsVal += " " + cli.DimStyle.Render("(v"+data.Nats.Version+")")
 		}
 		cli.PrintKV("NATS", natsVal)
+	}
+
+	// KV component (without duplicating the NATS line)
+	if c, ok := data.Components["kv"]; ok {
+		kvVal := c.Status
+		if c.Error != nil {
+			kvVal += " " + cli.DimStyle.Render(*c.Error)
+		}
+		cli.PrintKV("KV", kvVal)
+	}
+
+	// Non-standard components (skip nats/kv already shown above)
+	for name, component := range data.Components {
+		if name == "nats" || name == "kv" {
+			continue
+		}
+		val := component.Status
+		if component.Error != nil {
+			val += " " + cli.DimStyle.Render(*component.Error)
+		}
+		cli.PrintKV(name, val)
+	}
+
+	if data.Agents != nil {
+		cli.PrintKV("Agents", fmt.Sprintf(
+			"%d total, %d ready",
+			data.Agents.Total, data.Agents.Ready,
+		))
 	}
 
 	if data.Jobs != nil {
@@ -111,57 +146,25 @@ func displayStatusHealth(
 		))
 	}
 
-	// Tables only for genuinely multi-row data
-	var sections []cli.Section
-
-	componentRows := make([][]string, 0, len(data.Components))
-	for name, component := range data.Components {
-		errMsg := ""
-		if component.Error != nil {
-			errMsg = *component.Error
-		}
-		componentRows = append(componentRows, []string{name, component.Status, errMsg})
-	}
-	sections = append(sections, cli.Section{
-		Title:   "Components",
-		Headers: []string{"COMPONENT", "STATUS", "ERROR"},
-		Rows:    componentRows,
-	})
-
-	if data.Streams != nil && len(*data.Streams) > 0 {
-		streamRows := make([][]string, 0, len(*data.Streams))
+	// Streams
+	if data.Streams != nil {
 		for _, s := range *data.Streams {
-			streamRows = append(streamRows, []string{
-				s.Name,
-				strconv.Itoa(s.Messages),
-				strconv.Itoa(s.Bytes),
-				strconv.Itoa(s.Consumers),
-			})
+			cli.PrintKV("Stream", fmt.Sprintf(
+				"%s "+cli.DimStyle.Render("(%d msgs, %s, %d consumers)"),
+				s.Name, s.Messages, cli.FormatBytes(s.Bytes), s.Consumers,
+			))
 		}
-		sections = append(sections, cli.Section{
-			Title:   "Streams",
-			Headers: []string{"NAME", "MESSAGES", "BYTES", "CONSUMERS"},
-			Rows:    streamRows,
-		})
 	}
 
-	if data.KvBuckets != nil && len(*data.KvBuckets) > 0 {
-		kvRows := make([][]string, 0, len(*data.KvBuckets))
+	// KV Buckets
+	if data.KvBuckets != nil {
 		for _, b := range *data.KvBuckets {
-			kvRows = append(kvRows, []string{
-				b.Name,
-				strconv.Itoa(b.Keys),
-				strconv.Itoa(b.Bytes),
-			})
+			cli.PrintKV("Bucket", fmt.Sprintf(
+				"%s "+cli.DimStyle.Render("(%d keys, %s)"),
+				b.Name, b.Keys, cli.FormatBytes(b.Bytes),
+			))
 		}
-		sections = append(sections, cli.Section{
-			Title:   "KV Buckets",
-			Headers: []string{"NAME", "KEYS", "BYTES"},
-			Rows:    kvRows,
-		})
 	}
-
-	cli.PrintStyledTable(sections)
 }
 
 func init() {

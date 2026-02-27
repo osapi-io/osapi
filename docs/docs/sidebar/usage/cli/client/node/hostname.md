@@ -7,11 +7,8 @@ $ osapi client node hostname
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┓
-  ┃ HOSTNAME ┃
-  ┣━━━━━━━━━━┫
-  ┃ server1  ┃
-  ┗━━━━━━━━━━┛
+  HOSTNAME
+  server1
 ```
 
 When targeting all hosts:
@@ -21,12 +18,9 @@ $ osapi client node hostname --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  ┏━━━━━━━━━━┓
-  ┃ HOSTNAME ┃
-  ┣━━━━━━━━━━┫
-  ┃ server1  ┃
-  ┃ server2  ┃
-  ┗━━━━━━━━━━┛
+  HOSTNAME
+  server1
+  server2
 ```
 
 Target by label to query a group of servers:

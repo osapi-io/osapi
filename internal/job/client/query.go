@@ -411,11 +411,49 @@ func (c *Client) ListAgents(
 			continue
 		}
 
-		agents = append(agents, job.AgentInfo{
-			Hostname: reg.Hostname,
-			Labels:   reg.Labels,
-		})
+		agents = append(agents, agentInfoFromRegistration(&reg))
 	}
 
 	return agents, nil
+}
+
+// GetAgent reads a single agent's registration from the KV registry by hostname.
+func (c *Client) GetAgent(
+	ctx context.Context,
+	hostname string,
+) (*job.AgentInfo, error) {
+	if c.registryKV == nil {
+		return nil, fmt.Errorf("agent registry not configured")
+	}
+
+	key := "agents." + job.SanitizeHostname(hostname)
+	entry, err := c.registryKV.Get(ctx, key)
+	if err != nil {
+		return nil, fmt.Errorf("agent not found: %s", hostname)
+	}
+
+	var reg job.AgentRegistration
+	if err := json.Unmarshal(entry.Value(), &reg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal agent registration: %w", err)
+	}
+
+	info := agentInfoFromRegistration(&reg)
+	return &info, nil
+}
+
+// agentInfoFromRegistration maps an AgentRegistration to an AgentInfo.
+func agentInfoFromRegistration(
+	reg *job.AgentRegistration,
+) job.AgentInfo {
+	return job.AgentInfo{
+		Hostname:     reg.Hostname,
+		Labels:       reg.Labels,
+		RegisteredAt: reg.RegisteredAt,
+		StartedAt:    reg.StartedAt,
+		OSInfo:       reg.OSInfo,
+		Uptime:       reg.Uptime,
+		LoadAverages: reg.LoadAverages,
+		MemoryStats:  reg.MemoryStats,
+		AgentVersion: reg.AgentVersion,
+	}
 }

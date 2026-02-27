@@ -24,6 +24,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
@@ -62,6 +63,9 @@ type Agent struct {
 
 	// Registry KV for heartbeat registration
 	registryKV jetstream.KeyValue
+
+	// startedAt records when the agent process started.
+	startedAt time.Time
 
 	// Lifecycle management
 	ctx    context.Context

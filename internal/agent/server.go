@@ -23,6 +23,7 @@ package agent
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/retr0h/osapi/internal/job"
 )
@@ -30,6 +31,7 @@ import (
 // Start starts the agent without blocking. Call Stop to shut down.
 func (a *Agent) Start() {
 	a.ctx, a.cancel = context.WithCancel(context.Background())
+	a.startedAt = time.Now()
 
 	a.logger.Info("starting node agent")
 
