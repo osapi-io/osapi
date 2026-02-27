@@ -110,7 +110,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			name: "when Put fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "workers.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
@@ -118,7 +118,7 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			name: "when Put succeeds writes registration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "workers.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
 					Return(uint64(1), nil)
 			},
 		},
@@ -144,7 +144,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 			name: "when Delete fails logs warning",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "workers.test_worker").
+					Delete(gomock.Any(), "agents.test_worker").
 					Return(errors.New("delete failed"))
 			},
 		},
@@ -152,7 +152,7 @@ func (s *HeartbeatTestSuite) TestDeregister() {
 			name: "when Delete succeeds logs deregistration",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "workers.test_worker").
+					Delete(gomock.Any(), "agents.test_worker").
 					Return(nil)
 			},
 		},
@@ -176,13 +176,13 @@ func (s *HeartbeatTestSuite) TestStartHeartbeatRefresh() {
 			setupMock: func() {
 				// Initial write + at least 1 ticker refresh
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "workers.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(2)
 
 				// Deregister on cancel
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "workers.test_worker").
+					Delete(gomock.Any(), "agents.test_worker").
 					Return(nil).
 					Times(1)
 			},
@@ -217,12 +217,12 @@ func (s *HeartbeatTestSuite) TestRegistryKey() {
 		{
 			name:     "simple hostname",
 			hostname: "web-01",
-			expected: "workers.web_01",
+			expected: "agents.web_01",
 		},
 		{
 			name:     "hostname with dots",
 			hostname: "Johns-MacBook-Pro.local",
-			expected: "workers.Johns_MacBook_Pro_local",
+			expected: "agents.Johns_MacBook_Pro_local",
 		},
 	}
 

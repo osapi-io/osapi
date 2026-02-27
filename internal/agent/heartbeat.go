@@ -141,5 +141,5 @@ func (a *Agent) deregister(
 func registryKey(
 	hostname string,
 ) string {
-	return "workers." + job.SanitizeHostname(hostname)
+	return "agents." + job.SanitizeHostname(hostname)
 }

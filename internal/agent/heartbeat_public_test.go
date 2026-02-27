@@ -103,13 +103,13 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 			setupFunc: func() *agent.Agent {
 				// Heartbeat initial write
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "workers.test_worker", gomock.Any()).
+					Put(gomock.Any(), "agents.test_worker", gomock.Any()).
 					Return(uint64(1), nil).
 					MinTimes(1)
 
 				// Deregister on stop
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "workers.test_worker").
+					Delete(gomock.Any(), "agents.test_worker").
 					Return(nil).
 					Times(1)
 

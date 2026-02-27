@@ -63,7 +63,7 @@ func init() {
 	nodeAgentCmd.PersistentFlags().
 		StringP("agent-client-name", "", "osapi-node-agent", "NATS client name for agent")
 	nodeAgentCmd.PersistentFlags().
-		StringP("agent-queue-group", "", "job-workers", "NATS queue group for load balancing")
+		StringP("agent-queue-group", "", "job-agents", "NATS queue group for load balancing")
 	nodeAgentCmd.PersistentFlags().
 		StringP("agent-hostname", "", "", "Agent hostname (defaults to system hostname)")
 	nodeAgentCmd.PersistentFlags().

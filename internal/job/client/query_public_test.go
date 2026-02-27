@@ -1160,7 +1160,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
@@ -1169,7 +1169,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1179,7 +1179,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
 			expectedCount: 2,
@@ -1201,18 +1201,18 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 1,
@@ -1223,20 +1223,20 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return([]byte(`invalid json`))
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
 			expectedCount: 1,

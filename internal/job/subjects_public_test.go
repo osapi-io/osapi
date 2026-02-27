@@ -368,27 +368,27 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerQueueGroup() {
 		{
 			name:     "when building queue group for node category",
 			category: "node",
-			want:     "workers.node",
+			want:     "agents.node",
 		},
 		{
 			name:     "when building queue group for network category",
 			category: "network",
-			want:     "workers.network",
+			want:     "agents.network",
 		},
 		{
 			name:     "when building queue group for jobs category",
 			category: "jobs",
-			want:     "workers.jobs",
+			want:     "agents.jobs",
 		},
 		{
 			name:     "when building queue group with empty category",
 			category: "",
-			want:     "workers.",
+			want:     "agents.",
 		},
 		{
 			name:     "when building queue group with complex category",
 			category: "custom-service",
-			want:     "workers.custom-service",
+			want:     "agents.custom-service",
 		},
 	}
 

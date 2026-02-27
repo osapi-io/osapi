@@ -50,8 +50,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is _any",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -65,8 +65,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is _all",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -80,8 +80,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is a label with exact match",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -95,8 +95,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is a label with hierarchical prefix match",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{
 								Hostname: "server1",
 								Labels:   map[string]string{"group": "web.dev.us-east"},
@@ -113,8 +113,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target label does not match any worker",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -128,8 +128,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when label has empty key",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -143,8 +143,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when label has empty value",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -158,8 +158,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when label is malformed colons",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -173,8 +173,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when label key has invalid characters",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -188,8 +188,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when label value segment has invalid characters",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -203,8 +203,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is a known worker hostname",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -218,8 +218,8 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when target is an unknown hostname",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
-						return []validation.WorkerTarget{
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						return []validation.AgentTarget{
 							{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 							{Hostname: "server2"},
 						}, nil
@@ -234,7 +234,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when lister returns error for hostname",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
+					func(_ context.Context) ([]validation.AgentTarget, error) {
 						return nil, fmt.Errorf("nats connection failed")
 					},
 				)
@@ -246,7 +246,7 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			name: "when lister returns error for label",
 			setupLister: func() {
 				validation.RegisterTargetValidator(
-					func(_ context.Context) ([]validation.WorkerTarget, error) {
+					func(_ context.Context) ([]validation.AgentTarget, error) {
 						return nil, fmt.Errorf("nats connection failed")
 					},
 				)
@@ -283,9 +283,9 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 func (s *TargetPublicTestSuite) TestValidTargetCacheHit() {
 	callCount := 0
 	validation.RegisterTargetValidator(
-		func(_ context.Context) ([]validation.WorkerTarget, error) {
+		func(_ context.Context) ([]validation.AgentTarget, error) {
 			callCount++
-			return []validation.WorkerTarget{
+			return []validation.AgentTarget{
 				{Hostname: "server1"},
 			}, nil
 		},

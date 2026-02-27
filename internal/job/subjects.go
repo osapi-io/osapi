@@ -215,7 +215,7 @@ func BuildWorkerSubscriptionPattern(
 func BuildWorkerQueueGroup(
 	category string,
 ) string {
-	return fmt.Sprintf("workers.%s", category)
+	return fmt.Sprintf("agents.%s", category)
 }
 
 // IsSpecialHostname checks if a hostname is a special routing directive.

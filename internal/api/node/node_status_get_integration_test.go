@@ -57,8 +57,8 @@ type NodeStatusGetIntegrationTestSuite struct {
 }
 
 func (suite *NodeStatusGetIntegrationTestSuite) SetupSuite() {
-	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
-		return []validation.WorkerTarget{
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 			{Hostname: "server2"},
 		}, nil

@@ -114,14 +114,14 @@ var apiServerStartCmd = &cobra.Command{
 		}
 
 		validation.RegisterTargetValidator(
-			func(ctx context.Context) ([]validation.WorkerTarget, error) {
+			func(ctx context.Context) ([]validation.AgentTarget, error) {
 				workers, err := jc.ListAgents(ctx)
 				if err != nil {
 					return nil, err
 				}
-				targets := make([]validation.WorkerTarget, 0, len(workers))
+				targets := make([]validation.AgentTarget, 0, len(workers))
 				for _, w := range workers {
-					targets = append(targets, validation.WorkerTarget{
+					targets = append(targets, validation.AgentTarget{
 						Hostname: w.Hostname,
 						Labels:   w.Labels,
 					})

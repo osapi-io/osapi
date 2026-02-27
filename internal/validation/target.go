@@ -30,14 +30,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// WorkerTarget holds the routing-relevant fields of an active worker.
-type WorkerTarget struct {
+// AgentTarget holds the routing-relevant fields of an active worker.
+type AgentTarget struct {
 	Hostname string
 	Labels   map[string]string
 }
 
 // WorkerLister returns active workers with their hostnames and labels.
-type WorkerLister func(ctx context.Context) ([]WorkerTarget, error)
+type WorkerLister func(ctx context.Context) ([]AgentTarget, error)
 
 var workerLister WorkerLister
 
@@ -46,7 +46,7 @@ var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 var (
 	cacheMu       sync.Mutex
-	cachedWorkers []WorkerTarget
+	cachedWorkers []AgentTarget
 	cacheExpiry   time.Time
 	cacheTTL      = 5 * time.Second
 )
@@ -68,7 +68,7 @@ func RegisterTargetValidator(
 
 // getWorkers returns the cached worker list, refreshing from NATS when
 // the cache has expired.
-func getWorkers() ([]WorkerTarget, error) {
+func getWorkers() ([]AgentTarget, error) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
