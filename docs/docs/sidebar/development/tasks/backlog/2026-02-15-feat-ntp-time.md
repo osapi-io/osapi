@@ -32,7 +32,7 @@ PUT    /time/timezone        - Set timezone
 
 ## Provider
 
-- `internal/provider/system/ntp/`
+- `internal/provider/node/ntp/`
 - Implementations: `chrony_provider.go`, `timesyncd_provider.go`
 - Use `timedatectl`, `chronyc` command parsing
 - Return types: `NTPStatus` with sync state, stratum, offset, server, last sync

@@ -29,7 +29,7 @@ POST   /update/rollback      - Rollback last update (if supported)
 
 ## Provider
 
-- `internal/provider/system/update/`
+- `internal/provider/node/update/`
 - Implementations: `apt_provider.go` (`apt update`, `apt upgrade`),
   `yum_provider.go` (`yum check-update`, `yum update`)
 - Return types: `UpdateStatus` with available count, security count, last

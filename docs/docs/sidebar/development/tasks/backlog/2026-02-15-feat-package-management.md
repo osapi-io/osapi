@@ -32,7 +32,7 @@ GET    /package/updates        - List available updates
 
 ## Provider
 
-- `internal/provider/system/package/`
+- `internal/provider/node/package/`
 - Implementations: `apt_provider.go` (Debian/Ubuntu), `yum_provider.go`
   (RHEL/CentOS)
 - Return type: `PackageInfo` with name, version, description, installed size,

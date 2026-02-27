@@ -21,7 +21,7 @@ test-table mocks.
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------- |
 | `internal/job/mocks/`                                  | NATSClient, KeyValue, KeyValueEntry, KeyWatcher, JobClient, NATSConnector, JetStream, JetStreamContext | job/client, job/worker, api/ tests |
 | `internal/exec/mocks/`                                 | Manager                                                                                                | provider/network/dns tests         |
-| `internal/provider/system/{host,disk,mem,load}/mocks/` | Provider (per domain)                                                                                  | job/worker tests                   |
+| `internal/provider/node/{host,disk,mem,load}/mocks/` | Provider (per domain)                                                                                  | job/worker tests                   |
 | `internal/provider/network/{dns,ping}/mocks/`          | Provider, Pinger (ping only)                                                                           | job/worker, provider tests         |
 
 ### Hand-written wrapper files (`mocks.go`) -- 7 files, all useful

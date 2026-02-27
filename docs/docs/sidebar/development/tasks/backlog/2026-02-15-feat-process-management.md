@@ -26,7 +26,7 @@ POST   /process/{pid}/signal - Send signal to process (kill, term, hup)
 
 ## Provider
 
-- `internal/provider/system/process/`
+- `internal/provider/node/process/`
 - Use gopsutil or parse `/proc/` directly
 - Return type: `ProcessInfo` with PID, name, user, CPU%, memory%, state, command
   line, start time

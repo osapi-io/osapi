@@ -14,7 +14,7 @@ small but important CRUD gap.
 ## API Endpoints
 
 ```
-PUT    /system/hostname      - Set system hostname
+PUT    /node/hostname      - Set system hostname
 ```
 
 ## Operations
@@ -23,7 +23,7 @@ PUT    /system/hostname      - Set system hostname
 
 ## Provider
 
-- Extend existing `internal/provider/system/host/`
+- Extend existing `internal/provider/node/host/`
 - Add `SetHostname(name string) error` to `Provider` interface
 - Implementation: `hostnamectl set-hostname` via cmdexec
 - Update `/etc/hostname` for persistence

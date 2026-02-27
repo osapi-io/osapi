@@ -192,8 +192,8 @@ type QueueStats struct {
 
 // Operation data structures for specific operations
 
-// SystemHostnameGetData represents data for hostname retrieval
-type SystemHostnameGetData struct {
+// NodeHostnameGetData represents data for hostname retrieval
+type NodeHostnameGetData struct {
 	// No additional data needed for hostname retrieval
 }
 
@@ -239,8 +239,8 @@ type CommandShellData struct {
 	Timeout int `json:"timeout,omitempty"`
 }
 
-// SystemShutdownData represents data for system shutdown/reboot operations
-type SystemShutdownData struct {
+// NodeShutdownData represents data for node shutdown/reboot operations
+type NodeShutdownData struct {
 	// Action specifies whether to reboot or shutdown the system
 	Action string `json:"action"` // "reboot" or "shutdown"
 	// DelaySeconds is an optional field to specify a delay in seconds before reboot/shutdown

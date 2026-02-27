@@ -176,7 +176,7 @@ POST   /file/copy             - Copy file within the system
 
 ### Provider
 
-- `internal/provider/system/file/`
+- `internal/provider/node/file/`
 - `stat`: path, size, mode, owner, group, modified, is_dir, is_link, checksum
   (sha256)
 - `read`: line offset/limit, binary detection

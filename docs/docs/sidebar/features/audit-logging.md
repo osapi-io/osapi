@@ -38,7 +38,7 @@ Each audit entry contains:
 | `user`          | Identity from the JWT `sub` claim       |
 | `roles`         | Roles from the JWT token                |
 | `method`        | HTTP method (`GET`, `POST`, etc.)       |
-| `path`          | Request path (e.g., `/system/hostname`) |
+| `path`          | Request path (e.g., `/node/hostname`) |
 | `operation_id`  | OpenAPI operation ID (if available)     |
 | `source_ip`     | Client IP address                       |
 | `response_code` | HTTP response status code               |

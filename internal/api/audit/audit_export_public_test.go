@@ -102,7 +102,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 						Roles:        []string{"admin"},
 						Method:       "GET",
 						Path:         "/node/hostname",
-						OperationID:  "getSystemHostname",
+						OperationID:  "getNodeHostname",
 						SourceIP:     "127.0.0.1",
 						ResponseCode: 200,
 						DurationMs:   42,
@@ -114,7 +114,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 				s.True(ok)
 				s.Len(r.Items, 1)
 				s.Require().NotNil(r.Items[0].OperationId)
-				s.Equal("getSystemHostname", *r.Items[0].OperationId)
+				s.Equal("getNodeHostname", *r.Items[0].OperationId)
 			},
 		},
 		{

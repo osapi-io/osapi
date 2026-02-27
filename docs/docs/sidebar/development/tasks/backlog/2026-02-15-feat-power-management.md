@@ -28,7 +28,7 @@ POST   /power/reboot        - Reboot the system (with optional delay)
 
 ## Provider
 
-- `internal/provider/system/power/`
+- `internal/provider/node/power/`
 - Implementation uses `shutdown` command via cmdexec
 - Request body: optional `delay` (seconds), optional `message`
 

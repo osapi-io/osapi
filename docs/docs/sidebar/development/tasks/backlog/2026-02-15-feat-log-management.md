@@ -26,7 +26,7 @@ GET    /log/syslog           - Get recent syslog entries
 
 ## Provider
 
-- `internal/provider/system/log/`
+- `internal/provider/node/log/`
 - Use `journalctl` with JSON output for structured log parsing
 - Support query params: since, until, unit, priority, limit, grep
 - Return type: `LogEntry` with timestamp, unit, priority, message, PID, hostname

@@ -27,7 +27,7 @@ DELETE /schedule/{id}        - Delete scheduled task
 
 ## Provider
 
-- `internal/provider/system/schedule/`
+- `internal/provider/node/schedule/`
 - Parse crontab files and `systemd-timer` units
 - Support cron expression syntax for scheduling
 - Return type: `ScheduleInfo` with ID, expression, command, user, next run, last

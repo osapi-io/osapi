@@ -28,7 +28,7 @@ PUT    /sysctl/{key}/persist - Set parameter value (persistent across reboot)
 
 ## Provider
 
-- `internal/provider/system/sysctl/`
+- `internal/provider/node/sysctl/`
 - Parse `sysctl -a` output and `/etc/sysctl.d/*.conf`
 - Use `sysctl -w` for runtime changes
 - Write conf files for persistent changes

@@ -43,4 +43,4 @@ GET    /storage/lvm/lv           - List logical volumes
 - SMART health monitoring is valuable for appliance reliability
 - Mount operations are privileged and potentially destructive
 - Scopes: `storage:read`, `storage:write`
-- Existing `system.disk.get` can remain under `/system/status` as summary
+- Existing `system.disk.get` can remain under `/node/status` as summary
