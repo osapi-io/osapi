@@ -101,6 +101,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		dnsMock,
 		pingMock,
 		commandMock,
+		nil,
 	)
 }
 

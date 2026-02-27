@@ -249,6 +249,16 @@ type SystemShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
+// WorkerRegistration represents a worker's registration entry in the KV registry.
+type WorkerRegistration struct {
+	// Hostname is the hostname of the worker.
+	Hostname string `json:"hostname"`
+	// Labels are the key-value labels configured on the worker.
+	Labels map[string]string `json:"labels,omitempty"`
+	// RegisteredAt is the timestamp when the worker last registered.
+	RegisteredAt time.Time `json:"registered_at"`
+}
+
 // WorkerInfo represents basic information about an active worker.
 type WorkerInfo struct {
 	// Hostname is the hostname of the worker.

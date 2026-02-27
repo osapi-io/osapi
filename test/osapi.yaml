@@ -55,6 +55,12 @@ nats:
     storage: file
     replicas: 1
 
+  registry:
+    bucket: worker-registry
+    ttl: 30s
+    storage: file
+    replicas: 1
+
   dlq:
     max_age: 7d
     max_msgs: 1000

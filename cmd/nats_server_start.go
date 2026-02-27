@@ -163,6 +163,14 @@ func setupJetStream(
 		}
 	}
 
+	// Create registry KV bucket with configured settings
+	if appConfig.NATS.Registry.Bucket != "" {
+		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig); err != nil {
+			return fmt.Errorf("create registry KV bucket %s: %w", registryKVConfig.Bucket, err)
+		}
+	}
+
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
 	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)

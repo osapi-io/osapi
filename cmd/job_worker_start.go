@@ -79,11 +79,19 @@ It processes jobs as they become available.
 			cli.LogFatal(logger, "failed to create KV bucket", err)
 		}
 
+		// Create registry KV bucket for worker heartbeat
+		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
+		registryKV, registryErr := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
+		if registryErr != nil {
+			cli.LogFatal(logger, "failed to create registry KV bucket", registryErr)
+		}
+
 		// Create job client
 		var jc client.JobClient
 		jc, err = client.New(logger, nc, &client.Options{
 			Timeout:    30 * time.Second, // Default timeout
 			KVBucket:   jobsKV,
+			RegistryKV: registryKV,
 			StreamName: streamName,
 		})
 		if err != nil {
@@ -107,6 +115,7 @@ It processes jobs as they become available.
 			dnsProvider,
 			pingProvider,
 			commandProvider,
+			registryKV,
 		)
 
 		w.Start()

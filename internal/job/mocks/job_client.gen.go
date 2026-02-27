@@ -159,13 +159,12 @@ func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1, arg2, arg3 interface{}
 }
 
 // ListWorkers mocks base method.
-func (m *MockJobClient) ListWorkers(arg0 context.Context) (string, []job.WorkerInfo, error) {
+func (m *MockJobClient) ListWorkers(arg0 context.Context) ([]job.WorkerInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWorkers", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]job.WorkerInfo)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].([]job.WorkerInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListWorkers indicates an expected call of ListWorkers.

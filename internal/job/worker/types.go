@@ -25,6 +25,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -58,6 +59,9 @@ type Worker struct {
 
 	// Command provider
 	commandProvider command.Provider
+
+	// Registry KV for heartbeat registration
+	registryKV jetstream.KeyValue
 
 	// Lifecycle management
 	ctx    context.Context

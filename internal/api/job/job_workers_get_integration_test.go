@@ -73,7 +73,7 @@ func (suite *JobWorkersGetIntegrationTestSuite) TestGetJobWorkersValidation() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ListWorkers(gomock.Any()).
-					Return("", []jobtypes.WorkerInfo{
+					Return([]jobtypes.WorkerInfo{
 						{Hostname: "server1"},
 						{Hostname: "server2"},
 					}, nil)
@@ -88,7 +88,7 @@ func (suite *JobWorkersGetIntegrationTestSuite) TestGetJobWorkersValidation() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ListWorkers(gomock.Any()).
-					Return("", []jobtypes.WorkerInfo{}, nil)
+					Return([]jobtypes.WorkerInfo{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -100,7 +100,7 @@ func (suite *JobWorkersGetIntegrationTestSuite) TestGetJobWorkersValidation() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ListWorkers(gomock.Any()).
-					Return("", nil, assert.AnError)
+					Return(nil, assert.AnError)
 				return mock
 			},
 			wantCode:     http.StatusInternalServerError,
@@ -188,7 +188,7 @@ func (suite *JobWorkersGetIntegrationTestSuite) TestGetJobWorkersRBAC() {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
 					ListWorkers(gomock.Any()).
-					Return("", []jobtypes.WorkerInfo{
+					Return([]jobtypes.WorkerInfo{
 						{Hostname: "server1"},
 						{Hostname: "server2"},
 					}, nil)

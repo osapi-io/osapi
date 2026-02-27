@@ -176,7 +176,7 @@ type JobClient interface {
 	// Worker discovery
 	ListWorkers(
 		ctx context.Context,
-	) (string, []job.WorkerInfo, error)
+	) ([]job.WorkerInfo, error)
 
 	// Job deletion
 	DeleteJob(

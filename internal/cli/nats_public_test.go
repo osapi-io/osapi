@@ -159,6 +159,69 @@ func (suite *NATSTestSuite) TestBuildNATSAuthOptions() {
 	}
 }
 
+func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
+	tests := []struct {
+		name        string
+		namespace   string
+		registryCfg config.NATSRegistry
+		validateFn  func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			registryCfg: config.NATSRegistry{
+				Bucket:   "worker-registry",
+				TTL:      "30s",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-worker-registry", cfg.Bucket)
+				assert.Equal(suite.T(), 30*time.Second, cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			registryCfg: config.NATSRegistry{
+				Bucket:   "worker-registry",
+				TTL:      "1m",
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "worker-registry", cfg.Bucket)
+				assert.Equal(suite.T(), 1*time.Minute, cfg.TTL)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when TTL is invalid defaults to zero",
+			namespace: "",
+			registryCfg: config.NATSRegistry{
+				Bucket:   "worker-registry",
+				TTL:      "invalid",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildRegistryKVConfig(tc.namespace, tc.registryCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
 func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
 	tests := []struct {
 		name       string

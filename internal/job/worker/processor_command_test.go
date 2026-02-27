@@ -75,6 +75,7 @@ func (s *ProcessorCommandTestSuite) newWorkerWithCommandMock(
 		dnsMocks.NewPlainMockProvider(s.mockCtrl),
 		pingMocks.NewPlainMockProvider(s.mockCtrl),
 		cmdMock,
+		nil,
 	)
 }
 

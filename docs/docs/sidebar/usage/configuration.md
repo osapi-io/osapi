@@ -46,6 +46,10 @@ uppercased:
 | `nats.audit.max_bytes`             | `OSAPI_NATS_AUDIT_MAX_BYTES`             |
 | `nats.audit.storage`               | `OSAPI_NATS_AUDIT_STORAGE`               |
 | `nats.audit.replicas`              | `OSAPI_NATS_AUDIT_REPLICAS`              |
+| `nats.registry.bucket`             | `OSAPI_NATS_REGISTRY_BUCKET`             |
+| `nats.registry.ttl`                | `OSAPI_NATS_REGISTRY_TTL`                |
+| `nats.registry.storage`            | `OSAPI_NATS_REGISTRY_STORAGE`            |
+| `nats.registry.replicas`           | `OSAPI_NATS_REGISTRY_REPLICAS`           |
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
@@ -292,6 +296,18 @@ nats:
     # Number of KV replicas.
     replicas: 1
 
+  # ── Worker registry KV bucket ─────────────────────────────
+  registry:
+    # KV bucket for worker heartbeat registration.
+    bucket: 'worker-registry'
+    # TTL for registry entries (Go duration). Workers refresh
+    # every 10s; the TTL acts as a liveness timeout.
+    ttl: '30s'
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of KV replicas.
+    replicas: 1
+
   # ── Dead Letter Queue ─────────────────────────────────────
   dlq:
     # Maximum age of messages in the DLQ.
@@ -427,6 +443,15 @@ job:
 | `max_bytes` | int    | Maximum bucket size in bytes     |
 | `storage`   | string | `"file"` or `"memory"`           |
 | `replicas`  | int    | Number of KV replicas            |
+
+### `nats.registry`
+
+| Key        | Type   | Description                                |
+| ---------- | ------ | ------------------------------------------ |
+| `bucket`   | string | KV bucket for worker heartbeat entries     |
+| `ttl`      | string | Entry time-to-live / liveness timeout      |
+| `storage`  | string | `"file"` or `"memory"`                     |
+| `replicas` | int    | Number of KV replicas                      |
 
 ### `nats.dlq`
 

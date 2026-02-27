@@ -75,6 +75,22 @@ func BuildNATSAuthOptions(
 	}
 }
 
+// BuildRegistryKVConfig builds a jetstream.KeyValueConfig from registry config values.
+func BuildRegistryKVConfig(
+	namespace string,
+	registryCfg config.NATSRegistry,
+) jetstream.KeyValueConfig {
+	registryBucket := job.ApplyNamespaceToInfraName(namespace, registryCfg.Bucket)
+	registryTTL, _ := time.ParseDuration(registryCfg.TTL)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   registryBucket,
+		TTL:      registryTTL,
+		Storage:  ParseJetstreamStorageType(registryCfg.Storage),
+		Replicas: registryCfg.Replicas,
+	}
+}
+
 // BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
 func BuildAuditKVConfig(
 	namespace string,

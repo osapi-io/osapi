@@ -44,6 +44,9 @@ func (w *Worker) Start() {
 		slog.Any("labels", w.appConfig.Job.Worker.Labels),
 	)
 
+	// Register in worker registry and start heartbeat keepalive.
+	w.startHeartbeat(w.ctx, hostname)
+
 	// Start consuming messages for different job types.
 	// Each consume function spawns goroutines tracked by w.wg.
 	_ = w.consumeQueryJobs(w.ctx, hostname)
