@@ -52,8 +52,8 @@ type CommandExecPostIntegrationTestSuite struct {
 }
 
 func (suite *CommandExecPostIntegrationTestSuite) SetupSuite() {
-	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
-		return []validation.WorkerTarget{
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 			{Hostname: "server2"},
 		}, nil
@@ -94,11 +94,11 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 						ExitCode:   0,
 						DurationMs: 42,
 						Changed:    true,
-					}, "worker1", nil)
+					}, "agent1", nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"worker1"`, `"changed":true`},
+			wantContains: []string{`"results"`, `"agent1"`, `"changed":true`},
 		},
 		{
 			name: "when missing command",
@@ -131,7 +131,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecValidation(
 			wantContains: []string{`"error"`},
 		},
 		{
-			name: "when target worker not found",
+			name: "when target agent not found",
 			path: "/command/exec?target_hostname=nonexistent",
 			body: `{"command":"ls"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -236,7 +236,7 @@ func (suite *CommandExecPostIntegrationTestSuite) TestPostCommandExecRBAC() {
 							DurationMs: 10,
 							Changed:    true,
 						},
-						"worker1",
+						"agent1",
 						nil,
 					)
 				return mock

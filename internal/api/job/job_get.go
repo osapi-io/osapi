@@ -80,7 +80,7 @@ func (j *Job) GetJobByID(
 		resp.Result = result
 	}
 
-	// Expose per-worker responses for broadcast jobs
+	// Expose per-agent responses for broadcast jobs
 	if len(qj.Responses) > 1 {
 		respMap := make(map[string]struct {
 			Data     interface{} `json:"data,omitempty"`
@@ -133,14 +133,14 @@ func (j *Job) GetJobByID(
 		resp.Timeline = &timeline
 	}
 
-	// Expose worker states
-	if len(qj.WorkerStates) > 0 {
+	// Expose agent states
+	if len(qj.AgentStates) > 0 {
 		wsMap := make(map[string]struct {
 			Duration *string `json:"duration,omitempty"`
 			Error    *string `json:"error,omitempty"`
 			Status   *string `json:"status,omitempty"`
 		})
-		for hostname, ws := range qj.WorkerStates {
+		for hostname, ws := range qj.AgentStates {
 			entry := struct {
 				Duration *string `json:"duration,omitempty"`
 				Error    *string `json:"error,omitempty"`
@@ -156,7 +156,7 @@ func (j *Job) GetJobByID(
 			}
 			wsMap[hostname] = entry
 		}
-		resp.WorkerStates = &wsMap
+		resp.AgentStates = &wsMap
 	}
 
 	return resp, nil

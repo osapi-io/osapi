@@ -49,7 +49,7 @@ POST   /command/shell        - Execute via shell (supports pipes, etc.)
 
 ## Provider
 
-- `internal/provider/system/command/`
+- `internal/provider/node/command/`
 - Use existing `cmdexec` package for execution
 - `exec` mode: no shell interpretation (safer, like Ansible `command`)
 - `shell` mode: runs through `/bin/sh -c` (like Ansible `shell`)

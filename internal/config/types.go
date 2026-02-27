@@ -24,7 +24,7 @@ package config
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
 	API       API       `mapstructure:"api"       mask:"struct"`
-	Job       Job       `mapstructure:"job"`
+	Node      Node      `mapstructure:"node"`
 	NATS      NATS      `mapstructure:"nats"`
 	Telemetry Telemetry `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
@@ -104,9 +104,9 @@ type NATSAudit struct {
 	Replicas int    `mapstructure:"replicas"`
 }
 
-// NATSRegistry configuration for the worker registry KV bucket.
+// NATSRegistry configuration for the agent registry KV bucket.
 type NATSRegistry struct {
-	// Bucket is the KV bucket name for worker registration entries.
+	// Bucket is the KV bucket name for agent registration entries.
 	Bucket   string `mapstructure:"bucket"`
 	TTL      string `mapstructure:"ttl"`     // e.g. "30s"
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
@@ -144,7 +144,7 @@ type NATSStream struct {
 type NATSKV struct {
 	// Bucket is the KV bucket name for job definitions and status events.
 	Bucket string `mapstructure:"bucket"`
-	// ResponseBucket is the KV bucket name for worker result storage.
+	// ResponseBucket is the KV bucket name for agent result storage.
 	ResponseBucket string `mapstructure:"response_bucket"`
 	TTL            string `mapstructure:"ttl"` // e.g. "1h", "30m"
 	MaxBytes       int64  `mapstructure:"max_bytes"`
@@ -226,13 +226,13 @@ type CORS struct {
 	AllowOrigins []string `mapstructure:"allow_origins,omitempty"`
 }
 
-// Job configuration settings.
-type Job struct {
-	Worker JobWorker `mapstructure:"worker,omitempty"`
+// Node configuration settings.
+type Node struct {
+	Agent NodeAgent `mapstructure:"agent,omitempty"`
 }
 
-// JobWorkerConsumer configuration for the worker's JetStream consumer settings.
-type JobWorkerConsumer struct {
+// NodeAgentConsumer configuration for the agent's JetStream consumer settings.
+type NodeAgentConsumer struct {
 	// Name is the durable consumer name.
 	Name string `mapstructure:"name"`
 	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
@@ -247,15 +247,15 @@ type JobWorkerConsumer struct {
 	BackOff []string `mapstructure:"back_off"` // e.g. ["30s", "2m", "5m"]
 }
 
-// JobWorker configuration settings.
-type JobWorker struct {
-	// NATS connection settings for the worker.
+// NodeAgent configuration settings.
+type NodeAgent struct {
+	// NATS connection settings for the agent.
 	NATS NATSConnection `mapstructure:"nats"`
-	// Consumer settings for the worker's JetStream consumer.
-	Consumer JobWorkerConsumer `mapstructure:"consumer,omitempty"`
-	// QueueGroup for load balancing multiple workers.
+	// Consumer settings for the agent's JetStream consumer.
+	Consumer NodeAgentConsumer `mapstructure:"consumer,omitempty"`
+	// QueueGroup for load balancing multiple agents.
 	QueueGroup string `mapstructure:"queue_group"`
-	// Hostname identifies this worker instance for routing.
+	// Hostname identifies this agent instance for routing.
 	Hostname string `mapstructure:"hostname"`
 	// MaxJobs maximum number of concurrent jobs to process.
 	MaxJobs int `mapstructure:"max_jobs"`

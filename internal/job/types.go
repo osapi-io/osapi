@@ -24,10 +24,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	"github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // Type represents the type of job operation.
@@ -60,7 +60,7 @@ type Request struct {
 	JobID string `json:"job_id"`
 	// Type specifies whether this is a query or modify operation.
 	Type Type `json:"type"`
-	// Category specifies the operation category (system, network, etc.).
+	// Category specifies the operation category (node, network, etc.).
 	Category string `json:"category"`
 	// Operation specifies the specific operation to perform.
 	Operation string `json:"operation"`
@@ -83,7 +83,7 @@ type Response struct {
 	// Changed indicates whether the operation modified system state.
 	// Nil for query operations; set for mutation operations.
 	Changed *bool `json:"changed,omitempty"`
-	// Hostname identifies which worker processed this job.
+	// Hostname identifies which agent processed this job.
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
 	Timestamp time.Time `json:"timestamp"`
@@ -96,14 +96,14 @@ type Response struct {
 // This complements the existing JobType (query/modify) with specific operations.
 type OperationType string
 
-// System operations - read-only operations that query system state
+// Node operations - read-only operations that query node state
 const (
-	OperationSystemHostnameGet = "system.hostname.get"
-	OperationSystemStatusGet   = "system.status.get"
-	OperationSystemUptimeGet   = "system.uptime.get"
-	OperationSystemLoadGet     = "system.load.get"
-	OperationSystemMemoryGet   = "system.memory.get"
-	OperationSystemDiskGet     = "system.disk.get"
+	OperationNodeHostnameGet = "node.hostname.get"
+	OperationNodeStatusGet   = "node.status.get"
+	OperationNodeUptimeGet   = "node.uptime.get"
+	OperationNodeLoadGet     = "node.load.get"
+	OperationNodeMemoryGet   = "node.memory.get"
+	OperationNodeDiskGet     = "node.disk.get"
 )
 
 // Network operations - operations that can modify network configuration
@@ -113,13 +113,13 @@ const (
 	OperationNetworkPingDo    = "network.ping.do"
 )
 
-// System operations - operations that can modify system state
+// Node operations - operations that can modify node state
 const (
-	OperationSystemShutdown = "system.shutdown.execute"
-	OperationSystemReboot   = "system.reboot.execute"
+	OperationNodeShutdown = "node.shutdown.execute"
+	OperationNodeReboot   = "node.reboot.execute"
 )
 
-// Command operations - execute arbitrary commands on workers
+// Command operations - execute arbitrary commands on agents
 const (
 	OperationCommandExecExecute  = "command.exec.execute"
 	OperationCommandShellExecute = "command.shell.execute"
@@ -128,7 +128,7 @@ const (
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
-	// (e.g., "system.hostname.get", "network.dns.update")
+	// (e.g., "node.hostname.get", "network.dns.update")
 	Type OperationType `json:"type"`
 	// Data contains the operation-specific data as raw JSON
 	Data json.RawMessage `json:"data"`
@@ -152,20 +152,20 @@ type QueuedJob struct {
 	Result json.RawMessage `json:"result,omitempty"`
 	// Error contains error details if the job failed (optional)
 	Error string `json:"error,omitempty"`
-	// Hostname identifies which worker processed this job (optional)
+	// Hostname identifies which agent processed this job (optional)
 	Hostname string `json:"hostname,omitempty"`
 	// UpdatedAt is the timestamp when the job was last updated (optional)
 	UpdatedAt string `json:"updated_at,omitempty"`
-	// WorkerStates contains detailed state for each worker that processed this job
-	WorkerStates map[string]WorkerState `json:"worker_states,omitempty"`
+	// AgentStates contains detailed state for each agent that processed this job
+	AgentStates map[string]AgentState `json:"agent_states,omitempty"`
 	// Timeline contains the chronological sequence of events for this job
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
-	// Responses contains the actual response data from each worker
+	// Responses contains the actual response data from each agent
 	Responses map[string]Response `json:"responses,omitempty"`
 }
 
-// WorkerState represents the state of a specific worker processing a job
-type WorkerState struct {
+// AgentState represents the state of a specific agent processing a job
+type AgentState struct {
 	Status    string    `json:"status"`
 	Error     string    `json:"error,omitempty"`
 	Duration  string    `json:"duration,omitempty"`
@@ -192,8 +192,8 @@ type QueueStats struct {
 
 // Operation data structures for specific operations
 
-// SystemHostnameGetData represents data for hostname retrieval
-type SystemHostnameGetData struct {
+// NodeHostnameGetData represents data for hostname retrieval
+type NodeHostnameGetData struct {
 	// No additional data needed for hostname retrieval
 }
 
@@ -239,8 +239,8 @@ type CommandShellData struct {
 	Timeout int `json:"timeout,omitempty"`
 }
 
-// SystemShutdownData represents data for system shutdown/reboot operations
-type SystemShutdownData struct {
+// NodeShutdownData represents data for node shutdown/reboot operations
+type NodeShutdownData struct {
 	// Action specifies whether to reboot or shutdown the system
 	Action string `json:"action"` // "reboot" or "shutdown"
 	// DelaySeconds is an optional field to specify a delay in seconds before reboot/shutdown
@@ -249,27 +249,27 @@ type SystemShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
-// WorkerRegistration represents a worker's registration entry in the KV registry.
-type WorkerRegistration struct {
-	// Hostname is the hostname of the worker.
+// AgentRegistration represents an agent's registration entry in the KV registry.
+type AgentRegistration struct {
+	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
-	// Labels are the key-value labels configured on the worker.
+	// Labels are the key-value labels configured on the agent.
 	Labels map[string]string `json:"labels,omitempty"`
-	// RegisteredAt is the timestamp when the worker last registered.
+	// RegisteredAt is the timestamp when the agent last registered.
 	RegisteredAt time.Time `json:"registered_at"`
 }
 
-// WorkerInfo represents basic information about an active worker.
-type WorkerInfo struct {
-	// Hostname is the hostname of the worker.
+// AgentInfo represents basic information about an active agent.
+type AgentInfo struct {
+	// Hostname is the hostname of the agent.
 	Hostname string `json:"hostname"`
-	// Labels are the key-value labels configured on the worker.
+	// Labels are the key-value labels configured on the agent.
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
-// SystemStatusResponse aggregates system status information from multiple providers.
-// This represents the response for system.status.get operations in the job queue.
-type SystemStatusResponse struct {
+// NodeStatusResponse aggregates node status information from multiple providers.
+// This represents the response for node.status.get operations in the job queue.
+type NodeStatusResponse struct {
 	// Hostname from the host provider
 	Hostname string `json:"hostname"`
 	// Uptime from the host provider

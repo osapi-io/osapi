@@ -55,7 +55,7 @@ type Options struct {
 	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
 	KVBucket jetstream.KeyValue
-	// RegistryKV is the KV bucket for worker registry (optional).
+	// RegistryKV is the KV bucket for agent registry (optional).
 	RegistryKV jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
@@ -90,7 +90,7 @@ func New(
 	}, nil
 }
 
-// publishAndWait stores a job in KV, publishes a notification, and waits for the worker response.
+// publishAndWait stores a job in KV, publishes a notification, and waits for the agent response.
 // Returns the job ID, response, and any error.
 func (c *Client) publishAndWait(
 	ctx context.Context,
@@ -146,7 +146,7 @@ func (c *Client) publishAndWait(
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
 
-	// Watch for worker response in KV
+	// Watch for agent response in KV
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
@@ -189,7 +189,7 @@ func (c *Client) publishAndWait(
 const broadcastQuietPeriod = 3 * time.Second
 
 // publishAndCollect stores a job in KV, publishes a notification, and collects
-// worker responses using a quiet period strategy. After each response, a short
+// agent responses using a quiet period strategy. After each response, a short
 // timer resets. When the timer expires with no new responses, the collected
 // results are returned. The overall timeout acts as a safety net.
 // Returns the job ID, collected responses keyed by hostname, and any error.
@@ -247,7 +247,7 @@ func (c *Client) publishAndCollect(
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
 	}
 
-	// Watch for worker responses in KV
+	// Watch for agent responses in KV
 	responsePattern := "responses." + jobID + ".>"
 	watcher, err := c.kv.Watch(ctx, responsePattern)
 	if err != nil {
@@ -308,7 +308,7 @@ func (c *Client) publishAndCollect(
 		// Reached from either timeoutCtx.Done() or quietTimer.C
 		if len(responses) == 0 {
 			return "", nil, fmt.Errorf(
-				"timeout waiting for broadcast responses: no workers responded",
+				"timeout waiting for broadcast responses: no agents responded",
 			)
 		}
 		return jobID, responses, nil

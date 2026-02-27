@@ -291,7 +291,7 @@ func (suite *SubjectsPublicTestSuite) TestSanitizeHostname() {
 	}
 }
 
-func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
+func (suite *SubjectsPublicTestSuite) TestBuildAgentSubscriptionPattern() {
 	tests := []struct {
 		name     string
 		hostname string
@@ -353,48 +353,48 @@ func (suite *SubjectsPublicTestSuite) TestBuildWorkerSubscriptionPattern() {
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildWorkerSubscriptionPattern(tt.hostname, tt.labels)
+			got := job.BuildAgentSubscriptionPattern(tt.hostname, tt.labels)
 			suite.Equal(tt.want, got)
 		})
 	}
 }
 
-func (suite *SubjectsPublicTestSuite) TestBuildWorkerQueueGroup() {
+func (suite *SubjectsPublicTestSuite) TestBuildAgentQueueGroup() {
 	tests := []struct {
 		name     string
 		category string
 		want     string
 	}{
 		{
-			name:     "when building queue group for system category",
-			category: "system",
-			want:     "workers.system",
+			name:     "when building queue group for node category",
+			category: "node",
+			want:     "agents.node",
 		},
 		{
 			name:     "when building queue group for network category",
 			category: "network",
-			want:     "workers.network",
+			want:     "agents.network",
 		},
 		{
 			name:     "when building queue group for jobs category",
 			category: "jobs",
-			want:     "workers.jobs",
+			want:     "agents.jobs",
 		},
 		{
 			name:     "when building queue group with empty category",
 			category: "",
-			want:     "workers.",
+			want:     "agents.",
 		},
 		{
 			name:     "when building queue group with complex category",
 			category: "custom-service",
-			want:     "workers.custom-service",
+			want:     "agents.custom-service",
 		},
 	}
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := job.BuildWorkerQueueGroup(tt.category)
+			got := job.BuildAgentQueueGroup(tt.category)
 			suite.Equal(tt.want, got)
 		})
 	}
@@ -753,7 +753,7 @@ func (suite *SubjectsPublicTestSuite) TestInit() {
 			suite.Equal(tt.wantQueryPrefix, job.JobsQueryPrefix)
 			suite.Equal(tt.wantModifyPrefix, job.JobsModifyPrefix)
 			suite.Equal(tt.wantBuildQuery, job.BuildQuerySubject("_any"))
-			subs := job.BuildWorkerSubscriptionPattern("web-01", nil)
+			subs := job.BuildAgentSubscriptionPattern("web-01", nil)
 			suite.Contains(subs, tt.wantSubscription)
 			labels := job.BuildLabelSubjects("role", "web")
 			suite.Equal([]string{tt.wantLabelSubject}, labels)

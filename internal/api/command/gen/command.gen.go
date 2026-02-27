@@ -50,13 +50,13 @@ type CommandResultItem struct {
 	// DurationMs Execution time in milliseconds.
 	DurationMs *int64 `json:"duration_ms,omitempty"`
 
-	// Error Error message if the worker failed to process the request.
+	// Error Error message if the agent failed to process the request.
 	Error *string `json:"error,omitempty"`
 
 	// ExitCode Exit code of the command.
 	ExitCode *int `json:"exit_code,omitempty"`
 
-	// Hostname The hostname of the worker that executed the command.
+	// Hostname The hostname of the agent that executed the command.
 	Hostname string `json:"hostname"`
 
 	// Stderr Standard error output of the command.

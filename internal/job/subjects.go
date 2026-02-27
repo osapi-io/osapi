@@ -24,12 +24,12 @@
 //
 // Routing Patterns:
 //   - Direct: jobs.query.host.server1 (specific host)
-//   - Any: jobs.query._any (load-balanced across available workers)
-//   - Broadcast: jobs.modify._all (all workers receive)
+//   - Any: jobs.query._any (load-balanced across available agents)
+//   - Broadcast: jobs.modify._all (all agents receive)
 //   - Label: jobs.query.label.group.web (broadcast to label group)
 //   - Hierarchical: jobs.query.label.group.web.dev.us-east (prefix matching)
 //
-// Workers subscribe to:
+// Agents subscribe to:
 //   - Their specific hostname: jobs.*.host.server1
 //   - Load-balanced work: jobs.*._any (with queue group)
 //   - Broadcast messages: jobs.*._all
@@ -85,14 +85,14 @@ const (
 
 // Subject categories for different operations
 const (
-	SubjectCategorySystem  = "system"
+	SubjectCategoryNode    = "node"
 	SubjectCategoryNetwork = "network"
 )
 
-// System operation types
+// Node operation types
 const (
-	SystemOperationHostname = "hostname"
-	SystemOperationStatus   = "status"
+	NodeOperationHostname = "hostname"
+	NodeOperationStatus   = "status"
 )
 
 // Network operation types
@@ -177,12 +177,12 @@ func ParseSubject(
 	return prefix, hostname, nil
 }
 
-// BuildWorkerSubscriptionPattern creates subscription patterns for workers.
-// Workers typically subscribe to their own hostname and special routing patterns.
+// BuildAgentSubscriptionPattern creates subscription patterns for agents.
+// Agents typically subscribe to their own hostname and special routing patterns.
 // If labels are provided, hierarchical prefix subscriptions are included for
 // each label. For example, a label "group: web.dev.us-east" generates subscriptions
 // at every prefix level (group:web, group:web.dev, group:web.dev.us-east).
-func BuildWorkerSubscriptionPattern(
+func BuildAgentSubscriptionPattern(
 	hostname string,
 	labels map[string]string,
 ) []string {
@@ -210,12 +210,12 @@ func BuildWorkerSubscriptionPattern(
 	return patterns
 }
 
-// BuildWorkerQueueGroup returns the queue group name for load-balanced subscriptions.
-// This ensures only one worker processes each "_any" message.
-func BuildWorkerQueueGroup(
+// BuildAgentQueueGroup returns the queue group name for load-balanced subscriptions.
+// This ensures only one agent processes each "_any" message.
+func BuildAgentQueueGroup(
 	category string,
 ) string {
-	return fmt.Sprintf("workers.%s", category)
+	return fmt.Sprintf("agents.%s", category)
 }
 
 // IsSpecialHostname checks if a hostname is a special routing directive.
@@ -314,7 +314,7 @@ func IsBroadcastTarget(
 //	jobs.*.label.group.web.dev.us-east
 //
 // This enables targeting at any level of the hierarchy: --target group:web
-// matches all workers whose group label starts with "web".
+// matches all agents whose group label starts with "web".
 func BuildLabelSubjects(
 	key, value string,
 ) []string {

@@ -46,7 +46,7 @@ The REST API currently supports polling for job status:
 - NATS JetStream already provides real-time notifications internally — the
   question is whether to expose this to REST clients
 - WebSocket would align well with the `_all` broadcast jobs where status updates
-  come from multiple workers over time
+  come from multiple agents over time
 - Echo framework has WebSocket support via `labstack/echo`
 - Auth needs to work for long-lived connections (token refresh, expiry)
 - Consider whether the CLI and API need the same approach or can differ

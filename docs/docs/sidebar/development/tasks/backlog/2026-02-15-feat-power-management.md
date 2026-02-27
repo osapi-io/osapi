@@ -9,7 +9,7 @@ updated: 2026-02-15
 
 Add power management endpoints. The operation constants
 `system.shutdown.execute` and `system.reboot.execute` already exist in
-`types.go` but have no provider, worker dispatch, API endpoint, or CLI command
+`types.go` but have no provider, agent dispatch, API endpoint, or CLI command
 implementation.
 
 ## API Endpoints
@@ -28,15 +28,15 @@ POST   /power/reboot        - Reboot the system (with optional delay)
 
 ## Provider
 
-- `internal/provider/system/power/`
+- `internal/provider/node/power/`
 - Implementation uses `shutdown` command via cmdexec
 - Request body: optional `delay` (seconds), optional `message`
 
 ## Implementation Notes
 
-- Constants already exist — need provider + worker dispatch + API + CLI
+- Constants already exist — need provider + agent dispatch + API + CLI
 - These are destructive operations: require confirmation or elevated scope
 - Scopes: `power:write` (no read scope needed)
-- Worker should write status event before executing shutdown
+- Agent should write status event before executing shutdown
 - API should return 202 Accepted (async) since the system will go down
 - Consider a scheduled shutdown with cancel capability

@@ -80,7 +80,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "no auth header returns 401",
 			authHeader:      "",
-			requiredScopes:  []string{"system:read"},
+			requiredScopes:  []string{"node:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
@@ -88,7 +88,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "non-bearer auth header returns 401",
 			authHeader:      "Basic dXNlcjpwYXNz",
-			requiredScopes:  []string{"system:read"},
+			requiredScopes:  []string{"node:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
@@ -96,23 +96,23 @@ func (s *MiddlewareTestSuite) TestScopeMiddleware() {
 		{
 			name:            "invalid token returns 401",
 			authHeader:      "Bearer invalid-token-string",
-			requiredScopes:  []string{"system:read"},
+			requiredScopes:  []string{"node:read"},
 			expectedStatus:  http.StatusUnauthorized,
 			expectCalled:    false,
 			setupContextKey: true,
 		},
 		{
-			name:            "admin role has system:read",
+			name:            "admin role has node:read",
 			authHeader:      "", // set dynamically
-			requiredScopes:  []string{"system:read"},
+			requiredScopes:  []string{"node:read"},
 			expectedStatus:  http.StatusOK,
 			expectCalled:    true,
 			setupContextKey: true,
 		},
 		{
-			name:            "read role has system:read",
+			name:            "read role has node:read",
 			authHeader:      "", // set dynamically
-			requiredScopes:  []string{"system:read"},
+			requiredScopes:  []string{"node:read"},
 			expectedStatus:  http.StatusOK,
 			expectCalled:    true,
 			setupContextKey: true,
@@ -200,9 +200,9 @@ func (s *MiddlewareTestSuite) TestScopeMiddlewareCustomRoles() {
 			name:       "custom role grants access",
 			tokenRoles: []string{"ops"},
 			customRoles: map[string][]string{
-				"ops": {"system:read", "health:read"},
+				"ops": {"node:read", "health:read"},
 			},
-			requiredScope:  "system:read",
+			requiredScope:  "node:read",
 			expectedStatus: http.StatusOK,
 			expectCalled:   true,
 		},
@@ -212,7 +212,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddlewareCustomRoles() {
 			customRoles: map[string][]string{
 				"ops": {"health:read"},
 			},
-			requiredScope:  "system:read",
+			requiredScope:  "node:read",
 			expectedStatus: http.StatusForbidden,
 			expectCalled:   false,
 		},
@@ -288,15 +288,15 @@ func (s *MiddlewareTestSuite) TestScopeMiddlewareDirectPermissions() {
 	}{
 		{
 			name:           "direct permission grants access",
-			permissions:    []string{"system:read"},
-			requiredScope:  "system:read",
+			permissions:    []string{"node:read"},
+			requiredScope:  "node:read",
 			expectedStatus: http.StatusOK,
 			expectCalled:   true,
 		},
 		{
 			name:           "direct permission restricts to only listed",
 			permissions:    []string{"health:read"},
-			requiredScope:  "system:read",
+			requiredScope:  "node:read",
 			expectedStatus: http.StatusForbidden,
 			expectCalled:   false,
 		},
@@ -363,7 +363,7 @@ func (s *MiddlewareTestSuite) TestScopeMiddlewareInjectsIdentity() {
 	rec := httptest.NewRecorder()
 
 	ctx := e.NewContext(req, rec)
-	ctx.Set(contextKey, []string{"system:read"})
+	ctx.Set(contextKey, []string{"node:read"})
 
 	wrapped := scopeMiddleware(
 		testHandler,

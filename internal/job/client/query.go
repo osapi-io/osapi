@@ -30,14 +30,14 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-// QuerySystemStatus queries system status from a specific hostname.
-func (c *Client) QuerySystemStatus(
+// QueryNodeStatus queries node status from a specific hostname.
+func (c *Client) QueryNodeStatus(
 	ctx context.Context,
 	hostname string,
-) (string, *job.SystemStatusResponse, error) {
+) (string, *job.NodeStatusResponse, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "status.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -52,7 +52,7 @@ func (c *Client) QuerySystemStatus(
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result job.SystemStatusResponse
+	var result job.NodeStatusResponse
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, fmt.Errorf("failed to unmarshal status response: %w", err)
 	}
@@ -60,14 +60,14 @@ func (c *Client) QuerySystemStatus(
 	return jobID, &result, nil
 }
 
-// QuerySystemHostname queries hostname from a specific hostname.
-func (c *Client) QuerySystemHostname(
+// QueryNodeHostname queries hostname from a specific hostname.
+func (c *Client) QueryNodeHostname(
 	ctx context.Context,
 	hostname string,
-) (string, string, *job.WorkerInfo, error) {
+) (string, string, *job.AgentInfo, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "hostname.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -90,12 +90,12 @@ func (c *Client) QuerySystemHostname(
 		return "", "", nil, fmt.Errorf("failed to unmarshal hostname response: %w", err)
 	}
 
-	worker := &job.WorkerInfo{
+	agent := &job.AgentInfo{
 		Hostname: resp.Hostname,
 		Labels:   result.Labels,
 	}
 
-	return jobID, result.Hostname, worker, nil
+	return jobID, result.Hostname, agent, nil
 }
 
 // QueryNetworkDNS queries DNS configuration from a specific hostname.
@@ -132,22 +132,22 @@ func (c *Client) QueryNetworkDNS(
 	return jobID, &result, resp.Hostname, nil
 }
 
-// QuerySystemStatusAny queries system status from any available host.
-func (c *Client) QuerySystemStatusAny(
+// QueryNodeStatusAny queries node status from any available host.
+func (c *Client) QueryNodeStatusAny(
 	ctx context.Context,
-) (string, *job.SystemStatusResponse, error) {
-	return c.QuerySystemStatus(ctx, job.AnyHost)
+) (string, *job.NodeStatusResponse, error) {
+	return c.QueryNodeStatus(ctx, job.AnyHost)
 }
 
-// QuerySystemStatusBroadcast queries system status from a broadcast target
+// QueryNodeStatusBroadcast queries node status from a broadcast target
 // (_all or a label target like role:web).
-func (c *Client) QuerySystemStatusBroadcast(
+func (c *Client) QueryNodeStatusBroadcast(
 	ctx context.Context,
 	target string,
-) (string, []*job.SystemStatusResponse, map[string]string, error) {
+) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "status.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -158,7 +158,7 @@ func (c *Client) QuerySystemStatusBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	var results []*job.SystemStatusResponse
+	var results []*job.NodeStatusResponse
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -166,7 +166,7 @@ func (c *Client) QuerySystemStatusBroadcast(
 			continue
 		}
 
-		var result job.SystemStatusResponse
+		var result job.NodeStatusResponse
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
@@ -181,11 +181,11 @@ func (c *Client) QuerySystemStatusBroadcast(
 	return jobID, results, errs, nil
 }
 
-// QuerySystemStatusAll queries system status from all hosts.
-func (c *Client) QuerySystemStatusAll(
+// QueryNodeStatusAll queries node status from all hosts.
+func (c *Client) QueryNodeStatusAll(
 	ctx context.Context,
-) (string, []*job.SystemStatusResponse, map[string]string, error) {
-	return c.QuerySystemStatusBroadcast(ctx, job.BroadcastHost)
+) (string, []*job.NodeStatusResponse, map[string]string, error) {
+	return c.QueryNodeStatusBroadcast(ctx, job.BroadcastHost)
 }
 
 // QueryNetworkPing pings a host from a specific hostname.
@@ -230,15 +230,15 @@ func (c *Client) QueryNetworkPingAny(
 	return c.QueryNetworkPing(ctx, job.AnyHost, address)
 }
 
-// QuerySystemHostnameBroadcast queries hostname from a broadcast target
+// QueryNodeHostnameBroadcast queries hostname from a broadcast target
 // (_all or a label target like role:web).
-func (c *Client) QuerySystemHostnameBroadcast(
+func (c *Client) QueryNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "system",
+		Category:  "node",
 		Operation: "hostname.get",
 		Data:      json.RawMessage(`{}`),
 	}
@@ -249,7 +249,7 @@ func (c *Client) QuerySystemHostnameBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*job.WorkerInfo)
+	results := make(map[string]*job.AgentInfo)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -265,7 +265,7 @@ func (c *Client) QuerySystemHostnameBroadcast(
 			continue
 		}
 
-		results[hostname] = &job.WorkerInfo{
+		results[hostname] = &job.AgentInfo{
 			Hostname: result.Hostname,
 			Labels:   result.Labels,
 		}
@@ -274,11 +274,11 @@ func (c *Client) QuerySystemHostnameBroadcast(
 	return jobID, results, errs, nil
 }
 
-// QuerySystemHostnameAll queries hostname from all hosts.
-func (c *Client) QuerySystemHostnameAll(
+// QueryNodeHostnameAll queries hostname from all hosts.
+func (c *Client) QueryNodeHostnameAll(
 	ctx context.Context,
-) (string, map[string]*job.WorkerInfo, map[string]string, error) {
-	return c.QuerySystemHostnameBroadcast(ctx, job.BroadcastHost)
+) (string, map[string]*job.AgentInfo, map[string]string, error) {
+	return c.QueryNodeHostnameBroadcast(ctx, job.BroadcastHost)
 }
 
 // QueryNetworkDNSBroadcast queries DNS configuration from a broadcast target
@@ -381,41 +381,41 @@ func (c *Client) QueryNetworkPingAll(
 	return c.QueryNetworkPingBroadcast(ctx, job.BroadcastHost, address)
 }
 
-// ListWorkers reads the worker registry KV bucket and returns all registered
-// workers. Workers register via heartbeat, so only live workers appear.
-func (c *Client) ListWorkers(
+// ListAgents reads the agent registry KV bucket and returns all registered
+// agents. Agents register via heartbeat, so only live agents appear.
+func (c *Client) ListAgents(
 	ctx context.Context,
-) ([]job.WorkerInfo, error) {
+) ([]job.AgentInfo, error) {
 	if c.registryKV == nil {
-		return nil, fmt.Errorf("worker registry not configured")
+		return nil, fmt.Errorf("agent registry not configured")
 	}
 
 	keys, err := c.registryKV.Keys(ctx)
 	if err != nil {
 		// Keys returns jetstream.ErrNoKeysFound when the bucket is empty.
 		if err.Error() == "nats: no keys found" {
-			return []job.WorkerInfo{}, nil
+			return []job.AgentInfo{}, nil
 		}
 		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
-	workers := make([]job.WorkerInfo, 0, len(keys))
+	agents := make([]job.AgentInfo, 0, len(keys))
 	for _, key := range keys {
 		entry, err := c.registryKV.Get(ctx, key)
 		if err != nil {
 			continue
 		}
 
-		var reg job.WorkerRegistration
+		var reg job.AgentRegistration
 		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
 			continue
 		}
 
-		workers = append(workers, job.WorkerInfo{
+		agents = append(agents, job.AgentInfo{
 			Hostname: reg.Hostname,
 			Labels:   reg.Labels,
 		})
 	}
 
-	return workers, nil
+	return agents, nil
 }

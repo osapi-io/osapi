@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-// Lifecycle represents a long-running server or worker.
+// Lifecycle represents a long-running server or agent.
 type Lifecycle interface {
 	// Start starts the server without blocking.
 	Start()

@@ -35,7 +35,7 @@ PUT    /service/{name}/disable - Disable service at boot
 
 ## Provider
 
-- `internal/provider/system/service/`
+- `internal/provider/node/service/`
 - Interface: `Provider` with `List()`, `Status(name)`, `Start(name)`,
   `Stop(name)`, `Restart(name)`, `Enable(name)`, `Disable(name)`
 - Implementation: `systemd_provider.go` using `systemctl` via cmdexec

@@ -82,8 +82,8 @@ const config: Config = {
           items: [
             {
               type: 'doc',
-              label: 'System Management',
-              docId: 'sidebar/features/system-management'
+              label: 'Node Management',
+              docId: 'sidebar/features/node-management'
             },
             {
               type: 'doc',
@@ -241,7 +241,7 @@ const config: Config = {
         id: 'openapi',
         docsPluginId: 'classic',
         config: {
-          system: {
+          osapi: {
             specPath: '../../osapi-sdk/pkg/osapi/gen/api.yaml',
             outputDir: 'docs/gen/api',
             downloadUrl:

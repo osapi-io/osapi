@@ -786,12 +786,12 @@ func (suite *UITestSuite) TestDisplayJobDetailResponse() {
 				created := "2026-01-01T00:00:00Z"
 				updatedAt := "2026-01-01T00:01:00Z"
 				errMsg := "timeout"
-				operation := map[string]interface{}{"type": "system.hostname"}
+				operation := map[string]interface{}{"type": "node.hostname"}
 				result := map[string]interface{}{"hostname": "web-01"}
 				event := "completed"
 				timestamp := "2026-01-01T00:01:00Z"
 				message := "job completed"
-				workerStatus := "completed"
+				agentStatus := "completed"
 				duration := "1.5s"
 				respStatus := "ok"
 
@@ -818,13 +818,13 @@ func (suite *UITestSuite) TestDisplayJobDetailResponse() {
 							Message:   &message,
 						},
 					},
-					WorkerStates: &map[string]struct {
+					AgentStates: &map[string]struct {
 						Duration *string `json:"duration,omitempty"`
 						Error    *string `json:"error,omitempty"`
 						Status   *string `json:"status,omitempty"`
 					}{
 						"web-01": {
-							Status:   &workerStatus,
+							Status:   &agentStatus,
 							Duration: &duration,
 						},
 					},
@@ -843,7 +843,7 @@ func (suite *UITestSuite) TestDisplayJobDetailResponse() {
 			}(),
 		},
 		{
-			name: "when worker states with multiple workers shows summary",
+			name: "when agent states with multiple agents shows summary",
 			resp: func() *gen.JobDetailResponse {
 				status := "completed"
 				completed := "completed"
@@ -854,7 +854,7 @@ func (suite *UITestSuite) TestDisplayJobDetailResponse() {
 
 				return &gen.JobDetailResponse{
 					Status: &status,
-					WorkerStates: &map[string]struct {
+					AgentStates: &map[string]struct {
 						Duration *string `json:"duration,omitempty"`
 						Error    *string `json:"error,omitempty"`
 						Status   *string `json:"status,omitempty"`

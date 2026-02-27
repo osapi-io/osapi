@@ -42,15 +42,15 @@ start_server() {
   go run ${PROGRAM} api server start &
   sleep 2
 
-  # Start job worker
-  go run ${PROGRAM} job worker start &
+  # Start node agent
+  go run ${PROGRAM} node agent start &
   sleep 3
 }
 
 # Function to stop the server
 stop_server() {
   pkill -f "api server start" || true
-  pkill -f "job worker start" || true
+  pkill -f "node agent start" || true
   pkill -f "nats server start" || true
   rm -rf .nats/
 }

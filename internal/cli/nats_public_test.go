@@ -170,13 +170,13 @@ func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
 			name:      "when namespace is set",
 			namespace: "osapi",
 			registryCfg: config.NATSRegistry{
-				Bucket:   "worker-registry",
+				Bucket:   "agent-registry",
 				TTL:      "30s",
 				Storage:  "file",
 				Replicas: 1,
 			},
 			validateFn: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "osapi-worker-registry", cfg.Bucket)
+				assert.Equal(suite.T(), "osapi-agent-registry", cfg.Bucket)
 				assert.Equal(suite.T(), 30*time.Second, cfg.TTL)
 				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
 				assert.Equal(suite.T(), 1, cfg.Replicas)
@@ -186,13 +186,13 @@ func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
 			name:      "when namespace is empty",
 			namespace: "",
 			registryCfg: config.NATSRegistry{
-				Bucket:   "worker-registry",
+				Bucket:   "agent-registry",
 				TTL:      "1m",
 				Storage:  "memory",
 				Replicas: 3,
 			},
 			validateFn: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "worker-registry", cfg.Bucket)
+				assert.Equal(suite.T(), "agent-registry", cfg.Bucket)
 				assert.Equal(suite.T(), 1*time.Minute, cfg.TTL)
 				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
 				assert.Equal(suite.T(), 3, cfg.Replicas)
@@ -202,7 +202,7 @@ func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
 			name:      "when TTL is invalid defaults to zero",
 			namespace: "",
 			registryCfg: config.NATSRegistry{
-				Bucket:   "worker-registry",
+				Bucket:   "agent-registry",
 				TTL:      "invalid",
 				Storage:  "file",
 				Replicas: 1,

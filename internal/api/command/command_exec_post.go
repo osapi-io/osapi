@@ -78,7 +78,7 @@ func (c Command) PostCommandExec(
 		return c.postCommandExecBroadcast(ctx, hostname, cmdName, args, cwd, timeout)
 	}
 
-	jobID, result, workerHostname, err := c.JobClient.ModifyCommandExec(
+	jobID, result, agentHostname, err := c.JobClient.ModifyCommandExec(
 		ctx,
 		hostname,
 		cmdName,
@@ -104,7 +104,7 @@ func (c Command) PostCommandExec(
 		JobId: &jobUUID,
 		Results: []gen.CommandResultItem{
 			{
-				Hostname:   workerHostname,
+				Hostname:   agentHostname,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,

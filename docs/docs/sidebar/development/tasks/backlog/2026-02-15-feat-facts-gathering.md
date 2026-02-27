@@ -63,7 +63,7 @@ GET    /facts/{category}     - Get facts by category (hardware, os,
 
 ## Provider
 
-- `internal/provider/system/facts/`
+- `internal/provider/node/facts/`
 - Aggregates data from existing providers (host, disk, mem, load) plus
   additional hardware detection (CPU model, virtualization type)
 - Use `lscpu`, `dmidecode`, `systemd-detect-virt`

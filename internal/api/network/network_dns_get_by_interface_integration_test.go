@@ -51,8 +51,8 @@ type NetworkDNSGetByInterfaceIntegrationTestSuite struct {
 }
 
 func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) SetupSuite() {
-	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.WorkerTarget, error) {
-		return []validation.WorkerTarget{
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
 			{Hostname: "server2"},
 		}, nil
@@ -88,7 +88,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 					Return("550e8400-e29b-41d4-a716-446655440000", &dns.Config{
 						DNSServers:    []string{"8.8.8.8"},
 						SearchDomains: []string{"example.com"},
-					}, "worker1", nil)
+					}, "agent1", nil)
 				return mock
 			},
 			wantCode: http.StatusOK,
@@ -224,7 +224,7 @@ func (suite *NetworkDNSGetByInterfaceIntegrationTestSuite) TestGetNetworkDNSByIn
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
 						},
-						"worker1",
+						"agent1",
 						nil,
 					)
 				return mock

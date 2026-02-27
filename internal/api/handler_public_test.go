@@ -87,13 +87,13 @@ func (s *HandlerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *HandlerPublicTestSuite) TestGetSystemHandler() {
+func (s *HandlerPublicTestSuite) TestGetNodeHandler() {
 	tests := []struct {
 		name     string
 		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name: "returns system handler functions",
+			name: "returns handler functions",
 			validate: func(handlers []func(e *echo.Echo)) {
 				s.NotEmpty(handlers)
 			},
@@ -107,7 +107,7 @@ func (s *HandlerPublicTestSuite) TestGetSystemHandler() {
 				}
 				s.NotEmpty(e.Routes())
 
-				req := httptest.NewRequest(http.MethodGet, "/system/hostname", nil)
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},
@@ -116,7 +116,7 @@ func (s *HandlerPublicTestSuite) TestGetSystemHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.GetSystemHandler(s.mockJobClient)
+			handlers := s.server.GetNodeHandler(s.mockJobClient)
 
 			tt.validate(handlers)
 		})
@@ -388,7 +388,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			checker := &health.NATSChecker{}
 
 			handlers := make([]func(e *echo.Echo), 0, 4)
-			handlers = append(handlers, s.server.GetSystemHandler(s.mockJobClient)...)
+			handlers = append(handlers, s.server.GetNodeHandler(s.mockJobClient)...)
 			handlers = append(handlers, s.server.GetNetworkHandler(s.mockJobClient)...)
 			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)
 			handlers = append(

@@ -185,41 +185,6 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /job/workers:
-    get:
-      summary: List active workers
-      description: Discover all active workers in the fleet by broadcasting a hostname query.
-      tags:
-        - job_operations
-      security:
-        - BearerAuth:
-            - job:read
-      responses:
-        '200':
-          description: List of active workers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListWorkersResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '500':
-          description: Error discovering workers.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-
   /job/{id}:
     get:
       summary: Get job detail
@@ -494,27 +459,27 @@ components:
           description: Error message if failed.
         hostname:
           type: string
-          description: Worker hostname that processed the job.
+          description: Agent hostname that processed the job.
         updated_at:
           type: string
           description: Last update timestamp.
         responses:
           type: object
-          description: Per-worker response data for broadcast jobs.
+          description: Per-agent response data for broadcast jobs.
           additionalProperties:
             type: object
             properties:
               status:
                 type: string
               data:
-                description: Worker result data.
+                description: Agent result data.
               error:
                 type: string
               hostname:
                 type: string
-        worker_states:
+        agent_states:
           type: object
-          description: Per-worker processing state for broadcast jobs.
+          description: Per-agent processing state for broadcast jobs.
           additionalProperties:
             type: object
             properties:
@@ -540,36 +505,13 @@ components:
                   completed, failed, retried).
               hostname:
                 type: string
-                description: Worker or source that generated the event.
+                description: Agent or source that generated the event.
               message:
                 type: string
                 description: Human-readable description of the event.
               error:
                 type: string
                 description: Error details if applicable.
-
-    ListWorkersResponse:
-      type: object
-      properties:
-        workers:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkerInfo'
-        total:
-          type: integer
-          description: Total number of active workers.
-      required:
-        - workers
-        - total
-
-    WorkerInfo:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the worker.
-      required:
-        - hostname
 
     QueueStatsResponse:
       type: object

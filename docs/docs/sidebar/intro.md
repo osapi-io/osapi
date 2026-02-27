@@ -26,8 +26,8 @@ osapi nats server start &
 # Start the API server
 osapi api server start &
 
-# Start a worker
-osapi job worker start &
+# Start a node agent
+osapi node agent start &
 ```
 
 Generate a token and configure the CLI:
@@ -47,10 +47,10 @@ Query the system:
 
 ```bash
 # Get the hostname
-osapi client system hostname
+osapi client node hostname
 
-# Check system status
-osapi client system status
+# Check node status
+osapi client node status
 
 # View health
 osapi client health
@@ -58,10 +58,10 @@ osapi client health
 
 ## Explore the Docs
 
-- [Features](sidebar/features/system-management.md) — what OSAPI can manage and
+- [Features](sidebar/features/node-management.md) — what OSAPI can manage and
   how each feature works
 - [Architecture](sidebar/architecture/architecture.md) — how the three processes
-  (NATS, API server, worker) fit together
+  (NATS, API server, agent) fit together
 - [Configuration](sidebar/usage/configuration.md) — full `osapi.yaml` reference
 - [API](category/api) — OpenAPI documentation for all endpoints
 - [CLI Usage](sidebar/usage/usage.mdx) — command reference with examples

@@ -13,11 +13,11 @@ Generate a token with direct permissions (overrides role expansion):
 
 ```bash
 $ osapi token generate --subject svc@example.com --roles=read \
-  -p system:read -p health:read
+  -p node:read -p health:read
 
   Token: eyJhbGciOiJI...x3Q
   Subject: svc@example.com    Roles: read
-  Permissions: system:read, health:read
+  Permissions: node:read, health:read
 ```
 
 ## Flags
@@ -28,5 +28,5 @@ $ osapi token generate --subject svc@example.com --roles=read \
 | `-u, --subject`     | Subject for the token (e.g., user ID)          | required |
 | `-p, --permissions` | Direct permissions (overrides role expansion)  | optional |
 
-Available permissions: `system:read`, `network:read`, `network:write`,
-`job:read`, `job:write`, `health:read`.
+Available permissions: `node:read`, `network:read`, `network:write`, `job:read`,
+`job:write`, `health:read`.

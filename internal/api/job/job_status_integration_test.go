@@ -80,7 +80,7 @@ func (suite *JobStatusIntegrationTestSuite) TestGetJobStatusValidation() {
 							"failed":    5,
 						},
 						OperationCounts: map[string]int{
-							"system.hostname.get": 15,
+							"node.hostname.get": 15,
 						},
 						DLQCount: 2,
 					}, nil)
@@ -190,7 +190,7 @@ func (suite *JobStatusIntegrationTestSuite) TestGetJobStatusRBAC() {
 							"failed":    5,
 						},
 						OperationCounts: map[string]int{
-							"system.hostname.get": 15,
+							"node.hostname.get": 15,
 						},
 						DLQCount: 2,
 					}, nil)

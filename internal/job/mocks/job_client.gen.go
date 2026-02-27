@@ -143,6 +143,21 @@ func (mr *MockJobClientMockRecorder) GetQueueStats(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueStats", reflect.TypeOf((*MockJobClient)(nil).GetQueueStats), arg0)
 }
 
+// ListAgents mocks base method.
+func (m *MockJobClient) ListAgents(arg0 context.Context) ([]job.AgentInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAgents", arg0)
+	ret0, _ := ret[0].([]job.AgentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAgents indicates an expected call of ListAgents.
+func (mr *MockJobClientMockRecorder) ListAgents(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAgents", reflect.TypeOf((*MockJobClient)(nil).ListAgents), arg0)
+}
+
 // ListJobs mocks base method.
 func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string, arg2, arg3 int) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()
@@ -156,21 +171,6 @@ func (m *MockJobClient) ListJobs(arg0 context.Context, arg1 string, arg2, arg3 i
 func (mr *MockJobClientMockRecorder) ListJobs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), arg0, arg1, arg2, arg3)
-}
-
-// ListWorkers mocks base method.
-func (m *MockJobClient) ListWorkers(arg0 context.Context) ([]job.WorkerInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListWorkers", arg0)
-	ret0, _ := ret[0].([]job.WorkerInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListWorkers indicates an expected call of ListWorkers.
-func (mr *MockJobClientMockRecorder) ListWorkers(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWorkers", reflect.TypeOf((*MockJobClient)(nil).ListWorkers), arg0)
 }
 
 // ModifyCommandExec mocks base method.
@@ -428,121 +428,121 @@ func (mr *MockJobClientMockRecorder) QueryNetworkPingBroadcast(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNetworkPingBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryNetworkPingBroadcast), arg0, arg1, arg2)
 }
 
-// QuerySystemHostname mocks base method.
-func (m *MockJobClient) QuerySystemHostname(arg0 context.Context, arg1 string) (string, string, *job.WorkerInfo, error) {
+// QueryNodeHostname mocks base method.
+func (m *MockJobClient) QueryNodeHostname(arg0 context.Context, arg1 string) (string, string, *job.AgentInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemHostname", arg0, arg1)
+	ret := m.ctrl.Call(m, "QueryNodeHostname", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(*job.WorkerInfo)
+	ret2, _ := ret[2].(*job.AgentInfo)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
 
-// QuerySystemHostname indicates an expected call of QuerySystemHostname.
-func (mr *MockJobClientMockRecorder) QuerySystemHostname(arg0, arg1 interface{}) *gomock.Call {
+// QueryNodeHostname indicates an expected call of QueryNodeHostname.
+func (mr *MockJobClientMockRecorder) QueryNodeHostname(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemHostname", reflect.TypeOf((*MockJobClient)(nil).QuerySystemHostname), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeHostname", reflect.TypeOf((*MockJobClient)(nil).QueryNodeHostname), arg0, arg1)
 }
 
-// QuerySystemHostnameAll mocks base method.
-func (m *MockJobClient) QuerySystemHostnameAll(arg0 context.Context) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+// QueryNodeHostnameAll mocks base method.
+func (m *MockJobClient) QueryNodeHostnameAll(arg0 context.Context) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemHostnameAll", arg0)
+	ret := m.ctrl.Call(m, "QueryNodeHostnameAll", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
+	ret1, _ := ret[1].(map[string]*job.AgentInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
 
-// QuerySystemHostnameAll indicates an expected call of QuerySystemHostnameAll.
-func (mr *MockJobClientMockRecorder) QuerySystemHostnameAll(arg0 interface{}) *gomock.Call {
+// QueryNodeHostnameAll indicates an expected call of QueryNodeHostnameAll.
+func (mr *MockJobClientMockRecorder) QueryNodeHostnameAll(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemHostnameAll", reflect.TypeOf((*MockJobClient)(nil).QuerySystemHostnameAll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeHostnameAll", reflect.TypeOf((*MockJobClient)(nil).QueryNodeHostnameAll), arg0)
 }
 
-// QuerySystemHostnameBroadcast mocks base method.
-func (m *MockJobClient) QuerySystemHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.WorkerInfo, map[string]string, error) {
+// QueryNodeHostnameBroadcast mocks base method.
+func (m *MockJobClient) QueryNodeHostnameBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.AgentInfo, map[string]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemHostnameBroadcast", arg0, arg1)
+	ret := m.ctrl.Call(m, "QueryNodeHostnameBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*job.WorkerInfo)
+	ret1, _ := ret[1].(map[string]*job.AgentInfo)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
 
-// QuerySystemHostnameBroadcast indicates an expected call of QuerySystemHostnameBroadcast.
-func (mr *MockJobClientMockRecorder) QuerySystemHostnameBroadcast(arg0, arg1 interface{}) *gomock.Call {
+// QueryNodeHostnameBroadcast indicates an expected call of QueryNodeHostnameBroadcast.
+func (mr *MockJobClientMockRecorder) QueryNodeHostnameBroadcast(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemHostnameBroadcast", reflect.TypeOf((*MockJobClient)(nil).QuerySystemHostnameBroadcast), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeHostnameBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryNodeHostnameBroadcast), arg0, arg1)
 }
 
-// QuerySystemStatus mocks base method.
-func (m *MockJobClient) QuerySystemStatus(arg0 context.Context, arg1 string) (string, *job.SystemStatusResponse, error) {
+// QueryNodeStatus mocks base method.
+func (m *MockJobClient) QueryNodeStatus(arg0 context.Context, arg1 string) (string, *job.NodeStatusResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemStatus", arg0, arg1)
+	ret := m.ctrl.Call(m, "QueryNodeStatus", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret1, _ := ret[1].(*job.NodeStatusResponse)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// QuerySystemStatus indicates an expected call of QuerySystemStatus.
-func (mr *MockJobClientMockRecorder) QuerySystemStatus(arg0, arg1 interface{}) *gomock.Call {
+// QueryNodeStatus indicates an expected call of QueryNodeStatus.
+func (mr *MockJobClientMockRecorder) QueryNodeStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatus", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatus), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeStatus", reflect.TypeOf((*MockJobClient)(nil).QueryNodeStatus), arg0, arg1)
 }
 
-// QuerySystemStatusAll mocks base method.
-func (m *MockJobClient) QuerySystemStatusAll(arg0 context.Context) (string, []*job.SystemStatusResponse, map[string]string, error) {
+// QueryNodeStatusAll mocks base method.
+func (m *MockJobClient) QueryNodeStatusAll(arg0 context.Context) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemStatusAll", arg0)
+	ret := m.ctrl.Call(m, "QueryNodeStatusAll", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret1, _ := ret[1].([]*job.NodeStatusResponse)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
 
-// QuerySystemStatusAll indicates an expected call of QuerySystemStatusAll.
-func (mr *MockJobClientMockRecorder) QuerySystemStatusAll(arg0 interface{}) *gomock.Call {
+// QueryNodeStatusAll indicates an expected call of QueryNodeStatusAll.
+func (mr *MockJobClientMockRecorder) QueryNodeStatusAll(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatusAll", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatusAll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeStatusAll", reflect.TypeOf((*MockJobClient)(nil).QueryNodeStatusAll), arg0)
 }
 
-// QuerySystemStatusAny mocks base method.
-func (m *MockJobClient) QuerySystemStatusAny(arg0 context.Context) (string, *job.SystemStatusResponse, error) {
+// QueryNodeStatusAny mocks base method.
+func (m *MockJobClient) QueryNodeStatusAny(arg0 context.Context) (string, *job.NodeStatusResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemStatusAny", arg0)
+	ret := m.ctrl.Call(m, "QueryNodeStatusAny", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*job.SystemStatusResponse)
+	ret1, _ := ret[1].(*job.NodeStatusResponse)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// QuerySystemStatusAny indicates an expected call of QuerySystemStatusAny.
-func (mr *MockJobClientMockRecorder) QuerySystemStatusAny(arg0 interface{}) *gomock.Call {
+// QueryNodeStatusAny indicates an expected call of QueryNodeStatusAny.
+func (mr *MockJobClientMockRecorder) QueryNodeStatusAny(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatusAny", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatusAny), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeStatusAny", reflect.TypeOf((*MockJobClient)(nil).QueryNodeStatusAny), arg0)
 }
 
-// QuerySystemStatusBroadcast mocks base method.
-func (m *MockJobClient) QuerySystemStatusBroadcast(arg0 context.Context, arg1 string) (string, []*job.SystemStatusResponse, map[string]string, error) {
+// QueryNodeStatusBroadcast mocks base method.
+func (m *MockJobClient) QueryNodeStatusBroadcast(arg0 context.Context, arg1 string) (string, []*job.NodeStatusResponse, map[string]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySystemStatusBroadcast", arg0, arg1)
+	ret := m.ctrl.Call(m, "QueryNodeStatusBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]*job.SystemStatusResponse)
+	ret1, _ := ret[1].([]*job.NodeStatusResponse)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
 
-// QuerySystemStatusBroadcast indicates an expected call of QuerySystemStatusBroadcast.
-func (mr *MockJobClientMockRecorder) QuerySystemStatusBroadcast(arg0, arg1 interface{}) *gomock.Call {
+// QueryNodeStatusBroadcast indicates an expected call of QueryNodeStatusBroadcast.
+func (mr *MockJobClientMockRecorder) QueryNodeStatusBroadcast(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySystemStatusBroadcast", reflect.TypeOf((*MockJobClient)(nil).QuerySystemStatusBroadcast), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryNodeStatusBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryNodeStatusBroadcast), arg0, arg1)
 }
 
 // RetryJob mocks base method.

@@ -12,7 +12,7 @@ network operations as MCP tools. This gives AI agents (Claude Code, Cursor,
 etc.) native tool access to OSAPI without HTTP boilerplate.
 
 The MCP server will be a fourth server-type command alongside `api server`,
-`job worker`, and `nats server`, reusing the same `JobClient` layer and
+`node agent`, and `nats server`, reusing the same `JobClient` layer and
 `Lifecycle` pattern.
 
 ## Design
@@ -26,7 +26,7 @@ The MCP server will be a fourth server-type command alongside `api server`,
 ### Tools (5 total)
 
 Each tool gets an optional `target` parameter (defaults to `_any`). Broadcast
-targets (`_all`, labels) return per-worker results.
+targets (`_all`, labels) return per-agent results.
 
 | Tool                  | JobClient Method                    | Parameters                                         |
 | --------------------- | ----------------------------------- | -------------------------------------------------- |

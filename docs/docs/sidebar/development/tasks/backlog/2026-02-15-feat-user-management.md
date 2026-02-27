@@ -38,7 +38,7 @@ DELETE /group/{name}        - Delete group
 
 ## Provider
 
-- `internal/provider/system/user/`
+- `internal/provider/node/user/`
 - Parse `/etc/passwd`, `/etc/shadow`, `/etc/group`
 - Implementations: `useradd`, `usermod`, `userdel`, `groupadd`, etc.
 - Return type: `UserInfo` with name, UID, GID, home, shell, groups, locked

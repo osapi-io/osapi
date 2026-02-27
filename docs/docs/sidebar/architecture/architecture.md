@@ -19,9 +19,8 @@ spread across many.
 ### NATS Server
 
 A lightweight message broker that stores job state and routes messages between
-the API server and workers. OSAPI embeds a NATS server with JetStream enabled,
-so you don't need to install anything extra — just run
-`osapi nats server start`.
+the API server and agents. OSAPI embeds a NATS server with JetStream enabled, so
+you don't need to install anything extra — just run `osapi nats server start`.
 
 For production deployments with multiple hosts, you can point everything at an
 external NATS cluster instead of the embedded one. Just change the `nats.server`
@@ -36,14 +35,14 @@ returns a job ID. Clients poll for results.
 
 Start it with `osapi api server start`.
 
-### Worker
+### Agent
 
 A background process that subscribes to NATS, picks up jobs, and executes the
 actual system operations (reading hostname, querying DNS, checking disk usage,
-etc.). Workers run with whatever privileges they have — if a worker can't read
+etc.). Agents run with whatever privileges they have — if an agent can't read
 something due to permissions, it reports the error rather than failing silently.
 
-Start it with `osapi job worker start`.
+Start it with `osapi node agent start`.
 
 ## Deployment Models
 
@@ -56,13 +55,13 @@ graph TD
     subgraph host["Linux Host"]
         CLI["CLI"]
         API["API Server"]
-        Worker["Worker"]
+        Agent["Agent"]
         NATS["NATS (embedded)"]
 
         CLI -->|HTTP| API
         API -->|publish job| NATS
-        NATS -->|deliver job| Worker
-        Worker -->|write result| NATS
+        NATS -->|deliver job| Agent
+        Agent -->|write result| NATS
         API -->|read result| NATS
     end
 ```
@@ -73,7 +72,7 @@ for managing a single appliance or for development.
 ### Multi-Host
 
 For managing a fleet, run a shared NATS server (or cluster) and point multiple
-workers at it. Each worker registers with its hostname and optional labels, and
+agents at it. Each agent registers with its hostname and optional labels, and
 the job routing system delivers work to the right place.
 
 ```mermaid
@@ -81,8 +80,8 @@ graph TD
     CLI["CLI"]
     API["API Server"]
     NATS["NATS (shared)"]
-    W1["Worker (web-01)"]
-    W2["Worker (web-02)"]
+    W1["Agent (web-01)"]
+    W2["Agent (web-02)"]
 
     CLI -->|HTTP| API
     API -->|publish job| NATS
@@ -95,45 +94,45 @@ graph TD
 
 You can target jobs to specific hosts, broadcast to all, or route by label:
 
-- `--target _any` — send to any available worker (load balanced)
-- `--target _all` — send to every worker (broadcast)
+- `--target _any` — send to any available agent (load balanced)
+- `--target _all` — send to every agent (broadcast)
 - `--target web-01` — send to a specific host
-- `--target group:web.dev` — send to all workers with a matching label
+- `--target group:web.dev` — send to all agents with a matching label
 
 ## How a Request Flows
 
-When you run a command like `osapi client system hostname`:
+When you run a command like `osapi client node hostname`:
 
 ```mermaid
 sequenceDiagram
     participant CLI
     participant API as API Server
     participant NATS
-    participant Worker
+    participant Agent
 
     CLI->>API: POST /api/v1/jobs
     API->>NATS: store job in KV
     API->>NATS: publish notification
     API-->>CLI: 201 (job_id)
-    NATS->>Worker: deliver notification
-    Worker->>NATS: read job from KV
-    Worker->>Worker: execute operation
-    Worker->>NATS: write result to KV
+    NATS->>Agent: deliver notification
+    Agent->>NATS: read job from KV
+    Agent->>Agent: execute operation
+    Agent->>NATS: write result to KV
     CLI->>API: GET /api/v1/jobs/{id}
     API->>NATS: read result from KV
     API-->>CLI: 200 (result)
 ```
 
 The API server never touches the operating system directly. It's a thin
-coordination layer between clients and workers.
+coordination layer between clients and agents.
 
 ## Further Reading
 
 For details on individual features — what they do, how they work, and how to
 configure them — see the Features section:
 
-- [System Management](../features/system-management.md) — hostname, disk,
-  memory, load
+- [Node Management](../features/node-management.md) — hostname, disk, memory,
+  load
 - [Network Management](../features/network-management.md) — DNS, ping
 - [Command Execution](../features/command-execution.md) — exec, shell
 - [Job System](../features/job-system.md) — async job processing and routing
@@ -150,7 +149,7 @@ configure them — see the Features section:
 - [System Architecture](system-architecture.md) — package layout, handler
   structure, provider pattern, and code-level details
 - [Job Architecture](job-architecture.md) — KV-first design, subject routing,
-  worker pipeline, and multi-host processing
+  agent pipeline, and multi-host processing
 - [Configuration](../usage/configuration.md) — full `osapi.yaml` reference with
   every supported field
 - [API Design Guidelines](api-guidelines.md) — REST conventions and endpoint

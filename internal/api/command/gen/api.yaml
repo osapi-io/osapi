@@ -230,7 +230,7 @@ components:
       properties:
         hostname:
           type: string
-          description: The hostname of the worker that executed the command.
+          description: The hostname of the agent that executed the command.
         stdout:
           type: string
           description: Standard output of the command.
@@ -250,7 +250,7 @@ components:
         error:
           type: string
           description: >
-            Error message if the worker failed to process the request.
+            Error message if the agent failed to process the request.
       required:
         - hostname
 

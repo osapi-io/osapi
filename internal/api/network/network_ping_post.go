@@ -63,7 +63,7 @@ func (n Network) PostNetworkPing(
 		return n.postNetworkPingBroadcast(ctx, hostname, request.Body.Address)
 	}
 
-	jobID, pingResult, workerHostname, err := n.JobClient.QueryNetworkPing(
+	jobID, pingResult, agentHostname, err := n.JobClient.QueryNetworkPing(
 		ctx,
 		hostname,
 		request.Body.Address,
@@ -79,7 +79,7 @@ func (n Network) PostNetworkPing(
 	return gen.PostNetworkPing200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.PingResponse{
-			buildPingResponse(workerHostname, pingResult),
+			buildPingResponse(agentHostname, pingResult),
 		},
 	}, nil
 }

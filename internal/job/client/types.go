@@ -55,31 +55,31 @@ type JobClient interface {
 	) (*ListJobsResult, error)
 
 	// Query operations — all return (jobID, result..., error)
-	QuerySystemStatus(
+	QueryNodeStatus(
 		ctx context.Context,
 		hostname string,
-	) (string, *job.SystemStatusResponse, error)
-	QuerySystemStatusAny(
+	) (string, *job.NodeStatusResponse, error)
+	QueryNodeStatusAny(
 		ctx context.Context,
-	) (string, *job.SystemStatusResponse, error)
-	QuerySystemStatusAll(
+	) (string, *job.NodeStatusResponse, error)
+	QueryNodeStatusAll(
 		ctx context.Context,
-	) (string, []*job.SystemStatusResponse, map[string]string, error)
-	QuerySystemStatusBroadcast(
+	) (string, []*job.NodeStatusResponse, map[string]string, error)
+	QueryNodeStatusBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, []*job.SystemStatusResponse, map[string]string, error)
-	QuerySystemHostname(
+	) (string, []*job.NodeStatusResponse, map[string]string, error)
+	QueryNodeHostname(
 		ctx context.Context,
 		hostname string,
-	) (string, string, *job.WorkerInfo, error)
-	QuerySystemHostnameAll(
+	) (string, string, *job.AgentInfo, error)
+	QueryNodeHostnameAll(
 		ctx context.Context,
-	) (string, map[string]*job.WorkerInfo, map[string]string, error)
-	QuerySystemHostnameBroadcast(
+	) (string, map[string]*job.AgentInfo, map[string]string, error)
+	QueryNodeHostnameBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]*job.WorkerInfo, map[string]string, error)
+	) (string, map[string]*job.AgentInfo, map[string]string, error)
 	QueryNetworkDNS(
 		ctx context.Context,
 		hostname string,
@@ -173,10 +173,10 @@ type JobClient interface {
 		timeout int,
 	) (string, map[string]*command.Result, map[string]string, error)
 
-	// Worker discovery
-	ListWorkers(
+	// Agent discovery
+	ListAgents(
 		ctx context.Context,
-	) ([]job.WorkerInfo, error)
+	) ([]job.AgentInfo, error)
 
 	// Job deletion
 	DeleteJob(
@@ -191,7 +191,7 @@ type JobClient interface {
 		targetHostname string,
 	) (*CreateJobResult, error)
 
-	// Worker operations - used by job workers for processing
+	// Agent operations - used by agents for processing
 	WriteStatusEvent(
 		ctx context.Context,
 		jobID string,
@@ -242,12 +242,12 @@ type ListJobsResult struct {
 
 // computedJobStatus represents the computed status from events
 type computedJobStatus struct {
-	Status       string
-	Error        string
-	Hostname     string
-	UpdatedAt    string
-	WorkerStates map[string]job.WorkerState
-	Timeline     []job.TimelineEvent
+	Status      string
+	Error       string
+	Hostname    string
+	UpdatedAt   string
+	AgentStates map[string]job.AgentState
+	Timeline    []job.TimelineEvent
 }
 
 // Ensure Client implements JobClient interface

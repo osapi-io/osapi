@@ -24,7 +24,7 @@ The file exporter writes one JSON object per line (JSONL). Each line is a
 complete audit entry:
 
 ```jsonl
-{"id":"550e8400-e29b-41d4-a716-446655440000","timestamp":"2026-02-21T10:30:00Z","user":"ops@example.com","roles":["admin"],"method":"GET","path":"/system/hostname","source_ip":"127.0.0.1","response_code":200,"duration_ms":42}
+{"id":"550e8400-e29b-41d4-a716-446655440000","timestamp":"2026-02-21T10:30:00Z","user":"ops@example.com","roles":["admin"],"method":"GET","path":"/node/hostname","source_ip":"127.0.0.1","response_code":200,"duration_ms":42}
 {"id":"661f1234-e29b-41d4-a716-446655440111","timestamp":"2026-02-21T10:29:55Z","user":"ops@example.com","roles":["admin"],"method":"POST","path":"/job","source_ip":"127.0.0.1","response_code":201,"duration_ms":15}
 ```
 

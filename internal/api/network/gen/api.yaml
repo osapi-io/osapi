@@ -269,7 +269,7 @@ components:
       properties:
         hostname:
           type: string
-          description: The hostname of the worker that executed the ping.
+          description: The hostname of the agent that executed the ping.
         packets_sent:
           type: integer
           description: Number of packets sent.
@@ -297,7 +297,7 @@ components:
           example: "24.309240ms"
         error:
           type: string
-          description: Error message if the worker failed to process the request.
+          description: Error message if the agent failed to process the request.
       required:
         - hostname
 
@@ -321,7 +321,7 @@ components:
       properties:
         hostname:
           type: string
-          description: The hostname of the worker that served this DNS config.
+          description: The hostname of the agent that served this DNS config.
         servers:
           type: array
           description: List of configured DNS servers.
@@ -335,7 +335,7 @@ components:
             type: string
         error:
           type: string
-          description: Error message if the worker failed to process the request.
+          description: Error message if the agent failed to process the request.
       required:
         - hostname
 

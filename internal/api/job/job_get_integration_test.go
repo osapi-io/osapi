@@ -118,8 +118,8 @@ func (suite *JobGetIntegrationTestSuite) TestGetJobByIDValidation() {
 							{
 								Timestamp: time.Date(2026, 2, 19, 10, 0, 3, 0, time.UTC),
 								Event:     "failed",
-								Hostname:  "worker-1",
-								Message:   "Job failed on worker-1",
+								Hostname:  "agent-1",
+								Message:   "Job failed on agent-1",
 								Error:     "timeout",
 							},
 						},

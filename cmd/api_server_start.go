@@ -45,8 +45,8 @@ import (
 // ServerManager responsible for Server operations.
 type ServerManager interface {
 	cli.Lifecycle
-	// GetSystemHandler returns system handler for registration.
-	GetSystemHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetNodeHandler returns node handler for registration.
+	GetNodeHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNetworkHandler returns network handler for registration.
 	GetNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetJobHandler returns job handler for registration.
@@ -96,7 +96,7 @@ var apiServerStartCmd = &cobra.Command{
 
 		nc, jobsKV := connectNATSAndKV(ctx, kvBucket)
 
-		// Create registry KV bucket for worker discovery
+		// Create registry KV bucket for agent discovery
 		registryKVConfig := cli.BuildRegistryKVConfig(namespace, appConfig.NATS.Registry)
 		registryKV, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, registryKVConfig)
 		if err != nil {
@@ -114,16 +114,16 @@ var apiServerStartCmd = &cobra.Command{
 		}
 
 		validation.RegisterTargetValidator(
-			func(ctx context.Context) ([]validation.WorkerTarget, error) {
-				workers, err := jc.ListWorkers(ctx)
+			func(ctx context.Context) ([]validation.AgentTarget, error) {
+				agents, err := jc.ListAgents(ctx)
 				if err != nil {
 					return nil, err
 				}
-				targets := make([]validation.WorkerTarget, 0, len(workers))
-				for _, w := range workers {
-					targets = append(targets, validation.WorkerTarget{
-						Hostname: w.Hostname,
-						Labels:   w.Labels,
+				targets := make([]validation.AgentTarget, 0, len(agents))
+				for _, a := range agents {
+					targets = append(targets, validation.AgentTarget{
+						Hostname: a.Hostname,
+						Labels:   a.Labels,
 					})
 				}
 				return targets, nil
@@ -312,7 +312,7 @@ func registerAPIHandlers(
 	startTime := time.Now()
 
 	handlers := make([]func(e *echo.Echo), 0, 7)
-	handlers = append(handlers, sm.GetSystemHandler(jc)...)
+	handlers = append(handlers, sm.GetNodeHandler(jc)...)
 	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
 	handlers = append(handlers, sm.GetCommandHandler(jc)...)

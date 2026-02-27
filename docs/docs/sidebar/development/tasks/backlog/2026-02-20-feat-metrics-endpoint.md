@@ -1,5 +1,5 @@
 ---
-title: Add custom OTel metrics for jobs, workers, and NATS
+title: Add custom OTel metrics for jobs, agents, and NATS
 status: backlog
 created: 2026-02-20
 updated: 2026-02-20
@@ -11,21 +11,21 @@ The `/metrics` endpoint and Prometheus exporter are in place (see
 `.tasks/done/2026-02-20-feat-metrics-endpoint.md`), and `otelecho` already
 provides HTTP request metrics automatically. This task adds custom
 application-level metrics using the OTel metrics API so operators get visibility
-into job throughput, worker health, and NATS connectivity.
+into job throughput, agent health, and NATS connectivity.
 
 ## Metrics to Add
 
-### Job metrics (instrument in `internal/job/client/` and worker)
+### Job metrics (instrument in `internal/job/client/` and agent)
 
 - `osapi_jobs_created_total` — counter of jobs created
 - `osapi_jobs_completed_total` — counter by status (completed/failed)
 - `osapi_job_duration_seconds` — histogram of job processing time
 - `osapi_jobs_active` — gauge of currently processing jobs
 
-### Worker metrics (instrument in `internal/job/worker/`)
+### Agent metrics (instrument in `internal/agent/`)
 
-- `osapi_workers_connected` — gauge of connected workers
-- `osapi_worker_jobs_processed_total` — counter per worker
+- `osapi_agents_connected` — gauge of connected agents
+- `osapi_agent_jobs_processed_total` — counter per agent
 
 ### NATS metrics
 
@@ -47,20 +47,20 @@ exporter at `/metrics`.
 
 ### Components to update
 
-- `internal/job/worker/processor.go` — record job duration, active jobs,
-  completion status
-- `internal/job/worker/consumer.go` — record worker connection status
+- `internal/agent/processor.go` — record job duration, active jobs, completion
+  status
+- `internal/agent/consumer.go` — record agent connection status
 - `internal/job/client/` — record job creation counter
-- `cmd/job_worker_start.go` — init worker-side meter provider
+- `cmd/node_agent_start.go` — init agent-side meter provider
 
 ## Notes
 
-- Worker runs as a separate process — it needs its own `InitMeter()` call and
+- Agent runs as a separate process — it needs its own `InitMeter()` call and
   `/metrics` endpoint (or push-based exporter)
 - All metric names should use `osapi_` prefix to avoid collisions
 - Use `metric.WithDescription()` and `metric.WithUnit()` for each instrument so
   Prometheus exposition includes HELP and UNIT lines
-- Consider whether worker metrics should be exposed via a separate HTTP port or
+- Consider whether agent metrics should be exposed via a separate HTTP port or
   pushed to an OTel collector
 
 ## Outcome

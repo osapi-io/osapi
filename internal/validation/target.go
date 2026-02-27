@@ -30,68 +30,68 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// WorkerTarget holds the routing-relevant fields of an active worker.
-type WorkerTarget struct {
+// AgentTarget holds the routing-relevant fields of an active agent.
+type AgentTarget struct {
 	Hostname string
 	Labels   map[string]string
 }
 
-// WorkerLister returns active workers with their hostnames and labels.
-type WorkerLister func(ctx context.Context) ([]WorkerTarget, error)
+// AgentLister returns active agents with their hostnames and labels.
+type AgentLister func(ctx context.Context) ([]AgentTarget, error)
 
-var workerLister WorkerLister
+var agentLister AgentLister
 
 // labelSegmentRe matches NATS subject-safe segments (same as job.labelSegmentRegex).
 var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 var (
-	cacheMu       sync.Mutex
-	cachedWorkers []WorkerTarget
-	cacheExpiry   time.Time
-	cacheTTL      = 5 * time.Second
+	cacheMu      sync.Mutex
+	cachedAgents []AgentTarget
+	cacheExpiry  time.Time
+	cacheTTL     = 5 * time.Second
 )
 
 // RegisterTargetValidator registers the valid_target custom validator and
-// sets the WorkerLister it uses. Call this at API server startup after the
+// sets the AgentLister it uses. Call this at API server startup after the
 // job client is created, or in test SetupSuite to inject a mock.
 func RegisterTargetValidator(
-	lister WorkerLister,
+	lister AgentLister,
 ) {
 	// Cannot error: tag is non-empty and function is non-nil.
 	_ = instance.RegisterValidation("valid_target", validTarget)
-	workerLister = lister
+	agentLister = lister
 	// Reset cache so the new lister is used immediately.
 	cacheMu.Lock()
 	cacheExpiry = time.Time{}
 	cacheMu.Unlock()
 }
 
-// getWorkers returns the cached worker list, refreshing from NATS when
+// getAgents returns the cached agent list, refreshing from NATS when
 // the cache has expired.
-func getWorkers() ([]WorkerTarget, error) {
+func getAgents() ([]AgentTarget, error) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
 	if time.Now().Before(cacheExpiry) {
-		return cachedWorkers, nil
+		return cachedAgents, nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	workers, err := workerLister(ctx)
+	agents, err := agentLister(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	cachedWorkers = workers
+	cachedAgents = agents
 	cacheExpiry = time.Now().Add(cacheTTL)
 
-	return workers, nil
+	return agents, nil
 }
 
 // validTarget checks whether the target is a valid routing pattern
-// (_any, _all), a label matching an active worker, or a direct hostname.
+// (_any, _all), a label matching an active agent, or a direct hostname.
 func validTarget(fl validator.FieldLevel) bool {
 	target := fl.Field().String()
 
@@ -99,11 +99,11 @@ func validTarget(fl validator.FieldLevel) bool {
 		return true
 	}
 
-	if workerLister == nil {
+	if agentLister == nil {
 		return false
 	}
 
-	// Label target: validate format then check against active workers.
+	// Label target: validate format then check against active agents.
 	if i := strings.IndexByte(target, ':'); i > 0 && i < len(target)-1 {
 		key := target[:i]
 		value := target[i+1:]
@@ -113,7 +113,7 @@ func validTarget(fl validator.FieldLevel) bool {
 		return matchesLabel(key, value)
 	}
 
-	// Direct hostname target: check against active workers.
+	// Direct hostname target: check against active agents.
 	return matchesHostname(target)
 }
 
@@ -133,20 +133,20 @@ func isValidLabelFormat(
 	return true
 }
 
-// matchesLabel checks whether any active worker has a label whose key
+// matchesLabel checks whether any active agent has a label whose key
 // matches and whose value is a prefix match (hierarchical). For example,
-// target "group:web" matches a worker with label group=web.dev.us-east.
+// target "group:web" matches an agent with label group=web.dev.us-east.
 func matchesLabel(
 	key, value string,
 ) bool {
-	workers, err := getWorkers()
+	agents, err := getAgents()
 	if err != nil {
 		return false
 	}
 
-	for _, w := range workers {
-		if wv, ok := w.Labels[key]; ok {
-			if wv == value || strings.HasPrefix(wv, value+".") {
+	for _, a := range agents {
+		if av, ok := a.Labels[key]; ok {
+			if av == value || strings.HasPrefix(av, value+".") {
 				return true
 			}
 		}
@@ -155,17 +155,17 @@ func matchesLabel(
 	return false
 }
 
-// matchesHostname checks whether any active worker has the given hostname.
+// matchesHostname checks whether any active agent has the given hostname.
 func matchesHostname(
 	target string,
 ) bool {
-	workers, err := getWorkers()
+	agents, err := getAgents()
 	if err != nil {
 		return false
 	}
 
-	for _, w := range workers {
-		if w.Hostname == target {
+	for _, a := range agents {
+		if a.Hostname == target {
 			return true
 		}
 	}

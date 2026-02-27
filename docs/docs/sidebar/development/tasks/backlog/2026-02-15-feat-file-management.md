@@ -10,7 +10,7 @@ updated: 2026-02-19
 Add file and directory management in two parts: a content-addressed **blob
 store** for getting files onto the system, and **file operations** for managing
 files on disk. The blob store is a shared primitive — any future feature that
-needs to push files to workers (configs, certs, packages) uses the same
+needs to push files to agents (configs, certs, packages) uses the same
 upload-once, reference-by-SHA mechanism.
 
 ## Part 1: Blob Store (`/blobs`)
@@ -36,9 +36,9 @@ GET    /blobs                 - List blobs (with metadata, pagination)
 Good for config files, scripts, small binaries.
 
 **External reference:** `POST /blobs/register` records a pointer to a file that
-already lives somewhere workers can reach — S3 bucket, NFS mount, HTTPS URL. No
+already lives somewhere agents can reach — S3 bucket, NFS mount, HTTPS URL. No
 bytes are transferred through OSAPI. Good for ISOs, large packages, anything
-already hosted. Workers resolve the source at execution time.
+already hosted. Agents resolve the source at execution time.
 
 ```go
 type BlobRef struct {
@@ -77,7 +77,7 @@ type BlobMetadata struct {
 | **S3-compatible**     | `blobs.backend: s3`   | Large files, existing cloud infra                          | AWS S3, MinIO, R2, etc.                            |
 | **Filesystem**        | `blobs.backend: fs`   | NAS/NFS mounts, air-gapped environments                    | Simple directory on a shared mount.                |
 
-Backend is selected via config. Workers use the same interface to pull blobs
+Backend is selected via config. Agents use the same interface to pull blobs
 regardless of backend:
 
 ```yaml
@@ -101,7 +101,7 @@ blobs:
 ### How Jobs Reference Blobs
 
 Operations that need a file include the SHA in the job payload instead of inline
-content. Workers pull the blob from the configured store when executing:
+content. Agents pull the blob from the configured store when executing:
 
 ```json
 {
@@ -115,7 +115,7 @@ content. Workers pull the blob from the configured store when executing:
 }
 ```
 
-Upload once, deploy to many workers (broadcast `_all` or label targeting). CLI
+Upload once, deploy to many agents (broadcast `_all` or label targeting). CLI
 workflow:
 
 ```bash
@@ -133,7 +133,7 @@ osapi client blob register \
 osapi client blob check a1b2c3...
 # → exists: true, size: 4096, source: managed
 
-# Use it in a job — worker resolves source automatically
+# Use it in a job — agent resolves source automatically
 osapi client file write /etc/nginx/nginx.conf \
   --source-sha a1b2c3... --mode 0644
 ```
@@ -176,7 +176,7 @@ POST   /file/copy             - Copy file within the system
 
 ### Provider
 
-- `internal/provider/system/file/`
+- `internal/provider/node/file/`
 - `stat`: path, size, mode, owner, group, modified, is_dir, is_link, checksum
   (sha256)
 - `read`: line offset/limit, binary detection
@@ -232,9 +232,9 @@ pattern.
 
 - Blob uploads go direct to the API server (not through the job system) —
   they're infrastructure, not operations
-- File operations go through the job system as usual (worker executes on target
+- File operations go through the job system as usual (agent executes on target
   host)
-- Workers need access to the blob store to pull files — same config, same
+- Agents need access to the blob store to pull files — same config, same
   interface
 - Path validation to prevent directory traversal attacks
 - Size limits on inline content (small config snippets OK, large files must use

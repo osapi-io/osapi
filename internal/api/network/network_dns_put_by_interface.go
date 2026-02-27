@@ -74,7 +74,7 @@ func (n Network) PutNetworkDNS(
 		return n.putNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
 	}
 
-	jobID, workerHostname, changed, err := n.JobClient.ModifyNetworkDNS(
+	jobID, agentHostname, changed, err := n.JobClient.ModifyNetworkDNS(
 		ctx,
 		hostname,
 		servers,
@@ -93,7 +93,7 @@ func (n Network) PutNetworkDNS(
 		JobId: &jobUUID,
 		Results: []gen.DNSUpdateResultItem{
 			{
-				Hostname: workerHostname,
+				Hostname: agentHostname,
 				Status:   gen.Ok,
 				Changed:  &changed,
 			},

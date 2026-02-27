@@ -72,7 +72,7 @@ func (c Command) PostCommandShell(
 		return c.postCommandShellBroadcast(ctx, hostname, cmdStr, cwd, timeout)
 	}
 
-	jobID, result, workerHostname, err := c.JobClient.ModifyCommandShell(
+	jobID, result, agentHostname, err := c.JobClient.ModifyCommandShell(
 		ctx,
 		hostname,
 		cmdStr,
@@ -97,7 +97,7 @@ func (c Command) PostCommandShell(
 		JobId: &jobUUID,
 		Results: []gen.CommandResultItem{
 			{
-				Hostname:   workerHostname,
+				Hostname:   agentHostname,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,

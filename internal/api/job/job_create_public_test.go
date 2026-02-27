@@ -68,7 +68,7 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 			name: "success",
 			request: gen.PostJobRequestObject{
 				Body: &gen.CreateJobRequest{
-					Operation:      map[string]interface{}{"type": "system.hostname.get"},
+					Operation:      map[string]interface{}{"type": "node.hostname.get"},
 					TargetHostname: "_any",
 				},
 			},

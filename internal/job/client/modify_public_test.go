@@ -171,7 +171,7 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAny() {
 			servers:       []string{"invalid.ip"},
 			searchDomains: []string{"example.com"},
 			iface:         "eth0",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},
@@ -250,14 +250,14 @@ func (s *ModifyPublicTestSuite) TestModifyNetworkDNSAll() {
 			errorContains: "failed to collect broadcast responses",
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 	}
 

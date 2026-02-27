@@ -60,11 +60,11 @@ flowchart TD
 
 Built-in roles expand to these default permissions:
 
-| Role    | Permissions                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------- |
-| `admin` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read` |
-| `write` | `system:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`               |
-| `read`  | `system:read`, `network:read`, `job:read`, `health:read`                                             |
+| Role    | Permissions                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------------- |
+| `admin` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read` |
+| `write` | `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`               |
+| `read`  | `node:read`, `network:read`, `job:read`, `health:read`                                             |
 
 ### Custom Roles
 
@@ -78,7 +78,7 @@ api:
       roles:
         ops:
           permissions:
-            - system:read
+            - node:read
             - health:read
         netadmin:
           permissions:

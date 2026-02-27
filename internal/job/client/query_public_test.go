@@ -64,7 +64,7 @@ func (s *QueryPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatus() {
 	tests := []struct {
 		name          string
 		hostname      string
@@ -160,7 +160,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 				tt.mockError,
 			)
 
-			_, result, err := s.jobsClient.QuerySystemStatus(s.ctx, tt.hostname)
+			_, result, err := s.jobsClient.QueryNodeStatus(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -176,7 +176,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatus() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
+func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 	tests := []struct {
 		name          string
 		hostname      string
@@ -184,7 +184,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 		mockError     error
 		expectError   bool
 		errorContains string
-		validateFunc  func(result string, worker *job.WorkerInfo)
+		validateFunc  func(result string, agent *job.AgentInfo)
 	}{
 		{
 			name:     "success",
@@ -199,14 +199,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 			hostname: "server1",
 			responseData: `{
 				"status": "completed",
-				"hostname": "worker1",
+				"hostname": "agent1",
 				"data": {"hostname": "server1.example.com", "labels": {"group": "web", "env": "prod"}}
 			}`,
-			validateFunc: func(result string, worker *job.WorkerInfo) {
+			validateFunc: func(result string, agent *job.AgentInfo) {
 				s.Equal("server1.example.com", result)
-				s.Require().NotNil(worker)
-				s.Equal("worker1", worker.Hostname)
-				s.Equal(map[string]string{"group": "web", "env": "prod"}, worker.Labels)
+				s.Require().NotNil(agent)
+				s.Equal("agent1", agent.Hostname)
+				s.Equal(map[string]string{"group": "web", "env": "prod"}, agent.Labels)
 			},
 		},
 		{
@@ -260,12 +260,12 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 				tt.mockError,
 			)
 
-			_, result, worker, err := s.jobsClient.QuerySystemHostname(s.ctx, tt.hostname)
+			_, result, agent, err := s.jobsClient.QueryNodeHostname(s.ctx, tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
-				s.Nil(worker)
+				s.Nil(agent)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}
@@ -274,7 +274,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostname() {
 			}
 
 			if tt.validateFunc != nil {
-				tt.validateFunc(result, worker)
+				tt.validateFunc(result, agent)
 			}
 		})
 	}
@@ -512,7 +512,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 		{
 			name:          "publish error",
 			address:       "unreachable.host",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},
@@ -545,7 +545,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAny() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatusAny() {
 	tests := []struct {
 		name          string
 		responseData  string
@@ -565,7 +565,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 		},
 		{
 			name:          "publish error",
-			mockError:     errors.New("no workers available"),
+			mockError:     errors.New("no agents available"),
 			expectError:   true,
 			errorContains: "failed to publish and wait",
 		},
@@ -582,7 +582,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAny() {
 				tt.mockError,
 			)
 
-			_, result, err := s.jobsClient.QuerySystemStatusAny(s.ctx)
+			_, result, err := s.jobsClient.QueryNodeStatusAny(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -668,12 +668,12 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 				tt.opts,
 			)
 
-			_, result, worker, err := jobsClient.QuerySystemHostname(s.ctx, "server1")
+			_, result, agent, err := jobsClient.QueryNodeHostname(s.ctx, "server1")
 
 			if tt.expectError {
 				s.Error(err)
 				s.Empty(result)
-				s.Nil(worker)
+				s.Nil(agent)
 				if tt.errorContains != "" {
 					s.Contains(err.Error(), tt.errorContains)
 				}
@@ -684,7 +684,7 @@ func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
+func (s *QueryPublicTestSuite) TestQueryNodeStatusAll() {
 	tests := []struct {
 		name          string
 		timeout       time.Duration
@@ -716,14 +716,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 			expectedCount: 1,
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 		{
 			name: "KV put fails",
@@ -830,7 +830,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 				tt.opts,
 			)
 
-			_, result, _, err := jobsClient.QuerySystemStatusAll(s.ctx)
+			_, result, _, err := jobsClient.QueryNodeStatusAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -846,7 +846,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemStatusAll() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
+func (s *QueryPublicTestSuite) TestQueryNodeHostnameAll() {
 	tests := []struct {
 		name          string
 		timeout       time.Duration
@@ -898,14 +898,14 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 			errorContains: "failed to collect broadcast responses",
 		},
 		{
-			name:    "no workers respond",
+			name:    "no agents respond",
 			timeout: 50 * time.Millisecond,
 			opts: &publishAndCollectMockOpts{
 				mockError: errors.New("unused"),
 				errorMode: errorOnTimeout,
 			},
 			expectError:   true,
-			errorContains: "no workers responded",
+			errorContains: "no agents responded",
 		},
 	}
 
@@ -931,7 +931,7 @@ func (s *QueryPublicTestSuite) TestQuerySystemHostnameAll() {
 				tt.opts,
 			)
 
-			_, result, _, err := jobsClient.QuerySystemHostnameAll(s.ctx)
+			_, result, _, err := jobsClient.QueryNodeHostnameAll(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
@@ -1129,7 +1129,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 	}
 }
 
-func (s *QueryPublicTestSuite) TestListWorkers() {
+func (s *QueryPublicTestSuite) TestListAgents() {
 	tests := []struct {
 		name          string
 		setupMockKV   func(*jobmocks.MockKeyValue)
@@ -1142,7 +1142,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			name:          "when registryKV is nil returns error",
 			useRegistryKV: false,
 			expectError:   true,
-			errorContains: "worker registry not configured",
+			errorContains: "agent registry not configured",
 		},
 		{
 			name:          "when bucket is empty returns empty list",
@@ -1155,12 +1155,12 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			expectedCount: 0,
 		},
 		{
-			name:          "when workers exist returns worker list",
+			name:          "when agents exist returns agent list",
 			useRegistryKV: true,
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
@@ -1169,7 +1169,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 					),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1179,7 +1179,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 					),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
 			expectedCount: 2,
@@ -1201,18 +1201,18 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 1,
@@ -1223,20 +1223,20 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			setupMockKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
-					Return([]string{"workers.server1", "workers.server2"}, nil)
+					Return([]string{"agents.server1", "agents.server2"}, nil)
 
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(
 					[]byte(`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`),
 				)
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server1").
+					Get(gomock.Any(), "agents.server1").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return([]byte(`invalid json`))
 				kv.EXPECT().
-					Get(gomock.Any(), "workers.server2").
+					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
 			expectedCount: 1,
@@ -1261,7 +1261,7 @@ func (s *QueryPublicTestSuite) TestListWorkers() {
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 
-			result, err := jobsClient.ListWorkers(s.ctx)
+			result, err := jobsClient.ListAgents(s.ctx)
 
 			if tt.expectError {
 				s.Error(err)
