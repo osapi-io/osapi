@@ -69,7 +69,7 @@ func (suite *AuditListIntegrationTestSuite) TestGetAuditLogsValidation() {
 						User:         "user@example.com",
 						Roles:        []string{"admin"},
 						Method:       "GET",
-						Path:         "/system/hostname",
+						Path:         "/node/hostname",
 						SourceIP:     "127.0.0.1",
 						ResponseCode: 200,
 						DurationMs:   42,

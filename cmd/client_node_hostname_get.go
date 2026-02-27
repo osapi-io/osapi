@@ -40,7 +40,7 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		resp, err := sdkClient.Node.Hostname(ctx, host)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get system status endpoint", err)
+			cli.LogFatal(logger, "failed to get node hostname endpoint", err)
 		}
 
 		switch resp.StatusCode() {

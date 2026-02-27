@@ -103,7 +103,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 	}{
 		{
 			name:    "authenticated request is logged",
-			path:    "/system/hostname",
+			path:    "/node/hostname",
 			subject: "user@example.com",
 			roles:   []string{"admin"},
 			validateFunc: func(store *fakeAuditStore) {
@@ -113,14 +113,14 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 				s.Len(entries, 1)
 				s.Equal("user@example.com", entries[0].User)
 				s.Equal("GET", entries[0].Method)
-				s.Equal("/system/hostname", entries[0].Path)
+				s.Equal("/node/hostname", entries[0].Path)
 				s.Equal(http.StatusOK, entries[0].ResponseCode)
 				s.Equal([]string{"admin"}, entries[0].Roles)
 			},
 		},
 		{
 			name:    "unauthenticated request is skipped",
-			path:    "/system/hostname",
+			path:    "/node/hostname",
 			subject: "",
 			validateFunc: func(store *fakeAuditStore) {
 				time.Sleep(50 * time.Millisecond)
@@ -160,7 +160,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 		},
 		{
 			name:     "store error is handled gracefully",
-			path:     "/system/hostname",
+			path:     "/node/hostname",
 			subject:  "user@example.com",
 			roles:    []string{"admin"},
 			storeErr: fmt.Errorf("write failed"),

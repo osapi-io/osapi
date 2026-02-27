@@ -34,14 +34,14 @@ import (
 var clientNodeStatusGetCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status of the server",
-	Long: `Obtain the current system status.
+	Long: `Obtain the current node status.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		resp, err := sdkClient.Node.Status(ctx, host)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get system status endpoint", err)
+			cli.LogFatal(logger, "failed to get node status endpoint", err)
 		}
 
 		switch resp.StatusCode() {
@@ -74,7 +74,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 	},
 }
 
-// displayNodeStatusCollection renders system status results.
+// displayNodeStatusCollection renders node status results.
 // For a single non-broadcast result, shows detailed output; otherwise shows a summary table.
 func displayNodeStatusCollection(
 	target string,
@@ -119,7 +119,7 @@ func displayNodeStatusCollection(
 	cli.PrintStyledTable([]cli.Section{{Headers: headers, Rows: rows}})
 }
 
-// displayNodeStatusDetail renders a single system status response with full details.
+// displayNodeStatusDetail renders a single node status response with full details.
 func displayNodeStatusDetail(
 	data *gen.NodeStatusResponse,
 ) {

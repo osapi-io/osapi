@@ -30,7 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-// QueryNodeStatus queries system status from a specific hostname.
+// QueryNodeStatus queries node status from a specific hostname.
 func (c *Client) QueryNodeStatus(
 	ctx context.Context,
 	hostname string,
@@ -132,14 +132,14 @@ func (c *Client) QueryNetworkDNS(
 	return jobID, &result, resp.Hostname, nil
 }
 
-// QueryNodeStatusAny queries system status from any available host.
+// QueryNodeStatusAny queries node status from any available host.
 func (c *Client) QueryNodeStatusAny(
 	ctx context.Context,
 ) (string, *job.NodeStatusResponse, error) {
 	return c.QueryNodeStatus(ctx, job.AnyHost)
 }
 
-// QueryNodeStatusBroadcast queries system status from a broadcast target
+// QueryNodeStatusBroadcast queries node status from a broadcast target
 // (_all or a label target like role:web).
 func (c *Client) QueryNodeStatusBroadcast(
 	ctx context.Context,
@@ -181,7 +181,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 	return jobID, results, errs, nil
 }
 
-// QueryNodeStatusAll queries system status from all hosts.
+// QueryNodeStatusAll queries node status from all hosts.
 func (c *Client) QueryNodeStatusAll(
 	ctx context.Context,
 ) (string, []*job.NodeStatusResponse, map[string]string, error) {

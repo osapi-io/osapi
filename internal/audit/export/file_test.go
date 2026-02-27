@@ -44,7 +44,7 @@ func (s *FileInternalTestSuite) TestWriteNewlineError() {
 		User:         "user@example.com",
 		Roles:        []string{"admin"},
 		Method:       "GET",
-		Path:         "/system/hostname",
+		Path:         "/node/hostname",
 		SourceIp:     "127.0.0.1",
 		ResponseCode: 200,
 		DurationMs:   42,

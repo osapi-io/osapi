@@ -24,10 +24,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	"github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // Type represents the type of job operation.
@@ -60,7 +60,7 @@ type Request struct {
 	JobID string `json:"job_id"`
 	// Type specifies whether this is a query or modify operation.
 	Type Type `json:"type"`
-	// Category specifies the operation category (system, network, etc.).
+	// Category specifies the operation category (node, network, etc.).
 	Category string `json:"category"`
 	// Operation specifies the specific operation to perform.
 	Operation string `json:"operation"`
@@ -267,7 +267,7 @@ type WorkerInfo struct {
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
-// NodeStatusResponse aggregates system status information from multiple providers.
+// NodeStatusResponse aggregates node status information from multiple providers.
 // This represents the response for node.status.get operations in the job queue.
 type NodeStatusResponse struct {
 	// Hostname from the host provider

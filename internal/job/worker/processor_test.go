@@ -39,10 +39,10 @@ import (
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
-	diskMocks "github.com/retr0h/osapi/internal/provider/system/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/system/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/system/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/system/mem/mocks"
+	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
+	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
+	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
+	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
 type ProcessorTestSuite struct {
@@ -135,7 +135,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 		validate    func(json.RawMessage)
 	}{
 		{
-			name: "successful system hostname operation",
+			name: "successful node hostname operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "node",
@@ -152,7 +152,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			},
 		},
 		{
-			name: "successful system status operation",
+			name: "successful node status operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
 				Category:  "node",
@@ -450,7 +450,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 			},
 		},
 		{
-			name:      "get system status",
+			name:      "get node status",
 			operation: "status.get",
 			validate: func(result json.RawMessage) {
 				var response map[string]interface{}

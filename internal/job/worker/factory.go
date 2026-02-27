@@ -30,10 +30,10 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	systemHost "github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // factoryHostInfoFn is the function used to get host info (injectable for testing).
@@ -55,7 +55,7 @@ func NewProviderFactory(
 
 // CreateProviders creates all providers needed for the worker.
 func (f *ProviderFactory) CreateProviders() (
-	systemHost.Provider,
+	nodeHost.Provider,
 	disk.Provider,
 	mem.Provider,
 	load.Provider,
@@ -76,14 +76,14 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	// Create system providers
-	var hostProvider systemHost.Provider
+	var hostProvider nodeHost.Provider
 	switch platform {
 	case "ubuntu":
-		hostProvider = systemHost.NewUbuntuProvider()
+		hostProvider = nodeHost.NewUbuntuProvider()
 	case "darwin":
-		hostProvider = systemHost.NewDarwinProvider()
+		hostProvider = nodeHost.NewDarwinProvider()
 	default:
-		hostProvider = systemHost.NewLinuxProvider()
+		hostProvider = nodeHost.NewLinuxProvider()
 	}
 
 	var diskProvider disk.Provider

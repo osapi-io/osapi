@@ -31,7 +31,7 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// GetNodeHostname get the system hostname API endpoint.
+// GetNodeHostname get the node hostname API endpoint.
 func (s *Node) GetNodeHostname(
 	ctx context.Context,
 	request gen.GetNodeHostnameRequestObject,

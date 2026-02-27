@@ -32,7 +32,7 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// GetNodeStatus get the system status API endpoint.
+// GetNodeStatus get the node status API endpoint.
 func (s *Node) GetNodeStatus(
 	ctx context.Context,
 	request gen.GetNodeStatusRequestObject,

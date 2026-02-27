@@ -30,10 +30,10 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/provider/system/disk"
-	systemHost "github.com/retr0h/osapi/internal/provider/system/host"
-	"github.com/retr0h/osapi/internal/provider/system/load"
-	"github.com/retr0h/osapi/internal/provider/system/mem"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // processJobOperation handles the actual job processing based on category and operation.
@@ -101,7 +101,7 @@ func (w *Worker) processNetworkOperation(
 	}
 }
 
-// getNodeHostname retrieves the system hostname and agent labels.
+// getNodeHostname retrieves the node hostname and agent labels.
 func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 	w.logger.Debug("executing host.GetHostname")
 	hostProvider := w.getHostProvider()
@@ -121,15 +121,15 @@ func (w *Worker) getNodeHostname() (json.RawMessage, error) {
 	return json.Marshal(result)
 }
 
-// getNodeStatus retrieves comprehensive system status.
+// getNodeStatus retrieves comprehensive node status.
 func (w *Worker) getNodeStatus() (json.RawMessage, error) {
-	w.logger.Debug("executing system.GetStatus")
+	w.logger.Debug("executing node.GetStatus")
 	hostProvider := w.getHostProvider()
 	diskProvider := w.getDiskProvider()
 	memProvider := w.getMemProvider()
 	loadProvider := w.getLoadProvider()
 
-	// Get all system information
+	// Get all node information
 	hostname, _ := hostProvider.GetHostname()
 	osInfo, _ := hostProvider.GetOSInfo()
 	uptime, _ := hostProvider.GetUptime()
@@ -315,7 +315,7 @@ func (w *Worker) processNetworkPing(
 }
 
 // Provider accessor methods that return the injected providers
-func (w *Worker) getHostProvider() systemHost.Provider {
+func (w *Worker) getHostProvider() nodeHost.Provider {
 	return w.hostProvider
 }
 
