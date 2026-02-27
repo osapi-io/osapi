@@ -273,4 +273,12 @@ func (h *Health) populateMetrics(
 		}
 		resp.Consumers = &stats
 	}
+
+	if consumerStats, err := h.Metrics.GetConsumerStats(ctx); err != nil {
+		h.logger.Warn("failed to get consumer stats for status", "error", err)
+	} else {
+		resp.Consumers = &gen.ConsumerStats{
+			Total: consumerStats.Total,
+		}
+	}
 }

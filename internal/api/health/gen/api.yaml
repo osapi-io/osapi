@@ -279,6 +279,7 @@ components:
         - hostname
         - registered
 
+
     ConsumerStats:
       type: object
       properties:
@@ -318,6 +319,7 @@ components:
         - pending
         - ack_pending
         - redelivered
+
 
     StatusResponse:
       type: object
