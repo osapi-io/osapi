@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -22,49 +22,46 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/spf13/cobra"
-
+	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/telemetry"
 )
 
-// apiServerStartCmd represents the apiServerStart command.
-var apiServerStartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start the server",
-	Long: `Start the API server.
-`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
+// setupAgent connects to NATS, creates providers, and builds the agent
+// Lifecycle. It is used by the standalone agent start and combined start
+// commands.
+func setupAgent(
+	ctx context.Context,
+	log *slog.Logger,
+	connCfg config.NATSConnection,
+) (cli.Lifecycle, *natsBundle) {
+	namespace := connCfg.Namespace
+	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
+	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
 
-		shutdownTracer, err := telemetry.InitTracer(ctx, "osapi-api", appConfig.Telemetry.Tracing)
-		if err != nil {
-			cli.LogFatal(logger, "failed to initialize tracer", err)
-		}
+	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
 
-		metricsHandler, metricsPath, shutdownMeter, err := telemetry.InitMeter(
-			appConfig.Telemetry.Metrics,
-		)
-		if err != nil {
-			cli.LogFatal(logger, "failed to initialize meter", err)
-		}
+	providerFactory := agent.NewProviderFactory(log)
+	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := providerFactory.CreateProviders()
 
-		job.Init(appConfig.API.NATS.Namespace)
+	a := agent.New(
+		appFs,
+		appConfig,
+		log,
+		b.jobClient,
+		streamName,
+		hostProvider,
+		diskProvider,
+		memProvider,
+		loadProvider,
+		dnsProvider,
+		pingProvider,
+		commandProvider,
+		b.registryKV,
+	)
 
-		log := logger.With("component", "api")
-		sm, b := setupAPIServer(ctx, log, appConfig.API.NATS, metricsHandler, metricsPath)
-
-		sm.Start()
-		cli.RunServer(ctx, sm, func() {
-			_ = shutdownMeter(context.Background())
-			_ = shutdownTracer(context.Background())
-			cli.CloseNATSClient(b.nc)
-		})
-	},
-}
-
-func init() {
-	apiServerCmd.AddCommand(apiServerStartCmd)
+	return a, b
 }

@@ -66,6 +66,13 @@ graph TD
     end
 ```
 
+Use `osapi start` to run all three in a single process — the recommended
+approach for single-host deployments:
+
+```bash
+osapi start
+```
+
 The CLI on the same host talks to the API server over localhost. This is useful
 for managing a single appliance or for development.
 
