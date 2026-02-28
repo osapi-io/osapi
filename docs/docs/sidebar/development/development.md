@@ -87,14 +87,15 @@ See the [Testing](testing.md) page for details on running tests and listing just
 recipes.
 
 ```bash
-just test           # Run all tests (lint + unit + coverage + bats)
+just test           # Run all tests (lint + unit + coverage)
 just go::unit       # Run unit tests only
-just bats::test     # Run integration tests only
+just go::unit-int   # Run integration tests (requires running osapi)
 ```
 
 Unit tests should follow the Go convention of being located in a file named
 `*_test.go` in the same package as the code being tested. Integration tests are
-located in the `test` directory and executed by [Bats][].
+located in `test/integration/` and use a `//go:build integration` tag. They
+build and start a real `osapi` binary, so they require no external setup.
 
 ### File naming
 
@@ -143,6 +144,5 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 [Prettier]: https://prettier.io/
 [Docusaurus]: https://docusaurus.io
 [Conventional Commits]: https://www.conventionalcommits.org
-[Bats]: https://github.com/bats-core/bats-core
 [NATS CLI]: https://github.com/nats-io/natscli
 <!-- prettier-ignore-end -->

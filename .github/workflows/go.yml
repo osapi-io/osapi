@@ -24,7 +24,6 @@ jobs:
         run: |
           just go::deps
           just go::mod
-          just bats::deps
       - name: Test
         run: just test
       - name: Upload coverage reports to Codecov

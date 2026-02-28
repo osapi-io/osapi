@@ -1,8 +1,0 @@
-{
-  "type": "network.dns.update",
-  "data": {
-    "dns_servers": ["8.8.8.8", "8.8.4.4"],
-    "search_domains": ["example.com"],
-    "interface": "eth0"
-  }
-}

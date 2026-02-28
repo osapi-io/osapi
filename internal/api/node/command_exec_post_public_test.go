@@ -22,15 +22,23 @@ package node_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/api"
 	apinode "github.com/retr0h/osapi/internal/api/node"
 	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
@@ -43,6 +51,8 @@ type CommandExecPostPublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apinode.Node
 	ctx           context.Context
+	appConfig     config.Config
+	logger        *slog.Logger
 }
 
 func (s *CommandExecPostPublicTestSuite) SetupSuite() {
@@ -59,6 +69,8 @@ func (s *CommandExecPostPublicTestSuite) SetupTest() {
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apinode.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func (s *CommandExecPostPublicTestSuite) TearDownTest() {
@@ -352,6 +364,208 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 			resp, err := s.handler.PostNodeCommandExec(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *CommandExecPostPublicTestSuite) TestPostCommandExecHTTP() {
+	tests := []struct {
+		name         string
+		path         string
+		body         string
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when valid request",
+			path: "/node/server1/command/exec",
+			body: `{"command":"ls","args":["-la"]}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyCommandExec(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &command.Result{
+						Stdout:     "file1\nfile2",
+						Stderr:     "",
+						ExitCode:   0,
+						DurationMs: 42,
+						Changed:    true,
+					}, "agent1", nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"agent1"`, `"changed":true`},
+		},
+		{
+			name: "when missing command",
+			path: "/node/server1/command/exec",
+			body: `{}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Command", "required"},
+		},
+		{
+			name: "when invalid timeout",
+			path: "/node/server1/command/exec",
+			body: `{"command":"ls","timeout":999}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Timeout", "max"},
+		},
+		{
+			name: "when target agent not found",
+			path: "/node/nonexistent/command/exec",
+			body: `{"command":"ls"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "valid_target", "not found"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			nodeHandler := apinode.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				tc.path,
+				strings.NewReader(tc.body),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacExecTestSigningKey = "test-signing-key-for-exec-rbac"
+
+func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacExecTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with command:execute returns 202",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacExecTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyCommandExec(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&command.Result{
+							Stdout:     "output",
+							Stderr:     "",
+							ExitCode:   0,
+							DurationMs: 10,
+							Changed:    true,
+						},
+						"agent1",
+						nil,
+					)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"changed":true`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacExecTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetNodeHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/command/exec",
+				strings.NewReader(`{"command":"ls","args":["-la"]}`),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
 		})
 	}
 }

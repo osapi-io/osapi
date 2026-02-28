@@ -3,24 +3,22 @@ debug: false
 
 api:
   client:
-    url: http://0.0.0.0:8080
+    url: http://127.0.0.1:8080
     security:
-      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6InRlc3RAY2kiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2NDQ0NiwiaWF0IjoxNzcxMjc4NDQ2fQ.d9Rh86HUON7eXCL5l3LKiFhakkXXK6kGHnU8ZXIgQ-c
+      bearer_token: placeholder
   server:
     port: 8080
     nats:
       host: localhost
       port: 4222
-      client_name: osapi-api-test
+      client_name: osapi-api-integration
       namespace: ""
       auth:
         type: none
     security:
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
       cors:
-        allow_origins:
-          - http://localhost:3001
-          - https://osapi-io.github.io
+        allow_origins: []
 
 nats:
   server:
@@ -36,7 +34,7 @@ nats:
     subjects: jobs.>
     max_age: 24h
     max_msgs: 10000
-    storage: file
+    storage: memory
     replicas: 1
     discard: old
 
@@ -45,33 +43,33 @@ nats:
     response_bucket: job-responses
     ttl: 1h
     max_bytes: 104857600
-    storage: file
+    storage: memory
     replicas: 1
 
   audit:
     bucket: audit-log
     ttl: 720h
     max_bytes: 52428800
-    storage: file
+    storage: memory
     replicas: 1
 
   registry:
     bucket: agent-registry
     ttl: 30s
-    storage: file
+    storage: memory
     replicas: 1
 
   dlq:
     max_age: 7d
     max_msgs: 1000
-    storage: file
+    storage: memory
     replicas: 1
 
 agent:
   nats:
     host: localhost
     port: 4222
-    client_name: osapi-agent-test
+    client_name: osapi-agent-integration
     namespace: ""
     auth:
       type: none
