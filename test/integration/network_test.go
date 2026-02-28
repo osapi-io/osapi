@@ -76,6 +76,8 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 }
 
 func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
+	skipWrite(s.T())
+
 	tests := []struct {
 		name         string
 		args         []string

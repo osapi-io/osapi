@@ -20,5 +20,7 @@ jobs:
         uses: extractions/setup-just@v3
       - name: Fetch justfiles
         run: just fetch
+      - name: Linux tuning
+        run: just linux-tune
       - name: Integration
         run: just go::unit-int

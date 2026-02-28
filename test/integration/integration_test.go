@@ -49,12 +49,15 @@ var (
 	serverCmd  *exec.Cmd
 	tempDir    string
 	storeDir   string
+	runWrites  bool
 )
 
 func TestMain(
 	m *testing.M,
 ) {
 	var err error
+
+	runWrites = os.Getenv("INTEGRATION_WRITES") == "1"
 
 	tempDir, err = os.MkdirTemp("", "osapi-integration-*")
 	if err != nil {
@@ -222,4 +225,13 @@ func parseJSON(
 	target any,
 ) error {
 	return json.Unmarshal([]byte(strings.TrimSpace(raw)), target)
+}
+
+func skipWrite(
+	t *testing.T,
+) {
+	t.Helper()
+	if !runWrites {
+		t.Skip("skipping write test (set INTEGRATION_WRITES=1 to enable)")
+	}
 }

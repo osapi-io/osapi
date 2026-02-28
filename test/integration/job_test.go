@@ -139,6 +139,88 @@ func (s *JobSmokeSuite) TestJobStatus() {
 	}
 }
 
+func (s *JobSmokeSuite) TestJobDelete() {
+	skipWrite(s.T())
+
+	triggerOut, _, triggerCode := runCLI(
+		"client", "node", "command", "shell",
+		"--command", "echo delete-test",
+		"--json",
+	)
+	s.Require().Equal(0, triggerCode)
+
+	var triggerResp struct {
+		JobID string `json:"job_id"`
+	}
+	s.Require().NoError(parseJSON(triggerOut, &triggerResp))
+	s.Require().NotEmpty(triggerResp.JobID)
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "deletes a job by id",
+			args: []string{"client", "job", "delete", "--job-id", triggerResp.JobID, "--json"},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
+func (s *JobSmokeSuite) TestJobRetry() {
+	skipWrite(s.T())
+
+	triggerOut, _, triggerCode := runCLI(
+		"client", "node", "command", "shell",
+		"--command", "echo retry-test",
+		"--json",
+	)
+	s.Require().Equal(0, triggerCode)
+
+	var triggerResp struct {
+		JobID string `json:"job_id"`
+	}
+	s.Require().NoError(parseJSON(triggerOut, &triggerResp))
+	s.Require().NotEmpty(triggerResp.JobID)
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "retries a job by id",
+			args: []string{"client", "job", "retry", "--job-id", triggerResp.JobID, "--json"},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
 func TestJobSmokeSuite(
 	t *testing.T,
 ) {
