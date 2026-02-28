@@ -29,7 +29,6 @@ import (
 
 	"github.com/retr0h/osapi/internal/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetNodeStatus get the node status API endpoint.
@@ -37,14 +36,11 @@ func (s *Node) GetNodeStatus(
 	ctx context.Context,
 	request gen.GetNodeStatusRequestObject,
 ) (gen.GetNodeStatusResponseObject, error) {
-	if errMsg, ok := validation.Struct(request.Params); !ok {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
 		return gen.GetNodeStatus400JSONResponse{Error: &errMsg}, nil
 	}
 
-	hostname := job.AnyHost
-	if request.Params.TargetHostname != nil {
-		hostname = *request.Params.TargetHostname
-	}
+	hostname := request.Hostname
 
 	if job.IsBroadcastTarget(hostname) {
 		return s.getNodeStatusBroadcast(ctx, hostname)

@@ -32,7 +32,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Architecture (Quick Reference)
 
 - **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `api server`, `nats server`)
-- **`internal/api/`** - Echo REST API by domain (`node/`, `network/`, `job/`, `command/`, `common/`). Types are OpenAPI-generated (`*.gen.go`)
+- **`internal/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`)
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
@@ -108,9 +108,13 @@ input must be validated, and the spec must declare how:
   }
   ```
   **NOTE:** `x-oapi-codegen-extra-tags` on **path parameters** does
-  NOT generate tags on request object structs. Path params that need
-  validation beyond `format: uuid` (e.g., alphanum checks) still
-  require manual validation with a temporary struct.
+  NOT generate tags on `RequestObject` structs in **strict-server
+  mode** (upstream limitation — see oapi-codegen issue). Keep the
+  `x-oapi-codegen-extra-tags` in the spec for documentation and add
+  a YAML comment noting validation is handled manually. Path params
+  that need validation beyond `format: uuid` (e.g., `valid_target`)
+  use a shared helper like `node.validateHostname()` which calls
+  `validation.Var()`.
 
 **IMPORTANT — every endpoint with user input MUST have:**
 1. `x-oapi-codegen-extra-tags` with `validate:` tags on all request
@@ -248,6 +252,8 @@ func FunctionName(
 - Internal tests: `*_test.go` in same package (e.g., `package job`) for private functions
 - Public tests: `*_public_test.go` in test package (e.g., `package job_test`) for exported functions
 - Table-driven structure with `validateFunc` callbacks
+- Avoid generic file names like `helpers.go` or `utils.go` — name
+  files after what they contain
 
 ### Go Patterns
 
@@ -282,20 +288,7 @@ When committing via Claude Code, end with:
 
 ## Task Tracking
 
-Work is tracked as markdown files in `docs/docs/sidebar/development/tasks/`. These
-render on the documentation site. See
-@docs/docs/sidebar/development/tasks/README.md for format details.
-
-```
-docs/docs/sidebar/development/tasks/
-├── backlog/          # Tasks not yet started
-├── in-progress/      # Tasks actively being worked on
-├── done/             # Completed tasks
-└── sessions/         # Session work logs (per Claude Code session)
-```
-
-When starting a session:
-1. Check `docs/docs/sidebar/development/tasks/in-progress/` for ongoing work
-2. Check `docs/docs/sidebar/development/tasks/backlog/` for next tasks
-3. Move task files between directories as status changes
-4. Log session work in `docs/docs/sidebar/development/tasks/sessions/YYYY-MM-DD.md`
+Feature ideas and future work live in
+`docs/docs/sidebar/development/tasks/backlog/`. Implementation planning
+and execution uses the superpowers plugin workflows (`writing-plans` and
+`executing-plans`). See @docs/docs/sidebar/development/tasks/README.md.

@@ -85,6 +85,50 @@ func (s *ValidationPublicTestSuite) TestStruct() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestVar() {
+	tests := []struct {
+		name     string
+		field    any
+		tag      string
+		wantOK   bool
+		contains []string
+	}{
+		{
+			name:   "when valid field",
+			field:  "hello",
+			tag:    "required",
+			wantOK: true,
+		},
+		{
+			name:     "when empty required field",
+			field:    "",
+			tag:      "required",
+			wantOK:   false,
+			contains: []string{"required"},
+		},
+		{
+			name:     "when invalid email",
+			field:    "not-an-email",
+			tag:      "email",
+			wantOK:   false,
+			contains: []string{"email"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			errMsg, ok := validation.Var(tt.field, tt.tag)
+			s.Equal(tt.wantOK, ok)
+
+			if !ok {
+				for _, c := range tt.contains {
+					s.Contains(errMsg, c)
+				}
+			}
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestInstance() {
 	tests := []struct {
 		name string

@@ -1,0 +1,146 @@
+// Copyright (c) 2024 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package node
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/retr0h/osapi/internal/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/validation"
+)
+
+// PostNodeNetworkPing post the node network ping API endpoint.
+func (s *Node) PostNodeNetworkPing(
+	ctx context.Context,
+	request gen.PostNodeNetworkPingRequestObject,
+) (gen.PostNodeNetworkPingResponseObject, error) {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.PostNodeNetworkPing400JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Body); !ok {
+		return gen.PostNodeNetworkPing400JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	hostname := request.Hostname
+
+	s.logger.Debug("ping",
+		slog.String("address", request.Body.Address),
+		slog.String("target", hostname),
+	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeNetworkPingBroadcast(ctx, hostname, request.Body.Address)
+	}
+
+	jobID, pingResult, agentHostname, err := s.JobClient.QueryNetworkPing(
+		ctx,
+		hostname,
+		request.Body.Address,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeNetworkPing500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeNetworkPing200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.PingResponse{
+			buildPingResponse(agentHostname, pingResult),
+		},
+	}, nil
+}
+
+// postNodeNetworkPingBroadcast handles broadcast targets (_all or label) for ping.
+func (s *Node) postNodeNetworkPingBroadcast(
+	ctx context.Context,
+	target string,
+	address string,
+) (gen.PostNodeNetworkPingResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeNetworkPing500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var responses []gen.PingResponse
+	for host, r := range results {
+		responses = append(responses, buildPingResponse(host, r))
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.PingResponse{
+			Hostname: host,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeNetworkPing200JSONResponse{
+		JobId:   &jobUUID,
+		Results: responses,
+	}, nil
+}
+
+// buildPingResponse converts a ping.Result to the API response.
+func buildPingResponse(
+	hostname string,
+	r *ping.Result,
+) gen.PingResponse {
+	return gen.PingResponse{
+		Hostname:        hostname,
+		AvgRtt:          durationToString(&r.AvgRTT),
+		MaxRtt:          durationToString(&r.MaxRTT),
+		MinRtt:          durationToString(&r.MinRTT),
+		PacketLoss:      &r.PacketLoss,
+		PacketsReceived: &r.PacketsReceived,
+		PacketsSent:     &r.PacketsSent,
+	}
+}
+
+// durationToString converts *time.Duration to a human-readable *string
+// with consistent precision (e.g., "22.63ms").
+func durationToString(
+	d *time.Duration,
+) *string {
+	if d == nil {
+		return nil
+	}
+	ms := float64(*d) / float64(time.Millisecond)
+	str := fmt.Sprintf("%.2fms", ms)
+	return &str
+}

@@ -30,31 +30,37 @@ tags:
   - name: node_status
     x-displayName: Node/Status
     description: Operations related to node status endpoint.
+  - name: network_operations
+    x-displayName: Node/Network
+    description: Network operations on a target node.
+  - name: dns_operations
+    x-displayName: Node/Network/DNS
+    description: DNS configuration operations on a target node.
+  - name: command_operations
+    x-displayName: Node/Command
+    description: Command execution on a target node.
+
 paths:
-  /node/status:
+  # ── Node status & sub-resources ──────────────────────────
+
+  /node/{hostname}:
     get:
       summary: Retrieve node status
-      description: Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
+      description: >
+        Get the current status of the node including hostname, uptime,
+        load averages, memory, and disk usage.
       tags:
         - node_status
+      operationId: GetNodeStatus
       security:
         - BearerAuth:
             - node:read
       parameters:
-        - name: target_hostname
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,valid_target
-          schema:
-            type: string
-            default: _any
-          description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+        - $ref: '#/components/parameters/Hostname'
       responses:
         '200':
-          description: A JSON object containing the node's status information.
+          description: >
+            A JSON object containing the node's status information.
           content:
             application/json:
               schema:
@@ -83,27 +89,19 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-  /node/hostname:
+
+  /node/{hostname}/hostname:
     get:
       summary: Retrieve node hostname
-      description: Get the current hostname of the node.
+      description: Get the current hostname and labels of the node.
       tags:
         - node_operations
+      operationId: GetNodeHostname
       security:
         - BearerAuth:
             - node:read
       parameters:
-        - name: target_hostname
-          in: query
-          required: false
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,valid_target
-          schema:
-            type: string
-            default: _any
-          description: >
-            Target: _any (load-balanced), _all (broadcast), hostname
-            (direct), or key:value (label group, e.g., group:web.dev).
+        - $ref: '#/components/parameters/Hostname'
       responses:
         '200':
           description: A JSON object containing the node's hostname.
@@ -136,7 +134,528 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+  /node/{hostname}/disk:
+    get:
+      summary: Retrieve disk usage
+      description: Get disk usage information for the target node.
+      tags:
+        - node_operations
+      operationId: GetNodeDisk
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Disk usage information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiskCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving disk usage.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/memory:
+    get:
+      summary: Retrieve memory stats
+      description: Get memory usage information for the target node.
+      tags:
+        - node_operations
+      operationId: GetNodeMemory
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Memory usage information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving memory stats.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/load:
+    get:
+      summary: Retrieve load averages
+      description: Get load average information for the target node.
+      tags:
+        - node_operations
+      operationId: GetNodeLoad
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Load average information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving load averages.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/os:
+    get:
+      summary: Retrieve OS info
+      description: Get operating system information for the target node.
+      tags:
+        - node_operations
+      operationId: GetNodeOS
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Operating system information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OSInfoCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving OS info.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/uptime:
+    get:
+      summary: Retrieve uptime
+      description: Get uptime information for the target node.
+      tags:
+        - node_operations
+      operationId: GetNodeUptime
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Uptime information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UptimeCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving uptime.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # ── Network operations ───────────────────────────────────
+
+  /node/{hostname}/network/ping:
+    post:
+      summary: Ping a remote server
+      description: >
+        Send a ping to a remote server to verify network connectivity.
+      tags:
+        - network_operations
+      operationId: PostNodeNetworkPing
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: The server to ping.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: >
+                    The IP address of the server to ping. Supports both
+                    IPv4 and IPv6.
+                  example: "8.8.8.8"
+                  x-oapi-codegen-extra-tags:
+                    validate: required,ip
+              required:
+                - address
+      responses:
+        '200':
+          description: Successful ping response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingCollectionResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error performing the ping operation.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/network/dns/{interfaceName}:
+    get:
+      summary: List DNS servers
+      description: >
+        Retrieve the list of currently configured DNS servers for a
+        specific network interface.
+      tags:
+        - dns_operations
+      operationId: GetNodeNetworkDNSByInterface
+      security:
+        - BearerAuth:
+            - network:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: interfaceName
+          in: path
+          required: true
+          # NOTE: x-oapi-codegen-extra-tags on path params do not
+          # generate validate tags in strict-server mode. Validation
+          # is handled manually in the handler via node.validateInterfaceName().
+          x-oapi-codegen-extra-tags:
+            validate: required,alphanum
+          schema:
+            type: string
+          description: >
+            The name of the network interface to retrieve DNS
+            configuration for. Must only contain letters and numbers.
+      responses:
+        '200':
+          description: List of DNS servers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSConfigCollectionResponse'
+        '400':
+          description: Invalid interface name provided.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving DNS servers.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/network/dns:
+    put:
+      summary: Update DNS servers
+      description: Update the system's DNS server configuration.
+      tags:
+        - dns_operations
+      operationId: PutNodeNetworkDNS
+      security:
+        - BearerAuth:
+            - network:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DNSConfigUpdateRequest'
+      responses:
+        '202':
+          description: DNS servers update successfully accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSUpdateCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating DNS servers.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # ── Command operations ───────────────────────────────────
+
+  /node/{hostname}/command/exec:
+    post:
+      summary: Execute a command
+      description: >
+        Execute a command directly without a shell. This is the safer
+        option as it does not interpret shell metacharacters.
+      tags:
+        - command_operations
+      operationId: PostNodeCommandExec
+      security:
+        - BearerAuth:
+            - command:execute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: The command to execute.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandExecRequest'
+      responses:
+        '202':
+          description: Command execution accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResultCollectionResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error executing command.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/command/shell:
+    post:
+      summary: Execute a shell command
+      description: >
+        Execute a command through /bin/sh -c. Supports shell features
+        like pipes, redirects, and variable expansion.
+      tags:
+        - command_operations
+      operationId: PostNodeCommandShell
+      security:
+        - BearerAuth:
+            - command:execute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: The shell command to execute.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandShellRequest'
+      responses:
+        '202':
+          description: Shell command execution accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResultCollectionResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error executing shell command.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# ── Reusable components ─────────────────────────────────────
+
 components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via node.validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
   securitySchemes:
     BearerAuth:
       type: http
@@ -146,6 +665,8 @@ components:
   schemas:
     ErrorResponse:
       $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # ── Node schemas ───────────────────────────────────────
 
     LoadAverageResponse:
       type: object
@@ -221,6 +742,39 @@ components:
       items:
         $ref: '#/components/schemas/DiskResponse'
 
+    OSInfoResponse:
+      type: object
+      description: Operating system information.
+      properties:
+        distribution:
+          type: string
+          description: The name of the Linux distribution.
+          example: "Ubuntu"
+        version:
+          type: string
+          description: The version of the Linux distribution.
+          example: "20.04"
+      required:
+        - distribution
+        - version
+
+    UptimeResponse:
+      type: object
+      description: System uptime information.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        uptime:
+          type: string
+          description: The uptime of the system.
+          example: "0 days, 4 hours, 1 minute"
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
     NodeStatusResponse:
       type: object
       properties:
@@ -242,7 +796,7 @@ components:
           $ref: '#/components/schemas/OSInfoResponse'
         error:
           type: string
-          description: Error message if the agent failed to process the request.
+          description: Error message if the agent failed.
       required:
         - hostname
 
@@ -261,9 +815,67 @@ components:
           description: Key-value labels configured on the agent.
         error:
           type: string
-          description: Error message if the agent failed to process the request.
+          description: Error message if the agent failed.
       required:
         - hostname
+
+    DiskResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        disks:
+          $ref: '#/components/schemas/DisksResponse'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    MemoryResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        memory:
+          $ref: '#/components/schemas/MemoryResponse'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    LoadResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        load_average:
+          $ref: '#/components/schemas/LoadAverageResponse'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    OSInfoResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        os_info:
+          $ref: '#/components/schemas/OSInfoResponse'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    # ── Collection responses ───────────────────────────────
 
     NodeStatusCollectionResponse:
       type: object
@@ -295,18 +907,331 @@ components:
       required:
         - results
 
-    OSInfoResponse:
+    DiskCollectionResponse:
       type: object
-      description: Operating system information.
       properties:
-        distribution:
+        job_id:
           type: string
-          description: The name of the Linux distribution.
-          example: "Ubuntu"
-        version:
-          type: string
-          description: The version of the Linux distribution.
-          example: "20.04"
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskResultItem'
       required:
-        - distribution
-        - version
+        - results
+
+    MemoryCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryResultItem'
+      required:
+        - results
+
+    LoadCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadResultItem'
+      required:
+        - results
+
+    OSInfoCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OSInfoResultItem'
+      required:
+        - results
+
+    UptimeCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UptimeResponse'
+      required:
+        - results
+
+    # ── Network schemas ────────────────────────────────────
+
+    PingResponse:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent that executed the ping.
+        packets_sent:
+          type: integer
+          description: Number of packets sent.
+          example: 4
+        packets_received:
+          type: integer
+          description: Number of packets received.
+          example: 4
+        packet_loss:
+          type: number
+          format: double
+          description: Percentage of packet loss.
+          example: 0.0
+        min_rtt:
+          type: string
+          description: >
+            Minimum round-trip time in Go time.Duration format.
+          example: "14.637103ms"
+        avg_rtt:
+          type: string
+          description: >
+            Average round-trip time in Go time.Duration format.
+          example: "18.647498ms"
+        max_rtt:
+          type: string
+          description: >
+            Maximum round-trip time in Go time.Duration format.
+          example: "24.309240ms"
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    PingCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PingResponse'
+      required:
+        - results
+
+    DNSConfigResponse:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent that served this config.
+        servers:
+          type: array
+          description: List of configured DNS servers.
+          items:
+            type: string
+            description: IPv4 or IPv6 address of the DNS server.
+        search_domains:
+          type: array
+          description: List of search domains.
+          items:
+            type: string
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    DNSConfigCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DNSConfigResponse'
+      required:
+        - results
+
+    DNSUpdateResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+        status:
+          type: string
+          enum: [ok, failed]
+        changed:
+          type: boolean
+          description: Whether the DNS configuration was actually modified.
+        error:
+          type: string
+      required:
+        - hostname
+        - status
+
+    DNSUpdateCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DNSUpdateResultItem'
+      required:
+        - results
+
+    DNSConfigUpdateRequest:
+      type: object
+      properties:
+        servers:
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required_without=SearchDomains,omitempty,dive,ip,min=1
+          description: New list of DNS servers to configure.
+          items:
+            type: string
+            description: IPv4 or IPv6 address of the DNS server.
+        search_domains:
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required_without=Servers,omitempty,dive,hostname,min=1
+          description: New list of search domains to configure.
+          items:
+            type: string
+        interface_name:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,alphanum
+          description: >
+            The name of the network interface to apply DNS configuration
+            to. Must only contain letters and numbers.
+      required:
+        - interface_name
+
+    # ── Command schemas ────────────────────────────────────
+
+    CommandExecRequest:
+      type: object
+      properties:
+        command:
+          type: string
+          description: The executable name or path.
+          example: "ls"
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+        args:
+          type: array
+          description: Command arguments.
+          items:
+            type: string
+          example: ["-la", "/tmp"]
+        cwd:
+          type: string
+          description: Working directory for the command.
+          example: "/tmp"
+        timeout:
+          type: integer
+          description: Timeout in seconds (default 30, max 300).
+          minimum: 1
+          maximum: 300
+          default: 30
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=300
+      required:
+        - command
+
+    CommandShellRequest:
+      type: object
+      properties:
+        command:
+          type: string
+          description: The full shell command string.
+          example: "ls -la /tmp | grep log"
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+        cwd:
+          type: string
+          description: Working directory for the command.
+          example: "/tmp"
+        timeout:
+          type: integer
+          description: Timeout in seconds (default 30, max 300).
+          minimum: 1
+          maximum: 300
+          default: 30
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=300
+      required:
+        - command
+
+    CommandResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent that executed the command.
+        stdout:
+          type: string
+          description: Standard output of the command.
+        stderr:
+          type: string
+          description: Standard error output of the command.
+        exit_code:
+          type: integer
+          description: Exit code of the command.
+        duration_ms:
+          type: integer
+          format: int64
+          description: Execution time in milliseconds.
+        changed:
+          type: boolean
+          description: Whether the command modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    CommandResultCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommandResultItem'
+      required:
+        - results

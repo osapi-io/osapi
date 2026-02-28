@@ -33,9 +33,13 @@ OSAPI separates agent fleet discovery from node system queries:
 ## How It Works
 
 Node queries are submitted as jobs. The CLI posts a job to the API server, the
-API server publishes it to NATS, a agent picks it up and reads the requested
+API server publishes it to NATS, an agent picks it up and reads the requested
 system information, then writes the result back to NATS KV. The CLI polls for
 the result and displays it.
+
+Network and command operations are also nested under the node — see
+[Network Management](network-management.md) and
+[Command Execution](command-execution.md) for those domains.
 
 You can target a specific host, broadcast to all hosts, or route by label. See
 [Node CLI Reference](../usage/cli/client/node/node.mdx) for job-based commands

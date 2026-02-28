@@ -47,8 +47,8 @@ The `osapi` binary exposes four top-level command groups:
   processes operations
 - **`osapi nats server start`** — starts an embedded NATS server with JetStream
   enabled
-- **`osapi client`** — CLI client that talks to the REST API (node, command,
-  network, job, and health subcommands)
+- **`osapi client`** — CLI client that talks to the REST API (node, job, health,
+  agent, and audit subcommands)
 
 ## Layers
 
@@ -65,15 +65,13 @@ The API server is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                 | Responsibility                                                      |
-| ----------------------- | ------------------------------------------------------------------- |
-| `internal/api/node/`    | Node endpoints (hostname, status, list, uptime, disk, memory, load) |
-| `internal/api/network/` | Network endpoints (DNS, ping)                                       |
-| `internal/api/job/`     | Job queue endpoints (create, get, list, delete, status)             |
-| `internal/api/command/` | Command execution endpoints (exec, shell)                           |
-| `internal/api/health/`  | Health check endpoints (liveness, readiness, status)                |
-| `internal/api/common/`  | Shared middleware, error handling, collection responses             |
-| (metrics)               | Prometheus endpoint (`/metrics`) via OpenTelemetry                  |
+| Package                | Responsibility                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `internal/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
+| `internal/api/job/`    | Job queue endpoints (create, get, list, delete, status)                          |
+| `internal/api/health/` | Health check endpoints (liveness, readiness, status)                             |
+| `internal/api/common/` | Shared middleware, error handling, collection responses                          |
+| (metrics)              | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -102,10 +100,10 @@ provider is selected at runtime through a platform-aware factory pattern.
 
 | Domain          | Providers                      |
 | --------------- | ------------------------------ |
-| `system/host`   | Hostname, uptime, OS info      |
-| `system/disk`   | Disk usage statistics          |
-| `system/mem`    | Memory usage statistics        |
-| `system/load`   | Load average statistics        |
+| `node/host`     | Hostname, uptime, OS info      |
+| `node/disk`     | Disk usage statistics          |
+| `node/mem`      | Memory usage statistics        |
+| `node/load`     | Load average statistics        |
 | `network/dns`   | DNS configuration (get/update) |
 | `network/ping`  | Ping execution and statistics  |
 | `command/exec`  | Direct command execution       |
