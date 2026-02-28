@@ -23,20 +23,27 @@ package health_test
 import (
 	"context"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/api/health/gen"
+	"github.com/retr0h/osapi/internal/config"
 )
 
 type HealthGetPublicTestSuite struct {
 	suite.Suite
 
-	handler *health.Health
-	ctx     context.Context
+	handler   *health.Health
+	ctx       context.Context
+	appConfig config.Config
+	logger    *slog.Logger
 }
 
 func (s *HealthGetPublicTestSuite) SetupTest() {
@@ -48,6 +55,8 @@ func (s *HealthGetPublicTestSuite) SetupTest() {
 		nil,
 	)
 	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func (s *HealthGetPublicTestSuite) TestGetHealth() {
@@ -70,6 +79,45 @@ func (s *HealthGetPublicTestSuite) TestGetHealth() {
 			resp, err := s.handler.GetHealth(s.ctx, gen.GetHealthRequestObject{})
 			s.NoError(err)
 			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *HealthGetPublicTestSuite) TestGetHealthHTTP() {
+	tests := []struct {
+		name     string
+		wantCode int
+		wantBody string
+	}{
+		{
+			name:     "when liveness probe returns ok",
+			wantCode: http.StatusOK,
+			wantBody: `{"status":"ok"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			checker := &health.NATSChecker{}
+			healthHandler := health.New(
+				s.logger,
+				checker,
+				time.Now(),
+				"0.1.0",
+				nil,
+			)
+			strictHandler := gen.NewStrictHandler(healthHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(http.MethodGet, "/health", nil)
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			s.JSONEq(tc.wantBody, rec.Body.String())
 		})
 	}
 }

@@ -22,8 +22,9 @@ Quick reference for common commands:
 
 ```bash
 just deps          # Install all dependencies
-just test          # Run all tests (lint + unit + coverage + bats)
+just test          # Run all tests (lint + unit + coverage)
 just go::unit      # Run unit tests only
+just go::unit-int  # Run integration tests (requires running osapi)
 just go::vet       # Run golangci-lint
 just go::fmt       # Auto-format (gofumpt + golines)
 go test -run TestName -v ./internal/job/...  # Run a single test
@@ -32,7 +33,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Architecture (Quick Reference)
 
 - **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `api server`, `nats server`)
-- **`internal/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`)
+- **`internal/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
@@ -123,8 +124,9 @@ input must be validated, and the spec must declare how:
    `validation.Struct(request.Body)` for request bodies
 3. A `400` response defined in the OpenAPI spec for endpoints that
    accept user input
-4. An integration test (`*_integration_test.go`) that sends raw HTTP
-   through the full Echo middleware stack and verifies:
+4. HTTP wiring tests (`TestXxxHTTP` / `TestXxxRBACHTTP` methods in the
+   `*_public_test.go` suite) that send raw HTTP through the full Echo
+   middleware stack and verify:
    - Validation errors return correct status codes and error messages
    - RBAC: 401 (no token), 403 (wrong permissions), 200 (valid token)
 
@@ -140,13 +142,13 @@ Create `internal/api/{domain}/`:
   a 400 on failure.
 - Tests: `{operation}_get_public_test.go` (testify/suite, table-driven).
   Must cover validation failures (400), success, and error paths.
-- Integration tests: `{operation}_get_integration_test.go` — sends raw
-  HTTP through the full Echo middleware stack. Every integration test
-  MUST include:
-  - **Validation tests**: valid input, invalid input (400 responses)
-  - **RBAC tests**: no token (401), wrong permissions (403), valid
-    token (200). Uses `api.New()` + `server.GetXxxHandler()` +
-    `server.RegisterHandlers()` to wire through `scopeMiddleware`.
+  Each public test suite also includes HTTP wiring methods:
+  - `TestXxxHTTP` — sends raw HTTP through the full Echo middleware
+    stack to verify validation (valid input, invalid input → 400).
+  - `TestXxxRBACHTTP` — verifies auth middleware: no token (401),
+    wrong permissions (403), valid token (200). Uses `api.New()` +
+    `server.GetXxxHandler()` + `server.RegisterHandlers()` to wire
+    through `scopeMiddleware`.
   See existing examples in `internal/api/job/` and
   `internal/api/audit/`.
 
@@ -248,6 +250,16 @@ func FunctionName(
 
 ### Testing
 
+Three test layers:
+- **Unit tests** (`*_test.go`, `*_public_test.go`) — fast, mocked
+  dependencies, run with `just go::unit`. Includes `TestXxxHTTP` /
+  `TestXxxRBACHTTP` methods that send raw HTTP through real Echo
+  middleware with mocked backends.
+- **Integration tests** (`test/integration/`) — build and start a real
+  `osapi` binary, exercise CLI commands end-to-end. Guarded by
+  `//go:build integration` tag, run with `just go::unit-int`.
+
+Conventions:
 - ALL tests in `internal/job/` MUST use `testify/suite` with table-driven patterns
 - Internal tests: `*_test.go` in same package (e.g., `package job`) for private functions
 - Public tests: `*_public_test.go` in test package (e.g., `package job_test`) for exported functions

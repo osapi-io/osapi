@@ -21,17 +21,30 @@
 package metrics_test
 
 import (
+	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/metrics"
+	"github.com/retr0h/osapi/internal/config"
 )
 
 type MetricsGetPublicTestSuite struct {
 	suite.Suite
+
+	appConfig config.Config
+	logger    *slog.Logger
+}
+
+func (s *MetricsGetPublicTestSuite) SetupTest() {
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func (s *MetricsGetPublicTestSuite) TestRegisterHandler() {
@@ -72,6 +85,51 @@ func (s *MetricsGetPublicTestSuite) TestRegisterHandler() {
 			register(e)
 
 			tt.validate(e)
+		})
+	}
+}
+
+func (s *MetricsGetPublicTestSuite) TestGetMetricsHTTP() {
+	tests := []struct {
+		name         string
+		path         string
+		wantCode     int
+		wantContains string
+	}{
+		{
+			name:         "when metrics endpoint is wired returns prometheus text",
+			path:         "/metrics",
+			wantCode:     http.StatusOK,
+			wantContains: "test_metric 42",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			metricsHandler := http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "text/plain")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						"# HELP test_metric A test metric.\n# TYPE test_metric gauge\ntest_metric 42\n",
+					),
+				)
+			})
+
+			a := api.New(s.appConfig, s.logger)
+			handlers := a.GetMetricsHandler(metricsHandler, tc.path)
+			a.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			s.Contains(rec.Body.String(), tc.wantContains)
 		})
 	}
 }

@@ -1,5 +1,5 @@
 ---
-name: Go
+name: Go Integration
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  integration:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -20,13 +20,7 @@ jobs:
         uses: extractions/setup-just@v3
       - name: Fetch justfiles
         run: just fetch
-      - name: Deps
-        run: |
-          just go::deps
-          just go::mod
-      - name: Test
-        run: just test
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Linux tuning
+        run: just linux-tune
+      - name: Integration
+        run: just go::unit-int

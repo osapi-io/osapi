@@ -23,15 +23,22 @@ package job_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/api"
 	apijob "github.com/retr0h/osapi/internal/api/job"
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -44,6 +51,8 @@ type JobListPublicTestSuite struct {
 	mockJobClient *jobmocks.MockJobClient
 	handler       *apijob.Job
 	ctx           context.Context
+	appConfig     config.Config
+	logger        *slog.Logger
 }
 
 func (s *JobListPublicTestSuite) SetupTest() {
@@ -51,6 +60,8 @@ func (s *JobListPublicTestSuite) SetupTest() {
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apijob.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func (s *JobListPublicTestSuite) TearDownTest() {
@@ -257,6 +268,226 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			resp, err := s.handler.GetJob(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *JobListPublicTestSuite) TestListJobsHTTP() {
+	tests := []struct {
+		name         string
+		query        string
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name:  "when valid request without filter",
+			query: "",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ListJobs(gomock.Any(), "", 10, 0).
+					Return(&jobclient.ListJobsResult{
+						Jobs: []*jobtypes.QueuedJob{
+							{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
+						},
+						TotalCount: 1,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"total_items":1`},
+		},
+		{
+			name:  "when valid status filter",
+			query: "?status=completed",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ListJobs(gomock.Any(), "completed", 10, 0).
+					Return(&jobclient.ListJobsResult{
+						Jobs:       []*jobtypes.QueuedJob{},
+						TotalCount: 0,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"total_items":0`},
+		},
+		{
+			name:  "when invalid status filter",
+			query: "?status=bogus",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "'oneof'"},
+		},
+		{
+			name:  "when negative limit returns 400",
+			query: "?limit=-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name:  "when negative offset returns 400",
+			query: "?offset=-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name:  "when valid limit and offset",
+			query: "?limit=5&offset=10",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ListJobs(gomock.Any(), "", 5, 10).
+					Return(&jobclient.ListJobsResult{
+						Jobs:       []*jobtypes.QueuedJob{},
+						TotalCount: 50,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"total_items":50`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			jobHandler := apijob.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(jobHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(
+				http.MethodGet,
+				"/job"+tc.query,
+				nil,
+			)
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacJobListTestSigningKey = "test-signing-key-for-rbac-integration"
+
+func (s *JobListPublicTestSuite) TestListJobsRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacJobListTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"network:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with job:read returns 200",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacJobListTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ListJobs(gomock.Any(), "", 10, 0).
+					Return(&jobclient.ListJobsResult{
+						Jobs: []*jobtypes.QueuedJob{
+							{ID: "550e8400-e29b-41d4-a716-446655440000", Status: "completed"},
+						},
+						TotalCount: 1,
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"total_items":1`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacJobListTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetJobHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodGet,
+				"/job",
+				nil,
+			)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
 		})
 	}
 }

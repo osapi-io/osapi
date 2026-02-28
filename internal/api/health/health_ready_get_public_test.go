@@ -24,23 +24,32 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/api"
 	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/api/health/gen"
+	"github.com/retr0h/osapi/internal/config"
 )
 
 type HealthReadyGetPublicTestSuite struct {
 	suite.Suite
 
-	ctx context.Context
+	ctx       context.Context
+	appConfig config.Config
+	logger    *slog.Logger
 }
 
 func (s *HealthReadyGetPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
@@ -113,6 +122,60 @@ func (s *HealthReadyGetPublicTestSuite) TestGetHealthReady() {
 			resp, err := handler.GetHealthReady(s.ctx, gen.GetHealthReadyRequestObject{})
 			s.NoError(err)
 			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *HealthReadyGetPublicTestSuite) TestGetHealthReadyHTTP() {
+	tests := []struct {
+		name         string
+		checker      *health.NATSChecker
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when all checks pass returns ready",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"status":"ready"`},
+		},
+		{
+			name: "when NATS check fails returns not ready",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
+				KVCheck:   func() error { return nil },
+			},
+			wantCode:     http.StatusServiceUnavailable,
+			wantContains: []string{`"status":"not_ready"`, `"error"`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			healthHandler := health.New(
+				s.logger,
+				tc.checker,
+				time.Now(),
+				"0.1.0",
+				nil,
+			)
+			strictHandler := gen.NewStrictHandler(healthHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(http.MethodGet, "/health/ready", nil)
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, want := range tc.wantContains {
+				s.Contains(rec.Body.String(), want)
+			}
 		})
 	}
 }
