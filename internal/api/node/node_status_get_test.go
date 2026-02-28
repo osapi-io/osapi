@@ -131,6 +131,34 @@ func (suite *NodeStatusGetTestSuite) TestUint64ToInt() {
 	}
 }
 
+func (suite *NodeStatusGetTestSuite) TestDurationToString() {
+	dur := 20 * time.Millisecond
+
+	tests := []struct {
+		name string
+		d    *time.Duration
+		want *string
+	}{
+		{
+			name: "when nil",
+			d:    nil,
+			want: nil,
+		},
+		{
+			name: "when valid duration",
+			d:    &dur,
+			want: func() *string { s := "20.00ms"; return &s }(),
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := durationToString(tc.d)
+			suite.Equal(tc.want, got)
+		})
+	}
+}
+
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestNodeStatusGetTestSuite(t *testing.T) {

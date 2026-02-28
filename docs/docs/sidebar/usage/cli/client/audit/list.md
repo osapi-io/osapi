@@ -14,7 +14,7 @@ $ osapi client audit list
   ID        TIMESTAMP            USER             METHOD  PATH               STATUS  DURATION
   550e…000  2026-02-21 10:30:00  ops@example.com  GET     /node/hostname     200     42ms
   661f…111  2026-02-21 10:29:55  ops@example.com  POST    /job               201     15ms
-  772a…222  2026-02-21 10:29:50  ops@example.com  GET     /network/dns/eth0  200     8ms
+  772a…222  2026-02-21 10:29:50  ops@example.com  GET     /node/_any/network/dns/eth0  200     8ms
 ```
 
 Use `--limit` and `--offset` for pagination:

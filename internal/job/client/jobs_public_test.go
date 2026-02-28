@@ -1667,6 +1667,148 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 	}
 }
 
+func (s *JobsPublicTestSuite) TestGetQueueSummary() {
+	tests := []struct {
+		name               string
+		expectedErr        string
+		setupMocks         func()
+		expectedTotalJobs  int
+		expectedSubmitted  int
+		expectedProcessing int
+		expectedCompleted  int
+		expectedFailed     int
+		expectedDLQ        int
+	}{
+		{
+			name: "when no keys found returns empty stats",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, jetstream.ErrNoKeysFound)
+			},
+			expectedTotalJobs:  0,
+			expectedSubmitted:  0,
+			expectedProcessing: 0,
+			expectedCompleted:  0,
+			expectedFailed:     0,
+			expectedDLQ:        0,
+		},
+		{
+			name:        "when keys error returns error",
+			expectedErr: "error fetching keys",
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("connection failed"))
+			},
+		},
+		{
+			name: "when jobs exist returns correct status counts",
+			setupMocks: func() {
+				keys := []string{
+					// Job 1: submitted + acknowledged + started + completed → completed
+					"status.job-1.submitted._api.100",
+					"status.job-1.acknowledged.agent1.101",
+					"status.job-1.started.agent1.102",
+					"status.job-1.completed.agent1.103",
+					// Job 2: submitted + acknowledged + started → processing
+					"status.job-2.submitted._api.200",
+					"status.job-2.acknowledged.agent1.201",
+					"status.job-2.started.agent1.202",
+					// Job 3: submitted + failed → failed
+					"status.job-3.submitted._api.300",
+					"status.job-3.failed.agent1.301",
+					// Job 4: submitted only → submitted
+					"status.job-4.submitted._api.400",
+					// Job 5: retried → completed
+					"status.job-5.submitted._api.500",
+					"status.job-5.retried.agent1.501",
+					// Non-status keys should be ignored
+					"jobs.job-1",
+					"responses.job-1.agent1.103",
+				}
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(keys, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			expectedTotalJobs:  5,
+			expectedSubmitted:  1,
+			expectedProcessing: 1,
+			expectedCompleted:  2,
+			expectedFailed:     1,
+			expectedDLQ:        0,
+		},
+		{
+			name: "when DLQ has messages includes DLQ count",
+			setupMocks: func() {
+				keys := []string{
+					"status.job-1.submitted._api.100",
+				}
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(keys, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(&jetstream.StreamInfo{
+						State: jetstream.StreamState{Msgs: 3},
+					}, nil)
+			},
+			expectedTotalJobs:  1,
+			expectedSubmitted:  1,
+			expectedProcessing: 0,
+			expectedCompleted:  0,
+			expectedFailed:     0,
+			expectedDLQ:        3,
+		},
+		{
+			name: "when DLQ error returns zero DLQ count",
+			setupMocks: func() {
+				keys := []string{
+					"status.job-1.submitted._api.100",
+					"status.job-1.completed.agent1.101",
+				}
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(keys, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("stream not found"))
+			},
+			expectedTotalJobs:  1,
+			expectedSubmitted:  0,
+			expectedProcessing: 0,
+			expectedCompleted:  1,
+			expectedFailed:     0,
+			expectedDLQ:        0,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			stats, err := s.jobsClient.GetQueueSummary(s.ctx)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+			} else {
+				s.NoError(err)
+				s.NotNil(stats)
+				s.Equal(tt.expectedTotalJobs, stats.TotalJobs)
+				s.Equal(tt.expectedSubmitted, stats.StatusCounts["submitted"])
+				s.Equal(tt.expectedProcessing, stats.StatusCounts["processing"])
+				s.Equal(tt.expectedCompleted, stats.StatusCounts["completed"])
+				s.Equal(tt.expectedFailed, stats.StatusCounts["failed"])
+				s.Equal(tt.expectedDLQ, stats.DLQCount)
+			}
+		})
+	}
+}
+
 func TestJobsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(JobsPublicTestSuite))
 }

@@ -49,8 +49,6 @@ type ServerManager interface {
 	GetAgentHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNodeHandler returns node handler for registration.
 	GetNodeHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNetworkHandler returns network handler for registration.
-	GetNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetJobHandler returns job handler for registration.
 	GetJobHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetHealthHandler returns health handler for registration.
@@ -62,8 +60,6 @@ type ServerManager interface {
 	) []func(e *echo.Echo)
 	// GetMetricsHandler returns Prometheus metrics handler for registration.
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
-	// GetCommandHandler returns command handler for registration.
-	GetCommandHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
@@ -379,9 +375,7 @@ func registerAPIHandlers(
 	handlers := make([]func(e *echo.Echo), 0, 8)
 	handlers = append(handlers, sm.GetAgentHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeHandler(jc)...)
-	handlers = append(handlers, sm.GetNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
-	handlers = append(handlers, sm.GetCommandHandler(jc)...)
 	handlers = append(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)

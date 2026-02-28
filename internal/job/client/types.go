@@ -30,6 +30,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // JobClient defines the interface for interacting with the jobs system.
@@ -83,6 +86,46 @@ type JobClient interface {
 		ctx context.Context,
 		target string,
 	) (string, map[string]*job.AgentInfo, map[string]string, error)
+	QueryNodeDisk(
+		ctx context.Context,
+		hostname string,
+	) (string, *job.NodeDiskResponse, string, error)
+	QueryNodeDiskBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*job.NodeDiskResponse, map[string]string, error)
+	QueryNodeMemory(
+		ctx context.Context,
+		hostname string,
+	) (string, *mem.Stats, string, error)
+	QueryNodeMemoryBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*mem.Stats, map[string]string, error)
+	QueryNodeLoad(
+		ctx context.Context,
+		hostname string,
+	) (string, *load.AverageStats, string, error)
+	QueryNodeLoadBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*load.AverageStats, map[string]string, error)
+	QueryNodeOS(
+		ctx context.Context,
+		hostname string,
+	) (string, *host.OSInfo, string, error)
+	QueryNodeOSBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*host.OSInfo, map[string]string, error)
+	QueryNodeUptime(
+		ctx context.Context,
+		hostname string,
+	) (string, *job.NodeUptimeResponse, string, error)
+	QueryNodeUptimeBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*job.NodeUptimeResponse, map[string]string, error)
 	QueryNetworkDNS(
 		ctx context.Context,
 		hostname string,

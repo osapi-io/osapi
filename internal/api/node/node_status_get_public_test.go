@@ -75,10 +75,10 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 	}{
 		{
 			name:    "success",
-			request: gen.GetNodeStatusRequestObject{},
+			request: gen.GetNodeStatusRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatus(gomock.Any(), gomock.Any()).
+					QueryNodeStatus(gomock.Any(), "_any").
 					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.NodeStatusResponse{
 						Hostname: "test-host",
 						Uptime:   time.Hour,
@@ -90,25 +90,22 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
-			name: "validation error empty target_hostname",
-			request: gen.GetNodeStatusRequestObject{
-				Params: gen.GetNodeStatusParams{TargetHostname: strPtr("")},
-			},
+			name:      "validation error empty hostname",
+			request:   gen.GetNodeStatusRequestObject{Hostname: ""},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
 				r, ok := resp.(gen.GetNodeStatus400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "TargetHostname")
-				s.Contains(*r.Error, "min")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{
 			name:    "job client error",
-			request: gen.GetNodeStatusRequestObject{},
+			request: gen.GetNodeStatusRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatus(gomock.Any(), gomock.Any()).
+					QueryNodeStatus(gomock.Any(), "_any").
 					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -117,13 +114,11 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
-			name: "broadcast all success",
-			request: gen.GetNodeStatusRequestObject{
-				Params: gen.GetNodeStatusParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all success",
+			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeStatusBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 						{Hostname: "server2", Uptime: 2 * time.Hour},
@@ -134,13 +129,11 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
-			name: "broadcast all with errors",
-			request: gen.GetNodeStatusRequestObject{
-				Params: gen.GetNodeStatusParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all with errors",
+			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeStatusBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
 						{Hostname: "server1", Uptime: time.Hour},
 					}, map[string]string{
@@ -163,13 +156,11 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
-			name: "broadcast all error",
-			request: gen.GetNodeStatusRequestObject{
-				Params: gen.GetNodeStatusParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all error",
+			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeStatusBroadcast(gomock.Any(), "_all").
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {

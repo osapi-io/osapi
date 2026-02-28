@@ -50,9 +50,7 @@ convergence status (e.g., "3 of 5 operations changed, 2 already converged").
 
 ## Notes
 
-- Spun out from the completed
-  [Client SDK task](../done/2026-02-22-feat-client-sdk.md) which delivered the
-  programmatic SDK layer
-- The `changed` field
-  ([done](../done/2026-02-25-add-changed-field-to-mutation-responses.md)) is a
-  prerequisite for meaningful convergence reporting
+- Spun out from the completed Client SDK task which delivered the programmatic
+  SDK layer
+- The `changed` field (done) is a prerequisite for meaningful convergence
+  reporting

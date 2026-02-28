@@ -49,6 +49,21 @@ func Struct(
 	return "", true
 }
 
+// Var validates a single variable against a tag string and returns the error
+// message and false if invalid. This is useful for path parameters that
+// oapi-codegen does not generate validate tags for in strict-server mode.
+func Var(
+	field any,
+	tag string,
+) (string, bool) {
+	if err := instance.Var(field, tag); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return formatErrors(validationErrors), false
+	}
+
+	return "", true
+}
+
 // formatErrors builds the error string, appending a custom hint for known
 // tags while keeping the standard validator prefix.
 func formatErrors(

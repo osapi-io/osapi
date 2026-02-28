@@ -28,7 +28,6 @@ import (
 
 	"github.com/retr0h/osapi/internal/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetNodeHostname get the node hostname API endpoint.
@@ -36,14 +35,11 @@ func (s *Node) GetNodeHostname(
 	ctx context.Context,
 	request gen.GetNodeHostnameRequestObject,
 ) (gen.GetNodeHostnameResponseObject, error) {
-	if errMsg, ok := validation.Struct(request.Params); !ok {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
 		return gen.GetNodeHostname400JSONResponse{Error: &errMsg}, nil
 	}
 
-	hostname := job.AnyHost
-	if request.Params.TargetHostname != nil {
-		hostname = *request.Params.TargetHostname
-	}
+	hostname := request.Hostname
 
 	s.logger.Debug("routing",
 		slog.String("target", hostname),

@@ -20,6 +20,130 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for DNSUpdateResultItemStatus.
+const (
+	Failed DNSUpdateResultItemStatus = "failed"
+	Ok     DNSUpdateResultItemStatus = "ok"
+)
+
+// CommandExecRequest defines model for CommandExecRequest.
+type CommandExecRequest struct {
+	// Args Command arguments.
+	Args *[]string `json:"args,omitempty"`
+
+	// Command The executable name or path.
+	Command string `json:"command" validate:"required,min=1"`
+
+	// Cwd Working directory for the command.
+	Cwd *string `json:"cwd,omitempty"`
+
+	// Timeout Timeout in seconds (default 30, max 300).
+	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
+}
+
+// CommandResultCollectionResponse defines model for CommandResultCollectionResponse.
+type CommandResultCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []CommandResultItem `json:"results"`
+}
+
+// CommandResultItem defines model for CommandResultItem.
+type CommandResultItem struct {
+	// Changed Whether the command modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// DurationMs Execution time in milliseconds.
+	DurationMs *int64 `json:"duration_ms,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// ExitCode Exit code of the command.
+	ExitCode *int `json:"exit_code,omitempty"`
+
+	// Hostname The hostname of the agent that executed the command.
+	Hostname string `json:"hostname"`
+
+	// Stderr Standard error output of the command.
+	Stderr *string `json:"stderr,omitempty"`
+
+	// Stdout Standard output of the command.
+	Stdout *string `json:"stdout,omitempty"`
+}
+
+// CommandShellRequest defines model for CommandShellRequest.
+type CommandShellRequest struct {
+	// Command The full shell command string.
+	Command string `json:"command" validate:"required,min=1"`
+
+	// Cwd Working directory for the command.
+	Cwd *string `json:"cwd,omitempty"`
+
+	// Timeout Timeout in seconds (default 30, max 300).
+	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
+}
+
+// DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
+type DNSConfigCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []DNSConfigResponse `json:"results"`
+}
+
+// DNSConfigResponse defines model for DNSConfigResponse.
+type DNSConfigResponse struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent that served this config.
+	Hostname string `json:"hostname"`
+
+	// SearchDomains List of search domains.
+	SearchDomains *[]string `json:"search_domains,omitempty"`
+
+	// Servers List of configured DNS servers.
+	Servers *[]string `json:"servers,omitempty"`
+}
+
+// DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
+type DNSConfigUpdateRequest struct {
+	// InterfaceName The name of the network interface to apply DNS configuration to. Must only contain letters and numbers.
+	InterfaceName string `json:"interface_name" validate:"required,alphanum"`
+
+	// SearchDomains New list of search domains to configure.
+	SearchDomains *[]string `json:"search_domains,omitempty" validate:"required_without=Servers,omitempty,dive,hostname,min=1"`
+
+	// Servers New list of DNS servers to configure.
+	Servers *[]string `json:"servers,omitempty" validate:"required_without=SearchDomains,omitempty,dive,ip,min=1"`
+}
+
+// DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
+type DNSUpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
+	Results []DNSUpdateResultItem `json:"results"`
+}
+
+// DNSUpdateResultItem defines model for DNSUpdateResultItem.
+type DNSUpdateResultItem struct {
+	// Changed Whether the DNS configuration was actually modified.
+	Changed  *bool                     `json:"changed,omitempty"`
+	Error    *string                   `json:"error,omitempty"`
+	Hostname string                    `json:"hostname"`
+	Status   DNSUpdateResultItemStatus `json:"status"`
+}
+
+// DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
+type DNSUpdateResultItemStatus string
+
+// DiskCollectionResponse defines model for DiskCollectionResponse.
+type DiskCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []DiskResultItem    `json:"results"`
+}
+
 // DiskResponse Local disk usage information.
 type DiskResponse struct {
 	// Free Free disk space in bytes.
@@ -33,6 +157,18 @@ type DiskResponse struct {
 
 	// Used Used disk space in bytes.
 	Used int `json:"used"`
+}
+
+// DiskResultItem defines model for DiskResultItem.
+type DiskResultItem struct {
+	// Disks List of local disk usage information.
+	Disks *DisksResponse `json:"disks,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
 }
 
 // DisksResponse List of local disk usage information.
@@ -50,7 +186,7 @@ type HostnameCollectionResponse struct {
 
 // HostnameResponse The hostname of the system.
 type HostnameResponse struct {
-	// Error Error message if the agent failed to process the request.
+	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
 	// Hostname The system's hostname.
@@ -72,6 +208,32 @@ type LoadAverageResponse struct {
 	N5min float32 `json:"5min"`
 }
 
+// LoadCollectionResponse defines model for LoadCollectionResponse.
+type LoadCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []LoadResultItem    `json:"results"`
+}
+
+// LoadResultItem defines model for LoadResultItem.
+type LoadResultItem struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// LoadAverage The system load averages for 1, 5, and 15 minutes.
+	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+}
+
+// MemoryCollectionResponse defines model for MemoryCollectionResponse.
+type MemoryCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []MemoryResultItem  `json:"results"`
+}
+
 // MemoryResponse Memory usage information.
 type MemoryResponse struct {
 	// Free Free memory in bytes.
@@ -82,6 +244,18 @@ type MemoryResponse struct {
 
 	// Used Used memory in bytes.
 	Used int `json:"used"`
+}
+
+// MemoryResultItem defines model for MemoryResultItem.
+type MemoryResultItem struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Memory Memory usage information.
+	Memory *MemoryResponse `json:"memory,omitempty"`
 }
 
 // NodeStatusCollectionResponse defines model for NodeStatusCollectionResponse.
@@ -96,7 +270,7 @@ type NodeStatusResponse struct {
 	// Disks List of local disk usage information.
 	Disks *DisksResponse `json:"disks,omitempty"`
 
-	// Error Error message if the agent failed to process the request.
+	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
 	// Hostname The hostname of the system.
@@ -115,6 +289,13 @@ type NodeStatusResponse struct {
 	Uptime *string `json:"uptime,omitempty"`
 }
 
+// OSInfoCollectionResponse defines model for OSInfoCollectionResponse.
+type OSInfoCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []OSInfoResultItem  `json:"results"`
+}
+
 // OSInfoResponse Operating system information.
 type OSInfoResponse struct {
 	// Distribution The name of the Linux distribution.
@@ -124,26 +305,130 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
-// GetNodeHostnameParams defines parameters for GetNodeHostname.
-type GetNodeHostnameParams struct {
-	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target"`
+// OSInfoResultItem defines model for OSInfoResultItem.
+type OSInfoResultItem struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// OsInfo Operating system information.
+	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
 }
 
-// GetNodeStatusParams defines parameters for GetNodeStatus.
-type GetNodeStatusParams struct {
-	// TargetHostname Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).
-	TargetHostname *string `form:"target_hostname,omitempty" json:"target_hostname,omitempty" validate:"omitempty,min=1,valid_target"`
+// PingCollectionResponse defines model for PingCollectionResponse.
+type PingCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PingResponse      `json:"results"`
 }
+
+// PingResponse defines model for PingResponse.
+type PingResponse struct {
+	// AvgRtt Average round-trip time in Go time.Duration format.
+	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent that executed the ping.
+	Hostname string `json:"hostname"`
+
+	// MaxRtt Maximum round-trip time in Go time.Duration format.
+	MaxRtt *string `json:"max_rtt,omitempty"`
+
+	// MinRtt Minimum round-trip time in Go time.Duration format.
+	MinRtt *string `json:"min_rtt,omitempty"`
+
+	// PacketLoss Percentage of packet loss.
+	PacketLoss *float64 `json:"packet_loss,omitempty"`
+
+	// PacketsReceived Number of packets received.
+	PacketsReceived *int `json:"packets_received,omitempty"`
+
+	// PacketsSent Number of packets sent.
+	PacketsSent *int `json:"packets_sent,omitempty"`
+}
+
+// UptimeCollectionResponse defines model for UptimeCollectionResponse.
+type UptimeCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []UptimeResponse    `json:"results"`
+}
+
+// UptimeResponse System uptime information.
+type UptimeResponse struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Uptime The uptime of the system.
+	Uptime *string `json:"uptime,omitempty"`
+}
+
+// Hostname defines model for Hostname.
+type Hostname = string
+
+// PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
+type PostNodeNetworkPingJSONBody struct {
+	// Address The IP address of the server to ping. Supports both IPv4 and IPv6.
+	Address string `json:"address" validate:"required,ip"`
+}
+
+// PostNodeCommandExecJSONRequestBody defines body for PostNodeCommandExec for application/json ContentType.
+type PostNodeCommandExecJSONRequestBody = CommandExecRequest
+
+// PostNodeCommandShellJSONRequestBody defines body for PostNodeCommandShell for application/json ContentType.
+type PostNodeCommandShellJSONRequestBody = CommandShellRequest
+
+// PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
+type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
+
+// PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
+type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Retrieve node hostname
-	// (GET /node/hostname)
-	GetNodeHostname(ctx echo.Context, params GetNodeHostnameParams) error
 	// Retrieve node status
-	// (GET /node/status)
-	GetNodeStatus(ctx echo.Context, params GetNodeStatusParams) error
+	// (GET /node/{hostname})
+	GetNodeStatus(ctx echo.Context, hostname Hostname) error
+	// Execute a command
+	// (POST /node/{hostname}/command/exec)
+	PostNodeCommandExec(ctx echo.Context, hostname Hostname) error
+	// Execute a shell command
+	// (POST /node/{hostname}/command/shell)
+	PostNodeCommandShell(ctx echo.Context, hostname Hostname) error
+	// Retrieve disk usage
+	// (GET /node/{hostname}/disk)
+	GetNodeDisk(ctx echo.Context, hostname Hostname) error
+	// Retrieve node hostname
+	// (GET /node/{hostname}/hostname)
+	GetNodeHostname(ctx echo.Context, hostname Hostname) error
+	// Retrieve load averages
+	// (GET /node/{hostname}/load)
+	GetNodeLoad(ctx echo.Context, hostname Hostname) error
+	// Retrieve memory stats
+	// (GET /node/{hostname}/memory)
+	GetNodeMemory(ctx echo.Context, hostname Hostname) error
+	// Update DNS servers
+	// (PUT /node/{hostname}/network/dns)
+	PutNodeNetworkDNS(ctx echo.Context, hostname Hostname) error
+	// List DNS servers
+	// (GET /node/{hostname}/network/dns/{interfaceName})
+	GetNodeNetworkDNSByInterface(ctx echo.Context, hostname Hostname, interfaceName string) error
+	// Ping a remote server
+	// (POST /node/{hostname}/network/ping)
+	PostNodeNetworkPing(ctx echo.Context, hostname Hostname) error
+	// Retrieve OS info
+	// (GET /node/{hostname}/os)
+	GetNodeOS(ctx echo.Context, hostname Hostname) error
+	// Retrieve uptime
+	// (GET /node/{hostname}/uptime)
+	GetNodeUptime(ctx echo.Context, hostname Hostname) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -151,43 +436,227 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetNodeHostname converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeHostname(ctx echo.Context) error {
-	var err error
-
-	ctx.Set(BearerAuthScopes, []string{"node:read"})
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetNodeHostnameParams
-	// ------------- Optional query parameter "target_hostname" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeHostname(ctx, params)
-	return err
-}
-
 // GetNodeStatus converts echo context to params.
 func (w *ServerInterfaceWrapper) GetNodeStatus(ctx echo.Context) error {
 	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
 
 	ctx.Set(BearerAuthScopes, []string{"node:read"})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetNodeStatusParams
-	// ------------- Optional query parameter "target_hostname" -------------
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeStatus(ctx, hostname)
+	return err
+}
 
-	err = runtime.BindQueryParameter("form", true, false, "target_hostname", ctx.QueryParams(), &params.TargetHostname)
+// PostNodeCommandExec converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeCommandExec(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter target_hostname: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{"command:execute"})
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeStatus(ctx, params)
+	err = w.Handler.PostNodeCommandExec(ctx, hostname)
+	return err
+}
+
+// PostNodeCommandShell converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeCommandShell(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"command:execute"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostNodeCommandShell(ctx, hostname)
+	return err
+}
+
+// GetNodeDisk converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeDisk(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeDisk(ctx, hostname)
+	return err
+}
+
+// GetNodeHostname converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeHostname(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeHostname(ctx, hostname)
+	return err
+}
+
+// GetNodeLoad converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeLoad(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeLoad(ctx, hostname)
+	return err
+}
+
+// GetNodeMemory converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeMemory(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeMemory(ctx, hostname)
+	return err
+}
+
+// PutNodeNetworkDNS converts echo context to params.
+func (w *ServerInterfaceWrapper) PutNodeNetworkDNS(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"network:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PutNodeNetworkDNS(ctx, hostname)
+	return err
+}
+
+// GetNodeNetworkDNSByInterface converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeNetworkDNSByInterface(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "interfaceName" -------------
+	var interfaceName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "interfaceName", ctx.Param("interfaceName"), &interfaceName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter interfaceName: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"network:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeNetworkDNSByInterface(ctx, hostname, interfaceName)
+	return err
+}
+
+// PostNodeNetworkPing converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeNetworkPing(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"network:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostNodeNetworkPing(ctx, hostname)
+	return err
+}
+
+// GetNodeOS converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeOS(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeOS(ctx, hostname)
+	return err
+}
+
+// GetNodeUptime converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeUptime(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"node:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeUptime(ctx, hostname)
 	return err
 }
 
@@ -219,66 +688,23 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/node/hostname", wrapper.GetNodeHostname)
-	router.GET(baseURL+"/node/status", wrapper.GetNodeStatus)
+	router.GET(baseURL+"/node/:hostname", wrapper.GetNodeStatus)
+	router.POST(baseURL+"/node/:hostname/command/exec", wrapper.PostNodeCommandExec)
+	router.POST(baseURL+"/node/:hostname/command/shell", wrapper.PostNodeCommandShell)
+	router.GET(baseURL+"/node/:hostname/disk", wrapper.GetNodeDisk)
+	router.GET(baseURL+"/node/:hostname/hostname", wrapper.GetNodeHostname)
+	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
+	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
+	router.PUT(baseURL+"/node/:hostname/network/dns", wrapper.PutNodeNetworkDNS)
+	router.GET(baseURL+"/node/:hostname/network/dns/:interfaceName", wrapper.GetNodeNetworkDNSByInterface)
+	router.POST(baseURL+"/node/:hostname/network/ping", wrapper.PostNodeNetworkPing)
+	router.GET(baseURL+"/node/:hostname/os", wrapper.GetNodeOS)
+	router.GET(baseURL+"/node/:hostname/uptime", wrapper.GetNodeUptime)
 
-}
-
-type GetNodeHostnameRequestObject struct {
-	Params GetNodeHostnameParams
-}
-
-type GetNodeHostnameResponseObject interface {
-	VisitGetNodeHostnameResponse(w http.ResponseWriter) error
-}
-
-type GetNodeHostname200JSONResponse HostnameCollectionResponse
-
-func (response GetNodeHostname200JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname400JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname401JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname403JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname500JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
 }
 
 type GetNodeStatusRequestObject struct {
-	Params GetNodeStatusParams
+	Hostname Hostname `json:"hostname"`
 }
 
 type GetNodeStatusResponseObject interface {
@@ -330,14 +756,632 @@ func (response GetNodeStatus500JSONResponse) VisitGetNodeStatusResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostNodeCommandExecRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Body     *PostNodeCommandExecJSONRequestBody
+}
+
+type PostNodeCommandExecResponseObject interface {
+	VisitPostNodeCommandExecResponse(w http.ResponseWriter) error
+}
+
+type PostNodeCommandExec202JSONResponse CommandResultCollectionResponse
+
+func (response PostNodeCommandExec202JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandExec400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandExec400JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandExec401JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandExec401JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandExec403JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandExec403JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandExec500JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandExec500JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandShellRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Body     *PostNodeCommandShellJSONRequestBody
+}
+
+type PostNodeCommandShellResponseObject interface {
+	VisitPostNodeCommandShellResponse(w http.ResponseWriter) error
+}
+
+type PostNodeCommandShell202JSONResponse CommandResultCollectionResponse
+
+func (response PostNodeCommandShell202JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandShell400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandShell400JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandShell401JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandShell401JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandShell403JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandShell403JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeCommandShell500JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeCommandShell500JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDiskRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeDiskResponseObject interface {
+	VisitGetNodeDiskResponse(w http.ResponseWriter) error
+}
+
+type GetNodeDisk200JSONResponse DiskCollectionResponse
+
+func (response GetNodeDisk200JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDisk400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDisk400JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDisk401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDisk401JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDisk403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDisk403JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeDisk500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeDisk500JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeHostnameRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeHostnameResponseObject interface {
+	VisitGetNodeHostnameResponse(w http.ResponseWriter) error
+}
+
+type GetNodeHostname200JSONResponse HostnameCollectionResponse
+
+func (response GetNodeHostname200JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeHostname400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeHostname400JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeHostname401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeHostname401JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeHostname403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeHostname403JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeHostname500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeHostname500JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLoadRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeLoadResponseObject interface {
+	VisitGetNodeLoadResponse(w http.ResponseWriter) error
+}
+
+type GetNodeLoad200JSONResponse LoadCollectionResponse
+
+func (response GetNodeLoad200JSONResponse) VisitGetNodeLoadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLoad400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLoad400JSONResponse) VisitGetNodeLoadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLoad401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLoad401JSONResponse) VisitGetNodeLoadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLoad403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLoad403JSONResponse) VisitGetNodeLoadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLoad500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLoad500JSONResponse) VisitGetNodeLoadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeMemoryRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeMemoryResponseObject interface {
+	VisitGetNodeMemoryResponse(w http.ResponseWriter) error
+}
+
+type GetNodeMemory200JSONResponse MemoryCollectionResponse
+
+func (response GetNodeMemory200JSONResponse) VisitGetNodeMemoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeMemory400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeMemory400JSONResponse) VisitGetNodeMemoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeMemory401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeMemory401JSONResponse) VisitGetNodeMemoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeMemory403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeMemory403JSONResponse) VisitGetNodeMemoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeMemory500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeMemory500JSONResponse) VisitGetNodeMemoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeNetworkDNSRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Body     *PutNodeNetworkDNSJSONRequestBody
+}
+
+type PutNodeNetworkDNSResponseObject interface {
+	VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error
+}
+
+type PutNodeNetworkDNS202JSONResponse DNSUpdateCollectionResponse
+
+func (response PutNodeNetworkDNS202JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeNetworkDNS400JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeNetworkDNS400JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeNetworkDNS401JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeNetworkDNS401JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeNetworkDNS403JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeNetworkDNS403JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeNetworkDNS500JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeNetworkDNS500JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNetworkDNSByInterfaceRequestObject struct {
+	Hostname      Hostname `json:"hostname"`
+	InterfaceName string   `json:"interfaceName"`
+}
+
+type GetNodeNetworkDNSByInterfaceResponseObject interface {
+	VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error
+}
+
+type GetNodeNetworkDNSByInterface200JSONResponse DNSConfigCollectionResponse
+
+func (response GetNodeNetworkDNSByInterface200JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNetworkDNSByInterface400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeNetworkDNSByInterface400JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNetworkDNSByInterface401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeNetworkDNSByInterface401JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNetworkDNSByInterface403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeNetworkDNSByInterface403JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeNetworkDNSByInterface500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeNetworkDNSByInterface500JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeNetworkPingRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Body     *PostNodeNetworkPingJSONRequestBody
+}
+
+type PostNodeNetworkPingResponseObject interface {
+	VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error
+}
+
+type PostNodeNetworkPing200JSONResponse PingCollectionResponse
+
+func (response PostNodeNetworkPing200JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeNetworkPing400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeNetworkPing400JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeNetworkPing401JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeNetworkPing401JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeNetworkPing403JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeNetworkPing403JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeNetworkPing500JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeNetworkPing500JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeOSRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeOSResponseObject interface {
+	VisitGetNodeOSResponse(w http.ResponseWriter) error
+}
+
+type GetNodeOS200JSONResponse OSInfoCollectionResponse
+
+func (response GetNodeOS200JSONResponse) VisitGetNodeOSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeOS400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeOS400JSONResponse) VisitGetNodeOSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeOS401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeOS401JSONResponse) VisitGetNodeOSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeOS403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeOS403JSONResponse) VisitGetNodeOSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeOS500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeOS500JSONResponse) VisitGetNodeOSResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUptimeRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeUptimeResponseObject interface {
+	VisitGetNodeUptimeResponse(w http.ResponseWriter) error
+}
+
+type GetNodeUptime200JSONResponse UptimeCollectionResponse
+
+func (response GetNodeUptime200JSONResponse) VisitGetNodeUptimeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUptime400JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUptime400JSONResponse) VisitGetNodeUptimeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUptime401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUptime401JSONResponse) VisitGetNodeUptimeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUptime403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUptime403JSONResponse) VisitGetNodeUptimeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeUptime500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeUptime500JSONResponse) VisitGetNodeUptimeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// Retrieve node hostname
-	// (GET /node/hostname)
-	GetNodeHostname(ctx context.Context, request GetNodeHostnameRequestObject) (GetNodeHostnameResponseObject, error)
 	// Retrieve node status
-	// (GET /node/status)
+	// (GET /node/{hostname})
 	GetNodeStatus(ctx context.Context, request GetNodeStatusRequestObject) (GetNodeStatusResponseObject, error)
+	// Execute a command
+	// (POST /node/{hostname}/command/exec)
+	PostNodeCommandExec(ctx context.Context, request PostNodeCommandExecRequestObject) (PostNodeCommandExecResponseObject, error)
+	// Execute a shell command
+	// (POST /node/{hostname}/command/shell)
+	PostNodeCommandShell(ctx context.Context, request PostNodeCommandShellRequestObject) (PostNodeCommandShellResponseObject, error)
+	// Retrieve disk usage
+	// (GET /node/{hostname}/disk)
+	GetNodeDisk(ctx context.Context, request GetNodeDiskRequestObject) (GetNodeDiskResponseObject, error)
+	// Retrieve node hostname
+	// (GET /node/{hostname}/hostname)
+	GetNodeHostname(ctx context.Context, request GetNodeHostnameRequestObject) (GetNodeHostnameResponseObject, error)
+	// Retrieve load averages
+	// (GET /node/{hostname}/load)
+	GetNodeLoad(ctx context.Context, request GetNodeLoadRequestObject) (GetNodeLoadResponseObject, error)
+	// Retrieve memory stats
+	// (GET /node/{hostname}/memory)
+	GetNodeMemory(ctx context.Context, request GetNodeMemoryRequestObject) (GetNodeMemoryResponseObject, error)
+	// Update DNS servers
+	// (PUT /node/{hostname}/network/dns)
+	PutNodeNetworkDNS(ctx context.Context, request PutNodeNetworkDNSRequestObject) (PutNodeNetworkDNSResponseObject, error)
+	// List DNS servers
+	// (GET /node/{hostname}/network/dns/{interfaceName})
+	GetNodeNetworkDNSByInterface(ctx context.Context, request GetNodeNetworkDNSByInterfaceRequestObject) (GetNodeNetworkDNSByInterfaceResponseObject, error)
+	// Ping a remote server
+	// (POST /node/{hostname}/network/ping)
+	PostNodeNetworkPing(ctx context.Context, request PostNodeNetworkPingRequestObject) (PostNodeNetworkPingResponseObject, error)
+	// Retrieve OS info
+	// (GET /node/{hostname}/os)
+	GetNodeOS(ctx context.Context, request GetNodeOSRequestObject) (GetNodeOSResponseObject, error)
+	// Retrieve uptime
+	// (GET /node/{hostname}/uptime)
+	GetNodeUptime(ctx context.Context, request GetNodeUptimeRequestObject) (GetNodeUptimeResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -352,11 +1396,123 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
+// GetNodeStatus operation middleware
+func (sh *strictHandler) GetNodeStatus(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeStatusRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeStatus(ctx.Request().Context(), request.(GetNodeStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeStatus")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeStatusResponseObject); ok {
+		return validResponse.VisitGetNodeStatusResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostNodeCommandExec operation middleware
+func (sh *strictHandler) PostNodeCommandExec(ctx echo.Context, hostname Hostname) error {
+	var request PostNodeCommandExecRequestObject
+
+	request.Hostname = hostname
+
+	var body PostNodeCommandExecJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostNodeCommandExec(ctx.Request().Context(), request.(PostNodeCommandExecRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostNodeCommandExec")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostNodeCommandExecResponseObject); ok {
+		return validResponse.VisitPostNodeCommandExecResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostNodeCommandShell operation middleware
+func (sh *strictHandler) PostNodeCommandShell(ctx echo.Context, hostname Hostname) error {
+	var request PostNodeCommandShellRequestObject
+
+	request.Hostname = hostname
+
+	var body PostNodeCommandShellJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostNodeCommandShell(ctx.Request().Context(), request.(PostNodeCommandShellRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostNodeCommandShell")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostNodeCommandShellResponseObject); ok {
+		return validResponse.VisitPostNodeCommandShellResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeDisk operation middleware
+func (sh *strictHandler) GetNodeDisk(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeDiskRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeDisk(ctx.Request().Context(), request.(GetNodeDiskRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeDisk")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeDiskResponseObject); ok {
+		return validResponse.VisitGetNodeDiskResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // GetNodeHostname operation middleware
-func (sh *strictHandler) GetNodeHostname(ctx echo.Context, params GetNodeHostnameParams) error {
+func (sh *strictHandler) GetNodeHostname(ctx echo.Context, hostname Hostname) error {
 	var request GetNodeHostnameRequestObject
 
-	request.Params = params
+	request.Hostname = hostname
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetNodeHostname(ctx.Request().Context(), request.(GetNodeHostnameRequestObject))
@@ -377,25 +1533,188 @@ func (sh *strictHandler) GetNodeHostname(ctx echo.Context, params GetNodeHostnam
 	return nil
 }
 
-// GetNodeStatus operation middleware
-func (sh *strictHandler) GetNodeStatus(ctx echo.Context, params GetNodeStatusParams) error {
-	var request GetNodeStatusRequestObject
+// GetNodeLoad operation middleware
+func (sh *strictHandler) GetNodeLoad(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeLoadRequestObject
 
-	request.Params = params
+	request.Hostname = hostname
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeStatus(ctx.Request().Context(), request.(GetNodeStatusRequestObject))
+		return sh.ssi.GetNodeLoad(ctx.Request().Context(), request.(GetNodeLoadRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeStatus")
+		handler = middleware(handler, "GetNodeLoad")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetNodeStatusResponseObject); ok {
-		return validResponse.VisitGetNodeStatusResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetNodeLoadResponseObject); ok {
+		return validResponse.VisitGetNodeLoadResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeMemory operation middleware
+func (sh *strictHandler) GetNodeMemory(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeMemoryRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeMemory(ctx.Request().Context(), request.(GetNodeMemoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeMemory")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeMemoryResponseObject); ok {
+		return validResponse.VisitGetNodeMemoryResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PutNodeNetworkDNS operation middleware
+func (sh *strictHandler) PutNodeNetworkDNS(ctx echo.Context, hostname Hostname) error {
+	var request PutNodeNetworkDNSRequestObject
+
+	request.Hostname = hostname
+
+	var body PutNodeNetworkDNSJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutNodeNetworkDNS(ctx.Request().Context(), request.(PutNodeNetworkDNSRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutNodeNetworkDNS")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PutNodeNetworkDNSResponseObject); ok {
+		return validResponse.VisitPutNodeNetworkDNSResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeNetworkDNSByInterface operation middleware
+func (sh *strictHandler) GetNodeNetworkDNSByInterface(ctx echo.Context, hostname Hostname, interfaceName string) error {
+	var request GetNodeNetworkDNSByInterfaceRequestObject
+
+	request.Hostname = hostname
+	request.InterfaceName = interfaceName
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeNetworkDNSByInterface(ctx.Request().Context(), request.(GetNodeNetworkDNSByInterfaceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeNetworkDNSByInterface")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeNetworkDNSByInterfaceResponseObject); ok {
+		return validResponse.VisitGetNodeNetworkDNSByInterfaceResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostNodeNetworkPing operation middleware
+func (sh *strictHandler) PostNodeNetworkPing(ctx echo.Context, hostname Hostname) error {
+	var request PostNodeNetworkPingRequestObject
+
+	request.Hostname = hostname
+
+	var body PostNodeNetworkPingJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostNodeNetworkPing(ctx.Request().Context(), request.(PostNodeNetworkPingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostNodeNetworkPing")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostNodeNetworkPingResponseObject); ok {
+		return validResponse.VisitPostNodeNetworkPingResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeOS operation middleware
+func (sh *strictHandler) GetNodeOS(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeOSRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeOS(ctx.Request().Context(), request.(GetNodeOSRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeOS")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeOSResponseObject); ok {
+		return validResponse.VisitGetNodeOSResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeUptime operation middleware
+func (sh *strictHandler) GetNodeUptime(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeUptimeRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeUptime(ctx.Request().Context(), request.(GetNodeUptimeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeUptime")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeUptimeResponseObject); ok {
+		return validResponse.VisitGetNodeUptimeResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

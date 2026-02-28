@@ -293,6 +293,17 @@ type AgentInfo struct {
 	AgentVersion string `json:"agent_version,omitempty"`
 }
 
+// NodeDiskResponse represents the response for node.disk.get operations.
+type NodeDiskResponse struct {
+	Disks []disk.UsageStats `json:"disks"`
+}
+
+// NodeUptimeResponse represents the response for node.uptime.get operations.
+type NodeUptimeResponse struct {
+	UptimeSeconds float64 `json:"uptime_seconds"`
+	Uptime        string  `json:"uptime"`
+}
+
 // NodeStatusResponse aggregates node status information from multiple providers.
 // This represents the response for node.status.get operations in the job queue.
 type NodeStatusResponse struct {

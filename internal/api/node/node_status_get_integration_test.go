@@ -87,11 +87,11 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusValidation() {
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/status",
+			path: "/node/server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), job.AnyHost).
+					QueryNodeStatus(gomock.Any(), "server1").
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.NodeStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
@@ -157,11 +157,11 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusValidation() {
 		},
 		{
 			name: "when job client errors",
-			path: "/node/status",
+			path: "/node/server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), job.AnyHost).
+					QueryNodeStatus(gomock.Any(), "server1").
 					Return("", nil, assert.AnError)
 				return mock
 			},
@@ -169,21 +169,12 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusValidation() {
 			wantBody: `{"error":"assert.AnError general error for testing"}`,
 		},
 		{
-			name: "when empty target_hostname returns 400",
-			path: "/node/status?target_hostname=",
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(suite.ctrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`},
-		},
-		{
 			name: "when broadcast all",
-			path: "/node/status?target_hostname=_all",
+			path: "/node/_all",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeStatusBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", []*job.NodeStatusResponse{
 						{
 							Hostname: "server1",
@@ -283,7 +274,7 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusRBAC() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), job.AnyHost).
+					QueryNodeStatus(gomock.Any(), "server1").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.NodeStatusResponse{
@@ -339,7 +330,7 @@ func (suite *NodeStatusGetIntegrationTestSuite) TestGetNodeStatusRBAC() {
 			handlers := server.GetNodeHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/status", nil)
+			req := httptest.NewRequest(http.MethodGet, "/node/server1", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 

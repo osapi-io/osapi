@@ -1397,6 +1397,891 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 	}
 }
 
+func (s *QueryPublicTestSuite) TestQueryNodeDisk() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": {"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}
+			}`,
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "permission denied",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: permission denied",
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_data_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal disk response",
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			mockError:     errors.New("connection timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
+
+			_, result, _, err := s.jobsClient.QueryNodeDisk(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}}`,
+					`{"status":"completed","hostname":"server2","data":{"disks":[{"Name":"/dev/sdb1","Total":200000,"Used":100000,"Free":100000}]}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses collected in errors",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}}`,
+					`{"status":"failed","hostname":"server2","error":"disk read error"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_data_format"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, _, err := jobsClient.QueryNodeDiskBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeMemory() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": {"Total":8589934592,"Free":4294967296,"Cached":1073741824}
+			}`,
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "memory read error",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: memory read error",
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_data_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal memory response",
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			mockError:     errors.New("connection timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
+
+			_, result, _, err := s.jobsClient.QueryNodeMemory(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeMemoryBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Total":8589934592,"Free":4294967296,"Cached":1073741824}}`,
+					`{"status":"completed","hostname":"server2","data":{"Total":16777216000,"Free":8388608000,"Cached":2147483648}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses collected in errors",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Total":8589934592,"Free":4294967296,"Cached":1073741824}}`,
+					`{"status":"failed","hostname":"server2","error":"memory read error"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Total":8589934592,"Free":4294967296,"Cached":1073741824}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_data_format"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, _, err := jobsClient.QueryNodeMemoryBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeLoad() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": {"Load1":0.5,"Load5":0.3,"Load15":0.2}
+			}`,
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "load read error",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: load read error",
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_data_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal load response",
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			mockError:     errors.New("connection timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
+
+			_, result, _, err := s.jobsClient.QueryNodeLoad(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeLoadBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Load1":0.5,"Load5":0.3,"Load15":0.2}}`,
+					`{"status":"completed","hostname":"server2","data":{"Load1":1.2,"Load5":0.8,"Load15":0.5}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses collected in errors",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Load1":0.5,"Load5":0.3,"Load15":0.2}}`,
+					`{"status":"failed","hostname":"server2","error":"load read error"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Load1":0.5,"Load5":0.3,"Load15":0.2}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_data_format"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, _, err := jobsClient.QueryNodeLoadBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeOS() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": {"Distribution":"Ubuntu","Version":"24.04"}
+			}`,
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "os info unavailable",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: os info unavailable",
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_data_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal OS info response",
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			mockError:     errors.New("connection timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
+
+			_, result, _, err := s.jobsClient.QueryNodeOS(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeOSBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Distribution":"Ubuntu","Version":"24.04"}}`,
+					`{"status":"completed","hostname":"server2","data":{"Distribution":"CentOS","Version":"9"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses collected in errors",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Distribution":"Ubuntu","Version":"24.04"}}`,
+					`{"status":"failed","hostname":"server2","error":"os info unavailable"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"Distribution":"Ubuntu","Version":"24.04"}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_data_format"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, _, err := jobsClient.QueryNodeOSBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeUptime() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:     "success",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": {"uptime_seconds":3600,"uptime":"1h0m0s"}
+			}`,
+		},
+		{
+			name:     "job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "uptime read error",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed: uptime read error",
+		},
+		{
+			name:     "unmarshal error",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"data": "invalid_data_format"
+			}`,
+			expectError:   true,
+			errorContains: "failed to unmarshal uptime response",
+		},
+		{
+			name:          "publish error",
+			hostname:      "server1",
+			mockError:     errors.New("connection timeout"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				subject,
+				tt.responseData,
+				tt.mockError,
+			)
+
+			_, result, _, err := s.jobsClient.QueryNodeUptime(s.ctx, tt.hostname)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *QueryPublicTestSuite) TestQueryNodeUptimeBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple hosts respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"uptime_seconds":3600,"uptime":"1h0m0s"}}`,
+					`{"status":"completed","hostname":"server2","data":{"uptime_seconds":7200,"uptime":"2h0m0s"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "failed responses collected in errors",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"uptime_seconds":3600,"uptime":"1h0m0s"}}`,
+					`{"status":"failed","hostname":"server2","error":"uptime read error"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name:    "unmarshal error skipped",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"uptime_seconds":3600,"uptime":"1h0m0s"}}`,
+					`{"status":"completed","hostname":"server2","data":"invalid_data_format"}`,
+				},
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, _, err := jobsClient.QueryNodeUptimeBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
 func TestQueryPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(QueryPublicTestSuite))
 }

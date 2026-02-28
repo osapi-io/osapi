@@ -74,10 +74,10 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 	}{
 		{
 			name:    "success",
-			request: gen.GetNodeHostnameRequestObject{},
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), gomock.Any()).
+					QueryNodeHostname(gomock.Any(), "_any").
 					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", &job.AgentInfo{
 						Hostname: "agent1",
 						Labels:   map[string]string{"group": "web"},
@@ -94,10 +94,10 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 		},
 		{
 			name:    "empty hostname falls back to agent hostname",
-			request: gen.GetNodeHostnameRequestObject{},
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), gomock.Any()).
+					QueryNodeHostname(gomock.Any(), "_any").
 					Return("550e8400-e29b-41d4-a716-446655440000", "", &job.AgentInfo{
 						Hostname: "agent1",
 					}, nil)
@@ -110,25 +110,22 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
-			name: "validation error empty target_hostname",
-			request: gen.GetNodeHostnameRequestObject{
-				Params: gen.GetNodeHostnameParams{TargetHostname: strPtr("")},
-			},
+			name:      "validation error empty hostname",
+			request:   gen.GetNodeHostnameRequestObject{Hostname: ""},
 			setupMock: func() {},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
 				r, ok := resp.(gen.GetNodeHostname400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "TargetHostname")
-				s.Contains(*r.Error, "min")
+				s.Contains(*r.Error, "required")
 			},
 		},
 		{
 			name:    "job client error",
-			request: gen.GetNodeHostnameRequestObject{},
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), gomock.Any()).
+					QueryNodeHostname(gomock.Any(), "_any").
 					Return("", "", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -137,13 +134,11 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
-			name: "broadcast all success",
-			request: gen.GetNodeHostnameRequestObject{
-				Params: gen.GetNodeHostnameParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all success",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1", Labels: map[string]string{"group": "web"}},
 						"server2": {Hostname: "host2"},
@@ -154,13 +149,11 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
-			name: "broadcast all with errors",
-			request: gen.GetNodeHostnameRequestObject{
-				Params: gen.GetNodeHostnameParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all with errors",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1"},
 					}, map[string]string{
@@ -183,13 +176,11 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
-			name: "broadcast all error",
-			request: gen.GetNodeHostnameRequestObject{
-				Params: gen.GetNodeHostnameParams{TargetHostname: strPtr("_all")},
-			},
+			name:    "broadcast all error",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -208,12 +199,6 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			tt.validateFunc(resp)
 		})
 	}
-}
-
-func strPtr(
-	s string,
-) *string {
-	return &s
 }
 
 func TestNodeHostnameGetPublicTestSuite(t *testing.T) {

@@ -82,11 +82,11 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 	}{
 		{
 			name: "when get Ok",
-			path: "/node/hostname",
+			path: "/node/server1/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), job.AnyHost).
+					QueryNodeHostname(gomock.Any(), "server1").
 					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", &job.AgentInfo{
 						Hostname: "agent1",
 					}, nil)
@@ -97,11 +97,11 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 		},
 		{
 			name: "when job client errors",
-			path: "/node/hostname",
+			path: "/node/server1/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), job.AnyHost).
+					QueryNodeHostname(gomock.Any(), "server1").
 					Return("", "", nil, assert.AnError)
 				return mock
 			},
@@ -109,21 +109,12 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameValidation(
 			wantBody: `{"error":"assert.AnError general error for testing"}`,
 		},
 		{
-			name: "when empty target_hostname returns 400",
-			path: "/node/hostname?target_hostname=",
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(suite.ctrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`},
-		},
-		{
 			name: "when broadcast all",
-			path: "/node/hostname?target_hostname=_all",
+			path: "/node/_all/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), gomock.Any()).
+					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
 						"server1": {Hostname: "host1"},
 						"server2": {Hostname: "host2"},
@@ -217,7 +208,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameRBAC() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(suite.ctrl)
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), job.AnyHost).
+					QueryNodeHostname(gomock.Any(), "server1").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						"test-host",
@@ -249,7 +240,7 @@ func (suite *NodeHostnameGetIntegrationTestSuite) TestGetNodeHostnameRBAC() {
 			handlers := server.GetNodeHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodGet, "/node/hostname", nil)
+			req := httptest.NewRequest(http.MethodGet, "/node/server1/hostname", nil)
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 
