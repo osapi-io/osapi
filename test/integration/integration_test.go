@@ -57,7 +57,7 @@ func TestMain(
 ) {
 	var err error
 
-	runWrites = os.Getenv("INTEGRATION_WRITES") == "1"
+	runWrites = os.Getenv("OSAPI_INTEGRATION_WRITES") == "1"
 
 	tempDir, err = os.MkdirTemp("", "osapi-integration-*")
 	if err != nil {
@@ -232,6 +232,25 @@ func skipWrite(
 ) {
 	t.Helper()
 	if !runWrites {
-		t.Skip("skipping write test (set INTEGRATION_WRITES=1 to enable)")
+		t.Skip("skipping write test (set OSAPI_INTEGRATION_WRITES=1 to enable)")
 	}
+}
+
+func writeJobFile(
+	t *testing.T,
+	data map[string]any,
+) string {
+	t.Helper()
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("marshal job file: %v", err)
+	}
+
+	path := filepath.Join(t.TempDir(), "job.json")
+	if err := os.WriteFile(path, b, 0o644); err != nil {
+		t.Fatalf("write job file: %v", err)
+	}
+
+	return path
 }

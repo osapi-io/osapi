@@ -32,6 +32,37 @@ type HealthSmokeSuite struct {
 	suite.Suite
 }
 
+func (s *HealthSmokeSuite) TestHealthLiveness() {
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "returns liveness status",
+			args: []string{"client", "health", "--json"},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result map[string]any
+				err := parseJSON(stdout, &result)
+				s.Require().NoError(err)
+				s.Equal("ok", result["status"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
 func (s *HealthSmokeSuite) TestHealthReady() {
 	tests := []struct {
 		name         string

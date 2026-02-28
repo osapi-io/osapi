@@ -96,6 +96,54 @@ func (s *AuditSmokeSuite) TestAuditExport() {
 	}
 }
 
+func (s *AuditSmokeSuite) TestAuditGet() {
+	listOut, _, listCode := runCLI("client", "audit", "list", "--json")
+	s.Require().Equal(0, listCode)
+
+	var listResp struct {
+		Items []struct {
+			ID string `json:"id"`
+		} `json:"items"`
+	}
+	s.Require().NoError(parseJSON(listOut, &listResp))
+	s.Require().NotEmpty(listResp.Items, "audit list must contain at least one entry")
+
+	auditID := listResp.Items[0].ID
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "returns audit entry details for known id",
+			args: []string{"client", "audit", "get", "--audit-id", auditID, "--json"},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result struct {
+					Entry struct {
+						ID   string `json:"id"`
+						User string `json:"user"`
+					} `json:"entry"`
+				}
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.Equal(auditID, result.Entry.ID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
 func TestAuditSmokeSuite(
 	t *testing.T,
 ) {

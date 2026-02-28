@@ -180,6 +180,92 @@ func (s *JobSmokeSuite) TestJobDelete() {
 	}
 }
 
+func (s *JobSmokeSuite) TestJobAdd() {
+	skipWrite(s.T())
+
+	jobFile := writeJobFile(s.T(), map[string]any{
+		"operation": "node.hostname",
+		"target":    "_any",
+	})
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "adds a job to the queue",
+			args: []string{"client", "job", "add", "--json-file", jobFile, "--json"},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result struct {
+					JobID  string `json:"job_id"`
+					Status string `json:"status"`
+				}
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.NotEmpty(result.JobID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
+func (s *JobSmokeSuite) TestJobRun() {
+	skipWrite(s.T())
+
+	jobFile := writeJobFile(s.T(), map[string]any{
+		"operation": "node.hostname",
+		"target":    "_any",
+	})
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "submits and polls job to completion",
+			args: []string{
+				"client", "job", "run",
+				"--json-file", jobFile,
+				"--timeout", "30",
+				"--poll-interval", "1",
+				"--json",
+			},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result struct {
+					ID     string  `json:"id"`
+					Status *string `json:"status"`
+				}
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.NotEmpty(result.ID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
 func (s *JobSmokeSuite) TestJobRetry() {
 	skipWrite(s.T())
 
