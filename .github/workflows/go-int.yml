@@ -1,0 +1,24 @@
+---
+name: Go Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+      - name: Install just
+        uses: extractions/setup-just@v3
+      - name: Fetch justfiles
+        run: just fetch
+      - name: Integration
+        run: just go::unit-int
