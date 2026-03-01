@@ -33,11 +33,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type FileInternalTestSuite struct {
+type FileTestSuite struct {
 	suite.Suite
 }
 
-func (s *FileInternalTestSuite) TestWriteNewlineError() {
+func (s *FileTestSuite) TestWriteNewlineError() {
 	entry := gen.AuditEntry{
 		Id:           uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"),
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
@@ -84,8 +84,8 @@ func (s *FileInternalTestSuite) TestWriteNewlineError() {
 	}
 }
 
-func TestFileInternalTestSuite(t *testing.T) {
-	suite.Run(t, new(FileInternalTestSuite))
+func TestFileTestSuite(t *testing.T) {
+	suite.Run(t, new(FileTestSuite))
 }
 
 // internalFailWriter always returns an error on Write.

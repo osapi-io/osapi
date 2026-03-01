@@ -37,12 +37,12 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-type UITestSuite struct {
+type UIPublicTestSuite struct {
 	suite.Suite
 }
 
-func TestUITestSuite(t *testing.T) {
-	suite.Run(t, new(UITestSuite))
+func TestUIPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(UIPublicTestSuite))
 }
 
 func captureStdout(
@@ -63,7 +63,7 @@ func captureStdout(
 
 func boolPtr(b bool) *bool { return &b }
 
-func (suite *UITestSuite) TestBoolToSafeString() {
+func (suite *UIPublicTestSuite) TestBoolToSafeString() {
 	tests := []struct {
 		name string
 		b    *bool
@@ -95,7 +95,7 @@ func (suite *UITestSuite) TestBoolToSafeString() {
 	}
 }
 
-func (suite *UITestSuite) TestBuildBroadcastTable() {
+func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 	errMsg := "connection refused"
 
 	tests := []struct {
@@ -213,7 +213,7 @@ func (suite *UITestSuite) TestBuildBroadcastTable() {
 	}
 }
 
-func (suite *UITestSuite) TestFormatLabels() {
+func (suite *UIPublicTestSuite) TestFormatLabels() {
 	tests := []struct {
 		name   string
 		labels *map[string]string
@@ -249,7 +249,7 @@ func (suite *UITestSuite) TestFormatLabels() {
 	}
 }
 
-func (suite *UITestSuite) TestBuildMutationTable() {
+func (suite *UIPublicTestSuite) TestBuildMutationTable() {
 	errMsg := "interface not found"
 
 	tests := []struct {
@@ -337,7 +337,7 @@ func (suite *UITestSuite) TestBuildMutationTable() {
 	}
 }
 
-func (suite *UITestSuite) TestFormatList() {
+func (suite *UIPublicTestSuite) TestFormatList() {
 	tests := []struct {
 		name string
 		list []string
@@ -369,7 +369,7 @@ func (suite *UITestSuite) TestFormatList() {
 	}
 }
 
-func (suite *UITestSuite) TestCalculateColumnWidths() {
+func (suite *UIPublicTestSuite) TestCalculateColumnWidths() {
 	tests := []struct {
 		name       string
 		headers    []string
@@ -416,7 +416,7 @@ func (suite *UITestSuite) TestCalculateColumnWidths() {
 	}
 }
 
-func (suite *UITestSuite) TestGetMaxLineWidth() {
+func (suite *UIPublicTestSuite) TestGetMaxLineWidth() {
 	tests := []struct {
 		name string
 		text string
@@ -448,7 +448,7 @@ func (suite *UITestSuite) TestGetMaxLineWidth() {
 	}
 }
 
-func (suite *UITestSuite) TestSafeString() {
+func (suite *UIPublicTestSuite) TestSafeString() {
 	str := "hello"
 
 	tests := []struct {
@@ -477,7 +477,7 @@ func (suite *UITestSuite) TestSafeString() {
 	}
 }
 
-func (suite *UITestSuite) TestSafeUUID() {
+func (suite *UIPublicTestSuite) TestSafeUUID() {
 	id := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
 
 	tests := []struct {
@@ -506,7 +506,7 @@ func (suite *UITestSuite) TestSafeUUID() {
 	}
 }
 
-func (suite *UITestSuite) TestFloat64ToSafeString() {
+func (suite *UIPublicTestSuite) TestFloat64ToSafeString() {
 	val := 3.14
 
 	tests := []struct {
@@ -535,7 +535,7 @@ func (suite *UITestSuite) TestFloat64ToSafeString() {
 	}
 }
 
-func (suite *UITestSuite) TestIntToSafeString() {
+func (suite *UIPublicTestSuite) TestIntToSafeString() {
 	val := 42
 
 	tests := []struct {
@@ -564,7 +564,7 @@ func (suite *UITestSuite) TestIntToSafeString() {
 	}
 }
 
-func (suite *UITestSuite) TestHandleAuthError() {
+func (suite *UIPublicTestSuite) TestHandleAuthError() {
 	tests := []struct {
 		name      string
 		jsonError *gen.ErrorResponse
@@ -606,7 +606,7 @@ func (suite *UITestSuite) TestHandleAuthError() {
 	}
 }
 
-func (suite *UITestSuite) TestHandleUnknownError() {
+func (suite *UIPublicTestSuite) TestHandleUnknownError() {
 	tests := []struct {
 		name      string
 		jsonError *gen.ErrorResponse
@@ -648,7 +648,7 @@ func (suite *UITestSuite) TestHandleUnknownError() {
 	}
 }
 
-func (suite *UITestSuite) TestPrintKV() {
+func (suite *UIPublicTestSuite) TestPrintKV() {
 	tests := []struct {
 		name       string
 		pairs      []string
@@ -691,7 +691,7 @@ func (suite *UITestSuite) TestPrintKV() {
 	}
 }
 
-func (suite *UITestSuite) TestPrintCompactTable() {
+func (suite *UIPublicTestSuite) TestPrintCompactTable() {
 	tests := []struct {
 		name        string
 		sections    []cli.Section
@@ -806,7 +806,7 @@ func (suite *UITestSuite) TestPrintCompactTable() {
 	}
 }
 
-func (suite *UITestSuite) TestFormatAge() {
+func (suite *UIPublicTestSuite) TestFormatAge() {
 	tests := []struct {
 		name string
 		d    time.Duration
@@ -853,7 +853,7 @@ func (suite *UITestSuite) TestFormatAge() {
 	}
 }
 
-func (suite *UITestSuite) TestFormatBytes() {
+func (suite *UIPublicTestSuite) TestFormatBytes() {
 	tests := []struct {
 		name string
 		b    int
@@ -890,7 +890,7 @@ func (suite *UITestSuite) TestFormatBytes() {
 	}
 }
 
-func (suite *UITestSuite) TestDisplayJobDetailResponse() {
+func (suite *UIPublicTestSuite) TestDisplayJobDetailResponse() {
 	tests := []struct {
 		name string
 		resp *gen.JobDetailResponse

@@ -34,15 +34,15 @@ import (
 
 type exitSentinel struct{}
 
-type ValidateInternalTestSuite struct {
+type ValidateTestSuite struct {
 	suite.Suite
 }
 
-func TestValidateInternalTestSuite(t *testing.T) {
-	suite.Run(t, new(ValidateInternalTestSuite))
+func TestValidateTestSuite(t *testing.T) {
+	suite.Run(t, new(ValidateTestSuite))
 }
 
-func (suite *ValidateInternalTestSuite) TestValidateDistribution() {
+func (suite *ValidateTestSuite) TestValidateDistribution() {
 	tests := []struct {
 		name        string
 		ignoreLinux bool

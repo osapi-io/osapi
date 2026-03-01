@@ -263,6 +263,8 @@ Conventions:
 - ALL tests in `internal/job/` MUST use `testify/suite` with table-driven patterns
 - Internal tests: `*_test.go` in same package (e.g., `package job`) for private functions
 - Public tests: `*_public_test.go` in test package (e.g., `package job_test`) for exported functions
+- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`,
+  `*_test.go` → `{Name}TestSuite`
 - Table-driven structure with `validateFunc` callbacks
 - Avoid generic file names like `helpers.go` or `utils.go` — name
   files after what they contain
