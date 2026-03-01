@@ -3,6 +3,8 @@
 configs/osapi.*.yaml
 database.db*
 dist/
+docs/node_modules/
+docs/bun.lock
 .nats/jetstream/
 result.xml
 .just/remote/
