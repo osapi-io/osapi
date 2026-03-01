@@ -2,8 +2,8 @@
 #
 # sync.sh — Declarative GitHub org repo config sync.
 #
-# Reads repos.json and ensures repo settings and branch protection
-# match the desired state across all managed repos.
+# Reads repos.json and ensures repo settings, topics, and branch
+# protection match the desired state across all managed repos.
 #
 # Usage:
 #   ./github/sync.sh --check              # Report drift (exit 1 if any)
@@ -55,12 +55,12 @@ command -v jq >/dev/null || die "jq not found"
 # --- Load config ------------------------------------------------------------
 
 ORG=$(jq -r '.org' "$CONFIG")
-REPOS=$(jq -r '.repos[]' "$CONFIG")
+REPOS=$(jq -r '.repos[].name' "$CONFIG")
 DRIFT=0
 
 # If --repo was given, filter the list.
 if [[ -n "$TARGET_REPO" ]]; then
-  if ! jq -e --arg r "$TARGET_REPO" '.repos[] | select(. == $r)' "$CONFIG" >/dev/null 2>&1; then
+  if ! jq -e --arg r "$TARGET_REPO" '.repos[] | select(.name == $r)' "$CONFIG" >/dev/null 2>&1; then
     die "repo '$TARGET_REPO' not in config"
   fi
   REPOS="$TARGET_REPO"
@@ -98,6 +98,65 @@ apply_settings() {
   payload=$(jq -c '.settings' "$CONFIG")
   gh api -X PATCH "repos/${ORG}/${repo}" --input - <<< "$payload" >/dev/null
   echo "  [$repo] settings: APPLIED"
+}
+
+# --- Description ------------------------------------------------------------
+
+check_description() {
+  local repo="$1"
+  local desired actual
+  desired=$(jq -r --arg r "$repo" '.repos[] | select(.name == $r) | .description // ""' "$CONFIG")
+  [[ -z "$desired" ]] && { echo "  [$repo] description: SKIP (none configured)"; return; }
+
+  actual=$(gh api "repos/${ORG}/${repo}" --jq '.description // ""' 2>/dev/null) \
+    || { echo "  [$repo] description: ERROR (could not fetch)"; DRIFT=1; return; }
+
+  if [[ "$actual" == "$desired" ]]; then
+    echo "  [$repo] description: OK"
+  else
+    echo "  [$repo] description: DRIFT"
+    echo "  - actual:  ${actual}"
+    echo "  - desired: ${desired}"
+    DRIFT=1
+  fi
+}
+
+apply_description() {
+  local repo="$1"
+  local desc
+  desc=$(jq -r --arg r "$repo" '.repos[] | select(.name == $r) | .description // ""' "$CONFIG")
+  [[ -z "$desc" ]] && return
+  gh api -X PATCH "repos/${ORG}/${repo}" -f description="$desc" >/dev/null
+  echo "  [$repo] description: APPLIED"
+}
+
+# --- Topics -----------------------------------------------------------------
+
+check_topics() {
+  local repo="$1"
+  local desired_topics actual_topics
+  desired_topics=$(jq -r --arg r "$repo" '[.repos[] | select(.name == $r) | .topics // [] | .[]] | sort | join(",")' "$CONFIG")
+  [[ -z "$desired_topics" ]] && { echo "  [$repo] topics: SKIP (none configured)"; return; }
+
+  actual_topics=$(gh api "repos/${ORG}/${repo}/topics" --jq '[.names[]] | sort | join(",")' 2>/dev/null) \
+    || { echo "  [$repo] topics: ERROR (could not fetch)"; DRIFT=1; return; }
+
+  if [[ "$actual_topics" == "$desired_topics" ]]; then
+    echo "  [$repo] topics: OK"
+  else
+    echo "  [$repo] topics: DRIFT"
+    echo "  - actual:  ${actual_topics}"
+    echo "  - desired: ${desired_topics}"
+    DRIFT=1
+  fi
+}
+
+apply_topics() {
+  local repo="$1"
+  local payload
+  payload=$(jq -c --arg r "$repo" '{names: [.repos[] | select(.name == $r) | .topics // [] | .[]] }' "$CONFIG")
+  gh api -X PUT "repos/${ORG}/${repo}/topics" --input - <<< "$payload" >/dev/null
+  echo "  [$repo] topics: APPLIED"
 }
 
 # --- Branch protection ------------------------------------------------------
@@ -233,9 +292,13 @@ for repo in $REPOS; do
 
   if [[ "$MODE" == "check" ]]; then
     check_settings "$repo"
+    check_description "$repo"
+    check_topics "$repo"
     check_branch_protection "$repo"
   else
     apply_settings "$repo"
+    apply_description "$repo"
+    apply_topics "$repo"
     apply_branch_protection "$repo"
   fi
 
