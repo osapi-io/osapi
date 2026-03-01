@@ -41,6 +41,8 @@ type Config struct {
 	DNSServers []string
 	// List of search domains for DNS resolution
 	SearchDomains []string
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }
 
 // Result represents the outcome of a DNS update operation.

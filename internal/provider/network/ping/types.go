@@ -70,4 +70,6 @@ type Result struct {
 	AvgRTT time.Duration
 	// Maximum round-trip time
 	MaxRTT time.Duration
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }

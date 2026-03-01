@@ -147,6 +147,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				s.NoError(err)
 				s.Contains(response, "hostname")
 				s.IsType("", response["hostname"])
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -163,6 +164,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "hostname")
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -180,6 +182,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				s.NoError(err)
 				s.Contains(response, "uptime_seconds")
 				s.Contains(response, "uptime")
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -192,10 +195,10 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			},
 			expectError: false,
 			validate: func(result json.RawMessage) {
-				// OS info should return a valid object
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -212,6 +215,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "disks")
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -227,6 +231,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -242,6 +247,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -257,7 +263,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
-				// DNS response should be a valid object
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -277,6 +283,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				s.NoError(err)
 				s.Contains(response, "success")
 				s.Contains(response, "message")
+				s.Equal(true, response["changed"])
 			},
 		},
 		{
@@ -292,7 +299,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
-				// Ping response should be a valid object
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -430,6 +437,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "hostname")
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -445,6 +453,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				labels, ok := response["labels"].(map[string]interface{})
 				s.True(ok)
 				s.Equal("web.dev.us-east", labels["group"])
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -455,6 +464,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "hostname")
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -465,6 +475,7 @@ func (s *ProcessorTestSuite) TestSystemOperations() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "uptime_seconds")
+				s.Equal(false, response["changed"])
 			},
 		},
 	}
@@ -509,10 +520,10 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 			operation: "dns.get",
 			data:      `{"interface": "eth0"}`,
 			validate: func(result json.RawMessage) {
-				// Should return valid DNS config
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -520,10 +531,10 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 			operation: "dns.get",
 			data:      `{}`,
 			validate: func(result json.RawMessage) {
-				// Should return valid DNS config with default interface
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{
@@ -531,10 +542,10 @@ func (s *ProcessorTestSuite) TestNetworkOperations() {
 			operation: "ping.do",
 			data:      `{"address": "127.0.0.1"}`,
 			validate: func(result json.RawMessage) {
-				// Should return valid ping result
 				var response map[string]interface{}
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
+				s.Equal(false, response["changed"])
 			},
 		},
 		{

@@ -112,6 +112,7 @@ func (a *Agent) getNodeHostname() (json.RawMessage, error) {
 
 	result := map[string]interface{}{
 		"hostname": hostname,
+		"changed":  false,
 	}
 
 	if len(a.appConfig.Agent.Labels) > 0 {
@@ -144,6 +145,7 @@ func (a *Agent) getNodeStatus() (json.RawMessage, error) {
 		"disk_usage":    diskUsage,
 		"memory_stats":  memInfo,
 		"load_averages": loadAvg,
+		"changed":       false,
 	}
 
 	return json.Marshal(result)
@@ -161,6 +163,7 @@ func (a *Agent) getNodeUptime() (json.RawMessage, error) {
 	result := map[string]interface{}{
 		"uptime_seconds": uptime.Seconds(),
 		"uptime":         uptime.String(),
+		"changed":        false,
 	}
 
 	return json.Marshal(result)
@@ -188,7 +191,8 @@ func (a *Agent) getNodeDisk() (json.RawMessage, error) {
 	}
 
 	result := map[string]interface{}{
-		"disks": diskUsage,
+		"disks":   diskUsage,
+		"changed": false,
 	}
 
 	return json.Marshal(result)
