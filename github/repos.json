@@ -1,11 +1,31 @@
 {
   "org": "osapi-io",
   "repos": [
-    "osapi",
-    "osapi-sdk",
-    "nats-client",
-    "nats-server",
-    "osapi-io-justfiles"
+    {
+      "name": "osapi",
+      "description": "A Linux system management API with async job processing over NATS JetStream.",
+      "topics": ["golang", "linux", "nats-jetstream", "openapi3", "osapi", "rest-api", "system-management"]
+    },
+    {
+      "name": "osapi-sdk",
+      "description": "Go SDK for OSAPI — client library and orchestration primitives.",
+      "topics": ["dag", "golang", "nats-jetstream", "openapi3", "orchestration", "osapi", "sdk"]
+    },
+    {
+      "name": "nats-client",
+      "description": "A Go package for connecting to and interacting with a NATS server.",
+      "topics": ["golang", "messaging", "nats-client", "nats-jetstream", "osapi"]
+    },
+    {
+      "name": "nats-server",
+      "description": "A Go package for running an embedded NATS server.",
+      "topics": ["golang", "messaging", "nats-jetstream", "nats-server", "osapi"]
+    },
+    {
+      "name": "osapi-justfiles",
+      "description": "Shared justfiles for osapi-io projects.",
+      "topics": ["justfile", "osapi"]
+    }
   ],
   "settings": {
     "has_issues": true,
