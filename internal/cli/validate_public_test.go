@@ -29,15 +29,15 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-type ValidateTestSuite struct {
+type ValidatePublicTestSuite struct {
 	suite.Suite
 }
 
-func TestValidateTestSuite(t *testing.T) {
-	suite.Run(t, new(ValidateTestSuite))
+func TestValidatePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(ValidatePublicTestSuite))
 }
 
-func (suite *ValidateTestSuite) TestIsLinuxVersionSupported() {
+func (suite *ValidatePublicTestSuite) TestIsLinuxVersionSupported() {
 	tests := []struct {
 		name    string
 		distro  string

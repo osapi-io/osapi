@@ -27,11 +27,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type AgentListInternalTestSuite struct {
+type AgentListTestSuite struct {
 	suite.Suite
 }
 
-func (s *AgentListInternalTestSuite) TestUint64ToInt() {
+func (s *AgentListTestSuite) TestUint64ToInt() {
 	maxInt := int(^uint(0) >> 1)
 
 	tests := []struct {
@@ -69,6 +69,6 @@ func (s *AgentListInternalTestSuite) TestUint64ToInt() {
 	}
 }
 
-func TestAgentListInternalTestSuite(t *testing.T) {
-	suite.Run(t, new(AgentListInternalTestSuite))
+func TestAgentListTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentListTestSuite))
 }

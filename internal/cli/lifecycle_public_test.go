@@ -30,12 +30,12 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-type LifecycleTestSuite struct {
+type LifecyclePublicTestSuite struct {
 	suite.Suite
 }
 
-func TestLifecycleTestSuite(t *testing.T) {
-	suite.Run(t, new(LifecycleTestSuite))
+func TestLifecyclePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LifecyclePublicTestSuite))
 }
 
 type mockServer struct {
@@ -48,7 +48,7 @@ func (m *mockServer) Stop(_ context.Context) {
 	m.stopped = true
 }
 
-func (suite *LifecycleTestSuite) TestRunServer() {
+func (suite *LifecyclePublicTestSuite) TestRunServer() {
 	tests := []struct {
 		name         string
 		cleanupCount int

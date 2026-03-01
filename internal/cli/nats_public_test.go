@@ -36,25 +36,25 @@ import (
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
-type NATSTestSuite struct {
+type NATSPublicTestSuite struct {
 	suite.Suite
 
 	ctrl *gomock.Controller
 }
 
-func TestNATSTestSuite(t *testing.T) {
-	suite.Run(t, new(NATSTestSuite))
+func TestNATSPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(NATSPublicTestSuite))
 }
 
-func (suite *NATSTestSuite) SetupTest() {
+func (suite *NATSPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 }
 
-func (suite *NATSTestSuite) TearDownTest() {
+func (suite *NATSPublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *NATSTestSuite) TestCloseNATSClient() {
+func (suite *NATSPublicTestSuite) TestCloseNATSClient() {
 	tests := []struct {
 		name    string
 		setupFn func() func()
@@ -102,7 +102,7 @@ func (suite *NATSTestSuite) TestCloseNATSClient() {
 	}
 }
 
-func (suite *NATSTestSuite) TestBuildNATSAuthOptions() {
+func (suite *NATSPublicTestSuite) TestBuildNATSAuthOptions() {
 	tests := []struct {
 		name string
 		auth config.NATSAuth
@@ -159,7 +159,7 @@ func (suite *NATSTestSuite) TestBuildNATSAuthOptions() {
 	}
 }
 
-func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
+func (suite *NATSPublicTestSuite) TestBuildRegistryKVConfig() {
 	tests := []struct {
 		name        string
 		namespace   string
@@ -222,7 +222,7 @@ func (suite *NATSTestSuite) TestBuildRegistryKVConfig() {
 	}
 }
 
-func (suite *NATSTestSuite) TestBuildAuditKVConfig() {
+func (suite *NATSPublicTestSuite) TestBuildAuditKVConfig() {
 	tests := []struct {
 		name       string
 		namespace  string

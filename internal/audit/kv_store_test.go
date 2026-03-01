@@ -33,7 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
-type KVStoreInternalTestSuite struct {
+type KVStoreTestSuite struct {
 	suite.Suite
 
 	ctrl   *gomock.Controller
@@ -41,18 +41,18 @@ type KVStoreInternalTestSuite struct {
 	store  *KVStore
 }
 
-func (s *KVStoreInternalTestSuite) SetupTest() {
+func (s *KVStoreTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.mockKV = mocks.NewMockKeyValue(s.ctrl)
 	s.store = NewKVStore(slog.Default(), s.mockKV)
 }
 
-func (s *KVStoreInternalTestSuite) TearDownTest() {
+func (s *KVStoreTestSuite) TearDownTest() {
 	s.ctrl.Finish()
 	marshalJSON = json.Marshal
 }
 
-func (s *KVStoreInternalTestSuite) TestWriteMarshalError() {
+func (s *KVStoreTestSuite) TestWriteMarshalError() {
 	marshalJSON = func(_ interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("marshal failure")
 	}
@@ -63,6 +63,6 @@ func (s *KVStoreInternalTestSuite) TestWriteMarshalError() {
 	s.Contains(err.Error(), "marshal audit entry")
 }
 
-func TestKVStoreInternalTestSuite(t *testing.T) {
-	suite.Run(t, new(KVStoreInternalTestSuite))
+func TestKVStoreTestSuite(t *testing.T) {
+	suite.Run(t, new(KVStoreTestSuite))
 }
