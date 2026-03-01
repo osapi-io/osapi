@@ -757,6 +757,10 @@ github.com/osapi-io/osapi-sdk v0.0.0-20260228054052-d2b998219d2b h1:ShM1C9dPxzm3
 github.com/osapi-io/osapi-sdk v0.0.0-20260228054052-d2b998219d2b/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
 github.com/osapi-io/osapi-sdk v0.0.0-20260301210441-85c7e1be1b26 h1:DhBTF0DKP74r14IX0D0VgGGlH8s0jVqAniJw7DhkONg=
 github.com/osapi-io/osapi-sdk v0.0.0-20260301210441-85c7e1be1b26/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
+github.com/osapi-io/osapi-sdk v0.0.0-20260301215233-cf4d1dde8648 h1:9A1P6u0PnFEtLVE+p8rXNMkX6s9LJYq3Mh68tTxM7c8=
+github.com/osapi-io/osapi-sdk v0.0.0-20260301215233-cf4d1dde8648/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
+github.com/osapi-io/osapi-sdk v0.0.0-20260301225211-54433f58dfd8 h1:XwUb5ZywbIX4RDBfzxGjJNCCRLxLWD3AGYu4Xn1t104=
+github.com/osapi-io/osapi-sdk v0.0.0-20260301225211-54433f58dfd8/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.14.0 h1:dCI/t1iTdYGtkvCuBG2BgR6KZa83PTclw4U5n2wAllU=
 github.com/otiai10/copy v1.14.0/go.mod h1:ECfuL02W+/FkTWZWgQqXPWZgW9oeKCSQ5qVfSc4qc4w=
