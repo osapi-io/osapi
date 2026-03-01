@@ -61,14 +61,11 @@ var clientCmd = &cobra.Command{
 			slog.String("api.client.url", appConfig.API.URL),
 		)
 
-		sdkClient, err = osapi.New(
+		sdkClient = osapi.New(
 			appConfig.API.URL,
 			appConfig.API.Client.Security.BearerToken,
 			osapi.WithLogger(logger),
 		)
-		if err != nil {
-			cli.LogFatal(logger, "failed to create sdk client", err)
-		}
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
 		if tracerShutdown != nil {
