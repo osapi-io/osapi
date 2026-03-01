@@ -34,4 +34,6 @@ type Stats struct {
 	Free uint64
 	// Cached memory in bytes
 	Cached uint64
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }

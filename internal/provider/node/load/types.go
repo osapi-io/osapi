@@ -34,4 +34,6 @@ type AverageStats struct {
 	Load5 float32
 	// Load average over the last 15 minutes
 	Load15 float32
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }

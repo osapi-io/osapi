@@ -42,4 +42,6 @@ type OSInfo struct {
 	Distribution string
 	// The version of the Linux distribution (e.g., 20.04, 8.3).
 	Version string
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }
