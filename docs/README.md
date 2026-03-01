@@ -1,6 +1,7 @@
 # Template
 
-This template is built for [Docusaurus 3](https://docusaurus.io/), a modern static website generator.
+This template is built for [Docusaurus 3](https://docusaurus.io/), a modern
+static website generator.
 
 ### Usage
 
@@ -16,7 +17,8 @@ Template Repository URL:
 https://github.com/PaloAltoNetworks/docusaurus-template-openapi-docs.git
 ```
 
-> When asked how the template repo should be cloned choose "copy" (unless you know better).
+> When asked how the template repo should be cloned choose "copy" (unless you
+> know better).
 
 ```bash
 cd my-website
@@ -29,7 +31,8 @@ yarn
 yarn start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+This command starts a local development server and opens up a browser window.
+Most changes are reflected live without having to restart the server.
 
 ### Build
 
@@ -37,4 +40,5 @@ This command starts a local development server and opens up a browser window. Mo
 yarn build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+This command generates static content into the `build` directory and can be
+served using any static contents hosting service.

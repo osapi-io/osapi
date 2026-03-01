@@ -1,1 +1,4 @@
+.docusaurus/
+build/
 docs/gen/
+node_modules/

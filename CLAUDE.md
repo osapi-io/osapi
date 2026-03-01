@@ -300,7 +300,5 @@ When committing via Claude Code, end with:
 
 ## Task Tracking
 
-Feature ideas and future work live in
-`docs/docs/sidebar/development/tasks/backlog/`. Implementation planning
-and execution uses the superpowers plugin workflows (`writing-plans` and
-`executing-plans`). See @docs/docs/sidebar/development/tasks/README.md.
+Implementation planning and execution uses the superpowers plugin workflows
+(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
