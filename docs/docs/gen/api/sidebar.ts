@@ -4,7 +4,29 @@ const sidebar: SidebarsConfig = {
   apisidebar: [
     {
       type: "doc",
-      id: "gen/api/audit-log-api",
+      id: "gen/api/agent-management-api",
+    },
+    {
+      type: "category",
+      label: "Agent",
+      link: {
+        type: "doc",
+        id: "gen/api/agent-management-api-agent-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/list-active-agents",
+          label: "List active agents",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-agent-details",
+          label: "Get agent details",
+          className: "api-method get",
+        },
+      ],
     },
     {
       type: "category",
@@ -31,28 +53,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-audit-log-by-id",
           label: "Get a single audit log entry",
           className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Command",
-      link: {
-        type: "doc",
-        id: "gen/api/command-execution-api-command-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-command-exec",
-          label: "Execute a command",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-command-shell",
-          label: "Execute a shell command",
-          className: "api-method post",
         },
       ],
     },
@@ -148,44 +148,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Network",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-network-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/ping-a-remote-server",
-          label: "Ping a remote server",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Network/DNS",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-dns-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-network-dns-by-interface",
-          label: "List DNS servers",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-network-dns",
-          label: "Update DNS servers",
-          className: "api-method put",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node",
       link: {
         type: "doc",
@@ -194,14 +156,38 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/list-active-agents",
-          label: "List active agents",
+          id: "gen/api/get-node-hostname",
+          label: "Retrieve node hostname",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "gen/api/retrieve-node-hostname",
-          label: "Retrieve node hostname",
+          id: "gen/api/get-node-disk",
+          label: "Retrieve disk usage",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-memory",
+          label: "Retrieve memory stats",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-load",
+          label: "Retrieve load averages",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-os",
+          label: "Retrieve OS info",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-uptime",
+          label: "Retrieve uptime",
           className: "api-method get",
         },
       ],
@@ -216,9 +202,69 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/retrieve-node-status",
+          id: "gen/api/get-node-status",
           label: "Retrieve node status",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Network",
+      link: {
+        type: "doc",
+        id: "gen/api/node-management-api-network-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-ping",
+          label: "Ping a remote server",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Network/DNS",
+      link: {
+        type: "doc",
+        id: "gen/api/node-management-api-dns-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-dns-by-interface",
+          label: "List DNS servers",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-dns",
+          label: "Update DNS servers",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Command",
+      link: {
+        type: "doc",
+        id: "gen/api/node-management-api-command-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-exec",
+          label: "Execute a command",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-shell",
+          label: "Execute a shell command",
+          className: "api-method post",
         },
       ],
     },

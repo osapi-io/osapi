@@ -1,13 +1,13 @@
 ---
-id: retrieve-node-hostname
-title: "Retrieve node hostname"
-description: "Get the current hostname of the node."
-sidebar_label: "Retrieve node hostname"
+id: post-node-command-exec
+title: "Execute a command"
+description: "Execute a command directly without a shell. This is the safer option as it does not interpret shell metacharacters."
+sidebar_label: "Execute a command"
 hide_title: true
 hide_table_of_contents: true
-api: eJztV99v20YM/lcOfFkCSI7SOdkmYA/e1nZpty5oU+whCwxKR8uXSHfqHeXGM/S/D5T82y7WhxXbgDzZOh15H/l9R5EL0BRyb2o2zkIKL4kVT0nljfdkWU1dYIsVKTfp1q3TNIAIGIsA6S28cZrGv6LFgiqyPB5dX41lz9jV5FGcBriLIFDeeMNzSG8X8AOhJz9qeCoeZHfqCTXctXcR1OixIiYfur1yNqTA6Avi8QoNRGAE7YeG/Bwi8PShMZ40pBMsA0XwGDusTZw7TQXZmB7ZY9xjXsAMS6ORxa+rDFNV8zyqjP3+POpejfvToI0g5FOqUIx4XotBYG9sARFommBTMqQwRjuXvbuJvOl8pEreqpPSoY4zLNHmpE8jNcayVCeZd6hzDHwabRJ9oo2nXJacVw80T2dYNqROSsyoVIV3TR0pGhSDqH9IP1I20DQ7HfxhQTLoKdTOBupifZYk8rOLbaRevfvtjXLZPeWscmcZjTW2WDP8VVjjEbJlB1kWR1jXpck7Ys/ug3hbHCapdwwR1F5kwKbHcu+ysdHHkjlxvkLJZdMYDQepnJK6d5m6+kk1gbRip2rvcgpB8dQEJexTYEFKj1jVpfi+uEjo22GSxPTsuywenuthjN+cX8bD4eXlxcVwmCRJIqx5Ck3JYQsVeo8iKlFGOBbVIbr9WxLmgakaHGRgrd+jgtr32nvZ42ITYTWPS2ObxziQn5GXYDqNHMWMWhtxjeX1DqJdFAcqfk3zuNdf71rEMjFF40krZ7tYsSDLAzEl753/+9CeyzZVUQhYkDKTjRc1QVPuE0wbftt2+6rfbtJ5FwEb7rLy83Lt7fIWQLtvtWL8iNGPriwpF5zb5m0Ew2PX6Mp25WKFT21K1z94aT4zqSO19bySYWereIqsXN5VdL0roRfrfHtib2hGKjByEwa9FBhNeUQmB4evxaWWNgoz1/AGxNFjdUNytCX+6PyDYlORa3opSeHeOtdYpoL80VvSB5kvv0vrQy6SRIhbMdyJ7oDU80NS31tseOq8+ZO0itXo+kqKsFoL6InY/wOxXx8S+8L5zGhNVsXqyoZmMjG5kaJTk69MCF2r8sTuf5/di2O1uP+oLNMhrcwX6F+eOP1CnLYRVMRTpyEFabxlCpDhAM6kGT3b6vr7VkdGg62h4p3w11O0PVqsIU+Za1j28vKcdZsgWv55sWo+X/1+07UYxk5cZ74EPGq0YfWLK+RrABEIgj7o80Ey6LrI2gWusFPTcmJ5u2JRQlBbIeykbbHR5uePXn1UTI98VpdorABofCne+rz1QxVEOw2S/JdXi0WGgd77sm1luR+hZNTSJmBWbg1Rn0T678w2n4j8geZHB8TONaTQzUQz9EaCE+G0EUwJNfku6t58lOdU85bVQZ0QL2uRvnx+Iz31rsz2ZNV5X40Udr7le7Hod9y4B7JtC+sY5Bnau7Zt/wK4kGY2
-sidebar_class_name: "get api-method"
-info_path: gen/api/audit-log-api
+api: eJztWG1v2zYQ/isEPzWAnCiNk20G+iHtUiDDXoI0RT9kgXEWzxYTiVTJU2LP0H8fjpT8JrfLhg7rgH6TbPJ49zzPHXW3lAp95nRF2ho5khdzzGpCASKzZQlGCaUdZlQsxJOm3NYkQPgci+JQ3OTaC+0F5Sg8TNEJG8wI8EKTUBa9MJaENoSuckhxoyiRIMvBQUbo/OHvRiaSYObl6Fb+ahWOfwEDMyzR0Pj86nLcejK2FTrgA7y8S+Tq7VLJkbyynnjvm7iWw5CJ9JjVTtNCjm6X8jWCQ3deU84HtUZHGAOWd81dIitwUCJ7FXYYKFGOZG49hcdEasaoAsplIh1+rLVDJUfkakx2gLwBN0MSMENDorOQCIce3SMq4WxN2szEIxQ1ihdjMItEjKEoDhJhnShggoXwWGBG1okXD7gYhaUHEa/5wEKlB5lVOEMzwDk5GEQQl/IRCq2A2PfOyaTU5tVxEv4ZU/BNNon0WY4l8B5aVLzek9NmJhNZavMzmhmDddwwNmwJPb22asHrd6LNcSUYsqIF9XAPSpk1hIbYBFRVobPA4dG9ZzvLvkN2co8ZyURWjhknjSHE9rB9nvc9i+7ApEDBLDC+zCG7h3Moq4L3F/4fwyqbJpHg4qrWHXAOFj1vWnkKcLOa9e3ZB01Y+n4kzYZ3t3JQgEzkEZWVvGsSmT09I/YP1j2wxmIKW7cQU+tCurbwbSMQjDeJJF2irWnDPmfwDF0f3LhSaCM8ZtYoL14onEJdkDhJE1HCXJyk6cFhFJQu61KOjhNZwjw+n6Qp2ww7+O35DNiSYato0Sq7hPmrkzSVDXOxFt0q0blkkKYQ6EaRuI6q5m1hn6+s8VFiL9OXfaF3BEZJhWKXZVgRBiy/kLjv7WSs9/I7ta4EkiNZ11rt1fq9nYjLH0XtMWRi5WyGnmu09qJN4W3WT09T/H6YpgN8+cNkMDxWwwF8d3w2GA7Pzk5Ph8M0ZVQDNnVB+yS+q99PRLUqo8/K2W61sNOg2FhIKQfqqovaVjJXM1Lbuv2E/XcERoFTwtZU1dQdsWMKnfsbptA56z5jEOeaxqzqZ6TVxVyT4LX7DKk6XnvjLczXplYS0YbOhntsd8LlNOfMLXVR6DZ9wwlZDmaGm/qbWFsgmH6ByZFy3CoporRKTzUq4ReesBSegG8ChoAh+mtILwKSJXoPMxR6k/4p6IIzbTfHV9LqJ/l1kO0lYdkvDZ2kP7XrjS34/tXWXLeFoa0TwzTtl4ZLE8pTl2WigkVh4UvWhWcCeC423jsJRX2G/LFZVjuHO9X/bcCWa4ZDchofMVBXR00oJNDFnluqd7hSmh+hEO0eARO+I1ZO7D1W1chHG6Qn6x5EewVFOT4vaW5WQfKGrUNO07Rp1hwHgfUYPe4z+t5ATbl1+g9UYiDOry7FAy7ESkLfiP0/EHvSJ/atdROtFBoxEJfG19OpzjQXmApdqb0PPcY3dr9+dk/3FeJ4gbRfaGa2+bH7jdGvm9EmkSVSbrmlr6wPyHO3PZJHxio8WnY3fXPUsnqEXavvHmPffrfu+98xn5Gyze5/FUJOVMm2Cw7fOWGRTNqHt92n1E8fbsI3B+vket0HX3RxbfSjsY+MzeB219Y2bfFto8s6SRseLExtcKyF5jx876wHIXz5yERyiBHl48P0MHyXM0wlBPm284reDGeXouU6D/67gU9kgHBOR1UB2nAstSvYu0j5rWTKZSJHGwOYdUSB97skfPvx4uVyAh7fu6Jp+OePNbpFVMMjOM3Nf5jpKO35WcnRFAq/O7bZRObFdXvPH4h/eZizF4uuyTLcYoXVciRlIh9wsTmTangakCModCG++PebGMXgho2st/dqXpN0O85DG/vZtXcbyXn127sbzpN2GlSG0iAdPPHIB56iq1EdIf3Cb0tZgJnVMOO10WaYnGwn5U4Shqj2grFcxhU39gFN06ywIX5nYJrmTxI/PHU=
+sidebar_class_name: "post api-method"
+info_path: gen/api/agent-management-api
 custom_edit_url: null
 ---
 
@@ -27,20 +27,21 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Retrieve node hostname"}
+  children={"Execute a command"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"get"}
-  path={"/node/hostname"}
+  method={"post"}
+  path={"/node/{hostname}/command/exec"}
 >
   
 </MethodEndpoint>
 
 
 
-Get the current hostname of the node.
+Execute a command directly without a shell. This is the safer option as it does not interpret shell metacharacters.
+
 
 <Heading
   id={"request"}
@@ -62,32 +63,113 @@ Get the current hostname of the node.
     <h3
       className={"openapi-markdown__details-summary-header-params"}
     >
-      Query Parameters
+      Path Parameters
     </h3>
   </summary><div>
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"target_hostname","in":"query","required":false,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,valid_target"},"schema":{"type":"string","default":"_any"},"description":"Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).\n"}}
+        param={{"name":"hostname","in":"path","required":true,"description":"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"},"schema":{"type":"string","minLength":1}}}
       >
         
       </ParamsItem>
     </ul>
   </div>
-</details><div>
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
+>
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
+  >
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
+    >
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
+      >
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3><strong
+          className={"openapi-schema__required"}
+        >
+          required
+        </strong>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        <div
+          style={{"marginTop":"1rem","marginBottom":"1rem"}}
+        >
+          
+          
+          The command to execute.
+          
+          
+        </div>
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"command"}
+          required={true}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"The executable name or path.","example":"ls","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"args"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Command arguments.","items":{"type":"string"},"example":["-la","/tmp"]}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"cwd"}
+          required={false}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Working directory for the command.","example":"/tmp"}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"timeout"}
+          required={false}
+          schemaName={"integer"}
+          qualifierMessage={"**Possible values:** `>= 1` and `<= 300`"}
+          schema={{"type":"integer","description":"Timeout in seconds (default 30, max 300).","minimum":1,"maximum":300,"default":30,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=300"}}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
   <div>
     <ApiTabs
       label={undefined}
       id={undefined}
     >
       <TabItem
-        label={"200"}
-        value={"200"}
+        label={"202"}
+        value={"202"}
       >
         <div>
           
           
-          A JSON object containing the node's hostname.
+          Command execution accepted.
           
           
         </div><div>
@@ -182,64 +264,61 @@ Get the current hostname of the node.
                               required={true}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The system's hostname.","example":"my-linux-server"}}
+                              schema={{"type":"string","description":"The hostname of the agent that executed the command."}}
                             >
                               
                             </SchemaItem><SchemaItem
-                              collapsible={true}
-                              className={"schemaItem"}
+                              collapsible={false}
+                              name={"stdout"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Standard output of the command."}}
                             >
-                              <details
-                                style={{}}
-                                className={"openapi-markdown__details"}
-                              >
-                                <summary
-                                  style={{}}
-                                >
-                                  <span
-                                    className={"openapi-schema__container"}
-                                  >
-                                    <strong
-                                      className={"openapi-schema__property"}
-                                    >
-                                      labels
-                                    </strong><span
-                                      className={"openapi-schema__name"}
-                                    >
-                                       object
-                                    </span>
-                                  </span>
-                                </summary><div
-                                  style={{"marginLeft":"1rem"}}
-                                >
-                                  <div
-                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
-                                  >
-                                    
-                                    
-                                    Key-value labels configured on the agent.
-                                    
-                                    
-                                  </div><SchemaItem
-                                    name={"property name*"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string"}}
-                                    collapsible={false}
-                                    discriminator={false}
-                                  >
-                                    
-                                  </SchemaItem>
-                                </div>
-                              </details>
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"stderr"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Standard error output of the command."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"exit_code"}
+                              required={false}
+                              schemaName={"integer"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","description":"Exit code of the command."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"duration_ms"}
+                              required={false}
+                              schemaName={"int64"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","format":"int64","description":"Execution time in milliseconds."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"changed"}
+                              required={false}
+                              schemaName={"boolean"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"boolean","description":"Whether the command modified system state."}}
+                            >
+                              
                             </SchemaItem><SchemaItem
                               collapsible={false}
                               name={"error"}
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Error message if the agent failed to process the request."}}
+                              schema={{"type":"string","description":"Error message if the agent failed."}}
                             >
                               
                             </SchemaItem><li>
@@ -259,7 +338,7 @@ Get the current hostname of the node.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"my-linux-server\",\n      \"labels\": {},\n      \"error\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"stdout\": \"string\",\n      \"stderr\": \"string\",\n      \"exit_code\": 0,\n      \"duration_ms\": 0,\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
                     language={"json"}
                   >
                     
@@ -276,7 +355,7 @@ Get the current hostname of the node.
         <div>
           
           
-          Invalid request parameters.
+          Invalid request payload.
           
           
         </div><div>
@@ -549,7 +628,7 @@ Get the current hostname of the node.
         <div>
           
           
-          Error retrieving hostname.
+          Error executing command.
           
           
         </div><div>

@@ -41,7 +41,7 @@ You can target a specific host, broadcast to all hosts with `_all`, or route by
 label. When targeting `_all`, the CLI prompts for confirmation before
 proceeding. See [CLI Reference](../usage/cli/client/node/command/command.mdx)
 for usage and examples, or the
-[API Reference](/gen/api/command-execution-api-command-operations) for the REST
+[API Reference](/gen/api/node-management-api-command-operations) for the REST
 endpoints.
 
 ## Use Cases
@@ -100,7 +100,7 @@ roles or tokens explicitly when needed.
 
 - [CLI Reference](../usage/cli/client/node/command/command.mdx) -- command
   execution commands (exec, shell)
-- [API Reference](/gen/api/command-execution-api-command-operations) -- REST API
+- [API Reference](/gen/api/node-management-api-command-operations) -- REST API
   documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
