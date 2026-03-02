@@ -2,8 +2,8 @@
 #
 # sync.sh — Declarative GitHub org repo config sync.
 #
-# Reads repos.json and ensures repo settings, topics, and branch
-# protection match the desired state across all managed repos.
+# Reads repos.json and ensures repo settings, topics, security,
+# and branch protection match the desired state across all managed repos.
 #
 # Usage:
 #   ./github/sync.sh --check              # Report drift (exit 1 if any)
@@ -159,6 +159,79 @@ apply_topics() {
   echo "  [$repo] topics: APPLIED"
 }
 
+# --- Security ---------------------------------------------------------------
+
+check_security() {
+  local repo="$1"
+  local drifts=()
+
+  # Vulnerability alerts (Dependabot alerts)
+  local desired_alerts
+  desired_alerts=$(jq -r '.security.vulnerability_alerts' "$CONFIG")
+  if gh api "repos/${ORG}/${repo}/vulnerability-alerts" >/dev/null 2>&1; then
+    [[ "$desired_alerts" != "true" ]] && drifts+=("  - vulnerability_alerts: actual=true, desired=${desired_alerts}")
+  else
+    [[ "$desired_alerts" != "false" ]] && drifts+=("  - vulnerability_alerts: actual=false, desired=${desired_alerts}")
+  fi
+
+  # Dependabot security updates, secret scanning, push protection
+  local actual
+  actual=$(gh api "repos/${ORG}/${repo}" --jq '.security_and_analysis' 2>/dev/null) \
+    || { echo "  [$repo] security: ERROR (could not fetch)"; DRIFT=1; return; }
+
+  local key api_key
+  for key in dependabot_security_updates secret_scanning secret_scanning_push_protection; do
+    local desired actual_val
+    desired=$(jq -r --arg k "$key" '.security[$k]' "$CONFIG")
+    api_key="$key"
+    [[ "$key" == "secret_scanning_push_protection" ]] && api_key="secret_scanning_push_protection"
+    actual_val=$(echo "$actual" | jq -r --arg k "$api_key" '.[$k].status // "disabled"')
+    local desired_status="disabled"
+    [[ "$desired" == "true" ]] && desired_status="enabled"
+    if [[ "$actual_val" != "$desired_status" ]]; then
+      drifts+=("  - ${key}: actual=${actual_val}, desired=${desired_status}")
+    fi
+  done
+
+  if [[ ${#drifts[@]} -eq 0 ]]; then
+    echo "  [$repo] security: OK"
+  else
+    echo "  [$repo] security: DRIFT"
+    printf '%s\n' "${drifts[@]}"
+    DRIFT=1
+  fi
+}
+
+apply_security() {
+  local repo="$1"
+
+  # Vulnerability alerts
+  local desired_alerts
+  desired_alerts=$(jq -r '.security.vulnerability_alerts' "$CONFIG")
+  if [[ "$desired_alerts" == "true" ]]; then
+    gh api "repos/${ORG}/${repo}/vulnerability-alerts" -X PUT >/dev/null 2>&1
+  else
+    gh api "repos/${ORG}/${repo}/vulnerability-alerts" -X DELETE >/dev/null 2>&1
+  fi
+
+  # Dependabot security updates, secret scanning, push protection
+  local payload
+  payload=$(jq -n \
+    --arg dep "$(jq -r 'if .security.dependabot_security_updates then "enabled" else "disabled" end' "$CONFIG")" \
+    --arg ss "$(jq -r 'if .security.secret_scanning then "enabled" else "disabled" end' "$CONFIG")" \
+    --arg ssp "$(jq -r 'if .security.secret_scanning_push_protection then "enabled" else "disabled" end' "$CONFIG")" \
+    '{
+      security_and_analysis: {
+        dependabot_security_updates: { status: $dep },
+        secret_scanning: { status: $ss },
+        secret_scanning_push_protection: { status: $ssp }
+      }
+    }')
+
+  gh api -X PATCH "repos/${ORG}/${repo}" --input - <<< "$payload" >/dev/null
+  echo "  [$repo] security: APPLIED"
+}
+
 # --- Branch protection ------------------------------------------------------
 
 check_branch_protection() {
@@ -294,11 +367,13 @@ for repo in $REPOS; do
     check_settings "$repo"
     check_description "$repo"
     check_topics "$repo"
+    check_security "$repo"
     check_branch_protection "$repo"
   else
     apply_settings "$repo"
     apply_description "$repo"
     apply_topics "$repo"
+    apply_security "$repo"
     apply_branch_protection "$repo"
   fi
 

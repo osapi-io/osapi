@@ -25,8 +25,19 @@
       "name": "osapi-justfiles",
       "description": "Shared justfiles for osapi-io projects.",
       "topics": ["justfile", "osapi"]
+    },
+    {
+      "name": "osapi-orchestrator",
+      "description": "A Go package for orchestrating operations across OSAPI-managed hosts.",
+      "topics": ["configuration-management", "dag", "golang", "orchestration", "osapi"]
     }
   ],
+  "security": {
+    "vulnerability_alerts": true,
+    "dependabot_security_updates": true,
+    "secret_scanning": true,
+    "secret_scanning_push_protection": true
+  },
   "settings": {
     "has_issues": true,
     "has_wiki": false,
