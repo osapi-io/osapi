@@ -206,8 +206,8 @@ github.com/circonus-labs/circonusllhist v0.1.3/go.mod h1:kMXHVDlOchFAehlya5ePtbp
 github.com/ckaznocha/intrange v0.3.1 h1:j1onQyXvHUsPWujDH6WIjhyH26gkRt/txNlV7LspvJs=
 github.com/ckaznocha/intrange v0.3.1/go.mod h1:QVepyz1AkUoFQkpEqksSYpNpUo3c5W7nWh/s6SHIJJk=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
-github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
+github.com/cloudflare/circl v1.6.3 h1:9GPOhQGF9MCYUeXyMYlqTR6a5gTrgR/fBLXvUgtVcg8=
+github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJRn81BiS4=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
@@ -753,12 +753,6 @@ github.com/osapi-io/nats-client v0.0.0-20260222233639-d0822e0a4b86 h1:ML0fdgr0M4
 github.com/osapi-io/nats-client v0.0.0-20260222233639-d0822e0a4b86/go.mod h1:TQqODOjF2JuAOFrLtm1ItsMzPPAizKfHo+grOMuPDyE=
 github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848 h1:ELW1sTVBn5JIc17mHgd5fhpO3/7btaxJpxykG2Fe0U4=
 github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848/go.mod h1:4rzeY9jiJF/+Ej4WNwqK5HQ2sflZrEs60GxQpg3Iya8=
-github.com/osapi-io/osapi-sdk v0.0.0-20260228054052-d2b998219d2b h1:ShM1C9dPxzm3C7bW3THtsEHcM2fxaYaL3QGyFZu43Ms=
-github.com/osapi-io/osapi-sdk v0.0.0-20260228054052-d2b998219d2b/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
-github.com/osapi-io/osapi-sdk v0.0.0-20260301210441-85c7e1be1b26 h1:DhBTF0DKP74r14IX0D0VgGGlH8s0jVqAniJw7DhkONg=
-github.com/osapi-io/osapi-sdk v0.0.0-20260301210441-85c7e1be1b26/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
-github.com/osapi-io/osapi-sdk v0.0.0-20260301215233-cf4d1dde8648 h1:9A1P6u0PnFEtLVE+p8rXNMkX6s9LJYq3Mh68tTxM7c8=
-github.com/osapi-io/osapi-sdk v0.0.0-20260301215233-cf4d1dde8648/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
 github.com/osapi-io/osapi-sdk v0.0.0-20260301225211-54433f58dfd8 h1:XwUb5ZywbIX4RDBfzxGjJNCCRLxLWD3AGYu4Xn1t104=
 github.com/osapi-io/osapi-sdk v0.0.0-20260301225211-54433f58dfd8/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
