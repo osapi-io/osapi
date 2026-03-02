@@ -1,13 +1,13 @@
 ---
-id: get-network-dns-by-interface
-title: "List DNS servers"
-description: "Retrieve the list of currently configured DNS servers for a specific network interface."
-sidebar_label: "List DNS servers"
+id: post-node-command-shell
+title: "Execute a shell command"
+description: "Execute a command through /bin/sh -c. Supports shell features like pipes, redirects, and variable expansion."
+sidebar_label: "Execute a shell command"
 hide_title: true
 hide_table_of_contents: true
-api: eJztV9tu2zgQ/RWCTwkgO07XSXcF7EPatIUXbRA0KfYhaxgjcWwxkUiVHLnxGvr3xVCyLSdKL8B2L0CfEloc8sw5M8OZtVToU6dL0tbIWL5HchqXKChDkWtPws5FWjmHhvKVSK2Z60XlUInziyvh0S3ReTG3ToDwJaZ6rlNhkD5Zdye0IXRzSHEoI0mw8DK+kRfNx9k7MLDAAg3Nzi4nM2X8zJbogIF4OY3kdjVRMpZvkFrL84urF6vJ5mgZSY9p5TStZHyzli8QHLqzijK+rEUSOwQlp/U0kiU4KJDQ+bDdQIEyllukF7yOpGYuSqBMRtLhx0o7VDImV2Ek7wcWSj1IrcIFmgHek4NB491aLiHXCojP3NhFkJcZmKqQdSR9mmEBvJNWJe/y5LRZ8Kd9Ia4zFAyO+WctHnEqyAq3UYvF2GgTOGNJhuJdxQKaRjgCbUSOxL4LMEqYqkjQ+eEfRtbRlgoCt0CaZdaT6ZDxsUK32mNjDrn/BjpsoQmLklZRoc2vx1H4NGtu+xwzTMwcqpxkLGdgVj1UhTNiwV/FQW5BDRLIwaSoDiMxgzwXB4mzoFLwdBiJjWviQGmHKf9knbjDVbyEvEJxkEOCuVg4W5WRwOFiGDWL+BMmQ4XLw0DZlMnwpTUeg6/PRiP+s4/tbZtCnWzhZGA50BDvh7LMdRpEO7r1bLR+zIVNbjElGcnScVqQbq68tclMqz7O5tYVwJRVlVayL7hubSIm56LyqDiUSmdT9F5Qpr1gkdETI8V7KMqczz45GeHP49FogM9+SQbjYzUewPPj08F4fHp6cjIej0ajEYvj0Fc5+Q4qcA44djgA/Je92oZebyw89GOrZpsosEBDgjKghnDVuLTLkGGItkaLHpD9+vUXvmGPU09AnVwuxxxmk8vlqQClHJPdQt6dOJR1AAcuzWbKFqDN12NszERr9hlsfAc6Z92XYb/ibaJA72GBQncpnoPOH8YO7kKnrrvF4man6jSSpCmE1PnF1ctA7Ps2kWT90GwTTX1WL22eY8pIu/Z1JMd9qTgxoeR0KmgIm9LZpVao/sa0/Epuz0RnvYmFYNuEr03Dw6v20/D1lvZt9fcEVPlhUxkJdP4V8XimlOZ/IRetjYDEVrQD0XutqsLDs3mNSBdoKwpX8wvQuZdpXqDrzdnGSTbYu+RkNGL1NjqH2Huk7PFjZT8YqCizTv+JSgzE2eWEq7nYhtEPYf8Pwv70WNjX1iVaKTRiICbGV/O5TjXXnhJdob0PreIPdf/76p70FeTmbWnp0GbxnZqkH7J+J1nrSBZImeXxjJv4qJmYYnnUAjpSxh+t92arWnZ6r5vpbni7YjUbwboj3NaBjKiU7ZTA6yRsklH7z+tNv/vb79eh9dBmboN5C/+sUprEW7vg50FGkhE0FBwPR8PQuJbWUwEhttpZKHRWnah8SN96F6Pfc3JuGCC8p6MyB83jmqxczvc3jG8HXQYYSmK8P9FOo9B/8c71OgGPH1xe1/xzM9fxKKy0hyTvTHZPuvrvDFxPEHGHq96pNRwtYxkGtSU4zc59o6MH79sW4lD8s/P4E75uxgCz6jq44WBf8npaRzJDUOiC182eszTFkjrWjyor07VN6zevrmUkYT8VH6ReOL0X2Xrd7Li2d2jqeguUeM0A6/ovS7Rsog==
-sidebar_class_name: "get api-method"
-info_path: gen/api/audit-log-api
+api: eJztWG1v2zYQ/isEPyWAHCuNk20C+iHtUiDDXoIkRT90gUGLZ4kJRarkKbHn6b8PR0p+b5sNHdYB/UbZx+Pdc88debfgEnzuVI3KGp7xixnkDQITLLdVJYxkWDrbFCUbTpQZ+pIN8iN209S1deiZL0FrNgWBjQPPtHoAVqsafMIcSOUgR58wUvMonBITDQxmtTBeWXP0u+EJR1F4nr3nv1oJ41+EEQVUYHB8fnU57kwY2xqcIAM9v0v48utS8oxfWY+093WUvSGDeMI95I1TOOfZ+wV/BcKBO2+wpJM6rRlEV/lde5fwWjhRAYLzYYcRFfCMl9ZjWCZcETq1wJIn3MGHRjmQPEPXQLIF4a1wBSATBRhkvQbCw4N7BMmcbVCZgj0K3QA7GAszT9hYaH2YMOuYFhPQzIOGHK1jBw8wz4LoYQRsNrCiVoPcSijADGCGTgwiigv+KLSSAsn23sikUublcRL+GWOwjbcJ93kJlaA9OK9J3qNTpuAJr5T5GUxBYB23hA1pAo+vrJyT/Ja3JXQsWBLGsg7aoz1Y5dYgGCRFoq61ykMoh/eetC12zbKTe8iRJ7x2FHhUEBztDttn/65900brLSOjNBkIM1HVmjRozwZasCFWNfuTFQ5qpm3xjyHnbZvw/OkZNr6z7oEYERPGujmbWsewhN7cTTvJQAohqgpsg2v6lUEowO2CECWZMsxDbo307EDCVDQa2UmasErM2EmaHh7F8KuqqXh2nPBKzOL6JE1JZ9hBX8/HxFYKoapx3vGwErOXJ2nKW0JnRY5lWlKGo8Lg6HpOX0cS0r6w0dfW+MiFF+mLXV7ebIQ7ElJZw0SeQ40QIP1CXLy3k7HaG+apdZVAnvGmUXIvNe/thF3+yBoPIXFqZ3PwnmGpPOvybjP4p6cpfD9K0wG8+GEyGB3L0UB8d3w2GI3Ozk5PR6M0JXADQo1Gv2aVcE7MqZIhVP7zXi1r37NSrJdmdhqIG6sflgL7YiA3CU0lCOUmfT+i/waFkcJJZhusG+yP2FIFzv0NVeCcdZ9QCDOFYyL3M7LrYqaQkew+RbKJl9V4A/OVqiVFlMGz0R7dPXEp2ymBK6W16rI4nJCXwhSwzr+JtRqE2a0zJWAJG5WFVVaqqQLJ/NwjVMyjoMJNEBBEn4f0IiBZgfeiAKbWwz8VSlOmbaf6klq7uX4daHuJUO1WiJ7SH9v12mq6NJU111156KrFKE13C8SlCVWqzzJWi7m24kvWhWcCeM7WvnsKRX6G/LF53jgHW5fAm4At1QwH6BQ8QghdEzkhAYXS/hmHS6loKTTr9jAxoatiacTeY2UDdLQBfLLugXU3UaTj85Lmdukkbdg45DRN23YV40CwnYge70b0rRENltapP0CyATu/umQPMGdLCn0L7P8hsCe7gX1j3URJCYYN2KXxzXSqckUFpgZXKe9DZ/Atul9/dE/3FeJ4gXQvNFNsPtS/leOvP65twivA0lI7XlsfkKdGOeNDYyUMF/193w67qA79sk13j7Hnvlv17DcU0Biz9c596UOJWPOugw3PnSDEk27xpn9R/fTuNjw9iCjXqx72ondsrYv8eO8XGrjYcq11XCdpSyOBqQ1mdcich0fPaoZBNxBPODkYQT4+So/C45xQqkRgbzdpWM1dNui/HafFKhn+g1FNhB9hhsNaC2XIlcZpMisG/D2ngPOEZ2uTk5UrMep3SXgAkvRiMREe3jrdtvTzhwbcPHKhtyFMY6TytJY8mwrttwcu65gcXHeX/SH7l8cwe8HoOy1DfVaQ5hnnCX+A+fo0qb1rE16CkOCCf/Hv19GLwS0pWW3fKXlt0u84D73sJ2Xv1nLz6rebW8qSbo5ThcrAnXiiMY14iqbaOg7askX8bcG1MEUjCpKNOimnxGZKbqVg8GovGItFlLi1D2DadokN0jcB07Z/ARsxI+o=
+sidebar_class_name: "post api-method"
+info_path: gen/api/agent-management-api
 custom_edit_url: null
 ---
 
@@ -27,20 +27,21 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"List DNS servers"}
+  children={"Execute a shell command"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"get"}
-  path={"/network/dns/{interfaceName}"}
+  method={"post"}
+  path={"/node/{hostname}/command/shell"}
 >
   
 </MethodEndpoint>
 
 
 
-Retrieve the list of currently configured DNS servers for a specific network interface.
+Execute a command through /bin/sh -c. Supports shell features like pipes, redirects, and variable expansion.
+
 
 <Heading
   id={"request"}
@@ -68,50 +69,98 @@ Retrieve the list of currently configured DNS servers for a specific network int
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"interfaceName","in":"path","required":true,"x-oapi-codegen-extra-tags":{"validate":"required,alphanum"},"schema":{"type":"string"},"description":"The name of the network interface to retrieve DNS configuration for. Must only contain letters and numbers.\n"}}
+        param={{"name":"hostname","in":"path","required":true,"description":"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"},"schema":{"type":"string","minLength":1}}}
       >
         
       </ParamsItem>
     </ul>
   </div>
-</details><details
-  style={{"marginBottom":"1rem"}}
-  className={"openapi-markdown__details"}
-  data-collapsed={false}
-  open={true}
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
 >
-  <summary
-    style={{}}
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
   >
-    <h3
-      className={"openapi-markdown__details-summary-header-params"}
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
     >
-      Query Parameters
-    </h3>
-  </summary><div>
-    <ul>
-      <ParamsItem
-        className={"paramsItem"}
-        param={{"name":"target_hostname","in":"query","required":false,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,valid_target"},"schema":{"type":"string","default":"_any"},"description":"Target: _any (load-balanced), _all (broadcast), hostname (direct), or key:value (label group, e.g., group:web.dev).\n"}}
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
       >
-        
-      </ParamsItem>
-    </ul>
-  </div>
-</details><div>
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3><strong
+          className={"openapi-schema__required"}
+        >
+          required
+        </strong>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        <div
+          style={{"marginTop":"1rem","marginBottom":"1rem"}}
+        >
+          
+          
+          The shell command to execute.
+          
+          
+        </div>
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"command"}
+          required={true}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"The full shell command string.","example":"ls -la /tmp | grep log","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"cwd"}
+          required={false}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Working directory for the command.","example":"/tmp"}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"timeout"}
+          required={false}
+          schemaName={"integer"}
+          qualifierMessage={"**Possible values:** `>= 1` and `<= 300`"}
+          schema={{"type":"integer","description":"Timeout in seconds (default 30, max 300).","minimum":1,"maximum":300,"default":30,"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=300"}}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
   <div>
     <ApiTabs
       label={undefined}
       id={undefined}
     >
       <TabItem
-        label={"200"}
-        value={"200"}
+        label={"202"}
+        value={"202"}
       >
         <div>
           
           
-          List of DNS servers.
+          Shell command execution accepted.
           
           
         </div><div>
@@ -206,25 +255,52 @@ Retrieve the list of currently configured DNS servers for a specific network int
                               required={true}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The hostname of the agent that served this DNS config."}}
+                              schema={{"type":"string","description":"The hostname of the agent that executed the command."}}
                             >
                               
                             </SchemaItem><SchemaItem
                               collapsible={false}
-                              name={"servers"}
+                              name={"stdout"}
                               required={false}
-                              schemaName={"string[]"}
+                              schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"array","description":"List of configured DNS servers.","items":{"type":"string","description":"IPv4 or IPv6 address of the DNS server."}}}
+                              schema={{"type":"string","description":"Standard output of the command."}}
                             >
                               
                             </SchemaItem><SchemaItem
                               collapsible={false}
-                              name={"search_domains"}
+                              name={"stderr"}
                               required={false}
-                              schemaName={"string[]"}
+                              schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"array","description":"List of search domains.","items":{"type":"string"}}}
+                              schema={{"type":"string","description":"Standard error output of the command."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"exit_code"}
+                              required={false}
+                              schemaName={"integer"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","description":"Exit code of the command."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"duration_ms"}
+                              required={false}
+                              schemaName={"int64"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","format":"int64","description":"Execution time in milliseconds."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"changed"}
+                              required={false}
+                              schemaName={"boolean"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"boolean","description":"Whether the command modified system state."}}
                             >
                               
                             </SchemaItem><SchemaItem
@@ -233,7 +309,7 @@ Retrieve the list of currently configured DNS servers for a specific network int
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Error message if the agent failed to process the request."}}
+                              schema={{"type":"string","description":"Error message if the agent failed."}}
                             >
                               
                             </SchemaItem><li>
@@ -253,7 +329,7 @@ Retrieve the list of currently configured DNS servers for a specific network int
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"servers\": [\n        \"string\"\n      ],\n      \"search_domains\": [\n        \"string\"\n      ],\n      \"error\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"stdout\": \"string\",\n      \"stderr\": \"string\",\n      \"exit_code\": 0,\n      \"duration_ms\": 0,\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
                     language={"json"}
                   >
                     
@@ -270,7 +346,7 @@ Retrieve the list of currently configured DNS servers for a specific network int
         <div>
           
           
-          Invalid interface name provided.
+          Invalid request payload.
           
           
         </div><div>
@@ -543,7 +619,7 @@ Retrieve the list of currently configured DNS servers for a specific network int
         <div>
           
           
-          Error retrieving DNS servers.
+          Error executing shell command.
           
           
         </div><div>

@@ -25,7 +25,7 @@ through the host's network manager.
 
 See [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage and
 examples, or the
-[API Reference](/gen/api/network-management-api-network-operations) for the REST
+[API Reference](/gen/api/node-management-api-network-operations) for the REST
 endpoints.
 
 ## Configuration
@@ -49,7 +49,7 @@ The `read` role includes only `network:read`.
 
 - [CLI Reference](../usage/cli/client/node/network/network.mdx) -- network
   commands
-- [API Reference](/gen/api/network-management-api-network-operations) -- REST
-  API documentation
+- [API Reference](/gen/api/node-management-api-network-operations) -- REST API
+  documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Architecture](../architecture/architecture.md) -- system design overview
