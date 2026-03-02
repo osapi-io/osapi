@@ -381,7 +381,7 @@ components:
           description: The target hostname for routing (_any, _all, or specific hostname).
           example: "_any"
           x-oapi-codegen-extra-tags:
-            validate: required,min=1
+            validate: required,min=1,valid_target
       required:
         - operation
         - target_hostname
@@ -421,7 +421,7 @@ components:
             Defaults to _any if not specified.
           example: "_any"
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
+            validate: omitempty,min=1,valid_target
 
     ListJobsResponse:
       type: object

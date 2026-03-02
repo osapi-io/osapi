@@ -41,6 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 type JobCreatePublicTestSuite struct {
@@ -52,6 +53,15 @@ type JobCreatePublicTestSuite struct {
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
+}
+
+func (s *JobCreatePublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
 }
 
 func (s *JobCreatePublicTestSuite) SetupTest() {
@@ -128,6 +138,23 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "TargetHostname")
 				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "validation error invalid target",
+			request: gen.PostJobRequestObject{
+				Body: &gen.PostJobJSONRequestBody{
+					Operation:      map[string]interface{}{"type": "test"},
+					TargetHostname: "nonexistent-host",
+				},
+			},
+			expectMock: false,
+			validateFunc: func(resp gen.PostJobResponseObject) {
+				r, ok := resp.(gen.PostJob400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "TargetHostname")
+				s.Contains(*r.Error, "valid_target")
 			},
 		},
 		{
