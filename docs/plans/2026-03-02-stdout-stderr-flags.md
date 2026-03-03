@@ -1,10 +1,15 @@
 # --stdout/--stderr Flags Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
+> implement this plan task-by-task.
 
-**Goal:** Add `--stdout` and `--stderr` flags to `node command exec` and `node command shell` CLI commands for raw command output without `jq`.
+**Goal:** Add `--stdout` and `--stderr` flags to `node command exec` and
+`node command shell` CLI commands for raw command output without `jq`.
 
-**Architecture:** CLI-only change. Add two boolean flags that bypass the table/JSON display and print raw remote stdout/stderr directly. Multi-host output prefixes each line with a dimmed hostname. Exit code propagates from the remote command.
+**Architecture:** CLI-only change. Add two boolean flags that bypass the
+table/JSON display and print raw remote stdout/stderr directly. Multi-host
+output prefixes each line with a dimmed hostname. Exit code propagates from the
+remote command.
 
 **Tech Stack:** Go, Cobra, lipgloss (existing `cli.DimStyle`)
 
@@ -13,6 +18,7 @@
 ### Task 1: Add PrintRawOutput helper to internal/cli
 
 **Files:**
+
 - Create: `internal/cli/raw_output.go`
 - Create: `internal/cli/raw_output_test.go`
 
@@ -119,8 +125,8 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_MultiHost() {
 
 **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestRawOutputPublicTestSuite -v ./internal/cli/...`
-Expected: FAIL — `PrintRawOutput`, `PrintRawOutputPlain`, `RawResult` not defined
+Run: `go test -run TestRawOutputPublicTestSuite -v ./internal/cli/...` Expected:
+FAIL — `PrintRawOutput`, `PrintRawOutputPlain`, `RawResult` not defined
 
 **Step 3: Write minimal implementation**
 
@@ -214,8 +220,8 @@ func writeLines(
 
 **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestRawOutputPublicTestSuite -v ./internal/cli/...`
-Expected: PASS
+Run: `go test -run TestRawOutputPublicTestSuite -v ./internal/cli/...` Expected:
+PASS
 
 **Step 5: Commit**
 
@@ -229,6 +235,7 @@ git commit -m "feat(cli): add PrintRawOutput helper for --stdout/--stderr flags"
 ### Task 2: Add --stdout/--stderr flags to command exec
 
 **Files:**
+
 - Modify: `cmd/client_node_command_exec.go`
 
 **Step 1: Add flag definitions in init()**
@@ -319,8 +326,7 @@ Add `"os"` to the imports.
 
 **Step 3: Run tests and build**
 
-Run: `go build ./... && just go::unit`
-Expected: PASS
+Run: `go build ./... && just go::unit` Expected: PASS
 
 **Step 4: Commit**
 
@@ -334,6 +340,7 @@ git commit -m "feat(cli): add --stdout/--stderr flags to node command exec"
 ### Task 3: Add --stdout/--stderr flags to command shell
 
 **Files:**
+
 - Modify: `cmd/client_node_command_shell.go`
 
 **Step 1: Add flag definitions in init()**
@@ -356,15 +363,14 @@ Read the new flags after `timeout` (after line 41):
 		showStderr, _ := cmd.Flags().GetBool("stderr")
 ```
 
-Replace the `case http.StatusAccepted:` block (lines 62-96) with the
-same pattern as Task 2 (identical logic).
+Replace the `case http.StatusAccepted:` block (lines 62-96) with the same
+pattern as Task 2 (identical logic).
 
 Add `"os"` to the imports.
 
 **Step 3: Run tests and build**
 
-Run: `go build ./... && just go::unit`
-Expected: PASS
+Run: `go build ./... && just go::unit` Expected: PASS
 
 **Step 4: Commit**
 
@@ -378,6 +384,7 @@ git commit -m "feat(cli): add --stdout/--stderr flags to node command shell"
 ### Task 4: Update CLI documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/cli/client/node/command/exec.md`
 - Modify: `docs/docs/sidebar/usage/cli/client/node/command/shell.md`
 
@@ -385,11 +392,11 @@ git commit -m "feat(cli): add --stdout/--stderr flags to node command shell"
 
 Add a new section after "## JSON Output" and before "## Flags":
 
-```markdown
+````markdown
 ## Raw Output
 
-Use `--stdout` to print only the remote command's stdout, without the
-table wrapper:
+Use `--stdout` to print only the remote command's stdout, without the table
+wrapper:
 
 ```bash
 $ osapi client node command exec --command ls --args "-la" --stdout
@@ -397,6 +404,7 @@ total 48
 drwxr-xr-x  12 john  staff  384 Mar  2 10:00 .
 -rw-r--r--   1 john  staff 1234 Mar  2 09:30 main.go
 ```
+````
 
 Use `--stderr` to print only stderr:
 
@@ -405,8 +413,8 @@ $ osapi client node command exec --command ls --args "/nonexistent" --stderr
 ls: cannot access '/nonexistent': No such file or directory
 ```
 
-Both flags can be combined. When targeting multiple hosts, each line is
-prefixed with the hostname:
+Both flags can be combined. When targeting multiple hosts, each line is prefixed
+with the hostname:
 
 ```bash
 $ osapi client node command exec --command hostname --target _all --stdout
@@ -414,27 +422,27 @@ $ osapi client node command exec --command hostname --target _all --stdout
   web-02  web-02.example.com
 ```
 
-The CLI exit code matches the remote command's exit code, making it
-scriptable:
+The CLI exit code matches the remote command's exit code, making it scriptable:
 
 ```bash
 $ osapi client node command exec --command "test" --args "-f,/etc/hosts" --stdout && echo exists
 exists
 ```
-```
+
+````
 
 Add the new flags to the Flags table:
 
 ```markdown
 | `--stdout`     | Print only remote stdout                                 |         |
 | `--stderr`     | Print only remote stderr                                 |         |
-```
+````
 
 **Step 2: Update shell.md**
 
 Add the same "## Raw Output" section with shell-appropriate examples:
 
-```markdown
+````markdown
 ## Raw Output
 
 Use `--stdout` to print only the remote command's stdout:
@@ -443,6 +451,7 @@ Use `--stdout` to print only the remote command's stdout:
 $ osapi client node command shell --command "df -h / | tail -1" --stdout
 /dev/sda1        50G   12G   35G  26% /
 ```
+````
 
 Use `--stderr` to print only stderr:
 
@@ -451,8 +460,8 @@ $ osapi client node command shell --command "cat /nonexistent" --stderr
 cat: /nonexistent: No such file or directory
 ```
 
-Both flags can be combined. When targeting multiple hosts, each line is
-prefixed with the hostname:
+Both flags can be combined. When targeting multiple hosts, each line is prefixed
+with the hostname:
 
 ```bash
 $ osapi client node command shell --command "uname -r" --target _all --stdout
@@ -461,14 +470,15 @@ $ osapi client node command shell --command "uname -r" --target _all --stdout
 ```
 
 The CLI exit code matches the remote command's exit code.
-```
+
+````
 
 Add the new flags to the Flags table:
 
 ```markdown
 | `--stdout`     | Print only remote stdout                                 |         |
 | `--stderr`     | Print only remote stderr                                 |         |
-```
+````
 
 **Step 3: Verify docs build**
 
@@ -488,13 +498,12 @@ git commit -m "docs: add --stdout/--stderr flag documentation for exec and shell
 
 **Step 1: Run full test suite**
 
-Run: `just test`
-Expected: All lint + unit tests pass
+Run: `just test` Expected: All lint + unit tests pass
 
 **Step 2: Build and smoke test**
 
-Run: `go build -o osapi . && ./osapi client node command exec --help`
-Expected: `--stdout` and `--stderr` flags visible in help output
+Run: `go build -o osapi . && ./osapi client node command exec --help` Expected:
+`--stdout` and `--stderr` flags visible in help output
 
 **Step 3: Commit any fixes**
 

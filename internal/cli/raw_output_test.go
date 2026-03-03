@@ -46,11 +46,11 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_SingleHost() {
 		wantErr string
 	}{
 		{
-			name: "when single host stdout only prints without prefix",
+			name: "when single host stdout only prefixes with hostname",
 			results: []cli.RawResult{
 				{Hostname: "server1", Stdout: "file1\nfile2\n", Stderr: ""},
 			},
-			wantOut: "file1\nfile2\n",
+			wantOut: "[server1] file1\n[server1] file2\n",
 			wantErr: "",
 		},
 		{
@@ -59,22 +59,22 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_SingleHost() {
 				{Hostname: "server1", Stdout: "", Stderr: "permission denied\n"},
 			},
 			wantOut: "",
-			wantErr: "permission denied\n",
+			wantErr: "[server1] permission denied\n",
 		},
 		{
 			name: "when single host both streams prints each",
 			results: []cli.RawResult{
 				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
 			},
-			wantOut: "output\n",
-			wantErr: "warning\n",
+			wantOut: "[server1] output\n",
+			wantErr: "[server1] warning\n",
 		},
 		{
 			name: "when content has embedded empty lines preserves them",
 			results: []cli.RawResult{
 				{Hostname: "server1", Stdout: "line1\n\nline3\n"},
 			},
-			wantOut: "line1\n\nline3\n",
+			wantOut: "[server1] line1\n[server1] \n[server1] line3\n",
 			wantErr: "",
 		},
 		{
@@ -89,7 +89,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_SingleHost() {
 		suite.Run(tc.name, func() {
 			var stdout, stderr bytes.Buffer
 
-			cli.PrintRawOutput(&stdout, &stderr, tc.results, true, true)
+			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, true, true)
 
 			assert.Equal(suite.T(), tc.wantOut, stdout.String())
 			assert.Equal(suite.T(), tc.wantErr, stderr.String())
@@ -109,7 +109,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_MultiHost() {
 				{Hostname: "web-01", Stdout: "file1\nfile2\n"},
 				{Hostname: "web-02", Stdout: "file3\n"},
 			},
-			wantOut: "web-01  file1\nweb-01  file2\nweb-02  file3\n",
+			wantOut: "[web-01] file1\n[web-01] file2\n[web-02] file3\n",
 		},
 	}
 
@@ -141,7 +141,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
 			showStdout: false,
 			showStderr: true,
 			wantOut:    "",
-			wantErr:    "warning\n",
+			wantErr:    "[server1] warning\n",
 		},
 		{
 			name: "when showStderr false suppresses stderr",
@@ -150,7 +150,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
 			},
 			showStdout: true,
 			showStderr: false,
-			wantOut:    "output\n",
+			wantOut:    "[server1] output\n",
 			wantErr:    "",
 		},
 		{
@@ -169,7 +169,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
 		suite.Run(tc.name, func() {
 			var stdout, stderr bytes.Buffer
 
-			cli.PrintRawOutput(&stdout, &stderr, tc.results, tc.showStdout, tc.showStderr)
+			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, tc.showStdout, tc.showStderr)
 
 			assert.Equal(suite.T(), tc.wantOut, stdout.String())
 			assert.Equal(suite.T(), tc.wantErr, stderr.String())
@@ -189,7 +189,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain_MultiHostStderr()
 				{Hostname: "web-01", Stderr: "err1\n"},
 				{Hostname: "web-02", Stderr: "err2\n"},
 			},
-			wantErr: "web-01  err1\nweb-02  err2\n",
+			wantErr: "[web-01] err1\n[web-02] err2\n",
 		},
 	}
 
@@ -200,6 +200,50 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain_MultiHostStderr()
 			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, false, true)
 
 			assert.Equal(suite.T(), tc.wantErr, stderr.String())
+		})
+	}
+}
+
+func (suite *RawOutputPublicTestSuite) TestMaxExitCode() {
+	tests := []struct {
+		name    string
+		results []cli.RawResult
+		want    int
+	}{
+		{
+			name:    "when empty results returns zero",
+			results: []cli.RawResult{},
+			want:    0,
+		},
+		{
+			name: "when all zero returns zero",
+			results: []cli.RawResult{
+				{Hostname: "s1", ExitCode: 0},
+				{Hostname: "s2", ExitCode: 0},
+			},
+			want: 0,
+		},
+		{
+			name: "when mixed returns highest",
+			results: []cli.RawResult{
+				{Hostname: "s1", ExitCode: 0},
+				{Hostname: "s2", ExitCode: 2},
+				{Hostname: "s3", ExitCode: 1},
+			},
+			want: 2,
+		},
+		{
+			name: "when single non-zero returns it",
+			results: []cli.RawResult{
+				{Hostname: "s1", ExitCode: 127},
+			},
+			want: 127,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			assert.Equal(suite.T(), tc.want, cli.MaxExitCode(tc.results))
 		})
 	}
 }

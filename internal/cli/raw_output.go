@@ -60,6 +60,19 @@ func PrintRawOutputPlain(
 	printRaw(stdout, stderr, results, showStdout, showStderr, false)
 }
 
+// MaxExitCode returns the highest exit code from a slice of RawResults.
+func MaxExitCode(
+	results []RawResult,
+) int {
+	max := 0
+	for _, r := range results {
+		if r.ExitCode > max {
+			max = r.ExitCode
+		}
+	}
+	return max
+}
+
 func printRaw(
 	stdout io.Writer,
 	stderr io.Writer,
@@ -68,14 +81,12 @@ func printRaw(
 	showStderr bool,
 	styled bool,
 ) {
-	multiHost := len(results) > 1
-
 	for _, r := range results {
 		if showStdout && r.Stdout != "" {
-			writeLines(stdout, r.Hostname, r.Stdout, multiHost, styled)
+			writeLines(stdout, r.Hostname, r.Stdout, styled)
 		}
 		if showStderr && r.Stderr != "" {
-			writeLines(stderr, r.Hostname, r.Stderr, multiHost, styled)
+			writeLines(stderr, r.Hostname, r.Stderr, styled)
 		}
 	}
 }
@@ -84,7 +95,6 @@ func writeLines(
 	w io.Writer,
 	hostname string,
 	content string,
-	multiHost bool,
 	styled bool,
 ) {
 	lines := strings.Split(content, "\n")
@@ -96,14 +106,10 @@ func writeLines(
 	}
 
 	for _, line := range lines {
-		if multiHost {
-			prefix := hostname
-			if styled {
-				prefix = DimStyle.Render(hostname)
-			}
-			fmt.Fprintf(w, "%s  %s\n", prefix, line)
-		} else {
-			fmt.Fprintln(w, line)
+		prefix := "[" + hostname + "]"
+		if styled {
+			prefix = DimStyle.Render(prefix)
 		}
+		fmt.Fprintf(w, "%s %s\n", prefix, line)
 	}
 }

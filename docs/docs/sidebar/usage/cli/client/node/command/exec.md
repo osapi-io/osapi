@@ -55,8 +55,8 @@ $ osapi client node command exec --command hostname --json
 
 ## Raw Output
 
-Use `--stdout` to print only the remote command's stdout, without the
-table wrapper:
+Use `--stdout` to print only the remote command's stdout, without the table
+wrapper:
 
 ```bash
 $ osapi client node command exec --command ls --args "-la" --stdout
@@ -72,17 +72,15 @@ $ osapi client node command exec --command ls --args "/nonexistent" --stderr
 ls: cannot access '/nonexistent': No such file or directory
 ```
 
-Both flags can be combined. When targeting multiple hosts, each line is
-prefixed with the hostname:
+Both flags can be combined. Each line is prefixed with the hostname:
 
 ```bash
 $ osapi client node command exec --command hostname --target _all --stdout
-  web-01  web-01.example.com
-  web-02  web-02.example.com
+[web-01] web-01.example.com
+[web-02] web-02.example.com
 ```
 
-The CLI exit code matches the remote command's exit code, making it
-scriptable:
+The CLI exit code matches the remote command's exit code, making it scriptable:
 
 ```bash
 $ osapi client node command exec --command "test" --args "-f,/etc/hosts" --stdout && echo exists

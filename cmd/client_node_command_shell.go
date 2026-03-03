@@ -70,26 +70,10 @@ var clientNodeCommandShellCmd = &cobra.Command{
 			}
 
 			if (showStdout || showStderr) && resp.JSON202 != nil {
-				results := make([]cli.RawResult, 0, len(resp.JSON202.Results))
-				maxExitCode := 0
-				for _, r := range resp.JSON202.Results {
-					exitCode := 0
-					if r.ExitCode != nil {
-						exitCode = *r.ExitCode
-					}
-					if exitCode > maxExitCode {
-						maxExitCode = exitCode
-					}
-					results = append(results, cli.RawResult{
-						Hostname: r.Hostname,
-						Stdout:   cli.SafeString(r.Stdout),
-						Stderr:   cli.SafeString(r.Stderr),
-						ExitCode: exitCode,
-					})
-				}
+				results := buildRawResults(resp.JSON202.Results)
 				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
-				if maxExitCode != 0 {
-					os.Exit(maxExitCode)
+				if code := cli.MaxExitCode(results); code != 0 {
+					os.Exit(code)
 				}
 				return
 			}

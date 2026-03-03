@@ -2,21 +2,21 @@
 
 ## Problem
 
-Running a remote command with OSAPI requires piping through `jq` to see
-the actual output:
+Running a remote command with OSAPI requires piping through `jq` to see the
+actual output:
 
 ```bash
 osapi client node command exec --command ls --json | jq -r '.results[0].stdout'
 ```
 
-The default table view truncates stdout to 50 characters and flattens
-multi-line output. There's no way to get raw command output directly.
+The default table view truncates stdout to 50 characters and flattens multi-line
+output. There's no way to get raw command output directly.
 
 ## Solution
 
 Add `--stdout` and `--stderr` flags to `node command exec` and
-`node command shell` CLI commands. These print the remote command's
-raw output directly to the terminal.
+`node command shell` CLI commands. These print the remote command's raw output
+directly to the terminal.
 
 ## Behavior
 
@@ -62,8 +62,8 @@ $ osapi client node command exec --target _all --command ls --stdout
 
 ### Exit code propagation
 
-The CLI process exits with the remote command's exit code. For
-multi-host, exits non-zero if any host returned non-zero.
+The CLI process exits with the remote command's exit code. For multi-host, exits
+non-zero if any host returned non-zero.
 
 ## Scope
 
@@ -76,10 +76,10 @@ multi-host, exits non-zero if any host returned non-zero.
 
 - `cmd/client_node_command_exec.go` — add flags + output logic
 - `cmd/client_node_command_shell.go` — add flags + output logic
-- `docs/docs/sidebar/usage/cli/client/node/command-exec.md` — document
-  flags with examples
-- `docs/docs/sidebar/usage/cli/client/node/command-shell.md` — document
-  flags with examples
+- `docs/docs/sidebar/usage/cli/client/node/command-exec.md` — document flags
+  with examples
+- `docs/docs/sidebar/usage/cli/client/node/command-shell.md` — document flags
+  with examples
 - Tests for the new output paths
 
 ## Non-goals

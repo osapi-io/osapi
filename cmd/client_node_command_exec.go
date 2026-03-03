@@ -27,6 +27,7 @@ import (
 	"strconv"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -73,26 +74,10 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			}
 
 			if (showStdout || showStderr) && resp.JSON202 != nil {
-				results := make([]cli.RawResult, 0, len(resp.JSON202.Results))
-				maxExitCode := 0
-				for _, r := range resp.JSON202.Results {
-					exitCode := 0
-					if r.ExitCode != nil {
-						exitCode = *r.ExitCode
-					}
-					if exitCode > maxExitCode {
-						maxExitCode = exitCode
-					}
-					results = append(results, cli.RawResult{
-						Hostname: r.Hostname,
-						Stdout:   cli.SafeString(r.Stdout),
-						Stderr:   cli.SafeString(r.Stderr),
-						ExitCode: exitCode,
-					})
-				}
+				results := buildRawResults(resp.JSON202.Results)
 				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
-				if maxExitCode != 0 {
-					os.Exit(maxExitCode)
+				if code := cli.MaxExitCode(results); code != 0 {
+					os.Exit(code)
 				}
 				return
 			}
@@ -136,6 +121,25 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
 	},
+}
+
+func buildRawResults(
+	items []gen.CommandResultItem,
+) []cli.RawResult {
+	results := make([]cli.RawResult, 0, len(items))
+	for _, r := range items {
+		exitCode := 0
+		if r.ExitCode != nil {
+			exitCode = *r.ExitCode
+		}
+		results = append(results, cli.RawResult{
+			Hostname: r.Hostname,
+			Stdout:   cli.SafeString(r.Stdout),
+			Stderr:   cli.SafeString(r.Stderr),
+			ExitCode: exitCode,
+		})
+	}
+	return results
 }
 
 func formatDurationMs(
