@@ -20,7 +20,7 @@ them to be used as appliances.
 
 <br clear="left"/>
 
-## Features
+## ✨ Features
 
 | | |
 |---|---|
@@ -33,7 +33,7 @@ them to be used as appliances.
 | 🖥️ **CLI Parity** | Every API operation has a CLI equivalent with `--json` for scripting |
 | 🏢 **Multi-Tenant** | Namespace isolation lets multiple deployments share a single NATS cluster |
 
-## Documentation
+## 📖 Documentation
 
 [Features][] | [Architecture][] | [Getting Started][] | [API][] | [Usage][] | [Roadmap][]
 
@@ -44,7 +44,7 @@ them to be used as appliances.
 [Usage]: https://osapi-io.github.io/osapi/sidebar/usage
 [Roadmap]: https://osapi-io.github.io/osapi/sidebar/development/roadmap
 
-## License
+## 📄 License
 
 The [MIT][] License.
 
