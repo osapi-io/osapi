@@ -38,93 +38,7 @@ func TestRawOutputPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(RawOutputPublicTestSuite))
 }
 
-func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_SingleHost() {
-	tests := []struct {
-		name    string
-		results []cli.RawResult
-		wantOut string
-		wantErr string
-	}{
-		{
-			name: "when single host stdout only prefixes with hostname",
-			results: []cli.RawResult{
-				{Hostname: "server1", Stdout: "file1\nfile2\n", Stderr: ""},
-			},
-			wantOut: "[server1] file1\n[server1] file2\n",
-			wantErr: "",
-		},
-		{
-			name: "when single host stderr only prints to stderr",
-			results: []cli.RawResult{
-				{Hostname: "server1", Stdout: "", Stderr: "permission denied\n"},
-			},
-			wantOut: "",
-			wantErr: "[server1] permission denied\n",
-		},
-		{
-			name: "when single host both streams prints each",
-			results: []cli.RawResult{
-				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
-			},
-			wantOut: "[server1] output\n",
-			wantErr: "[server1] warning\n",
-		},
-		{
-			name: "when content has embedded empty lines preserves them",
-			results: []cli.RawResult{
-				{Hostname: "server1", Stdout: "line1\n\nline3\n"},
-			},
-			wantOut: "[server1] line1\n[server1] \n[server1] line3\n",
-			wantErr: "",
-		},
-		{
-			name:    "when single host empty output prints nothing",
-			results: []cli.RawResult{{Hostname: "server1"}},
-			wantOut: "",
-			wantErr: "",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var stdout, stderr bytes.Buffer
-
-			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, true, true)
-
-			assert.Equal(suite.T(), tc.wantOut, stdout.String())
-			assert.Equal(suite.T(), tc.wantErr, stderr.String())
-		})
-	}
-}
-
-func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_MultiHost() {
-	tests := []struct {
-		name    string
-		results []cli.RawResult
-		wantOut string
-	}{
-		{
-			name: "when multi host stdout prefixed with hostname",
-			results: []cli.RawResult{
-				{Hostname: "web-01", Stdout: "file1\nfile2\n"},
-				{Hostname: "web-02", Stdout: "file3\n"},
-			},
-			wantOut: "[web-01] file1\n[web-01] file2\n[web-02] file3\n",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var stdout, stderr bytes.Buffer
-
-			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, true, false)
-
-			assert.Equal(suite.T(), tc.wantOut, stdout.String())
-		})
-	}
-}
-
-func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain() {
 	tests := []struct {
 		name       string
 		results    []cli.RawResult
@@ -133,6 +47,76 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
 		wantOut    string
 		wantErr    string
 	}{
+		{
+			name: "when single host stdout only prefixes with hostname",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "file1\nfile2\n", Stderr: ""},
+			},
+			showStdout: true,
+			showStderr: true,
+			wantOut:    "[server1] file1\n[server1] file2\n",
+			wantErr:    "",
+		},
+		{
+			name: "when single host stderr only prints to stderr",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "", Stderr: "permission denied\n"},
+			},
+			showStdout: true,
+			showStderr: true,
+			wantOut:    "",
+			wantErr:    "[server1] permission denied\n",
+		},
+		{
+			name: "when single host both streams prints each",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
+			},
+			showStdout: true,
+			showStderr: true,
+			wantOut:    "[server1] output\n",
+			wantErr:    "[server1] warning\n",
+		},
+		{
+			name: "when content has embedded empty lines preserves them",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "line1\n\nline3\n"},
+			},
+			showStdout: true,
+			showStderr: true,
+			wantOut:    "[server1] line1\n[server1] \n[server1] line3\n",
+			wantErr:    "",
+		},
+		{
+			name:       "when single host empty output prints nothing",
+			results:    []cli.RawResult{{Hostname: "server1"}},
+			showStdout: true,
+			showStderr: true,
+			wantOut:    "",
+			wantErr:    "",
+		},
+		{
+			name: "when multi host stdout prefixed with hostname",
+			results: []cli.RawResult{
+				{Hostname: "web-01", Stdout: "file1\nfile2\n"},
+				{Hostname: "web-02", Stdout: "file3\n"},
+			},
+			showStdout: true,
+			showStderr: false,
+			wantOut:    "[web-01] file1\n[web-01] file2\n[web-02] file3\n",
+			wantErr:    "",
+		},
+		{
+			name: "when multi host stderr prefixed with hostname",
+			results: []cli.RawResult{
+				{Hostname: "web-01", Stderr: "err1\n"},
+				{Hostname: "web-02", Stderr: "err2\n"},
+			},
+			showStdout: false,
+			showStderr: true,
+			wantOut:    "",
+			wantErr:    "[web-01] err1\n[web-02] err2\n",
+		},
 		{
 			name: "when showStdout false suppresses stdout",
 			results: []cli.RawResult{
@@ -177,34 +161,7 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
 	}
 }
 
-func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain_MultiHostStderr() {
-	tests := []struct {
-		name    string
-		results []cli.RawResult
-		wantErr string
-	}{
-		{
-			name: "when multi host stderr prefixed with hostname",
-			results: []cli.RawResult{
-				{Hostname: "web-01", Stderr: "err1\n"},
-				{Hostname: "web-02", Stderr: "err2\n"},
-			},
-			wantErr: "[web-01] err1\n[web-02] err2\n",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var stdout, stderr bytes.Buffer
-
-			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, false, true)
-
-			assert.Equal(suite.T(), tc.wantErr, stderr.String())
-		})
-	}
-}
-
-func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_Styled() {
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutput() {
 	results := []cli.RawResult{
 		{Hostname: "server1", Stdout: "hello\n", Stderr: "warn\n"},
 	}
