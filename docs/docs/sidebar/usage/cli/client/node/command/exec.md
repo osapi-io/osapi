@@ -53,6 +53,42 @@ Use `--json` to get the full untruncated API response:
 $ osapi client node command exec --command hostname --json
 ```
 
+## Raw Output
+
+Use `--stdout` to print only the remote command's stdout, without the
+table wrapper:
+
+```bash
+$ osapi client node command exec --command ls --args "-la" --stdout
+total 48
+drwxr-xr-x  12 john  staff  384 Mar  2 10:00 .
+-rw-r--r--   1 john  staff 1234 Mar  2 09:30 main.go
+```
+
+Use `--stderr` to print only stderr:
+
+```bash
+$ osapi client node command exec --command ls --args "/nonexistent" --stderr
+ls: cannot access '/nonexistent': No such file or directory
+```
+
+Both flags can be combined. When targeting multiple hosts, each line is
+prefixed with the hostname:
+
+```bash
+$ osapi client node command exec --command hostname --target _all --stdout
+  web-01  web-01.example.com
+  web-02  web-02.example.com
+```
+
+The CLI exit code matches the remote command's exit code, making it
+scriptable:
+
+```bash
+$ osapi client node command exec --command "test" --args "-f,/etc/hosts" --stdout && echo exists
+exists
+```
+
 ## Flags
 
 | Flag           | Description                                              | Default |
@@ -62,4 +98,6 @@ $ osapi client node command exec --command hostname --json
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `--stdout`     | Print only remote stdout                                 |         |
+| `--stderr`     | Print only remote stderr                                 |         |
 | `-j, --json`   | Output raw JSON response                                 |         |

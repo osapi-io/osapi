@@ -61,6 +61,33 @@ Use `--json` to get the full untruncated API response:
 $ osapi client node command shell --command "uname -r" --json
 ```
 
+## Raw Output
+
+Use `--stdout` to print only the remote command's stdout:
+
+```bash
+$ osapi client node command shell --command "df -h / | tail -1" --stdout
+/dev/sda1        50G   12G   35G  26% /
+```
+
+Use `--stderr` to print only stderr:
+
+```bash
+$ osapi client node command shell --command "cat /nonexistent" --stderr
+cat: /nonexistent: No such file or directory
+```
+
+Both flags can be combined. When targeting multiple hosts, each line is
+prefixed with the hostname:
+
+```bash
+$ osapi client node command shell --command "uname -r" --target _all --stdout
+  web-01  5.15.0-91-generic
+  web-02  5.15.0-91-generic
+```
+
+The CLI exit code matches the remote command's exit code.
+
 ## Flags
 
 | Flag           | Description                                              | Default |
@@ -69,4 +96,6 @@ $ osapi client node command shell --command "uname -r" --json
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `--stdout`     | Print only remote stdout                                 |         |
+| `--stderr`     | Print only remote stderr                                 |         |
 | `-j, --json`   | Output raw JSON response                                 |         |
