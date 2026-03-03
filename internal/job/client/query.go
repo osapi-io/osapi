@@ -153,7 +153,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -244,7 +244,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -299,7 +299,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -349,7 +349,7 @@ func (c *Client) QueryNetworkPingBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}

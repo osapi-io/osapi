@@ -888,6 +888,84 @@ func (suite *SubjectsPublicTestSuite) TestApplyNamespaceToSubjects() {
 	}
 }
 
+func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
+	agents := []job.AgentInfo{
+		{Hostname: "web-01", Labels: map[string]string{"group": "web.dev.us-east"}},
+		{Hostname: "web-02", Labels: map[string]string{"group": "web.dev.us-west"}},
+		{Hostname: "db-01", Labels: map[string]string{"group": "db.prod"}},
+		{Hostname: "plain-01"},
+	}
+
+	tests := []struct {
+		name   string
+		agents []job.AgentInfo
+		target string
+		want   int
+	}{
+		{
+			name:   "when target is _all returns full count",
+			agents: agents,
+			target: "_all",
+			want:   4,
+		},
+		{
+			name:   "when label exact match",
+			agents: agents,
+			target: "group:web.dev.us-east",
+			want:   1,
+		},
+		{
+			name:   "when label prefix match",
+			agents: agents,
+			target: "group:web",
+			want:   2,
+		},
+		{
+			name:   "when label prefix match at second level",
+			agents: agents,
+			target: "group:web.dev",
+			want:   2,
+		},
+		{
+			name:   "when no agents match label",
+			agents: agents,
+			target: "group:staging",
+			want:   0,
+		},
+		{
+			name:   "when label key does not exist on any agent",
+			agents: agents,
+			target: "region:us-east",
+			want:   0,
+		},
+		{
+			name:   "when agent list is empty",
+			agents: []job.AgentInfo{},
+			target: "_all",
+			want:   0,
+		},
+		{
+			name:   "when target is a hostname returns 0",
+			agents: agents,
+			target: "web-01",
+			want:   0,
+		},
+		{
+			name:   "when target is _any returns 0",
+			agents: agents,
+			target: "_any",
+			want:   0,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := job.CountExpectedAgents(tt.agents, tt.target)
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
 func TestSubjectsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(SubjectsPublicTestSuite))
 }

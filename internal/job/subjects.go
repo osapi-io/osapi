@@ -327,6 +327,34 @@ func BuildLabelSubjects(
 	return subjects
 }
 
+// CountExpectedAgents returns the number of agents expected to respond to a
+// broadcast target. For _all it returns len(agents). For label targets it
+// filters to agents whose label value equals or is a prefix of the target value
+// (mirroring hierarchical NATS subject matching).
+func CountExpectedAgents(
+	agents []AgentInfo,
+	target string,
+) int {
+	routingType, key, value := ParseTarget(target)
+
+	switch routingType {
+	case BroadcastHost:
+		return len(agents)
+	case "label":
+		count := 0
+		for i := range agents {
+			if agentVal, ok := agents[i].Labels[key]; ok {
+				if agentVal == value || strings.HasPrefix(agentVal, value+".") {
+					count++
+				}
+			}
+		}
+		return count
+	default:
+		return 0
+	}
+}
+
 // ApplyNamespaceToInfraName prefixes an infrastructure name (stream, KV bucket)
 // with the namespace. Returns the name unchanged if namespace is empty.
 //

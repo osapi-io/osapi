@@ -92,7 +92,7 @@ func (c *Client) ModifyCommandExecBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -174,7 +174,7 @@ func (c *Client) ModifyCommandShellBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}

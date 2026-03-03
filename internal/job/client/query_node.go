@@ -74,7 +74,7 @@ func (c *Client) QueryNodeDiskBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -141,7 +141,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -208,7 +208,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -275,7 +275,7 @@ func (c *Client) QueryNodeOSBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
@@ -342,7 +342,7 @@ func (c *Client) QueryNodeUptimeBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}

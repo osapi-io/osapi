@@ -1475,12 +1475,13 @@ func (s *QueryPublicTestSuite) TestQueryNodeDisk() {
 
 func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 	tests := []struct {
-		name          string
-		timeout       time.Duration
-		opts          *publishAndCollectMockOpts
-		expectError   bool
-		errorContains string
-		expectedCount int
+		name            string
+		timeout         time.Duration
+		opts            *publishAndCollectMockOpts
+		setupRegistryKV func(*jobmocks.MockKeyValue)
+		expectError     bool
+		errorContains   string
+		expectedCount   int
 	}{
 		{
 			name:    "multiple hosts respond",
@@ -1490,6 +1491,34 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 					`{"status":"completed","hostname":"server1","data":{"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}}`,
 					`{"status":"completed","hostname":"server2","data":{"disks":[{"Name":"/dev/sdb1","Total":200000,"Used":100000,"Free":100000}]}}`,
 				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "early completion when all registered agents respond",
+			timeout: 10 * time.Second,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"disks":[{"Name":"/dev/sda1","Total":100000,"Used":50000,"Free":50000}]}}`,
+					`{"status":"completed","hostname":"server2","data":{"disks":[{"Name":"/dev/sdb1","Total":200000,"Used":100000,"Free":100000}]}}`,
+				},
+			},
+			setupRegistryKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1", "agents.server2"}, nil)
+
+				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry1.EXPECT().Value().Return([]byte(`{"hostname":"server1"}`))
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry1, nil)
+
+				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry2.EXPECT().Value().Return([]byte(`{"hostname":"server2"}`))
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server2").
+					Return(entry2, nil)
 			},
 			expectedCount: 2,
 		},
@@ -1547,6 +1576,13 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 				Timeout:  timeout,
 				KVBucket: s.mockKV,
 			}
+
+			if tt.setupRegistryKV != nil {
+				mockRegistryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				tt.setupRegistryKV(mockRegistryKV)
+				opts.RegistryKV = mockRegistryKV
+			}
+
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
 

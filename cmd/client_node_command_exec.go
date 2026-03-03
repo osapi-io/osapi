@@ -74,6 +74,7 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			}
 
 			if (showStdout || showStderr) && resp.JSON202 != nil {
+				fmt.Println()
 				results := buildRawResults(resp.JSON202.Results)
 				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
 				if code := cli.MaxExitCode(results); code != 0 {
