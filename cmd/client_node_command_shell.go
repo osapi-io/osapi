@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
@@ -39,6 +40,8 @@ var clientNodeCommandShellCmd = &cobra.Command{
 		command, _ := cmd.Flags().GetString("command")
 		cwd, _ := cmd.Flags().GetString("cwd")
 		timeout, _ := cmd.Flags().GetInt("timeout")
+		showStdout, _ := cmd.Flags().GetBool("stdout")
+		showStderr, _ := cmd.Flags().GetBool("stderr")
 
 		if host == "_all" {
 			fmt.Print("This will execute shell command on ALL hosts. Continue? [y/N] ")
@@ -63,6 +66,15 @@ var clientNodeCommandShellCmd = &cobra.Command{
 		case http.StatusAccepted:
 			if jsonOutput {
 				fmt.Println(string(resp.Body))
+				return
+			}
+
+			if (showStdout || showStderr) && resp.JSON202 != nil {
+				results := buildRawResults(resp.JSON202.Results)
+				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
+				if code := cli.MaxExitCode(results); code != 0 {
+					os.Exit(code)
+				}
 				return
 			}
 
@@ -116,6 +128,10 @@ func init() {
 		String("cwd", "", "Working directory for the command")
 	clientNodeCommandShellCmd.PersistentFlags().
 		Int("timeout", 30, "Timeout in seconds (default 30, max 300)")
+	clientNodeCommandShellCmd.PersistentFlags().
+		Bool("stdout", false, "Print only remote stdout")
+	clientNodeCommandShellCmd.PersistentFlags().
+		Bool("stderr", false, "Print only remote stderr")
 
 	_ = clientNodeCommandShellCmd.MarkPersistentFlagRequired("command")
 }

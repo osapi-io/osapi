@@ -23,9 +23,11 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -41,6 +43,8 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		args, _ := cmd.Flags().GetStringSlice("args")
 		cwd, _ := cmd.Flags().GetString("cwd")
 		timeout, _ := cmd.Flags().GetInt("timeout")
+		showStdout, _ := cmd.Flags().GetBool("stdout")
+		showStderr, _ := cmd.Flags().GetBool("stderr")
 
 		if host == "_all" {
 			fmt.Print("This will execute command on ALL hosts. Continue? [y/N] ")
@@ -66,6 +70,15 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		case http.StatusAccepted:
 			if jsonOutput {
 				fmt.Println(string(resp.Body))
+				return
+			}
+
+			if (showStdout || showStderr) && resp.JSON202 != nil {
+				results := buildRawResults(resp.JSON202.Results)
+				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
+				if code := cli.MaxExitCode(results); code != 0 {
+					os.Exit(code)
+				}
 				return
 			}
 
@@ -110,6 +123,25 @@ var clientNodeCommandExecCmd = &cobra.Command{
 	},
 }
 
+func buildRawResults(
+	items []gen.CommandResultItem,
+) []cli.RawResult {
+	results := make([]cli.RawResult, 0, len(items))
+	for _, r := range items {
+		exitCode := 0
+		if r.ExitCode != nil {
+			exitCode = *r.ExitCode
+		}
+		results = append(results, cli.RawResult{
+			Hostname: r.Hostname,
+			Stdout:   cli.SafeString(r.Stdout),
+			Stderr:   cli.SafeString(r.Stderr),
+			ExitCode: exitCode,
+		})
+	}
+	return results
+}
+
 func formatDurationMs(
 	ms *int64,
 ) string {
@@ -130,6 +162,10 @@ func init() {
 		String("cwd", "", "Working directory for the command")
 	clientNodeCommandExecCmd.PersistentFlags().
 		Int("timeout", 30, "Timeout in seconds (default 30, max 300)")
+	clientNodeCommandExecCmd.PersistentFlags().
+		Bool("stdout", false, "Print only remote stdout")
+	clientNodeCommandExecCmd.PersistentFlags().
+		Bool("stderr", false, "Print only remote stderr")
 
 	_ = clientNodeCommandExecCmd.MarkPersistentFlagRequired("command")
 }
