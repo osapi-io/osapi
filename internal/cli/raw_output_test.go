@@ -1,0 +1,205 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package cli_test
+
+import (
+	"bytes"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/cli"
+)
+
+type RawOutputPublicTestSuite struct {
+	suite.Suite
+}
+
+func TestRawOutputPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(RawOutputPublicTestSuite))
+}
+
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_SingleHost() {
+	tests := []struct {
+		name    string
+		results []cli.RawResult
+		wantOut string
+		wantErr string
+	}{
+		{
+			name: "when single host stdout only prints without prefix",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "file1\nfile2\n", Stderr: ""},
+			},
+			wantOut: "file1\nfile2\n",
+			wantErr: "",
+		},
+		{
+			name: "when single host stderr only prints to stderr",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "", Stderr: "permission denied\n"},
+			},
+			wantOut: "",
+			wantErr: "permission denied\n",
+		},
+		{
+			name: "when single host both streams prints each",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
+			},
+			wantOut: "output\n",
+			wantErr: "warning\n",
+		},
+		{
+			name: "when content has embedded empty lines preserves them",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "line1\n\nline3\n"},
+			},
+			wantOut: "line1\n\nline3\n",
+			wantErr: "",
+		},
+		{
+			name:    "when single host empty output prints nothing",
+			results: []cli.RawResult{{Hostname: "server1"}},
+			wantOut: "",
+			wantErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var stdout, stderr bytes.Buffer
+
+			cli.PrintRawOutput(&stdout, &stderr, tc.results, true, true)
+
+			assert.Equal(suite.T(), tc.wantOut, stdout.String())
+			assert.Equal(suite.T(), tc.wantErr, stderr.String())
+		})
+	}
+}
+
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_MultiHost() {
+	tests := []struct {
+		name    string
+		results []cli.RawResult
+		wantOut string
+	}{
+		{
+			name: "when multi host stdout prefixed with hostname",
+			results: []cli.RawResult{
+				{Hostname: "web-01", Stdout: "file1\nfile2\n"},
+				{Hostname: "web-02", Stdout: "file3\n"},
+			},
+			wantOut: "web-01  file1\nweb-01  file2\nweb-02  file3\n",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var stdout, stderr bytes.Buffer
+
+			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, true, false)
+
+			assert.Equal(suite.T(), tc.wantOut, stdout.String())
+		})
+	}
+}
+
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_ShowFlags() {
+	tests := []struct {
+		name       string
+		results    []cli.RawResult
+		showStdout bool
+		showStderr bool
+		wantOut    string
+		wantErr    string
+	}{
+		{
+			name: "when showStdout false suppresses stdout",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
+			},
+			showStdout: false,
+			showStderr: true,
+			wantOut:    "",
+			wantErr:    "warning\n",
+		},
+		{
+			name: "when showStderr false suppresses stderr",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
+			},
+			showStdout: true,
+			showStderr: false,
+			wantOut:    "output\n",
+			wantErr:    "",
+		},
+		{
+			name: "when both false prints nothing",
+			results: []cli.RawResult{
+				{Hostname: "server1", Stdout: "output\n", Stderr: "warning\n"},
+			},
+			showStdout: false,
+			showStderr: false,
+			wantOut:    "",
+			wantErr:    "",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var stdout, stderr bytes.Buffer
+
+			cli.PrintRawOutput(&stdout, &stderr, tc.results, tc.showStdout, tc.showStderr)
+
+			assert.Equal(suite.T(), tc.wantOut, stdout.String())
+			assert.Equal(suite.T(), tc.wantErr, stderr.String())
+		})
+	}
+}
+
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain_MultiHostStderr() {
+	tests := []struct {
+		name    string
+		results []cli.RawResult
+		wantErr string
+	}{
+		{
+			name: "when multi host stderr prefixed with hostname",
+			results: []cli.RawResult{
+				{Hostname: "web-01", Stderr: "err1\n"},
+				{Hostname: "web-02", Stderr: "err2\n"},
+			},
+			wantErr: "web-01  err1\nweb-02  err2\n",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var stdout, stderr bytes.Buffer
+
+			cli.PrintRawOutputPlain(&stdout, &stderr, tc.results, false, true)
+
+			assert.Equal(suite.T(), tc.wantErr, stderr.String())
+		})
+	}
+}
