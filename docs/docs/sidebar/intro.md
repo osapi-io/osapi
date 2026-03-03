@@ -15,6 +15,14 @@ file, and get a REST API and CLI for querying and changing system configuration
 
 <br clear="left"/>
 
+## Install
+
+```bash
+go install github.com/retr0h/osapi@latest
+```
+
+Or download a prebuilt binary from the [releases][] page.
+
 ## Quickstart
 
 Install OSAPI and start all three components in a single process:
@@ -77,4 +85,5 @@ osapi client health
 <!-- prettier-ignore-start -->
 [Cockpit]: https://cockpit-project.org/
 [webmin]: https://webmin.com/
+[releases]: https://github.com/retr0h/osapi/releases
 <!-- prettier-ignore-end -->

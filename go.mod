@@ -3,6 +3,7 @@ module github.com/retr0h/osapi
 go 1.25.0
 
 require (
+	github.com/caarlos0/go-version v0.2.2
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/ggwhite/go-masker/v2 v2.2.0
