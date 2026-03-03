@@ -20,6 +20,8 @@ them to be used as appliances.
 
 <br clear="left"/>
 
+<img src="asset/demo.gif" alt="OSAPI demo" />
+
 ## ✨ Features
 
 | | |
