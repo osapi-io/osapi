@@ -204,6 +204,20 @@ func (suite *RawOutputPublicTestSuite) TestPrintRawOutputPlain_MultiHostStderr()
 	}
 }
 
+func (suite *RawOutputPublicTestSuite) TestPrintRawOutput_Styled() {
+	results := []cli.RawResult{
+		{Hostname: "server1", Stdout: "hello\n", Stderr: "warn\n"},
+	}
+
+	var stdout, stderr bytes.Buffer
+	cli.PrintRawOutput(&stdout, &stderr, results, true, true)
+
+	assert.Contains(suite.T(), stdout.String(), "server1")
+	assert.Contains(suite.T(), stdout.String(), "hello")
+	assert.Contains(suite.T(), stderr.String(), "server1")
+	assert.Contains(suite.T(), stderr.String(), "warn")
+}
+
 func (suite *RawOutputPublicTestSuite) TestMaxExitCode() {
 	tests := []struct {
 		name    string
