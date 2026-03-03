@@ -64,13 +64,13 @@ func PrintRawOutputPlain(
 func MaxExitCode(
 	results []RawResult,
 ) int {
-	max := 0
+	maxCode := 0
 	for _, r := range results {
-		if r.ExitCode > max {
-			max = r.ExitCode
+		if r.ExitCode > maxCode {
+			maxCode = r.ExitCode
 		}
 	}
-	return max
+	return maxCode
 }
 
 func printRaw(
@@ -110,6 +110,6 @@ func writeLines(
 		if styled {
 			prefix = DimStyle.Render(prefix)
 		}
-		fmt.Fprintf(w, "%s %s\n", prefix, line)
+		_, _ = fmt.Fprintf(w, "%s %s\n", prefix, line)
 	}
 }
