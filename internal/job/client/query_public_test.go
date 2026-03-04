@@ -1131,13 +1131,15 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 
 func (s *QueryPublicTestSuite) TestListAgents() {
 	tests := []struct {
-		name          string
-		setupMockKV   func(*jobmocks.MockKeyValue)
-		useRegistryKV bool
-		expectError   bool
-		errorContains string
-		expectedCount int
-		validateFunc  func([]job.AgentInfo)
+		name             string
+		setupMockKV      func(*jobmocks.MockKeyValue)
+		setupMockFactsKV func(*jobmocks.MockKeyValue)
+		useRegistryKV    bool
+		useFactsKV       bool
+		expectError      bool
+		errorContains    string
+		expectedCount    int
+		validateFunc     func([]job.AgentInfo)
 	}{
 		{
 			name:          "when registryKV is nil returns error",
@@ -1252,6 +1254,111 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			},
 			expectedCount: 1,
 		},
+		{
+			name:          "when factsKV has data merges facts into agent info",
+			useRegistryKV: true,
+			useFactsKV:    true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return(
+					[]byte(
+						`{"architecture":"x86_64","kernel_version":"6.1.0","cpu_count":8,"fqdn":"server1.example.com","service_mgr":"systemd","package_mgr":"apt","interfaces":[{"name":"eth0","ipv4":"10.0.0.1"}],"facts":{"custom_key":"custom_value"}}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+			},
+			expectedCount: 1,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+				s.Equal("x86_64", agents[0].Architecture)
+				s.Equal("6.1.0", agents[0].KernelVersion)
+				s.Equal(8, agents[0].CPUCount)
+				s.Equal("server1.example.com", agents[0].FQDN)
+				s.Equal("systemd", agents[0].ServiceMgr)
+				s.Equal("apt", agents[0].PackageMgr)
+				s.Len(agents[0].Interfaces, 1)
+				s.Equal("eth0", agents[0].Interfaces[0].Name)
+				s.Equal("custom_value", agents[0].Facts["custom_key"])
+			},
+		},
+		{
+			name:          "when factsKV is nil degrades gracefully",
+			useRegistryKV: true,
+			useFactsKV:    false,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			expectedCount: 1,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+				s.Empty(agents[0].Architecture)
+				s.Empty(agents[0].KernelVersion)
+				s.Zero(agents[0].CPUCount)
+				s.Empty(agents[0].FQDN)
+				s.Nil(agents[0].Interfaces)
+				s.Nil(agents[0].Facts)
+			},
+		},
+		{
+			name:          "when factsKV Get returns error degrades gracefully",
+			useRegistryKV: true,
+			useFactsKV:    true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(nil, errors.New("key not found"))
+			},
+			expectedCount: 1,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+				s.Empty(agents[0].Architecture)
+				s.Empty(agents[0].KernelVersion)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1267,6 +1374,13 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			}
 			if tt.useRegistryKV {
 				opts.RegistryKV = registryKV
+			}
+			if tt.useFactsKV {
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				if tt.setupMockFactsKV != nil {
+					tt.setupMockFactsKV(factsKV)
+				}
+				opts.FactsKV = factsKV
 			}
 
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
@@ -1293,13 +1407,15 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 
 func (s *QueryPublicTestSuite) TestGetAgent() {
 	tests := []struct {
-		name          string
-		hostname      string
-		setupMockKV   func(*jobmocks.MockKeyValue)
-		useRegistryKV bool
-		expectError   bool
-		errorContains string
-		validateFunc  func(*job.AgentInfo)
+		name             string
+		hostname         string
+		setupMockKV      func(*jobmocks.MockKeyValue)
+		setupMockFactsKV func(*jobmocks.MockKeyValue)
+		useRegistryKV    bool
+		useFactsKV       bool
+		expectError      bool
+		errorContains    string
+		validateFunc     func(*job.AgentInfo)
 	}{
 		{
 			name:          "when registryKV is nil returns error",
@@ -1358,6 +1474,100 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 			expectError:   true,
 			errorContains: "failed to unmarshal",
 		},
+		{
+			name:          "when factsKV has data merges facts into agent info",
+			hostname:      "server1",
+			useRegistryKV: true,
+			useFactsKV:    true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","labels":{"group":"web"},"registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return(
+					[]byte(
+						`{"architecture":"aarch64","kernel_version":"5.15.0","cpu_count":4,"fqdn":"server1.local","service_mgr":"systemd","package_mgr":"yum","interfaces":[{"name":"ens3","ipv4":"192.168.1.10","mac":"aa:bb:cc:dd:ee:ff"}],"facts":{"env":"prod"}}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Equal("aarch64", info.Architecture)
+				s.Equal("5.15.0", info.KernelVersion)
+				s.Equal(4, info.CPUCount)
+				s.Equal("server1.local", info.FQDN)
+				s.Equal("systemd", info.ServiceMgr)
+				s.Equal("yum", info.PackageMgr)
+				s.Len(info.Interfaces, 1)
+				s.Equal("ens3", info.Interfaces[0].Name)
+				s.Equal("aa:bb:cc:dd:ee:ff", info.Interfaces[0].MAC)
+				s.Equal("prod", info.Facts["env"])
+			},
+		},
+		{
+			name:          "when factsKV is nil degrades gracefully",
+			hostname:      "server1",
+			useRegistryKV: true,
+			useFactsKV:    false,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Empty(info.Architecture)
+				s.Empty(info.KernelVersion)
+				s.Zero(info.CPUCount)
+				s.Empty(info.FQDN)
+				s.Nil(info.Interfaces)
+				s.Nil(info.Facts)
+			},
+		},
+		{
+			name:          "when factsKV Get returns error degrades gracefully",
+			hostname:      "server1",
+			useRegistryKV: true,
+			useFactsKV:    true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(nil, errors.New("key not found"))
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Empty(info.Architecture)
+				s.Empty(info.KernelVersion)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1373,6 +1583,13 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 			}
 			if tt.useRegistryKV {
 				opts.RegistryKV = registryKV
+			}
+			if tt.useFactsKV {
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				if tt.setupMockFactsKV != nil {
+					tt.setupMockFactsKV(factsKV)
+				}
+				opts.FactsKV = factsKV
 			}
 
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
