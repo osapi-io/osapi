@@ -41,6 +41,7 @@ type Client struct {
 	natsClient messaging.NATSClient
 	kv         jetstream.KeyValue
 	registryKV jetstream.KeyValue
+	factsKV    jetstream.KeyValue
 	timeout    time.Duration
 	streamName string
 }
@@ -53,6 +54,8 @@ type Options struct {
 	KVBucket jetstream.KeyValue
 	// RegistryKV is the KV bucket for agent registry (optional).
 	RegistryKV jetstream.KeyValue
+	// FactsKV is the KV bucket for agent facts (optional).
+	FactsKV jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
 }
@@ -75,6 +78,7 @@ func New(
 		natsClient: natsClient,
 		kv:         opts.KVBucket,
 		registryKV: opts.RegistryKV,
+		factsKV:    opts.FactsKV,
 		streamName: opts.StreamName,
 		timeout:    opts.Timeout,
 	}, nil

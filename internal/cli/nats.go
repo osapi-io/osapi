@@ -91,6 +91,22 @@ func BuildRegistryKVConfig(
 	}
 }
 
+// BuildFactsKVConfig builds a jetstream.KeyValueConfig from facts config values.
+func BuildFactsKVConfig(
+	namespace string,
+	factsCfg config.NATSFacts,
+) jetstream.KeyValueConfig {
+	factsBucket := job.ApplyNamespaceToInfraName(namespace, factsCfg.Bucket)
+	factsTTL, _ := time.ParseDuration(factsCfg.TTL)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   factsBucket,
+		TTL:      factsTTL,
+		Storage:  ParseJetstreamStorageType(factsCfg.Storage),
+		Replicas: factsCfg.Replicas,
+	}
+}
+
 // BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
 func BuildAuditKVConfig(
 	namespace string,

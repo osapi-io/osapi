@@ -73,6 +73,7 @@ type natsBundle struct {
 	jobClient  jobclient.JobClient
 	jobsKV     jetstream.KeyValue
 	registryKV jetstream.KeyValue
+	factsKV    jetstream.KeyValue
 }
 
 // setupAPIServer connects to NATS, creates the API server with all handlers,
@@ -111,7 +112,7 @@ func setupAPIServer(
 	checker := newHealthChecker(b.nc, b.jobsKV)
 	auditStore, auditKV, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	metricsProvider := newMetricsProvider(
-		b.nc, b.jobsKV, b.registryKV, auditKV, streamName, b.jobClient,
+		b.nc, b.jobsKV, b.registryKV, b.factsKV, auditKV, streamName, b.jobClient,
 	)
 
 	sm := api.New(appConfig, log, serverOpts...)
@@ -153,10 +154,20 @@ func connectNATSBundle(
 		cli.LogFatal(log, "failed to create registry KV bucket", err)
 	}
 
+	var factsKV jetstream.KeyValue
+	if appConfig.NATS.Facts.Bucket != "" {
+		factsKVConfig := cli.BuildFactsKVConfig(namespace, appConfig.NATS.Facts)
+		factsKV, err = nc.CreateOrUpdateKVBucketWithConfig(ctx, factsKVConfig)
+		if err != nil {
+			cli.LogFatal(log, "failed to create facts KV bucket", err)
+		}
+	}
+
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
 		Timeout:    30 * time.Second,
 		KVBucket:   jobsKV,
 		RegistryKV: registryKV,
+		FactsKV:    factsKV,
 		StreamName: streamName,
 	})
 	if err != nil {
@@ -168,6 +179,7 @@ func connectNATSBundle(
 		jobClient:  jc,
 		jobsKV:     jobsKV,
 		registryKV: registryKV,
+		factsKV:    factsKV,
 	}
 }
 
@@ -203,6 +215,7 @@ func newMetricsProvider(
 	nc messaging.NATSClient,
 	jobsKV jetstream.KeyValue,
 	registryKV jetstream.KeyValue,
+	factsKV jetstream.KeyValue,
 	auditKV jetstream.KeyValue,
 	streamName string,
 	jc jobclient.JobClient,
@@ -241,7 +254,7 @@ func newMetricsProvider(
 			}, nil
 		},
 		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
-			buckets := []jetstream.KeyValue{jobsKV, registryKV, auditKV}
+			buckets := []jetstream.KeyValue{jobsKV, registryKV, factsKV, auditKV}
 			results := make([]health.KVMetrics, 0, len(buckets))
 
 			for _, kv := range buckets {
