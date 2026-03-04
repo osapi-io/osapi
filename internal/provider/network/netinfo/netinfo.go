@@ -74,6 +74,15 @@ func (n *Netinfo) GetInterfaces() ([]job.NetworkInterface, error) {
 			}
 		}
 
+		switch {
+		case ni.IPv4 != "" && ni.IPv6 != "":
+			ni.Family = "dual"
+		case ni.IPv6 != "":
+			ni.Family = "inet6"
+		case ni.IPv4 != "":
+			ni.Family = "inet"
+		}
+
 		result = append(result, ni)
 	}
 

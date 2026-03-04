@@ -50,16 +50,18 @@ func (suite *TypesPublicTestSuite) TestNetworkInterfaceJSONRoundTrip() {
 		{
 			name: "when all fields are set",
 			iface: job.NetworkInterface{
-				Name: "eth0",
-				IPv4: "192.168.1.100",
-				IPv6: "fe80::1",
-				MAC:  "00:1a:2b:3c:4d:5e",
+				Name:   "eth0",
+				IPv4:   "192.168.1.100",
+				IPv6:   "fe80::1",
+				MAC:    "00:1a:2b:3c:4d:5e",
+				Family: "dual",
 			},
 			validateFunc: func(result job.NetworkInterface) {
 				suite.Equal("eth0", result.Name)
 				suite.Equal("192.168.1.100", result.IPv4)
 				suite.Equal("fe80::1", result.IPv6)
 				suite.Equal("00:1a:2b:3c:4d:5e", result.MAC)
+				suite.Equal("dual", result.Family)
 			},
 		},
 		{
@@ -72,6 +74,7 @@ func (suite *TypesPublicTestSuite) TestNetworkInterfaceJSONRoundTrip() {
 				suite.Empty(result.IPv4)
 				suite.Empty(result.IPv6)
 				suite.Empty(result.MAC)
+				suite.Empty(result.Family)
 			},
 		},
 		{
@@ -231,7 +234,7 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				ServiceMgr:    "systemd",
 				PackageMgr:    "apt",
 				Interfaces: []job.NetworkInterface{
-					{Name: "eth0", IPv4: "10.0.0.1", IPv6: "fe80::1", MAC: "aa:bb:cc:dd:ee:ff"},
+					{Name: "eth0", IPv4: "10.0.0.1", IPv6: "fe80::1", MAC: "aa:bb:cc:dd:ee:ff", Family: "dual"},
 				},
 				Facts: map[string]any{
 					"custom": "value",
@@ -251,6 +254,7 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				suite.Equal("10.0.0.1", result.Interfaces[0].IPv4)
 				suite.Equal("fe80::1", result.Interfaces[0].IPv6)
 				suite.Equal("aa:bb:cc:dd:ee:ff", result.Interfaces[0].MAC)
+				suite.Equal("dual", result.Interfaces[0].Family)
 				suite.Equal("value", result.Facts["custom"])
 			},
 		},

@@ -251,10 +251,11 @@ type NodeShutdownData struct {
 
 // NetworkInterface represents a network interface with its address.
 type NetworkInterface struct {
-	Name string `json:"name"`
-	IPv4 string `json:"ipv4,omitempty"`
-	IPv6 string `json:"ipv6,omitempty"`
-	MAC  string `json:"mac,omitempty"`
+	Name   string `json:"name"`
+	IPv4   string `json:"ipv4,omitempty"`
+	IPv6   string `json:"ipv6,omitempty"`
+	MAC    string `json:"mac,omitempty"`
+	Family string `json:"family,omitempty"`
 }
 
 // FactsRegistration represents an agent's facts entry in the facts KV bucket.
