@@ -43,6 +43,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 	tests := []struct {
 		name         string
 		setupMock    func() func() ([]net.Interface, error)
+		addrsFn      func(iface net.Interface) ([]net.Addr, error)
 		wantErr      bool
 		wantErrType  error
 		validateFunc func(result []job.NetworkInterface)
@@ -103,6 +104,171 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 			},
 		},
 		{
+			name: "when interface has IPv4 address",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return []net.Addr{
+					&net.IPNet{IP: net.ParseIP("192.168.1.10"), Mask: net.CIDRMask(24, 32)},
+				}, nil
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Equal("192.168.1.10", result[0].IPv4)
+				suite.Empty(result[0].IPv6)
+				suite.Equal("inet", result[0].Family)
+			},
+		},
+		{
+			name: "when interface has IPv6 address",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return []net.Addr{
+					&net.IPNet{IP: net.ParseIP("fe80::1"), Mask: net.CIDRMask(64, 128)},
+				}, nil
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Empty(result[0].IPv4)
+				suite.Equal("fe80::1", result[0].IPv6)
+				suite.Equal("inet6", result[0].Family)
+			},
+		},
+		{
+			name: "when interface has both IPv4 and IPv6 addresses",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return []net.Addr{
+					&net.IPNet{IP: net.ParseIP("10.0.0.5"), Mask: net.CIDRMask(24, 32)},
+					&net.IPNet{IP: net.ParseIP("fe80::1"), Mask: net.CIDRMask(64, 128)},
+				}, nil
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Equal("10.0.0.5", result[0].IPv4)
+				suite.Equal("fe80::1", result[0].IPv6)
+				suite.Equal("dual", result[0].Family)
+			},
+		},
+		{
+			name: "when interface has no addresses",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return []net.Addr{}, nil
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Empty(result[0].IPv4)
+				suite.Empty(result[0].IPv6)
+				suite.Empty(result[0].Family)
+			},
+		},
+		{
+			name: "when AddrsFn returns error",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return nil, assert.AnError
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Empty(result[0].IPv4)
+				suite.Empty(result[0].IPv6)
+				suite.Empty(result[0].Family)
+			},
+		},
+		{
+			name: "when addr is not *net.IPNet",
+			setupMock: func() func() ([]net.Interface, error) {
+				return func() ([]net.Interface, error) {
+					return []net.Interface{
+						{
+							Index:        2,
+							MTU:          1500,
+							Name:         "eth0",
+							HardwareAddr: net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
+							Flags:        net.FlagUp | net.FlagBroadcast,
+						},
+					}, nil
+				}
+			},
+			addrsFn: func(_ net.Interface) ([]net.Addr, error) {
+				return []net.Addr{
+					&net.IPAddr{IP: net.ParseIP("192.168.1.10")},
+				}, nil
+			},
+			wantErr: false,
+			validateFunc: func(result []job.NetworkInterface) {
+				suite.Require().Len(result, 1)
+				suite.Empty(result[0].IPv4)
+				suite.Empty(result[0].IPv6)
+				suite.Empty(result[0].Family)
+			},
+		},
+		{
 			name: "when net.Interfaces errors",
 			setupMock: func() func() ([]net.Interface, error) {
 				return func() ([]net.Interface, error) {
@@ -120,6 +286,10 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 
 			if tc.setupMock != nil {
 				n.InterfacesFn = tc.setupMock()
+			}
+
+			if tc.addrsFn != nil {
+				n.AddrsFn = tc.addrsFn
 			}
 
 			got, err := n.GetInterfaces()

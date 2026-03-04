@@ -30,12 +30,16 @@ import (
 // Netinfo implements the Provider interface for network interface information.
 type Netinfo struct {
 	InterfacesFn func() ([]net.Interface, error)
+	AddrsFn      func(iface net.Interface) ([]net.Addr, error)
 }
 
 // New factory to create a new Netinfo instance.
 func New() *Netinfo {
 	return &Netinfo{
 		InterfacesFn: net.Interfaces,
+		AddrsFn: func(iface net.Interface) ([]net.Addr, error) {
+			return iface.Addrs()
+		},
 	}
 }
 
@@ -59,7 +63,7 @@ func (n *Netinfo) GetInterfaces() ([]job.NetworkInterface, error) {
 			MAC:  iface.HardwareAddr.String(),
 		}
 
-		addrs, err := iface.Addrs()
+		addrs, err := n.AddrsFn(iface)
 		if err == nil {
 			for _, addr := range addrs {
 				ipNet, ok := addr.(*net.IPNet)

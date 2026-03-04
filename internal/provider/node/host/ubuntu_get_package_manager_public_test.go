@@ -38,10 +38,11 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TearDownTest() {}
 
 func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 	tests := []struct {
-		name      string
-		setupMock func(u *host.Ubuntu)
-		want      interface{}
-		wantErr   bool
+		name         string
+		setupMock    func(u *host.Ubuntu)
+		want         interface{}
+		wantErr      bool
+		validateFunc func(got string)
 	}{
 		{
 			name: "when apt detected",
@@ -92,6 +93,20 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 			want:    "unknown",
 			wantErr: false,
 		},
+		{
+			name: "when ExecNotFoundError formats message",
+			setupMock: func(u *host.Ubuntu) {
+				u.LookPathFn = func(file string) (string, error) {
+					return "", &host.ExecNotFoundError{Name: file}
+				}
+			},
+			want:    "unknown",
+			wantErr: false,
+			validateFunc: func(_ string) {
+				err := &host.ExecNotFoundError{Name: "apt"}
+				suite.Equal("executable file not found: apt", err.Error())
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -110,6 +125,10 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 			} else {
 				suite.NoError(err)
 				suite.Equal(tc.want, got)
+			}
+
+			if tc.validateFunc != nil {
+				tc.validateFunc(got)
 			}
 		})
 	}
