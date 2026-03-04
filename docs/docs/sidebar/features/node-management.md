@@ -15,20 +15,26 @@ OSAPI separates agent fleet discovery from node system queries:
 
 - **Agent** commands (`agent list`, `agent get`) read directly from the NATS KV
   heartbeat registry. They show which agents are online, their labels, and
-  lightweight metrics from the last heartbeat. No jobs are created.
+  lightweight metrics from the last heartbeat. No jobs are created. Agents
+  also expose typed **system facts** (architecture, kernel version, FQDN,
+  CPU count, network interfaces, service manager, package manager) gathered
+  every 60 seconds via providers and stored in a separate `agent-facts` KV
+  bucket with a 5-minute TTL. The API merges registry and facts data into a
+  single `AgentInfo` response.
 - **Node** commands (`node hostname`, `node status`) dispatch jobs to agents
   that execute system commands and return detailed results (disk usage, full
   memory breakdown, etc.).
 
 ## What It Manages
 
-| Resource | Description                                        |
-| -------- | -------------------------------------------------- |
-| Hostname | System hostname                                    |
-| Status   | Uptime, OS name and version, kernel, platform info |
-| Disk     | Per-mount usage (total, used, free, percent)       |
-| Memory   | RAM and swap usage (total, used, free, percent)    |
-| Load     | 1-, 5-, and 15-minute load averages                |
+| Resource     | Description                                              |
+| ------------ | -------------------------------------------------------- |
+| Hostname     | System hostname                                          |
+| Status       | Uptime, OS name and version, kernel, platform info       |
+| Disk         | Per-mount usage (total, used, free, percent)             |
+| Memory       | RAM and swap usage (total, used, free, percent)          |
+| Load         | 1-, 5-, and 15-minute load averages                      |
+| System Facts | Architecture, kernel, FQDN, CPUs, NICs, service/pkg mgr |
 
 ## How It Works
 
