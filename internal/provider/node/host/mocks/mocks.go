@@ -45,5 +45,12 @@ func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 		Version:      "24.04",
 	}, nil).AnyTimes()
 
+	mock.EXPECT().GetArchitecture().Return("amd64", nil).AnyTimes()
+	mock.EXPECT().GetKernelVersion().Return("5.15.0-91-generic", nil).AnyTimes()
+	mock.EXPECT().GetFQDN().Return("default-hostname.local", nil).AnyTimes()
+	mock.EXPECT().GetCPUCount().Return(4, nil).AnyTimes()
+	mock.EXPECT().GetServiceManager().Return("systemd", nil).AnyTimes()
+	mock.EXPECT().GetPackageManager().Return("apt", nil).AnyTimes()
+
 	return mock
 }

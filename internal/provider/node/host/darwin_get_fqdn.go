@@ -21,29 +21,15 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
-
-	"github.com/shirou/gopsutil/v4/host"
+	"fmt"
 )
 
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
-}
-
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+// GetFQDN retrieves the fully qualified domain name of the system.
+// It returns the hostname as reported by the operating system.
+func (d *Darwin) GetFQDN() (string, error) {
+	hostname, err := d.HostnameFn()
+	if err != nil {
+		return "", fmt.Errorf("failed to get FQDN: %w", err)
 	}
+	return hostname, nil
 }

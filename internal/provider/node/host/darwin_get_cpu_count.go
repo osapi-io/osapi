@@ -20,30 +20,8 @@
 
 package host
 
-import (
-	"os"
-	"os/exec"
-	"runtime"
-
-	"github.com/shirou/gopsutil/v4/host"
-)
-
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
-}
-
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
-	}
+// GetCPUCount retrieves the number of logical CPUs available to the process.
+// It uses runtime.NumCPU under the hood.
+func (d *Darwin) GetCPUCount() (int, error) {
+	return d.NumCPUFn(), nil
 }

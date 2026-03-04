@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,30 +20,16 @@
 
 package host
 
-import (
-	"os"
-	"os/exec"
-	"runtime"
+// packageManagers is the ordered list of package managers to detect.
+var packageManagers = []string{"apt", "dnf", "yum"}
 
-	"github.com/shirou/gopsutil/v4/host"
-)
-
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
-}
-
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+// GetPackageManager detects the system's package manager by checking for
+// known executables in order of preference: apt, dnf, yum.
+func (u *Ubuntu) GetPackageManager() (string, error) {
+	for _, pm := range packageManagers {
+		if _, err := u.LookPathFn(pm); err == nil {
+			return pm, nil
+		}
 	}
+	return "unknown", nil
 }

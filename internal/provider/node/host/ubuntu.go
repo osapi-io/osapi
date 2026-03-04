@@ -21,17 +21,39 @@
 package host
 
 import (
+	"os"
+	"os/exec"
+	"runtime"
+
 	"github.com/shirou/gopsutil/v4/host"
 )
 
 // Ubuntu implements the Mem interface for Ubuntu.
 type Ubuntu struct {
-	InfoFn func() (*host.InfoStat, error)
+	InfoFn     func() (*host.InfoStat, error)
+	HostnameFn func() (string, error)
+	NumCPUFn   func() int
+	StatFn     func(name string) (os.FileInfo, error)
+	LookPathFn func(file string) (string, error)
 }
 
 // NewUbuntuProvider factory to create a new Ubuntu instance.
 func NewUbuntuProvider() *Ubuntu {
 	return &Ubuntu{
-		InfoFn: host.Info,
+		InfoFn:     host.Info,
+		HostnameFn: os.Hostname,
+		NumCPUFn:   runtime.NumCPU,
+		StatFn:     os.Stat,
+		LookPathFn: exec.LookPath,
 	}
+}
+
+// ExecNotFoundError wraps exec.ErrNotFound for testability.
+type ExecNotFoundError struct {
+	Name string
+}
+
+// Error implements the error interface.
+func (e *ExecNotFoundError) Error() string {
+	return "executable file not found: " + e.Name
 }

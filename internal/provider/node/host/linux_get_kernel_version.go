@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,29 +21,11 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
-
-	"github.com/shirou/gopsutil/v4/host"
+	"fmt"
 )
 
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
-}
-
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
-	}
+// GetKernelVersion retrieves the running kernel version string.
+// It returns an error because it is not implemented for LinuxProvider.
+func (l *Linux) GetKernelVersion() (string, error) {
+	return "", fmt.Errorf("getKernelVersion is not implemented for LinuxProvider")
 }

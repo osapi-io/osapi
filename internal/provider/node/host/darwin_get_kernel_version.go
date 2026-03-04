@@ -20,30 +20,12 @@
 
 package host
 
-import (
-	"os"
-	"os/exec"
-	"runtime"
-
-	"github.com/shirou/gopsutil/v4/host"
-)
-
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
-}
-
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+// GetKernelVersion retrieves the running kernel version string.
+// It uses gopsutil's KernelVersion field.
+func (d *Darwin) GetKernelVersion() (string, error) {
+	hostInfo, err := d.InfoFn()
+	if err != nil {
+		return "", err
 	}
+	return hostInfo.KernelVersion, nil
 }

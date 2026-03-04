@@ -18,32 +18,56 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host
+package host_test
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
+	"testing"
 
-	"github.com/shirou/gopsutil/v4/host"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-// Darwin implements the Host interface for Darwin (macOS).
-type Darwin struct {
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
+type DarwinGetServiceManagerPublicTestSuite struct {
+	suite.Suite
 }
 
-// NewDarwinProvider factory to create a new Darwin instance.
-func NewDarwinProvider() *Darwin {
-	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+func (suite *DarwinGetServiceManagerPublicTestSuite) SetupTest() {}
+
+func (suite *DarwinGetServiceManagerPublicTestSuite) TearDownTest() {}
+
+func (suite *DarwinGetServiceManagerPublicTestSuite) TestGetServiceManager() {
+	tests := []struct {
+		name    string
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name:    "when GetServiceManager returns launchd",
+			want:    "launchd",
+			wantErr: false,
+		},
 	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			darwin := host.NewDarwinProvider()
+
+			got, err := darwin.GetServiceManager()
+
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Empty(got)
+			} else {
+				suite.NoError(err)
+				suite.Equal(tc.want, got)
+			}
+		})
+	}
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+func TestDarwinGetServiceManagerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinGetServiceManagerPublicTestSuite))
 }
