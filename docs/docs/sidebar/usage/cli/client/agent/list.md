@@ -25,5 +25,13 @@ Agents that stop heartbeating disappear from the list automatically.
 | LOAD (1m) | 1-minute load average from heartbeat    |
 | OS        | Distribution and version from heartbeat |
 
+:::tip Full facts in JSON output
+
+`--json` output includes additional system facts collected by the agent:
+architecture, kernel version, FQDN, CPU count, network interfaces, service
+manager, and package manager. These fields are not shown in the table view.
+
+:::
+
 Use `agent get --hostname X` for detailed information about a specific agent, or
 `node status` for deep system metrics gathered via the job system.
