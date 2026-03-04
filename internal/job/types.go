@@ -249,6 +249,25 @@ type NodeShutdownData struct {
 	Message string `json:"message,omitempty"`
 }
 
+// NetworkInterface represents a network interface with its address.
+type NetworkInterface struct {
+	Name string `json:"name"`
+	IPv4 string `json:"ipv4,omitempty"`
+	MAC  string `json:"mac,omitempty"`
+}
+
+// FactsRegistration represents an agent's facts entry in the facts KV bucket.
+type FactsRegistration struct {
+	Architecture  string             `json:"architecture,omitempty"`
+	KernelVersion string             `json:"kernel_version,omitempty"`
+	CPUCount      int                `json:"cpu_count,omitempty"`
+	FQDN          string             `json:"fqdn,omitempty"`
+	ServiceMgr    string             `json:"service_mgr,omitempty"`
+	PackageMgr    string             `json:"package_mgr,omitempty"`
+	Interfaces    []NetworkInterface `json:"interfaces,omitempty"`
+	Facts         map[string]any     `json:"facts,omitempty"`
+}
+
 // AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
 	// Hostname is the hostname of the agent.
@@ -291,6 +310,22 @@ type AgentInfo struct {
 	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// Architecture is the CPU architecture (e.g., x86_64, aarch64).
+	Architecture string `json:"architecture,omitempty"`
+	// KernelVersion is the kernel version string.
+	KernelVersion string `json:"kernel_version,omitempty"`
+	// CPUCount is the number of logical CPUs.
+	CPUCount int `json:"cpu_count,omitempty"`
+	// FQDN is the fully qualified domain name.
+	FQDN string `json:"fqdn,omitempty"`
+	// ServiceMgr is the init/service manager (e.g., systemd).
+	ServiceMgr string `json:"service_mgr,omitempty"`
+	// PackageMgr is the package manager (e.g., apt, yum).
+	PackageMgr string `json:"package_mgr,omitempty"`
+	// Interfaces contains network interface information.
+	Interfaces []NetworkInterface `json:"interfaces,omitempty"`
+	// Facts contains arbitrary key-value facts collected by the agent.
+	Facts map[string]any `json:"facts,omitempty"`
 }
 
 // NodeDiskResponse represents the response for node.disk.get operations.
