@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -42,63 +42,52 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 
 		resp, err := sdkClient.Node.Ping(ctx, host, address)
 		if err != nil {
-			cli.LogFatal(logger, "failed to post network ping endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("post network ping was nil"))
-			}
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
 
-			if resp.JSON200.JobId != nil {
-				fmt.Println()
-				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+		for _, r := range resp.Data.Results {
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
 			}
-
-			results := make([]cli.ResultRow, 0, len(resp.JSON200.Results))
-			for _, r := range resp.JSON200.Results {
-				results = append(results, cli.ResultRow{
-					Hostname: r.Hostname,
-					Error:    r.Error,
-					Fields: []string{
-						cli.SafeString(r.AvgRtt),
-						cli.SafeString(r.MaxRtt),
-						cli.SafeString(r.MinRtt),
-						cli.Float64ToSafeString(r.PacketLoss),
-						cli.IntToSafeString(r.PacketsReceived),
-						cli.IntToSafeString(r.PacketsSent),
-					},
-				})
-			}
-			headers, rows := cli.BuildBroadcastTable(results, []string{
-				"AVG RTT",
-				"MAX RTT",
-				"MIN RTT",
-				"PACKET LOSS",
-				"PACKETS RECEIVED",
-				"PACKETS SENT",
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Error:    errPtr,
+				Fields: []string{
+					r.AvgRtt,
+					r.MaxRtt,
+					r.MinRtt,
+					fmt.Sprintf("%f", r.PacketLoss),
+					strconv.Itoa(r.PacketsReceived),
+					strconv.Itoa(r.PacketsSent),
+				},
 			})
-			cli.PrintCompactTable([]cli.Section{{
-				Title:   "Ping Response",
-				Headers: headers,
-				Rows:    rows,
-			}})
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
+		headers, rows := cli.BuildBroadcastTable(results, []string{
+			"AVG RTT",
+			"MAX RTT",
+			"MIN RTT",
+			"PACKET LOSS",
+			"PACKETS RECEIVED",
+			"PACKETS SENT",
+		})
+		cli.PrintCompactTable([]cli.Section{{
+			Title:   "Ping Response",
+			Headers: headers,
+			Rows:    rows,
+		}})
 	},
 }
 

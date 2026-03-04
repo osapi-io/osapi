@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -41,41 +40,29 @@ var clientJobDeleteCmd = &cobra.Command{
 		jobID, _ := cmd.Flags().GetString("job-id")
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Job.Delete(ctx, jobID)
+		err := sdkClient.Job.Delete(ctx, jobID)
 		if err != nil {
-			cli.LogFatal(logger, "failed to delete job", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusNoContent:
-			if jsonOutput {
-				result := map[string]interface{}{
-					"status":    "deleted",
-					"job_id":    jobID,
-					"timestamp": time.Now().Format(time.RFC3339),
-				}
-				resultJSON, _ := json.Marshal(result)
-				fmt.Println(string(resultJSON))
-				return
+		if jsonOutput {
+			result := map[string]interface{}{
+				"status":    "deleted",
+				"job_id":    jobID,
+				"timestamp": time.Now().Format(time.RFC3339),
 			}
-
-			fmt.Println()
-			cli.PrintKV("Job ID", jobID, "Status", "Deleted")
-
-			logger.Info("job deleted successfully",
-				slog.String("job_id", jobID),
-			)
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusNotFound:
-			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			resultJSON, _ := json.Marshal(result)
+			fmt.Println(string(resultJSON))
+			return
 		}
+
+		fmt.Println()
+		cli.PrintKV("Job ID", jobID, "Status", "Deleted")
+
+		logger.Info("job deleted successfully",
+			slog.String("job_id", jobID),
+		)
 	},
 }
 

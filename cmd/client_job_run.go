@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
@@ -74,24 +73,11 @@ This combines job submission and retrieval into a single command for convenience
 		// Submit the job
 		resp, err := sdkClient.Job.Create(ctx, operationData, targetHostname)
 		if err != nil {
-			logger.Error("failed to submit job", slog.String("error", err.Error()))
+			cli.HandleError(err, logger)
 			return
 		}
 
-		if resp.StatusCode() != http.StatusCreated {
-			logger.Error("failed to submit job",
-				slog.Int("status_code", resp.StatusCode()),
-				slog.String("body", string(resp.Body)),
-			)
-			return
-		}
-
-		if resp.JSON201 == nil {
-			logger.Error("failed to submit job: nil response")
-			return
-		}
-
-		jobID := resp.JSON201.JobId.String()
+		jobID := resp.Data.JobID
 		logger.Debug("job submitted", slog.String("job_id", jobID))
 
 		// Poll for completion
@@ -134,15 +120,7 @@ func checkJobComplete(
 		return false
 	}
 
-	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
-		logger.Error("failed to get job status",
-			slog.String("job_id", jobID),
-			slog.Int("status_code", resp.StatusCode()),
-		)
-		return false
-	}
-
-	status := cli.SafeString(resp.JSON200.Status)
+	status := resp.Data.Status
 	logger.Debug("job status check",
 		slog.String("job_id", jobID),
 		slog.String("status", status),
@@ -155,11 +133,11 @@ func checkJobComplete(
 		)
 
 		if jsonOutput {
-			fmt.Println(string(resp.Body))
+			fmt.Println(string(resp.RawJSON()))
 			return true
 		}
 
-		cli.DisplayJobDetailResponse(resp.JSON200)
+		cli.DisplayJobDetail(&resp.Data)
 		return true
 	}
 

@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -160,43 +159,26 @@ func fetchJobsStatus() string {
 		return fmt.Sprintf("Error fetching jobs: %v", err)
 	}
 
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Sprintf("Error fetching jobs: HTTP %d", resp.StatusCode())
-	}
+	stats := &resp.Data
 
-	stats := resp.JSON200
-	if stats == nil {
-		return "Error fetching jobs: nil response"
-	}
-
-	totalJobs := 0
-	if stats.TotalJobs != nil {
-		totalJobs = *stats.TotalJobs
-	}
-
-	if totalJobs == 0 {
+	if stats.TotalJobs == 0 {
 		return "Job queue is empty (0 jobs total)"
 	}
 
-	statusCounts := map[string]int{}
-	if stats.StatusCounts != nil {
-		statusCounts = *stats.StatusCounts
-	}
-
 	statusDisplay := "Jobs Queue Status:\n"
-	statusDisplay += fmt.Sprintf("  Total Jobs: %d\n", totalJobs)
-	statusDisplay += fmt.Sprintf("  Unprocessed: %d\n", statusCounts["unprocessed"])
-	statusDisplay += fmt.Sprintf("  Processing: %d\n", statusCounts["processing"])
-	statusDisplay += fmt.Sprintf("  Completed: %d\n", statusCounts["completed"])
-	statusDisplay += fmt.Sprintf("  Failed: %d\n", statusCounts["failed"])
+	statusDisplay += fmt.Sprintf("  Total Jobs: %d\n", stats.TotalJobs)
+	statusDisplay += fmt.Sprintf("  Unprocessed: %d\n", stats.StatusCounts["unprocessed"])
+	statusDisplay += fmt.Sprintf("  Processing: %d\n", stats.StatusCounts["processing"])
+	statusDisplay += fmt.Sprintf("  Completed: %d\n", stats.StatusCounts["completed"])
+	statusDisplay += fmt.Sprintf("  Failed: %d\n", stats.StatusCounts["failed"])
 
-	if stats.DlqCount != nil && *stats.DlqCount > 0 {
-		statusDisplay += fmt.Sprintf("  Dead Letter Queue: %d\n", *stats.DlqCount)
+	if stats.DlqCount > 0 {
+		statusDisplay += fmt.Sprintf("  Dead Letter Queue: %d\n", stats.DlqCount)
 	}
 
-	if stats.OperationCounts != nil && len(*stats.OperationCounts) > 0 {
+	if len(stats.OperationCounts) > 0 {
 		statusDisplay += "\nOperation Types:\n"
-		for opType, count := range *stats.OperationCounts {
+		for opType, count := range stats.OperationCounts {
 			statusDisplay += fmt.Sprintf("  %s: %d\n", opType, count)
 		}
 	}
@@ -214,15 +196,7 @@ func fetchJobsStatusJSON() string {
 		return string(resultJSON)
 	}
 
-	if resp.StatusCode() != http.StatusOK {
-		errorResult := map[string]interface{}{
-			"error": fmt.Sprintf("HTTP %d", resp.StatusCode()),
-		}
-		resultJSON, _ := json.Marshal(errorResult)
-		return string(resultJSON)
-	}
-
-	return string(resp.Body)
+	return string(resp.RawJSON())
 }
 
 // clientJobStatusCmd represents the clientJobsStatus command.

@@ -22,6 +22,7 @@ package cli_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -30,7 +31,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -216,7 +217,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 func (suite *UIPublicTestSuite) TestFormatLabels() {
 	tests := []struct {
 		name   string
-		labels *map[string]string
+		labels map[string]string
 		want   string
 	}{
 		{
@@ -226,17 +227,17 @@ func (suite *UIPublicTestSuite) TestFormatLabels() {
 		},
 		{
 			name:   "when empty map returns empty",
-			labels: &map[string]string{},
+			labels: map[string]string{},
 			want:   "",
 		},
 		{
 			name:   "when single label formats correctly",
-			labels: &map[string]string{"group": "web"},
+			labels: map[string]string{"group": "web"},
 			want:   "group:web",
 		},
 		{
 			name:   "when multiple labels sorts by key",
-			labels: &map[string]string{"group": "web", "env": "prod", "az": "us-east"},
+			labels: map[string]string{"group": "web", "env": "prod", "az": "us-east"},
 			want:   "az:us-east, env:prod, group:web",
 		},
 	}
@@ -564,76 +565,37 @@ func (suite *UIPublicTestSuite) TestIntToSafeString() {
 	}
 }
 
-func (suite *UIPublicTestSuite) TestHandleAuthError() {
+func (suite *UIPublicTestSuite) TestHandleError() {
 	tests := []struct {
 		name      string
-		jsonError *gen.ErrorResponse
-		code      int
+		err       error
 		wantInLog string
 	}{
 		{
-			name:      "when error response is nil logs unknown error",
-			jsonError: nil,
-			code:      401,
-			wantInLog: "unknown error",
-		},
-		{
-			name:      "when error field is nil logs unknown error",
-			jsonError: &gen.ErrorResponse{Error: nil},
-			code:      403,
-			wantInLog: "unknown error",
-		},
-		{
-			name: "when error response provided logs message",
-			jsonError: func() *gen.ErrorResponse {
-				msg := "insufficient permissions"
-				return &gen.ErrorResponse{Error: &msg}
-			}(),
-			code:      403,
+			name:      "when auth error logs api error with status code",
+			err:       &osapi.AuthError{APIError: osapi.APIError{StatusCode: 403, Message: "insufficient permissions"}},
 			wantInLog: "insufficient permissions",
 		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var buf bytes.Buffer
-			logger := slog.New(slog.NewTextHandler(&buf, nil))
-
-			cli.HandleAuthError(tc.jsonError, tc.code, logger)
-
-			assert.Contains(suite.T(), buf.String(), tc.wantInLog)
-		})
-	}
-}
-
-func (suite *UIPublicTestSuite) TestHandleUnknownError() {
-	tests := []struct {
-		name      string
-		jsonError *gen.ErrorResponse
-		code      int
-		wantInLog string
-	}{
 		{
-			name:      "when error response is nil logs unknown error",
-			jsonError: nil,
-			code:      500,
-			wantInLog: "unknown error",
+			name:      "when not found error logs api error with status code",
+			err:       &osapi.NotFoundError{APIError: osapi.APIError{StatusCode: 404, Message: "job not found"}},
+			wantInLog: "job not found",
 		},
 		{
-			name:      "when error field is nil logs unknown error",
-			jsonError: &gen.ErrorResponse{Error: nil},
-			code:      500,
-			wantInLog: "unknown error",
+			name:      "when validation error logs api error with status code",
+			err:       &osapi.ValidationError{APIError: osapi.APIError{StatusCode: 400, Message: "invalid input"}},
+			wantInLog: "invalid input",
 		},
 		{
-			name: "when error response provided logs message",
-			jsonError: func() *gen.ErrorResponse {
-				msg := "internal server error"
-				return &gen.ErrorResponse{Error: &msg}
-			}(),
-			code:      500,
+			name:      "when server error logs api error with status code",
+			err:       &osapi.ServerError{APIError: osapi.APIError{StatusCode: 500, Message: "internal server error"}},
 			wantInLog: "internal server error",
 		},
+		{
+			name:      "when generic error logs error message",
+			err:       fmt.Errorf("connection refused"),
+			wantInLog: "connection refused",
+		},
 	}
 
 	for _, tc := range tests {
@@ -641,7 +603,7 @@ func (suite *UIPublicTestSuite) TestHandleUnknownError() {
 			var buf bytes.Buffer
 			logger := slog.New(slog.NewTextHandler(&buf, nil))
 
-			cli.HandleUnknownError(tc.jsonError, tc.code, logger)
+			cli.HandleError(tc.err, logger)
 
 			assert.Contains(suite.T(), buf.String(), tc.wantInLog)
 		})
@@ -890,186 +852,104 @@ func (suite *UIPublicTestSuite) TestFormatBytes() {
 	}
 }
 
-func (suite *UIPublicTestSuite) TestDisplayJobDetailResponse() {
+func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 	tests := []struct {
 		name string
-		resp *gen.JobDetailResponse
+		resp *osapi.JobDetail
 	}{
 		{
 			name: "when minimal response displays job info",
-			resp: func() *gen.JobDetailResponse {
-				status := "completed"
-				return &gen.JobDetailResponse{
-					Status: &status,
-				}
-			}(),
+			resp: &osapi.JobDetail{
+				Status: "completed",
+			},
 		},
 		{
 			name: "when full response displays all sections",
-			resp: func() *gen.JobDetailResponse {
-				id := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-				status := "completed"
-				hostname := "web-01"
-				created := "2026-01-01T00:00:00Z"
-				updatedAt := "2026-01-01T00:01:00Z"
-				errMsg := "timeout"
-				operation := map[string]interface{}{"type": "node.hostname"}
-				result := map[string]interface{}{"hostname": "web-01"}
-				event := "completed"
-				timestamp := "2026-01-01T00:01:00Z"
-				message := "job completed"
-				agentStatus := "completed"
-				duration := "1.5s"
-				respStatus := "ok"
-
-				return &gen.JobDetailResponse{
-					Id:        &id,
-					Status:    &status,
-					Hostname:  &hostname,
-					Created:   &created,
-					UpdatedAt: &updatedAt,
-					Error:     &errMsg,
-					Operation: &operation,
-					Result:    result,
-					Timeline: &[]struct {
-						Error     *string `json:"error,omitempty"`
-						Event     *string `json:"event,omitempty"`
-						Hostname  *string `json:"hostname,omitempty"`
-						Message   *string `json:"message,omitempty"`
-						Timestamp *string `json:"timestamp,omitempty"`
-					}{
-						{
-							Event:     &event,
-							Timestamp: &timestamp,
-							Hostname:  &hostname,
-							Message:   &message,
-						},
+			resp: &osapi.JobDetail{
+				ID:        "550e8400-e29b-41d4-a716-446655440000",
+				Status:    "completed",
+				Hostname:  "web-01",
+				Created:   "2026-01-01T00:00:00Z",
+				UpdatedAt: "2026-01-01T00:01:00Z",
+				Error:     "timeout",
+				Operation: map[string]any{"type": "node.hostname"},
+				Result:    map[string]any{"hostname": "web-01"},
+				Timeline: []osapi.TimelineEvent{
+					{
+						Event:     "completed",
+						Timestamp: "2026-01-01T00:01:00Z",
+						Hostname:  "web-01",
+						Message:   "job completed",
 					},
-					AgentStates: &map[string]struct {
-						Duration *string `json:"duration,omitempty"`
-						Error    *string `json:"error,omitempty"`
-						Status   *string `json:"status,omitempty"`
-					}{
-						"web-01": {
-							Status:   &agentStatus,
-							Duration: &duration,
-						},
+				},
+				AgentStates: map[string]osapi.AgentState{
+					"web-01": {
+						Status:   "completed",
+						Duration: "1.5s",
 					},
-					Responses: &map[string]struct {
-						Data     interface{} `json:"data,omitempty"`
-						Error    *string     `json:"error,omitempty"`
-						Hostname *string     `json:"hostname,omitempty"`
-						Status   *string     `json:"status,omitempty"`
-					}{
-						"web-01": {
-							Status: &respStatus,
-							Data:   map[string]string{"key": "val"},
-						},
+				},
+				Responses: map[string]osapi.AgentJobResponse{
+					"web-01": {
+						Status: "ok",
+						Data:   map[string]string{"key": "val"},
 					},
-				}
-			}(),
+				},
+			},
 		},
 		{
 			name: "when agent states with multiple agents shows summary",
-			resp: func() *gen.JobDetailResponse {
-				status := "completed"
-				completed := "completed"
-				failed := "failed"
-				started := "started"
-				duration := "1s"
-				errMsg := "error"
-
-				return &gen.JobDetailResponse{
-					Status: &status,
-					AgentStates: &map[string]struct {
-						Duration *string `json:"duration,omitempty"`
-						Error    *string `json:"error,omitempty"`
-						Status   *string `json:"status,omitempty"`
-					}{
-						"web-01": {Status: &completed, Duration: &duration},
-						"web-02": {Status: &failed, Duration: &duration, Error: &errMsg},
-						"web-03": {Status: &started, Duration: &duration},
-					},
-				}
-			}(),
+			resp: &osapi.JobDetail{
+				Status: "completed",
+				AgentStates: map[string]osapi.AgentState{
+					"web-01": {Status: "completed", Duration: "1s"},
+					"web-02": {Status: "failed", Duration: "1s", Error: "error"},
+					"web-03": {Status: "started", Duration: "1s"},
+				},
+			},
 		},
 		{
 			name: "when response has nil data shows no data placeholder",
-			resp: func() *gen.JobDetailResponse {
-				status := "completed"
-				respStatus := "ok"
-
-				return &gen.JobDetailResponse{
-					Status: &status,
-					Responses: &map[string]struct {
-						Data     interface{} `json:"data,omitempty"`
-						Error    *string     `json:"error,omitempty"`
-						Hostname *string     `json:"hostname,omitempty"`
-						Status   *string     `json:"status,omitempty"`
-					}{
-						"web-01": {
-							Status: &respStatus,
-							Data:   nil,
-						},
+			resp: &osapi.JobDetail{
+				Status: "completed",
+				Responses: map[string]osapi.AgentJobResponse{
+					"web-01": {
+						Status: "ok",
+						Data:   nil,
 					},
-				}
-			}(),
+				},
+			},
 		},
 		{
 			name: "when response has error shows error message",
-			resp: func() *gen.JobDetailResponse {
-				status := "failed"
-				respStatus := "failed"
-				errMsg := "timeout"
-
-				return &gen.JobDetailResponse{
-					Status: &status,
-					Responses: &map[string]struct {
-						Data     interface{} `json:"data,omitempty"`
-						Error    *string     `json:"error,omitempty"`
-						Hostname *string     `json:"hostname,omitempty"`
-						Status   *string     `json:"status,omitempty"`
-					}{
-						"web-01": {
-							Status: &respStatus,
-							Error:  &errMsg,
-						},
+			resp: &osapi.JobDetail{
+				Status: "failed",
+				Responses: map[string]osapi.AgentJobResponse{
+					"web-01": {
+						Status: "failed",
+						Error:  "timeout",
 					},
-				}
-			}(),
+				},
+			},
 		},
 		{
 			name: "when timeline has error shows error message",
-			resp: func() *gen.JobDetailResponse {
-				status := "failed"
-				event := "failed"
-				timestamp := "2026-01-01T00:01:00Z"
-				errMsg := "connection refused"
-
-				return &gen.JobDetailResponse{
-					Status: &status,
-					Timeline: &[]struct {
-						Error     *string `json:"error,omitempty"`
-						Event     *string `json:"event,omitempty"`
-						Hostname  *string `json:"hostname,omitempty"`
-						Message   *string `json:"message,omitempty"`
-						Timestamp *string `json:"timestamp,omitempty"`
-					}{
-						{
-							Event:     &event,
-							Timestamp: &timestamp,
-							Error:     &errMsg,
-						},
+			resp: &osapi.JobDetail{
+				Status: "failed",
+				Timeline: []osapi.TimelineEvent{
+					{
+						Event:     "failed",
+						Timestamp: "2026-01-01T00:01:00Z",
+						Error:     "connection refused",
 					},
-				}
-			}(),
+				},
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			output := captureStdout(func() {
-				cli.DisplayJobDetailResponse(tc.resp)
+				cli.DisplayJobDetail(tc.resp)
 			})
 
 			assert.NotEmpty(suite.T(), output)

@@ -28,8 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	gen "github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -38,14 +37,14 @@ type FileTestSuite struct {
 }
 
 func (s *FileTestSuite) TestWriteNewlineError() {
-	entry := gen.AuditEntry{
-		Id:           uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"),
+	entry := osapi.AuditEntry{
+		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
 		User:         "user@example.com",
 		Roles:        []string{"admin"},
 		Method:       "GET",
 		Path:         "/node/hostname",
-		SourceIp:     "127.0.0.1",
+		SourceIP:     "127.0.0.1",
 		ResponseCode: 200,
 		DurationMs:   42,
 	}

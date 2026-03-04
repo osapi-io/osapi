@@ -23,10 +23,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/audit/export"
@@ -51,29 +50,17 @@ entry as a JSON line (JSONL format). Requires audit:read permission.
 		ctx := cmd.Context()
 		resp, err := sdkClient.Audit.Export(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "API request failed", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "export failed", fmt.Errorf("response was nil"))
-			}
-
-			writeExport(ctx, resp.JSON200.Items, resp.JSON200.TotalItems)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
-		}
+		writeExport(ctx, resp.Data.Items, resp.Data.TotalItems)
 	},
 }
 
 func writeExport(
 	ctx context.Context,
-	items []gen.AuditEntry,
+	items []osapi.AuditEntry,
 	totalItems int,
 ) {
 	var exporter export.Exporter

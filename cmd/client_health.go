@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -41,26 +40,17 @@ Running without a subcommand performs a liveness probe.
 		ctx := cmd.Context()
 		resp, err := sdkClient.Health.Liveness(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get health endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("health response was nil"))
-			}
-
-			fmt.Println()
-			cli.PrintKV("Status", resp.JSON200.Status)
-
-		default:
-			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		fmt.Println()
+		cli.PrintKV("Status", resp.Data.Status)
 	},
 }
 

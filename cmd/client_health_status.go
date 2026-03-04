@@ -22,9 +22,8 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -41,71 +40,38 @@ Requires authentication.
 		ctx := cmd.Context()
 		resp, err := sdkClient.Health.Status(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get health status endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(
-					logger,
-					"failed response",
-					fmt.Errorf("health status response was nil"),
-				)
-			}
-
-			displayStatusHealth(resp.JSON200)
-
-		case http.StatusServiceUnavailable:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON503 == nil {
-				cli.LogFatal(
-					logger,
-					"failed response",
-					fmt.Errorf("health status response was nil"),
-				)
-			}
-
-			displayStatusHealth(resp.JSON503)
-
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		displayStatusHealth(&resp.Data)
 	},
 }
 
 // displayStatusHealth renders health status output with system metrics.
 func displayStatusHealth(
-	data *gen.StatusResponse,
+	data *osapi.SystemStatus,
 ) {
 	fmt.Println()
 	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
 
 	// NATS connection info (merged with component health)
-	if data.Nats != nil {
+	if data.NATS != nil {
 		natsStatus := "ok"
 		if c, ok := data.Components["nats"]; ok && c.Status != "ok" {
 			natsStatus = c.Status
-			if c.Error != nil {
-				natsStatus += " " + cli.DimStyle.Render(*c.Error)
+			if c.Error != "" {
+				natsStatus += " " + cli.DimStyle.Render(c.Error)
 			}
 		}
-		natsVal := natsStatus + " " + cli.DimStyle.Render(data.Nats.Url)
-		if data.Nats.Version != "" {
-			natsVal += " " + cli.DimStyle.Render("(v"+data.Nats.Version+")")
+		natsVal := natsStatus + " " + cli.DimStyle.Render(data.NATS.URL)
+		if data.NATS.Version != "" {
+			natsVal += " " + cli.DimStyle.Render("(v"+data.NATS.Version+")")
 		}
 		cli.PrintKV("NATS", natsVal)
 	}
@@ -113,8 +79,8 @@ func displayStatusHealth(
 	// KV component (without duplicating the NATS line)
 	if c, ok := data.Components["kv"]; ok {
 		kvVal := c.Status
-		if c.Error != nil {
-			kvVal += " " + cli.DimStyle.Render(*c.Error)
+		if c.Error != "" {
+			kvVal += " " + cli.DimStyle.Render(c.Error)
 		}
 		cli.PrintKV("KV", kvVal)
 	}
@@ -125,8 +91,8 @@ func displayStatusHealth(
 			continue
 		}
 		val := component.Status
-		if component.Error != nil {
-			val += " " + cli.DimStyle.Render(*component.Error)
+		if component.Error != "" {
+			val += " " + cli.DimStyle.Render(component.Error)
 		}
 		cli.PrintKV(name, val)
 	}
@@ -136,14 +102,10 @@ func displayStatusHealth(
 			"%d total, %d ready",
 			data.Agents.Total, data.Agents.Ready,
 		))
-		if data.Agents.Agents != nil {
-			rows := make([][]string, 0, len(*data.Agents.Agents))
-			for _, a := range *data.Agents.Agents {
-				labels := ""
-				if a.Labels != nil {
-					labels = *a.Labels
-				}
-				rows = append(rows, []string{a.Hostname, labels, a.Registered})
+		if len(data.Agents.Agents) > 0 {
+			rows := make([][]string, 0, len(data.Agents.Agents))
+			for _, a := range data.Agents.Agents {
+				rows = append(rows, []string{a.Hostname, a.Labels, a.Registered})
 			}
 			cli.PrintCompactTable([]cli.Section{{
 				Headers: []string{"HOSTNAME", "LABELS", "REGISTERED"},
@@ -166,32 +128,28 @@ func displayStatusHealth(
 	}
 
 	// Streams
-	if data.Streams != nil {
-		for _, s := range *data.Streams {
-			cli.PrintKV("Stream", fmt.Sprintf(
-				"%s "+cli.DimStyle.Render("(%d msgs, %s, %d consumers)"),
-				s.Name, s.Messages, cli.FormatBytes(s.Bytes), s.Consumers,
-			))
-		}
+	for _, s := range data.Streams {
+		cli.PrintKV("Stream", fmt.Sprintf(
+			"%s "+cli.DimStyle.Render("(%d msgs, %s, %d consumers)"),
+			s.Name, s.Messages, cli.FormatBytes(s.Bytes), s.Consumers,
+		))
 	}
 
 	// KV Buckets
-	if data.KvBuckets != nil {
-		for _, b := range *data.KvBuckets {
-			cli.PrintKV("Bucket", fmt.Sprintf(
-				"%s "+cli.DimStyle.Render("(%d keys, %s)"),
-				b.Name, b.Keys, cli.FormatBytes(b.Bytes),
-			))
-		}
+	for _, b := range data.KVBuckets {
+		cli.PrintKV("Bucket", fmt.Sprintf(
+			"%s "+cli.DimStyle.Render("(%d keys, %s)"),
+			b.Name, b.Keys, cli.FormatBytes(b.Bytes),
+		))
 	}
 
 	// Consumers last — the table can be long with many agents
 	if data.Consumers != nil {
 		fmt.Println()
 		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
-		if data.Consumers.Consumers != nil {
-			rows := make([][]string, 0, len(*data.Consumers.Consumers))
-			for _, c := range *data.Consumers.Consumers {
+		if len(data.Consumers.Consumers) > 0 {
+			rows := make([][]string, 0, len(data.Consumers.Consumers))
+			for _, c := range data.Consumers.Consumers {
 				rows = append(rows, []string{
 					c.Name,
 					fmt.Sprintf("%d", c.Pending),

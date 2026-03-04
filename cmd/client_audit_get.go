@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -45,47 +44,32 @@ Requires audit:read permission.
 
 		resp, err := sdkClient.Audit.Get(ctx, auditID)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get audit log entry", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("audit entry response was nil"))
-			}
+		entry := &resp.Data
 
-			entry := resp.JSON200.Entry
-
-			fmt.Println()
-			cli.PrintKV("ID", entry.Id.String())
-			cli.PrintKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
-			cli.PrintKV("User", entry.User)
-			cli.PrintKV("Roles", strings.Join(entry.Roles, ", "))
-			cli.PrintKV("Method", entry.Method, "Path", entry.Path)
-			cli.PrintKV(
-				"Status",
-				strconv.Itoa(entry.ResponseCode),
-				"Duration",
-				strconv.FormatInt(entry.DurationMs, 10)+"ms",
-			)
-			cli.PrintKV("Source IP", entry.SourceIp)
-			if entry.OperationId != nil {
-				cli.PrintKV("Operation", *entry.OperationId)
-			}
-
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		case http.StatusNotFound:
-			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		fmt.Println()
+		cli.PrintKV("ID", entry.ID)
+		cli.PrintKV("Timestamp", entry.Timestamp.Format("2006-01-02 15:04:05"))
+		cli.PrintKV("User", entry.User)
+		cli.PrintKV("Roles", strings.Join(entry.Roles, ", "))
+		cli.PrintKV("Method", entry.Method, "Path", entry.Path)
+		cli.PrintKV(
+			"Status",
+			strconv.Itoa(entry.ResponseCode),
+			"Duration",
+			strconv.FormatInt(entry.DurationMs, 10)+"ms",
+		)
+		cli.PrintKV("Source IP", entry.SourceIP)
+		if entry.OperationID != "" {
+			cli.PrintKV("Operation", entry.OperationID)
 		}
 	},
 }

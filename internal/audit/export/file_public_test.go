@@ -31,8 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	gen "github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit/export"
@@ -52,15 +51,15 @@ func (suite *FileExporterPublicTestSuite) SetupTest() {
 
 func (suite *FileExporterPublicTestSuite) newEntry(
 	user string,
-) gen.AuditEntry {
-	return gen.AuditEntry{
-		Id:           uuid.New(),
+) osapi.AuditEntry {
+	return osapi.AuditEntry{
+		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
 		User:         user,
 		Roles:        []string{"admin"},
 		Method:       "GET",
 		Path:         "/node/hostname",
-		SourceIp:     "127.0.0.1",
+		SourceIP:     "127.0.0.1",
 		ResponseCode: 200,
 		DurationMs:   42,
 	}
@@ -69,17 +68,17 @@ func (suite *FileExporterPublicTestSuite) newEntry(
 func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 	tests := []struct {
 		name         string
-		entries      []gen.AuditEntry
+		entries      []osapi.AuditEntry
 		validateFunc func(path string)
 	}{
 		{
 			name:    "when single entry writes valid JSONL",
-			entries: []gen.AuditEntry{suite.newEntry("alice@example.com")},
+			entries: []osapi.AuditEntry{suite.newEntry("alice@example.com")},
 			validateFunc: func(path string) {
 				lines := suite.readLines(path)
 				suite.Len(lines, 1)
 
-				var entry gen.AuditEntry
+				var entry osapi.AuditEntry
 				err := json.Unmarshal([]byte(lines[0]), &entry)
 				suite.NoError(err)
 				suite.Equal("alice@example.com", entry.User)
@@ -87,7 +86,7 @@ func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 		},
 		{
 			name: "when multiple entries writes valid JSONL",
-			entries: []gen.AuditEntry{
+			entries: []osapi.AuditEntry{
 				suite.newEntry("alice@example.com"),
 				suite.newEntry("bob@example.com"),
 				suite.newEntry("charlie@example.com"),
@@ -97,7 +96,7 @@ func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 				suite.Len(lines, 3)
 
 				for i, user := range []string{"alice@example.com", "bob@example.com", "charlie@example.com"} {
-					var entry gen.AuditEntry
+					var entry osapi.AuditEntry
 					err := json.Unmarshal([]byte(lines[i]), &entry)
 					suite.NoError(err)
 					suite.Equal(user, entry.User)

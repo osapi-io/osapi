@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -39,41 +38,19 @@ var clientHealthReadyCmd = &cobra.Command{
 		ctx := cmd.Context()
 		resp, err := sdkClient.Health.Ready(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get health ready endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("health ready response was nil"))
-			}
-
-			fmt.Println()
-			cli.PrintKV("Status", resp.JSON200.Status)
-
-		case http.StatusServiceUnavailable:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON503 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("health ready response was nil"))
-			}
-
-			fmt.Println()
-			cli.PrintKV("Status", resp.JSON503.Status)
-			if resp.JSON503.Error != nil {
-				cli.PrintKV("Error", *resp.JSON503.Error)
-			}
-
-		default:
-			cli.HandleUnknownError(nil, resp.StatusCode(), logger)
+		fmt.Println()
+		cli.PrintKV("Status", resp.Data.Status)
+		if resp.Data.Error != "" {
+			cli.PrintKV("Error", resp.Data.Error)
 		}
 	},
 }
