@@ -1764,6 +1764,28 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 			expectedDLQ:        3,
 		},
 		{
+			name: "when malformed status key is skipped",
+			setupMocks: func() {
+				keys := []string{
+					"status.incomplete",
+					"status.job-1.submitted._api.100",
+					"status.job-1.completed.agent1.101",
+				}
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(keys, nil)
+				s.mockNATSClient.EXPECT().
+					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			expectedTotalJobs:  1,
+			expectedSubmitted:  0,
+			expectedProcessing: 0,
+			expectedCompleted:  1,
+			expectedFailed:     0,
+			expectedDLQ:        0,
+		},
+		{
 			name: "when DLQ error returns zero DLQ count",
 			setupMocks: func() {
 				keys := []string{

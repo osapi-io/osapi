@@ -94,7 +94,7 @@ func (c *Client) ModifyNetworkDNSBroadcast(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	jobID, responses, err := c.publishAndCollect(ctx, subject, req)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}

@@ -37,22 +37,18 @@ import (
 
 // Client provides methods for publishing job requests and retrieving responses.
 type Client struct {
-	logger             *slog.Logger
-	natsClient         messaging.NATSClient
-	kv                 jetstream.KeyValue
-	registryKV         jetstream.KeyValue
-	timeout            time.Duration
-	broadcastQuietTime time.Duration
-	streamName         string
+	logger     *slog.Logger
+	natsClient messaging.NATSClient
+	kv         jetstream.KeyValue
+	registryKV jetstream.KeyValue
+	timeout    time.Duration
+	streamName string
 }
 
 // Options configures the jobs client.
 type Options struct {
 	// Timeout for waiting for job responses (default: 30s)
 	Timeout time.Duration
-	// BroadcastQuietPeriod is the silence window after the last broadcast
-	// response before collection stops (default: 3s)
-	BroadcastQuietPeriod time.Duration
 	// KVBucket for job storage (required)
 	KVBucket jetstream.KeyValue
 	// RegistryKV is the KV bucket for agent registry (optional).
@@ -74,19 +70,13 @@ func New(
 		return nil, fmt.Errorf("kvBucket cannot be nil")
 	}
 
-	quietPeriod := opts.BroadcastQuietPeriod
-	if quietPeriod == 0 {
-		quietPeriod = broadcastQuietPeriod
-	}
-
 	return &Client{
-		logger:             logger,
-		natsClient:         natsClient,
-		kv:                 opts.KVBucket,
-		registryKV:         opts.RegistryKV,
-		streamName:         opts.StreamName,
-		timeout:            opts.Timeout,
-		broadcastQuietTime: quietPeriod,
+		logger:     logger,
+		natsClient: natsClient,
+		kv:         opts.KVBucket,
+		registryKV: opts.RegistryKV,
+		streamName: opts.StreamName,
+		timeout:    opts.Timeout,
 	}, nil
 }
 
@@ -183,19 +173,15 @@ func (c *Client) publishAndWait(
 	}
 }
 
-// broadcastQuietPeriod is the duration of silence after the last response
-// before we consider the broadcast complete. If no new responses arrive
-// within this window, we return whatever we've collected.
-const broadcastQuietPeriod = 3 * time.Second
-
 // publishAndCollect stores a job in KV, publishes a notification, and collects
-// agent responses using a quiet period strategy. After each response, a short
-// timer resets. When the timer expires with no new responses, the collected
-// results are returned. The overall timeout acts as a safety net.
+// agent responses. It uses the agent registry to determine how many agents are
+// expected to respond and returns immediately once all have replied. The overall
+// timeout acts as a safety net if an agent doesn't respond.
 // Returns the job ID, collected responses keyed by hostname, and any error.
 func (c *Client) publishAndCollect(
 	ctx context.Context,
 	subject string,
+	target string,
 	req *job.Request,
 ) (string, map[string]*job.Response, error) {
 	// Generate job ID if not provided
@@ -235,6 +221,22 @@ func (c *Client) publishAndCollect(
 		return "", nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}
 
+	// Determine expected agent count from registry for early completion.
+	// If ListAgents fails, fall back to waiting for the full timeout.
+	expectedCount := 0
+	agents, err := c.ListAgents(ctx)
+	if err != nil {
+		c.logger.WarnContext(ctx, "failed to list agents for broadcast count, using full timeout",
+			slog.String("error", err.Error()),
+		)
+	} else {
+		expectedCount = job.CountExpectedAgents(agents, target)
+		c.logger.DebugContext(ctx, "broadcast expected agent count",
+			slog.String("target", target),
+			slog.Int("expected_count", expectedCount),
+		)
+	}
+
 	c.logger.InfoContext(ctx, "publishing broadcast job request",
 		slog.String("job_id", jobID),
 		slog.String("subject", subject),
@@ -263,15 +265,15 @@ func (c *Client) publishAndCollect(
 	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	// Quiet period timer — starts at the full timeout (waiting for first response),
-	// then resets to the short quiet period after each response arrives.
-	quietTimer := time.NewTimer(c.timeout)
-	defer quietTimer.Stop()
-
 	for {
 		select {
 		case <-timeoutCtx.Done():
-		case <-quietTimer.C:
+			if len(responses) == 0 {
+				return "", nil, fmt.Errorf(
+					"timeout waiting for broadcast responses: no agents responded",
+				)
+			}
+			return jobID, responses, nil
 		case entry := <-watcher.Updates():
 			if entry == nil {
 				continue
@@ -299,18 +301,10 @@ func (c *Client) publishAndCollect(
 
 			responses[hostname] = &response
 
-			// Reset quiet period — if no more responses arrive within
-			// this window, we're done collecting.
-			quietTimer.Reset(c.broadcastQuietTime)
-			continue
+			// Return early when all expected agents have responded.
+			if expectedCount > 0 && len(responses) >= expectedCount {
+				return jobID, responses, nil
+			}
 		}
-
-		// Reached from either timeoutCtx.Done() or quietTimer.C
-		if len(responses) == 0 {
-			return "", nil, fmt.Errorf(
-				"timeout waiting for broadcast responses: no agents responded",
-			)
-		}
-		return jobID, responses, nil
 	}
 }
