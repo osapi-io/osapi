@@ -20,18 +20,18 @@ cloud region).
 
 | Category | Facts | Source |
 |----------|-------|--------|
-| System | architecture, kernel_version, fqdn, service_mgr, pkg_mgr | `runtime.GOARCH`, `host.KernelVersion()`, `os.Hostname()` |
-| Hardware | cpu_count | `runtime.NumCPU()` or `cpu.Counts()` |
-| Network | interfaces (name, ipv4, mac), default gateway | `net.Interfaces()` |
+| System | architecture, kernel_version, fqdn, service_mgr, pkg_mgr | `host.Provider` extensions |
+| Hardware | cpu_count | `host.Provider` extension |
+| Network | interfaces (name, ipv4, mac) | New `netinfo.Provider` |
 
-**Phase 2 — Pluggable collectors (opt-in):**
+**Phase 2 — Additional providers (opt-in):**
 
-| Collector | Facts | Source |
-|-----------|-------|--------|
-| Cloud | instance_id, region, instance_type, public_ip, availability_zone | Cloud metadata endpoints (AWS/GCP/Azure `169.254.169.254`) |
+| Provider | Facts | Source |
+|----------|-------|--------|
+| Cloud | instance_id, region, instance_type, public_ip | Cloud metadata endpoints (AWS/GCP/Azure) |
 | Local | arbitrary key-value data | JSON/YAML files in `/etc/osapi/facts.d/` |
 
-All Phase 1 facts are sub-millisecond calls. Phase 2 collectors may involve
+All Phase 1 facts are sub-millisecond calls. Phase 2 providers may involve
 network I/O (cloud metadata) or file I/O (local facts).
 
 ### Storage: Same API, Separate KV
@@ -46,43 +46,40 @@ The heartbeat serves two purposes today: liveness ("I'm alive") and state
 
 **Facts KV (new `agent-facts` bucket)** — richer data, less frequent:
 - OS, architecture, kernel, CPU, memory, interfaces, load, uptime
-- Extended facts from pluggable collectors (cloud, local)
+- Extended facts from future providers
 - 60s refresh, 5min TTL
-- 1-10KB per agent (grows with extensible facts)
+- 1-10KB per agent (grows with future providers)
 
 The API merges both KVs into a single `AgentInfo` response. Consumers never
 know about the split.
 
-### Fact Collector Interface
+### Provider Pattern (Not a Plugin System)
 
-Extensible via a provider pattern in the agent:
+Facts are gathered through the existing provider layer — the same pattern
+used for `hostProvider.GetOSInfo()`, `loadProvider.GetAverageStats()`, etc.
+There is no plugin system and no `Collector` interface.
 
-```go
-// internal/agent/facts/collector.go
-type Collector interface {
-    Name() string
-    Collect(ctx context.Context) (map[string]any, error)
-}
-```
+**Extend `host.Provider`** with new methods:
+- `GetArchitecture() (string, error)`
+- `GetKernelVersion() (string, error)`
+- `GetFQDN() (string, error)`
+- `GetCPUCount() (int, error)`
+- `GetServiceManager() (string, error)`
+- `GetPackageManager() (string, error)`
 
-Built-in collectors (system, hardware, network) always run. Pluggable
-collectors (cloud, local) are opt-in via config. Collector errors are
-non-fatal — the agent writes whatever data it gathered.
+**New `netinfo.Provider`** for network interface facts:
+- `GetInterfaces() ([]NetworkInterface, error)`
+
+The facts writer calls these providers exactly like the heartbeat calls its
+providers — errors are non-fatal, the agent writes whatever data it gathered.
+
+Future cloud metadata and local facts would be additional providers added
+to the agent when needed, following the same pattern.
 
 ### Data Structure
 
-Common facts get typed fields for compile-time safety. Extended facts go
-into a flexible map for forward compatibility:
-
 ```go
-type AgentRegistration struct {
-    // Existing fields (move to facts KV)
-    OSInfo       *host.OSInfo          `json:"os_info,omitempty"`
-    Uptime       string                `json:"uptime,omitempty"`
-    LoadAverages *load.AverageStats    `json:"load_averages,omitempty"`
-    MemoryStats  *mem.Stats            `json:"memory_stats,omitempty"`
-
-    // New typed facts
+type FactsRegistration struct {
     Architecture  string               `json:"architecture,omitempty"`
     KernelVersion string               `json:"kernel_version,omitempty"`
     CPUCount      int                  `json:"cpu_count,omitempty"`
@@ -90,15 +87,16 @@ type AgentRegistration struct {
     ServiceMgr    string               `json:"service_mgr,omitempty"`
     PackageMgr    string               `json:"package_mgr,omitempty"`
     Interfaces    []NetworkInterface   `json:"interfaces,omitempty"`
-
-    // Extended facts from pluggable collectors
-    Facts map[string]any `json:"facts,omitempty"`
+    Facts         map[string]any       `json:"facts,omitempty"`
 }
 ```
 
+The `Facts map[string]any` field is reserved for future providers that
+produce unstructured data (cloud metadata, local facts).
+
 ### API Exposure
 
-No new endpoints. Existing `GET /node` and `GET /node/{hostname}` return
+No new endpoints. Existing `GET /agent` and `GET /agent/{hostname}` return
 `AgentInfo` which includes all facts. The API server reads both the registry
 and facts KV buckets and merges them.
 
@@ -155,45 +153,61 @@ nats:
 agent:
   facts:
     interval: '60s'
-    collectors:
-      - system
-      - hardware
-      - network
-      # - cloud    # auto-detect cloud platform
-      # - local    # read /etc/osapi/facts.d/
-    # local_dir: /etc/osapi/facts.d
 ```
 
 ## What Changes Where
 
 ### OSAPI (this repo)
 
-1. `internal/job/types.go` — add new typed fields + `Facts map[string]any`
-   to `AgentRegistration` and `AgentInfo`
-2. `internal/agent/facts/` — new package with `Collector` interface and
-   built-in collectors (system, hardware, network)
-3. `internal/agent/agent.go` — initialize fact collectors, start fact
-   refresh loop (separate from heartbeat)
-4. `internal/agent/heartbeat.go` — slim down to just liveness fields
-   (hostname, labels, timestamps)
-5. `internal/config/` — add `nats.facts` and `agent.facts` config sections
-6. `internal/api/agent/gen/api.yaml` — extend `AgentInfo` schema with new
-   fact fields
-7. `internal/job/client/query.go` — `ListAgents` and `GetAgent` merge
-   registry + facts KVs
-8. `internal/api/` — wire facts KV into API server startup
+1. `internal/job/types.go` — add `NetworkInterface`, `FactsRegistration`,
+   and new typed fields on `AgentInfo`
+2. `internal/provider/node/host/types.go` — extend `Provider` interface
+   with `GetArchitecture`, `GetKernelVersion`, `GetFQDN`, `GetCPUCount`,
+   `GetServiceManager`, `GetPackageManager`
+3. `internal/provider/node/host/ubuntu.go` (+ other platforms) — implement
+   new methods
+4. `internal/provider/network/netinfo/` — new provider for `GetInterfaces()`
+5. `internal/agent/types.go` — add `factsKV` and `netinfoProvider` fields
+6. `internal/agent/agent.go` — accept new provider, start facts loop
+7. `internal/agent/facts.go` — facts writer (calls providers, writes KV)
+8. `internal/agent/factory.go` — create netinfo provider
+9. `internal/config/types.go` — add `NATSFacts` and `AgentFacts` config
+10. `cmd/nats_helpers.go` — create facts KV bucket
+11. `cmd/api_helpers.go` — wire factsKV into natsBundle and job client
+12. `internal/job/client/client.go` — add `FactsKV` option
+13. `internal/job/client/query.go` — merge facts into ListAgents/GetAgent
+14. `internal/api/agent/gen/api.yaml` — extend AgentInfo schema
+15. `internal/api/agent/agent_list.go` — update buildAgentInfo mapping
+16. `osapi.yaml` — default config values
+17. Documentation (see below)
+
+### Documentation Updates
+
+18. `docs/docs/sidebar/features/node-management.md` — update "Agent vs.
+    Node" section to explain facts, add facts to "What It Manages" table
+19. `docs/docs/sidebar/architecture/system-architecture.md` — add
+    `agent-facts` KV bucket to component map, update NATS layers
+20. `docs/docs/sidebar/architecture/job-architecture.md` — add section on
+    facts collection, describe 60s interval and KV storage
+21. `docs/docs/sidebar/usage/configuration.md` — add `nats.facts` and
+    `agent.facts` config sections, env var table, section reference
+22. `docs/docs/sidebar/usage/cli/client/agent/list.md` — update example
+    output and column table with facts data
+23. `docs/docs/sidebar/usage/cli/client/agent/get.md` — add facts fields
+    to output example and field table
+24. `docs/docs/sidebar/usage/cli/client/health/status.md` — add
+    agent-facts bucket to KV buckets section
 
 ### SDK (osapi-sdk)
 
-9. Sync api.yaml, regenerate — `AgentInfo` gets new fields automatically
-10. No code changes needed
+25. Sync api.yaml, regenerate — `AgentInfo` gets new fields automatically
 
 ### Orchestrator (osapi-orchestrator)
 
-11. `Discover()` method — query `Agent.List()`, apply fact predicates
-12. Fact predicates — `OS()`, `Arch()`, `MinMemory()`, `FactEquals()`, etc.
-13. `WhenFact()` step method
-14. `GroupByFact()` method
+26. `Discover()` method — query `Agent.List()`, apply fact predicates
+27. Fact predicates — `OS()`, `Arch()`, `MinMemory()`, `FactEquals()`, etc.
+28. `WhenFact()` step method
+29. `GroupByFact()` method
 
 ## What This Does NOT Change
 
@@ -203,12 +217,11 @@ agent:
 - Labels remain the primary routing mechanism; facts are for conditional
   logic and discovery
 - Existing heartbeat liveness behavior unchanged
+- No plugin system — facts are gathered through the provider layer
 
 ## Phases
 
-- **Phase 1**: Typed facts (system, hardware, network), separate KV,
-  `Collector` interface, API exposure, SDK sync
-- **Phase 2**: Cloud metadata collector, local facts collector,
-  `agent.facts` config section
+- **Phase 1**: Typed facts via providers, separate KV, API exposure, docs
+- **Phase 2**: Cloud metadata provider, local facts provider
 - **Phase 3**: Orchestrator DSL extensions (`Discover`, `WhenFact`,
   `GroupByFact`)
