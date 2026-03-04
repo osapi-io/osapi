@@ -50,6 +50,10 @@ uppercased:
 | `nats.registry.ttl`                | `OSAPI_NATS_REGISTRY_TTL`                |
 | `nats.registry.storage`            | `OSAPI_NATS_REGISTRY_STORAGE`            |
 | `nats.registry.replicas`           | `OSAPI_NATS_REGISTRY_REPLICAS`           |
+| `nats.facts.bucket`               | `OSAPI_NATS_FACTS_BUCKET`                |
+| `nats.facts.ttl`                  | `OSAPI_NATS_FACTS_TTL`                   |
+| `nats.facts.storage`              | `OSAPI_NATS_FACTS_STORAGE`               |
+| `nats.facts.replicas`             | `OSAPI_NATS_FACTS_REPLICAS`              |
 | `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
 | `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
 | `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
@@ -59,6 +63,7 @@ uppercased:
 | `agent.nats.namespace`             | `OSAPI_AGENT_NATS_NAMESPACE`             |
 | `agent.nats.auth.type`             | `OSAPI_AGENT_NATS_AUTH_TYPE`             |
 | `agent.hostname`                   | `OSAPI_AGENT_HOSTNAME`                   |
+| `agent.facts.interval`             | `OSAPI_AGENT_FACTS_INTERVAL`             |
 
 Environment variables take precedence over file values.
 
@@ -308,6 +313,17 @@ nats:
     # Number of KV replicas.
     replicas: 1
 
+  # ── Facts KV bucket ──────────────────────────────────────
+  facts:
+    # KV bucket for agent facts entries.
+    bucket: 'agent-facts'
+    # TTL for facts entries (Go duration).
+    ttl: '5m'
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of KV replicas.
+    replicas: 1
+
   # ── Dead Letter Queue ─────────────────────────────────────
   dlq:
     # Maximum age of messages in the DLQ.
@@ -359,6 +375,10 @@ agent:
       - '5m'
       - '15m'
       - '30m'
+  # Facts collection settings.
+  facts:
+    # How often the agent collects and publishes facts.
+    interval: '60s'
   # Queue group for load-balanced (_any) subscriptions.
   queue_group: 'job-agents'
   # Agent hostname for direct routing. Defaults to the
@@ -452,6 +472,15 @@ agent:
 | `storage`  | string | `"file"` or `"memory"`                |
 | `replicas` | int    | Number of KV replicas                 |
 
+### `nats.facts`
+
+| Key        | Type   | Description                       |
+| ---------- | ------ | --------------------------------- |
+| `bucket`   | string | KV bucket for agent facts entries |
+| `ttl`      | string | Entry time-to-live (Go duration)  |
+| `storage`  | string | `"file"` or `"memory"`            |
+| `replicas` | int    | Number of KV replicas             |
+
 ### `nats.dlq`
 
 | Key        | Type   | Description                       |
@@ -489,4 +518,5 @@ agent:
 | `queue_group`              | string            | Queue group for load-balanced routing    |
 | `hostname`                 | string            | Agent hostname (defaults to OS hostname) |
 | `max_jobs`                 | int               | Max concurrent jobs                      |
+| `facts.interval`           | string            | How often the agent collects facts       |
 | `labels`                   | map[string]string | Key-value pairs for label-based routing  |
