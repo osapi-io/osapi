@@ -49,12 +49,12 @@ import (
 type FactsTestSuite struct {
 	suite.Suite
 
-	mockCtrl        *gomock.Controller
-	mockJobClient   *mocks.MockJobClient
-	mockFactsKV     *mocks.MockKeyValue
+	mockCtrl         *gomock.Controller
+	mockJobClient    *mocks.MockJobClient
+	mockFactsKV      *mocks.MockKeyValue
 	mockHostProvider *hostMocks.MockProvider
-	mockNetinfo     *netinfoMocks.MockProvider
-	agent           *Agent
+	mockNetinfo      *netinfoMocks.MockProvider
+	agent            *Agent
 }
 
 func (s *FactsTestSuite) SetupTest() {

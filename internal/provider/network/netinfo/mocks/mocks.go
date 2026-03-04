@@ -36,7 +36,13 @@ func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 	mock := NewMockProvider(ctrl)
 
 	mock.EXPECT().GetInterfaces().Return([]job.NetworkInterface{
-		{Name: "eth0", IPv4: "192.168.1.10", IPv6: "fe80::1", MAC: "00:11:22:33:44:55", Family: "dual"},
+		{
+			Name:   "eth0",
+			IPv4:   "192.168.1.10",
+			IPv6:   "fe80::1",
+			MAC:    "00:11:22:33:44:55",
+			Family: "dual",
+		},
 	}, nil).AnyTimes()
 
 	return mock

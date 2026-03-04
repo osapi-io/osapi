@@ -234,7 +234,13 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				ServiceMgr:    "systemd",
 				PackageMgr:    "apt",
 				Interfaces: []job.NetworkInterface{
-					{Name: "eth0", IPv4: "10.0.0.1", IPv6: "fe80::1", MAC: "aa:bb:cc:dd:ee:ff", Family: "dual"},
+					{
+						Name:   "eth0",
+						IPv4:   "10.0.0.1",
+						IPv6:   "fe80::1",
+						MAC:    "aa:bb:cc:dd:ee:ff",
+						Family: "dual",
+					},
 				},
 				Facts: map[string]any{
 					"custom": "value",

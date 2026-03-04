@@ -47,7 +47,7 @@ func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 		{
 			name: "when systemd detected",
 			setupMock: func(u *host.Ubuntu) {
-				u.StatFn = func(name string) (os.FileInfo, error) {
+				u.StatFn = func(_ string) (os.FileInfo, error) {
 					return nil, nil
 				}
 			},
@@ -57,7 +57,7 @@ func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 		{
 			name: "when systemd not detected",
 			setupMock: func(u *host.Ubuntu) {
-				u.StatFn = func(name string) (os.FileInfo, error) {
+				u.StatFn = func(_ string) (os.FileInfo, error) {
 					return nil, os.ErrNotExist
 				}
 			},
