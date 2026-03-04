@@ -35,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
+	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
@@ -134,8 +135,10 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 					s.mockKV,
+					nil,
 				)
 			},
 			stopFunc: func(a *agent.Agent) {
@@ -171,7 +174,9 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},

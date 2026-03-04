@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -58,11 +59,17 @@ type Agent struct {
 	dnsProvider  dns.Provider
 	pingProvider ping.Provider
 
+	// Network info provider
+	netinfoProvider netinfo.Provider
+
 	// Command provider
 	commandProvider command.Provider
 
 	// Registry KV for heartbeat registration
 	registryKV jetstream.KeyValue
+
+	// Facts KV for system facts collection
+	factsKV jetstream.KeyValue
 
 	// startedAt records when the agent process started.
 	startedAt time.Time

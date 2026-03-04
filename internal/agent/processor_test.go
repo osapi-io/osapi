@@ -37,6 +37,7 @@ import (
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
+	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
@@ -101,6 +102,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		PacketLoss:      0,
 	}, nil).AnyTimes()
 
+	netinfoMock := netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.agent = New(
@@ -115,7 +117,9 @@ func (s *ProcessorTestSuite) SetupTest() {
 		loadMock,
 		dnsMock,
 		pingMock,
+		netinfoMock,
 		commandMock,
+		nil,
 		nil,
 	)
 }
@@ -658,7 +662,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -684,7 +690,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -708,7 +716,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -732,7 +742,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -756,7 +768,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -780,7 +794,9 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					loadMock,
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -838,7 +854,9 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -866,7 +884,9 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMock,
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},
@@ -892,7 +912,9 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingMock,
+					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 				)
 			},

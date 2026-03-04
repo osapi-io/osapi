@@ -30,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -50,8 +51,10 @@ func New(
 	loadProvider load.Provider,
 	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
+	netinfoProvider netinfo.Provider,
 	commandProvider command.Provider,
 	registryKV jetstream.KeyValue,
+	factsKV jetstream.KeyValue,
 ) *Agent {
 	return &Agent{
 		logger:          logger,
@@ -65,7 +68,9 @@ func New(
 		loadProvider:    loadProvider,
 		dnsProvider:     dnsProvider,
 		pingProvider:    pingProvider,
+		netinfoProvider: netinfoProvider,
 		commandProvider: commandProvider,
 		registryKV:      registryKV,
+		factsKV:         factsKV,
 	}
 }

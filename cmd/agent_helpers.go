@@ -45,7 +45,7 @@ func setupAgent(
 	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
 
 	providerFactory := agent.NewProviderFactory(log)
-	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider := providerFactory.CreateProviders()
+	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := providerFactory.CreateProviders()
 
 	a := agent.New(
 		appFs,
@@ -59,8 +59,10 @@ func setupAgent(
 		loadProvider,
 		dnsProvider,
 		pingProvider,
+		netinfoProvider,
 		commandProvider,
 		b.registryKV,
+		b.factsKV,
 	)
 
 	return a, b
