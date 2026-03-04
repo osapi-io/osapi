@@ -22,7 +22,7 @@ cloud region).
 |----------|-------|--------|
 | System | architecture, kernel_version, fqdn, service_mgr, pkg_mgr | `host.Provider` extensions |
 | Hardware | cpu_count | `host.Provider` extension |
-| Network | interfaces (name, ipv4, mac) | New `netinfo.Provider` |
+| Network | interfaces (name, ipv4, ipv6, mac) | New `netinfo.Provider` |
 
 **Phase 2 — Additional providers (opt-in):**
 

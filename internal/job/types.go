@@ -253,6 +253,7 @@ type NodeShutdownData struct {
 type NetworkInterface struct {
 	Name string `json:"name"`
 	IPv4 string `json:"ipv4,omitempty"`
+	IPv6 string `json:"ipv6,omitempty"`
 	MAC  string `json:"mac,omitempty"`
 }
 

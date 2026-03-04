@@ -61,10 +61,15 @@ func (n *Netinfo) GetInterfaces() ([]job.NetworkInterface, error) {
 		addrs, err := iface.Addrs()
 		if err == nil {
 			for _, addr := range addrs {
-				if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil {
-					ni.IPv4 = ipNet.IP.String()
+				ipNet, ok := addr.(*net.IPNet)
+				if !ok {
+					continue
+				}
 
-					break
+				if ipNet.IP.To4() != nil && ni.IPv4 == "" {
+					ni.IPv4 = ipNet.IP.String()
+				} else if ipNet.IP.To4() == nil && ni.IPv6 == "" {
+					ni.IPv6 = ipNet.IP.String()
 				}
 			}
 		}

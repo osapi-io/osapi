@@ -52,11 +52,13 @@ func (suite *TypesPublicTestSuite) TestNetworkInterfaceJSONRoundTrip() {
 			iface: job.NetworkInterface{
 				Name: "eth0",
 				IPv4: "192.168.1.100",
+				IPv6: "fe80::1",
 				MAC:  "00:1a:2b:3c:4d:5e",
 			},
 			validateFunc: func(result job.NetworkInterface) {
 				suite.Equal("eth0", result.Name)
 				suite.Equal("192.168.1.100", result.IPv4)
+				suite.Equal("fe80::1", result.IPv6)
 				suite.Equal("00:1a:2b:3c:4d:5e", result.MAC)
 			},
 		},
@@ -68,6 +70,7 @@ func (suite *TypesPublicTestSuite) TestNetworkInterfaceJSONRoundTrip() {
 			validateFunc: func(result job.NetworkInterface) {
 				suite.Equal("lo", result.Name)
 				suite.Empty(result.IPv4)
+				suite.Empty(result.IPv6)
 				suite.Empty(result.MAC)
 			},
 		},
@@ -228,7 +231,7 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				ServiceMgr:    "systemd",
 				PackageMgr:    "apt",
 				Interfaces: []job.NetworkInterface{
-					{Name: "eth0", IPv4: "10.0.0.1", MAC: "aa:bb:cc:dd:ee:ff"},
+					{Name: "eth0", IPv4: "10.0.0.1", IPv6: "fe80::1", MAC: "aa:bb:cc:dd:ee:ff"},
 				},
 				Facts: map[string]any{
 					"custom": "value",
@@ -246,6 +249,7 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				suite.Len(result.Interfaces, 1)
 				suite.Equal("eth0", result.Interfaces[0].Name)
 				suite.Equal("10.0.0.1", result.Interfaces[0].IPv4)
+				suite.Equal("fe80::1", result.Interfaces[0].IPv6)
 				suite.Equal("aa:bb:cc:dd:ee:ff", result.Interfaces[0].MAC)
 				suite.Equal("value", result.Facts["custom"])
 			},
