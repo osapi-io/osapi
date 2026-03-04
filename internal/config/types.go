@@ -92,6 +92,7 @@ type NATS struct {
 	DLQ      NATSDLQ      `mapstructure:"dlq,omitempty"`
 	Audit    NATSAudit    `mapstructure:"audit,omitempty"`
 	Registry NATSRegistry `mapstructure:"registry,omitempty"`
+	Facts    NATSFacts    `mapstructure:"facts,omitempty"`
 }
 
 // NATSAudit configuration for the audit log KV bucket.
@@ -109,6 +110,15 @@ type NATSRegistry struct {
 	// Bucket is the KV bucket name for agent registration entries.
 	Bucket   string `mapstructure:"bucket"`
 	TTL      string `mapstructure:"ttl"`     // e.g. "30s"
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSFacts configuration for the agent facts KV bucket.
+type NATSFacts struct {
+	// Bucket is the KV bucket name for agent facts entries.
+	Bucket   string `mapstructure:"bucket"`
+	TTL      string `mapstructure:"ttl"`     // e.g. "1h"
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }
@@ -242,12 +252,20 @@ type AgentConsumer struct {
 	BackOff []string `mapstructure:"back_off"` // e.g. ["30s", "2m", "5m"]
 }
 
+// AgentFacts configuration for the agent's facts collection settings.
+type AgentFacts struct {
+	// Interval is how often the agent collects and publishes facts.
+	Interval string `mapstructure:"interval"` // e.g. "5m", "1h"
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
 	NATS NATSConnection `mapstructure:"nats"`
 	// Consumer settings for the agent's JetStream consumer.
 	Consumer AgentConsumer `mapstructure:"consumer,omitempty"`
+	// Facts settings for the agent's facts collection.
+	Facts AgentFacts `mapstructure:"facts,omitempty"`
 	// QueueGroup for load balancing multiple agents.
 	QueueGroup string `mapstructure:"queue_group"`
 	// Hostname identifies this agent instance for routing.
