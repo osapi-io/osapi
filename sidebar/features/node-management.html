@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Node Management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/node-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Node Management | OSAPI"><meta data-rh="true" name="description" content="OSAPI can query a variety of system-level information from managed nodes. All"><meta data-rh="true" property="og:description" content="OSAPI can query a variety of system-level information from managed nodes. All"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/node-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/node-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/node-management" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.56a51dbd.css">
-<script src="/osapi/assets/js/runtime~main.78c71446.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.0643d8f1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.89f37168.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -18,7 +18,12 @@ host.</p>
 <ul>
 <li><strong>Agent</strong> commands (<code>agent list</code>, <code>agent get</code>) read directly from the NATS KV
 heartbeat registry. They show which agents are online, their labels, and
-lightweight metrics from the last heartbeat. No jobs are created.</li>
+lightweight metrics from the last heartbeat. No jobs are created. Agents also
+expose typed <strong>system facts</strong> (architecture, kernel version, FQDN, CPU count,
+network interfaces, service manager, package manager) gathered every 60
+seconds via providers and stored in a separate <code>agent-facts</code> KV bucket with a
+5-minute TTL. The API merges registry and facts data into a single <code>AgentInfo</code>
+response.</li>
 <li><strong>Node</strong> commands (<code>node hostname</code>, <code>node status</code>) dispatch jobs to agents
 that execute system commands and return detailed results (disk usage, full
 memory breakdown, etc.).</li>
@@ -53,7 +58,11 @@ memory breakdown, etc.).</li>
 
 
 
-<table><thead><tr><th>Resource</th><th>Description</th></tr></thead><tbody><tr><td>Hostname</td><td>System hostname</td></tr><tr><td>Status</td><td>Uptime, OS name and version, kernel, platform info</td></tr><tr><td>Disk</td><td>Per-mount usage (total, used, free, percent)</td></tr><tr><td>Memory</td><td>RAM and swap usage (total, used, free, percent)</td></tr><tr><td>Load</td><td>1-, 5-, and 15-minute load averages</td></tr></tbody></table>
+
+
+
+
+<table><thead><tr><th>Resource</th><th>Description</th></tr></thead><tbody><tr><td>Hostname</td><td>System hostname</td></tr><tr><td>Status</td><td>Uptime, OS name and version, kernel, platform info</td></tr><tr><td>Disk</td><td>Per-mount usage (total, used, free, percent)</td></tr><tr><td>Memory</td><td>RAM and swap usage (total, used, free, percent)</td></tr><tr><td>Load</td><td>1-, 5-, and 15-minute load averages</td></tr><tr><td>System Facts</td><td>Architecture, kernel, FQDN, CPUs, NICs, service/pkg mgr</td></tr></tbody></table>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="how-it-works">How It Works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How It Works" title="Direct link to How It Works">​</a></h2>
 <p>Node queries are submitted as jobs. The CLI posts a job to the API server, the
 API server publishes it to NATS, an agent picks it up and reads the requested
