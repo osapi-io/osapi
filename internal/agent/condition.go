@@ -69,8 +69,7 @@ func evaluateMemoryPressure(
 		c.LastTransitionTime = transitionTime(c.Type, false, prev)
 		return c
 	}
-	available := stats.Free + stats.Cached
-	used := stats.Total - available
+	used := stats.Total - stats.Available
 	pct := float64(used) / float64(stats.Total) * 100
 	c.Status = pct > float64(threshold)
 	if c.Status {

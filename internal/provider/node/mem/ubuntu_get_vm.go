@@ -30,8 +30,9 @@ func (u *Ubuntu) GetStats() (*Stats, error) {
 	}
 
 	return &Stats{
-		Total:  memInfo.Total,
-		Free:   memInfo.Free,
-		Cached: memInfo.Cached,
+		Total:     memInfo.Total,
+		Available: memInfo.Available,
+		Free:      memInfo.Free,
+		Cached:    memInfo.Cached,
 	}, nil
 }

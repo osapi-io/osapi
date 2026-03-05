@@ -198,8 +198,8 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		{
 			name: "when usage above threshold returns true with reason",
 			stats: &mem.Stats{
-				Total: 8 * 1024 * 1024 * 1024, // 8 GB
-				Free:  1 * 1024 * 1024 * 1024, // 1 GB free = 87.5% used
+				Total:     8 * 1024 * 1024 * 1024, // 8 GB
+				Available: 1 * 1024 * 1024 * 1024, // 1 GB available = 87.5% used
 			},
 			threshold: 80,
 			prev:      nil,
@@ -214,8 +214,8 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		{
 			name: "when usage below threshold returns false",
 			stats: &mem.Stats{
-				Total: 8 * 1024 * 1024 * 1024, // 8 GB
-				Free:  6 * 1024 * 1024 * 1024, // 6 GB free = 25% used
+				Total:     8 * 1024 * 1024 * 1024, // 8 GB
+				Available: 6 * 1024 * 1024 * 1024, // 6 GB available = 25% used
 			},
 			threshold: 80,
 			prev:      nil,
@@ -239,23 +239,8 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		{
 			name: "when total is zero returns false",
 			stats: &mem.Stats{
-				Total: 0,
-				Free:  0,
-			},
-			threshold: 80,
-			prev:      nil,
-			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
-				s.False(c.Status)
-				s.Empty(c.Reason)
-			},
-		},
-		{
-			name: "when cached memory brings usage below threshold returns false",
-			stats: &mem.Stats{
-				Total:  8 * 1024 * 1024 * 1024, // 8 GB
-				Free:   512 * 1024 * 1024,       // 0.5 GB free
-				Cached: 4 * 1024 * 1024 * 1024,  // 4 GB cached (reclaimable)
+				Total:     0,
+				Available: 0,
 			},
 			threshold: 80,
 			prev:      nil,
@@ -268,8 +253,8 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		{
 			name: "when usage exactly at threshold returns false",
 			stats: &mem.Stats{
-				Total: 100,
-				Free:  20, // 80% used, threshold is 80 (> not >=)
+				Total:     100,
+				Available: 20, // 80% used, threshold is 80 (> not >=)
 			},
 			threshold: 80,
 			prev:      nil,
@@ -526,8 +511,8 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
 					&mem.Stats{
-						Total: 100,
-						Free:  10, // 90% used
+						Total:     100,
+						Available: 10, // 90% used
 					},
 					80,
 					prev,
@@ -551,8 +536,8 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
 					&mem.Stats{
-						Total: 100,
-						Free:  10, // 90% used
+						Total:     100,
+						Available: 10, // 90% used
 					},
 					80,
 					prev,
@@ -575,8 +560,8 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
 					&mem.Stats{
-						Total: 100,
-						Free:  80, // 20% used
+						Total:     100,
+						Available: 80, // 20% used
 					},
 					80,
 					prev,
@@ -600,8 +585,8 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
 					&mem.Stats{
-						Total: 100,
-						Free:  80, // 20% used
+						Total:     100,
+						Available: 80, // 20% used
 					},
 					80,
 					prev,
