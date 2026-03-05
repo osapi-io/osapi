@@ -222,6 +222,69 @@ func (suite *NATSPublicTestSuite) TestBuildRegistryKVConfig() {
 	}
 }
 
+func (suite *NATSPublicTestSuite) TestBuildFactsKVConfig() {
+	tests := []struct {
+		name       string
+		namespace  string
+		factsCfg   config.NATSFacts
+		validateFn func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			factsCfg: config.NATSFacts{
+				Bucket:   "agent-facts",
+				TTL:      "1h",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-agent-facts", cfg.Bucket)
+				assert.Equal(suite.T(), 1*time.Hour, cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			factsCfg: config.NATSFacts{
+				Bucket:   "agent-facts",
+				TTL:      "30m",
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "agent-facts", cfg.Bucket)
+				assert.Equal(suite.T(), 30*time.Minute, cfg.TTL)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when TTL is invalid defaults to zero",
+			namespace: "",
+			factsCfg: config.NATSFacts{
+				Bucket:   "agent-facts",
+				TTL:      "invalid",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildFactsKVConfig(tc.namespace, tc.factsCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
 func (suite *NATSPublicTestSuite) TestBuildAuditKVConfig() {
 	tests := []struct {
 		name       string

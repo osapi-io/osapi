@@ -22,8 +22,8 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
@@ -59,63 +59,64 @@ var clientNodeCommandShellCmd = &cobra.Command{
 			Target:  host,
 		})
 		if err != nil {
-			cli.LogFatal(logger, "failed to execute shell command", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusAccepted:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if (showStdout || showStderr) && resp.JSON202 != nil {
-				fmt.Println()
-				results := buildRawResults(resp.JSON202.Results)
-				cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
-				if code := cli.MaxExitCode(results); code != 0 {
-					os.Exit(code)
+		if showStdout || showStderr {
+			fmt.Println()
+			results := buildRawResults(resp.Data.Results)
+			cli.PrintRawOutput(os.Stdout, os.Stderr, results, showStdout, showStderr)
+			if code := cli.MaxExitCode(results); code != 0 {
+				os.Exit(code)
+			}
+			return
+		}
+
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
+
+		if len(resp.Data.Results) > 0 {
+			results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+			for _, r := range resp.Data.Results {
+				var errPtr *string
+				if r.Error != "" {
+					errPtr = &r.Error
 				}
-				return
-			}
-
-			if resp.JSON202 != nil && resp.JSON202.JobId != nil {
-				fmt.Println()
-				cli.PrintKV("Job ID", resp.JSON202.JobId.String())
-			}
-
-			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
-				results := make([]cli.ResultRow, 0, len(resp.JSON202.Results))
-				for _, r := range resp.JSON202.Results {
-					results = append(results, cli.ResultRow{
-						Hostname: r.Hostname,
-						Changed:  r.Changed,
-						Error:    r.Error,
-						Fields: []string{
-							cli.SafeString(r.Stdout),
-							cli.SafeString(r.Stderr),
-							cli.IntToSafeString(r.ExitCode),
-							formatDurationMs(r.DurationMs),
-						},
-					})
+				var changedPtr *bool
+				if r.Changed {
+					changedPtr = &r.Changed
 				}
-				headers, rows := cli.BuildBroadcastTable(results, []string{
-					"STDOUT",
-					"STDERR",
-					"EXIT CODE",
-					"DURATION",
+				durationStr := ""
+				if r.DurationMs > 0 {
+					durationStr = strconv.FormatInt(r.DurationMs, 10) + "ms"
+				}
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Changed:  changedPtr,
+					Error:    errPtr,
+					Fields: []string{
+						r.Stdout,
+						r.Stderr,
+						strconv.Itoa(r.ExitCode),
+						durationStr,
+					},
 				})
-				cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 			}
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			headers, rows := cli.BuildBroadcastTable(results, []string{
+				"STDOUT",
+				"STDERR",
+				"EXIT CODE",
+				"DURATION",
+			})
+			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 		}
 	},
 }

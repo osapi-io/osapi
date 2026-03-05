@@ -1348,6 +1348,38 @@ components:
           $ref: '#/components/schemas/LoadAverageResponse'
         memory:
           $ref: '#/components/schemas/MemoryResponse'
+        architecture:
+          type: string
+          description: CPU architecture.
+          example: amd64
+        kernel_version:
+          type: string
+          description: OS kernel version.
+          example: 5.15.0-91-generic
+        cpu_count:
+          type: integer
+          description: Number of logical CPUs.
+          example: 4
+        fqdn:
+          type: string
+          description: Fully qualified domain name.
+          example: web-01.example.com
+        service_mgr:
+          type: string
+          description: Init system.
+          example: systemd
+        package_mgr:
+          type: string
+          description: Package manager.
+          example: apt
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkInterfaceResponse'
+        facts:
+          type: object
+          additionalProperties: true
+          description: Extended facts from additional providers.
       required:
         - hostname
         - status
@@ -1406,6 +1438,31 @@ components:
       required:
         - distribution
         - version
+    NetworkInterfaceResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: eth0
+        ipv4:
+          type: string
+          example: 192.168.1.10
+        ipv6:
+          type: string
+          example: fe80::1
+        mac:
+          type: string
+          example: '00:11:22:33:44:55'
+        family:
+          type: string
+          description: IP address family.
+          example: dual
+          enum:
+            - inet
+            - inet6
+            - dual
+      required:
+        - name
     AuditEntry:
       type: object
       properties:

@@ -13,14 +13,14 @@ that can either hit the REST API directly or manage the job queue.
 
 The system is organized into six layers, top to bottom:
 
-| Layer                      | Package                                 | Role                                              |
-| -------------------------- | --------------------------------------- | ------------------------------------------------- |
-| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                  |
-| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI              |
-| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                   |
-| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status            |
-| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses` |
-| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs from NATS and executes providers    |
+| Layer                      | Package                                 | Role                                                                |
+| -------------------------- | --------------------------------------- | ------------------------------------------------------------------- |
+| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                    |
+| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI                                |
+| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                     |
+| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                              |
+| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts` |
+| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, publishes system facts           |
 
 ```mermaid
 graph TD

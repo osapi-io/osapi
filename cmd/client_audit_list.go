@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -48,66 +47,51 @@ response status, and duration. Requires audit:read permission.
 		ctx := cmd.Context()
 		resp, err := sdkClient.Audit.List(ctx, auditListLimit, auditListOffset)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get audit logs", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("audit list response was nil"))
-			}
+		fmt.Println()
+		cli.PrintKV("Total", strconv.Itoa(resp.Data.TotalItems))
 
-			fmt.Println()
-			cli.PrintKV("Total", strconv.Itoa(resp.JSON200.TotalItems))
+		if len(resp.Data.Items) == 0 {
+			fmt.Println("  No audit entries found.")
+			return
+		}
 
-			if len(resp.JSON200.Items) == 0 {
-				fmt.Println("  No audit entries found.")
-				return
-			}
-
-			rows := make([][]string, 0, len(resp.JSON200.Items))
-			for _, entry := range resp.JSON200.Items {
-				rows = append(rows, []string{
-					entry.Id.String(),
-					entry.Timestamp.Format("2006-01-02 15:04:05"),
-					entry.User,
-					entry.Method,
-					entry.Path,
-					strconv.Itoa(entry.ResponseCode),
-					strconv.FormatInt(entry.DurationMs, 10) + "ms",
-				})
-			}
-
-			cli.PrintCompactTable([]cli.Section{
-				{
-					Title: "Audit Entries",
-					Headers: []string{
-						"ID",
-						"TIMESTAMP",
-						"USER",
-						"METHOD",
-						"PATH",
-						"STATUS",
-						"DURATION",
-					},
-					Rows: rows,
-				},
+		rows := make([][]string, 0, len(resp.Data.Items))
+		for _, entry := range resp.Data.Items {
+			rows = append(rows, []string{
+				entry.ID,
+				entry.Timestamp.Format("2006-01-02 15:04:05"),
+				entry.User,
+				entry.Method,
+				entry.Path,
+				strconv.Itoa(entry.ResponseCode),
+				strconv.FormatInt(entry.DurationMs, 10) + "ms",
 			})
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
 		}
+
+		cli.PrintCompactTable([]cli.Section{
+			{
+				Title: "Audit Entries",
+				Headers: []string{
+					"ID",
+					"TIMESTAMP",
+					"USER",
+					"METHOD",
+					"PATH",
+					"STATUS",
+					"DURATION",
+				},
+				Rows: rows,
+			},
+		})
 	},
 }
 

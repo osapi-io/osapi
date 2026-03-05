@@ -35,6 +35,51 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
+// GetArchitecture mocks base method.
+func (m *MockProvider) GetArchitecture() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetArchitecture")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetArchitecture indicates an expected call of GetArchitecture.
+func (mr *MockProviderMockRecorder) GetArchitecture() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetArchitecture", reflect.TypeOf((*MockProvider)(nil).GetArchitecture))
+}
+
+// GetCPUCount mocks base method.
+func (m *MockProvider) GetCPUCount() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCPUCount")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCPUCount indicates an expected call of GetCPUCount.
+func (mr *MockProviderMockRecorder) GetCPUCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCPUCount", reflect.TypeOf((*MockProvider)(nil).GetCPUCount))
+}
+
+// GetFQDN mocks base method.
+func (m *MockProvider) GetFQDN() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFQDN")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFQDN indicates an expected call of GetFQDN.
+func (mr *MockProviderMockRecorder) GetFQDN() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFQDN", reflect.TypeOf((*MockProvider)(nil).GetFQDN))
+}
+
 // GetHostname mocks base method.
 func (m *MockProvider) GetHostname() (string, error) {
 	m.ctrl.T.Helper()
@@ -50,6 +95,21 @@ func (mr *MockProviderMockRecorder) GetHostname() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHostname", reflect.TypeOf((*MockProvider)(nil).GetHostname))
 }
 
+// GetKernelVersion mocks base method.
+func (m *MockProvider) GetKernelVersion() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKernelVersion")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKernelVersion indicates an expected call of GetKernelVersion.
+func (mr *MockProviderMockRecorder) GetKernelVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKernelVersion", reflect.TypeOf((*MockProvider)(nil).GetKernelVersion))
+}
+
 // GetOSInfo mocks base method.
 func (m *MockProvider) GetOSInfo() (*host.OSInfo, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +123,36 @@ func (m *MockProvider) GetOSInfo() (*host.OSInfo, error) {
 func (mr *MockProviderMockRecorder) GetOSInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOSInfo", reflect.TypeOf((*MockProvider)(nil).GetOSInfo))
+}
+
+// GetPackageManager mocks base method.
+func (m *MockProvider) GetPackageManager() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPackageManager")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPackageManager indicates an expected call of GetPackageManager.
+func (mr *MockProviderMockRecorder) GetPackageManager() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPackageManager", reflect.TypeOf((*MockProvider)(nil).GetPackageManager))
+}
+
+// GetServiceManager mocks base method.
+func (m *MockProvider) GetServiceManager() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetServiceManager")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetServiceManager indicates an expected call of GetServiceManager.
+func (mr *MockProviderMockRecorder) GetServiceManager() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServiceManager", reflect.TypeOf((*MockProvider)(nil).GetServiceManager))
 }
 
 // GetUptime mocks base method.

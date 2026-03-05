@@ -22,6 +22,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -30,7 +31,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 )
 
 // Theme colors for terminal UI rendering.
@@ -363,21 +364,21 @@ func FormatList(
 
 // FormatLabels formats a label map as "key:value, key:value" sorted by key.
 func FormatLabels(
-	labels *map[string]string,
+	labels map[string]string,
 ) string {
-	if labels == nil || len(*labels) == 0 {
+	if len(labels) == 0 {
 		return ""
 	}
 
-	keys := make([]string, 0, len(*labels))
-	for k := range *labels {
+	keys := make([]string, 0, len(labels))
+	for k := range labels {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
 	parts := make([]string, 0, len(keys))
 	for _, k := range keys {
-		parts = append(parts, k+":"+(*labels)[k])
+		parts = append(parts, k+":"+labels[k])
 	}
 	return strings.Join(parts, ", ")
 }
@@ -474,85 +475,64 @@ func IntToSafeString(
 	return "N/A"
 }
 
-// HandleAuthError handles authentication and authorization errors (401 and 403).
-func HandleAuthError(
-	jsonError *gen.ErrorResponse,
-	statusCode int,
+// HandleError logs the appropriate error message based on the SDK error type.
+func HandleError(
+	err error,
 	logger *slog.Logger,
 ) {
-	errorMsg := "unknown error"
+	var apiErr *osapi.APIError
+	if errors.As(err, &apiErr) {
+		logger.Error(
+			"api error",
+			slog.Int("code", apiErr.StatusCode),
+			slog.String("error", apiErr.Message),
+		)
 
-	if jsonError != nil && jsonError.Error != nil {
-		errorMsg = SafeString(jsonError.Error)
+		return
 	}
 
-	logger.Error(
-		"authorization error",
-		slog.Int("code", statusCode),
-		slog.String("response", errorMsg),
-	)
+	logger.Error("error", slog.String("error", err.Error()))
 }
 
-// HandleUnknownError handles unexpected errors, such as 500 Internal Server Error.
-func HandleUnknownError(
-	json500 *gen.ErrorResponse,
-	statusCode int,
-	logger *slog.Logger,
-) {
-	errorMsg := "unknown error"
-
-	if json500 != nil && json500.Error != nil {
-		errorMsg = SafeString(json500.Error)
-	}
-
-	logger.Error(
-		"error in response",
-		slog.Int("code", statusCode),
-		slog.String("error", errorMsg),
-	)
-}
-
-// DisplayJobDetailResponse displays detailed job information from a REST API response.
+// DisplayJobDetail displays detailed job information from domain types.
 // Used by both job get and job run commands.
-func DisplayJobDetailResponse(
-	resp *gen.JobDetailResponse,
+func DisplayJobDetail(
+	resp *osapi.JobDetail,
 ) {
 	// Display job metadata
 	fmt.Println()
-	PrintKV("Job ID", SafeUUID(resp.Id), "Status", SafeString(resp.Status))
-	if resp.Hostname != nil && *resp.Hostname != "" {
-		PrintKV("Hostname", *resp.Hostname)
+	PrintKV("Job ID", resp.ID, "Status", resp.Status)
+	if resp.Hostname != "" {
+		PrintKV("Hostname", resp.Hostname)
 	}
-	if resp.Created != nil {
-		PrintKV("Created", *resp.Created)
+	if resp.Created != "" {
+		PrintKV("Created", resp.Created)
 	}
-	if resp.UpdatedAt != nil && *resp.UpdatedAt != "" {
-		PrintKV("Updated At", *resp.UpdatedAt)
+	if resp.UpdatedAt != "" {
+		PrintKV("Updated At", resp.UpdatedAt)
 	}
-	if resp.Error != nil && *resp.Error != "" {
-		PrintKV("Error", *resp.Error)
+	if resp.Error != "" {
+		PrintKV("Error", resp.Error)
 	}
 
 	// Add agent summary from agent_states
-	if resp.AgentStates != nil && len(*resp.AgentStates) > 0 {
+	if len(resp.AgentStates) > 0 {
 		completed := 0
 		failed := 0
 		processing := 0
 
-		for _, state := range *resp.AgentStates {
-			if state.Status != nil {
-				switch *state.Status {
-				case "completed":
-					completed++
-				case "failed":
-					failed++
-				case "started":
-					processing++
-				}
+		for _, state := range resp.AgentStates {
+			switch state.Status {
+			case "completed":
+				completed++
+			case "failed":
+				failed++
+			case "started":
+				processing++
 			}
 		}
 
-		total := len(*resp.AgentStates)
+		total := len(resp.AgentStates)
 		if total > 1 {
 			PrintKV("Agents", fmt.Sprintf(
 				"%d total (%d completed, %d failed, %d processing)",
@@ -568,7 +548,7 @@ func DisplayJobDetailResponse(
 
 	// Display the operation request
 	if resp.Operation != nil {
-		jobOperationJSON, _ := json.MarshalIndent(*resp.Operation, "", "  ")
+		jobOperationJSON, _ := json.MarshalIndent(resp.Operation, "", "  ")
 		operationRows := [][]string{{string(jobOperationJSON)}}
 		sections = append(sections, Section{
 			Title:   "Job Request",
@@ -578,15 +558,9 @@ func DisplayJobDetailResponse(
 	}
 
 	// Display agent responses (for broadcast jobs)
-	if resp.Responses != nil && len(*resp.Responses) > 0 {
-		responseRows := make([][]string, 0, len(*resp.Responses))
-		for hostname, response := range *resp.Responses {
-			status := SafeString(response.Status)
-			errMsg := ""
-			if response.Error != nil {
-				errMsg = *response.Error
-			}
-
+	if len(resp.Responses) > 0 {
+		responseRows := make([][]string, 0, len(resp.Responses))
+		for hostname, response := range resp.Responses {
 			var dataStr string
 			if response.Data != nil {
 				dataJSON, _ := json.MarshalIndent(response.Data, "", "  ")
@@ -595,7 +569,7 @@ func DisplayJobDetailResponse(
 				dataStr = "(no data)"
 			}
 
-			row := []string{hostname, status, dataStr, errMsg}
+			row := []string{hostname, response.Status, dataStr, response.Error}
 			responseRows = append(responseRows, row)
 		}
 
@@ -607,17 +581,13 @@ func DisplayJobDetailResponse(
 	}
 
 	// Display agent states (for broadcast jobs)
-	if resp.AgentStates != nil && len(*resp.AgentStates) > 0 {
-		stateRows := make([][]string, 0, len(*resp.AgentStates))
-		for hostname, state := range *resp.AgentStates {
-			status := SafeString(state.Status)
-			duration := SafeString(state.Duration)
-			errMsg := ""
-			if state.Error != nil {
-				errMsg = *state.Error
-			}
-
-			stateRows = append(stateRows, []string{hostname, status, duration, errMsg})
+	if len(resp.AgentStates) > 0 {
+		stateRows := make([][]string, 0, len(resp.AgentStates))
+		for hostname, state := range resp.AgentStates {
+			stateRows = append(
+				stateRows,
+				[]string{hostname, state.Status, state.Duration, state.Error},
+			)
 		}
 
 		sections = append(sections, Section{
@@ -628,18 +598,13 @@ func DisplayJobDetailResponse(
 	}
 
 	// Display timeline
-	if resp.Timeline != nil && len(*resp.Timeline) > 0 {
-		timelineRows := make([][]string, 0, len(*resp.Timeline))
-		for _, te := range *resp.Timeline {
-			ts := SafeString(te.Timestamp)
-			event := SafeString(te.Event)
-			hostname := SafeString(te.Hostname)
-			message := SafeString(te.Message)
-			errMsg := ""
-			if te.Error != nil {
-				errMsg = *te.Error
-			}
-			timelineRows = append(timelineRows, []string{ts, event, hostname, message, errMsg})
+	if len(resp.Timeline) > 0 {
+		timelineRows := make([][]string, 0, len(resp.Timeline))
+		for _, te := range resp.Timeline {
+			timelineRows = append(
+				timelineRows,
+				[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+			)
 		}
 
 		sections = append(sections, Section{

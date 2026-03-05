@@ -23,12 +23,10 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -52,46 +50,20 @@ var clientJobListCmd = &cobra.Command{
 			Offset: offsetFlag,
 		})
 		if err != nil {
-			cli.LogFatal(logger, "failed to list jobs", err)
-		}
-
-		if jobsResp.StatusCode() != http.StatusOK {
-			switch jobsResp.StatusCode() {
-			case http.StatusBadRequest:
-				cli.HandleUnknownError(jobsResp.JSON400, jobsResp.StatusCode(), logger)
-			case http.StatusUnauthorized:
-				cli.HandleAuthError(jobsResp.JSON401, jobsResp.StatusCode(), logger)
-			case http.StatusForbidden:
-				cli.HandleAuthError(jobsResp.JSON403, jobsResp.StatusCode(), logger)
-			default:
-				cli.HandleUnknownError(jobsResp.JSON500, jobsResp.StatusCode(), logger)
-			}
+			cli.HandleError(err, logger)
 			return
 		}
 
 		// Get queue stats for summary
 		statsResp, err := sdkClient.Job.QueueStats(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get queue stats", err)
-		}
-
-		if statsResp.StatusCode() != http.StatusOK {
-			cli.HandleUnknownError(statsResp.JSON500, statsResp.StatusCode(), logger)
+			cli.HandleError(err, logger)
 			return
 		}
 
-		// Extract jobs from response (already paginated server-side)
-		var jobs []gen.JobDetailResponse
-		if jobsResp.JSON200 != nil && jobsResp.JSON200.Items != nil {
-			jobs = *jobsResp.JSON200.Items
-		}
-
-		totalItems := 0
-		if jobsResp.JSON200 != nil && jobsResp.JSON200.TotalItems != nil {
-			totalItems = *jobsResp.JSON200.TotalItems
-		}
-
-		statusCounts := extractStatusCounts(statsResp.JSON200)
+		jobs := jobsResp.Data.Items
+		totalItems := jobsResp.Data.TotalItems
+		statusCounts := statsResp.Data.StatusCounts
 
 		if jsonOutput {
 			displayJobListJSON(jobs, totalItems, statusCounts, statusFilter, limitFlag, offsetFlag)
@@ -110,17 +82,8 @@ var clientJobListCmd = &cobra.Command{
 	},
 }
 
-func extractStatusCounts(
-	stats *gen.QueueStatsResponse,
-) map[string]int {
-	if stats != nil && stats.StatusCounts != nil {
-		return *stats.StatusCounts
-	}
-	return map[string]int{}
-}
-
 func displayJobListJSON(
-	jobs []gen.JobDetailResponse,
+	jobs []osapi.JobDetail,
 	totalItems int,
 	statusCounts map[string]int,
 	statusFilter string,
@@ -173,7 +136,7 @@ func displayJobListSummary(
 }
 
 func displayJobListTable(
-	jobs []gen.JobDetailResponse,
+	jobs []osapi.JobDetail,
 ) {
 	if len(jobs) == 0 {
 		return
@@ -181,25 +144,23 @@ func displayJobListTable(
 
 	jobRows := [][]string{}
 	for _, j := range jobs {
-		created := cli.SafeString(j.Created)
+		created := j.Created
 		if t, err := time.Parse(time.RFC3339, created); err == nil {
 			created = t.Format("2006-01-02 15:04")
 		}
 
 		operationSummary := "Unknown"
 		if j.Operation != nil {
-			if operationType, ok := (*j.Operation)["type"].(string); ok {
+			if operationType, ok := j.Operation["type"].(string); ok {
 				operationSummary = operationType
 			}
 		}
 
-		target := cli.SafeString(j.Hostname)
-
 		jobRows = append(jobRows, []string{
-			cli.SafeUUID(j.Id),
-			cli.SafeString(j.Status),
+			j.ID,
+			j.Status,
 			created,
-			target,
+			j.Hostname,
 			operationSummary,
 		})
 	}

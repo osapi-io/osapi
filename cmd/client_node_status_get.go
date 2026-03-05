@@ -22,9 +22,8 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -41,36 +40,21 @@ var clientNodeStatusGetCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		resp, err := sdkClient.Node.Status(ctx, host)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get node status endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("node status response was nil"))
-			}
-
-			if resp.JSON200.JobId != nil {
-				fmt.Println()
-				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
-			}
-
-			displayNodeStatusCollection(host, resp.JSON200)
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
+
+		displayNodeStatusCollection(host, &resp.Data)
 	},
 }
 
@@ -78,7 +62,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 // For a single non-broadcast result, shows detailed output; otherwise shows a summary table.
 func displayNodeStatusCollection(
 	target string,
-	data *gen.NodeStatusCollectionResponse,
+	data *osapi.Collection[osapi.NodeStatus],
 ) {
 	if len(data.Results) == 1 && target != "_all" {
 		displayNodeStatusDetail(&data.Results[0])
@@ -89,13 +73,9 @@ func displayNodeStatusCollection(
 
 	results := make([]cli.ResultRow, 0, len(data.Results))
 	for _, s := range data.Results {
-		uptime := ""
-		if s.Uptime != nil {
-			uptime = *s.Uptime
-		}
 		load := ""
 		if s.LoadAverage != nil {
-			load = fmt.Sprintf("%.2f", s.LoadAverage.N1min)
+			load = fmt.Sprintf("%.2f", s.LoadAverage.OneMin)
 		}
 		memory := ""
 		if s.Memory != nil {
@@ -105,10 +85,14 @@ func displayNodeStatusCollection(
 				s.Memory.Total/1024/1024/1024,
 			)
 		}
+		var errPtr *string
+		if s.Error != "" {
+			errPtr = &s.Error
+		}
 		results = append(results, cli.ResultRow{
 			Hostname: s.Hostname,
-			Error:    s.Error,
-			Fields:   []string{uptime, load, memory},
+			Error:    errPtr,
+			Fields:   []string{s.Uptime, load, memory},
 		})
 	}
 	headers, rows := cli.BuildBroadcastTable(results, []string{
@@ -121,23 +105,23 @@ func displayNodeStatusCollection(
 
 // displayNodeStatusDetail renders a single node status response with full details.
 func displayNodeStatusDetail(
-	data *gen.NodeStatusResponse,
+	data *osapi.NodeStatus,
 ) {
 	fmt.Println()
 
 	kvArgs := []string{"Hostname", data.Hostname}
-	if data.OsInfo != nil {
+	if data.OSInfo != nil {
 		kvArgs = append(
 			kvArgs,
 			"OS",
-			data.OsInfo.Distribution+" "+cli.DimStyle.Render(data.OsInfo.Version),
+			data.OSInfo.Distribution+" "+cli.DimStyle.Render(data.OSInfo.Version),
 		)
 	}
 	cli.PrintKV(kvArgs...)
 
 	if data.LoadAverage != nil {
 		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
-			data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
+			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
 		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
 	}
 
@@ -149,17 +133,14 @@ func displayNodeStatusDetail(
 		))
 	}
 
-	diskRows := [][]string{}
-
-	if data.Disks != nil {
-		for _, disk := range *data.Disks {
-			diskRows = append(diskRows, []string{
-				disk.Name,
-				fmt.Sprintf("%d GB", disk.Total/1024/1024/1024),
-				fmt.Sprintf("%d GB", disk.Used/1024/1024/1024),
-				fmt.Sprintf("%d GB", disk.Free/1024/1024/1024),
-			})
-		}
+	diskRows := make([][]string, 0, len(data.Disks))
+	for _, disk := range data.Disks {
+		diskRows = append(diskRows, []string{
+			disk.Name,
+			fmt.Sprintf("%d GB", disk.Total/1024/1024/1024),
+			fmt.Sprintf("%d GB", disk.Used/1024/1024/1024),
+			fmt.Sprintf("%d GB", disk.Free/1024/1024/1024),
+		})
 	}
 
 	sections := []cli.Section{

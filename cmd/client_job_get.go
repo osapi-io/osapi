@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -40,32 +39,16 @@ var clientJobGetCmd = &cobra.Command{
 
 		resp, err := sdkClient.Job.Get(ctx, jobID)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get job", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("job detail response was nil"))
-			}
-
-			cli.DisplayJobDetailResponse(resp.JSON200)
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusNotFound:
-			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		cli.DisplayJobDetail(&resp.Data)
 	},
 }
 

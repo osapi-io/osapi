@@ -18,7 +18,7 @@ require (
 	github.com/oapi-codegen/runtime v1.2.0
 	github.com/osapi-io/nats-client v0.0.0-20260222233639-d0822e0a4b86
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
-	github.com/osapi-io/osapi-sdk v0.0.0-20260301225211-54433f58dfd8
+	github.com/osapi-io/osapi-sdk v0.0.0-20260305004213-6ad316fa4505
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/samber/slog-echo v1.21.0
@@ -120,8 +120,8 @@ require (
 	github.com/ghostiam/protogetter v0.3.20 // indirect
 	github.com/go-critic/go-critic v0.14.3 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.6.2 // indirect
-	github.com/go-git/go-git/v5 v5.16.5 // indirect
+	github.com/go-git/go-billy/v5 v5.8.0 // indirect
+	github.com/go-git/go-git/v5 v5.17.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect

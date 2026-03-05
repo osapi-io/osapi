@@ -106,6 +106,67 @@ func buildAgentInfo(
 		}
 	}
 
+	if a.Architecture != "" {
+		arch := a.Architecture
+		info.Architecture = &arch
+	}
+
+	if a.KernelVersion != "" {
+		kv := a.KernelVersion
+		info.KernelVersion = &kv
+	}
+
+	if a.CPUCount > 0 {
+		cpuCount := a.CPUCount
+		info.CpuCount = &cpuCount
+	}
+
+	if a.FQDN != "" {
+		fqdn := a.FQDN
+		info.Fqdn = &fqdn
+	}
+
+	if a.ServiceMgr != "" {
+		svcMgr := a.ServiceMgr
+		info.ServiceMgr = &svcMgr
+	}
+
+	if a.PackageMgr != "" {
+		pkgMgr := a.PackageMgr
+		info.PackageMgr = &pkgMgr
+	}
+
+	if len(a.Interfaces) > 0 {
+		ifaces := make([]gen.NetworkInterfaceResponse, len(a.Interfaces))
+		for i, ni := range a.Interfaces {
+			ifaces[i] = gen.NetworkInterfaceResponse{
+				Name: ni.Name,
+			}
+			if ni.IPv4 != "" {
+				ipv4 := ni.IPv4
+				ifaces[i].Ipv4 = &ipv4
+			}
+			if ni.IPv6 != "" {
+				ipv6 := ni.IPv6
+				ifaces[i].Ipv6 = &ipv6
+			}
+			if ni.MAC != "" {
+				mac := ni.MAC
+				ifaces[i].Mac = &mac
+			}
+			if ni.Family != "" {
+				family := gen.NetworkInterfaceResponseFamily(ni.Family)
+				ifaces[i].Family = &family
+			}
+		}
+		info.Interfaces = &ifaces
+	}
+
+	if len(a.Facts) > 0 {
+		facts := a.Facts
+		info.Facts = &facts
+	}
+
 	return info
 }
 

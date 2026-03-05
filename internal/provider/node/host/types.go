@@ -34,6 +34,18 @@ type Provider interface {
 	// distribution name and version. It returns an OSInfo struct containing this
 	// data and an error if something goes wrong during the process.
 	GetOSInfo() (*OSInfo, error)
+	// GetArchitecture retrieves the system CPU architecture (e.g., x86_64, arm64).
+	GetArchitecture() (string, error)
+	// GetKernelVersion retrieves the running kernel version string.
+	GetKernelVersion() (string, error)
+	// GetFQDN retrieves the fully qualified domain name of the system.
+	GetFQDN() (string, error)
+	// GetCPUCount retrieves the number of logical CPUs available.
+	GetCPUCount() (int, error)
+	// GetServiceManager detects the system's service manager (e.g., systemd).
+	GetServiceManager() (string, error)
+	// GetPackageManager detects the system's package manager (e.g., apt, dnf, yum).
+	GetPackageManager() (string, error)
 }
 
 // OSInfo represents the operating system information.

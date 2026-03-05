@@ -22,11 +22,10 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi/gen"
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -43,65 +42,67 @@ var clientAgentGetCmd = &cobra.Command{
 
 		resp, err := sdkClient.Agent.Get(ctx, hostname)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get agent details", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("agent response was nil"))
-			}
-
-			displayAgentGetDetail(resp.JSON200)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		case http.StatusNotFound:
-			cli.HandleUnknownError(resp.JSON404, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		displayAgentGetDetail(&resp.Data)
 	},
 }
 
 // displayAgentGetDetail renders detailed agent information in PrintKV style.
 func displayAgentGetDetail(
-	data *gen.AgentInfo,
+	data *osapi.Agent,
 ) {
 	fmt.Println()
 
-	kvArgs := []string{"Hostname", data.Hostname, "Status", string(data.Status)}
+	kvArgs := []string{"Hostname", data.Hostname, "Status", data.Status}
 	cli.PrintKV(kvArgs...)
 
-	if data.Labels != nil && len(*data.Labels) > 0 {
+	if len(data.Labels) > 0 {
 		cli.PrintKV("Labels", cli.FormatLabels(data.Labels))
 	}
 
-	if data.OsInfo != nil {
-		cli.PrintKV("OS", data.OsInfo.Distribution+" "+cli.DimStyle.Render(data.OsInfo.Version))
+	if data.OSInfo != nil {
+		cli.PrintKV("OS", data.OSInfo.Distribution+" "+cli.DimStyle.Render(data.OSInfo.Version))
 	}
 
-	if data.Uptime != nil {
-		cli.PrintKV("Uptime", *data.Uptime)
+	if data.Uptime != "" {
+		cli.PrintKV("Uptime", data.Uptime)
 	}
 
-	if data.StartedAt != nil {
-		cli.PrintKV("Age", cli.FormatAge(time.Since(*data.StartedAt)))
+	if !data.StartedAt.IsZero() {
+		cli.PrintKV("Age", cli.FormatAge(time.Since(data.StartedAt)))
 	}
 
-	if data.RegisteredAt != nil {
-		cli.PrintKV("Last Seen", cli.FormatAge(time.Since(*data.RegisteredAt))+" ago")
+	if !data.RegisteredAt.IsZero() {
+		cli.PrintKV("Last Seen", cli.FormatAge(time.Since(data.RegisteredAt))+" ago")
+	}
+
+	if data.Architecture != "" {
+		cli.PrintKV("Arch", data.Architecture)
+	}
+
+	if data.KernelVersion != "" {
+		cli.PrintKV("Kernel", data.KernelVersion)
+	}
+
+	if data.CPUCount > 0 {
+		cli.PrintKV("CPUs", fmt.Sprintf("%d", data.CPUCount))
+	}
+
+	if data.Fqdn != "" {
+		cli.PrintKV("FQDN", data.Fqdn)
 	}
 
 	if data.LoadAverage != nil {
 		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
-			data.LoadAverage.N1min, data.LoadAverage.N5min, data.LoadAverage.N15min,
+			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
 		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
 	}
 
@@ -112,6 +113,30 @@ func displayAgentGetDetail(
 		}
 		memParts = append(memParts, cli.FormatBytes(data.Memory.Free)+" free")
 		cli.PrintKV("Memory", strings.Join(memParts, ", "))
+	}
+
+	if data.ServiceMgr != "" {
+		cli.PrintKV("Service Mgr", data.ServiceMgr)
+	}
+
+	if data.PackageMgr != "" {
+		cli.PrintKV("Package Mgr", data.PackageMgr)
+	}
+
+	if len(data.Interfaces) > 0 {
+		for _, iface := range data.Interfaces {
+			parts := []string{}
+			if iface.IPv4 != "" {
+				parts = append(parts, iface.IPv4)
+			}
+			if iface.IPv6 != "" {
+				parts = append(parts, iface.IPv6)
+			}
+			if iface.MAC != "" {
+				parts = append(parts, cli.DimStyle.Render(iface.MAC))
+			}
+			cli.PrintKV("Interface "+iface.Name, strings.Join(parts, "  "))
+		}
 	}
 }
 

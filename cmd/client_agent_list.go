@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -41,66 +40,54 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 
 		resp, err := sdkClient.Agent.List(ctx)
 		if err != nil {
-			cli.LogFatal(logger, "failed to list agents", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("agents response was nil"))
-			}
-
-			agents := resp.JSON200.Agents
-			if len(agents) == 0 {
-				fmt.Println("No active agents found.")
-				return
-			}
-
-			rows := make([][]string, 0, len(agents))
-			for _, a := range agents {
-				labels := cli.FormatLabels(a.Labels)
-				age := ""
-				if a.StartedAt != nil {
-					age = cli.FormatAge(time.Since(*a.StartedAt))
-				}
-				loadStr := ""
-				if a.LoadAverage != nil {
-					loadStr = fmt.Sprintf("%.2f", a.LoadAverage.N1min)
-				}
-				osStr := ""
-				if a.OsInfo != nil {
-					osStr = a.OsInfo.Distribution + " " + a.OsInfo.Version
-				}
-				rows = append(rows, []string{
-					a.Hostname,
-					string(a.Status),
-					labels,
-					age,
-					loadStr,
-					osStr,
-				})
-			}
-
-			sections := []cli.Section{
-				{
-					Title:   fmt.Sprintf("Active Agents (%d)", resp.JSON200.Total),
-					Headers: []string{"HOSTNAME", "STATUS", "LABELS", "AGE", "LOAD (1m)", "OS"},
-					Rows:    rows,
-				},
-			}
-			cli.PrintCompactTable(sections)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		agents := resp.Data.Agents
+		if len(agents) == 0 {
+			fmt.Println("No active agents found.")
+			return
+		}
+
+		rows := make([][]string, 0, len(agents))
+		for _, a := range agents {
+			labels := cli.FormatLabels(a.Labels)
+			age := ""
+			if !a.StartedAt.IsZero() {
+				age = cli.FormatAge(time.Since(a.StartedAt))
+			}
+			loadStr := ""
+			if a.LoadAverage != nil {
+				loadStr = fmt.Sprintf("%.2f", a.LoadAverage.OneMin)
+			}
+			osStr := ""
+			if a.OSInfo != nil {
+				osStr = a.OSInfo.Distribution + " " + a.OSInfo.Version
+			}
+			rows = append(rows, []string{
+				a.Hostname,
+				a.Status,
+				labels,
+				age,
+				loadStr,
+				osStr,
+			})
+		}
+
+		sections := []cli.Section{
+			{
+				Title:   fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
+				Headers: []string{"HOSTNAME", "STATUS", "LABELS", "AGE", "LOAD (1m)", "OS"},
+				Rows:    rows,
+			},
+		}
+		cli.PrintCompactTable(sections)
 	},
 }
 

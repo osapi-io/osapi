@@ -49,6 +49,9 @@ func (a *Agent) Start() {
 	// Register in agent registry and start heartbeat keepalive.
 	a.startHeartbeat(a.ctx, hostname)
 
+	// Collect and publish system facts.
+	a.startFacts(a.ctx, hostname)
+
 	// Start consuming messages for different job types.
 	// Each consume function spawns goroutines tracked by a.wg.
 	_ = a.consumeQueryJobs(a.ctx, hostname)

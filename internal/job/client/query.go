@@ -411,7 +411,9 @@ func (c *Client) ListAgents(
 			continue
 		}
 
-		agents = append(agents, agentInfoFromRegistration(&reg))
+		info := agentInfoFromRegistration(&reg)
+		c.mergeFacts(ctx, &info)
+		agents = append(agents, info)
 	}
 
 	return agents, nil
@@ -438,7 +440,39 @@ func (c *Client) GetAgent(
 	}
 
 	info := agentInfoFromRegistration(&reg)
+	c.mergeFacts(ctx, &info)
 	return &info, nil
+}
+
+// mergeFacts reads facts from the facts KV bucket and merges them into the
+// AgentInfo. If factsKV is nil or the read fails, this is a no-op.
+func (c *Client) mergeFacts(
+	ctx context.Context,
+	info *job.AgentInfo,
+) {
+	if c.factsKV == nil {
+		return
+	}
+
+	key := "facts." + job.SanitizeHostname(info.Hostname)
+	entry, err := c.factsKV.Get(ctx, key)
+	if err != nil {
+		return
+	}
+
+	var facts job.FactsRegistration
+	if err := json.Unmarshal(entry.Value(), &facts); err != nil {
+		return
+	}
+
+	info.Architecture = facts.Architecture
+	info.KernelVersion = facts.KernelVersion
+	info.CPUCount = facts.CPUCount
+	info.FQDN = facts.FQDN
+	info.ServiceMgr = facts.ServiceMgr
+	info.PackageMgr = facts.PackageMgr
+	info.Interfaces = facts.Interfaces
+	info.Facts = facts.Facts
 }
 
 // agentInfoFromRegistration maps an AgentRegistration to an AgentInfo.

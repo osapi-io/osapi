@@ -92,6 +92,12 @@ nats:
     storage: file
     replicas: 1
 
+  facts:
+    bucket: agent-facts
+    ttl: 5m
+    storage: file
+    replicas: 1
+
 telemetry:
   tracing:
     enabled: true
@@ -125,3 +131,5 @@ agent:
   max_jobs: 10
   labels:
     group: web.dev.us-east  # hierarchical: --target group:web, group:web.dev, etc.
+  facts:
+    interval: 60s

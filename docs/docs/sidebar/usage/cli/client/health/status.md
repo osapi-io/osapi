@@ -22,6 +22,7 @@ $ osapi client health status
   Stream: JOBS (42 msgs, 1.0 KB, 24 consumers)
   Bucket: job-queue (10 keys, 2.0 KB)
   Bucket: agent-registry (2 keys, 256 B)
+  Bucket: agent-facts (2 keys, 1.5 KB)
   Bucket: audit-log (50 keys, 8.0 KB)
 ```
 

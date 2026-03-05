@@ -112,6 +112,70 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 			},
 		},
 		{
+			name: "success with all facts fields",
+			mockAgents: []jobtypes.AgentInfo{
+				{
+					Hostname:      "server1",
+					Architecture:  "x86_64",
+					KernelVersion: "6.1.0",
+					CPUCount:      8,
+					FQDN:          "server1.example.com",
+					ServiceMgr:    "systemd",
+					PackageMgr:    "apt",
+					Interfaces: []jobtypes.NetworkInterface{
+						{
+							Name:   "eth0",
+							IPv4:   "10.0.0.1",
+							IPv6:   "fe80::1",
+							MAC:    "aa:bb:cc:dd:ee:ff",
+							Family: "inet",
+						},
+						{Name: "lo", IPv4: "127.0.0.1"},
+					},
+					Facts: map[string]any{"env": "prod"},
+				},
+			},
+			validateFunc: func(resp gen.GetAgentResponseObject) {
+				r, ok := resp.(gen.GetAgent200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+
+				a := r.Agents[0]
+				s.Equal("server1", a.Hostname)
+				s.Require().NotNil(a.Architecture)
+				s.Equal("x86_64", *a.Architecture)
+				s.Require().NotNil(a.KernelVersion)
+				s.Equal("6.1.0", *a.KernelVersion)
+				s.Require().NotNil(a.CpuCount)
+				s.Equal(8, *a.CpuCount)
+				s.Require().NotNil(a.Fqdn)
+				s.Equal("server1.example.com", *a.Fqdn)
+				s.Require().NotNil(a.ServiceMgr)
+				s.Equal("systemd", *a.ServiceMgr)
+				s.Require().NotNil(a.PackageMgr)
+				s.Equal("apt", *a.PackageMgr)
+				s.Require().NotNil(a.Interfaces)
+				s.Len(*a.Interfaces, 2)
+				iface0 := (*a.Interfaces)[0]
+				s.Equal("eth0", iface0.Name)
+				s.Require().NotNil(iface0.Ipv4)
+				s.Equal("10.0.0.1", *iface0.Ipv4)
+				s.Require().NotNil(iface0.Ipv6)
+				s.Equal("fe80::1", *iface0.Ipv6)
+				s.Require().NotNil(iface0.Mac)
+				s.Equal("aa:bb:cc:dd:ee:ff", *iface0.Mac)
+				s.Require().NotNil(iface0.Family)
+				s.Equal(gen.NetworkInterfaceResponseFamily("inet"), *iface0.Family)
+				iface1 := (*a.Interfaces)[1]
+				s.Equal("lo", iface1.Name)
+				s.Nil(iface1.Ipv6)
+				s.Nil(iface1.Mac)
+				s.Nil(iface1.Family)
+				s.Require().NotNil(a.Facts)
+				s.Equal("prod", (*a.Facts)["env"])
+			},
+		},
+		{
 			name:       "success with no agents",
 			mockAgents: []jobtypes.AgentInfo{},
 			validateFunc: func(resp gen.GetAgentResponseObject) {

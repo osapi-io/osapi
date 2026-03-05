@@ -29,6 +29,7 @@ import (
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
@@ -61,6 +62,7 @@ func (f *ProviderFactory) CreateProviders() (
 	load.Provider,
 	dns.Provider,
 	ping.Provider,
+	netinfo.Provider,
 	command.Provider,
 ) {
 	info, _ := factoryHostInfoFn()
@@ -138,8 +140,11 @@ func (f *ProviderFactory) CreateProviders() (
 		pingProvider = ping.NewLinuxProvider()
 	}
 
+	// Create network info provider
+	netinfoProvider := netinfo.New()
+
 	// Create command provider (cross-platform, uses exec.Manager)
 	commandProvider := command.New(f.logger, execManager)
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, commandProvider
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider
 }

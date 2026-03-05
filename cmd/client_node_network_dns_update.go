@@ -23,7 +23,6 @@ package cmd
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -61,51 +60,47 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 			searchDomains,
 		)
 		if err != nil {
-			cli.LogFatal(logger, "failed to update network dns endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusAccepted:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-			if resp.JSON202 != nil && resp.JSON202.JobId != nil {
-				fmt.Println()
-				cli.PrintKV("Job ID", resp.JSON202.JobId.String())
-			}
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
 
-			if resp.JSON202 != nil && len(resp.JSON202.Results) > 0 {
-				results := make([]cli.MutationResultRow, 0, len(resp.JSON202.Results))
-				for _, r := range resp.JSON202.Results {
-					results = append(results, cli.MutationResultRow{
-						Hostname: r.Hostname,
-						Status:   string(r.Status),
-						Changed:  r.Changed,
-						Error:    r.Error,
-					})
+		if len(resp.Data.Results) > 0 {
+			results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
+			for _, r := range resp.Data.Results {
+				var errPtr *string
+				if r.Error != "" {
+					errPtr = &r.Error
 				}
-				headers, rows := cli.BuildMutationTable(results, nil)
-				cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
-			} else {
-				logger.Info(
-					"network dns put",
-					slog.String("search_domains", strings.Join(searchDomains, ",")),
-					slog.String("servers", strings.Join(servers, ",")),
-					slog.Int("code", resp.StatusCode()),
-					slog.String("status", "ok"),
-				)
+				var changedPtr *bool
+				if r.Changed {
+					changedPtr = &r.Changed
+				}
+				results = append(results, cli.MutationResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Changed:  changedPtr,
+					Error:    errPtr,
+				})
 			}
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+			headers, rows := cli.BuildMutationTable(results, nil)
+			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
+		} else {
+			logger.Info(
+				"network dns put",
+				slog.String("search_domains", strings.Join(searchDomains, ",")),
+				slog.String("servers", strings.Join(servers, ",")),
+				slog.String("status", "ok"),
+			)
 		}
 	},
 }

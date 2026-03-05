@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -62,39 +61,25 @@ var clientJobAddCmd = &cobra.Command{
 
 		resp, err := sdkClient.Job.Create(ctx, operationData, targetHostname)
 		if err != nil {
-			cli.LogFatal(logger, "failed to create job", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusCreated:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON201 == nil {
-				cli.LogFatal(logger, "failed response", fmt.Errorf("create job response was nil"))
-			}
-
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.JSON201.JobId.String(), "Status", resp.JSON201.Status)
-			if resp.JSON201.Revision != nil {
-				cli.PrintKV("Revision", fmt.Sprintf("%d", *resp.JSON201.Revision))
-			}
-
-			logger.Info("job created successfully",
-				slog.String("job_id", resp.JSON201.JobId.String()),
-				slog.String("target_hostname", targetHostname),
-			)
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		fmt.Println()
+		cli.PrintKV("Job ID", resp.Data.JobID, "Status", resp.Data.Status)
+		if resp.Data.Revision != 0 {
+			cli.PrintKV("Revision", fmt.Sprintf("%d", resp.Data.Revision))
+		}
+
+		logger.Info("job created successfully",
+			slog.String("job_id", resp.Data.JobID),
+			slog.String("target_hostname", targetHostname),
+		)
 	},
 }
 

@@ -36,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
+	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
@@ -74,7 +75,9 @@ func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
 		loadMocks.NewPlainMockProvider(s.mockCtrl),
 		dnsMocks.NewPlainMockProvider(s.mockCtrl),
 		pingMocks.NewPlainMockProvider(s.mockCtrl),
+		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 		cmdMock,
+		nil,
 		nil,
 	)
 }

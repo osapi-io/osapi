@@ -82,9 +82,16 @@ graph LR
    - History: 5 versions
 
 2. **job-responses**: Result storage
+
    - Key format: `{sanitized_job_id}`
    - TTL: 24 hours
    - Used for agent-to-client result passing
+
+3. **agent-facts**: System facts storage (see
+   [Facts Collection](#facts-collection) below)
+   - Key format: `{hostname}`
+   - TTL: 5 minutes
+   - Typed system facts gathered by agents independently from the job system
 
 ### JetStream Configuration
 
@@ -452,6 +459,23 @@ default:
     provider = dns.NewLinuxProvider()
 }
 ```
+
+### Facts Collection
+
+Agents collect **system facts** independently from the job system. Facts are
+typed system properties — architecture, kernel version, FQDN, CPU count, network
+interfaces, service manager, and package manager — gathered via providers on a
+60-second interval.
+
+Facts are stored in a dedicated `agent-facts` KV bucket with a 5-minute TTL,
+separate from the `agent-registry` heartbeat bucket. This keeps the heartbeat
+lightweight (status and metrics only) while facts carry richer, less frequently
+changing data.
+
+When the API serves an `AgentInfo` response (via `GET /node/{hostname}` or
+`GET /node`), it merges data from both KV buckets — registry for status, labels,
+and lightweight metrics, and facts for detailed system properties — into a
+single unified response.
 
 ## Operation Examples
 

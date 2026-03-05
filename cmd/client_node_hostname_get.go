@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -40,49 +39,34 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		resp, err := sdkClient.Node.Hostname(ctx, host)
 		if err != nil {
-			cli.LogFatal(logger, "failed to get node hostname endpoint", err)
+			cli.HandleError(err, logger)
+			return
 		}
 
-		switch resp.StatusCode() {
-		case http.StatusOK:
-			if jsonOutput {
-				fmt.Println(string(resp.Body))
-				return
-			}
-
-			if resp.JSON200 == nil {
-				cli.LogFatal(
-					logger,
-					"failed response",
-					fmt.Errorf("node hostname response was nil"),
-				)
-			}
-
-			if resp.JSON200.JobId != nil {
-				fmt.Println()
-				cli.PrintKV("Job ID", resp.JSON200.JobId.String())
-			}
-
-			results := make([]cli.ResultRow, 0, len(resp.JSON200.Results))
-			for _, h := range resp.JSON200.Results {
-				results = append(results, cli.ResultRow{
-					Hostname: h.Hostname,
-					Error:    h.Error,
-					Fields:   []string{cli.FormatLabels(h.Labels)},
-				})
-			}
-			headers, rows := cli.BuildBroadcastTable(results, []string{"LABELS"})
-			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
-
-		case http.StatusBadRequest:
-			cli.HandleUnknownError(resp.JSON400, resp.StatusCode(), logger)
-		case http.StatusUnauthorized:
-			cli.HandleAuthError(resp.JSON401, resp.StatusCode(), logger)
-		case http.StatusForbidden:
-			cli.HandleAuthError(resp.JSON403, resp.StatusCode(), logger)
-		default:
-			cli.HandleUnknownError(resp.JSON500, resp.StatusCode(), logger)
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
 		}
+
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
+
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+		for _, h := range resp.Data.Results {
+			var errPtr *string
+			if h.Error != "" {
+				errPtr = &h.Error
+			}
+			results = append(results, cli.ResultRow{
+				Hostname: h.Hostname,
+				Error:    errPtr,
+				Fields:   []string{cli.FormatLabels(h.Labels)},
+			})
+		}
+		headers, rows := cli.BuildBroadcastTable(results, []string{"LABELS"})
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 
