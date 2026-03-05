@@ -251,6 +251,21 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 			},
 		},
 		{
+			name: "when cached memory brings usage below threshold returns false",
+			stats: &mem.Stats{
+				Total:  8 * 1024 * 1024 * 1024, // 8 GB
+				Free:   512 * 1024 * 1024,       // 0.5 GB free
+				Cached: 4 * 1024 * 1024 * 1024,  // 4 GB cached (reclaimable)
+			},
+			threshold: 80,
+			prev:      nil,
+			validateFunc: func(c job.Condition) {
+				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.False(c.Status)
+				s.Empty(c.Reason)
+			},
+		},
+		{
 			name: "when usage exactly at threshold returns false",
 			stats: &mem.Stats{
 				Total: 100,
