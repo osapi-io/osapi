@@ -107,6 +107,21 @@ func BuildFactsKVConfig(
 	}
 }
 
+// BuildStateKVConfig builds a jetstream.KeyValueConfig from state config values.
+// The state bucket has no TTL so drain flags and timeline events persist indefinitely.
+func BuildStateKVConfig(
+	namespace string,
+	stateCfg config.NATSState,
+) jetstream.KeyValueConfig {
+	stateBucket := job.ApplyNamespaceToInfraName(namespace, stateCfg.Bucket)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   stateBucket,
+		Storage:  ParseJetstreamStorageType(stateCfg.Storage),
+		Replicas: stateCfg.Replicas,
+	}
+}
+
 // BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
 func BuildAuditKVConfig(
 	namespace string,

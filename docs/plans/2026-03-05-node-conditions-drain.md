@@ -3,18 +3,18 @@
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
 > implement this plan task-by-task.
 
-**Goal:** Add Kubernetes-inspired node conditions (MemoryPressure,
-HighLoad, DiskPressure) and agent drain/cordon lifecycle to OSAPI.
+**Goal:** Add Kubernetes-inspired node conditions (MemoryPressure, HighLoad,
+DiskPressure) and agent drain/cordon lifecycle to OSAPI.
 
-**Architecture:** Conditions are evaluated agent-side on each heartbeat
-tick using existing provider data, stored in AgentRegistration. Drain
-uses append-only timeline events in the registry KV bucket (reusing the
-existing `TimelineEvent` type from job lifecycle), with a separate drain
-intent key the API writes and the agent reads on heartbeat. State
-transitions trigger NATS consumer subscribe/unsubscribe.
+**Architecture:** Conditions are evaluated agent-side on each heartbeat tick
+using existing provider data, stored in AgentRegistration. Drain uses
+append-only timeline events in the registry KV bucket (reusing the existing
+`TimelineEvent` type from job lifecycle), with a separate drain intent key the
+API writes and the agent reads on heartbeat. State transitions trigger NATS
+consumer subscribe/unsubscribe.
 
-**Tech Stack:** Go 1.25, NATS JetStream KV, Echo REST API, OpenAPI
-codegen, testify/suite
+**Tech Stack:** Go 1.25, NATS JetStream KV, Echo REST API, OpenAPI codegen,
+testify/suite
 
 **Design Doc:** `docs/plans/2026-03-05-node-conditions-drain-design.md`
 
@@ -23,6 +23,7 @@ codegen, testify/suite
 ## Task 1: Add Condition type and evaluation functions
 
 **Files:**
+
 - Create: `internal/agent/condition.go`
 - Create: `internal/agent/condition_test.go`
 
@@ -200,8 +201,8 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `go test -run TestConditionTestSuite -v ./internal/agent/`
-Expected: FAIL — `evaluateMemoryPressure` not defined
+Run: `go test -run TestConditionTestSuite -v ./internal/agent/` Expected: FAIL —
+`evaluateMemoryPressure` not defined
 
 **Step 3: Write minimal implementation**
 
@@ -328,8 +329,7 @@ func evaluateDiskPressure(
 
 **Step 4: Run tests to verify they pass**
 
-Run: `go test -run TestConditionTestSuite -v ./internal/agent/`
-Expected: PASS
+Run: `go test -run TestConditionTestSuite -v ./internal/agent/` Expected: PASS
 
 **Step 5: Commit**
 
@@ -343,8 +343,8 @@ git commit -m "feat(agent): add condition evaluation functions"
 ## Task 2: Add Condition and State types to job domain
 
 **Files:**
-- Modify: `internal/job/types.go:273-331` (AgentRegistration,
-  AgentInfo)
+
+- Modify: `internal/job/types.go:273-331` (AgentRegistration, AgentInfo)
 
 **Step 1: Write the types**
 
@@ -375,8 +375,8 @@ type Condition struct {
 
 ```
 
-The existing `TimelineEvent` type (line 177) is already generic and
-will be reused for agent state transitions — no new event type needed.
+The existing `TimelineEvent` type (line 177) is already generic and will be
+reused for agent state transitions — no new event type needed.
 
 Add fields to `AgentRegistration`:
 
@@ -395,8 +395,7 @@ Timeline   []TimelineEvent  `json:"timeline,omitempty"`
 
 **Step 2: Run existing tests**
 
-Run: `go test ./internal/job/... -count=1`
-Expected: PASS (additive change)
+Run: `go test ./internal/job/... -count=1` Expected: PASS (additive change)
 
 **Step 3: Commit**
 
@@ -410,6 +409,7 @@ git commit -m "feat(job): add Condition type and agent state constants"
 ## Task 3: Add conditions config to AgentConfig
 
 **Files:**
+
 - Modify: `internal/config/types.go:262-277`
 - Modify: `configs/osapi.yaml`
 - Modify: `configs/osapi.local.yaml`
@@ -445,8 +445,7 @@ agent:
 
 **Step 3: Verify compilation**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 **Step 4: Commit**
 
@@ -460,6 +459,7 @@ git commit -m "feat(config): add agent conditions threshold configuration"
 ## Task 4: Add disk stats to heartbeat and evaluate conditions
 
 **Files:**
+
 - Modify: `internal/agent/heartbeat.go:88-134` (writeRegistration)
 - Modify: `internal/agent/types.go:45-81` (add prevConditions, cpuCount)
 
@@ -477,8 +477,8 @@ cpuCount int
 
 **Step 2: Extend writeRegistration**
 
-In `internal/agent/heartbeat.go`, after memory stats collection
-(~line 111), add:
+In `internal/agent/heartbeat.go`, after memory stats collection (~line 111),
+add:
 
 ```go
 // Collect disk stats (non-fatal).
@@ -513,8 +513,8 @@ Add `Conditions: conditions` to the `AgentRegistration` literal.
 
 **Step 3: Set cpuCount from facts**
 
-In `internal/agent/facts.go` (the `writeFacts` function), after
-collecting `CPUCount`, add:
+In `internal/agent/facts.go` (the `writeFacts` function), after collecting
+`CPUCount`, add:
 
 ```go
 a.cpuCount = cpuCount
@@ -522,8 +522,7 @@ a.cpuCount = cpuCount
 
 **Step 4: Run tests**
 
-Run: `go test ./internal/agent/... -count=1`
-Expected: PASS
+Run: `go test ./internal/agent/... -count=1` Expected: PASS
 
 **Step 5: Commit**
 
@@ -537,6 +536,7 @@ git commit -m "feat(agent): evaluate node conditions on heartbeat tick"
 ## Task 5: Add drain timeline event storage functions
 
 **Files:**
+
 - Modify: `internal/job/client/agent.go:39-85`
 - Create: `internal/job/client/agent_timeline_test.go`
 
@@ -552,6 +552,7 @@ package client_test
 ```
 
 Table-driven tests:
+
 - `WriteAgentTimelineEvent` writes key like
   `timeline.{hostname}.{event}.{unix_nano}`
 - `ComputeAgentState` with no events returns "Ready"
@@ -561,8 +562,7 @@ Table-driven tests:
 
 **Step 2: Run tests to verify they fail**
 
-Run: `go test -run TestAgentTimeline -v ./internal/job/client/`
-Expected: FAIL
+Run: `go test -run TestAgentTimeline -v ./internal/job/client/` Expected: FAIL
 
 **Step 3: Implement**
 
@@ -624,13 +624,12 @@ func ComputeAgentState(
 }
 ```
 
-Add `WriteAgentTimelineEvent`, `GetAgentTimeline` to the `JobClient`
-interface in `internal/job/client/types.go`. Regenerate mocks.
+Add `WriteAgentTimelineEvent`, `GetAgentTimeline` to the `JobClient` interface
+in `internal/job/client/types.go`. Regenerate mocks.
 
 **Step 4: Run tests**
 
-Run: `go test -run TestAgentTimeline -v ./internal/job/client/`
-Expected: PASS
+Run: `go test -run TestAgentTimeline -v ./internal/job/client/` Expected: PASS
 
 **Step 5: Commit**
 
@@ -645,6 +644,7 @@ git commit -m "feat(job): add append-only timeline events for agent drain"
 ## Task 6: Add drain/undrain API endpoints
 
 **Files:**
+
 - Modify: `internal/api/agent/gen/api.yaml`
 - Create: `internal/api/agent/agent_drain.go`
 - Create: `internal/api/agent/agent_drain_public_test.go`
@@ -661,7 +661,7 @@ Add to `internal/api/agent/gen/api.yaml`:
     description: Stop the agent from accepting new jobs.
     security:
       - BearerAuth:
-          - "agent:write"
+          - 'agent:write'
     parameters:
       - name: hostname
         in: path
@@ -669,7 +669,7 @@ Add to `internal/api/agent/gen/api.yaml`:
         schema:
           type: string
     responses:
-      "200":
+      '200':
         description: Agent drain initiated.
         content:
           application/json:
@@ -678,18 +678,18 @@ Add to `internal/api/agent/gen/api.yaml`:
               properties:
                 message:
                   type: string
-      "404":
+      '404':
         description: Agent not found.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
-      "409":
+              $ref: '#/components/schemas/ErrorResponse'
+      '409':
         description: Agent already in requested state.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: '#/components/schemas/ErrorResponse'
 
 /agent/{hostname}/undrain:
   post:
@@ -698,7 +698,7 @@ Add to `internal/api/agent/gen/api.yaml`:
     description: Resume accepting jobs on a drained agent.
     security:
       - BearerAuth:
-          - "agent:write"
+          - 'agent:write'
     parameters:
       - name: hostname
         in: path
@@ -706,7 +706,7 @@ Add to `internal/api/agent/gen/api.yaml`:
         schema:
           type: string
     responses:
-      "200":
+      '200':
         description: Agent undrain initiated.
         content:
           application/json:
@@ -715,22 +715,22 @@ Add to `internal/api/agent/gen/api.yaml`:
               properties:
                 message:
                   type: string
-      "404":
+      '404':
         description: Agent not found.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
-      "409":
+              $ref: '#/components/schemas/ErrorResponse'
+      '409':
         description: Agent not in draining/cordoned state.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErrorResponse"
+              $ref: '#/components/schemas/ErrorResponse'
 ```
 
-Add `agent:write` to BearerAuth scopes. Add `state` and `conditions`
-fields to `AgentInfo` schema. Add `NodeCondition` schema.
+Add `agent:write` to BearerAuth scopes. Add `state` and `conditions` fields to
+`AgentInfo` schema. Add `NodeCondition` schema.
 
 Run: `just generate` to regenerate `*.gen.go`.
 
@@ -784,8 +784,7 @@ func (a *Agent) UndrainAgent(
 
 **Step 4: Run tests**
 
-Run: `go test ./internal/api/agent/... -count=1`
-Expected: PASS
+Run: `go test ./internal/api/agent/... -count=1` Expected: PASS
 
 **Step 5: Commit**
 
@@ -800,6 +799,7 @@ git commit -m "feat(api): add drain/undrain endpoints with RBAC"
 ## Task 7: Add agent:write permission
 
 **Files:**
+
 - Modify: `internal/authtoken/permissions.go:27-37` (add constant)
 - Modify: `internal/authtoken/permissions.go:53-81` (add to admin role)
 
@@ -815,8 +815,7 @@ In `DefaultRolePermissions`, add `PermAgentWrite` to the `admin` slice.
 
 **Step 3: Run tests**
 
-Run: `go test ./internal/authtoken/... -count=1`
-Expected: PASS
+Run: `go test ./internal/authtoken/... -count=1` Expected: PASS
 
 **Step 4: Commit**
 
@@ -830,29 +829,28 @@ git commit -m "feat(auth): add agent:write permission for drain operations"
 ## Task 8: Wire drain endpoints into server
 
 **Files:**
+
 - Modify: `internal/api/handler_agent.go:34-61`
 - Modify: `internal/api/handler_agent_public_test.go`
 
 **Step 1: Update handler registration**
 
 The `GetAgentHandler` already wires all agent gen handlers through
-`scopeMiddleware`. After regenerating the OpenAPI code (Task 6), the
-new `DrainAgent` and `UndrainAgent` methods on the strict server
-interface will be picked up automatically by `RegisterHandlers`.
+`scopeMiddleware`. After regenerating the OpenAPI code (Task 6), the new
+`DrainAgent` and `UndrainAgent` methods on the strict server interface will be
+picked up automatically by `RegisterHandlers`.
 
-No code change needed in `handler_agent.go` unless
-`unauthenticatedOperations` needs updating (it doesn't — drain
-requires auth).
+No code change needed in `handler_agent.go` unless `unauthenticatedOperations`
+needs updating (it doesn't — drain requires auth).
 
 **Step 2: Verify compilation**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 **Step 3: Add handler test cases**
 
-Add test cases to `handler_agent_public_test.go` for drain/undrain
-handler registration.
+Add test cases to `handler_agent_public_test.go` for drain/undrain handler
+registration.
 
 **Step 4: Commit**
 
@@ -866,6 +864,7 @@ git commit -m "feat(api): wire drain/undrain handlers into server"
 ## Task 9: Add drain detection to agent heartbeat
 
 **Files:**
+
 - Modify: `internal/agent/heartbeat.go:88-134`
 - Modify: `internal/agent/server.go:32-61`
 - Create: `internal/agent/drain.go`
@@ -931,13 +930,12 @@ Initialize to `job.AgentStateReady` in `Start()`.
 
 **Step 4: Call from heartbeat**
 
-In `writeRegistration()`, add `a.handleDrainDetection(ctx, hostname)`
-and include `State: a.state` in the registration.
+In `writeRegistration()`, add `a.handleDrainDetection(ctx, hostname)` and
+include `State: a.state` in the registration.
 
 **Step 5: Run tests**
 
-Run: `go test ./internal/agent/... -count=1`
-Expected: PASS
+Run: `go test ./internal/agent/... -count=1` Expected: PASS
 
 **Step 6: Commit**
 
@@ -952,10 +950,10 @@ git commit -m "feat(agent): detect drain flag and manage consumer lifecycle"
 ## Task 10: Extend buildAgentInfo with conditions and state
 
 **Files:**
+
 - Modify: `internal/api/agent/agent_list.go:59-171` (buildAgentInfo)
 - Modify: `internal/api/agent/agent_list_public_test.go`
-- Modify: `internal/job/client/query.go:479-493`
-  (agentInfoFromRegistration)
+- Modify: `internal/job/client/query.go:479-493` (agentInfoFromRegistration)
 
 **Step 1: Update agentInfoFromRegistration**
 
@@ -995,18 +993,17 @@ if a.State != "" {
 
 **Step 3: Update status derivation**
 
-Change status logic: if `a.State` is set, use it; otherwise default
-to `Ready` (existing behavior).
+Change status logic: if `a.State` is set, use it; otherwise default to `Ready`
+(existing behavior).
 
 **Step 4: Add test cases**
 
-Add table-driven test case for agent with conditions and
-Draining/Cordoned states.
+Add table-driven test case for agent with conditions and Draining/Cordoned
+states.
 
 **Step 5: Run tests**
 
-Run: `go test ./internal/api/agent/... -count=1`
-Expected: PASS
+Run: `go test ./internal/api/agent/... -count=1` Expected: PASS
 
 **Step 6: Commit**
 
@@ -1021,6 +1018,7 @@ git commit -m "feat(api): expose conditions and state in agent responses"
 ## Task 11: Add timeline to GetAgent response
 
 **Files:**
+
 - Modify: `internal/job/client/query.go:423-445` (GetAgent)
 - Modify: `internal/job/client/query_public_test.go`
 
@@ -1041,8 +1039,7 @@ Test GetAgent returns timeline events when present.
 
 **Step 3: Run tests**
 
-Run: `go test ./internal/job/client/... -count=1`
-Expected: PASS
+Run: `go test ./internal/job/client/... -count=1` Expected: PASS
 
 **Step 4: Commit**
 
@@ -1056,14 +1053,14 @@ git commit -m "feat(job): include timeline events in GetAgent response"
 ## Task 12: Update SDK with conditions, state, drain/undrain
 
 **Files:**
+
 - Modify: `osapi-sdk/pkg/osapi/gen/agent/api.yaml` (copy from osapi)
 - Modify: `osapi-sdk/pkg/osapi/agent.go` (add Drain, Undrain methods)
-- Modify: `osapi-sdk/pkg/osapi/agent_types.go` (add conditions, state,
-  timeline to Agent type)
-- Create: `osapi-sdk/pkg/osapi/types.go` (promote TimelineEvent to
-  shared type)
-- Modify: `osapi-sdk/pkg/osapi/job_types.go` (remove TimelineEvent,
-  import from types.go)
+- Modify: `osapi-sdk/pkg/osapi/agent_types.go` (add conditions, state, timeline
+  to Agent type)
+- Create: `osapi-sdk/pkg/osapi/types.go` (promote TimelineEvent to shared type)
+- Modify: `osapi-sdk/pkg/osapi/job_types.go` (remove TimelineEvent, import from
+  types.go)
 
 **Step 1: Promote TimelineEvent to shared type**
 
@@ -1132,8 +1129,7 @@ func (s *AgentService) Undrain(
 
 **Step 4: Run SDK tests**
 
-Run: `go test ./pkg/osapi/... -count=1`
-Expected: PASS
+Run: `go test ./pkg/osapi/... -count=1` Expected: PASS
 
 **Step 5: Commit (in osapi-sdk repo)**
 
@@ -1147,12 +1143,13 @@ git commit -m "feat(agent): add conditions, state, drain/undrain support"
 ## Task 13: Add CONDITIONS column to agent list CLI
 
 **Files:**
+
 - Modify: `cmd/client_agent_list.go`
 
 **Step 1: Add CONDITIONS column**
 
-In the table builder for `agent list`, add a column that joins active
-condition type names:
+In the table builder for `agent list`, add a column that joins active condition
+type names:
 
 ```go
 conditions := "-"
@@ -1169,13 +1166,11 @@ if len(agent.Conditions) > 0 {
 }
 ```
 
-Headers: `HOSTNAME`, `STATUS`, `CONDITIONS`, `LABELS`, `AGE`, `LOAD`,
-`OS`
+Headers: `HOSTNAME`, `STATUS`, `CONDITIONS`, `LABELS`, `AGE`, `LOAD`, `OS`
 
 **Step 2: Use State for STATUS column**
 
-Replace hardcoded "Ready" with `agent.State` (defaulting to "Ready"
-if empty).
+Replace hardcoded "Ready" with `agent.State` (defaulting to "Ready" if empty).
 
 **Step 3: Run `go build ./cmd/...`**
 
@@ -1193,6 +1188,7 @@ git commit -m "feat(cli): add CONDITIONS column and state to agent list"
 ## Task 14: Add conditions and timeline to agent get CLI
 
 **Files:**
+
 - Modify: `cmd/client_agent_get.go:58-141`
 
 **Step 1: Add state to agent get output**
@@ -1266,6 +1262,7 @@ git commit -m "feat(cli): display conditions and timeline in agent get"
 ## Task 15: Add agent drain/undrain CLI commands
 
 **Files:**
+
 - Create: `cmd/client_agent_drain.go`
 - Create: `cmd/client_agent_undrain.go`
 
@@ -1327,6 +1324,7 @@ git commit -m "feat(cli): add agent drain and undrain commands"
 ## Task 16: Update documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/features/agent-management.md` (or create)
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Modify: `docs/docs/sidebar/usage/cli/client/agent/`
@@ -1334,6 +1332,7 @@ git commit -m "feat(cli): add agent drain and undrain commands"
 **Step 1: Add conditions and drain docs**
 
 Document:
+
 - Condition types and thresholds
 - Drain lifecycle (Ready → Draining → Cordoned)
 - CLI commands (`agent drain`, `agent undrain`)
@@ -1356,27 +1355,24 @@ git commit -m "docs: add node conditions and agent drain documentation"
 
 **Step 1: Regenerate**
 
-Run: `just generate`
-Expected: no diff
+Run: `just generate` Expected: no diff
 
 **Step 2: Build**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 **Step 3: Unit tests**
 
-Run: `just go::unit`
-Expected: PASS
+Run: `just go::unit` Expected: PASS
 
 **Step 4: Lint**
 
-Run: `just go::vet`
-Expected: clean
+Run: `just go::vet` Expected: clean
 
 **Step 5: Coverage check**
 
-Run: `go test -coverprofile=coverage.out ./internal/agent/... ./internal/job/client/... ./internal/api/agent/...`
+Run:
+`go test -coverprofile=coverage.out ./internal/agent/... ./internal/job/client/... ./internal/api/agent/...`
 Expected: condition.go, drain.go, agent_drain.go at 100%
 
 ---

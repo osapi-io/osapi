@@ -172,6 +172,14 @@ func setupJetStream(
 		}
 	}
 
+	// Create state KV bucket with configured settings (no TTL)
+	if appConfig.NATS.State.Bucket != "" {
+		stateKVConfig := cli.BuildStateKVConfig(namespace, appConfig.NATS.State)
+		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, stateKVConfig); err != nil {
+			return fmt.Errorf("create state KV bucket %s: %w", stateKVConfig.Bucket, err)
+		}
+	}
+
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
 	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)

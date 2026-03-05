@@ -17,15 +17,15 @@ This command reads directly from the agent heartbeat registry -- no job is
 created. Each agent writes a heartbeat every 10 seconds with a 30-second TTL.
 Agents that stop heartbeating disappear from the list automatically.
 
-| Column     | Source                                                        |
-| ---------- | ------------------------------------------------------------- |
-| HOSTNAME   | Agent's configured or OS hostname                             |
-| STATUS     | Scheduling state: `Ready`, `Draining`, or `Cordoned`         |
+| Column     | Source                                                          |
+| ---------- | --------------------------------------------------------------- |
+| HOSTNAME   | Agent's configured or OS hostname                               |
+| STATUS     | Scheduling state: `Ready`, `Draining`, or `Cordoned`            |
 | CONDITIONS | Active node conditions (MemoryPressure, HighLoad, DiskPressure) |
-| LABELS     | Key-value labels from agent config                            |
-| AGE        | Time since the agent process started                          |
-| LOAD (1m)  | 1-minute load average from heartbeat                          |
-| OS         | Distribution and version from heartbeat                       |
+| LABELS     | Key-value labels from agent config                              |
+| AGE        | Time since the agent process started                            |
+| LOAD (1m)  | 1-minute load average from heartbeat                            |
+| OS         | Distribution and version from heartbeat                         |
 
 :::tip Full facts in JSON output
 

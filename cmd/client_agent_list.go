@@ -100,9 +100,17 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 
 		sections := []cli.Section{
 			{
-				Title:   fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
-				Headers: []string{"HOSTNAME", "STATUS", "CONDITIONS", "LABELS", "AGE", "LOAD (1m)", "OS"},
-				Rows:    rows,
+				Title: fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
+				Headers: []string{
+					"HOSTNAME",
+					"STATUS",
+					"CONDITIONS",
+					"LABELS",
+					"AGE",
+					"LOAD (1m)",
+					"OS",
+				},
+				Rows: rows,
 			},
 		}
 		cli.PrintCompactTable(sections)

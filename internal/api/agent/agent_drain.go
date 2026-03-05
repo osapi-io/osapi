@@ -47,6 +47,11 @@ func (a *Agent) DrainAgent(
 		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 
+	if err := a.JobClient.SetDrainFlag(ctx, hostname); err != nil {
+		errMsg := fmt.Sprintf("failed to set drain flag: %s", err.Error())
+		return gen.DrainAgent409JSONResponse{Error: &errMsg}, nil
+	}
+
 	if err := a.JobClient.WriteAgentTimelineEvent(ctx, hostname, "drain", "Drain initiated via API"); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			errMsg := fmt.Sprintf("agent not found: %s", hostname)

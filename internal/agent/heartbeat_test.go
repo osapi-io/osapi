@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
@@ -87,11 +86,11 @@ func (s *HeartbeatTestSuite) SetupTest() {
 	)
 	s.agent.state = job.AgentStateReady
 
-	// writeRegistration now calls handleDrainDetection which reads the drain flag.
-	// Default: no drain flag present (key not found).
-	s.mockKV.EXPECT().
-		Get(gomock.Any(), "drain.test_agent").
-		Return(nil, jetstream.ErrKeyNotFound).
+	// writeRegistration now calls handleDrainDetection which checks drain flag.
+	// Default: no drain flag present.
+	s.mockJobClient.EXPECT().
+		CheckDrainFlag(gomock.Any(), "test-agent").
+		Return(false).
 		AnyTimes()
 }
 

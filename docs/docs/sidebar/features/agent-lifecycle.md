@@ -14,11 +14,11 @@ Conditions are threshold-based booleans evaluated agent-side on every heartbeat
 (10 seconds). They surface "is anything wrong?" at a glance without requiring
 operators to interpret raw metrics.
 
-| Condition        | Default Threshold        | Data Source         |
-| ---------------- | ------------------------ | ------------------- |
-| `MemoryPressure` | Memory used > 90%        | Heartbeat memory    |
-| `HighLoad`       | Load1 > 2x CPU count     | Heartbeat load      |
-| `DiskPressure`   | Any disk > 90% used      | Heartbeat disk      |
+| Condition        | Default Threshold    | Data Source      |
+| ---------------- | -------------------- | ---------------- |
+| `MemoryPressure` | Memory used > 90%    | Heartbeat memory |
+| `HighLoad`       | Load1 > 2x CPU count | Heartbeat load   |
+| `DiskPressure`   | Any disk > 90% used  | Heartbeat disk   |
 
 Each condition tracks:
 
@@ -56,9 +56,9 @@ Thresholds are configurable in `osapi.yaml`:
 ```yaml
 agent:
   conditions:
-    memory_pressure_threshold: 90   # percent used
-    high_load_multiplier: 2.0       # load1 / cpu_count
-    disk_pressure_threshold: 90     # percent used
+    memory_pressure_threshold: 90 # percent used
+    high_load_multiplier: 2.0 # load1 / cpu_count
+    disk_pressure_threshold: 90 # percent used
 ```
 
 ## Agent Drain
@@ -77,16 +77,16 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
   └──────────────(undrain)───────────────────────┘
 ```
 
-| State      | Meaning                                      |
-| ---------- | -------------------------------------------- |
-| `Ready`    | Accepting and processing jobs (default)      |
-| `Draining` | Finishing in-flight jobs, not accepting new   |
-| `Cordoned` | Fully drained, idle, not accepting jobs       |
+| State      | Meaning                                     |
+| ---------- | ------------------------------------------- |
+| `Ready`    | Accepting and processing jobs (default)     |
+| `Draining` | Finishing in-flight jobs, not accepting new |
+| `Cordoned` | Fully drained, idle, not accepting jobs     |
 
 ### How It Works
 
 1. Operator calls `osapi client agent drain --hostname web-01`
-2. API writes a `drain.{hostname}` key to the registry KV bucket
+2. API writes a `drain.{hostname}` key to the state KV bucket
 3. Agent detects the drain flag on its next heartbeat tick (10s)
 4. Agent transitions to `Draining` and **unsubscribes from NATS JetStream
    consumers** -- this is how it stops receiving new jobs
@@ -97,8 +97,8 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
 
 ### Timeline
 
-Every state transition is recorded as an append-only event in the registry KV
-bucket. `agent get` shows the full transition history:
+Every state transition is recorded as an append-only event in the state KV
+bucket (`agent-state`, no TTL). `agent get` shows the full transition history:
 
 ```
 Timeline:

@@ -2,15 +2,15 @@
 
 ## Context
 
-OSAPI agents collect rich system metrics (memory, load, disk, CPU count)
-via heartbeat and facts, but operators must manually interpret raw numbers
-to detect problems. Kubernetes solves this with node conditions —
-threshold-based booleans that surface "is anything wrong?" at a glance.
+OSAPI agents collect rich system metrics (memory, load, disk, CPU count) via
+heartbeat and facts, but operators must manually interpret raw numbers to detect
+problems. Kubernetes solves this with node conditions — threshold-based booleans
+that surface "is anything wrong?" at a glance.
 
-Additionally, there's no way to gracefully remove an agent from the job
-routing pool for maintenance without stopping the process entirely. When
-an agent stops, it vanishes from the registry and looks identical to a
-crash. Kubernetes handles this with cordon/drain.
+Additionally, there's no way to gracefully remove an agent from the job routing
+pool for maintenance without stopping the process entirely. When an agent stops,
+it vanishes from the registry and looks identical to a crash. Kubernetes handles
+this with cordon/drain.
 
 This design adds both features to OSAPI.
 
@@ -21,11 +21,11 @@ This design adds both features to OSAPI.
 Three conditions derived from existing heartbeat and facts data, evaluated
 agent-side on each heartbeat tick (10s):
 
-| Condition | Default Threshold | Data Source |
-|-----------|-------------------|-------------|
-| `MemoryPressure` | memory used > 90% | `MemoryStats` (heartbeat) |
-| `HighLoad` | load1 > 2× CPU count | `LoadAverages` (heartbeat) + `CPUCount` (facts) |
-| `DiskPressure` | any disk > 90% used | `DiskStats` (new in heartbeat) |
+| Condition        | Default Threshold    | Data Source                                     |
+| ---------------- | -------------------- | ----------------------------------------------- |
+| `MemoryPressure` | memory used > 90%    | `MemoryStats` (heartbeat)                       |
+| `HighLoad`       | load1 > 2× CPU count | `LoadAverages` (heartbeat) + `CPUCount` (facts) |
+| `DiskPressure`   | any disk > 90% used  | `DiskStats` (new in heartbeat)                  |
 
 ### Condition Structure
 
@@ -52,26 +52,26 @@ Thresholds configurable in `osapi.yaml` with sensible defaults:
 ```yaml
 agent:
   conditions:
-    memory_pressure_threshold: 90   # percent used
-    high_load_multiplier: 2.0       # load1 / cpu_count
-    disk_pressure_threshold: 90     # percent used
+    memory_pressure_threshold: 90 # percent used
+    high_load_multiplier: 2.0 # load1 / cpu_count
+    disk_pressure_threshold: 90 # percent used
 ```
 
 ### Evaluation
 
-Conditions are evaluated in the agent during `writeRegistration()`. The
-agent maintains previous condition state in memory to track
-`LastTransitionTime` — only updated when the boolean flips.
+Conditions are evaluated in the agent during `writeRegistration()`. The agent
+maintains previous condition state in memory to track `LastTransitionTime` —
+only updated when the boolean flips.
 
 DiskPressure requires adding disk stats to the heartbeat. The existing
-`disk.Provider` already implements `GetUsage()` so the data is available.
-Disk collection joins the existing non-fatal provider pattern: if it
-fails, the DiskPressure condition is simply not evaluated.
+`disk.Provider` already implements `GetUsage()` so the data is available. Disk
+collection joins the existing non-fatal provider pattern: if it fails, the
+DiskPressure condition is simply not evaluated.
 
 ### Storage
 
-Conditions are stored as part of `AgentRegistration` in the registry KV
-bucket. No new KV bucket needed.
+Conditions are stored as part of `AgentRegistration` in the registry KV bucket.
+No new KV bucket needed.
 
 ```go
 type AgentRegistration struct {
@@ -118,16 +118,16 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
   └──────────────(undrain)───────────────────────┘
 ```
 
-| State | Meaning |
-|-------|---------|
-| `Ready` | Accepting and processing jobs (default) |
+| State      | Meaning                                          |
+| ---------- | ------------------------------------------------ |
+| `Ready`    | Accepting and processing jobs (default)          |
 | `Draining` | Finishing in-flight jobs, not accepting new ones |
-| `Cordoned` | Fully drained, idle, not accepting jobs |
+| `Cordoned` | Fully drained, idle, not accepting jobs          |
 
 ### Mechanism
 
 1. Operator calls `POST /agent/{hostname}/drain`
-2. API writes a `drain.{hostname}` key to the registry KV bucket
+2. API writes a `drain.{hostname}` key to the state KV bucket
 3. Agent checks for drain key on each heartbeat tick (10s)
 4. When drain flag detected:
    - Agent transitions state to `Draining`
@@ -146,8 +146,8 @@ POST /agent/{hostname}/drain     # Start draining
 POST /agent/{hostname}/undrain   # Resume accepting jobs
 ```
 
-Both return 200 on success, 404 if agent not found, 409 if already in
-the requested state.
+Both return 200 on success, 404 if agent not found, 409 if already in the
+requested state.
 
 ### Permission
 
@@ -155,13 +155,13 @@ New `agent:write` permission. Added to the `admin` role by default.
 
 ### Storage
 
-Agent state transitions are recorded as **append-only events** in the
-registry KV bucket, following the same pattern used for job status events
-(see `WriteStatusEvent` in `internal/job/client/agent.go`).
+Agent state transitions are recorded as **append-only events** in the state KV
+bucket (`agent-state`, no TTL), following the same pattern used for job status
+events (see `WriteStatusEvent` in `internal/job/client/agent.go`).
 
-Events reuse the existing `TimelineEvent` type (`internal/job/types.go`)
-— the same type used for job lifecycle events. This type is generic
-(Timestamp, Event, Hostname, Message, Error) and not job-specific:
+Events reuse the existing `TimelineEvent` type (`internal/job/types.go`) — the
+same type used for job lifecycle events. This type is generic (Timestamp, Event,
+Hostname, Message, Error) and not job-specific:
 
 ```
 Key format: timeline.{sanitized_hostname}.{event}.{unix_nano}
@@ -170,21 +170,21 @@ Value:      TimelineEvent JSON
 
 Events: `ready`, `drain`, `cordoned`, `undrain`
 
-On the SDK side, `TimelineEvent` is promoted from `job_types.go` to a
-shared top-level type in `pkg/osapi/types.go`. Both `JobDetail.Timeline`
-and `Agent.Timeline` reference the same type.
+On the SDK side, `TimelineEvent` is promoted from `job_types.go` to a shared
+top-level type in `pkg/osapi/types.go`. Both `JobDetail.Timeline` and
+`Agent.Timeline` reference the same type.
 
-Current state is **computed from the latest event**, just like job status
-is computed via `computeStatusFromEvents`. This preserves the full
-transition history (Ready → Draining → Cordoned → Ready → Draining → ...)
-and eliminates race conditions by never updating existing keys.
+Current state is **computed from the latest event**, just like job status is
+computed via `computeStatusFromEvents`. This preserves the full transition
+history (Ready → Draining → Cordoned → Ready → Draining → ...) and eliminates
+race conditions by never updating existing keys.
 
-The drain intent uses a separate key: `drain.{sanitized_hostname}`. The
-API writes this key to signal drain; the agent reads it on heartbeat and
-writes the state transition event. The API deletes the key on undrain.
+The drain intent uses a separate key: `drain.{sanitized_hostname}`. The API
+writes this key to signal drain; the agent reads it on heartbeat and writes the
+state transition event. The API deletes the key on undrain.
 
-The `AgentRegistration` also carries the current state for quick reads
-without scanning events:
+The `AgentRegistration` also carries the current state for quick reads without
+scanning events:
 
 ```go
 type AgentRegistration struct {
@@ -320,12 +320,11 @@ admin:
 
 ## Testing
 
-- **Unit**: condition evaluation logic (threshold math, transition
-  tracking), state machine transitions, drain flag detection
-- **HTTP wiring**: drain/undrain endpoints with RBAC (401, 403, 200, 404,
-  409)
-- **Integration**: drain agent → submit job → verify not routed to
-  drained agent → undrain → verify jobs resume
+- **Unit**: condition evaluation logic (threshold math, transition tracking),
+  state machine transitions, drain flag detection
+- **HTTP wiring**: drain/undrain endpoints with RBAC (401, 403, 200, 404, 409)
+- **Integration**: drain agent → submit job → verify not routed to drained agent
+  → undrain → verify jobs resume
 
 ## Verification
 

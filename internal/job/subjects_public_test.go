@@ -956,6 +956,43 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 			target: "_any",
 			want:   0,
 		},
+		{
+			name: "when _all excludes cordoned agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStateCordoned},
+				{Hostname: "web-03"},
+			},
+			target: "_all",
+			want:   2,
+		},
+		{
+			name: "when _all excludes draining agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01"},
+				{Hostname: "web-02", State: job.AgentStateDraining},
+			},
+			target: "_all",
+			want:   1,
+		},
+		{
+			name: "when label match excludes cordoned agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01", Labels: map[string]string{"group": "web.dev"}, State: job.AgentStateCordoned},
+				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
+			},
+			target: "group:web",
+			want:   1,
+		},
+		{
+			name: "when label match excludes draining agents",
+			agents: []job.AgentInfo{
+				{Hostname: "web-01", Labels: map[string]string{"group": "web.dev"}, State: job.AgentStateDraining},
+				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
+			},
+			target: "group:web",
+			want:   1,
+		},
 	}
 
 	for _, tt := range tests {

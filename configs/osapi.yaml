@@ -98,6 +98,11 @@ nats:
     storage: file
     replicas: 1
 
+  state:
+    bucket: agent-state
+    storage: file
+    replicas: 1
+
 telemetry:
   tracing:
     enabled: true

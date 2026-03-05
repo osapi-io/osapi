@@ -1133,6 +1133,7 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 	tests := []struct {
 		name             string
 		setupMockKV      func(*jobmocks.MockKeyValue)
+		setupStateKV     func(*jobmocks.MockKeyValue)
 		setupMockFactsKV func(*jobmocks.MockKeyValue)
 		useRegistryKV    bool
 		useFactsKV       bool
@@ -1185,6 +1186,14 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server2").
+					Return(nil, errors.New("key not found"))
+			},
 			expectedCount: 2,
 			validateFunc: func(agents []job.AgentInfo) {
 				s.Equal("server1", agents[0].Hostname)
@@ -1228,6 +1237,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Get(gomock.Any(), "agents.server2").
 					Return(nil, errors.New("key not found"))
 			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+			},
 			expectedCount: 1,
 		},
 		{
@@ -1252,6 +1266,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
 			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+			},
 			expectedCount: 1,
 		},
 		{
@@ -1272,6 +1291,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 			},
 			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
 				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1317,6 +1341,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
 			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+			},
 			expectedCount: 1,
 			validateFunc: func(agents []job.AgentInfo) {
 				s.Equal("server1", agents[0].Hostname)
@@ -1346,6 +1375,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 			},
 			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
@@ -1378,6 +1412,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
 			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+			},
 			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
 				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				factsEntry.EXPECT().Value().Return([]byte(`not valid json`))
@@ -1408,6 +1447,11 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			}
 			if tt.useRegistryKV {
 				opts.RegistryKV = registryKV
+			}
+			if tt.setupStateKV != nil {
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				tt.setupStateKV(stateKV)
+				opts.StateKV = stateKV
 			}
 			if tt.useFactsKV {
 				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
@@ -1444,6 +1488,7 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 		name             string
 		hostname         string
 		setupMockKV      func(*jobmocks.MockKeyValue)
+		setupStateKV     func(*jobmocks.MockKeyValue)
 		setupMockFactsKV func(*jobmocks.MockKeyValue)
 		useRegistryKV    bool
 		useFactsKV       bool
@@ -1472,6 +1517,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 				kv.EXPECT().
 					Keys(gomock.Any()).
 					Return(nil, errors.New("nats: no keys found"))
@@ -1526,6 +1576,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 				kv.EXPECT().
 					Keys(gomock.Any()).
 					Return(nil, errors.New("nats: no keys found"))
@@ -1570,6 +1625,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 				kv.EXPECT().
 					Keys(gomock.Any()).
 					Return(nil, errors.New("nats: no keys found"))
@@ -1599,6 +1659,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 				kv.EXPECT().
 					Keys(gomock.Any()).
 					Return(nil, errors.New("nats: no keys found"))
@@ -1628,6 +1693,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 
 				// GetAgentTimeline calls Keys then Get for matching keys
 				kv.EXPECT().
@@ -1681,6 +1751,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
 				kv.EXPECT().
 					Keys(gomock.Any()).
 					Return(nil, errors.New("nats: no keys found"))
@@ -1709,6 +1784,11 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 			}
 			if tt.useRegistryKV {
 				opts.RegistryKV = registryKV
+			}
+			if tt.setupStateKV != nil {
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				tt.setupStateKV(stateKV)
+				opts.StateKV = stateKV
 			}
 			if tt.useFactsKV {
 				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
@@ -1822,6 +1902,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 		timeout         time.Duration
 		opts            *publishAndCollectMockOpts
 		setupRegistryKV func(*jobmocks.MockKeyValue)
+		setupStateKV    func(*jobmocks.MockKeyValue)
 		expectError     bool
 		errorContains   string
 		expectedCount   int
@@ -1862,6 +1943,14 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server2").
 					Return(entry2, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server2").
+					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 2,
 		},
@@ -1924,6 +2013,12 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 				mockRegistryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				tt.setupRegistryKV(mockRegistryKV)
 				opts.RegistryKV = mockRegistryKV
+			}
+
+			if tt.setupStateKV != nil {
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				tt.setupStateKV(stateKV)
+				opts.StateKV = stateKV
 			}
 
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)

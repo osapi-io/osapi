@@ -43,7 +43,16 @@ func (a *Agent) UndrainAgent(
 	}
 
 	if agentInfo.State != job.AgentStateDraining && agentInfo.State != job.AgentStateCordoned {
-		errMsg := fmt.Sprintf("agent %s is not in draining or cordoned state (current: %s)", hostname, agentInfo.State)
+		errMsg := fmt.Sprintf(
+			"agent %s is not in draining or cordoned state (current: %s)",
+			hostname,
+			agentInfo.State,
+		)
+		return gen.UndrainAgent409JSONResponse{Error: &errMsg}, nil
+	}
+
+	if err := a.JobClient.DeleteDrainFlag(ctx, hostname); err != nil {
+		errMsg := fmt.Sprintf("failed to delete drain flag: %s", err.Error())
 		return gen.UndrainAgent409JSONResponse{Error: &errMsg}, nil
 	}
 

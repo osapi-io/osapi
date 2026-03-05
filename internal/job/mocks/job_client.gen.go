@@ -44,6 +44,20 @@ func (m *MockJobClient) EXPECT() *MockJobClientMockRecorder {
 	return m.recorder
 }
 
+// CheckDrainFlag mocks base method.
+func (m *MockJobClient) CheckDrainFlag(arg0 context.Context, arg1 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckDrainFlag", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckDrainFlag indicates an expected call of CheckDrainFlag.
+func (mr *MockJobClientMockRecorder) CheckDrainFlag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckDrainFlag", reflect.TypeOf((*MockJobClient)(nil).CheckDrainFlag), arg0, arg1)
+}
+
 // ConsumeJobs mocks base method.
 func (m *MockJobClient) ConsumeJobs(arg0 context.Context, arg1, arg2 string, arg3 func(jetstream.Msg) error, arg4 *client.ConsumeOptions) error {
 	m.ctrl.T.Helper()
@@ -85,6 +99,20 @@ func (m *MockJobClient) CreateOrUpdateConsumer(arg0 context.Context, arg1 string
 func (mr *MockJobClientMockRecorder) CreateOrUpdateConsumer(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateConsumer", reflect.TypeOf((*MockJobClient)(nil).CreateOrUpdateConsumer), arg0, arg1, arg2)
+}
+
+// DeleteDrainFlag mocks base method.
+func (m *MockJobClient) DeleteDrainFlag(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDrainFlag", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDrainFlag indicates an expected call of DeleteDrainFlag.
+func (mr *MockJobClientMockRecorder) DeleteDrainFlag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDrainFlag", reflect.TypeOf((*MockJobClient)(nil).DeleteDrainFlag), arg0, arg1)
 }
 
 // DeleteJob mocks base method.
@@ -776,6 +804,20 @@ func (m *MockJobClient) RetryJob(arg0 context.Context, arg1, arg2 string) (*clie
 func (mr *MockJobClientMockRecorder) RetryJob(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetryJob", reflect.TypeOf((*MockJobClient)(nil).RetryJob), arg0, arg1, arg2)
+}
+
+// SetDrainFlag mocks base method.
+func (m *MockJobClient) SetDrainFlag(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDrainFlag", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDrainFlag indicates an expected call of SetDrainFlag.
+func (mr *MockJobClientMockRecorder) SetDrainFlag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDrainFlag", reflect.TypeOf((*MockJobClient)(nil).SetDrainFlag), arg0, arg1)
 }
 
 // WriteAgentTimelineEvent mocks base method.

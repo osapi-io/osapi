@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
@@ -102,9 +101,9 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 			name: "when registryKV is set registers and deregisters",
 			setupFunc: func() *agent.Agent {
 				// Drain check on each heartbeat tick (no drain flag present)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(nil, jetstream.ErrKeyNotFound).
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false).
 					AnyTimes()
 
 				// Heartbeat initial write

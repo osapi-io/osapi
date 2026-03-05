@@ -344,3 +344,5 @@ tool (
 	google.golang.org/protobuf/cmd/protoc-gen-go
 	mvdan.cc/gofumpt
 )
+
+replace github.com/osapi-io/osapi-sdk => ../osapi-sdk

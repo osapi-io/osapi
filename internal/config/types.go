@@ -93,6 +93,7 @@ type NATS struct {
 	Audit    NATSAudit    `mapstructure:"audit,omitempty"`
 	Registry NATSRegistry `mapstructure:"registry,omitempty"`
 	Facts    NATSFacts    `mapstructure:"facts,omitempty"`
+	State    NATSState    `mapstructure:"state,omitempty"`
 }
 
 // NATSAudit configuration for the audit log KV bucket.
@@ -119,6 +120,14 @@ type NATSFacts struct {
 	// Bucket is the KV bucket name for agent facts entries.
 	Bucket   string `mapstructure:"bucket"`
 	TTL      string `mapstructure:"ttl"`     // e.g. "1h"
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSState configuration for the agent state KV bucket (drain flags, timeline events).
+type NATSState struct {
+	// Bucket is the KV bucket name for persistent agent state.
+	Bucket   string `mapstructure:"bucket"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }

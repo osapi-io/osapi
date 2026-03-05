@@ -56,13 +56,13 @@ func (s *AgentTimelinePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentTimelinePublicTestSuite) newClientWithRegistry(
-	registryKV *jobmocks.MockKeyValue,
+func (s *AgentTimelinePublicTestSuite) newClientWithState(
+	stateKV *jobmocks.MockKeyValue,
 ) *client.Client {
 	opts := &client.Options{
-		Timeout:    30 * time.Second,
-		KVBucket:   s.mockKV,
-		RegistryKV: registryKV,
+		Timeout:  30 * time.Second,
+		KVBucket: s.mockKV,
+		StateKV:  stateKV,
 	}
 	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
@@ -70,7 +70,7 @@ func (s *AgentTimelinePublicTestSuite) newClientWithRegistry(
 	return c
 }
 
-func (s *AgentTimelinePublicTestSuite) newClientWithoutRegistry() *client.Client {
+func (s *AgentTimelinePublicTestSuite) newClientWithoutState() *client.Client {
 	opts := &client.Options{
 		Timeout:  30 * time.Second,
 		KVBucket: s.mockKV,
@@ -87,17 +87,17 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 		hostname    string
 		event       string
 		message     string
-		useRegistry bool
+		useState    bool
 		setupMocks  func(*jobmocks.MockKeyValue)
 		expectError bool
 		errorMsg    string
 	}{
 		{
-			name:        "when write succeeds stores timeline event",
-			hostname:    "server1",
-			event:       "drain",
-			message:     "node marked for drain",
-			useRegistry: true,
+			name:     "when write succeeds stores timeline event",
+			hostname: "server1",
+			event:    "drain",
+			message:  "node marked for drain",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -121,11 +121,11 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			},
 		},
 		{
-			name:        "when KV put fails returns error",
-			hostname:    "server1",
-			event:       "drain",
-			message:     "drain requested",
-			useRegistry: true,
+			name:     "when KV put fails returns error",
+			hostname: "server1",
+			event:    "drain",
+			message:  "drain requested",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -135,27 +135,27 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			errorMsg:    "write timeline event",
 		},
 		{
-			name:        "when registryKV is nil returns error",
+			name:        "when stateKV is nil returns error",
 			hostname:    "server1",
 			event:       "drain",
 			message:     "drain requested",
-			useRegistry: false,
+			useState:    false,
 			expectError: true,
-			errorMsg:    "agent registry not configured",
+			errorMsg:    "agent state bucket not configured",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
-			if tt.useRegistry {
-				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+			if tt.useState {
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(registryKV)
+					tt.setupMocks(stateKV)
 				}
-				jobsClient = s.newClientWithRegistry(registryKV)
+				jobsClient = s.newClientWithState(stateKV)
 			} else {
-				jobsClient = s.newClientWithoutRegistry()
+				jobsClient = s.newClientWithoutState()
 			}
 
 			err := jobsClient.WriteAgentTimelineEvent(
@@ -183,7 +183,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 	tests := []struct {
 		name          string
 		hostname      string
-		useRegistry   bool
+		useState      bool
 		setupMocks    func(*jobmocks.MockKeyValue)
 		expectError   bool
 		errorMsg      string
@@ -191,9 +191,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 		validateFunc  func([]job.TimelineEvent)
 	}{
 		{
-			name:        "when events exist returns sorted events",
-			hostname:    "server1",
-			useRegistry: true,
+			name:     "when events exist returns sorted events",
+			hostname: "server1",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
@@ -235,9 +235,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			},
 		},
 		{
-			name:        "when no keys found returns empty slice",
-			hostname:    "server1",
-			useRegistry: true,
+			name:     "when no keys found returns empty slice",
+			hostname: "server1",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
@@ -246,16 +246,16 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			expectedCount: 0,
 		},
 		{
-			name:        "when registryKV is nil returns error",
+			name:        "when stateKV is nil returns error",
 			hostname:    "server1",
-			useRegistry: false,
+			useState:    false,
 			expectError: true,
-			errorMsg:    "agent registry not configured",
+			errorMsg:    "agent state bucket not configured",
 		},
 		{
-			name:        "when Get fails for a key skips it",
-			hostname:    "server1",
-			useRegistry: true,
+			name:     "when Get fails for a key skips it",
+			hostname: "server1",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
@@ -286,9 +286,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			},
 		},
 		{
-			name:        "when unmarshal fails for a key skips it",
-			hostname:    "server1",
-			useRegistry: true,
+			name:     "when unmarshal fails for a key skips it",
+			hostname: "server1",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
@@ -321,9 +321,9 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 			},
 		},
 		{
-			name:        "when keys exist for other hostnames filters them out",
-			hostname:    "server1",
-			useRegistry: true,
+			name:     "when keys exist for other hostnames filters them out",
+			hostname: "server1",
+			useState: true,
 			setupMocks: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
 					Keys(gomock.Any()).
@@ -355,14 +355,14 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			var jobsClient *client.Client
-			if tt.useRegistry {
-				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+			if tt.useState {
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
 				if tt.setupMocks != nil {
-					tt.setupMocks(registryKV)
+					tt.setupMocks(stateKV)
 				}
-				jobsClient = s.newClientWithRegistry(registryKV)
+				jobsClient = s.newClientWithState(stateKV)
 			} else {
-				jobsClient = s.newClientWithoutRegistry()
+				jobsClient = s.newClientWithoutState()
 			}
 
 			events, err := jobsClient.GetAgentTimeline(s.ctx, tt.hostname)

@@ -26,14 +26,13 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// checkDrainFlag reads drain.{hostname} from registryKV.
+// checkDrainFlag checks the drain flag via the job client. Drain flags
+// are stored in the main KV bucket (longer TTL than registry).
 func (a *Agent) checkDrainFlag(
 	ctx context.Context,
 	hostname string,
 ) bool {
-	key := "drain." + job.SanitizeHostname(hostname)
-	_, err := a.registryKV.Get(ctx, key)
-	return err == nil
+	return a.jobClient.CheckDrainFlag(ctx, hostname)
 }
 
 // handleDrainDetection checks drain flag on each heartbeat tick.

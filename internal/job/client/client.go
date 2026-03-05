@@ -42,6 +42,7 @@ type Client struct {
 	kv         jetstream.KeyValue
 	registryKV jetstream.KeyValue
 	factsKV    jetstream.KeyValue
+	stateKV    jetstream.KeyValue
 	timeout    time.Duration
 	streamName string
 }
@@ -56,6 +57,8 @@ type Options struct {
 	RegistryKV jetstream.KeyValue
 	// FactsKV is the KV bucket for agent facts (optional).
 	FactsKV jetstream.KeyValue
+	// StateKV is the KV bucket for persistent agent state (drain flags, timeline).
+	StateKV jetstream.KeyValue
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
 }
@@ -79,6 +82,7 @@ func New(
 		kv:         opts.KVBucket,
 		registryKV: opts.RegistryKV,
 		factsKV:    opts.FactsKV,
+		stateKV:    opts.StateKV,
 		streamName: opts.StreamName,
 		timeout:    opts.Timeout,
 	}, nil

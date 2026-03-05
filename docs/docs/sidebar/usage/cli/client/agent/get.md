@@ -39,27 +39,27 @@ $ osapi client agent get --hostname web-01
 This command reads directly from the agent heartbeat registry -- no job is
 created. The data comes from the agent's most recent heartbeat write.
 
-| Field        | Description                                              |
-| ------------ | -------------------------------------------------------- |
-| Hostname     | Agent's configured or OS hostname                        |
-| Status       | `Ready` if present in registry                           |
-| State        | Scheduling state: `Draining` or `Cordoned` (if not Ready)|
-| Labels       | Key-value labels from agent config                       |
-| OS           | Distribution and version                                 |
-| Uptime       | System uptime reported by the agent                      |
-| Age          | Time since the agent process started                     |
-| Last Seen    | Time since the last heartbeat refresh                    |
-| Load         | 1-, 5-, and 15-minute load averages                      |
-| Memory       | Total, used, and free RAM                                |
-| Architecture | CPU architecture (e.g., amd64)                           |
-| Kernel       | OS kernel version                                        |
-| FQDN         | Fully qualified domain name                              |
-| CPUs         | Number of logical CPUs                                   |
-| Service Mgr  | Init system (e.g., systemd)                              |
-| Package Mgr  | Package manager (e.g., apt)                              |
-| Interfaces   | Network interfaces with IPv4, IPv6, MAC, and family      |
-| Conditions   | Node conditions table (type, status, reason, since)      |
-| Timeline     | State transition events (timestamp, event, hostname)     |
+| Field        | Description                                               |
+| ------------ | --------------------------------------------------------- |
+| Hostname     | Agent's configured or OS hostname                         |
+| Status       | `Ready` if present in registry                            |
+| State        | Scheduling state: `Draining` or `Cordoned` (if not Ready) |
+| Labels       | Key-value labels from agent config                        |
+| OS           | Distribution and version                                  |
+| Uptime       | System uptime reported by the agent                       |
+| Age          | Time since the agent process started                      |
+| Last Seen    | Time since the last heartbeat refresh                     |
+| Load         | 1-, 5-, and 15-minute load averages                       |
+| Memory       | Total, used, and free RAM                                 |
+| Architecture | CPU architecture (e.g., amd64)                            |
+| Kernel       | OS kernel version                                         |
+| FQDN         | Fully qualified domain name                               |
+| CPUs         | Number of logical CPUs                                    |
+| Service Mgr  | Init system (e.g., systemd)                               |
+| Package Mgr  | Package manager (e.g., apt)                               |
+| Interfaces   | Network interfaces with IPv4, IPv6, MAC, and family       |
+| Conditions   | Node conditions table (type, status, reason, since)       |
+| Timeline     | State transition events (timestamp, event, hostname)      |
 
 :::tip agent get vs. node status
 

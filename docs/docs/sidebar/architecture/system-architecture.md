@@ -13,13 +13,13 @@ that can either hit the REST API directly or manage the job queue.
 
 The system is organized into six layers, top to bottom:
 
-| Layer                      | Package                                 | Role                                                                |
-| -------------------------- | --------------------------------------- | ------------------------------------------------------------------- |
-| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                    |
-| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI                                |
-| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                     |
-| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                              |
-| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts` |
+| Layer                      | Package                                 | Role                                                                     |
+| -------------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
+| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                         |
+| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI                                     |
+| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                          |
+| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                   |
+| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts`      |
 | **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle |
 
 ```mermaid
@@ -120,13 +120,13 @@ Agents evaluate **node conditions** on each heartbeat tick (10s) and support
 (MemoryPressure, HighLoad, DiskPressure) computed from heartbeat metrics.
 
 The drain mechanism uses NATS consumer subscribe/unsubscribe. When an operator
-drains an agent, the API writes a `drain.{hostname}` key to the registry KV
-bucket. The agent detects this on its next heartbeat, unsubscribes from all
-NATS JetStream consumers (stopping new job delivery), and transitions through
-`Draining` → `Cordoned` as in-flight jobs complete. Undrain deletes the key
-and the agent resubscribes.
+drains an agent, the API writes a `drain.{hostname}` key to the state KV bucket
+(`agent-state`, no TTL). The agent detects this on its next heartbeat,
+unsubscribes from all NATS JetStream consumers (stopping new job delivery), and
+transitions through `Draining` → `Cordoned` as in-flight jobs complete. Undrain
+deletes the key and the agent resubscribes.
 
-State transitions are recorded as append-only timeline events in the registry KV
+State transitions are recorded as append-only timeline events in the state KV
 bucket, following the same pattern used for job lifecycle events. See
 [Agent Lifecycle](../features/agent-lifecycle.md) for details.
 

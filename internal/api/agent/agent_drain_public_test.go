@@ -73,6 +73,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 		mockGetErr   error
 		mockWriteErr error
 		skipWrite    bool
+		mockSetDrain bool
 		validateFunc func(resp gen.DrainAgentResponseObject)
 	}{
 		{
@@ -82,6 +83,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 				Hostname: "server1",
 				State:    jobtypes.AgentStateReady,
 			},
+			mockSetDrain: true,
 			validateFunc: func(resp gen.DrainAgentResponseObject) {
 				r, ok := resp.(gen.DrainAgent200JSONResponse)
 				s.True(ok)
@@ -132,6 +134,12 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 				GetAgent(gomock.Any(), tt.hostname).
 				Return(tt.mockAgent, tt.mockGetErr)
 
+			if tt.mockSetDrain {
+				s.mockJobClient.EXPECT().
+					SetDrainFlag(gomock.Any(), tt.hostname).
+					Return(nil)
+			}
+
 			if !tt.skipWrite {
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), tt.hostname, "drain", "Drain initiated via API").
@@ -166,6 +174,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentValidationHTTP() {
 						Hostname: "server1",
 						State:    jobtypes.AgentStateReady,
 					}, nil)
+				mock.EXPECT().
+					SetDrainFlag(gomock.Any(), "server1").
+					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
 					Return(nil)
@@ -293,6 +304,9 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 						Hostname: "server1",
 						State:    jobtypes.AgentStateReady,
 					}, nil)
+				mock.EXPECT().
+					SetDrainFlag(gomock.Any(), "server1").
+					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
 					Return(nil)

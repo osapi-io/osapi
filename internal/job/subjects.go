@@ -339,10 +339,19 @@ func CountExpectedAgents(
 
 	switch routingType {
 	case BroadcastHost:
-		return len(agents)
+		count := 0
+		for i := range agents {
+			if agents[i].State != AgentStateCordoned && agents[i].State != AgentStateDraining {
+				count++
+			}
+		}
+		return count
 	case "label":
 		count := 0
 		for i := range agents {
+			if agents[i].State == AgentStateCordoned || agents[i].State == AgentStateDraining {
+				continue
+			}
 			if agentVal, ok := agents[i].Labels[key]; ok {
 				if agentVal == value || strings.HasPrefix(agentVal, value+".") {
 					count++

@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
@@ -100,9 +99,9 @@ func (s *DrainTestSuite) TestCheckDrainFlag() {
 		{
 			name: "when drain key exists returns true",
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(s.mockEntry, nil)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(true)
 			},
 			validateFunc: func(result bool) {
 				s.True(result)
@@ -111,9 +110,9 @@ func (s *DrainTestSuite) TestCheckDrainFlag() {
 		{
 			name: "when drain key missing returns false",
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false)
 			},
 			validateFunc: func(result bool) {
 				s.False(result)
@@ -141,9 +140,9 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 			name:         "when drain flag set and agent is Ready transitions to Cordoned",
 			initialState: job.AgentStateReady,
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(s.mockEntry, nil)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(true)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
@@ -167,9 +166,9 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 			name:         "when drain flag removed and agent is Draining transitions to Ready",
 			initialState: job.AgentStateDraining,
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
@@ -194,9 +193,9 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 			name:         "when drain flag removed and agent is Cordoned transitions to Ready",
 			initialState: job.AgentStateCordoned,
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
@@ -221,9 +220,9 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 			name:         "when drain flag still set and agent is already Draining stays Draining",
 			initialState: job.AgentStateDraining,
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(s.mockEntry, nil)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(true)
 			},
 			expectedState: job.AgentStateDraining,
 		},
@@ -231,9 +230,9 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 			name:         "when no drain flag and agent is Ready stays Ready",
 			initialState: job.AgentStateReady,
 			setupMock: func() {
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "drain.test_agent").
-					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false)
 			},
 			expectedState: job.AgentStateReady,
 		},

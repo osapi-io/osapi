@@ -26,6 +26,18 @@ const sidebar: SidebarsConfig = {
           label: "Get agent details",
           className: "api-method get",
         },
+        {
+          type: "doc",
+          id: "gen/api/drain-agent",
+          label: "Drain an agent",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/undrain-agent",
+          label: "Undrain an agent",
+          className: "api-method post",
+        },
       ],
     },
     {

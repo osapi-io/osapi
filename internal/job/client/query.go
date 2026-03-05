@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -401,6 +402,10 @@ func (c *Client) ListAgents(
 
 	agents := make([]job.AgentInfo, 0, len(keys))
 	for _, key := range keys {
+		if !strings.HasPrefix(key, "agents.") {
+			continue
+		}
+
 		entry, err := c.registryKV.Get(ctx, key)
 		if err != nil {
 			continue
@@ -413,6 +418,8 @@ func (c *Client) ListAgents(
 
 		info := agentInfoFromRegistration(&reg)
 		c.mergeFacts(ctx, &info)
+		c.overlayDrainState(ctx, &info)
+
 		agents = append(agents, info)
 	}
 
@@ -441,6 +448,7 @@ func (c *Client) GetAgent(
 
 	info := agentInfoFromRegistration(&reg)
 	c.mergeFacts(ctx, &info)
+	c.overlayDrainState(ctx, &info)
 
 	timeline, err := c.GetAgentTimeline(ctx, hostname)
 	if err == nil && len(timeline) > 0 {

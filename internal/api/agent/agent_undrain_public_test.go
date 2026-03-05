@@ -67,13 +67,14 @@ func (s *AgentUndrainPublicTestSuite) TearDownTest() {
 
 func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 	tests := []struct {
-		name         string
-		hostname     string
-		mockAgent    *jobtypes.AgentInfo
-		mockGetErr   error
-		mockWriteErr error
-		skipWrite    bool
-		validateFunc func(resp gen.UndrainAgentResponseObject)
+		name            string
+		hostname        string
+		mockAgent       *jobtypes.AgentInfo
+		mockGetErr      error
+		mockWriteErr    error
+		skipWrite       bool
+		mockDeleteDrain bool
+		validateFunc    func(resp gen.UndrainAgentResponseObject)
 	}{
 		{
 			name:     "success undrains draining agent",
@@ -82,6 +83,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 				Hostname: "server1",
 				State:    jobtypes.AgentStateDraining,
 			},
+			mockDeleteDrain: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
 				r, ok := resp.(gen.UndrainAgent200JSONResponse)
 				s.True(ok)
@@ -95,6 +97,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 				Hostname: "server1",
 				State:    jobtypes.AgentStateCordoned,
 			},
+			mockDeleteDrain: true,
 			validateFunc: func(resp gen.UndrainAgentResponseObject) {
 				r, ok := resp.(gen.UndrainAgent200JSONResponse)
 				s.True(ok)
@@ -145,6 +148,12 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 				GetAgent(gomock.Any(), tt.hostname).
 				Return(tt.mockAgent, tt.mockGetErr)
 
+			if tt.mockDeleteDrain {
+				s.mockJobClient.EXPECT().
+					DeleteDrainFlag(gomock.Any(), tt.hostname).
+					Return(nil)
+			}
+
 			if !tt.skipWrite {
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), tt.hostname, "undrain", "Undrain initiated via API").
@@ -179,6 +188,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentValidationHTTP() {
 						Hostname: "server1",
 						State:    jobtypes.AgentStateDraining,
 					}, nil)
+				mock.EXPECT().
+					DeleteDrainFlag(gomock.Any(), "server1").
+					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
 					Return(nil)
@@ -306,6 +318,9 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentRBACHTTP() {
 						Hostname: "server1",
 						State:    jobtypes.AgentStateDraining,
 					}, nil)
+				mock.EXPECT().
+					DeleteDrainFlag(gomock.Any(), "server1").
+					Return(nil)
 				mock.EXPECT().
 					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
 					Return(nil)

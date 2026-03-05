@@ -74,6 +74,7 @@ type natsBundle struct {
 	jobsKV     jetstream.KeyValue
 	registryKV jetstream.KeyValue
 	factsKV    jetstream.KeyValue
+	stateKV    jetstream.KeyValue
 }
 
 // setupAPIServer connects to NATS, creates the API server with all handlers,
@@ -112,7 +113,7 @@ func setupAPIServer(
 	checker := newHealthChecker(b.nc, b.jobsKV)
 	auditStore, auditKV, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	metricsProvider := newMetricsProvider(
-		b.nc, b.jobsKV, b.registryKV, b.factsKV, auditKV, streamName, b.jobClient,
+		b.nc, b.jobsKV, b.registryKV, b.factsKV, b.stateKV, auditKV, streamName, b.jobClient,
 	)
 
 	sm := api.New(appConfig, log, serverOpts...)
@@ -163,11 +164,21 @@ func connectNATSBundle(
 		}
 	}
 
+	var stateKV jetstream.KeyValue
+	if appConfig.NATS.State.Bucket != "" {
+		stateKVConfig := cli.BuildStateKVConfig(namespace, appConfig.NATS.State)
+		stateKV, err = nc.CreateOrUpdateKVBucketWithConfig(ctx, stateKVConfig)
+		if err != nil {
+			cli.LogFatal(log, "failed to create state KV bucket", err)
+		}
+	}
+
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
 		Timeout:    30 * time.Second,
 		KVBucket:   jobsKV,
 		RegistryKV: registryKV,
 		FactsKV:    factsKV,
+		StateKV:    stateKV,
 		StreamName: streamName,
 	})
 	if err != nil {
@@ -180,6 +191,7 @@ func connectNATSBundle(
 		jobsKV:     jobsKV,
 		registryKV: registryKV,
 		factsKV:    factsKV,
+		stateKV:    stateKV,
 	}
 }
 
@@ -216,6 +228,7 @@ func newMetricsProvider(
 	jobsKV jetstream.KeyValue,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
+	stateKV jetstream.KeyValue,
 	auditKV jetstream.KeyValue,
 	streamName string,
 	jc jobclient.JobClient,
@@ -254,7 +267,7 @@ func newMetricsProvider(
 			}, nil
 		},
 		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
-			buckets := []jetstream.KeyValue{jobsKV, registryKV, factsKV, auditKV}
+			buckets := []jetstream.KeyValue{jobsKV, registryKV, factsKV, stateKV, auditKV}
 			results := make([]health.KVMetrics, 0, len(buckets))
 
 			for _, kv := range buckets {
