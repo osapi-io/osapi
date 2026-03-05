@@ -64,6 +64,9 @@ uppercased:
 | `agent.nats.auth.type`             | `OSAPI_AGENT_NATS_AUTH_TYPE`             |
 | `agent.hostname`                   | `OSAPI_AGENT_HOSTNAME`                   |
 | `agent.facts.interval`             | `OSAPI_AGENT_FACTS_INTERVAL`             |
+| `agent.conditions.memory_pressure_threshold` | `OSAPI_AGENT_CONDITIONS_MEMORY_PRESSURE_THRESHOLD` |
+| `agent.conditions.high_load_multiplier`      | `OSAPI_AGENT_CONDITIONS_HIGH_LOAD_MULTIPLIER`      |
+| `agent.conditions.disk_pressure_threshold`   | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`   |
 
 Environment variables take precedence over file values.
 
@@ -127,11 +130,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                         |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
-| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                |
+| Role    | Permissions                                                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
+| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                                |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                              |
 
 ### Custom Roles
 
@@ -226,9 +229,9 @@ api:
           - 'http://localhost:3001'
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
-      # Permissions: agent:read, node:read, network:read, network:write,
-      #              job:read, job:write, health:read, audit:read,
-      #              command:execute
+      # Permissions: agent:read, agent:write, node:read, network:read,
+      #              network:write, job:read, job:write, health:read,
+      #              audit:read, command:execute
       # roles:
       #   ops:
       #     permissions:
@@ -379,6 +382,14 @@ agent:
   facts:
     # How often the agent collects and publishes facts.
     interval: '60s'
+  # Node condition thresholds.
+  conditions:
+    # Memory pressure threshold (percent used).
+    memory_pressure_threshold: 90
+    # High load multiplier (load1 / cpu_count).
+    high_load_multiplier: 2.0
+    # Disk pressure threshold (percent used).
+    disk_pressure_threshold: 90
   # Queue group for load-balanced (_any) subscriptions.
   queue_group: 'job-agents'
   # Agent hostname for direct routing. Defaults to the
@@ -519,4 +530,7 @@ agent:
 | `hostname`                 | string            | Agent hostname (defaults to OS hostname) |
 | `max_jobs`                 | int               | Max concurrent jobs                      |
 | `facts.interval`           | string            | How often the agent collects facts       |
+| `conditions.memory_pressure_threshold` | int  | Memory pressure threshold percent (default 90)  |
+| `conditions.high_load_multiplier`      | float | Load multiplier over CPU count (default 2.0)    |
+| `conditions.disk_pressure_threshold`   | int   | Disk pressure threshold percent (default 90)    |
 | `labels`                   | map[string]string | Key-value pairs for label-based routing  |

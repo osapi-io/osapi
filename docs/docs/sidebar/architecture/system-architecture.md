@@ -20,7 +20,7 @@ The system is organized into six layers, top to bottom:
 | **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                     |
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                              |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts` |
-| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, publishes system facts           |
+| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle |
 
 ```mermaid
 graph TD
@@ -112,6 +112,23 @@ provider is selected at runtime through a platform-aware factory pattern.
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the
 provider interface and registering it in the agent's processor dispatch.
+
+### Agent Lifecycle (`internal/agent/`)
+
+Agents evaluate **node conditions** on each heartbeat tick (10s) and support
+**graceful drain** for maintenance. Conditions are threshold-based booleans
+(MemoryPressure, HighLoad, DiskPressure) computed from heartbeat metrics.
+
+The drain mechanism uses NATS consumer subscribe/unsubscribe. When an operator
+drains an agent, the API writes a `drain.{hostname}` key to the registry KV
+bucket. The agent detects this on its next heartbeat, unsubscribes from all
+NATS JetStream consumers (stopping new job delivery), and transitions through
+`Draining` → `Cordoned` as in-flight jobs complete. Undrain deletes the key
+and the agent resubscribes.
+
+State transitions are recorded as append-only timeline events in the registry KV
+bucket, following the same pattern used for job lifecycle events. See
+[Agent Lifecycle](../features/agent-lifecycle.md) for details.
 
 ### Configuration (`internal/config/`)
 

@@ -92,6 +92,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Agent Lifecycle',
+              docId: 'sidebar/features/agent-lifecycle'
+            },
+            {
+              type: 'doc',
               label: 'Job System',
               docId: 'sidebar/features/job-system'
             },

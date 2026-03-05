@@ -30,6 +30,7 @@ them to be used as appliances.
 | 🌐 **[Network Management][]** | DNS read/update, ping |
 | ⚙️ **[Command Execution][]** | Remote exec and shell across managed hosts |
 | 📊 **[System Facts][]** | Agent-collected system facts — architecture, kernel, FQDN, CPUs, network interfaces, service/package manager |
+| 🔄 **[Agent Lifecycle][]** | Node conditions (memory, disk, load pressure), graceful drain/cordon for maintenance |
 | ⚡ **[Async Job System][]** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
 | 💚 **[Health][] & [Metrics][]** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
 | 📋 **[Audit Logging][]** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |
@@ -77,5 +78,6 @@ them to be used as appliances.
 
 The [MIT][] License.
 
+[Agent Lifecycle]: https://osapi-io.github.io/osapi/sidebar/features/agent-lifecycle
 [System Facts]: https://osapi-io.github.io/osapi/sidebar/features/node-management
 [MIT]: LICENSE
