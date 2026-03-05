@@ -20,10 +20,17 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for AgentInfoState.
+const (
+	AgentInfoStateCordoned AgentInfoState = "Cordoned"
+	AgentInfoStateDraining AgentInfoState = "Draining"
+	AgentInfoStateReady    AgentInfoState = "Ready"
+)
+
 // Defines values for AgentInfoStatus.
 const (
-	NotReady AgentInfoStatus = "NotReady"
-	Ready    AgentInfoStatus = "Ready"
+	AgentInfoStatusNotReady AgentInfoStatus = "NotReady"
+	AgentInfoStatusReady    AgentInfoStatus = "Ready"
 )
 
 // Defines values for NetworkInterfaceResponseFamily.
@@ -33,10 +40,20 @@ const (
 	Inet6 NetworkInterfaceResponseFamily = "inet6"
 )
 
+// Defines values for NodeConditionType.
+const (
+	DiskPressure   NodeConditionType = "DiskPressure"
+	HighLoad       NodeConditionType = "HighLoad"
+	MemoryPressure NodeConditionType = "MemoryPressure"
+)
+
 // AgentInfo defines model for AgentInfo.
 type AgentInfo struct {
 	// Architecture CPU architecture.
 	Architecture *string `json:"architecture,omitempty"`
+
+	// Conditions Evaluated node conditions.
+	Conditions *[]NodeCondition `json:"conditions,omitempty"`
 
 	// CpuCount Number of logical CPUs.
 	CpuCount *int `json:"cpu_count,omitempty"`
@@ -78,12 +95,21 @@ type AgentInfo struct {
 	// StartedAt When the agent process started.
 	StartedAt *time.Time `json:"started_at,omitempty"`
 
+	// State Agent scheduling state.
+	State *AgentInfoState `json:"state,omitempty"`
+
 	// Status The current status of the agent.
 	Status AgentInfoStatus `json:"status"`
+
+	// Timeline Agent state transition history.
+	Timeline *[]TimelineEvent `json:"timeline,omitempty"`
 
 	// Uptime The system uptime.
 	Uptime *string `json:"uptime,omitempty"`
 }
+
+// AgentInfoState Agent scheduling state.
+type AgentInfoState string
 
 // AgentInfoStatus The current status of the agent.
 type AgentInfoStatus string
@@ -136,6 +162,17 @@ type NetworkInterfaceResponse struct {
 // NetworkInterfaceResponseFamily IP address family.
 type NetworkInterfaceResponseFamily string
 
+// NodeCondition defines model for NodeCondition.
+type NodeCondition struct {
+	LastTransitionTime time.Time         `json:"last_transition_time"`
+	Reason             *string           `json:"reason,omitempty"`
+	Status             bool              `json:"status"`
+	Type               NodeConditionType `json:"type"`
+}
+
+// NodeConditionType defines model for NodeCondition.Type.
+type NodeConditionType string
+
 // OSInfoResponse Operating system information.
 type OSInfoResponse struct {
 	// Distribution The name of the Linux distribution.
@@ -143,6 +180,15 @@ type OSInfoResponse struct {
 
 	// Version The version of the Linux distribution.
 	Version string `json:"version"`
+}
+
+// TimelineEvent defines model for TimelineEvent.
+type TimelineEvent struct {
+	Error     *string   `json:"error,omitempty"`
+	Event     string    `json:"event"`
+	Hostname  *string   `json:"hostname,omitempty"`
+	Message   *string   `json:"message,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // ServerInterface represents all server handlers.
@@ -153,6 +199,12 @@ type ServerInterface interface {
 	// Get agent details
 	// (GET /agent/{hostname})
 	GetAgentDetails(ctx echo.Context, hostname string) error
+	// Drain an agent
+	// (POST /agent/{hostname}/drain)
+	DrainAgent(ctx echo.Context, hostname string) error
+	// Undrain an agent
+	// (POST /agent/{hostname}/undrain)
+	UndrainAgent(ctx echo.Context, hostname string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -189,6 +241,42 @@ func (w *ServerInterfaceWrapper) GetAgentDetails(ctx echo.Context) error {
 	return err
 }
 
+// DrainAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) DrainAgent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"agent:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DrainAgent(ctx, hostname)
+	return err
+}
+
+// UndrainAgent converts echo context to params.
+func (w *ServerInterfaceWrapper) UndrainAgent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"agent:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UndrainAgent(ctx, hostname)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -219,6 +307,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/agent", wrapper.GetAgent)
 	router.GET(baseURL+"/agent/:hostname", wrapper.GetAgentDetails)
+	router.POST(baseURL+"/agent/:hostname/drain", wrapper.DrainAgent)
+	router.POST(baseURL+"/agent/:hostname/undrain", wrapper.UndrainAgent)
 
 }
 
@@ -318,6 +408,116 @@ func (response GetAgentDetails500JSONResponse) VisitGetAgentDetailsResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DrainAgentRequestObject struct {
+	Hostname string `json:"hostname"`
+}
+
+type DrainAgentResponseObject interface {
+	VisitDrainAgentResponse(w http.ResponseWriter) error
+}
+
+type DrainAgent200JSONResponse struct {
+	Message string `json:"message"`
+}
+
+func (response DrainAgent200JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DrainAgent401JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent401JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DrainAgent403JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent403JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DrainAgent404JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent404JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DrainAgent409JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent409JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgentRequestObject struct {
+	Hostname string `json:"hostname"`
+}
+
+type UndrainAgentResponseObject interface {
+	VisitUndrainAgentResponse(w http.ResponseWriter) error
+}
+
+type UndrainAgent200JSONResponse struct {
+	Message string `json:"message"`
+}
+
+func (response UndrainAgent200JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgent401JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent401JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgent403JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent403JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgent404JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent404JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgent409JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent409JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List active agents
@@ -326,6 +526,12 @@ type StrictServerInterface interface {
 	// Get agent details
 	// (GET /agent/{hostname})
 	GetAgentDetails(ctx context.Context, request GetAgentDetailsRequestObject) (GetAgentDetailsResponseObject, error)
+	// Drain an agent
+	// (POST /agent/{hostname}/drain)
+	DrainAgent(ctx context.Context, request DrainAgentRequestObject) (DrainAgentResponseObject, error)
+	// Undrain an agent
+	// (POST /agent/{hostname}/undrain)
+	UndrainAgent(ctx context.Context, request UndrainAgentRequestObject) (UndrainAgentResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -382,6 +588,56 @@ func (sh *strictHandler) GetAgentDetails(ctx echo.Context, hostname string) erro
 		return err
 	} else if validResponse, ok := response.(GetAgentDetailsResponseObject); ok {
 		return validResponse.VisitGetAgentDetailsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DrainAgent operation middleware
+func (sh *strictHandler) DrainAgent(ctx echo.Context, hostname string) error {
+	var request DrainAgentRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DrainAgent(ctx.Request().Context(), request.(DrainAgentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DrainAgent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DrainAgentResponseObject); ok {
+		return validResponse.VisitDrainAgentResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UndrainAgent operation middleware
+func (sh *strictHandler) UndrainAgent(ctx echo.Context, hostname string) error {
+	var request UndrainAgentRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UndrainAgent(ctx.Request().Context(), request.(UndrainAgentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UndrainAgent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(UndrainAgentResponseObject); ok {
+		return validResponse.VisitUndrainAgentResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
