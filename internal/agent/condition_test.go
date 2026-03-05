@@ -199,7 +199,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 			name: "when usage above threshold returns true with reason",
 			stats: &mem.Stats{
 				Total: 8 * 1024 * 1024 * 1024, // 8 GB
-				Free:  1 * 1024 * 1024 * 1024,  // 1 GB free = 87.5% used
+				Free:  1 * 1024 * 1024 * 1024, // 1 GB free = 87.5% used
 			},
 			threshold: 80,
 			prev:      nil,
@@ -215,7 +215,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 			name: "when usage below threshold returns false",
 			stats: &mem.Stats{
 				Total: 8 * 1024 * 1024 * 1024, // 8 GB
-				Free:  6 * 1024 * 1024 * 1024,  // 6 GB free = 25% used
+				Free:  6 * 1024 * 1024 * 1024, // 6 GB free = 25% used
 			},
 			threshold: 80,
 			prev:      nil,
@@ -385,7 +385,7 @@ func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 				{
 					Name:  "/dev/sda1",
 					Total: 100 * 1024 * 1024 * 1024, // 100 GB
-					Used:  95 * 1024 * 1024 * 1024,   // 95 GB = 95%
+					Used:  95 * 1024 * 1024 * 1024,  // 95 GB = 95%
 					Free:  5 * 1024 * 1024 * 1024,
 				},
 			},
