@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -162,6 +164,113 @@ func (c *Client) CreateOrUpdateConsumer(
 	consumerConfig jetstream.ConsumerConfig,
 ) error {
 	return c.natsClient.CreateOrUpdateConsumerWithConfig(ctx, streamName, consumerConfig)
+}
+
+// WriteAgentTimelineEvent writes an append-only timeline event
+// for an agent state transition.
+func (c *Client) WriteAgentTimelineEvent(
+	ctx context.Context,
+	hostname, event, message string,
+) error {
+	if c.registryKV == nil {
+		return fmt.Errorf("agent registry not configured")
+	}
+
+	now := time.Now()
+	key := fmt.Sprintf(
+		"timeline.%s.%s.%d",
+		job.SanitizeHostname(hostname),
+		event,
+		now.UnixNano(),
+	)
+
+	data, err := json.Marshal(job.TimelineEvent{
+		Timestamp: now,
+		Event:     event,
+		Hostname:  hostname,
+		Message:   message,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal timeline event: %w", err)
+	}
+
+	_, err = c.registryKV.Put(ctx, key, data)
+	if err != nil {
+		return fmt.Errorf("write timeline event: %w", err)
+	}
+
+	c.logger.Debug("wrote agent timeline event",
+		slog.String("hostname", hostname),
+		slog.String("event", event),
+		slog.String("key", key),
+	)
+
+	return nil
+}
+
+// GetAgentTimeline returns sorted timeline events for a hostname.
+func (c *Client) GetAgentTimeline(
+	ctx context.Context,
+	hostname string,
+) ([]job.TimelineEvent, error) {
+	if c.registryKV == nil {
+		return nil, fmt.Errorf("agent registry not configured")
+	}
+
+	prefix := "timeline." + job.SanitizeHostname(hostname) + "."
+
+	keys, err := c.registryKV.Keys(ctx)
+	if err != nil {
+		// No keys found is not an error for timeline
+		return []job.TimelineEvent{}, nil
+	}
+
+	var events []job.TimelineEvent
+	for _, key := range keys {
+		if !strings.HasPrefix(key, prefix) {
+			continue
+		}
+
+		entry, err := c.registryKV.Get(ctx, key)
+		if err != nil {
+			continue
+		}
+
+		var te job.TimelineEvent
+		if err := json.Unmarshal(entry.Value(), &te); err != nil {
+			continue
+		}
+
+		events = append(events, te)
+	}
+
+	// Sort by timestamp
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Timestamp.Before(events[j].Timestamp)
+	})
+
+	return events, nil
+}
+
+// ComputeAgentState returns the current state from timeline events.
+func ComputeAgentState(
+	events []job.TimelineEvent,
+) string {
+	if len(events) == 0 {
+		return job.AgentStateReady
+	}
+
+	latest := events[len(events)-1]
+	switch latest.Event {
+	case "drain":
+		return job.AgentStateDraining
+	case "cordoned":
+		return job.AgentStateCordoned
+	case "undrain", "ready":
+		return job.AgentStateReady
+	default:
+		return job.AgentStateReady
+	}
 }
 
 // sanitizeKeyForNATS sanitizes a string for use as a NATS key.

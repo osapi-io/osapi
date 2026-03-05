@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -73,6 +74,12 @@ type Agent struct {
 
 	// startedAt records when the agent process started.
 	startedAt time.Time
+
+	// prevConditions tracks condition state between heartbeats.
+	prevConditions []job.Condition
+
+	// cpuCount cached from facts for HighLoad evaluation.
+	cpuCount int
 
 	// Lifecycle management
 	ctx    context.Context

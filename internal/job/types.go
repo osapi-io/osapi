@@ -270,6 +270,28 @@ type FactsRegistration struct {
 	Facts         map[string]any     `json:"facts,omitempty"`
 }
 
+// Condition type constants.
+const (
+	ConditionMemoryPressure = "MemoryPressure"
+	ConditionHighLoad       = "HighLoad"
+	ConditionDiskPressure   = "DiskPressure"
+)
+
+// Agent state constants.
+const (
+	AgentStateReady    = "Ready"
+	AgentStateDraining = "Draining"
+	AgentStateCordoned = "Cordoned"
+)
+
+// Condition represents a node condition evaluated agent-side.
+type Condition struct {
+	Type               string    `json:"type"`
+	Status             bool      `json:"status"`
+	Reason             string    `json:"reason,omitempty"`
+	LastTransitionTime time.Time `json:"last_transition_time"`
+}
+
 // AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
 	// Hostname is the hostname of the agent.
@@ -290,6 +312,10 @@ type AgentRegistration struct {
 	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// Conditions contains the evaluated node conditions.
+	Conditions []Condition `json:"conditions,omitempty"`
+	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	State string `json:"state,omitempty"`
 }
 
 // AgentInfo represents information about an active agent.
@@ -328,6 +354,12 @@ type AgentInfo struct {
 	Interfaces []NetworkInterface `json:"interfaces,omitempty"`
 	// Facts contains arbitrary key-value facts collected by the agent.
 	Facts map[string]any `json:"facts,omitempty"`
+	// Conditions contains the evaluated node conditions.
+	Conditions []Condition `json:"conditions,omitempty"`
+	// State is the agent's scheduling state (Ready, Draining, Cordoned).
+	State string `json:"state,omitempty"`
+	// Timeline contains the chronological sequence of state transition events.
+	Timeline []TimelineEvent `json:"timeline,omitempty"`
 }
 
 // NodeDiskResponse represents the response for node.disk.get operations.

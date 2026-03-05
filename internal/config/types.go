@@ -258,6 +258,13 @@ type AgentFacts struct {
 	Interval string `mapstructure:"interval"` // e.g. "5m", "1h"
 }
 
+// AgentConditions holds threshold configuration for node conditions.
+type AgentConditions struct {
+	MemoryPressureThreshold int     `mapstructure:"memory_pressure_threshold"`
+	HighLoadMultiplier      float64 `mapstructure:"high_load_multiplier"`
+	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -274,4 +281,6 @@ type AgentConfig struct {
 	MaxJobs int `mapstructure:"max_jobs"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	Labels map[string]string `mapstructure:"labels"`
+	// Conditions holds threshold settings for node condition evaluation.
+	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 }

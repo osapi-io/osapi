@@ -228,6 +228,16 @@ type JobClient interface {
 		hostname string,
 	) (*job.AgentInfo, error)
 
+	// Agent timeline
+	WriteAgentTimelineEvent(
+		ctx context.Context,
+		hostname, event, message string,
+	) error
+	GetAgentTimeline(
+		ctx context.Context,
+		hostname string,
+	) ([]job.TimelineEvent, error)
+
 	// Job deletion
 	DeleteJob(
 		ctx context.Context,

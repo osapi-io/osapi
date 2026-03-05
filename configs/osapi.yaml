@@ -133,3 +133,7 @@ agent:
     group: web.dev.us-east  # hierarchical: --target group:web, group:web.dev, etc.
   facts:
     interval: 60s
+  conditions:
+    memory_pressure_threshold: 90
+    high_load_multiplier: 2.0
+    disk_pressure_threshold: 90

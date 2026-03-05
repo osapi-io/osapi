@@ -116,6 +116,21 @@ func (mr *MockJobClientMockRecorder) GetAgent(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgent", reflect.TypeOf((*MockJobClient)(nil).GetAgent), arg0, arg1)
 }
 
+// GetAgentTimeline mocks base method.
+func (m *MockJobClient) GetAgentTimeline(arg0 context.Context, arg1 string) ([]job.TimelineEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAgentTimeline", arg0, arg1)
+	ret0, _ := ret[0].([]job.TimelineEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAgentTimeline indicates an expected call of GetAgentTimeline.
+func (mr *MockJobClientMockRecorder) GetAgentTimeline(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgentTimeline", reflect.TypeOf((*MockJobClient)(nil).GetAgentTimeline), arg0, arg1)
+}
+
 // GetJobData mocks base method.
 func (m *MockJobClient) GetJobData(arg0 context.Context, arg1 string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -761,6 +776,20 @@ func (m *MockJobClient) RetryJob(arg0 context.Context, arg1, arg2 string) (*clie
 func (mr *MockJobClientMockRecorder) RetryJob(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetryJob", reflect.TypeOf((*MockJobClient)(nil).RetryJob), arg0, arg1, arg2)
+}
+
+// WriteAgentTimelineEvent mocks base method.
+func (m *MockJobClient) WriteAgentTimelineEvent(arg0 context.Context, arg1, arg2, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteAgentTimelineEvent", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteAgentTimelineEvent indicates an expected call of WriteAgentTimelineEvent.
+func (mr *MockJobClientMockRecorder) WriteAgentTimelineEvent(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteAgentTimelineEvent", reflect.TypeOf((*MockJobClient)(nil).WriteAgentTimelineEvent), arg0, arg1, arg2, arg3)
 }
 
 // WriteJobResponse mocks base method.

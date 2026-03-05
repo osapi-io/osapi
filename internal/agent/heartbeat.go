@@ -27,6 +27,9 @@ import (
 	"time"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // heartbeatInterval is the interval between heartbeat refreshes.
@@ -104,13 +107,43 @@ func (a *Agent) writeRegistration(
 		reg.Uptime = uptime
 	}
 
+	var loadAvg *load.AverageStats
 	if avg, err := a.loadProvider.GetAverageStats(); err == nil {
+		loadAvg = avg
 		reg.LoadAverages = avg
 	}
 
+	var memStats *mem.Stats
 	if stats, err := a.memProvider.GetStats(); err == nil {
+		memStats = stats
 		reg.MemoryStats = stats
 	}
+
+	var diskStats []disk.UsageStats
+	if stats, err := a.diskProvider.GetLocalUsageStats(); err == nil {
+		diskStats = stats
+	}
+
+	conditions := []job.Condition{
+		evaluateMemoryPressure(
+			memStats,
+			a.appConfig.Agent.Conditions.MemoryPressureThreshold,
+			a.prevConditions,
+		),
+		evaluateHighLoad(
+			loadAvg,
+			a.cpuCount,
+			a.appConfig.Agent.Conditions.HighLoadMultiplier,
+			a.prevConditions,
+		),
+		evaluateDiskPressure(
+			diskStats,
+			a.appConfig.Agent.Conditions.DiskPressureThreshold,
+			a.prevConditions,
+		),
+	}
+	a.prevConditions = conditions
+	reg.Conditions = conditions
 
 	data, err := marshalJSON(reg)
 	if err != nil {

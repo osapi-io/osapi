@@ -85,6 +85,7 @@ func (a *Agent) writeFacts(
 
 	if count, err := a.hostProvider.GetCPUCount(); err == nil {
 		reg.CPUCount = count
+		a.cpuCount = count
 	}
 
 	if mgr, err := a.hostProvider.GetServiceManager(); err == nil {
