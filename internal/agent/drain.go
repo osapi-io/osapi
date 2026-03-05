@@ -49,18 +49,21 @@ func (a *Agent) handleDrainDetection(
 
 	switch {
 	case drainRequested && a.state == job.AgentStateReady:
-		a.state = job.AgentStateDraining
 		a.logger.Info("drain detected, stopping job consumption")
-		// Note: actual consumer unsubscribe will be implemented when
-		// consumer lifecycle management is added. For now, the state
-		// transition is recorded and reported.
+		a.stopConsumers()
+		a.state = job.AgentStateCordoned
+		a.logger.Info("all consumers stopped, agent cordoned")
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "drain", "Drain initiated",
 		)
+		_ = a.jobClient.WriteAgentTimelineEvent(
+			ctx, hostname, "cordoned", "All jobs completed",
+		)
 
 	case !drainRequested && (a.state == job.AgentStateDraining || a.state == job.AgentStateCordoned):
-		a.state = job.AgentStateReady
 		a.logger.Info("undrain detected, resuming job consumption")
+		a.startConsumers()
+		a.state = job.AgentStateReady
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "undrain", "Resumed accepting jobs",
 		)

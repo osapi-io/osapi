@@ -84,10 +84,18 @@ type Agent struct {
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	state string
 
+	// hostname cached from Start for drain/undrain resubscribe.
+	hostname string
+
 	// Lifecycle management
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
+
+	// Consumer lifecycle for drain/undrain.
+	consumerCtx    context.Context
+	consumerCancel context.CancelFunc
+	consumerWg     sync.WaitGroup
 }
 
 // JobContext contains the context and data for a single job execution.

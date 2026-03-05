@@ -37,26 +37,24 @@ func (a *Agent) Start() {
 	a.logger.Info("starting node agent")
 
 	// Determine agent hostname (GetAgentHostname always succeeds)
-	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
+	a.hostname, _ = job.GetAgentHostname(a.appConfig.Agent.Hostname)
 
 	a.logger.Info(
 		"agent configuration",
-		slog.String("hostname", hostname),
+		slog.String("hostname", a.hostname),
 		slog.String("queue_group", a.appConfig.Agent.QueueGroup),
 		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
 	// Register in agent registry and start heartbeat keepalive.
-	a.startHeartbeat(a.ctx, hostname)
+	a.startHeartbeat(a.ctx, a.hostname)
 
 	// Collect and publish system facts.
-	a.startFacts(a.ctx, hostname)
+	a.startFacts(a.ctx, a.hostname)
 
 	// Start consuming messages for different job types.
-	// Each consume function spawns goroutines tracked by a.wg.
-	_ = a.consumeQueryJobs(a.ctx, hostname)
-	_ = a.consumeModifyJobs(a.ctx, hostname)
+	a.startConsumers()
 
 	a.logger.Info("node agent started successfully")
 }
@@ -71,6 +69,7 @@ func (a *Agent) Stop(
 
 	done := make(chan struct{})
 	go func() {
+		a.consumerWg.Wait()
 		a.wg.Wait()
 		close(done)
 	}()

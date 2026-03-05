@@ -83,6 +83,8 @@ func (s *DrainTestSuite) SetupTest() {
 		nil,
 	)
 	s.agent.state = job.AgentStateReady
+	s.agent.ctx, s.agent.cancel = context.WithCancel(context.Background())
+	s.agent.consumerCtx, s.agent.consumerCancel = context.WithCancel(s.agent.ctx)
 }
 
 func (s *DrainTestSuite) TearDownTest() {
@@ -136,7 +138,7 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 		expectedState string
 	}{
 		{
-			name:         "when drain flag set and agent is Ready transitions to Draining",
+			name:         "when drain flag set and agent is Ready transitions to Cordoned",
 			initialState: job.AgentStateReady,
 			setupMock: func() {
 				s.mockKV.EXPECT().
@@ -150,8 +152,16 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 						"Drain initiated",
 					).
 					Return(nil)
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(
+						gomock.Any(),
+						"test-agent",
+						"cordoned",
+						"All jobs completed",
+					).
+					Return(nil)
 			},
-			expectedState: job.AgentStateDraining,
+			expectedState: job.AgentStateCordoned,
 		},
 		{
 			name:         "when drain flag removed and agent is Draining transitions to Ready",
@@ -168,6 +178,15 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 						"Resumed accepting jobs",
 					).
 					Return(nil)
+				// startConsumers re-creates consumers
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					AnyTimes()
 			},
 			expectedState: job.AgentStateReady,
 		},
@@ -186,6 +205,15 @@ func (s *DrainTestSuite) TestHandleDrainDetection() {
 						"Resumed accepting jobs",
 					).
 					Return(nil)
+				// startConsumers re-creates consumers
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					AnyTimes()
 			},
 			expectedState: job.AgentStateReady,
 		},
