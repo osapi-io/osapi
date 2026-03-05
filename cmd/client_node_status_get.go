@@ -133,7 +133,7 @@ func displayNodeStatusDetail(
 		))
 	}
 
-	diskRows := [][]string{}
+	diskRows := make([][]string, 0, len(data.Disks))
 	for _, disk := range data.Disks {
 		diskRows = append(diskRows, []string{
 			disk.Name,
