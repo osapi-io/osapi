@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -57,6 +58,22 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 
 		rows := make([][]string, 0, len(agents))
 		for _, a := range agents {
+			status := a.State
+			if status == "" {
+				status = "Ready"
+			}
+			conditions := "-"
+			if len(a.Conditions) > 0 {
+				active := make([]string, 0)
+				for _, c := range a.Conditions {
+					if c.Status {
+						active = append(active, c.Type)
+					}
+				}
+				if len(active) > 0 {
+					conditions = strings.Join(active, ",")
+				}
+			}
 			labels := cli.FormatLabels(a.Labels)
 			age := ""
 			if !a.StartedAt.IsZero() {
@@ -72,7 +89,8 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 			}
 			rows = append(rows, []string{
 				a.Hostname,
-				a.Status,
+				status,
+				conditions,
 				labels,
 				age,
 				loadStr,
@@ -83,7 +101,7 @@ Shows each agent's hostname, status, labels, age, load, and OS.`,
 		sections := []cli.Section{
 			{
 				Title:   fmt.Sprintf("Active Agents (%d)", resp.Data.Total),
-				Headers: []string{"HOSTNAME", "STATUS", "LABELS", "AGE", "LOAD (1m)", "OS"},
+				Headers: []string{"HOSTNAME", "STATUS", "CONDITIONS", "LABELS", "AGE", "LOAD (1m)", "OS"},
 				Rows:    rows,
 			},
 		}
