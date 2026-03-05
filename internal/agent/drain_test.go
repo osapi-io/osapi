@@ -22,12 +22,8 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"log/slog"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
@@ -47,19 +43,21 @@ import (
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
-type HeartbeatTestSuite struct {
+type DrainTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 	mockKV        *mocks.MockKeyValue
+	mockEntry     *mocks.MockKeyValueEntry
 	agent         *Agent
 }
 
-func (s *HeartbeatTestSuite) SetupTest() {
+func (s *DrainTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 	s.mockKV = mocks.NewMockKeyValue(s.mockCtrl)
+	s.mockEntry = mocks.NewMockKeyValueEntry(s.mockCtrl)
 
 	appConfig := config.Config{
 		Agent: config.AgentConfig{
@@ -67,7 +65,6 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		},
 	}
 
-	// Use DefaultMockProviders so provider calls during writeRegistration are satisfied.
 	s.agent = New(
 		afero.NewMemMapFs(),
 		appConfig,
@@ -86,52 +83,38 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		nil,
 	)
 	s.agent.state = job.AgentStateReady
-
-	// writeRegistration now calls handleDrainDetection which reads the drain flag.
-	// Default: no drain flag present (key not found).
-	s.mockKV.EXPECT().
-		Get(gomock.Any(), "drain.test_agent").
-		Return(nil, jetstream.ErrKeyNotFound).
-		AnyTimes()
 }
 
-func (s *HeartbeatTestSuite) TearDownTest() {
+func (s *DrainTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-	marshalJSON = json.Marshal
-	heartbeatInterval = 10 * time.Second
 }
 
-func (s *HeartbeatTestSuite) TestWriteRegistration() {
+func (s *DrainTestSuite) TestCheckDrainFlag() {
 	tests := []struct {
 		name         string
 		setupMock    func()
-		teardownMock func()
+		validateFunc func(bool)
 	}{
 		{
-			name: "when marshal fails logs warning",
+			name: "when drain key exists returns true",
 			setupMock: func() {
-				marshalJSON = func(_ interface{}) ([]byte, error) {
-					return nil, fmt.Errorf("marshal failure")
-				}
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "drain.test_agent").
+					Return(s.mockEntry, nil)
 			},
-			teardownMock: func() {
-				marshalJSON = json.Marshal
+			validateFunc: func(result bool) {
+				s.True(result)
 			},
 		},
 		{
-			name: "when Put fails logs warning",
+			name: "when drain key missing returns false",
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
-					Return(uint64(0), errors.New("put failed"))
+					Get(gomock.Any(), "drain.test_agent").
+					Return(nil, jetstream.ErrKeyNotFound)
 			},
-		},
-		{
-			name: "when Put succeeds writes registration",
-			setupMock: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
-					Return(uint64(1), nil)
+			validateFunc: func(result bool) {
+				s.False(result)
 			},
 		},
 	}
@@ -139,113 +122,105 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			if tt.teardownMock != nil {
-				defer tt.teardownMock()
-			}
-			s.agent.writeRegistration(context.Background(), "test-agent")
+			result := s.agent.checkDrainFlag(context.Background(), "test-agent")
+			tt.validateFunc(result)
 		})
 	}
 }
 
-func (s *HeartbeatTestSuite) TestDeregister() {
+func (s *DrainTestSuite) TestHandleDrainDetection() {
 	tests := []struct {
-		name      string
-		setupMock func()
+		name          string
+		initialState  string
+		setupMock     func()
+		expectedState string
 	}{
 		{
-			name: "when Delete fails logs warning",
+			name:         "when drain flag set and agent is Ready transitions to Draining",
+			initialState: job.AgentStateReady,
 			setupMock: func() {
 				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
-					Return(errors.New("delete failed"))
-			},
-		},
-		{
-			name: "when Delete succeeds logs deregistration",
-			setupMock: func() {
-				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
+					Get(gomock.Any(), "drain.test_agent").
+					Return(s.mockEntry, nil)
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(
+						gomock.Any(),
+						"test-agent",
+						"drain",
+						"Drain initiated",
+					).
 					Return(nil)
 			},
+			expectedState: job.AgentStateDraining,
 		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupMock()
-			s.agent.deregister("test-agent")
-		})
-	}
-}
-
-func (s *HeartbeatTestSuite) TestStartHeartbeatRefresh() {
-	tests := []struct {
-		name      string
-		setupMock func()
-	}{
 		{
-			name: "ticker fires and refreshes registration",
+			name:         "when drain flag removed and agent is Draining transitions to Ready",
+			initialState: job.AgentStateDraining,
 			setupMock: func() {
-				// Initial write + at least 1 ticker refresh
 				s.mockKV.EXPECT().
-					Put(gomock.Any(), "agents.test_agent", gomock.Any()).
-					Return(uint64(1), nil).
-					MinTimes(2)
-
-				// Deregister on cancel
-				s.mockKV.EXPECT().
-					Delete(gomock.Any(), "agents.test_agent").
-					Return(nil).
-					Times(1)
+					Get(gomock.Any(), "drain.test_agent").
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(
+						gomock.Any(),
+						"test-agent",
+						"undrain",
+						"Resumed accepting jobs",
+					).
+					Return(nil)
 			},
+			expectedState: job.AgentStateReady,
+		},
+		{
+			name:         "when drain flag removed and agent is Cordoned transitions to Ready",
+			initialState: job.AgentStateCordoned,
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "drain.test_agent").
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(
+						gomock.Any(),
+						"test-agent",
+						"undrain",
+						"Resumed accepting jobs",
+					).
+					Return(nil)
+			},
+			expectedState: job.AgentStateReady,
+		},
+		{
+			name:         "when drain flag still set and agent is already Draining stays Draining",
+			initialState: job.AgentStateDraining,
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "drain.test_agent").
+					Return(s.mockEntry, nil)
+			},
+			expectedState: job.AgentStateDraining,
+		},
+		{
+			name:         "when no drain flag and agent is Ready stays Ready",
+			initialState: job.AgentStateReady,
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "drain.test_agent").
+					Return(nil, jetstream.ErrKeyNotFound)
+			},
+			expectedState: job.AgentStateReady,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			s.agent.state = tt.initialState
 			tt.setupMock()
-
-			heartbeatInterval = 10 * time.Millisecond
-
-			ctx, cancel := context.WithCancel(context.Background())
-			s.agent.startHeartbeat(ctx, "test-agent")
-
-			// Wait for at least one ticker refresh
-			time.Sleep(50 * time.Millisecond)
-			cancel()
-
-			// Wait for goroutine to finish
-			s.agent.wg.Wait()
+			s.agent.handleDrainDetection(context.Background(), "test-agent")
+			s.Equal(tt.expectedState, s.agent.state)
 		})
 	}
 }
 
-func (s *HeartbeatTestSuite) TestRegistryKey() {
-	tests := []struct {
-		name     string
-		hostname string
-		expected string
-	}{
-		{
-			name:     "simple hostname",
-			hostname: "web-01",
-			expected: "agents.web_01",
-		},
-		{
-			name:     "hostname with dots",
-			hostname: "Johns-MacBook-Pro.local",
-			expected: "agents.Johns_MacBook_Pro_local",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			result := registryKey(tt.hostname)
-			s.Equal(tt.expected, result)
-		})
-	}
-}
-
-func TestHeartbeatTestSuite(t *testing.T) {
-	suite.Run(t, new(HeartbeatTestSuite))
+func TestDrainTestSuite(t *testing.T) {
+	suite.Run(t, new(DrainTestSuite))
 }

@@ -441,6 +441,12 @@ func (c *Client) GetAgent(
 
 	info := agentInfoFromRegistration(&reg)
 	c.mergeFacts(ctx, &info)
+
+	timeline, err := c.GetAgentTimeline(ctx, hostname)
+	if err == nil && len(timeline) > 0 {
+		info.Timeline = timeline
+	}
+
 	return &info, nil
 }
 
@@ -489,5 +495,7 @@ func agentInfoFromRegistration(
 		LoadAverages: reg.LoadAverages,
 		MemoryStats:  reg.MemoryStats,
 		AgentVersion: reg.AgentVersion,
+		Conditions:   reg.Conditions,
+		State:        reg.State,
 	}
 }

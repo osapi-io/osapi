@@ -92,11 +92,14 @@ func (a *Agent) writeRegistration(
 	ctx context.Context,
 	hostname string,
 ) {
+	a.handleDrainDetection(ctx, hostname)
+
 	reg := job.AgentRegistration{
 		Hostname:     hostname,
 		Labels:       a.appConfig.Agent.Labels,
 		RegisteredAt: time.Now(),
 		StartedAt:    a.startedAt,
+		State:        a.state,
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {

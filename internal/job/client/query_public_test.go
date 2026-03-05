@@ -1472,6 +1472,9 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
 			},
 			validateFunc: func(info *job.AgentInfo) {
 				s.Equal("server1", info.Hostname)
@@ -1523,6 +1526,9 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
 			},
 			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
 				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -1564,6 +1570,9 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
 			},
 			validateFunc: func(info *job.AgentInfo) {
 				s.Equal("server1", info.Hostname)
@@ -1590,6 +1599,9 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				kv.EXPECT().
 					Get(gomock.Any(), "agents.server1").
 					Return(entry, nil)
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
 			},
 			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
 				kv.EXPECT().
@@ -1600,6 +1612,86 @@ func (s *QueryPublicTestSuite) TestGetAgent() {
 				s.Equal("server1", info.Hostname)
 				s.Empty(info.Architecture)
 				s.Empty(info.KernelVersion)
+			},
+		},
+		{
+			name:          "when timeline events exist includes timeline in response",
+			hostname:      "server1",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				// GetAgentTimeline calls Keys then Get for matching keys
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{
+						"agents.server1",
+						"timeline.server1.drain.1000000000",
+						"timeline.server1.undrain.2000000000",
+					}, nil)
+
+				drainEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				drainEntry.EXPECT().Value().Return(
+					[]byte(
+						`{"timestamp":"2026-01-01T01:00:00Z","event":"drain","hostname":"server1","message":"node draining"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+					Return(drainEntry, nil)
+
+				undrainEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				undrainEntry.EXPECT().Value().Return(
+					[]byte(
+						`{"timestamp":"2026-01-01T02:00:00Z","event":"undrain","hostname":"server1","message":"node undrained"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "timeline.server1.undrain.2000000000").
+					Return(undrainEntry, nil)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Len(info.Timeline, 2)
+				s.Equal("drain", info.Timeline[0].Event)
+				s.Equal("node draining", info.Timeline[0].Message)
+				s.Equal("undrain", info.Timeline[1].Event)
+				s.Equal("node undrained", info.Timeline[1].Message)
+			},
+		},
+		{
+			name:          "when conditions and state set includes them in response",
+			hostname:      "server1",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z","state":"Draining","conditions":[{"type":"DiskPressure","status":true,"reason":"disk usage 92%","last_transition_time":"2026-01-01T00:00:00Z"}]}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.Equal("server1", info.Hostname)
+				s.Equal("Draining", info.State)
+				s.Len(info.Conditions, 1)
+				s.Equal("DiskPressure", info.Conditions[0].Type)
+				s.True(info.Conditions[0].Status)
+				s.Equal("disk usage 92%", info.Conditions[0].Reason)
 			},
 		},
 	}

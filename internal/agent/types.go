@@ -81,6 +81,9 @@ type Agent struct {
 	// cpuCount cached from facts for HighLoad evaluation.
 	cpuCount int
 
+	// state is the agent's scheduling state (Ready, Draining, Cordoned).
+	state string
+
 	// Lifecycle management
 	ctx    context.Context
 	cancel context.CancelFunc

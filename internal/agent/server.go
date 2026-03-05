@@ -32,6 +32,7 @@ import (
 func (a *Agent) Start() {
 	a.ctx, a.cancel = context.WithCancel(context.Background())
 	a.startedAt = time.Now()
+	a.state = job.AgentStateReady
 
 	a.logger.Info("starting node agent")
 
