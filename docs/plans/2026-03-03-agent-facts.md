@@ -1,12 +1,21 @@
 # Agent Facts Collection System — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
+> implement this plan task-by-task.
 
-**Goal:** Add extensible fact collection to agents via the provider layer, stored in a separate KV bucket, merged into existing API responses, enabling orchestrator-side host filtering.
+**Goal:** Add extensible fact collection to agents via the provider layer,
+stored in a separate KV bucket, merged into existing API responses, enabling
+orchestrator-side host filtering.
 
-**Architecture:** Extend `host.Provider` with new fact methods (architecture, kernel, FQDN, CPU count, service manager, package manager). Create a new `netinfo.Provider` for network interfaces. The agent gathers facts on a 60s interval and writes them to a dedicated `agent-facts` KV bucket. The job client merges facts into `AgentInfo` when serving `ListAgents`/`GetAgent`. No plugin system — everything goes through providers.
+**Architecture:** Extend `host.Provider` with new fact methods (architecture,
+kernel, FQDN, CPU count, service manager, package manager). Create a new
+`netinfo.Provider` for network interfaces. The agent gathers facts on a 60s
+interval and writes them to a dedicated `agent-facts` KV bucket. The job client
+merges facts into `AgentInfo` when serving `ListAgents`/`GetAgent`. No plugin
+system — everything goes through providers.
 
-**Tech Stack:** Go 1.25, NATS JetStream KV, gopsutil, oapi-codegen, testify/suite, gomock
+**Tech Stack:** Go 1.25, NATS JetStream KV, gopsutil, oapi-codegen,
+testify/suite, gomock
 
 **Design doc:** `docs/plans/2026-03-03-agent-facts-design.md`
 
@@ -15,6 +24,7 @@
 ### Task 1: Add Types — NetworkInterface, FactsRegistration, AgentInfo fields
 
 **Files:**
+
 - Modify: `internal/job/types.go`
 - Test: `internal/job/types_public_test.go` (or appropriate existing test file)
 
@@ -78,6 +88,7 @@ feat(job): add NetworkInterface and FactsRegistration types
 ### Task 2: Add Config Types — NATSFacts and AgentFacts
 
 **Files:**
+
 - Modify: `internal/config/types.go`
 
 **Step 1: Add config structs**
@@ -122,9 +133,11 @@ feat(config): add NATSFacts and AgentFacts config types
 ### Task 3: Extend host.Provider with Fact Methods
 
 **Files:**
+
 - Modify: `internal/provider/node/host/types.go` — add methods to interface
 - Modify: `internal/provider/node/host/ubuntu.go` — implement for Ubuntu
-- Modify: `internal/provider/node/host/mocks/types.gen.go` — update mock defaults
+- Modify: `internal/provider/node/host/mocks/types.gen.go` — update mock
+  defaults
 - Test: `internal/provider/node/host/ubuntu_public_test.go` or similar
 
 **Step 1: Write failing tests**
@@ -207,6 +220,7 @@ feat(provider): extend host.Provider with fact methods
 ### Task 4: Create netinfo.Provider for Network Interfaces
 
 **Files:**
+
 - Create: `internal/provider/network/netinfo/types.go`
 - Create: `internal/provider/network/netinfo/netinfo.go`
 - Create: `internal/provider/network/netinfo/mocks/` (generate)
@@ -214,9 +228,9 @@ feat(provider): extend host.Provider with fact methods
 
 **Step 1: Write failing test**
 
-Test `GetInterfaces()` returns non-loopback, up interfaces with name,
-IPv4, and MAC. Use table-driven pattern. Mock `net.Interfaces` via
-a package-level function variable.
+Test `GetInterfaces()` returns non-loopback, up interfaces with name, IPv4, and
+MAC. Use table-driven pattern. Mock `net.Interfaces` via a package-level
+function variable.
 
 **Step 2: Define the interface**
 
@@ -292,8 +306,8 @@ func (n *Netinfo) GetInterfaces() ([]job.NetworkInterface, error) {
 go generate ./internal/provider/network/netinfo/...
 ```
 
-Create `mocks/types.gen.go` with `NewDefaultMockProvider` returning
-a stub interface list.
+Create `mocks/types.gen.go` with `NewDefaultMockProvider` returning a stub
+interface list.
 
 **Step 5: Run tests**
 
@@ -312,17 +326,18 @@ feat(provider): add netinfo.Provider for network interface facts
 ### Task 5: Facts KV Bucket Infrastructure
 
 **Files:**
+
 - Modify: `internal/cli/nats.go` — add `BuildFactsKVConfig`
 - Modify: `cmd/nats_helpers.go` — create facts KV in `setupJetStream`
-- Modify: `cmd/api_helpers.go` — add `factsKV` to `natsBundle`, pass to
-  job client and metrics provider
-- Modify: `internal/job/client/client.go` — add `FactsKV` to `Options`
-  and `factsKV` to `Client`
+- Modify: `cmd/api_helpers.go` — add `factsKV` to `natsBundle`, pass to job
+  client and metrics provider
+- Modify: `internal/job/client/client.go` — add `FactsKV` to `Options` and
+  `factsKV` to `Client`
 
 **Step 1: Add BuildFactsKVConfig**
 
-In `internal/cli/nats.go`, add after `BuildRegistryKVConfig` (follow the
-exact same pattern):
+In `internal/cli/nats.go`, add after `BuildRegistryKVConfig` (follow the exact
+same pattern):
 
 ```go
 func BuildFactsKVConfig(
@@ -358,8 +373,8 @@ if appConfig.NATS.Facts.Bucket != "" {
 
 Add `factsKV jetstream.KeyValue` to `natsBundle` struct.
 
-In `connectNATSBundle`, create the facts KV bucket (only if configured)
-and pass it as `FactsKV` in `jobclient.Options`.
+In `connectNATSBundle`, create the facts KV bucket (only if configured) and pass
+it as `FactsKV` in `jobclient.Options`.
 
 Add `factsKV` to the returned `natsBundle`.
 
@@ -368,6 +383,7 @@ In `newMetricsProvider`, add `b.factsKV` to the `KVInfoFn` buckets slice.
 **Step 4: Add to job client**
 
 In `internal/job/client/client.go`:
+
 - Add `FactsKV jetstream.KeyValue` to `Options`
 - Add `factsKV jetstream.KeyValue` to `Client` struct
 - Assign in `New()`: `factsKV: opts.FactsKV,`
@@ -389,11 +405,12 @@ feat(nats): add facts KV bucket infrastructure
 ### Task 6: Facts Writer in Agent
 
 **Files:**
+
 - Create: `internal/agent/facts.go`
 - Create: `internal/agent/facts_test.go` (internal tests)
 - Modify: `internal/agent/types.go` — add `factsKV` and `netinfoProvider`
-- Modify: `internal/agent/agent.go` — add params to `New()`, call
-  `startFacts()` in `Start()`
+- Modify: `internal/agent/agent.go` — add params to `New()`, call `startFacts()`
+  in `Start()`
 - Modify: `internal/agent/factory.go` — create netinfo provider
 - Modify: `cmd/agent_helpers.go` — pass `factsKV` and netinfo provider
 
@@ -411,17 +428,18 @@ netinfoProvider netinfo.Provider
 In `internal/agent/agent.go`, add `netinfoProvider netinfo.Provider` and
 `factsKV jetstream.KeyValue` parameters. Assign them.
 
-In `internal/agent/factory.go`, add `netinfo.New()` to the provider
-factory return values. Update `CreateProviders()` signature.
+In `internal/agent/factory.go`, add `netinfo.New()` to the provider factory
+return values. Update `CreateProviders()` signature.
 
 **Step 3: Write failing test for writeFacts**
 
-Create `internal/agent/facts_test.go` (internal, `package agent`).
-Use `FactsTestSuite` with gomock. Mock the `factsKV.Put()` call.
-Verify the written data contains architecture, cpu_count, interfaces.
-Follow the existing `heartbeat_test.go` pattern exactly.
+Create `internal/agent/facts_test.go` (internal, `package agent`). Use
+`FactsTestSuite` with gomock. Mock the `factsKV.Put()` call. Verify the written
+data contains architecture, cpu_count, interfaces. Follow the existing
+`heartbeat_test.go` pattern exactly.
 
 Test cases:
+
 - `"when Put succeeds writes facts"` — verify JSON contains expected fields
 - `"when Put fails logs warning"` — verify no panic
 - `"when marshal fails logs warning"` — override `marshalJSON` variable
@@ -536,12 +554,14 @@ feat(agent): add facts writer with provider-based collection
 ### Task 7: Merge Facts into ListAgents and GetAgent
 
 **Files:**
+
 - Modify: `internal/job/client/query.go` — add `mergeFacts` helper
 - Test: `internal/job/client/query_public_test.go`
 
 **Step 1: Write failing test**
 
 Add test cases for facts merging. Test:
+
 - Facts KV has data → fields appear in AgentInfo
 - Facts KV is nil → graceful degradation (fields empty)
 - Facts KV Get returns error → graceful degradation
@@ -606,6 +626,7 @@ feat(job): merge facts KV data into ListAgents and GetAgent
 ### Task 8: OpenAPI Spec and API Handler
 
 **Files:**
+
 - Modify: `internal/api/agent/gen/api.yaml`
 - Run: `go generate ./internal/api/agent/gen/...`
 - Modify: `internal/api/agent/agent_list.go` — update `buildAgentInfo`
@@ -619,11 +640,11 @@ Add to `AgentInfo` properties in `api.yaml`:
 architecture:
   type: string
   description: CPU architecture.
-  example: "amd64"
+  example: 'amd64'
 kernel_version:
   type: string
   description: OS kernel version.
-  example: "5.15.0-91-generic"
+  example: '5.15.0-91-generic'
 cpu_count:
   type: integer
   description: Number of logical CPUs.
@@ -631,15 +652,15 @@ cpu_count:
 fqdn:
   type: string
   description: Fully qualified domain name.
-  example: "web-01.example.com"
+  example: 'web-01.example.com'
 service_mgr:
   type: string
   description: Init system.
-  example: "systemd"
+  example: 'systemd'
 package_mgr:
   type: string
   description: Package manager.
-  example: "apt"
+  example: 'apt'
 interfaces:
   type: array
   items:
@@ -658,13 +679,13 @@ NetworkInterfaceResponse:
   properties:
     name:
       type: string
-      example: "eth0"
+      example: 'eth0'
     ipv4:
       type: string
-      example: "192.168.1.10"
+      example: '192.168.1.10'
     mac:
       type: string
-      example: "00:11:22:33:44:55"
+      example: '00:11:22:33:44:55'
   required:
     - name
 ```
@@ -677,9 +698,9 @@ go generate ./internal/api/agent/gen/...
 
 **Step 3: Update buildAgentInfo**
 
-In `internal/api/agent/agent_list.go`, add mappings for new fields after
-the existing memory block. Map each non-zero/non-empty field. Map
-`Interfaces` as `[]gen.NetworkInterfaceResponse`.
+In `internal/api/agent/agent_list.go`, add mappings for new fields after the
+existing memory block. Map each non-zero/non-empty field. Map `Interfaces` as
+`[]gen.NetworkInterfaceResponse`.
 
 Check the generated field names in `agent.gen.go` and match them exactly.
 
@@ -701,6 +722,7 @@ feat(api): expose agent facts in AgentInfo responses
 ### Task 9: Default Config
 
 **Files:**
+
 - Modify: `osapi.yaml`
 
 **Step 1: Add defaults**
@@ -739,27 +761,27 @@ chore: add default facts config to osapi.yaml
 ### Task 10: Update Documentation — Configuration Reference
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 
 **Step 1: Add environment variable mappings**
 
 Add to the env var table:
 
-| `nats.facts.bucket` | `OSAPI_NATS_FACTS_BUCKET` |
-| `nats.facts.ttl` | `OSAPI_NATS_FACTS_TTL` |
-| `nats.facts.storage` | `OSAPI_NATS_FACTS_STORAGE` |
-| `nats.facts.replicas` | `OSAPI_NATS_FACTS_REPLICAS` |
-| `agent.facts.interval` | `OSAPI_AGENT_FACTS_INTERVAL` |
+| `nats.facts.bucket` | `OSAPI_NATS_FACTS_BUCKET` | | `nats.facts.ttl` |
+`OSAPI_NATS_FACTS_TTL` | | `nats.facts.storage` | `OSAPI_NATS_FACTS_STORAGE` | |
+`nats.facts.replicas` | `OSAPI_NATS_FACTS_REPLICAS` | | `agent.facts.interval` |
+`OSAPI_AGENT_FACTS_INTERVAL` |
 
 **Step 2: Add section references**
 
-Add `nats.facts` section reference table (Bucket, TTL, Storage, Replicas).
-Add `agent.facts` section reference table (Interval).
+Add `nats.facts` section reference table (Bucket, TTL, Storage, Replicas). Add
+`agent.facts` section reference table (Interval).
 
 **Step 3: Update full YAML reference**
 
-Add the `nats.facts` and `agent.facts` blocks to the full reference YAML
-with inline comments.
+Add the `nats.facts` and `agent.facts` blocks to the full reference YAML with
+inline comments.
 
 **Step 4: Commit**
 
@@ -772,33 +794,34 @@ docs: add facts configuration reference
 ### Task 11: Update Documentation — Feature and Architecture Pages
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/features/node-management.md`
 - Modify: `docs/docs/sidebar/architecture/system-architecture.md`
 - Modify: `docs/docs/sidebar/architecture/job-architecture.md`
 
 **Step 1: Update node-management.md**
 
-- In "Agent vs. Node" section, add that agents now expose typed system
-  facts (architecture, kernel, FQDN, CPU count, network interfaces) in
-  addition to the basic heartbeat metrics.
-- Clarify: facts are gathered every 60s via providers, stored in a
-  separate `agent-facts` KV bucket with a 5-minute TTL.
+- In "Agent vs. Node" section, add that agents now expose typed system facts
+  (architecture, kernel, FQDN, CPU count, network interfaces) in addition to the
+  basic heartbeat metrics.
+- Clarify: facts are gathered every 60s via providers, stored in a separate
+  `agent-facts` KV bucket with a 5-minute TTL.
 - Add a "System Facts" row to the "What It Manages" table.
 
 **Step 2: Update system-architecture.md**
 
 - Add `agent-facts` KV bucket to the NATS JetStream section alongside
   `agent-registry`.
-- Update the component map table to mention facts in the Agent/Provider
-  layer description.
+- Update the component map table to mention facts in the Agent/Provider layer
+  description.
 
 **Step 3: Update job-architecture.md**
 
 - Add a brief section on facts collection:
   - Facts are collected independently from the job system.
   - 60-second interval, separate KV bucket.
-  - Providers gather system facts (architecture, kernel, network
-    interfaces, etc.).
+  - Providers gather system facts (architecture, kernel, network interfaces,
+    etc.).
   - API merges registry + facts KV into a single AgentInfo response.
 
 **Step 4: Commit**
@@ -812,35 +835,32 @@ docs: update feature and architecture pages with facts
 ### Task 12: Update Documentation — CLI Pages
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/cli/client/agent/list.md`
 - Modify: `docs/docs/sidebar/usage/cli/client/agent/get.md`
 - Modify: `docs/docs/sidebar/usage/cli/client/health/status.md`
 
 **Step 1: Update agent list.md**
 
-Update the example output to show any new facts-derived columns if the
-CLI is updated to display them (e.g., ARCH column). If no CLI column
-changes are planned for Phase 1, add a note that `--json` output
-includes full facts data.
+Update the example output to show any new facts-derived columns if the CLI is
+updated to display them (e.g., ARCH column). If no CLI column changes are
+planned for Phase 1, add a note that `--json` output includes full facts data.
 
 **Step 2: Update agent get.md**
 
 Add facts fields to the example output and field description table:
 
-| Architecture | CPU architecture (e.g., amd64) |
-| Kernel | OS kernel version |
-| FQDN | Fully qualified domain name |
-| CPUs | Number of logical CPUs |
-| Service Mgr | Init system (e.g., systemd) |
-| Package Mgr | Package manager (e.g., apt) |
-| Interfaces | Network interfaces with IPv4 and MAC |
+| Architecture | CPU architecture (e.g., amd64) | | Kernel | OS kernel version |
+| FQDN | Fully qualified domain name | | CPUs | Number of logical CPUs | |
+Service Mgr | Init system (e.g., systemd) | | Package Mgr | Package manager
+(e.g., apt) | | Interfaces | Network interfaces with IPv4 and MAC |
 
 Update the example output block to show these new fields.
 
 **Step 3: Update health status.md**
 
-Add `agent-facts` to the KV buckets section in the example output
-(e.g., `Bucket: agent-facts (2 keys, 1.5 KB)`).
+Add `agent-facts` to the KV buckets section in the example output (e.g.,
+`Bucket: agent-facts (2 keys, 1.5 KB)`).
 
 **Step 4: Commit**
 

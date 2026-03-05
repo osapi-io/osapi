@@ -572,23 +572,31 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 		wantInLog string
 	}{
 		{
-			name:      "when auth error logs api error with status code",
-			err:       &osapi.AuthError{APIError: osapi.APIError{StatusCode: 403, Message: "insufficient permissions"}},
+			name: "when auth error logs api error with status code",
+			err: &osapi.AuthError{
+				APIError: osapi.APIError{StatusCode: 403, Message: "insufficient permissions"},
+			},
 			wantInLog: "insufficient permissions",
 		},
 		{
-			name:      "when not found error logs api error with status code",
-			err:       &osapi.NotFoundError{APIError: osapi.APIError{StatusCode: 404, Message: "job not found"}},
+			name: "when not found error logs api error with status code",
+			err: &osapi.NotFoundError{
+				APIError: osapi.APIError{StatusCode: 404, Message: "job not found"},
+			},
 			wantInLog: "job not found",
 		},
 		{
-			name:      "when validation error logs api error with status code",
-			err:       &osapi.ValidationError{APIError: osapi.APIError{StatusCode: 400, Message: "invalid input"}},
+			name: "when validation error logs api error with status code",
+			err: &osapi.ValidationError{
+				APIError: osapi.APIError{StatusCode: 400, Message: "invalid input"},
+			},
 			wantInLog: "invalid input",
 		},
 		{
-			name:      "when server error logs api error with status code",
-			err:       &osapi.ServerError{APIError: osapi.APIError{StatusCode: 500, Message: "internal server error"}},
+			name: "when server error logs api error with status code",
+			err: &osapi.ServerError{
+				APIError: osapi.APIError{StatusCode: 500, Message: "internal server error"},
+			},
 			wantInLog: "internal server error",
 		},
 		{

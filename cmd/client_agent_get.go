@@ -84,6 +84,22 @@ func displayAgentGetDetail(
 		cli.PrintKV("Last Seen", cli.FormatAge(time.Since(data.RegisteredAt))+" ago")
 	}
 
+	if data.Architecture != "" {
+		cli.PrintKV("Arch", data.Architecture)
+	}
+
+	if data.KernelVersion != "" {
+		cli.PrintKV("Kernel", data.KernelVersion)
+	}
+
+	if data.CPUCount > 0 {
+		cli.PrintKV("CPUs", fmt.Sprintf("%d", data.CPUCount))
+	}
+
+	if data.Fqdn != "" {
+		cli.PrintKV("FQDN", data.Fqdn)
+	}
+
 	if data.LoadAverage != nil {
 		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
 			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
@@ -97,6 +113,30 @@ func displayAgentGetDetail(
 		}
 		memParts = append(memParts, cli.FormatBytes(data.Memory.Free)+" free")
 		cli.PrintKV("Memory", strings.Join(memParts, ", "))
+	}
+
+	if data.ServiceMgr != "" {
+		cli.PrintKV("Service Mgr", data.ServiceMgr)
+	}
+
+	if data.PackageMgr != "" {
+		cli.PrintKV("Package Mgr", data.PackageMgr)
+	}
+
+	if len(data.Interfaces) > 0 {
+		for _, iface := range data.Interfaces {
+			parts := []string{}
+			if iface.IPv4 != "" {
+				parts = append(parts, iface.IPv4)
+			}
+			if iface.IPv6 != "" {
+				parts = append(parts, iface.IPv6)
+			}
+			if iface.MAC != "" {
+				parts = append(parts, cli.DimStyle.Render(iface.MAC))
+			}
+			cli.PrintKV("Interface "+iface.Name, strings.Join(parts, "  "))
+		}
 	}
 }
 

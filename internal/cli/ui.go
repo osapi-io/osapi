@@ -584,7 +584,10 @@ func DisplayJobDetail(
 	if len(resp.AgentStates) > 0 {
 		stateRows := make([][]string, 0, len(resp.AgentStates))
 		for hostname, state := range resp.AgentStates {
-			stateRows = append(stateRows, []string{hostname, state.Status, state.Duration, state.Error})
+			stateRows = append(
+				stateRows,
+				[]string{hostname, state.Status, state.Duration, state.Error},
+			)
 		}
 
 		sections = append(sections, Section{
@@ -598,7 +601,10 @@ func DisplayJobDetail(
 	if len(resp.Timeline) > 0 {
 		timelineRows := make([][]string, 0, len(resp.Timeline))
 		for _, te := range resp.Timeline {
-			timelineRows = append(timelineRows, []string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error})
+			timelineRows = append(
+				timelineRows,
+				[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+			)
 		}
 
 		sections = append(sections, Section{

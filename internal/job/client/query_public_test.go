@@ -1359,6 +1359,40 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 				s.Empty(agents[0].KernelVersion)
 			},
 		},
+		{
+			name:          "when factsKV returns invalid JSON degrades gracefully",
+			useRegistryKV: true,
+			useFactsKV:    true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupMockFactsKV: func(kv *jobmocks.MockKeyValue) {
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return([]byte(`not valid json`))
+				kv.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+			},
+			expectedCount: 1,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+				s.Empty(agents[0].Architecture)
+				s.Zero(agents[0].CPUCount)
+				s.Nil(agents[0].Interfaces)
+			},
+		},
 	}
 
 	for _, tt := range tests {
