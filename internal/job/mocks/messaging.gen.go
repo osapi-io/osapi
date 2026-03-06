@@ -127,6 +127,21 @@ func (mr *MockNATSClientMockRecorder) CreateOrUpdateKVBucketWithConfig(arg0, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateKVBucketWithConfig", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateKVBucketWithConfig), arg0, arg1)
 }
 
+// CreateOrUpdateObjectStore mocks base method.
+func (m *MockNATSClient) CreateOrUpdateObjectStore(arg0 context.Context, arg1 jetstream.ObjectStoreConfig) (jetstream.ObjectStore, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrUpdateObjectStore", arg0, arg1)
+	ret0, _ := ret[0].(jetstream.ObjectStore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrUpdateObjectStore indicates an expected call of CreateOrUpdateObjectStore.
+func (mr *MockNATSClientMockRecorder) CreateOrUpdateObjectStore(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateObjectStore", reflect.TypeOf((*MockNATSClient)(nil).CreateOrUpdateObjectStore), arg0, arg1)
+}
+
 // CreateOrUpdateStreamWithConfig mocks base method.
 func (m *MockNATSClient) CreateOrUpdateStreamWithConfig(arg0 context.Context, arg1 jetstream.StreamConfig) error {
 	m.ctrl.T.Helper()
@@ -212,6 +227,21 @@ func (m *MockNATSClient) KVPut(arg0, arg1 string, arg2 []byte) error {
 func (mr *MockNATSClientMockRecorder) KVPut(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVPut", reflect.TypeOf((*MockNATSClient)(nil).KVPut), arg0, arg1, arg2)
+}
+
+// ObjectStore mocks base method.
+func (m *MockNATSClient) ObjectStore(arg0 context.Context, arg1 string) (jetstream.ObjectStore, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectStore", arg0, arg1)
+	ret0, _ := ret[0].(jetstream.ObjectStore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectStore indicates an expected call of ObjectStore.
+func (mr *MockNATSClientMockRecorder) ObjectStore(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStore", reflect.TypeOf((*MockNATSClient)(nil).ObjectStore), arg0, arg1)
 }
 
 // Publish mocks base method.

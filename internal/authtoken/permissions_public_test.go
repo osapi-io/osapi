@@ -57,6 +57,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				authtoken.PermJobRead,
 				authtoken.PermJobWrite,
 				authtoken.PermHealthRead,
+				authtoken.PermFileRead,
+				authtoken.PermFileWrite,
 			},
 			expectMissing: []string{
 				authtoken.PermAuditRead,
@@ -70,11 +72,13 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				authtoken.PermNetworkRead,
 				authtoken.PermJobRead,
 				authtoken.PermHealthRead,
+				authtoken.PermFileRead,
 			},
 			expectMissing: []string{
 				authtoken.PermNetworkWrite,
 				authtoken.PermJobWrite,
 				authtoken.PermAuditRead,
+				authtoken.PermFileWrite,
 			},
 		},
 		{
