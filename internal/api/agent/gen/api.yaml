@@ -304,6 +304,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NetworkInterfaceResponse'
+        primary_interface:
+          type: string
+          description: Name of the interface used for the default route.
+          example: "eth0"
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteResponse'
+          description: Network routing table entries.
         facts:
           type: object
           additionalProperties: true
@@ -427,6 +436,39 @@ components:
         - type
         - status
         - last_transition_time
+
+    RouteResponse:
+      type: object
+      description: A network routing table entry.
+      properties:
+        destination:
+          type: string
+          description: Destination network address.
+          example: "0.0.0.0"
+        gateway:
+          type: string
+          description: Gateway address.
+          example: "192.168.1.1"
+        interface:
+          type: string
+          description: Network interface name.
+          example: "eth0"
+        mask:
+          type: string
+          description: Network mask in CIDR notation.
+          example: "/0"
+        metric:
+          type: integer
+          description: Route metric.
+          example: 100
+        flags:
+          type: string
+          description: Route flags.
+          example: "0003"
+      required:
+        - destination
+        - gateway
+        - interface
 
     TimelineEvent:
       type: object

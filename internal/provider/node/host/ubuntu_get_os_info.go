@@ -25,15 +25,14 @@ import (
 )
 
 // GetOSInfo retrieves information about the operating system, including the
-// distribution name and version. It returns an OSInfo struct containing this
-// data and an error if something goes wrong during the process.
-func (u *Ubuntu) GetOSInfo() (*OSInfo, error) {
+// distribution name and version. It returns the
+func (u *Ubuntu) GetOSInfo() (*Result, error) {
 	info, err := u.InfoFn()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get host info: %w", err)
 	}
 
-	return &OSInfo{
+	return &Result{
 		Distribution: info.Platform,
 		Version:      info.PlatformVersion,
 	}, nil

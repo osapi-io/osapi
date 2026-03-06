@@ -86,7 +86,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 		validateFunc func(resp gen.PostNodeNetworkPingResponseObject)
 	}{
 		{
-			name: "success",
+			name: "when success",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_any",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -122,7 +122,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "validation error empty hostname",
+			name: "when validation error empty hostname",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -138,7 +138,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "body validation error empty address",
+			name: "when body validation error empty address",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_any",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -153,7 +153,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "job client error",
+			name: "when job client error",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_any",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -171,7 +171,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "broadcast all success",
+			name: "when broadcast all success",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_all",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -204,7 +204,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "broadcast all with errors",
+			name: "when broadcast all with errors",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_all",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -245,7 +245,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 		},
 		{
-			name: "broadcast all error",
+			name: "when broadcast all error",
 			request: gen.PostNodeNetworkPingRequestObject{
 				Hostname: "_all",
 				Body: &gen.PostNodeNetworkPingJSONRequestBody{
@@ -323,7 +323,48 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingHTTP() {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "Address", "ip"},
+			wantContains: []string{`"error"`, "Address", "ip_or_fact"},
+		},
+		{
+			name: "when fact reference passes validation",
+			path: "/node/server1/network/ping",
+			body: `{"address":"@fact.custom.gateway"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					QueryNetworkPing(gomock.Any(), "server1", "@fact.custom.gateway").
+					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
+						PacketsSent:     3,
+						PacketsReceived: 3,
+						PacketLoss:      0,
+						MinRTT:          10 * time.Millisecond,
+						AvgRTT:          15 * time.Millisecond,
+						MaxRTT:          20 * time.Millisecond,
+					}, "agent1", nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"packets_sent":3`},
+		},
+		{
+			name: "when partial fact reference rejected",
+			path: "/node/server1/network/ping",
+			body: `{"address":"@fact"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "ip_or_fact"},
+		},
+		{
+			name: "when unknown fact key rejected",
+			path: "/node/server1/network/ping",
+			body: `{"address":"@fact.primary_interface"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "ip_or_fact"},
 		},
 		{
 			name: "when broadcast all",

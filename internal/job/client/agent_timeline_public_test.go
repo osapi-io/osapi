@@ -88,6 +88,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 		event       string
 		message     string
 		useState    bool
+		marshalErr  bool
 		setupMocks  func(*jobmocks.MockKeyValue)
 		expectError bool
 		errorMsg    string
@@ -143,6 +144,19 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 			expectError: true,
 			errorMsg:    "agent state bucket not configured",
 		},
+		{
+			name:       "when json marshal fails returns error",
+			hostname:   "server1",
+			event:      "drain",
+			message:    "drain requested",
+			useState:   true,
+			marshalErr: true,
+			setupMocks: func(_ *jobmocks.MockKeyValue) {
+				// No KV expectations — marshal fails before Put
+			},
+			expectError: true,
+			errorMsg:    "marshal timeline event",
+		},
 	}
 
 	for _, tt := range tests {
@@ -156,6 +170,12 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 				jobsClient = s.newClientWithState(stateKV)
 			} else {
 				jobsClient = s.newClientWithoutState()
+			}
+
+			if tt.marshalErr {
+				jobsClient.JSONMarshalFn = func(_ any) ([]byte, error) {
+					return nil, errors.New("marshal failed")
+				}
 			}
 
 			err := jobsClient.WriteAgentTimelineEvent(

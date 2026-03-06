@@ -56,7 +56,7 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 					}, nil
 				}
 			},
-			want: &host.OSInfo{
+			want: &host.Result{
 				Distribution: "Ubuntu",
 				Version:      "24.04",
 			},

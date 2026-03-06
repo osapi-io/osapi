@@ -56,7 +56,7 @@ func (suite *DarwinGetOSInfoPublicTestSuite) TestGetOSInfo() {
 					}, nil
 				}
 			},
-			want: &host.OSInfo{
+			want: &host.Result{
 				Distribution: "darwin",
 				Version:      "15.3",
 			},

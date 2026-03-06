@@ -29,14 +29,14 @@ OSAPI separates agent fleet discovery from node system queries:
 
 ## What It Manages
 
-| Resource     | Description                                             |
-| ------------ | ------------------------------------------------------- |
-| Hostname     | System hostname                                         |
-| Status       | Uptime, OS name and version, kernel, platform info      |
-| Disk         | Per-mount usage (total, used, free, percent)            |
-| Memory       | RAM and swap usage (total, used, free, percent)         |
-| Load         | 1-, 5-, and 15-minute load averages                     |
-| System Facts | Architecture, kernel, FQDN, CPUs, NICs, service/pkg mgr |
+| Resource                        | Description                                                     |
+| ------------------------------- | --------------------------------------------------------------- |
+| Hostname                        | System hostname                                                 |
+| Status                          | Uptime, OS name and version, kernel, platform info              |
+| Disk                            | Per-mount usage (total, used, free, percent)                    |
+| Memory                          | RAM and swap usage (total, used, free, percent)                 |
+| Load                            | 1-, 5-, and 15-minute load averages                             |
+| [System Facts](system-facts.md) | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
 
 ## How It Works
 
@@ -73,6 +73,7 @@ and `read` roles all include both permissions.
 - [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) -- agent fleet
   commands
 - [Node CLI Reference](../usage/cli/client/node/node.mdx) -- node job commands
+- [System Facts](system-facts.md) -- fact collection and `@fact.*` references
 - [API Reference](/gen/api/node-management-api-node-operations) -- REST API
   documentation
 - [Job System](job-system.md) -- how async job processing works

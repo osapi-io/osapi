@@ -184,7 +184,7 @@ func (c *Client) WriteAgentTimelineEvent(
 		now.UnixNano(),
 	)
 
-	data, err := json.Marshal(job.TimelineEvent{
+	data, err := c.JSONMarshalFn(job.TimelineEvent{
 		Timestamp: now,
 		Event:     event,
 		Hostname:  hostname,

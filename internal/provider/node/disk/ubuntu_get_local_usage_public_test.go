@@ -115,7 +115,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 					}
 				}
 			},
-			want: []disk.UsageStats{
+			want: []disk.Result{
 				{
 					Name:  "/dev/disk1",
 					Total: 500000000000,

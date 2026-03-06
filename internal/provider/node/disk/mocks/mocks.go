@@ -35,7 +35,7 @@ func NewPlainMockProvider(ctrl *gomock.Controller) *MockProvider {
 func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 	mock := NewMockProvider(ctrl)
 
-	mock.EXPECT().GetLocalUsageStats().Return([]disk.UsageStats{
+	mock.EXPECT().GetLocalUsageStats().Return([]disk.Result{
 		{
 			Name:  "/dev/disk1",
 			Total: 500000000000,

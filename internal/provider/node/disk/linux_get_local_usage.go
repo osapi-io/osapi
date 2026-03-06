@@ -25,9 +25,9 @@ import (
 )
 
 // GetLocalUsageStats retrieves disk space statistics for local disks only.
-// It returns a slice of UsageStats structs, each containing the total, used,
+// It returns a slice of Result structs, each containing the total, used,
 // and free space in bytes for the corresponding local disk.
 // An error is returned if somethng goes wrong.
-func (l *Linux) GetLocalUsageStats() ([]UsageStats, error) {
+func (l *Linux) GetLocalUsageStats() ([]Result, error) {
 	return nil, fmt.Errorf("getLocalUsageStats is not implemented for LinuxProvider")
 }

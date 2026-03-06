@@ -127,6 +127,10 @@ func displayAgentGetDetail(
 		cli.PrintKV("Package Mgr", data.PackageMgr)
 	}
 
+	if data.PrimaryInterface != "" {
+		cli.PrintKV("Primary Iface", data.PrimaryInterface)
+	}
+
 	if len(data.Interfaces) > 0 {
 		for _, iface := range data.Interfaces {
 			parts := []string{}
@@ -144,6 +148,20 @@ func displayAgentGetDetail(
 	}
 
 	var sections []cli.Section
+
+	if len(data.Routes) > 0 {
+		routeRows := make([][]string, 0, len(data.Routes))
+		for _, r := range data.Routes {
+			routeRows = append(routeRows, []string{
+				r.Destination, r.Gateway, r.Interface, r.Mask, fmt.Sprintf("%d", r.Metric),
+			})
+		}
+		sections = append(sections, cli.Section{
+			Title:   "Routes",
+			Headers: []string{"DESTINATION", "GATEWAY", "INTERFACE", "MASK", "METRIC"},
+			Rows:    routeRows,
+		})
+	}
 
 	if len(data.Conditions) > 0 {
 		condRows := make([][]string, 0, len(data.Conditions))
@@ -166,20 +184,21 @@ func displayAgentGetDetail(
 		})
 	}
 
-	if len(data.Timeline) > 0 {
-		timelineRows := make([][]string, 0, len(data.Timeline))
-		for _, te := range data.Timeline {
-			timelineRows = append(
-				timelineRows,
-				[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
-			)
-		}
-		sections = append(sections, cli.Section{
-			Title:   "Timeline",
-			Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
-			Rows:    timelineRows,
-		})
+	timelineRows := make([][]string, 0, len(data.Timeline))
+	for _, te := range data.Timeline {
+		timelineRows = append(
+			timelineRows,
+			[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+		)
 	}
+	if len(timelineRows) == 0 {
+		timelineRows = [][]string{{"No events"}}
+	}
+	sections = append(sections, cli.Section{
+		Title:   "Timeline",
+		Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+		Rows:    timelineRows,
+	})
 
 	for _, sec := range sections {
 		cli.PrintCompactTable([]cli.Section{sec})

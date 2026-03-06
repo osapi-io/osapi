@@ -102,7 +102,7 @@ func (c *Client) QueryNodeDiskBroadcast(
 func (c *Client) QueryNodeMemory(
 	ctx context.Context,
 	hostname string,
-) (string, *mem.Stats, string, error) {
+) (string, *mem.Result, string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -120,7 +120,7 @@ func (c *Client) QueryNodeMemory(
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result mem.Stats
+	var result mem.Result
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, "", fmt.Errorf("failed to unmarshal memory response: %w", err)
 	}
@@ -132,7 +132,7 @@ func (c *Client) QueryNodeMemory(
 func (c *Client) QueryNodeMemoryBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]*mem.Stats, map[string]string, error) {
+) (string, map[string]*mem.Result, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -146,7 +146,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*mem.Stats)
+	results := make(map[string]*mem.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -154,7 +154,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 			continue
 		}
 
-		var result mem.Stats
+		var result mem.Result
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
@@ -169,7 +169,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 func (c *Client) QueryNodeLoad(
 	ctx context.Context,
 	hostname string,
-) (string, *load.AverageStats, string, error) {
+) (string, *load.Result, string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -187,7 +187,7 @@ func (c *Client) QueryNodeLoad(
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result load.AverageStats
+	var result load.Result
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, "", fmt.Errorf("failed to unmarshal load response: %w", err)
 	}
@@ -199,7 +199,7 @@ func (c *Client) QueryNodeLoad(
 func (c *Client) QueryNodeLoadBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]*load.AverageStats, map[string]string, error) {
+) (string, map[string]*load.Result, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -213,7 +213,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*load.AverageStats)
+	results := make(map[string]*load.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -221,7 +221,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 			continue
 		}
 
-		var result load.AverageStats
+		var result load.Result
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
@@ -236,7 +236,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 func (c *Client) QueryNodeOS(
 	ctx context.Context,
 	hostname string,
-) (string, *host.OSInfo, string, error) {
+) (string, *host.Result, string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -254,7 +254,7 @@ func (c *Client) QueryNodeOS(
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result host.OSInfo
+	var result host.Result
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, "", fmt.Errorf("failed to unmarshal OS info response: %w", err)
 	}
@@ -266,7 +266,7 @@ func (c *Client) QueryNodeOS(
 func (c *Client) QueryNodeOSBroadcast(
 	ctx context.Context,
 	target string,
-) (string, map[string]*host.OSInfo, map[string]string, error) {
+) (string, map[string]*host.Result, map[string]string, error) {
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
@@ -280,7 +280,7 @@ func (c *Client) QueryNodeOSBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*host.OSInfo)
+	results := make(map[string]*host.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -288,7 +288,7 @@ func (c *Client) QueryNodeOSBroadcast(
 			continue
 		}
 
-		var result host.OSInfo
+		var result host.Result
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}

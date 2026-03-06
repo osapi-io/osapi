@@ -23,7 +23,7 @@ package mocks
 import (
 	"github.com/golang/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.
@@ -35,7 +35,7 @@ func NewPlainMockProvider(ctrl *gomock.Controller) *MockProvider {
 func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 	mock := NewMockProvider(ctrl)
 
-	mock.EXPECT().GetInterfaces().Return([]job.NetworkInterface{
+	mock.EXPECT().GetInterfaces().Return([]netinfo.InterfaceResult{
 		{
 			Name:   "eth0",
 			IPv4:   "192.168.1.10",
@@ -44,6 +44,18 @@ func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 			Family: "dual",
 		},
 	}, nil).AnyTimes()
+
+	mock.EXPECT().GetRoutes().Return([]netinfo.RouteResult{
+		{
+			Destination: "0.0.0.0",
+			Gateway:     "192.168.1.1",
+			Interface:   "eth0",
+			Mask:        "/0",
+			Metric:      100,
+		},
+	}, nil).AnyTimes()
+
+	mock.EXPECT().GetPrimaryInterface().Return("eth0", nil).AnyTimes()
 
 	return mock
 }

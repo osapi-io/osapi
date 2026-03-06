@@ -386,11 +386,11 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSBroadcast(arg0, arg1, arg2,
 }
 
 // QueryNetworkDNS mocks base method.
-func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (string, *dns.Config, string, error) {
+func (m *MockJobClient) QueryNetworkDNS(arg0 context.Context, arg1, arg2 string) (string, *dns.GetResult, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*dns.Config)
+	ret1, _ := ret[1].(*dns.GetResult)
 	ret2, _ := ret[2].(string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -403,11 +403,11 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNS(arg0, arg1, arg2 interface{
 }
 
 // QueryNetworkDNSAll mocks base method.
-func (m *MockJobClient) QueryNetworkDNSAll(arg0 context.Context, arg1 string) (string, map[string]*dns.Config, map[string]string, error) {
+func (m *MockJobClient) QueryNetworkDNSAll(arg0 context.Context, arg1 string) (string, map[string]*dns.GetResult, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNSAll", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*dns.Config)
+	ret1, _ := ret[1].(map[string]*dns.GetResult)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -420,11 +420,11 @@ func (mr *MockJobClientMockRecorder) QueryNetworkDNSAll(arg0, arg1 interface{}) 
 }
 
 // QueryNetworkDNSBroadcast mocks base method.
-func (m *MockJobClient) QueryNetworkDNSBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*dns.Config, map[string]string, error) {
+func (m *MockJobClient) QueryNetworkDNSBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*dns.GetResult, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNetworkDNSBroadcast", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*dns.Config)
+	ret1, _ := ret[1].(map[string]*dns.GetResult)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -590,11 +590,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeHostnameBroadcast(arg0, arg1 inter
 }
 
 // QueryNodeLoad mocks base method.
-func (m *MockJobClient) QueryNodeLoad(arg0 context.Context, arg1 string) (string, *load.AverageStats, string, error) {
+func (m *MockJobClient) QueryNodeLoad(arg0 context.Context, arg1 string) (string, *load.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeLoad", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*load.AverageStats)
+	ret1, _ := ret[1].(*load.Result)
 	ret2, _ := ret[2].(string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -607,11 +607,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeLoad(arg0, arg1 interface{}) *gomo
 }
 
 // QueryNodeLoadBroadcast mocks base method.
-func (m *MockJobClient) QueryNodeLoadBroadcast(arg0 context.Context, arg1 string) (string, map[string]*load.AverageStats, map[string]string, error) {
+func (m *MockJobClient) QueryNodeLoadBroadcast(arg0 context.Context, arg1 string) (string, map[string]*load.Result, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeLoadBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*load.AverageStats)
+	ret1, _ := ret[1].(map[string]*load.Result)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -624,11 +624,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeLoadBroadcast(arg0, arg1 interface
 }
 
 // QueryNodeMemory mocks base method.
-func (m *MockJobClient) QueryNodeMemory(arg0 context.Context, arg1 string) (string, *mem.Stats, string, error) {
+func (m *MockJobClient) QueryNodeMemory(arg0 context.Context, arg1 string) (string, *mem.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeMemory", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*mem.Stats)
+	ret1, _ := ret[1].(*mem.Result)
 	ret2, _ := ret[2].(string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -641,11 +641,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeMemory(arg0, arg1 interface{}) *go
 }
 
 // QueryNodeMemoryBroadcast mocks base method.
-func (m *MockJobClient) QueryNodeMemoryBroadcast(arg0 context.Context, arg1 string) (string, map[string]*mem.Stats, map[string]string, error) {
+func (m *MockJobClient) QueryNodeMemoryBroadcast(arg0 context.Context, arg1 string) (string, map[string]*mem.Result, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeMemoryBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*mem.Stats)
+	ret1, _ := ret[1].(map[string]*mem.Result)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -658,11 +658,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeMemoryBroadcast(arg0, arg1 interfa
 }
 
 // QueryNodeOS mocks base method.
-func (m *MockJobClient) QueryNodeOS(arg0 context.Context, arg1 string) (string, *host.OSInfo, string, error) {
+func (m *MockJobClient) QueryNodeOS(arg0 context.Context, arg1 string) (string, *host.Result, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeOS", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(*host.OSInfo)
+	ret1, _ := ret[1].(*host.Result)
 	ret2, _ := ret[2].(string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
@@ -675,11 +675,11 @@ func (mr *MockJobClientMockRecorder) QueryNodeOS(arg0, arg1 interface{}) *gomock
 }
 
 // QueryNodeOSBroadcast mocks base method.
-func (m *MockJobClient) QueryNodeOSBroadcast(arg0 context.Context, arg1 string) (string, map[string]*host.OSInfo, map[string]string, error) {
+func (m *MockJobClient) QueryNodeOSBroadcast(arg0 context.Context, arg1 string) (string, map[string]*host.Result, map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryNodeOSBroadcast", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(map[string]*host.OSInfo)
+	ret1, _ := ret[1].(map[string]*host.Result)
 	ret2, _ := ret[2].(map[string]string)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3

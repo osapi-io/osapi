@@ -166,6 +166,11 @@ func (s *FactsTestSuite) TestWriteFacts() {
 				s.agent.netinfoProvider = func() *netinfoMocks.MockProvider {
 					m := netinfoMocks.NewPlainMockProvider(s.mockCtrl)
 					m.EXPECT().GetInterfaces().Return(nil, errors.New("net fail")).AnyTimes()
+					m.EXPECT().GetRoutes().Return(nil, errors.New("routes fail")).AnyTimes()
+					m.EXPECT().
+						GetPrimaryInterface().
+						Return("", errors.New("primary fail")).
+						AnyTimes()
 					return m
 				}()
 

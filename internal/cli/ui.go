@@ -177,6 +177,18 @@ func BoolToSafeString(
 // compactMaxColWidth is the maximum column width before truncation.
 const compactMaxColWidth = 50
 
+// printJSONBlock prints a titled JSON block without truncation.
+func printJSONBlock(
+	title string,
+	jsonStr string,
+) {
+	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(Purple)
+	dataStyle := lipgloss.NewStyle().Foreground(Teal)
+
+	fmt.Printf("\n  %s:\n", titleStyle.Render(title))
+	fmt.Printf("  %s\n", dataStyle.Render(jsonStr))
+}
+
 // PrintCompactTable renders a compact column-aligned table (kubectl-style).
 // Headers are uppercase purple, data rows are teal, with 2-space indent.
 // Multi-line cell values are flattened to a single line and long values
@@ -544,18 +556,13 @@ func DisplayJobDetail(
 		}
 	}
 
-	var sections []Section
-
-	// Display the operation request
+	// Display the operation request as an untruncated JSON block
 	if resp.Operation != nil {
-		jobOperationJSON, _ := json.MarshalIndent(resp.Operation, "", "  ")
-		operationRows := [][]string{{string(jobOperationJSON)}}
-		sections = append(sections, Section{
-			Title:   "Job Request",
-			Headers: []string{"DATA"},
-			Rows:    operationRows,
-		})
+		jobOperationJSON, _ := json.MarshalIndent(resp.Operation, "  ", "  ")
+		printJSONBlock("Job Request", string(jobOperationJSON))
 	}
+
+	var sections []Section
 
 	// Display agent responses (for broadcast jobs)
 	if len(resp.Responses) > 0 {
@@ -598,34 +605,29 @@ func DisplayJobDetail(
 	}
 
 	// Display timeline
-	if len(resp.Timeline) > 0 {
-		timelineRows := make([][]string, 0, len(resp.Timeline))
-		for _, te := range resp.Timeline {
-			timelineRows = append(
-				timelineRows,
-				[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
-			)
-		}
-
-		sections = append(sections, Section{
-			Title:   "Timeline",
-			Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
-			Rows:    timelineRows,
-		})
+	timelineRows := make([][]string, 0, len(resp.Timeline))
+	for _, te := range resp.Timeline {
+		timelineRows = append(
+			timelineRows,
+			[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+		)
 	}
-
-	// Display result if completed
-	if resp.Result != nil {
-		resultJSON, _ := json.MarshalIndent(resp.Result, "", "  ")
-		resultRows := [][]string{{string(resultJSON)}}
-		sections = append(sections, Section{
-			Title:   "Job Result",
-			Headers: []string{"DATA"},
-			Rows:    resultRows,
-		})
+	if len(timelineRows) == 0 {
+		timelineRows = [][]string{{"No events"}}
 	}
+	sections = append(sections, Section{
+		Title:   "Timeline",
+		Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+		Rows:    timelineRows,
+	})
 
 	for _, sec := range sections {
 		PrintCompactTable([]Section{sec})
+	}
+
+	// Display result as an untruncated JSON block after tables
+	if resp.Result != nil {
+		resultJSON, _ := json.MarshalIndent(resp.Result, "  ", "  ")
+		printJSONBlock("Job Result", string(resultJSON))
 	}
 }

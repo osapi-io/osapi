@@ -78,7 +78,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeLoad(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &load.AverageStats{
+					Return("550e8400-e29b-41d4-a716-446655440000", &load.Result{
 						Load1:  1.5,
 						Load5:  2.0,
 						Load15: 1.8,
@@ -119,7 +119,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeLoadBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*load.AverageStats{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*load.Result{
 						"server1": {Load1: 1.5, Load5: 2.0, Load15: 1.8},
 						"server2": {Load1: 0.5, Load5: 0.8, Load15: 0.6},
 					}, map[string]string{}, nil)
@@ -134,7 +134,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeLoadBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*load.AverageStats{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*load.Result{
 						"server1": {Load1: 1.5, Load5: 2.0, Load15: 1.8},
 					}, map[string]string{
 						"server2": "some error",

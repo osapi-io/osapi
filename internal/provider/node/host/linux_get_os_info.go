@@ -25,8 +25,7 @@ import (
 )
 
 // GetOSInfo retrieves information about the operating system, including the
-// distribution name and version. It returns an OSInfo struct containing this
-// data and an error if something goes wrong during the process.
-func (l *Linux) GetOSInfo() (*OSInfo, error) {
+// distribution name and version. It returns the
+func (l *Linux) GetOSInfo() (*Result, error) {
 	return nil, fmt.Errorf("getOSInfo is not implemented for LinuxProvider")
 }

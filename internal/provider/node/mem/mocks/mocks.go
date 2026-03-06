@@ -35,7 +35,7 @@ func NewPlainMockProvider(ctrl *gomock.Controller) *MockProvider {
 func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 	mock := NewMockProvider(ctrl)
 
-	mock.EXPECT().GetStats().Return(&mem.Stats{
+	mock.EXPECT().GetStats().Return(&mem.Result{
 		Total:  8388608,
 		Free:   4194304,
 		Cached: 2097152,

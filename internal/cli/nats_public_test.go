@@ -285,6 +285,53 @@ func (suite *NATSPublicTestSuite) TestBuildFactsKVConfig() {
 	}
 }
 
+func (suite *NATSPublicTestSuite) TestBuildStateKVConfig() {
+	tests := []struct {
+		name       string
+		namespace  string
+		stateCfg   config.NATSState
+		validateFn func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			stateCfg: config.NATSState{
+				Bucket:   "agent-state",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-agent-state", cfg.Bucket)
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			stateCfg: config.NATSState{
+				Bucket:   "agent-state",
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "agent-state", cfg.Bucket)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildStateKVConfig(tc.namespace, tc.stateCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
 func (suite *NATSPublicTestSuite) TestBuildAuditKVConfig() {
 	tests := []struct {
 		name       string

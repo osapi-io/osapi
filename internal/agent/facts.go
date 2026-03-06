@@ -96,9 +96,40 @@ func (a *Agent) writeFacts(
 		reg.PackageMgr = mgr
 	}
 
-	if ifaces, err := a.netinfoProvider.GetInterfaces(); err == nil {
+	if providerIfaces, err := a.netinfoProvider.GetInterfaces(); err == nil {
+		ifaces := make([]job.NetworkInterface, len(providerIfaces))
+		for i, iface := range providerIfaces {
+			ifaces[i] = job.NetworkInterface{
+				Name:   iface.Name,
+				IPv4:   iface.IPv4,
+				IPv6:   iface.IPv6,
+				MAC:    iface.MAC,
+				Family: iface.Family,
+			}
+		}
 		reg.Interfaces = ifaces
 	}
+
+	if providerRoutes, err := a.netinfoProvider.GetRoutes(); err == nil {
+		routes := make([]job.Route, len(providerRoutes))
+		for i, r := range providerRoutes {
+			routes[i] = job.Route{
+				Destination: r.Destination,
+				Gateway:     r.Gateway,
+				Interface:   r.Interface,
+				Mask:        r.Mask,
+				Metric:      r.Metric,
+				Flags:       r.Flags,
+			}
+		}
+		reg.Routes = routes
+	}
+
+	if primary, err := a.netinfoProvider.GetPrimaryInterface(); err == nil {
+		reg.PrimaryInterface = primary
+	}
+
+	a.cachedFacts = &reg
 
 	data, err := marshalJSON(reg)
 	if err != nil {

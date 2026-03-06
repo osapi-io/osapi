@@ -30,6 +30,39 @@ import (
 
 var instance = validator.New()
 
+// isKnownFactKey reports whether key is a recognized fact key.
+// Known keys: interface.primary, hostname, arch, kernel, fqdn, custom.*.
+func isKnownFactKey(key string) bool {
+	switch key {
+	case "interface.primary", "hostname", "arch", "kernel", "fqdn":
+		return true
+	default:
+		return strings.HasPrefix(key, "custom.") && len(key) > len("custom.")
+	}
+}
+
+func init() {
+	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
+	// with a known fact key. Fact references are resolved agent-side.
+	_ = instance.RegisterValidation("alphanum_or_fact", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		if strings.HasPrefix(v, "@fact.") {
+			return isKnownFactKey(v[len("@fact."):])
+		}
+		return instance.Var(v, "alphanum") == nil
+	})
+
+	// ip_or_fact accepts IP addresses (v4/v6) or @fact. prefixed references
+	// with a known fact key. Fact references are resolved agent-side.
+	_ = instance.RegisterValidation("ip_or_fact", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		if strings.HasPrefix(v, "@fact.") {
+			return isKnownFactKey(v[len("@fact."):])
+		}
+		return instance.Var(v, "ip") == nil
+	})
+}
+
 // customHints maps validator tags to a hint appended to the default error.
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {

@@ -97,27 +97,27 @@ type JobClient interface {
 	QueryNodeMemory(
 		ctx context.Context,
 		hostname string,
-	) (string, *mem.Stats, string, error)
+	) (string, *mem.Result, string, error)
 	QueryNodeMemoryBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]*mem.Stats, map[string]string, error)
+	) (string, map[string]*mem.Result, map[string]string, error)
 	QueryNodeLoad(
 		ctx context.Context,
 		hostname string,
-	) (string, *load.AverageStats, string, error)
+	) (string, *load.Result, string, error)
 	QueryNodeLoadBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]*load.AverageStats, map[string]string, error)
+	) (string, map[string]*load.Result, map[string]string, error)
 	QueryNodeOS(
 		ctx context.Context,
 		hostname string,
-	) (string, *host.OSInfo, string, error)
+	) (string, *host.Result, string, error)
 	QueryNodeOSBroadcast(
 		ctx context.Context,
 		target string,
-	) (string, map[string]*host.OSInfo, map[string]string, error)
+	) (string, map[string]*host.Result, map[string]string, error)
 	QueryNodeUptime(
 		ctx context.Context,
 		hostname string,
@@ -130,16 +130,16 @@ type JobClient interface {
 		ctx context.Context,
 		hostname string,
 		iface string,
-	) (string, *dns.Config, string, error)
+	) (string, *dns.GetResult, string, error)
 	QueryNetworkDNSAll(
 		ctx context.Context,
 		iface string,
-	) (string, map[string]*dns.Config, map[string]string, error)
+	) (string, map[string]*dns.GetResult, map[string]string, error)
 	QueryNetworkDNSBroadcast(
 		ctx context.Context,
 		target string,
 		iface string,
-	) (string, map[string]*dns.Config, map[string]string, error)
+	) (string, map[string]*dns.GetResult, map[string]string, error)
 
 	// Modify operations — all return (jobID, result..., error)
 	ModifyNetworkDNS(

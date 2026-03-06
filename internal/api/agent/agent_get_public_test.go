@@ -85,10 +85,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 				Labels:       map[string]string{"group": "web"},
 				RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-				OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
+				OSInfo:       &host.Result{Distribution: "Ubuntu", Version: "24.04"},
 				Uptime:       5 * time.Hour,
-				LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-				MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+				LoadAverages: &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.2},
+				MemoryStats:  &mem.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
 			},
 			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
 				r, ok := resp.(gen.GetAgentDetails200JSONResponse)
@@ -158,10 +158,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 						Labels:       map[string]string{"group": "web"},
 						RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 						StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-						OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
+						OSInfo:       &host.Result{Distribution: "Ubuntu", Version: "24.04"},
 						Uptime:       5 * time.Hour,
-						LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-						MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+						LoadAverages: &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.2},
+						MemoryStats:  &mem.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
 					}, nil)
 				return mock
 			},

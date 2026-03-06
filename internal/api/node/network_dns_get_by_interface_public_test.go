@@ -84,7 +84,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 		validateFunc func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject)
 	}{
 		{
-			name: "success",
+			name: "when success",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "eth0",
@@ -94,7 +94,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 					QueryNetworkDNS(gomock.Any(), "_any", "eth0").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&dns.Config{
+						&dns.GetResult{
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
 						},
@@ -114,7 +114,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "validation error empty hostname",
+			name: "when validation error empty hostname",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "",
 				InterfaceName: "eth0",
@@ -128,7 +128,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "validation error empty interface name",
+			name: "when validation error empty interface name",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "",
@@ -142,7 +142,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "job client error",
+			name: "when job client error",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "eth0",
@@ -158,7 +158,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all success",
+			name: "when broadcast all success",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -168,7 +168,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*dns.Config{
+						map[string]*dns.GetResult{
 							"server1": {
 								DNSServers:    []string{"8.8.8.8"},
 								SearchDomains: []string{"example.com"},
@@ -187,7 +187,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all with errors",
+			name: "when broadcast all with errors",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -197,7 +197,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*dns.Config{
+						map[string]*dns.GetResult{
 							"server1": {
 								DNSServers:    []string{"8.8.8.8"},
 								SearchDomains: []string{"example.com"},
@@ -225,7 +225,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all error",
+			name: "when broadcast all error",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -268,7 +268,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceHT
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					QueryNetworkDNS(gomock.Any(), "server1", "eth0").
-					Return("550e8400-e29b-41d4-a716-446655440000", &dns.Config{
+					Return("550e8400-e29b-41d4-a716-446655440000", &dns.GetResult{
 						DNSServers:    []string{"8.8.8.8"},
 						SearchDomains: []string{"example.com"},
 					}, "agent1", nil)
@@ -284,13 +284,46 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceHT
 			},
 		},
 		{
+			name: "when fact reference interface name passes validation",
+			path: "/node/server1/network/dns/@fact.interface.primary",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					QueryNetworkDNS(gomock.Any(), "server1", "@fact.interface.primary").
+					Return("550e8400-e29b-41d4-a716-446655440000", &dns.GetResult{
+						DNSServers: []string{"8.8.8.8"},
+					}, "agent1", nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"8.8.8.8"`},
+		},
+		{
+			name: "when partial fact reference rejected",
+			path: "/node/server1/network/dns/@fact",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "alphanum_or_fact"},
+		},
+		{
 			name: "when non-alphanum interface name",
 			path: "/node/server1/network/dns/eth-0!",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "alphanum"},
+			wantContains: []string{`"error"`, "alphanum_or_fact"},
+		},
+		{
+			name: "when unknown fact key rejected",
+			path: "/node/server1/network/dns/@fact.primary_interface",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "alphanum_or_fact"},
 		},
 		{
 			name: "when broadcast all",
@@ -299,7 +332,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceHT
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*dns.Config{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*dns.GetResult{
 						"server1": {
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
@@ -394,7 +427,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceRB
 					QueryNetworkDNS(gomock.Any(), "server1", "eth0").
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&dns.Config{
+						&dns.GetResult{
 							DNSServers:    []string{"8.8.8.8"},
 							SearchDomains: []string{"example.com"},
 						},

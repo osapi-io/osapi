@@ -31,9 +31,8 @@ type Provider interface {
 	// GetHostname retrieves the hostname of the system.
 	GetHostname() (string, error)
 	// GetOSInfo retrieves information about the operating system, including the
-	// distribution name and version. It returns an OSInfo struct containing this
-	// data and an error if something goes wrong during the process.
-	GetOSInfo() (*OSInfo, error)
+	// distribution name and version.
+	GetOSInfo() (*Result, error)
 	// GetArchitecture retrieves the system CPU architecture (e.g., x86_64, arm64).
 	GetArchitecture() (string, error)
 	// GetKernelVersion retrieves the running kernel version string.
@@ -48,8 +47,8 @@ type Provider interface {
 	GetPackageManager() (string, error)
 }
 
-// OSInfo represents the operating system information.
-type OSInfo struct {
+// Result represents the operating system information.
+type Result struct {
 	// The name of the Linux distribution (e.g., Ubuntu, CentOS).
 	Distribution string
 	// The version of the Linux distribution (e.g., 20.04, 8.3).

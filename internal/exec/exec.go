@@ -22,10 +22,13 @@
 package exec
 
 import (
+	"fmt"
 	"log/slog"
 	"os/exec"
 	"strings"
 )
+
+const maxLogOutputLen = 200
 
 // New factory to create a new Exec instance.
 func New(
@@ -49,11 +52,17 @@ func (e *Exec) RunCmdImpl(
 		cmd.Dir = cwd
 	}
 	out, err := cmd.CombinedOutput()
+
+	logOutput := string(out)
+	if len(logOutput) > maxLogOutputLen {
+		logOutput = logOutput[:maxLogOutputLen] + fmt.Sprintf("... (%d bytes total)", len(out))
+	}
+
 	e.logger.Debug(
 		"exec",
 		slog.String("command", strings.Join(cmd.Args, " ")),
 		slog.String("cwd", cwd),
-		slog.String("output", string(out)),
+		slog.String("output", logOutput),
 		slog.Any("error", err),
 	)
 	if err != nil {

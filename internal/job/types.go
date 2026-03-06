@@ -258,16 +258,28 @@ type NetworkInterface struct {
 	Family string `json:"family,omitempty"`
 }
 
+// Route represents a network routing table entry.
+type Route struct {
+	Destination string `json:"destination"`
+	Gateway     string `json:"gateway"`
+	Interface   string `json:"interface"`
+	Mask        string `json:"mask,omitempty"`
+	Metric      int    `json:"metric,omitempty"`
+	Flags       string `json:"flags,omitempty"`
+}
+
 // FactsRegistration represents an agent's facts entry in the facts KV bucket.
 type FactsRegistration struct {
-	Architecture  string             `json:"architecture,omitempty"`
-	KernelVersion string             `json:"kernel_version,omitempty"`
-	CPUCount      int                `json:"cpu_count,omitempty"`
-	FQDN          string             `json:"fqdn,omitempty"`
-	ServiceMgr    string             `json:"service_mgr,omitempty"`
-	PackageMgr    string             `json:"package_mgr,omitempty"`
-	Interfaces    []NetworkInterface `json:"interfaces,omitempty"`
-	Facts         map[string]any     `json:"facts,omitempty"`
+	Architecture     string             `json:"architecture,omitempty"`
+	KernelVersion    string             `json:"kernel_version,omitempty"`
+	CPUCount         int                `json:"cpu_count,omitempty"`
+	FQDN             string             `json:"fqdn,omitempty"`
+	ServiceMgr       string             `json:"service_mgr,omitempty"`
+	PackageMgr       string             `json:"package_mgr,omitempty"`
+	Interfaces       []NetworkInterface `json:"interfaces,omitempty"`
+	PrimaryInterface string             `json:"primary_interface,omitempty"`
+	Routes           []Route            `json:"routes,omitempty"`
+	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
 // Condition type constants.
@@ -303,13 +315,13 @@ type AgentRegistration struct {
 	// StartedAt is the timestamp when the agent process started.
 	StartedAt time.Time `json:"started_at"`
 	// OSInfo contains operating system information.
-	OSInfo *host.OSInfo `json:"os_info,omitempty"`
+	OSInfo *host.Result `json:"os_info,omitempty"`
 	// Uptime is the system uptime.
 	Uptime time.Duration `json:"uptime,omitempty"`
 	// LoadAverages contains the system load averages.
-	LoadAverages *load.AverageStats `json:"load_averages,omitempty"`
+	LoadAverages *load.Result `json:"load_averages,omitempty"`
 	// MemoryStats contains memory usage information.
-	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
+	MemoryStats *mem.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
 	// Conditions contains the evaluated node conditions.
@@ -329,13 +341,13 @@ type AgentInfo struct {
 	// StartedAt is the timestamp when the agent process started.
 	StartedAt time.Time `json:"started_at"`
 	// OSInfo contains operating system information.
-	OSInfo *host.OSInfo `json:"os_info,omitempty"`
+	OSInfo *host.Result `json:"os_info,omitempty"`
 	// Uptime is the system uptime.
 	Uptime time.Duration `json:"uptime,omitempty"`
 	// LoadAverages contains the system load averages.
-	LoadAverages *load.AverageStats `json:"load_averages,omitempty"`
+	LoadAverages *load.Result `json:"load_averages,omitempty"`
 	// MemoryStats contains memory usage information.
-	MemoryStats *mem.Stats `json:"memory_stats,omitempty"`
+	MemoryStats *mem.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
 	// Architecture is the CPU architecture (e.g., x86_64, aarch64).
@@ -352,6 +364,10 @@ type AgentInfo struct {
 	PackageMgr string `json:"package_mgr,omitempty"`
 	// Interfaces contains network interface information.
 	Interfaces []NetworkInterface `json:"interfaces,omitempty"`
+	// PrimaryInterface is the name of the interface used for the default route.
+	PrimaryInterface string `json:"primary_interface,omitempty"`
+	// Routes contains the network routing table.
+	Routes []Route `json:"routes,omitempty"`
 	// Facts contains arbitrary key-value facts collected by the agent.
 	Facts map[string]any `json:"facts,omitempty"`
 	// Conditions contains the evaluated node conditions.
@@ -364,7 +380,7 @@ type AgentInfo struct {
 
 // NodeDiskResponse represents the response for node.disk.get operations.
 type NodeDiskResponse struct {
-	Disks []disk.UsageStats `json:"disks"`
+	Disks []disk.Result `json:"disks"`
 }
 
 // NodeUptimeResponse represents the response for node.uptime.get operations.
@@ -381,11 +397,11 @@ type NodeStatusResponse struct {
 	// Uptime from the host provider
 	Uptime time.Duration `json:"uptime"`
 	// OSInfo from the host provider
-	OSInfo *host.OSInfo `json:"os_info"`
+	OSInfo *host.Result `json:"os_info"`
 	// LoadAverages from the load provider
-	LoadAverages *load.AverageStats `json:"load_averages"`
+	LoadAverages *load.Result `json:"load_averages"`
 	// MemoryStats from the memory provider
-	MemoryStats *mem.Stats `json:"memory_stats"`
+	MemoryStats *mem.Result `json:"memory_stats"`
 	// DiskUsage from the disk provider
-	DiskUsage []disk.UsageStats `json:"disk_usage"`
+	DiskUsage []disk.Result `json:"disk_usage"`
 }

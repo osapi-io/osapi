@@ -111,10 +111,10 @@ func (mr *MockProviderMockRecorder) GetKernelVersion() *gomock.Call {
 }
 
 // GetOSInfo mocks base method.
-func (m *MockProvider) GetOSInfo() (*host.OSInfo, error) {
+func (m *MockProvider) GetOSInfo() (*host.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOSInfo")
-	ret0, _ := ret[0].(*host.OSInfo)
+	ret0, _ := ret[0].(*host.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

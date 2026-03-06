@@ -37,7 +37,7 @@ func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 
 	mock.EXPECT().
 		GetAverageStats().
-		Return(&load.AverageStats{
+		Return(&load.Result{
 			Load1:  1.0,
 			Load5:  0.5,
 			Load15: 0.2,

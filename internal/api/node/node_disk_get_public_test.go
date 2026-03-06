@@ -80,7 +80,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 				s.mockJobClient.EXPECT().
 					QueryNodeDisk(gomock.Any(), "_any").
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.NodeDiskResponse{
-						Disks: []disk.UsageStats{
+						Disks: []disk.Result{
 							{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
 						},
 					}, "agent1", nil)
@@ -122,12 +122,12 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 					QueryNodeDiskBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeDiskResponse{
 						"server1": {
-							Disks: []disk.UsageStats{
+							Disks: []disk.Result{
 								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
 							},
 						},
 						"server2": {
-							Disks: []disk.UsageStats{
+							Disks: []disk.Result{
 								{Name: "/dev/sda1", Total: 2000, Used: 1000, Free: 1000},
 							},
 						},
@@ -145,7 +145,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 					QueryNodeDiskBroadcast(gomock.Any(), "_all").
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeDiskResponse{
 						"server1": {
-							Disks: []disk.UsageStats{
+							Disks: []disk.Result{
 								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
 							},
 						},

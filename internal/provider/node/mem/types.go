@@ -23,11 +23,11 @@ package mem
 // Provider implements the methods to interact with various Mem components.
 type Provider interface {
 	// GetStats retrieves memory statistics of the system.
-	GetStats() (*Stats, error)
+	GetStats() (*Result, error)
 }
 
-// Stats holds memory information in bytes.
-type Stats struct {
+// Result holds memory information in bytes.
+type Result struct {
 	// Total memory in bytes
 	Total uint64
 	// Available memory in bytes (free + reclaimable)

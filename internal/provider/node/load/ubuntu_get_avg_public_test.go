@@ -42,7 +42,7 @@ func (suite *UbuntuGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysLoad.AvgStat, error)
-		want        *load.AverageStats
+		want        *load.Result
 		wantErr     bool
 		wantErrType error
 	}{
@@ -57,7 +57,7 @@ func (suite *UbuntuGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 					}, nil
 				}
 			},
-			want: &load.AverageStats{
+			want: &load.Result{
 				Load1:  1.0,
 				Load5:  0.5,
 				Load15: 0.2,

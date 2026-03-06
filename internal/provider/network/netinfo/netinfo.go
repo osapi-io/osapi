@@ -23,42 +23,32 @@ package netinfo
 
 import (
 	"net"
-
-	"github.com/retr0h/osapi/internal/job"
 )
 
-// Netinfo implements the Provider interface for network interface information.
+// Netinfo provides cross-platform network interface information.
+// Platform-specific types (Linux, Darwin) embed this for shared
+// interface enumeration and add their own route implementations.
 type Netinfo struct {
 	InterfacesFn func() ([]net.Interface, error)
 	AddrsFn      func(iface net.Interface) ([]net.Addr, error)
 }
 
-// New factory to create a new Netinfo instance.
-func New() *Netinfo {
-	return &Netinfo{
-		InterfacesFn: net.Interfaces,
-		AddrsFn: func(iface net.Interface) ([]net.Addr, error) {
-			return iface.Addrs()
-		},
-	}
-}
-
 // GetInterfaces retrieves non-loopback, up network interfaces
 // with name, IPv4, and MAC address.
-func (n *Netinfo) GetInterfaces() ([]job.NetworkInterface, error) {
+func (n *Netinfo) GetInterfaces() ([]InterfaceResult, error) {
 	ifaces, err := n.InterfacesFn()
 	if err != nil {
 		return nil, err
 	}
 
-	var result []job.NetworkInterface
+	var result []InterfaceResult
 
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
 			continue
 		}
 
-		ni := job.NetworkInterface{
+		ni := InterfaceResult{
 			Name: iface.Name,
 			MAC:  iface.HardwareAddr.String(),
 		}

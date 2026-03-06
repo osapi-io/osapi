@@ -1140,10 +1140,11 @@ paths:
                   type: string
                   description: >
                     The IP address of the server to ping. Supports both IPv4 and
-                    IPv6.
+                    IPv6. Also accepts @fact. references that are resolved
+                    agent-side.
                   example: 8.8.8.8
                   x-oapi-codegen-extra-tags:
-                    validate: required,ip
+                    validate: required,ip_or_fact
               required:
                 - address
       responses:
@@ -1196,7 +1197,7 @@ paths:
           in: path
           required: true
           x-oapi-codegen-extra-tags:
-            validate: required,alphanum
+            validate: required,alphanum_or_fact
           schema:
             type: string
           description: >
@@ -1486,6 +1487,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NetworkInterfaceResponse'
+        primary_interface:
+          type: string
+          description: Name of the interface used for the default route.
+          example: eth0
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteResponse'
+          description: Network routing table entries.
         facts:
           type: object
           additionalProperties: true
@@ -1610,6 +1620,38 @@ components:
         - type
         - status
         - last_transition_time
+    RouteResponse:
+      type: object
+      description: A network routing table entry.
+      properties:
+        destination:
+          type: string
+          description: Destination network address.
+          example: 0.0.0.0
+        gateway:
+          type: string
+          description: Gateway address.
+          example: 192.168.1.1
+        interface:
+          type: string
+          description: Network interface name.
+          example: eth0
+        mask:
+          type: string
+          description: Network mask in CIDR notation.
+          example: /0
+        metric:
+          type: integer
+          description: Route metric.
+          example: 100
+        flags:
+          type: string
+          description: Route flags.
+          example: '0003'
+      required:
+        - destination
+        - gateway
+        - interface
     TimelineEvent:
       type: object
       properties:
@@ -2491,10 +2533,10 @@ components:
         interface_name:
           type: string
           x-oapi-codegen-extra-tags:
-            validate: required,alphanum
+            validate: required,alphanum_or_fact
           description: >
             The name of the network interface to apply DNS configuration to.
-            Must only contain letters and numbers.
+            Accepts alphanumeric names or @fact. references.
       required:
         - interface_name
     CommandExecRequest:

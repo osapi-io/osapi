@@ -45,6 +45,18 @@ Target by label to execute on a group of servers:
 $ osapi client node command exec --command whoami --target group:web
 ```
 
+Use `@fact.*` references to inject live system values. Each agent resolves its
+own facts, so this works correctly with broadcast targeting:
+
+```bash
+$ osapi client node command exec \
+    --command ip --args "addr,show,dev,@fact.interface.primary" \
+    --target _all
+```
+
+See [System Facts](../../../../../features/system-facts.md) for all available
+`@fact.*` references.
+
 ## JSON Output
 
 Use `--json` to get the full untruncated API response:

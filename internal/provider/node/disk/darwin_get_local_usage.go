@@ -31,19 +31,19 @@ import (
 )
 
 // GetLocalUsageStats retrieves disk space statistics for local disks only.
-// It returns a slice of UsageStats structs, each containing the total, used,
+// It returns a slice of Result structs, each containing the total, used,
 // and free space in bytes for the corresponding local disk.
 // It gracefully skips partitions where a permission error occurs (e.g., for mounts
 // that the user cannot access without root privileges), and continues processing
 // the remaining partitions.
 // If a non-permission-related error occurs, the function returns an error.
-func (d *Darwin) GetLocalUsageStats() ([]UsageStats, error) {
+func (d *Darwin) GetLocalUsageStats() ([]Result, error) {
 	partitions, err := d.PartitionsFn(false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get disk partitions: %w", err)
 	}
 
-	diskSpaces := make([]UsageStats, 0, len(partitions))
+	diskSpaces := make([]Result, 0, len(partitions))
 	for _, partition := range partitions {
 		// Skip non-local devices, network-mounted partitions, Docker, and Kubernetes mounts
 		if partition.Device == "" || partition.Fstype == "" || !isLocalPartitionDarwin(partition) {
@@ -63,7 +63,7 @@ func (d *Darwin) GetLocalUsageStats() ([]UsageStats, error) {
 			return nil, fmt.Errorf("failed to get disk usage for %s: %w", partition.Mountpoint, err)
 		}
 
-		diskSpaces = append(diskSpaces, UsageStats{
+		diskSpaces = append(diskSpaces, Result{
 			Total: usage.Total,
 			Used:  usage.Used,
 			Free:  usage.Free,

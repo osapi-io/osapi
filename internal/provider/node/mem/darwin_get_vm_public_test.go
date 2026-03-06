@@ -42,7 +42,7 @@ func (suite *DarwinGetStatsPublicTestSuite) TestGetStats() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysMem.VirtualMemoryStat, error)
-		want        *mem.Stats
+		want        *mem.Result
 		wantErr     bool
 		wantErrType error
 	}{
@@ -57,7 +57,7 @@ func (suite *DarwinGetStatsPublicTestSuite) TestGetStats() {
 					}, nil
 				}
 			},
-			want: &mem.Stats{
+			want: &mem.Result{
 				Total:  1024,
 				Free:   512,
 				Cached: 256,

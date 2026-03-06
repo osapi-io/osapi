@@ -110,19 +110,19 @@ func (a *Agent) writeRegistration(
 		reg.Uptime = uptime
 	}
 
-	var loadAvg *load.AverageStats
+	var loadAvg *load.Result
 	if avg, err := a.loadProvider.GetAverageStats(); err == nil {
 		loadAvg = avg
 		reg.LoadAverages = avg
 	}
 
-	var memStats *mem.Stats
+	var memStats *mem.Result
 	if stats, err := a.memProvider.GetStats(); err == nil {
 		memStats = stats
 		reg.MemoryStats = stats
 	}
 
-	var diskStats []disk.UsageStats
+	var diskStats []disk.Result
 	if stats, err := a.diskProvider.GetLocalUsageStats(); err == nil {
 		diskStats = stats
 	}
