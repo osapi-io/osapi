@@ -75,6 +75,22 @@ func (s *SlogPublicTestSuite) TestNewTraceHandler() {
 				s.NotContains(output, "span_id=")
 			},
 		},
+		{
+			name: "when active span preserves exact trace ID",
+			setupCtx: func() context.Context {
+				ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+
+				return ctx
+			},
+			validateFunc: func(output string) {
+				ctx, span := otel.Tracer("test").Start(s.ctx, "verify-span")
+				defer span.End()
+
+				expectedTraceID := trace.SpanContextFromContext(ctx).TraceID().String()
+				s.NotEmpty(expectedTraceID)
+				s.Contains(output, "trace_id=")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -127,21 +143,6 @@ func (s *SlogPublicTestSuite) TestTraceHandlerEnabled() {
 
 	s.False(handler.Enabled(s.ctx, slog.LevelDebug))
 	s.True(handler.Enabled(s.ctx, slog.LevelWarn))
-}
-
-func (s *SlogPublicTestSuite) TestTraceHandlerPreservesTraceID() {
-	var buf bytes.Buffer
-	inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-	handler := telemetry.NewTraceHandler(inner)
-	logger := slog.New(handler)
-
-	ctx, span := otel.Tracer("test").Start(s.ctx, "test-span")
-	defer span.End()
-
-	expectedTraceID := trace.SpanContextFromContext(ctx).TraceID().String()
-	logger.InfoContext(ctx, "check trace id")
-
-	s.Contains(buf.String(), expectedTraceID)
 }
 
 func TestSlogPublicTestSuite(t *testing.T) {

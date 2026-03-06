@@ -58,50 +58,44 @@ func (s *InitTracerTestSuite) SetupTest() {
 	s.ctx = context.Background()
 }
 
-func (s *InitTracerTestSuite) TestInitTracerResourceError() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "when resource creation fails returns error",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			original := resourceNewFn
-			defer func() { resourceNewFn = original }()
-
-			resourceNewFn = func(
-				_ context.Context,
-				_ ...resource.Option,
-			) (*resource.Resource, error) {
-				return nil, errors.New("resource creation failed")
-			}
-
-			cfg := config.TracingConfig{
-				Enabled: true,
-			}
-
-			shutdown, err := InitTracer(s.ctx, "test-service", cfg)
-
-			s.Error(err)
-			s.Nil(shutdown)
-			s.Contains(err.Error(), "creating resource")
-		})
-	}
-}
-
-func (s *InitTracerTestSuite) TestInitTracerStdoutExporter() {
+func (s *InitTracerTestSuite) TestInitTracer() {
 	tests := []struct {
 		name         string
-		stubFn       func(...stdouttrace.Option) (*stdouttrace.Exporter, error)
+		cfg          config.TracingConfig
+		setupFn      func()
 		validateFunc func(func(context.Context) error, error)
 	}{
 		{
+			name: "when resource creation fails returns error",
+			cfg: config.TracingConfig{
+				Enabled: true,
+			},
+			setupFn: func() {
+				resourceNewFn = func(
+					_ context.Context,
+					_ ...resource.Option,
+				) (*resource.Resource, error) {
+					return nil, errors.New("resource creation failed")
+				}
+			},
+			validateFunc: func(shutdown func(context.Context) error, err error) {
+				s.Error(err)
+				s.Nil(shutdown)
+				s.Contains(err.Error(), "creating resource")
+			},
+		},
+		{
 			name: "when stdout exporter creation fails returns error",
-			stubFn: func(_ ...stdouttrace.Option) (*stdouttrace.Exporter, error) {
-				return nil, errors.New("stdout exporter failed")
+			cfg: config.TracingConfig{
+				Enabled:  true,
+				Exporter: "stdout",
+			},
+			setupFn: func() {
+				stdouttraceNewFn = func(
+					_ ...stdouttrace.Option,
+				) (*stdouttrace.Exporter, error) {
+					return nil, errors.New("stdout exporter failed")
+				}
 			},
 			validateFunc: func(shutdown func(context.Context) error, err error) {
 				s.Error(err)
@@ -109,36 +103,20 @@ func (s *InitTracerTestSuite) TestInitTracerStdoutExporter() {
 				s.Contains(err.Error(), "creating stdout exporter")
 			},
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			original := stdouttraceNewFn
-			defer func() { stdouttraceNewFn = original }()
-
-			stdouttraceNewFn = tc.stubFn
-
-			cfg := config.TracingConfig{
-				Enabled:  true,
-				Exporter: "stdout",
-			}
-
-			shutdown, err := InitTracer(s.ctx, "test-service", cfg)
-			tc.validateFunc(shutdown, err)
-		})
-	}
-}
-
-func (s *InitTracerTestSuite) TestInitTracerOTLPExporter() {
-	tests := []struct {
-		name         string
-		stubFn       func(context.Context, ...otlptracegrpc.Option) (*otlptrace.Exporter, error)
-		validateFunc func(func(context.Context) error, error)
-	}{
 		{
 			name: "when OTLP exporter configured creates valid provider",
-			stubFn: func(_ context.Context, _ ...otlptracegrpc.Option) (*otlptrace.Exporter, error) {
-				return otlptrace.NewUnstarted(noopClient{}), nil
+			cfg: config.TracingConfig{
+				Enabled:      true,
+				Exporter:     "otlp",
+				OTLPEndpoint: "localhost:4317",
+			},
+			setupFn: func() {
+				otlptraceNewFn = func(
+					_ context.Context,
+					_ ...otlptracegrpc.Option,
+				) (*otlptrace.Exporter, error) {
+					return otlptrace.NewUnstarted(noopClient{}), nil
+				}
 			},
 			validateFunc: func(shutdown func(context.Context) error, err error) {
 				s.NoError(err)
@@ -153,8 +131,18 @@ func (s *InitTracerTestSuite) TestInitTracerOTLPExporter() {
 		},
 		{
 			name: "when OTLP exporter creation fails returns error",
-			stubFn: func(_ context.Context, _ ...otlptracegrpc.Option) (*otlptrace.Exporter, error) {
-				return nil, errors.New("otlp exporter failed")
+			cfg: config.TracingConfig{
+				Enabled:      true,
+				Exporter:     "otlp",
+				OTLPEndpoint: "localhost:4317",
+			},
+			setupFn: func() {
+				otlptraceNewFn = func(
+					_ context.Context,
+					_ ...otlptracegrpc.Option,
+				) (*otlptrace.Exporter, error) {
+					return nil, errors.New("otlp exporter failed")
+				}
 			},
 			validateFunc: func(shutdown func(context.Context) error, err error) {
 				s.Error(err)
@@ -166,18 +154,20 @@ func (s *InitTracerTestSuite) TestInitTracerOTLPExporter() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			original := otlptraceNewFn
-			defer func() { otlptraceNewFn = original }()
+			originalResource := resourceNewFn
+			originalStdout := stdouttraceNewFn
+			originalOTLP := otlptraceNewFn
+			defer func() {
+				resourceNewFn = originalResource
+				stdouttraceNewFn = originalStdout
+				otlptraceNewFn = originalOTLP
+			}()
 
-			otlptraceNewFn = tc.stubFn
-
-			cfg := config.TracingConfig{
-				Enabled:      true,
-				Exporter:     "otlp",
-				OTLPEndpoint: "localhost:4317",
+			if tc.setupFn != nil {
+				tc.setupFn()
 			}
 
-			shutdown, err := InitTracer(s.ctx, "test-service", cfg)
+			shutdown, err := InitTracer(s.ctx, "test-service", tc.cfg)
 			tc.validateFunc(shutdown, err)
 		})
 	}
