@@ -189,7 +189,7 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			wantErrType:   fmt.Errorf("failed to list hardware ports"),
 		},
 		{
-			name: "when interface not found in hardware ports",
+			name: "when interface not found in scutil",
 			setupMock: func() *execMocks.MockManager {
 				mock := execMocks.NewPlainMockManager(suite.ctrl)
 
@@ -204,6 +204,36 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			interfaceName: "en99",
 			wantErr:       true,
 			wantErrType:   fmt.Errorf("does not exist"),
+		},
+		{
+			name: "when interface not found in hardware ports",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+
+				// Interface exists in scutil with different config
+				scutilOutput := `
+DNS configuration
+
+resolver #1
+  nameserver[0] : 10.0.0.1
+  if_index : 20 (utun5)
+`
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(scutilOutput, nil)
+
+				// But not in hardware ports
+				mock.EXPECT().
+					RunCmd("networksetup", []string{"-listallhardwareports"}).
+					Return(darwinHardwarePorts, nil)
+
+				return mock
+			},
+			servers:       []string{"8.8.8.8"},
+			searchDomains: []string{},
+			interfaceName: "utun5",
+			wantErr:       true,
+			wantErrType:   fmt.Errorf("no network service found for interface"),
 		},
 		{
 			name: "when setdnsservers errors",
