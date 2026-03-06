@@ -529,6 +529,106 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+  # ── File operations ──────────────────────────────────────
+
+  /node/{hostname}/file/deploy:
+    post:
+      operationId: PostNodeFileDeploy
+      summary: Deploy a file from Object Store to the host
+      tags:
+        - node_operations
+      security:
+        - BearerAuth:
+            - "file:write"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileDeployRequest'
+      responses:
+        '202':
+          description: File deploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeployResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/file/status:
+    post:
+      operationId: PostNodeFileStatus
+      summary: Check deployment status of a file on the host
+      tags:
+        - node_operations
+      security:
+        - BearerAuth:
+            - "file:read"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileStatusRequest'
+      responses:
+        '200':
+          description: File status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatusResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
   # ── Command operations ───────────────────────────────────
 
   /node/{hostname}/command/exec:
@@ -1137,6 +1237,86 @@ components:
             to. Accepts alphanumeric names or @fact. references.
       required:
         - interface_name
+
+    # ── File schemas ──────────────────────────────────────
+
+    FileDeployRequest:
+      type: object
+      properties:
+        object_name:
+          type: string
+          description: Name of the file in the Object Store.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        path:
+          type: string
+          description: Destination path on the target filesystem.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+        mode:
+          type: string
+          description: File permission mode (e.g., "0644").
+        owner:
+          type: string
+          description: File owner user.
+        group:
+          type: string
+          description: File owner group.
+        content_type:
+          type: string
+          description: Content type — "raw" or "template".
+          enum: [raw, template]
+          x-oapi-codegen-extra-tags:
+            validate: required,oneof=raw template
+        vars:
+          type: object
+          description: Template variables when content_type is "template".
+          additionalProperties: true
+      required: [object_name, path, content_type]
+
+    FileDeployResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The ID of the created job.
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        changed:
+          type: boolean
+          description: Whether the file was actually written.
+      required: [job_id, hostname, changed]
+
+    FileStatusRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to check.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+      required: [path]
+
+    FileStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The ID of the created job.
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        path:
+          type: string
+          description: The filesystem path.
+        status:
+          type: string
+          description: File state — "in-sync", "drifted", or "missing".
+        sha256:
+          type: string
+          description: Current SHA-256 of the file on disk.
+      required: [job_id, hostname, path, status]
 
     # ── Command schemas ────────────────────────────────────
 

@@ -50,7 +50,10 @@ func (p *FileProvider) Deploy(
 	}
 
 	if req.ContentType == "template" {
-		return nil, fmt.Errorf("template rendering not yet supported")
+		content, err = p.renderTemplate(content, req.Vars)
+		if err != nil {
+			return nil, fmt.Errorf("failed to render template: %w", err)
+		}
 	}
 
 	sha := computeSHA256(content)

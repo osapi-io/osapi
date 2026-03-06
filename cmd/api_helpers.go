@@ -32,6 +32,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/retr0h/osapi/internal/api"
+	"github.com/retr0h/osapi/internal/api/file"
 	"github.com/retr0h/osapi/internal/api/health"
 	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/cli"
@@ -62,6 +63,8 @@ type ServerManager interface {
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
+	// GetFileHandler returns file handler for registration.
+	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -75,6 +78,7 @@ type natsBundle struct {
 	registryKV jetstream.KeyValue
 	factsKV    jetstream.KeyValue
 	stateKV    jetstream.KeyValue
+	objStore   file.ObjectStoreManager
 }
 
 // setupAPIServer connects to NATS, creates the API server with all handlers,
@@ -119,7 +123,7 @@ func setupAPIServer(
 	sm := api.New(appConfig, log, serverOpts...)
 	registerAPIHandlers(
 		sm, b.jobClient, checker, metricsProvider,
-		metricsHandler, metricsPath, auditStore,
+		metricsHandler, metricsPath, auditStore, b.objStore,
 	)
 
 	return sm, b
@@ -173,6 +177,19 @@ func connectNATSBundle(
 		}
 	}
 
+	// Get Object Store handle for file management API
+	var objStore file.ObjectStoreManager
+	if appConfig.NATS.Objects.Bucket != "" {
+		objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
+		var objErr error
+		objStore, objErr = nc.ObjectStore(ctx, objStoreName)
+		if objErr != nil {
+			log.Warn("Object Store not available, file endpoints disabled",
+				slog.String("bucket", objStoreName),
+				slog.String("error", objErr.Error()))
+		}
+	}
+
 	jc, err := jobclient.New(log, nc, &jobclient.Options{
 		Timeout:    30 * time.Second,
 		KVBucket:   jobsKV,
@@ -192,6 +209,7 @@ func connectNATSBundle(
 		registryKV: registryKV,
 		factsKV:    factsKV,
 		stateKV:    stateKV,
+		objStore:   objStore,
 	}
 }
 
@@ -395,6 +413,7 @@ func registerAPIHandlers(
 	metricsHandler http.Handler,
 	metricsPath string,
 	auditStore audit.Store,
+	objStore file.ObjectStoreManager,
 ) {
 	startTime := time.Now()
 
@@ -408,6 +427,9 @@ func registerAPIHandlers(
 	handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
+	}
+	if objStore != nil {
+		handlers = append(handlers, sm.GetFileHandler(objStore)...)
 	}
 
 	sm.RegisterHandlers(handlers)

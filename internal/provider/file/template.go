@@ -21,41 +21,42 @@
 package file
 
 import (
-	"log/slog"
-
-	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
+	"bytes"
+	"fmt"
+	"text/template"
 )
 
-// Compile-time interface check.
-var _ Provider = (*FileProvider)(nil)
-
-// FileProvider implements the Provider interface for file deploy and status
-// operations using NATS Object Store for content and KV for state tracking.
-type FileProvider struct {
-	logger      *slog.Logger
-	fs          afero.Fs
-	objStore    jetstream.ObjectStore
-	stateKV     jetstream.KeyValue
-	hostname    string
-	cachedFacts map[string]any
+// TemplateContext is the data available to Go templates during rendering.
+type TemplateContext struct {
+	// Facts contains agent facts (architecture, kernel, etc.).
+	Facts map[string]any
+	// Vars contains user-supplied template variables.
+	Vars map[string]any
+	// Hostname is the agent's hostname.
+	Hostname string
 }
 
-// NewFileProvider creates a new FileProvider with the given dependencies.
-func NewFileProvider(
-	logger *slog.Logger,
-	fs afero.Fs,
-	objStore jetstream.ObjectStore,
-	stateKV jetstream.KeyValue,
-	hostname string,
-	cachedFacts map[string]any,
-) *FileProvider {
-	return &FileProvider{
-		logger:      logger,
-		fs:          fs,
-		objStore:    objStore,
-		stateKV:     stateKV,
-		hostname:    hostname,
-		cachedFacts: cachedFacts,
+// renderTemplate parses rawTemplate as a Go text/template and executes it
+// with the provider's cached facts, the supplied vars, and the hostname.
+func (p *FileProvider) renderTemplate(
+	rawTemplate []byte,
+	vars map[string]any,
+) ([]byte, error) {
+	tmpl, err := template.New("file").Parse(string(rawTemplate))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
+
+	ctx := TemplateContext{
+		Facts:    p.cachedFacts,
+		Vars:     vars,
+		Hostname: p.hostname,
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, ctx); err != nil {
+		return nil, fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }

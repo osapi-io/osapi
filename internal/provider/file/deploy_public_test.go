@@ -202,18 +202,35 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *stubObjectStore,
-				_ *jobmocks.MockKeyValue,
+				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.getBytesData = []byte("server {{ .Vars.host }}")
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
 			},
 			req: file.DeployRequest{
 				ObjectName:  "nginx.conf",
 				Path:        "/etc/nginx/nginx.conf",
 				ContentType: "template",
+				Vars:        map[string]any{"host": "10.0.0.1"},
 			},
-			wantErr:    true,
-			wantErrMsg: "template rendering not yet supported",
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  computeTestSHA256([]byte("server 10.0.0.1")),
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal("server 10.0.0.1", string(data))
+			},
 		},
 		{
 			name: "when file write fails",
@@ -322,6 +339,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				mockObj,
 				mockKV,
 				"test-host",
+				nil,
 			)
 
 			got, err := provider.Deploy(suite.ctx, tc.req)
