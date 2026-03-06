@@ -225,6 +225,18 @@ func (s *FactRefPublicTestSuite) TestResolveFacts() {
 			errContains: "custom fact \"key\" not found",
 		},
 		{
+			name: "when custom fact key missing from non-nil facts map",
+			params: map[string]any{
+				"val": "@fact.custom.missing",
+			},
+			facts: &job.FactsRegistration{
+				Facts: map[string]any{"other": "value"},
+			},
+			hostname:    "web-01",
+			wantErr:     true,
+			errContains: "custom fact \"missing\" not found",
+		},
+		{
 			name: "when primary interface not set returns error",
 			params: map[string]any{
 				"iface": "@fact.interface.primary",

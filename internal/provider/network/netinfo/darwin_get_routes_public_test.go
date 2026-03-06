@@ -121,6 +121,16 @@ default            fe80::1%en0        UGcg        en0
 			wantErr:      true,
 		},
 		{
+			name: "when Internet6 appears before header in IPv4 section",
+			routeContent: `Routing tables
+
+Internet:
+Internet6:
+Destination        Gateway            Flags     Netif Expire
+`,
+			wantErr: true,
+		},
+		{
 			name:         "when empty output",
 			routeContent: "",
 			wantErr:      true,

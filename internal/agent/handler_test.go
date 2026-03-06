@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -541,6 +542,71 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			},
 			expectError: true,
 			errorMsg:    "job processing failed",
+		},
+		{
+			name: "fact reference resolved in job data",
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-agent",
+				data:    []byte("fact-resolve-job"),
+			},
+			setupMocks: func() {
+				s.agent.cachedFacts = &job.FactsRegistration{
+					PrimaryInterface: "eth0",
+				}
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.fact-resolve-job").
+					Return([]byte(`{
+						"id": "fact-resolve-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {"iface": "@fact.interface.primary"}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "completed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "fact-resolve-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "unresolvable fact reference returns error",
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-agent",
+				data:    []byte("fact-fail-job"),
+			},
+			setupMocks: func() {
+				s.agent.cachedFacts = &job.FactsRegistration{}
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.fact-fail-job").
+					Return([]byte(`{
+						"id": "fact-fail-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {"iface": "@fact.nonexistent"}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			expectError: true,
+			errorMsg:    "failed to resolve fact references",
 		},
 		{
 			name: "response storage failure",
