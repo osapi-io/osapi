@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/command"
+	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -218,6 +219,24 @@ type JobClient interface {
 		cwd string,
 		timeout int,
 	) (string, map[string]*command.Result, map[string]string, error)
+
+	// File operations
+	ModifyFileDeploy(
+		ctx context.Context,
+		hostname string,
+		objectName string,
+		path string,
+		contentType string,
+		mode string,
+		owner string,
+		group string,
+		vars map[string]any,
+	) (string, string, bool, error)
+	QueryFileStatus(
+		ctx context.Context,
+		hostname string,
+		path string,
+	) (string, *file.StatusResult, string, error)
 
 	// Agent discovery
 	ListAgents(

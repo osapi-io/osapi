@@ -1,0 +1,350 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package file_test
+
+import (
+	"context"
+	"encoding/json"
+	"log/slog"
+	"os"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider/file"
+)
+
+type DeployPublicTestSuite struct {
+	suite.Suite
+
+	logger *slog.Logger
+	ctx    context.Context
+}
+
+func (suite *DeployPublicTestSuite) SetupTest() {
+	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	suite.ctx = context.Background()
+}
+
+func (suite *DeployPublicTestSuite) TearDownTest() {}
+
+func (suite *DeployPublicTestSuite) TestDeploy() {
+	fileContent := []byte("server { listen 80; }")
+	existingSHA := computeTestSHA256(fileContent)
+	differentContent := []byte("server { listen 443; }")
+	differentSHA := computeTestSHA256(differentContent)
+
+	tests := []struct {
+		name         string
+		setupMock    func(*gomock.Controller, *stubObjectStore, *jobmocks.MockKeyValue, *afero.Fs)
+		req          file.DeployRequest
+		want         *file.DeployResult
+		wantErr      bool
+		wantErrMsg   string
+		validateFunc func(afero.Fs)
+	}{
+		{
+			name: "when deploy succeeds (new file)",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0644",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(fileContent, data)
+			},
+		},
+		{
+			name: "when deploy succeeds (changed content)",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				existingState := job.FileState{
+					SHA256: differentSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				}
+				stateBytes, _ := json.Marshal(existingState)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0644",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(fileContent, data)
+			},
+		},
+		{
+			name: "when deploy skips (unchanged)",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				existingState := job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				}
+				stateBytes, _ := json.Marshal(existingState)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: false,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+		},
+		{
+			name: "when Object Store get fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				_ *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesErr = assert.AnError
+			},
+			req: file.DeployRequest{
+				ObjectName:  "missing.conf",
+				Path:        "/etc/missing.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to get object",
+		},
+		{
+			name: "when content type is template",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				_ *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "template",
+			},
+			wantErr:    true,
+			wantErrMsg: "template rendering not yet supported",
+		},
+		{
+			name: "when file write fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				// Use a read-only filesystem to trigger write failure.
+				*appFs = afero.NewReadOnlyFs(afero.NewMemMapFs())
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to write file",
+		},
+		{
+			name: "when state KV put fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(0), assert.AnError)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to update file state",
+		},
+		{
+			name: "when mode is set",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "script.sh",
+				Path:        "/usr/local/bin/script.sh",
+				Mode:        "0755",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/usr/local/bin/script.sh",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				info, err := appFs.Stat("/usr/local/bin/script.sh")
+				suite.Require().NoError(err)
+				suite.Equal(os.FileMode(0o755), info.Mode())
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			defer ctrl.Finish()
+
+			appFs := afero.Fs(afero.NewMemMapFs())
+			mockKV := jobmocks.NewMockKeyValue(ctrl)
+			mockObj := &stubObjectStore{}
+
+			if tc.setupMock != nil {
+				tc.setupMock(ctrl, mockObj, mockKV, &appFs)
+			}
+
+			provider := file.NewFileProvider(
+				suite.logger,
+				appFs,
+				mockObj,
+				mockKV,
+				"test-host",
+			)
+
+			got, err := provider.Deploy(suite.ctx, tc.req)
+
+			if tc.wantErr {
+				suite.Error(err)
+				suite.ErrorContains(err, tc.wantErrMsg)
+				suite.Nil(got)
+			} else {
+				suite.NoError(err)
+				suite.Require().NotNil(got)
+				suite.Equal(tc.want, got)
+			}
+
+			if tc.validateFunc != nil {
+				tc.validateFunc(appFs)
+			}
+		})
+	}
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+func TestDeployPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DeployPublicTestSuite))
+}

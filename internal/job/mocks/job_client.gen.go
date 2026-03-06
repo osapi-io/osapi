@@ -14,6 +14,7 @@ import (
 	job "github.com/retr0h/osapi/internal/job"
 	client0 "github.com/retr0h/osapi/internal/job/client"
 	command "github.com/retr0h/osapi/internal/provider/command"
+	file "github.com/retr0h/osapi/internal/provider/file"
 	dns "github.com/retr0h/osapi/internal/provider/network/dns"
 	ping "github.com/retr0h/osapi/internal/provider/network/ping"
 	host "github.com/retr0h/osapi/internal/provider/node/host"
@@ -317,6 +318,23 @@ func (mr *MockJobClientMockRecorder) ModifyCommandShellBroadcast(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandShellBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandShellBroadcast), arg0, arg1, arg2, arg3, arg4)
 }
 
+// ModifyFileDeploy mocks base method.
+func (m *MockJobClient) ModifyFileDeploy(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string, arg8 map[string]interface{}) (string, string, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyFileDeploy", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyFileDeploy indicates an expected call of ModifyFileDeploy.
+func (mr *MockJobClientMockRecorder) ModifyFileDeploy(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileDeploy", reflect.TypeOf((*MockJobClient)(nil).ModifyFileDeploy), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+}
+
 // ModifyNetworkDNS mocks base method.
 func (m *MockJobClient) ModifyNetworkDNS(arg0 context.Context, arg1 string, arg2, arg3 []string, arg4 string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
@@ -383,6 +401,23 @@ func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 str
 func (mr *MockJobClientMockRecorder) ModifyNetworkDNSBroadcast(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyNetworkDNSBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyNetworkDNSBroadcast), arg0, arg1, arg2, arg3, arg4)
+}
+
+// QueryFileStatus mocks base method.
+func (m *MockJobClient) QueryFileStatus(arg0 context.Context, arg1, arg2 string) (string, *file.StatusResult, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryFileStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(*file.StatusResult)
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// QueryFileStatus indicates an expected call of QueryFileStatus.
+func (mr *MockJobClientMockRecorder) QueryFileStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryFileStatus", reflect.TypeOf((*MockJobClient)(nil).QueryFileStatus), arg0, arg1, arg2)
 }
 
 // QueryNetworkDNS mocks base method.
