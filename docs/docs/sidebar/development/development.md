@@ -97,6 +97,12 @@ Unit tests should follow the Go convention of being located in a file named
 located in `test/integration/` and use a `//go:build integration` tag. They
 build and start a real `osapi` binary, so they require no external setup.
 
+Use `testify/suite` with table-driven patterns and `validateFunc` callbacks.
+**One suite method per function under test.** All scenarios for a function
+(success, error codes, transport failures, nil responses) belong as rows in a
+single table — never split into separate `TestFoo`, `TestFooError`,
+`TestFooNilResponse` methods.
+
 ### File naming
 
 Avoid generic file names like `helpers.go` or `utils.go`. Name files after what
