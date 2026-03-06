@@ -2,16 +2,15 @@
 
 ## Context
 
-OSAPI manages system configuration through async jobs. Current operations
-(DNS, disk, memory, commands) send small JSON payloads through NATS KV.
-File management — deploying config files, rendering templates with
-per-host facts — requires transferring larger blobs and tracking deployed
-state for idempotency.
+OSAPI manages system configuration through async jobs. Current operations (DNS,
+disk, memory, commands) send small JSON payloads through NATS KV. File
+management — deploying config files, rendering templates with per-host facts —
+requires transferring larger blobs and tracking deployed state for idempotency.
 
 Ansible's approach transfers the full file every run to verify whether it
-changed. We want SHA-based idempotency: compute the hash of what should
-be on disk, compare against what was last deployed, and skip the transfer
-when nothing changed.
+changed. We want SHA-based idempotency: compute the hash of what should be on
+disk, compare against what was last deployed, and skip the transfer when nothing
+changed.
 
 ## Goals
 
@@ -19,40 +18,36 @@ when nothing changed.
 - Deploy files to agent hosts with mode, owner, and group control
 - Render Go `text/template` files agent-side using live facts + user vars
 - SHA-based idempotency — skip transfer when content hasn't changed
-- Report `changed: true/false` so orchestrator guards
-  (`OnlyIfChanged`) work
-- **Shared primitive** — the Object Store layer is reusable by future
-  providers (firmware, packages, certs, scripts), not tied to the file
-  provider
+- Report `changed: true/false` so orchestrator guards (`OnlyIfChanged`) work
+- **Shared primitive** — the Object Store layer is reusable by future providers
+  (firmware, packages, certs, scripts), not tied to the file provider
 
 ## Design Decisions
 
-- **Approach B: single operation with `content_type` flag.** One
-  `file.deploy` operation. A `content_type` field (`raw` or `template`)
-  controls whether the agent renders content before writing. SHA is
-  computed on the **rendered output** for templates, so fact changes
-  trigger redeployment.
-- **NATS Object Store** for blob storage. It handles chunking
-  automatically (KV has a ~1MB value limit). Files are uploaded once and
-  pulled by agents on demand.
+- **Approach B: single operation with `content_type` flag.** One `file.deploy`
+  operation. A `content_type` field (`raw` or `template`) controls whether the
+  agent renders content before writing. SHA is computed on the **rendered
+  output** for templates, so fact changes trigger redeployment.
+- **NATS Object Store** for blob storage. It handles chunking automatically (KV
+  has a ~1MB value limit). Files are uploaded once and pulled by agents on
+  demand.
 - **Dedicated `file-state` KV bucket** for SHA tracking. Keyed by
   `<hostname>.<sha256-of-path>`. No TTL — deployed state persists until
-  explicitly removed. Separate from `agent-state` to keep concerns
-  clean. Visible to the API server for fleet-wide deployment status.
-- **Agent-side template rendering.** Raw Go template stored in Object
-  Store. Agent renders locally using its cached facts + user-supplied
-  vars. Consistent with how `@fact.*` resolution works today — each host
-  gets its own output.
-- **Mode + owner/group in job params.** Agent sets permissions after
-  writing. Defaults to umask/current user when not specified.
+  explicitly removed. Separate from `agent-state` to keep concerns clean.
+  Visible to the API server for fleet-wide deployment status.
+- **Agent-side template rendering.** Raw Go template stored in Object Store.
+  Agent renders locally using its cached facts + user-supplied vars. Consistent
+  with how `@fact.*` resolution works today — each host gets its own output.
+- **Mode + owner/group in job params.** Agent sets permissions after writing.
+  Defaults to umask/current user when not specified.
 
 ## Architecture
 
 ### Shared Object Store Primitive
 
-The Object Store client is a **shared agent dependency** — injected at
-startup like `execManager`, `hostProvider`, or `factsKV`. Any provider
-can use it to pull blobs.
+The Object Store client is a **shared agent dependency** — injected at startup
+like `execManager`, `hostProvider`, or `factsKV`. Any provider can use it to
+pull blobs.
 
 ```
 ┌─────────────────────────────────┐
@@ -74,15 +69,15 @@ provider  provider    provider       provider
 
 Future providers that would consume the Object Store:
 
-| Provider | Operation | Usage |
-|----------|-----------|-------|
-| `firmware.update` | Pull binary, run flash tool |
-| `package.install` | Pull `.deb`/`.rpm`, install via `dpkg`/`rpm` |
-| `cert.deploy` | Pull TLS cert/key, write with restricted perms |
-| `script.run` | Pull script file, execute with args |
+| Provider          | Operation                                      | Usage |
+| ----------------- | ---------------------------------------------- | ----- |
+| `firmware.update` | Pull binary, run flash tool                    |
+| `package.install` | Pull `.deb`/`.rpm`, install via `dpkg`/`rpm`   |
+| `cert.deploy`     | Pull TLS cert/key, write with restricted perms |
+| `script.run`      | Pull script file, execute with args            |
 
-Each provider owns its domain logic but shares: Object Store download,
-SHA comparison, and state tracking from the `file-state` KV bucket.
+Each provider owns its domain logic but shares: Object Store download, SHA
+comparison, and state tracking from the `file-state` KV bucket.
 
 ### Data Flow
 
@@ -95,8 +90,8 @@ SHA comparison, and state tracking from the `file-state` KV bucket.
 **Deploy phase** (job system — `file.deploy` operation):
 
 1. Client creates job with `file.deploy` targeting host(s)
-2. Job data: object name, destination path, mode, owner, group,
-   content_type, optional template vars
+2. Job data: object name, destination path, mode, owner, group, content_type,
+   optional template vars
 3. Agent pulls object from Object Store
 4. If `content_type: "template"` — renders with Go `text/template`
 5. Computes SHA of final content (rendered or raw)
@@ -116,14 +111,14 @@ SHA comparison, and state tracking from the `file-state` KV bucket.
 ```yaml
 nats:
   objects:
-    bucket: "file-objects"
-    max_bytes: 524288000  # 500 MiB
-    storage: "file"
+    bucket: 'file-objects'
+    max_bytes: 524288000 # 500 MiB
+    storage: 'file'
     replicas: 1
 
   file_state:
-    bucket: "file-state"
-    storage: "file"
+    bucket: 'file-state'
+    storage: 'file'
     replicas: 1
     # No TTL — deployed file state persists
 ```
@@ -182,20 +177,20 @@ server {{ .Vars.upstream }}:{{ if eq .Facts.Architecture "arm64" }}8081{{ else }
 
 ## API Endpoints
 
-| Method | Path | Permission | Description |
-|--------|------|------------|-------------|
-| `POST /file` | `file:write` | Upload file to Object Store |
-| `GET /file` | `file:read` | List stored objects |
-| `GET /file/{name}` | `file:read` | Get object metadata |
-| `DELETE /file/{name}` | `file:write` | Remove stored object |
+| Method                | Path         | Permission                  | Description |
+| --------------------- | ------------ | --------------------------- | ----------- |
+| `POST /file`          | `file:write` | Upload file to Object Store |
+| `GET /file`           | `file:read`  | List stored objects         |
+| `GET /file/{name}`    | `file:read`  | Get object metadata         |
+| `DELETE /file/{name}` | `file:write` | Remove stored object        |
 
-Deploy and status go through the existing job system as `file.deploy`
-and `file.status` operations. No new job endpoints needed.
+Deploy and status go through the existing job system as `file.deploy` and
+`file.status` operations. No new job endpoints needed.
 
 ### Permissions
 
-New permissions: `file:read`, `file:write`. Added to `admin` and
-`write` built-in roles.
+New permissions: `file:read`, `file:write`. Added to `admin` and `write`
+built-in roles.
 
 ## Agent-Side Architecture
 
@@ -206,13 +201,13 @@ The agent gets two new dependencies:
 
 The file provider implements:
 
-- `Deploy(req) → (Result, error)` — pull from Object Store, optionally
-  render template, SHA compare, write file, set perms, update state
-- `Status(req) → (Result, error)` — read-only: compare local file SHA
-  against state KV
+- `Deploy(req) → (Result, error)` — pull from Object Store, optionally render
+  template, SHA compare, write file, set perms, update state
+- `Status(req) → (Result, error)` — read-only: compare local file SHA against
+  state KV
 
-The processor dispatch adds a `file` category alongside `node`,
-`network`, `command`.
+The processor dispatch adds a `file` category alongside `node`, `network`,
+`command`.
 
 ## SDK & Orchestrator Integration
 

@@ -24,6 +24,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // clientNodeFileStatusCmd represents the clientNodeFileStatus command.
@@ -33,38 +35,29 @@ var clientNodeFileStatusCmd = &cobra.Command{
 	Long: `Check the deployment status of a file on the target host.
 Reports whether the file is in-sync, drifted, or missing.`,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		host, _ := cmd.Flags().GetString("target")
 		path, _ := cmd.Flags().GetString("path")
 
-		// TODO(sdk): Replace with SDK call when FileService is available:
-		//   ctx := cmd.Context()
-		//   host, _ := cmd.Flags().GetString("target")
-		//   resp, err := sdkClient.Node.FileStatus(ctx, osapi.FileStatusRequest{
-		//       Target: host,
-		//       Path:   path,
-		//   })
-		//   if err != nil {
-		//       cli.HandleError(err, logger)
-		//       return
-		//   }
-		//
-		//   if jsonOutput {
-		//       fmt.Println(string(resp.RawJSON()))
-		//       return
-		//   }
-		//
-		//   fmt.Println()
-		//   cli.PrintKV("Job ID", resp.Data.JobID)
-		//   cli.PrintKV("Hostname", resp.Data.Hostname)
-		//   cli.PrintKV("Path", resp.Data.Path)
-		//   cli.PrintKV("Status", resp.Data.Status)
-		//   if resp.Data.SHA256 != "" {
-		//       cli.PrintKV("SHA256", resp.Data.SHA256)
-		//   }
+		resp, err := sdkClient.Node.FileStatus(ctx, host, path)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
 
-		_ = cmd.Context()
-		_ = path
-		logger.Error("file status requires osapi-sdk FileService (not yet available)")
-		fmt.Println("file status: SDK FileService not yet integrated")
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Job ID", resp.Data.JobID)
+		cli.PrintKV("Hostname", resp.Data.Hostname)
+		cli.PrintKV("Path", resp.Data.Path)
+		cli.PrintKV("Status", resp.Data.Status)
+		if resp.Data.SHA256 != "" {
+			cli.PrintKV("SHA256", resp.Data.SHA256)
+		}
 	},
 }
 

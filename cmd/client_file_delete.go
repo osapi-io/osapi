@@ -24,6 +24,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // clientFileDeleteCmd represents the clientFileDelete command.
@@ -32,29 +34,23 @@ var clientFileDeleteCmd = &cobra.Command{
 	Short: "Delete a file from the Object Store",
 	Long:  `Delete a specific file from the OSAPI Object Store.`,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 
-		// TODO(sdk): Replace with SDK call when FileService is available:
-		//   ctx := cmd.Context()
-		//   resp, err := sdkClient.File.Delete(ctx, name)
-		//   if err != nil {
-		//       cli.HandleError(err, logger)
-		//       return
-		//   }
-		//
-		//   if jsonOutput {
-		//       fmt.Println(string(resp.RawJSON()))
-		//       return
-		//   }
-		//
-		//   fmt.Println()
-		//   cli.PrintKV("Name", resp.Data.Name)
-		//   cli.PrintKV("Deleted", fmt.Sprintf("%v", resp.Data.Deleted))
+		resp, err := sdkClient.File.Delete(ctx, name)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
 
-		_ = cmd.Context()
-		_ = name
-		logger.Error("file delete requires osapi-sdk FileService (not yet available)")
-		fmt.Println("file delete: SDK FileService not yet integrated")
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Name", resp.Data.Name)
+		cli.PrintKV("Deleted", fmt.Sprintf("%v", resp.Data.Deleted))
 	},
 }
 

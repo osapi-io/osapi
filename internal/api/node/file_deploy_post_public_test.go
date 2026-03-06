@@ -467,7 +467,9 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 			req := httptest.NewRequest(
 				http.MethodPost,
 				"/node/server1/file/deploy",
-				strings.NewReader(`{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`),
+				strings.NewReader(
+					`{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+				),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)

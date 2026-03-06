@@ -29,6 +29,7 @@ them to be used as appliances.
 | 🖥️ **[Node Management][]** | Hostname, uptime, OS info, disk, memory, load |
 | 🌐 **[Network Management][]** | DNS read/update, ping |
 | ⚙️ **[Command Execution][]** | Remote exec and shell across managed hosts |
+| 📁 **[File Management][]** | Upload, deploy, and template files with SHA-based idempotency |
 | 📊 **[System Facts][]** | Agent-collected system facts — architecture, kernel, FQDN, CPUs, network interfaces, service/package manager |
 | 🔄 **[Agent Lifecycle][]** | Node conditions (memory, disk, load pressure), graceful drain/cordon for maintenance |
 | ⚡ **[Async Job System][]** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
@@ -42,6 +43,7 @@ them to be used as appliances.
 [Node Management]: https://osapi-io.github.io/osapi/sidebar/features/node-management
 [Network Management]: https://osapi-io.github.io/osapi/sidebar/features/network-management
 [Command Execution]: https://osapi-io.github.io/osapi/sidebar/features/command-execution
+[File Management]: https://osapi-io.github.io/osapi/sidebar/features/file-management
 [Async Job System]: https://osapi-io.github.io/osapi/sidebar/features/job-system
 [Health]: https://osapi-io.github.io/osapi/sidebar/features/health-checks
 [Metrics]: https://osapi-io.github.io/osapi/sidebar/features/metrics

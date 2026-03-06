@@ -27,8 +27,6 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-//go:generate mockgen -source=types.go -destination=mocks/types.gen.go -package=mocks
-
 // ObjectStoreManager wraps the subset of jetstream.ObjectStore methods
 // needed by the file API handlers. This minimal interface enables
 // straightforward mocking in tests.
@@ -40,7 +38,11 @@ type ObjectStoreManager interface {
 	GetBytes(ctx context.Context, name string, opts ...jetstream.GetObjectOpt) ([]byte, error)
 
 	// GetInfo retrieves metadata for the named object.
-	GetInfo(ctx context.Context, name string, opts ...jetstream.GetObjectInfoOpt) (*jetstream.ObjectInfo, error)
+	GetInfo(
+		ctx context.Context,
+		name string,
+		opts ...jetstream.GetObjectInfoOpt,
+	) (*jetstream.ObjectInfo, error)
 
 	// Delete removes the named object.
 	Delete(ctx context.Context, name string) error

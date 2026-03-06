@@ -1,0 +1,153 @@
+---
+sidebar_position: 9
+---
+
+# File Management
+
+OSAPI can upload files to a central Object Store and deploy them to managed
+hosts with SHA-based idempotency. File operations run through the
+[job system](job-system.md), so the API server never writes to the filesystem
+directly -- agents handle all deployment.
+
+## What It Does
+
+| Operation | Description                                            |
+| --------- | ------------------------------------------------------ |
+| Upload    | Store a file (base64-encoded) in the NATS Object Store |
+| List      | List all files stored in the Object Store              |
+| Get       | Retrieve metadata for a specific stored file           |
+| Delete    | Remove a file from the Object Store                    |
+| Deploy    | Deploy a file from Object Store to agent filesystem    |
+| Status    | Check whether a deployed file is in-sync or drifted    |
+
+**Upload / List / Get / Delete** manage files in the central NATS Object Store.
+Files are stored by name and tracked with SHA-256 checksums. These operations
+are synchronous REST calls -- they do not go through the job system.
+
+**Deploy** creates an asynchronous job that fetches the file from the Object
+Store and writes it to the target path on the agent's filesystem. Deploy
+supports optional file permissions (mode, owner, group) and Go template
+rendering.
+
+**Status** creates an asynchronous job that compares the current file on disk
+against its expected SHA-256 from the file-state KV bucket. It reports one of
+three states: `in-sync`, `drifted`, or `missing`.
+
+## How It Works
+
+### File Upload Flow
+
+1. The CLI (or API client) posts a base64-encoded file to the API server.
+2. The API server stores the file in the NATS Object Store and returns the file
+   name, SHA-256, and size.
+
+### File Deploy Flow
+
+1. The CLI posts a deploy request specifying the Object Store file name, target
+   path, and optional permissions.
+2. The API server creates a job and publishes it to NATS.
+3. An agent picks up the job, fetches the file from Object Store, and computes
+   its SHA-256.
+4. The agent checks the file-state KV for a previous deploy. If the SHA matches,
+   the file is skipped (idempotent no-op).
+5. If the content differs, the agent writes the file to disk and updates the
+   file-state KV with the new SHA-256.
+6. The result (changed, SHA-256, path) is written back to NATS KV.
+
+You can target a specific host, broadcast to all hosts with `_all`, or route by
+label.
+
+### SHA-Based Idempotency
+
+Every deploy operation computes a SHA-256 of the file content and compares it
+against the previously deployed SHA stored in the file-state KV bucket. If the
+hashes match, the file is not rewritten. This makes repeated deploys safe and
+efficient -- only actual changes hit the filesystem.
+
+The file-state KV has no TTL, so deploy state persists indefinitely until
+explicitly removed.
+
+## Template Rendering
+
+When `content_type` is set to `template`, the file content is processed as a Go
+`text/template` before being written to disk. The template context provides
+three top-level fields:
+
+| Field       | Description                            |
+| ----------- | -------------------------------------- |
+| `.Facts`    | Agent's collected system facts (map)   |
+| `.Vars`     | User-supplied template variables (map) |
+| `.Hostname` | Target agent's hostname (string)       |
+
+### Example Template
+
+A configuration file that adapts to each host:
+
+```text
+# Generated for {{ .Hostname }}
+listen_address = {{ .Vars.listen_address }}
+workers = {{ .Facts.cpu_count }}
+arch = {{ .Facts.architecture }}
+```
+
+Deploy it with template variables:
+
+```bash
+osapi client node file deploy \
+    --object-name app.conf.tmpl \
+    --path /etc/app/app.conf \
+    --content-type template \
+    --var listen_address=0.0.0.0:8080 \
+    --target _all
+```
+
+Each agent renders the template with its own facts and hostname, so the same
+template produces host-specific configuration across a fleet.
+
+## Configuration
+
+File management uses two NATS infrastructure components in addition to the
+general job infrastructure:
+
+- **Object Store** (`nats.objects`) -- stores uploaded file content. Configured
+  with bucket name, max size, storage backend, and chunk size.
+- **File State KV** (`nats.file_state`) -- tracks deploy state (SHA-256, path,
+  timestamps) per host. Has no TTL -- state persists until explicitly removed.
+
+See [Configuration](../usage/configuration.md) for the full reference.
+
+```yaml
+nats:
+  objects:
+    bucket: 'file-objects'
+    max_bytes: 104857600
+    storage: 'file'
+    replicas: 1
+    max_chunk_size: 262144
+
+  file_state:
+    bucket: 'file-state'
+    storage: 'file'
+    replicas: 1
+```
+
+## Permissions
+
+| Endpoint                            | Permission   |
+| ----------------------------------- | ------------ |
+| `POST /file` (upload)               | `file:write` |
+| `GET /file` (list)                  | `file:read`  |
+| `GET /file/{name}` (get)            | `file:read`  |
+| `DELETE /file/{name}` (delete)      | `file:write` |
+| `POST /node/{hostname}/file/deploy` | `file:write` |
+| `POST /node/{hostname}/file/status` | `file:read`  |
+
+The `admin` and `write` roles include both `file:read` and `file:write`. The
+`read` role includes only `file:read`.
+
+## Related
+
+- [System Facts](system-facts.md) -- facts available in template context
+- [Job System](job-system.md) -- how async job processing works
+- [Authentication & RBAC](authentication.md) -- permissions and roles
+- [Architecture](../architecture/architecture.md) -- system design overview

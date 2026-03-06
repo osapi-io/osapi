@@ -3,15 +3,15 @@
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
 > implement this plan task-by-task.
 
-**Goal:** Add file management (upload/list/get/delete via Object Store),
-file deployment with SHA-based idempotency, and Go template rendering
-with per-host facts.
+**Goal:** Add file management (upload/list/get/delete via Object Store), file
+deployment with SHA-based idempotency, and Go template rendering with per-host
+facts.
 
 **Architecture:** NATS Object Store as shared blob storage, dedicated
-`file-state` KV for SHA tracking, single `file.deploy` job operation
-with `content_type` flag (raw/template), agent-side `text/template`
-rendering. Object Store is a shared primitive — future providers
-(firmware, packages, certs) reuse the same infrastructure.
+`file-state` KV for SHA tracking, single `file.deploy` job operation with
+`content_type` flag (raw/template), agent-side `text/template` rendering. Object
+Store is a shared primitive — future providers (firmware, packages, certs) reuse
+the same infrastructure.
 
 **Tech Stack:** Go 1.25, NATS JetStream Object Store, `text/template`,
 oapi-codegen, testify/suite, gomock.
@@ -24,8 +24,8 @@ oapi-codegen, testify/suite, gomock.
 
 ### nats-client Object Store Support
 
-The `github.com/osapi-io/nats-client` package needs Object Store methods
-before this plan can start. Add to the nats-client repo:
+The `github.com/osapi-io/nats-client` package needs Object Store methods before
+this plan can start. Add to the nats-client repo:
 
 ```go
 // In pkg/client/types.go or new objectstore.go
@@ -54,17 +54,18 @@ ObjectStore(
 ) (jetstream.ObjectStore, error)
 ```
 
-This is a separate PR on the nats-client repo. Once merged, `go get`
-the new version before starting Task 1.
+This is a separate PR on the nats-client repo. Once merged, `go get` the new
+version before starting Task 1.
 
 ---
 
 ## Task 1: NATS Configuration for Object Store + File-State KV
 
-Add config structs, builder functions, and startup creation for the two
-new NATS resources.
+Add config structs, builder functions, and startup creation for the two new NATS
+resources.
 
 **Files:**
+
 - Modify: `internal/config/types.go`
 - Modify: `internal/cli/nats.go`
 - Modify: `internal/cli/nats_public_test.go`
@@ -161,8 +162,7 @@ func BuildFileStateKVConfig(
 
 ### Step 4: Add startup creation
 
-In `cmd/nats_helpers.go` `setupJetStream()`, add after the state KV
-block:
+In `cmd/nats_helpers.go` `setupJetStream()`, add after the state KV block:
 
 ```go
 // Create Object Store bucket for file content
@@ -189,14 +189,14 @@ Add to `osapi.yaml` and the configuration docs the new sections:
 ```yaml
 nats:
   objects:
-    bucket: "file-objects"
-    max_bytes: 524288000  # 500 MiB
-    storage: "file"
+    bucket: 'file-objects'
+    max_bytes: 524288000 # 500 MiB
+    storage: 'file'
     replicas: 1
 
   file_state:
-    bucket: "file-state"
-    storage: "file"
+    bucket: 'file-state'
+    storage: 'file'
     replicas: 1
 ```
 
@@ -222,6 +222,7 @@ git commit -m "feat(config): add Object Store and file-state KV config"
 Add file permissions to the auth system before creating API endpoints.
 
 **Files:**
+
 - Modify: `internal/authtoken/permissions.go`
 - Modify: `internal/authtoken/permissions_public_test.go`
 
@@ -292,6 +293,7 @@ git commit -m "feat(auth): add file:read and file:write permissions"
 Create the `/file` REST API domain for Object Store management.
 
 **Files:**
+
 - Create: `internal/api/file/gen/api.yaml`
 - Create: `internal/api/file/gen/cfg.yaml`
 - Create: `internal/api/file/gen/generate.go`
@@ -302,7 +304,7 @@ Create the `/file` REST API domain for Object Store management.
 Create `internal/api/file/gen/api.yaml`:
 
 ```yaml
-openapi: "3.0.0"
+openapi: '3.0.0'
 info:
   title: File Management API
   version: 1.0.0
@@ -318,49 +320,49 @@ paths:
       operationId: PostFile
       summary: Upload a file to Object Store
       description: >
-        Stores file content in NATS Object Store. Returns the object
-        reference with SHA256 and size.
+        Stores file content in NATS Object Store. Returns the object reference
+        with SHA256 and size.
       tags: [file]
       security:
         - BearerAuth:
-            - "file:write"
+            - 'file:write'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FileUploadRequest"
+              $ref: '#/components/schemas/FileUploadRequest'
       responses:
-        "201":
+        '201':
           description: File uploaded successfully.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FileUploadResponse"
-        "400":
+                $ref: '#/components/schemas/FileUploadResponse'
+        '400':
           description: Invalid input.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "401":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
           description: Unauthorized.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "500":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     get:
       operationId: GetFiles
@@ -369,32 +371,32 @@ paths:
       tags: [file]
       security:
         - BearerAuth:
-            - "file:read"
+            - 'file:read'
       responses:
-        "200":
+        '200':
           description: List of stored files.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FileListResponse"
-        "401":
+                $ref: '#/components/schemas/FileListResponse'
+        '401':
           description: Unauthorized.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "500":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /file/{name}:
     get:
@@ -404,40 +406,40 @@ paths:
       tags: [file]
       security:
         - BearerAuth:
-            - "file:read"
+            - 'file:read'
       parameters:
-        - $ref: "#/components/parameters/FileName"
+        - $ref: '#/components/parameters/FileName'
       responses:
-        "200":
+        '200':
           description: File metadata.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FileInfoResponse"
-        "401":
+                $ref: '#/components/schemas/FileInfoResponse'
+        '401':
           description: Unauthorized.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "404":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
           description: File not found.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "500":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       operationId: DeleteFile
@@ -446,40 +448,40 @@ paths:
       tags: [file]
       security:
         - BearerAuth:
-            - "file:write"
+            - 'file:write'
       parameters:
-        - $ref: "#/components/parameters/FileName"
+        - $ref: '#/components/parameters/FileName'
       responses:
-        "200":
+        '200':
           description: File deleted.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FileDeleteResponse"
-        "401":
+                $ref: '#/components/schemas/FileDeleteResponse'
+        '401':
           description: Unauthorized.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "403":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
           description: Forbidden.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "404":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
           description: File not found.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
-        "500":
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: "../../common/gen/api.yaml#/components/schemas/ErrorResponse"
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -539,7 +541,7 @@ components:
         files:
           type: array
           items:
-            $ref: "#/components/schemas/FileInfo"
+            $ref: '#/components/schemas/FileInfo'
       required: [files]
 
     FileInfo:
@@ -621,6 +623,7 @@ git commit -m "feat(api): add file domain OpenAPI spec and codegen"
 Implement the file API handler with all four endpoints.
 
 **Files:**
+
 - Create: `internal/api/file/types.go`
 - Create: `internal/api/file/file.go`
 - Create: `internal/api/file/file_upload.go`
@@ -675,11 +678,10 @@ type File struct {
 }
 ```
 
-**Note:** The `ObjectStoreManager` interface wraps `jetstream.ObjectStore`
-so handlers can be tested with mocks. The actual `jetstream.ObjectStore`
-satisfies this interface. Verify that the `jetstream.ObjectStore`
-interface matches — the `List` method may return a lister instead of a
-slice; adapt accordingly.
+**Note:** The `ObjectStoreManager` interface wraps `jetstream.ObjectStore` so
+handlers can be tested with mocks. The actual `jetstream.ObjectStore` satisfies
+this interface. Verify that the `jetstream.ObjectStore` interface matches — the
+`List` method may return a lister instead of a slice; adapt accordingly.
 
 ### Step 2: Write file.go factory
 
@@ -714,6 +716,7 @@ reference. Use `validation.Struct(request.Body)` for input validation.
 ### Step 4: Write failing tests for upload
 
 Create `file_upload_public_test.go` with table-driven suite:
+
 - when valid upload succeeds (201)
 - when name is empty (400, validation error)
 - when content is empty (400, validation error)
@@ -724,6 +727,7 @@ Include `TestPostFileHTTP` and `TestPostFileRBACHTTP` methods.
 ### Step 5: Implement remaining handlers
 
 Follow the same test-first pattern for list, get, delete:
+
 - `file_list.go` — iterate Object Store, return file info array
 - `file_get.go` — get info by name, return 404 if not found
 - `file_delete.go` — delete by name, return 404 if not found
@@ -748,6 +752,7 @@ git commit -m "feat(api): implement file upload, list, get, delete handlers"
 Wire the file handler into the API server.
 
 **Files:**
+
 - Create: `internal/api/handler_file.go`
 - Create: `internal/api/handler_file_public_test.go`
 - Modify: `internal/api/types.go`
@@ -792,8 +797,8 @@ func (s *Server) GetFileHandler(
 
 ### Step 2: Update types.go
 
-No new fields needed on `Server` — the Object Store is passed directly
-to `GetFileHandler()`.
+No new fields needed on `Server` — the Object Store is passed directly to
+`GetFileHandler()`.
 
 ### Step 3: Update handler.go
 
@@ -805,8 +810,8 @@ handlers = append(handlers, sm.GetFileHandler(objStore)...)
 
 ### Step 4: Update startup wiring
 
-In `cmd/api_helpers.go`, create the Object Store handle at startup and
-pass it to the file handler:
+In `cmd/api_helpers.go`, create the Object Store handle at startup and pass it
+to the file handler:
 
 ```go
 // Create Object Store handle for file management API
@@ -847,10 +852,11 @@ git commit -m "feat(api): wire file handler into API server"
 
 ## Task 6: Job Types + File Provider Interface
 
-Define operation constants, request/response types, and the file
-provider interface.
+Define operation constants, request/response types, and the file provider
+interface.
 
 **Files:**
+
 - Modify: `internal/job/types.go`
 - Create: `internal/provider/file/types.go`
 - Create: `internal/provider/file/mocks/types.gen.go`
@@ -966,10 +972,11 @@ git commit -m "feat(file): add job operation constants and provider interface"
 
 ## Task 7: File Provider Implementation — Deploy with SHA Idempotency
 
-Implement the core deploy logic: pull from Object Store, SHA compare,
-write file, set permissions, update state KV.
+Implement the core deploy logic: pull from Object Store, SHA compare, write
+file, set permissions, update state KV.
 
 **Files:**
+
 - Create: `internal/provider/file/provider.go`
 - Create: `internal/provider/file/deploy.go`
 - Create: `internal/provider/file/deploy_public_test.go`
@@ -1023,23 +1030,23 @@ func New(
 }
 ```
 
-**Note:** The provider uses `afero.Fs` for filesystem abstraction
-(testable without writing real files). The `objStore` and `stateKV` are
-NATS JetStream interfaces — mock them in tests.
+**Note:** The provider uses `afero.Fs` for filesystem abstraction (testable
+without writing real files). The `objStore` and `stateKV` are NATS JetStream
+interfaces — mock them in tests.
 
 ### Step 2: Write failing deploy tests
 
 Create `deploy_public_test.go` with table-driven cases:
 
-| Case | Setup | Expected |
-|------|-------|----------|
-| when deploy succeeds (new file) | Mock: objStore returns content, stateKV has no entry | changed: true, file written |
-| when deploy succeeds (changed) | Mock: objStore returns content, stateKV has different SHA | changed: true, file written |
-| when deploy skips (unchanged) | Mock: objStore returns content, stateKV has same SHA | changed: false, no write |
-| when Object Store get fails | Mock: objStore returns error | error |
-| when file write fails | Mock: fs write fails | error |
-| when state KV put fails | Mock: stateKV put fails | error |
-| when mode is set | Mock: success | file written with correct mode |
+| Case                            | Setup                                                     | Expected                       |
+| ------------------------------- | --------------------------------------------------------- | ------------------------------ |
+| when deploy succeeds (new file) | Mock: objStore returns content, stateKV has no entry      | changed: true, file written    |
+| when deploy succeeds (changed)  | Mock: objStore returns content, stateKV has different SHA | changed: true, file written    |
+| when deploy skips (unchanged)   | Mock: objStore returns content, stateKV has same SHA      | changed: false, no write       |
+| when Object Store get fails     | Mock: objStore returns error                              | error                          |
+| when file write fails           | Mock: fs write fails                                      | error                          |
+| when state KV put fails         | Mock: stateKV put fails                                   | error                          |
+| when mode is set                | Mock: success                                             | file written with correct mode |
 
 ### Step 3: Implement deploy
 
@@ -1143,12 +1150,12 @@ func parseFileMode(mode string) os.FileMode {
 
 Create `status_public_test.go`:
 
-| Case | Setup | Expected |
-|------|-------|----------|
-| when file in sync | Local SHA matches state KV SHA | status: "in-sync" |
-| when file drifted | Local SHA differs from state KV SHA | status: "drifted" |
-| when file missing | File doesn't exist on disk | status: "missing" |
-| when no state entry | stateKV has no entry for path | status: "missing" |
+| Case                | Setup                               | Expected          |
+| ------------------- | ----------------------------------- | ----------------- |
+| when file in sync   | Local SHA matches state KV SHA      | status: "in-sync" |
+| when file drifted   | Local SHA differs from state KV SHA | status: "drifted" |
+| when file missing   | File doesn't exist on disk          | status: "missing" |
+| when no state entry | stateKV has no entry for path       | status: "missing" |
 
 ### Step 6: Implement status
 
@@ -1204,6 +1211,7 @@ git commit -m "feat(file): implement deploy with SHA idempotency and status chec
 Add Go `text/template` rendering support to the file provider.
 
 **Files:**
+
 - Create: `internal/provider/file/template.go`
 - Create: `internal/provider/file/template_public_test.go`
 
@@ -1224,14 +1232,14 @@ type TemplateContext struct {
 
 Create `template_public_test.go`:
 
-| Case | Template | Vars/Facts | Expected |
-|------|----------|------------|----------|
-| when simple var substitution | `server {{ .Vars.host }}` | `{"host":"10.0.0.1"}` | `server 10.0.0.1` |
-| when fact reference | `arch: {{ .Facts.Architecture }}` | Facts with Architecture="amd64" | `arch: amd64` |
-| when conditional | `{{ if eq .Facts.Architecture "arm64" }}arm{{ else }}x86{{ end }}` | Architecture="amd64" | `x86` |
-| when hostname | `# {{ .Hostname }}` | hostname="web-01" | `# web-01` |
-| when invalid template syntax | `{{ .Invalid` | — | error |
-| when nil facts | `{{ .Hostname }}` | nil facts | uses hostname only |
+| Case                         | Template                                                           | Vars/Facts                      | Expected           |
+| ---------------------------- | ------------------------------------------------------------------ | ------------------------------- | ------------------ |
+| when simple var substitution | `server {{ .Vars.host }}`                                          | `{"host":"10.0.0.1"}`           | `server 10.0.0.1`  |
+| when fact reference          | `arch: {{ .Facts.Architecture }}`                                  | Facts with Architecture="amd64" | `arch: amd64`      |
+| when conditional             | `{{ if eq .Facts.Architecture "arm64" }}arm{{ else }}x86{{ end }}` | Architecture="amd64"            | `x86`              |
+| when hostname                | `# {{ .Hostname }}`                                                | hostname="web-01"               | `# web-01`         |
+| when invalid template syntax | `{{ .Invalid`                                                      | —                               | error              |
+| when nil facts               | `{{ .Hostname }}`                                                  | nil facts                       | uses hostname only |
 
 ### Step 3: Implement renderTemplate
 
@@ -1278,10 +1286,11 @@ git commit -m "feat(file): add Go text/template rendering with facts and vars"
 
 ## Task 9: Agent Wiring + Processor Dispatch
 
-Add Object Store, file-state KV, and file provider to the agent. Add
-`file` category to the processor dispatcher.
+Add Object Store, file-state KV, and file provider to the agent. Add `file`
+category to the processor dispatcher.
 
 **Files:**
+
 - Modify: `internal/agent/types.go`
 - Modify: `internal/agent/agent.go` (New constructor)
 - Create: `internal/agent/processor_file.go`
@@ -1390,8 +1399,8 @@ case "file":
 
 ### Step 5: Write processor tests
 
-Add test cases to `processor_test.go` for the file category, and
-create `processor_file_test.go` for the file sub-dispatch.
+Add test cases to `processor_test.go` for the file category, and create
+`processor_file_test.go` for the file sub-dispatch.
 
 ### Step 6: Update startup wiring
 
@@ -1423,15 +1432,15 @@ a := agent.New(
 )
 ```
 
-**Note:** The file provider's `cachedFacts` is initially nil and gets
-updated when facts are collected. Add a method or field update in the
-facts collection loop to keep the file provider's facts current.
+**Note:** The file provider's `cachedFacts` is initially nil and gets updated
+when facts are collected. Add a method or field update in the facts collection
+loop to keep the file provider's facts current.
 
 ### Step 7: Update all existing tests that call agent.New()
 
-Every test that constructs an `Agent` needs the new parameters. Pass
-`nil` for file provider, objStore, and fileStateKV in tests that
-don't exercise file operations.
+Every test that constructs an `Agent` needs the new parameters. Pass `nil` for
+file provider, objStore, and fileStateKV in tests that don't exercise file
+operations.
 
 ### Step 8: Run tests
 
@@ -1454,6 +1463,7 @@ git commit -m "feat(agent): wire file provider and Object Store into agent"
 Add convenience methods to the job client for triggering file operations.
 
 **Files:**
+
 - Modify: `internal/job/client/types.go` (JobClient interface)
 - Create: `internal/job/client/file.go`
 - Create: `internal/job/client/file_public_test.go`
@@ -1555,10 +1565,11 @@ git commit -m "feat(job): add file deploy and status job client methods"
 
 ## Task 11: Node API Endpoints for File Deploy/Status
 
-Add REST endpoints for triggering file deploy and status through the
-node domain.
+Add REST endpoints for triggering file deploy and status through the node
+domain.
 
 **Files:**
+
 - Modify: `internal/api/node/gen/api.yaml`
 - Regenerate: `internal/api/node/gen/node.gen.go`
 - Create: `internal/api/node/file_deploy_post.go`
@@ -1577,25 +1588,25 @@ Add paths and schemas to `internal/api/node/gen/api.yaml`:
     summary: Deploy a file from Object Store to the host
     security:
       - BearerAuth:
-          - "file:write"
+          - 'file:write'
     parameters:
-      - $ref: "#/components/parameters/Hostname"
+      - $ref: '#/components/parameters/Hostname'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/FileDeployRequest"
+            $ref: '#/components/schemas/FileDeployRequest'
     responses:
-      "202":
+      '202':
         description: File deploy job accepted.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FileDeployResponse"
-      "400":
+              $ref: '#/components/schemas/FileDeployResponse'
+      '400':
         description: Invalid input.
-      "500":
+      '500':
         description: Internal error.
 
 /node/{hostname}/file/status:
@@ -1604,25 +1615,25 @@ Add paths and schemas to `internal/api/node/gen/api.yaml`:
     summary: Check deployment status of a file on the host
     security:
       - BearerAuth:
-          - "file:read"
+          - 'file:read'
     parameters:
-      - $ref: "#/components/parameters/Hostname"
+      - $ref: '#/components/parameters/Hostname'
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/FileStatusRequest"
+            $ref: '#/components/schemas/FileStatusRequest'
     responses:
-      "200":
+      '200':
         description: File status.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FileStatusResponse"
-      "400":
+              $ref: '#/components/schemas/FileStatusResponse'
+      '400':
         description: Invalid input.
-      "500":
+      '500':
         description: Internal error.
 ```
 
@@ -1675,6 +1686,7 @@ go generate ./internal/api/node/gen/...
 ### Step 3: Implement handlers
 
 Follow the pattern of `network_dns_put_by_interface.go`. Each handler:
+
 1. Validates hostname
 2. Validates request body
 3. Calls the job client method
@@ -1704,6 +1716,7 @@ git commit -m "feat(api): add node file deploy and status endpoints"
 Add CLI commands for file management and file deployment.
 
 **Files:**
+
 - Create: `cmd/client_file.go` — parent command
 - Create: `cmd/client_file_upload.go`
 - Create: `cmd/client_file_list.go`
@@ -1754,9 +1767,9 @@ Add CLI commands for file management and file deployment.
 
 ### Step 3: Implement commands
 
-Follow the pattern of `cmd/client_node_command_exec.go`. Read local
-file, base64 encode, call SDK upload. For deploy, call SDK deploy.
-Handle all response codes in switch block.
+Follow the pattern of `cmd/client_node_command_exec.go`. Read local file, base64
+encode, call SDK upload. For deploy, call SDK deploy. Handle all response codes
+in switch block.
 
 ### Step 4: Test manually
 
@@ -1779,6 +1792,7 @@ git commit -m "feat(cli): add file upload/list/get/delete and deploy/status comm
 Update the `osapi-sdk` to support the new file endpoints.
 
 **Files (in osapi-sdk repo):**
+
 - Copy: `pkg/osapi/gen/file/api.yaml` (from osapi)
 - Create: `pkg/osapi/file.go` — FileService
 - Modify: `.gilt.yml` — add file spec overlay
@@ -1805,8 +1819,8 @@ func (s *FileService) Get(ctx context.Context, name string) (*FileInfo, error)
 func (s *FileService) Delete(ctx context.Context, name string) error
 ```
 
-Deploy/status use the existing job system through `NodeService` or
-as separate methods.
+Deploy/status use the existing job system through `NodeService` or as separate
+methods.
 
 ### Step 4: Regenerate and test
 
@@ -1826,6 +1840,7 @@ Separate PR on osapi-sdk repo.
 Add file operations to `osapi-orchestrator`.
 
 **Files (in osapi-orchestrator repo):**
+
 - Create: `pkg/orchestrator/file.go`
 - Create: example `examples/file-deploy/main.go`
 
@@ -1846,8 +1861,8 @@ func WithOwner(owner, group string) FileOption
 
 ### Step 2: OnlyIfChanged integration
 
-`FileDeploy` and `FileTemplate` return `changed: true/false` in the
-result, so `OnlyIfChanged()` guards work naturally:
+`FileDeploy` and `FileTemplate` return `changed: true/false` in the result, so
+`OnlyIfChanged()` guards work naturally:
 
 ```go
 upload := o.FileUpload("nginx.conf", "./local/nginx.conf.tmpl")
@@ -1873,6 +1888,7 @@ Separate PR on osapi-orchestrator repo.
 Update docs for the new feature.
 
 **Files:**
+
 - Create: `docs/docs/sidebar/features/file-management.md`
 - Create: `docs/docs/sidebar/usage/cli/client/file/file.md`
 - Create: `docs/docs/sidebar/usage/cli/client/file/upload.md`
@@ -1884,12 +1900,13 @@ Update docs for the new feature.
 - Create: `docs/docs/sidebar/usage/cli/client/node/file/status.md`
 - Modify: `docs/docusaurus.config.ts` — add to Features dropdown
 - Modify: `docs/docs/sidebar/usage/configuration.md` — add new config
-- Modify: `docs/docs/sidebar/architecture/system-architecture.md` —
-  add endpoints
+- Modify: `docs/docs/sidebar/architecture/system-architecture.md` — add
+  endpoints
 
 ### Step 1: Feature page
 
 Create `file-management.md` covering:
+
 - What it manages (file deployment with SHA idempotency)
 - How it works (Object Store + file-state KV)
 - Template rendering with facts
@@ -1898,21 +1915,20 @@ Create `file-management.md` covering:
 
 ### Step 2: CLI docs
 
-One page per command with usage examples, flags table, and `--json`
-output.
+One page per command with usage examples, flags table, and `--json` output.
 
 ### Step 3: Config docs
 
 Add `nats.objects` and `nats.file_state` sections with env vars:
 
-| Config Key | Env Var |
-|---|---|
-| `nats.objects.bucket` | `OSAPI_NATS_OBJECTS_BUCKET` |
-| `nats.objects.max_bytes` | `OSAPI_NATS_OBJECTS_MAX_BYTES` |
-| `nats.objects.storage` | `OSAPI_NATS_OBJECTS_STORAGE` |
-| `nats.objects.replicas` | `OSAPI_NATS_OBJECTS_REPLICAS` |
-| `nats.file_state.bucket` | `OSAPI_NATS_FILE_STATE_BUCKET` |
-| `nats.file_state.storage` | `OSAPI_NATS_FILE_STATE_STORAGE` |
+| Config Key                 | Env Var                          |
+| -------------------------- | -------------------------------- |
+| `nats.objects.bucket`      | `OSAPI_NATS_OBJECTS_BUCKET`      |
+| `nats.objects.max_bytes`   | `OSAPI_NATS_OBJECTS_MAX_BYTES`   |
+| `nats.objects.storage`     | `OSAPI_NATS_OBJECTS_STORAGE`     |
+| `nats.objects.replicas`    | `OSAPI_NATS_OBJECTS_REPLICAS`    |
+| `nats.file_state.bucket`   | `OSAPI_NATS_FILE_STATE_BUCKET`   |
+| `nats.file_state.storage`  | `OSAPI_NATS_FILE_STATE_STORAGE`  |
 | `nats.file_state.replicas` | `OSAPI_NATS_FILE_STATE_REPLICAS` |
 
 ### Step 4: Commit
@@ -1926,20 +1942,20 @@ git commit -m "docs: add file management feature documentation"
 
 ## Shared Primitive: Object Store for Future Providers
 
-The Object Store and file-state KV infrastructure built in this plan
-is designed as a **shared primitive**. The agent's `objStore` handle
-is injected at startup and available to any provider. Future providers
-that would consume this infrastructure:
+The Object Store and file-state KV infrastructure built in this plan is designed
+as a **shared primitive**. The agent's `objStore` handle is injected at startup
+and available to any provider. Future providers that would consume this
+infrastructure:
 
-| Provider | Operation | Usage |
-|---|---|---|
+| Provider          | Operation                   | Usage                           |
+| ----------------- | --------------------------- | ------------------------------- |
 | `firmware.update` | Pull binary, run flash tool | Object Store for firmware blobs |
-| `package.install` | Pull `.deb`/`.rpm`, install | Object Store for packages |
-| `cert.deploy` | Pull TLS cert/key | Object Store + restricted perms |
-| `script.run` | Pull script, execute | Object Store for scripts |
+| `package.install` | Pull `.deb`/`.rpm`, install | Object Store for packages       |
+| `cert.deploy`     | Pull TLS cert/key           | Object Store + restricted perms |
+| `script.run`      | Pull script, execute        | Object Store for scripts        |
 
-Each provider reuses: Object Store download, SHA comparison, and state
-tracking from the `file-state` KV bucket. No new infrastructure needed.
+Each provider reuses: Object Store download, SHA comparison, and state tracking
+from the `file-state` KV bucket. No new infrastructure needed.
 
 ---
 

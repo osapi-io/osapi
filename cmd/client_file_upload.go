@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -36,6 +35,7 @@ var clientFileUploadCmd = &cobra.Command{
 	Short: "Upload a file to the Object Store",
 	Long:  `Upload a local file to the OSAPI Object Store for later deployment.`,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 		filePath, _ := cmd.Flags().GetString("file")
 
@@ -44,15 +44,21 @@ var clientFileUploadCmd = &cobra.Command{
 			cli.LogFatal(logger, "failed to read file", err)
 		}
 
-		_ = base64.StdEncoding.EncodeToString(data)
+		resp, err := sdkClient.File.Upload(ctx, name, data)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
 
-		// TODO(sdk): Replace with SDK call when FileService is available:
-		//   resp, err := sdkClient.File.Upload(ctx, name, encoded)
-		_ = cmd.Context()
-		_ = name
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
 
-		logger.Error("file upload requires osapi-sdk FileService (not yet available)")
-		fmt.Println("file upload: SDK FileService not yet integrated")
+		fmt.Println()
+		cli.PrintKV("Name", resp.Data.Name)
+		cli.PrintKV("SHA256", resp.Data.SHA256)
+		cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
 	},
 }
 

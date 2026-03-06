@@ -18,60 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package mocks provides mock implementations for testing.
+package mocks
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/cli"
-)
-
-// clientFileListCmd represents the clientFileList command.
-var clientFileListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List stored files",
-	Long:  `List all files stored in the OSAPI Object Store.`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-		resp, err := sdkClient.File.List(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
-			return
-		}
-
-		files := resp.Data.Files
-		if len(files) == 0 {
-			fmt.Println("No files found.")
-			return
-		}
-
-		rows := make([][]string, 0, len(files))
-		for _, f := range files {
-			rows = append(rows, []string{
-				f.Name,
-				f.SHA256,
-				fmt.Sprintf("%d", f.Size),
-			})
-		}
-
-		sections := []cli.Section{
-			{
-				Title:   fmt.Sprintf("Files (%d)", resp.Data.Total),
-				Headers: []string{"NAME", "SHA256", "SIZE"},
-				Rows:    rows,
-			},
-		}
-		cli.PrintCompactTable(sections)
-	},
-}
-
-func init() {
-	clientFileCmd.AddCommand(clientFileListCmd)
-}
+//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks

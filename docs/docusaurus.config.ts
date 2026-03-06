@@ -117,6 +117,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'File Management',
+              docId: 'sidebar/features/file-management'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },

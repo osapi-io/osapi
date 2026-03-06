@@ -24,7 +24,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // clientNodeFileDeployCmd represents the clientNodeFileDeploy command.
@@ -35,6 +38,7 @@ var clientNodeFileDeployCmd = &cobra.Command{
 The file is fetched from the Object Store and written to the specified path.
 SHA-256 idempotency ensures unchanged files are not rewritten.`,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		objectName, _ := cmd.Flags().GetString("object")
 		path, _ := cmd.Flags().GetString("path")
@@ -53,46 +57,32 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 			}
 		}
 
-		// Parse --var flags into a map
 		vars := parseVarFlags(varFlags)
 
-		// TODO(sdk): Replace with SDK call when FileService is available:
-		//   ctx := cmd.Context()
-		//   resp, err := sdkClient.Node.FileDeploy(ctx, osapi.FileDeployRequest{
-		//       Target:      host,
-		//       ObjectName:  objectName,
-		//       Path:        path,
-		//       ContentType: contentType,
-		//       Mode:        mode,
-		//       Owner:       owner,
-		//       Group:       group,
-		//       Vars:        vars,
-		//   })
-		//   if err != nil {
-		//       cli.HandleError(err, logger)
-		//       return
-		//   }
-		//
-		//   if jsonOutput {
-		//       fmt.Println(string(resp.RawJSON()))
-		//       return
-		//   }
-		//
-		//   fmt.Println()
-		//   cli.PrintKV("Job ID", resp.Data.JobID)
-		//   cli.PrintKV("Hostname", resp.Data.Hostname)
-		//   cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
+		resp, err := sdkClient.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+			Target:      host,
+			ObjectName:  objectName,
+			Path:        path,
+			ContentType: contentType,
+			Mode:        mode,
+			Owner:       owner,
+			Group:       group,
+			Vars:        vars,
+		})
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
 
-		_ = cmd.Context()
-		_ = objectName
-		_ = path
-		_ = contentType
-		_ = mode
-		_ = owner
-		_ = group
-		_ = vars
-		logger.Error("file deploy requires osapi-sdk FileService (not yet available)")
-		fmt.Println("file deploy: SDK FileService not yet integrated")
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Job ID", resp.Data.JobID)
+		cli.PrintKV("Hostname", resp.Data.Hostname)
+		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
 	},
 }
 

@@ -202,6 +202,18 @@ const sidebar: SidebarsConfig = {
           label: "Retrieve uptime",
           className: "api-method get",
         },
+        {
+          type: "doc",
+          id: "gen/api/post-node-file-deploy",
+          label: "Deploy a file from Object Store to the host",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-file-status",
+          label: "Check deployment status of a file on the host",
+          className: "api-method post",
+        },
       ],
     },
     {
@@ -277,6 +289,40 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/post-node-command-shell",
           label: "Execute a shell command",
           className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "File",
+      link: {
+        type: "doc",
+        id: "gen/api/file-management-api-file-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-file",
+          label: "Upload a file",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-files",
+          label: "List stored files",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-file-by-name",
+          label: "Get file metadata",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-file-by-name",
+          label: "Delete a file",
+          className: "api-method delete",
         },
       ],
     },

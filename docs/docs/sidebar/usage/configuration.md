@@ -57,6 +57,14 @@ uppercased:
 | `nats.state.bucket`                          | `OSAPI_NATS_STATE_BUCKET`                          |
 | `nats.state.storage`                         | `OSAPI_NATS_STATE_STORAGE`                         |
 | `nats.state.replicas`                        | `OSAPI_NATS_STATE_REPLICAS`                        |
+| `nats.objects.bucket`                        | `OSAPI_NATS_OBJECTS_BUCKET`                        |
+| `nats.objects.max_bytes`                     | `OSAPI_NATS_OBJECTS_MAX_BYTES`                     |
+| `nats.objects.storage`                       | `OSAPI_NATS_OBJECTS_STORAGE`                       |
+| `nats.objects.replicas`                      | `OSAPI_NATS_OBJECTS_REPLICAS`                      |
+| `nats.objects.max_chunk_size`                | `OSAPI_NATS_OBJECTS_MAX_CHUNK_SIZE`                |
+| `nats.file_state.bucket`                     | `OSAPI_NATS_FILE_STATE_BUCKET`                     |
+| `nats.file_state.storage`                    | `OSAPI_NATS_FILE_STATE_STORAGE`                    |
+| `nats.file_state.replicas`                   | `OSAPI_NATS_FILE_STATE_REPLICAS`                   |
 | `telemetry.tracing.enabled`                  | `OSAPI_TELEMETRY_TRACING_ENABLED`                  |
 | `telemetry.tracing.exporter`                 | `OSAPI_TELEMETRY_TRACING_EXPORTER`                 |
 | `telemetry.tracing.otlp_endpoint`            | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`            |
@@ -133,11 +141,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                                        |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
-| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                                 |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                               |
+| Role    | Permissions                                                                                                                                                                   |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write` |
+| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`                                                 |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`                                                                                             |
 
 ### Custom Roles
 
@@ -234,7 +242,7 @@ api:
       # Custom roles with fine-grained permissions.
       # Permissions: agent:read, agent:write, node:read, network:read,
       #              network:write, job:read, job:write, health:read,
-      #              audit:read, command:execute
+      #              audit:read, command:execute, file:read, file:write
       # roles:
       #   ops:
       #     permissions:
@@ -335,6 +343,29 @@ nats:
     # KV bucket for persistent agent state (drain flags, timeline events).
     # No TTL — operator actions persist indefinitely.
     bucket: 'agent-state'
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of KV replicas.
+    replicas: 1
+
+  # ── Object Store (file uploads) ─────────────────────────
+  objects:
+    # Object Store bucket for uploaded file content.
+    bucket: 'file-objects'
+    # Maximum total size of the bucket in bytes.
+    max_bytes: 104857600 # 100 MiB
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of Object Store replicas.
+    replicas: 1
+    # Maximum chunk size for uploads in bytes.
+    max_chunk_size: 262144 # 256 KiB
+
+  # ── File state KV bucket ────────────────────────────────
+  file_state:
+    # KV bucket for file deploy state tracking.
+    # No TTL — state persists until explicitly removed.
+    bucket: 'file-state'
     # Storage backend: "file" or "memory".
     storage: 'file'
     # Number of KV replicas.
@@ -512,6 +543,24 @@ agent:
 | `bucket`   | string | KV bucket for persistent agent state (no TTL) |
 | `storage`  | string | `"file"` or `"memory"`                        |
 | `replicas` | int    | Number of KV replicas                         |
+
+### `nats.objects`
+
+| Key              | Type   | Description                          |
+| ---------------- | ------ | ------------------------------------ |
+| `bucket`         | string | Object Store bucket for file uploads |
+| `max_bytes`      | int    | Maximum bucket size in bytes         |
+| `storage`        | string | `"file"` or `"memory"`               |
+| `replicas`       | int    | Number of Object Store replicas      |
+| `max_chunk_size` | int    | Maximum chunk size for uploads       |
+
+### `nats.file_state`
+
+| Key        | Type   | Description                              |
+| ---------- | ------ | ---------------------------------------- |
+| `bucket`   | string | KV bucket for file deploy state (no TTL) |
+| `storage`  | string | `"file"` or `"memory"`                   |
+| `replicas` | int    | Number of KV replicas                    |
 
 ### `nats.dlq`
 

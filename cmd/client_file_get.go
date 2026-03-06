@@ -24,6 +24,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
 // clientFileGetCmd represents the clientFileGet command.
@@ -32,30 +34,24 @@ var clientFileGetCmd = &cobra.Command{
 	Short: "Get file metadata",
 	Long:  `Get metadata for a specific file stored in the OSAPI Object Store.`,
 	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 
-		// TODO(sdk): Replace with SDK call when FileService is available:
-		//   ctx := cmd.Context()
-		//   resp, err := sdkClient.File.Get(ctx, name)
-		//   if err != nil {
-		//       cli.HandleError(err, logger)
-		//       return
-		//   }
-		//
-		//   if jsonOutput {
-		//       fmt.Println(string(resp.RawJSON()))
-		//       return
-		//   }
-		//
-		//   fmt.Println()
-		//   cli.PrintKV("Name", resp.Data.Name)
-		//   cli.PrintKV("SHA256", resp.Data.SHA256)
-		//   cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
+		resp, err := sdkClient.File.Get(ctx, name)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
 
-		_ = cmd.Context()
-		_ = name
-		logger.Error("file get requires osapi-sdk FileService (not yet available)")
-		fmt.Println("file get: SDK FileService not yet integrated")
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Name", resp.Data.Name)
+		cli.PrintKV("SHA256", resp.Data.SHA256)
+		cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
 	},
 }
 
