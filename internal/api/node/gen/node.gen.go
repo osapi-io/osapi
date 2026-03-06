@@ -108,8 +108,8 @@ type DNSConfigResponse struct {
 
 // DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
 type DNSConfigUpdateRequest struct {
-	// InterfaceName The name of the network interface to apply DNS configuration to. Must only contain letters and numbers.
-	InterfaceName string `json:"interface_name" validate:"required,alphanum"`
+	// InterfaceName The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references.
+	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact"`
 
 	// SearchDomains New list of search domains to configure.
 	SearchDomains *[]string `json:"search_domains,omitempty" validate:"required_without=Servers,omitempty,dive,hostname,min=1"`
@@ -375,8 +375,8 @@ type Hostname = string
 
 // PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
 type PostNodeNetworkPingJSONBody struct {
-	// Address The IP address of the server to ping. Supports both IPv4 and IPv6.
-	Address string `json:"address" validate:"required,ip"`
+	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
+	Address string `json:"address" validate:"required,ip_or_fact"`
 }
 
 // PostNodeCommandExecJSONRequestBody defines body for PostNodeCommandExec for application/json ContentType.

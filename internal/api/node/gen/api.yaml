@@ -381,10 +381,11 @@ paths:
                   type: string
                   description: >
                     The IP address of the server to ping. Supports both
-                    IPv4 and IPv6.
+                    IPv4 and IPv6. Also accepts @fact. references that
+                    are resolved agent-side.
                   example: "8.8.8.8"
                   x-oapi-codegen-extra-tags:
-                    validate: required,ip
+                    validate: required,ip_or_fact
               required:
                 - address
       responses:
@@ -440,7 +441,7 @@ paths:
           # generate validate tags in strict-server mode. Validation
           # is handled manually in the handler via node.validateInterfaceName().
           x-oapi-codegen-extra-tags:
-            validate: required,alphanum
+            validate: required,alphanum_or_fact
           schema:
             type: string
           description: >
@@ -1130,10 +1131,10 @@ components:
         interface_name:
           type: string
           x-oapi-codegen-extra-tags:
-            validate: required,alphanum
+            validate: required,alphanum_or_fact
           description: >
             The name of the network interface to apply DNS configuration
-            to. Must only contain letters and numbers.
+            to. Accepts alphanumeric names or @fact. references.
       required:
         - interface_name
 

@@ -30,6 +30,28 @@ import (
 
 var instance = validator.New()
 
+func init() {
+	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references.
+	// Fact references are resolved agent-side before the value is used.
+	_ = instance.RegisterValidation("alphanum_or_fact", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		if strings.HasPrefix(v, "@fact.") {
+			return true
+		}
+		return instance.Var(v, "alphanum") == nil
+	})
+
+	// ip_or_fact accepts IP addresses (v4/v6) or @fact. prefixed references.
+	// Fact references are resolved agent-side before the value is used.
+	_ = instance.RegisterValidation("ip_or_fact", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		if strings.HasPrefix(v, "@fact.") {
+			return true
+		}
+		return instance.Var(v, "ip") == nil
+	})
+}
+
 // customHints maps validator tags to a hint appended to the default error.
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {

@@ -129,6 +129,113 @@ func (s *ValidationPublicTestSuite) TestVar() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestAlphanumOrFact() {
+	tests := []struct {
+		name   string
+		field  string
+		wantOK bool
+	}{
+		{
+			name:   "when alphanumeric value",
+			field:  "eth0",
+			wantOK: true,
+		},
+		{
+			name:   "when fact reference",
+			field:  "@fact.interface.primary",
+			wantOK: true,
+		},
+		{
+			name:   "when fact custom reference",
+			field:  "@fact.custom.mykey",
+			wantOK: true,
+		},
+		{
+			name:   "when non-alphanum non-fact value",
+			field:  "eth-0!",
+			wantOK: false,
+		},
+		{
+			name:   "when empty value",
+			field:  "",
+			wantOK: false,
+		},
+		{
+			name:   "when partial fact prefix",
+			field:  "@fact",
+			wantOK: false,
+		},
+		{
+			name:   "when at-sign without fact",
+			field:  "@notfact.x",
+			wantOK: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "required,alphanum_or_fact")
+			s.Equal(tt.wantOK, ok)
+		})
+	}
+}
+
+func (s *ValidationPublicTestSuite) TestIpOrFact() {
+	tests := []struct {
+		name   string
+		field  string
+		wantOK bool
+	}{
+		{
+			name:   "when valid IPv4",
+			field:  "1.1.1.1",
+			wantOK: true,
+		},
+		{
+			name:   "when valid IPv6",
+			field:  "::1",
+			wantOK: true,
+		},
+		{
+			name:   "when fact reference",
+			field:  "@fact.custom.gateway",
+			wantOK: true,
+		},
+		{
+			name:   "when fact interface primary",
+			field:  "@fact.interface.primary",
+			wantOK: true,
+		},
+		{
+			name:   "when invalid address",
+			field:  "not-an-ip",
+			wantOK: false,
+		},
+		{
+			name:   "when empty value",
+			field:  "",
+			wantOK: false,
+		},
+		{
+			name:   "when partial fact prefix",
+			field:  "@fact",
+			wantOK: false,
+		},
+		{
+			name:   "when at-sign without fact",
+			field:  "@notfact.x",
+			wantOK: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(tt.field, "required,ip_or_fact")
+			s.Equal(tt.wantOK, ok)
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestInstance() {
 	tests := []struct {
 		name string

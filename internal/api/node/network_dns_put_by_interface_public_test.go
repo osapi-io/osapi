@@ -333,6 +333,30 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSHTTP() {
 			wantContains: []string{`"error"`, "InterfaceName", "required"},
 		},
 		{
+			name: "when fact reference interface name passes validation",
+			path: "/node/server1/network/dns",
+			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.interface.primary"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyNetworkDNS(gomock.Any(), "server1", gomock.Any(), gomock.Any(), "@fact.interface.primary").
+					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"results"`, `"agent1"`},
+		},
+		{
+			name: "when partial fact reference rejected",
+			path: "/node/server1/network/dns",
+			body: `{"servers":["1.1.1.1"],"interface_name":"@fact"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
+		},
+		{
 			name: "when non-alphanum interface name",
 			path: "/node/server1/network/dns",
 			body: `{"servers":["1.1.1.1"],"interface_name":"eth-0!"}`,
@@ -340,7 +364,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSHTTP() {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "InterfaceName", "alphanum"},
+			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
 		},
 		{
 			name: "when invalid server IP",

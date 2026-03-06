@@ -323,7 +323,38 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingHTTP() {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "Address", "ip"},
+			wantContains: []string{`"error"`, "Address", "ip_or_fact"},
+		},
+		{
+			name: "when fact reference passes validation",
+			path: "/node/server1/network/ping",
+			body: `{"address":"@fact.custom.gateway"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					QueryNetworkPing(gomock.Any(), "server1", "@fact.custom.gateway").
+					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
+						PacketsSent:     3,
+						PacketsReceived: 3,
+						PacketLoss:      0,
+						MinRTT:          10 * time.Millisecond,
+						AvgRTT:          15 * time.Millisecond,
+						MaxRTT:          20 * time.Millisecond,
+					}, "agent1", nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"results"`, `"packets_sent":3`},
+		},
+		{
+			name: "when partial fact reference rejected",
+			path: "/node/server1/network/ping",
+			body: `{"address":"@fact"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "ip_or_fact"},
 		},
 		{
 			name: "when broadcast all",
