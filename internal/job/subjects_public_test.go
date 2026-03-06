@@ -978,7 +978,11 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 		{
 			name: "when label match excludes cordoned agents",
 			agents: []job.AgentInfo{
-				{Hostname: "web-01", Labels: map[string]string{"group": "web.dev"}, State: job.AgentStateCordoned},
+				{
+					Hostname: "web-01",
+					Labels:   map[string]string{"group": "web.dev"},
+					State:    job.AgentStateCordoned,
+				},
 				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
 			},
 			target: "group:web",
@@ -987,7 +991,11 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 		{
 			name: "when label match excludes draining agents",
 			agents: []job.AgentInfo{
-				{Hostname: "web-01", Labels: map[string]string{"group": "web.dev"}, State: job.AgentStateDraining},
+				{
+					Hostname: "web-01",
+					Labels:   map[string]string{"group": "web.dev"},
+					State:    job.AgentStateDraining,
+				},
 				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
 			},
 			target: "group:web",
