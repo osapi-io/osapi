@@ -75,6 +75,16 @@ type NATSClient interface {
 		bucket string,
 	) ([]string, error)
 
+	// Object Store operations
+	CreateOrUpdateObjectStore(
+		ctx context.Context,
+		cfg jetstream.ObjectStoreConfig,
+	) (jetstream.ObjectStore, error)
+	ObjectStore(
+		ctx context.Context,
+		name string,
+	) (jetstream.ObjectStore, error)
+
 	// Message publishing
 	Publish(
 		ctx context.Context,
