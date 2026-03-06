@@ -100,10 +100,10 @@ func (s *Node) getNodeLoadBroadcast(
 	}, nil
 }
 
-// buildLoadResultItem converts load.AverageStats to a LoadResultItem.
+// buildLoadResultItem converts load.Result to a LoadResultItem.
 func buildLoadResultItem(
 	hostname string,
-	loadStats *load.AverageStats,
+	loadStats *load.Result,
 ) *gen.LoadResultItem {
 	item := &gen.LoadResultItem{
 		Hostname: hostname,

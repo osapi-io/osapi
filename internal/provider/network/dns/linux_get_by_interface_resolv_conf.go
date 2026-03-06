@@ -29,6 +29,6 @@ import (
 // servers and search domains for the interface, and an error if something goes wrong.
 func (l *Linux) GetResolvConfByInterface(
 	_ string,
-) (*Config, error) {
+) (*GetResult, error) {
 	return nil, fmt.Errorf("getResolvConfByInterface is not implemented for LinuxProvider")
 }

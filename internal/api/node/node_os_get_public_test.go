@@ -78,7 +78,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeOS(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &host.OSInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", &host.Result{
 						Distribution: "Ubuntu",
 						Version:      "22.04",
 					}, "agent1", nil)
@@ -118,7 +118,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeOSBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.OSInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.Result{
 						"server1": {Distribution: "Ubuntu", Version: "22.04"},
 						"server2": {Distribution: "CentOS", Version: "8.3"},
 					}, map[string]string{}, nil)
@@ -133,7 +133,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeOSBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.OSInfo{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.Result{
 						"server1": {Distribution: "Ubuntu", Version: "22.04"},
 					}, map[string]string{
 						"server2": "some error",

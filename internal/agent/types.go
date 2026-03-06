@@ -81,6 +81,9 @@ type Agent struct {
 	// cpuCount cached from facts for HighLoad evaluation.
 	cpuCount int
 
+	// cachedFacts holds the latest collected facts for @fact.X resolution.
+	cachedFacts *job.FactsRegistration
+
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	state string
 

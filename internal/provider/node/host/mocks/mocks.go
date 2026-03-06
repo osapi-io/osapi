@@ -40,7 +40,7 @@ func NewDefaultMockProvider(ctrl *gomock.Controller) *MockProvider {
 	mock.EXPECT().GetUptime().Return(time.Hour*5, nil).AnyTimes()
 	mock.EXPECT().GetHostname().Return("default-hostname", nil).AnyTimes()
 
-	mock.EXPECT().GetOSInfo().Return(&host.OSInfo{
+	mock.EXPECT().GetOSInfo().Return(&host.Result{
 		Distribution: "Ubuntu",
 		Version:      "24.04",
 	}, nil).AnyTimes()

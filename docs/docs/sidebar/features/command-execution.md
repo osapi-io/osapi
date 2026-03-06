@@ -44,6 +44,20 @@ for usage and examples, or the
 [API Reference](/gen/api/node-management-api-command-operations) for the REST
 endpoints.
 
+## Fact References
+
+Command arguments support `@fact.*` references that resolve to live system
+values on the executing agent. This is especially useful with broadcast
+targeting, where each agent substitutes its own values:
+
+```bash
+$ osapi client node command exec \
+    --command ip --args "addr,show,dev,@fact.interface.primary" \
+    --target _all
+```
+
+See [System Facts](system-facts.md) for the full list of available references.
+
 ## Use Cases
 
 - **Ad-hoc debugging** -- quickly check a process table, inspect a log file, or
@@ -100,6 +114,7 @@ roles or tokens explicitly when needed.
 
 - [CLI Reference](../usage/cli/client/node/command/command.mdx) -- command
   execution commands (exec, shell)
+- [System Facts](system-facts.md) -- available `@fact.*` references
 - [API Reference](/gen/api/node-management-api-command-operations) -- REST API
   documentation
 - [Job System](job-system.md) -- how async job processing works

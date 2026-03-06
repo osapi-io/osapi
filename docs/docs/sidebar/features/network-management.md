@@ -19,7 +19,9 @@ unprivileged while agents execute the actual changes.
 
 **DNS** -- queries read the current nameserver configuration for a network
 interface. Updates modify the nameservers and search domains, applying changes
-through the host's network manager.
+through the host's network manager. The `--interface-name` parameter supports
+[fact references](system-facts.md) — use `@fact.interface.primary` to
+automatically target the default route interface.
 
 **Ping** -- sends ICMP echo requests to a target host and reports the results.
 
@@ -49,6 +51,7 @@ The `read` role includes only `network:read`.
 
 - [CLI Reference](../usage/cli/client/node/network/network.mdx) -- network
   commands
+- [System Facts](system-facts.md) -- available `@fact.*` references
 - [API Reference](/gen/api/node-management-api-network-operations) -- REST API
   documentation
 - [Job System](job-system.md) -- how async job processing works

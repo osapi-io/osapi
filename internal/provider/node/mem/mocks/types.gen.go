@@ -35,10 +35,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetStats mocks base method.
-func (m *MockProvider) GetStats() (*mem.Stats, error) {
+func (m *MockProvider) GetStats() (*mem.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStats")
-	ret0, _ := ret[0].(*mem.Stats)
+	ret0, _ := ret[0].(*mem.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

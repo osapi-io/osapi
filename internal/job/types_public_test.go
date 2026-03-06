@@ -219,13 +219,13 @@ func (suite *TypesPublicTestSuite) TestAgentInfoFactsFieldsJSONRoundTrip() {
 				Labels:       map[string]string{"group": "web"},
 				RegisteredAt: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 				StartedAt:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
-				OSInfo: &host.OSInfo{
+				OSInfo: &host.Result{
 					Distribution: "Ubuntu",
 					Version:      "22.04",
 				},
 				Uptime:        time.Duration(3600) * time.Second,
-				LoadAverages:  &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.1},
-				MemoryStats:   &mem.Stats{Total: 1024, Free: 512},
+				LoadAverages:  &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.1},
+				MemoryStats:   &mem.Result{Total: 1024, Free: 512},
 				AgentVersion:  "1.0.0",
 				Architecture:  "x86_64",
 				KernelVersion: "6.1.0-25-generic",

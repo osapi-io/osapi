@@ -72,9 +72,7 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	if platform == "darwin" {
-		f.logger.Warn("running on darwin with development providers",
-			slog.String("note", "DNS and ping return mock data"),
-		)
+		f.logger.Info("running on darwin")
 	}
 
 	// Create system providers
@@ -125,7 +123,7 @@ func (f *ProviderFactory) CreateProviders() (
 	case "ubuntu":
 		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)
 	case "darwin":
-		dnsProvider = dns.NewDarwinProvider()
+		dnsProvider = dns.NewDarwinProvider(f.logger, execManager)
 	default:
 		dnsProvider = dns.NewLinuxProvider()
 	}
@@ -141,7 +139,13 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	// Create network info provider
-	netinfoProvider := netinfo.New()
+	var netinfoProvider netinfo.Provider
+	switch platform {
+	case "darwin":
+		netinfoProvider = netinfo.NewDarwinProvider(execManager)
+	default:
+		netinfoProvider = netinfo.NewLinuxProvider()
+	}
 
 	// Create command provider (cross-platform, uses exec.Manager)
 	commandProvider := command.New(f.logger, execManager)

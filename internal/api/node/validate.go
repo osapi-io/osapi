@@ -38,5 +38,5 @@ func validateHostname(
 func validateInterfaceName(
 	name string,
 ) (string, bool) {
-	return validation.Var(name, "required,alphanum")
+	return validation.Var(name, "required,alphanum_or_fact")
 }

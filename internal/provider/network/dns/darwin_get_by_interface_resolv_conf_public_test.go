@@ -1,15 +1,15 @@
 // Copyright (c) 2026 John Dewey
-
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
 // deal in the Software without restriction, including without limitation the
 // rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,44 +21,197 @@
 package dns_test
 
 import (
+	"fmt"
+	"log/slog"
+	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	execMocks "github.com/retr0h/osapi/internal/exec/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
 type DarwinGetResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
+	ctrl *gomock.Controller
+
+	logger *slog.Logger
 }
 
-func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) SetupTest() {}
+func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) SetupTest() {
+	suite.ctrl = gomock.NewController(suite.T())
 
-func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
+	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) SetupSubTest() {
+	suite.SetupTest()
+}
+
+func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) TearDownTest() {
+	suite.ctrl.Finish()
+}
 
 func (suite *DarwinGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByInterface() {
 	tests := []struct {
-		name string
-		want *dns.Config
+		name          string
+		setupMock     func() *execMocks.MockManager
+		interfaceName string
+		want          *dns.GetResult
+		wantErr       bool
+		wantErrType   error
 	}{
 		{
-			name: "when GetResolvConfByInterface returns mock data",
-			want: &dns.Config{
-				DNSServers:    []string{"8.8.8.8", "1.1.1.1"},
-				SearchDomains: []string{"local", "example.com"},
+			name: "when matching interface found",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+				output := `
+DNS configuration
+
+resolver #1
+  search domain[0] : example.com
+  search domain[1] : local.lan
+  nameserver[0] : 192.168.1.1
+  nameserver[1] : 8.8.8.8
+  if_index : 6 (en0)
+  flags    : Request A records
+
+resolver #2
+  nameserver[0] : 10.0.0.1
+  if_index : 7 (en1)
+`
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(output, nil)
+
+				return mock
+			},
+			interfaceName: "en0",
+			want: &dns.GetResult{
+				DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
+				SearchDomains: []string{"example.com", "local.lan"},
+			},
+		},
+		{
+			name: "when no interface match falls back to first resolver",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+				output := `
+DNS configuration
+
+resolver #1
+  nameserver[0] : 192.168.1.1
+  nameserver[1] : 8.8.8.8
+  if_index : 6 (en0)
+
+resolver #2
+  nameserver[0] : 10.0.0.1
+  if_index : 7 (en1)
+`
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(output, nil)
+
+				return mock
+			},
+			interfaceName: "en5",
+			want: &dns.GetResult{
+				DNSServers: []string{"192.168.1.1", "8.8.8.8"},
+			},
+		},
+		{
+			name: "when scutil command errors",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return("", assert.AnError)
+
+				return mock
+			},
+			interfaceName: "en0",
+			wantErr:       true,
+			wantErrType:   assert.AnError,
+		},
+		{
+			name: "when no nameservers in output",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+				output := `
+DNS configuration
+
+resolver #1
+  search domain[0] : example.com
+  if_index : 6 (en0)
+`
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(output, nil)
+
+				return mock
+			},
+			interfaceName: "en0",
+			wantErr:       true,
+			wantErrType:   fmt.Errorf("no resolver blocks found"),
+		},
+		{
+			name: "when empty output",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return("", nil)
+
+				return mock
+			},
+			interfaceName: "en0",
+			wantErr:       true,
+			wantErrType:   fmt.Errorf("no resolver blocks found"),
+		},
+		{
+			name: "when resolver has no search domains",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+				output := `
+DNS configuration
+
+resolver #1
+  nameserver[0] : 8.8.8.8
+  nameserver[1] : 8.8.4.4
+  if_index : 6 (en0)
+`
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(output, nil)
+
+				return mock
+			},
+			interfaceName: "en0",
+			want: &dns.GetResult{
+				DNSServers: []string{"8.8.8.8", "8.8.4.4"},
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			darwin := dns.NewDarwinProvider()
+			mock := tc.setupMock()
 
-			got, err := darwin.GetResolvConfByInterface("en0")
+			darwin := dns.NewDarwinProvider(suite.logger, mock)
+			got, err := darwin.GetResolvConfByInterface(tc.interfaceName)
 
-			suite.NoError(err)
-			suite.NotNil(got)
-			suite.Equal(tc.want, got)
+			if !tc.wantErr {
+				suite.NoError(err)
+				suite.Equal(tc.want, got)
+			} else {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.wantErrType.Error())
+			}
 		})
 	}
 }

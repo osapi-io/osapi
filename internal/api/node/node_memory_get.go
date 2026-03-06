@@ -100,10 +100,10 @@ func (s *Node) getNodeMemoryBroadcast(
 	}, nil
 }
 
-// buildMemoryResultItem converts mem.Stats to a MemoryResultItem.
+// buildMemoryResultItem converts mem.Result to a MemoryResultItem.
 func buildMemoryResultItem(
 	hostname string,
-	memStats *mem.Stats,
+	memStats *mem.Result,
 ) *gen.MemoryResultItem {
 	item := &gen.MemoryResultItem{
 		Hostname: hostname,

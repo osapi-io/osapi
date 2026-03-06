@@ -116,7 +116,7 @@ func (suite *DarwinGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 					}
 				}
 			},
-			want: []disk.UsageStats{
+			want: []disk.Result{
 				{
 					Name:  "/",
 					Total: 500000000000,
@@ -170,7 +170,7 @@ func (suite *DarwinGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 					}
 				}
 			},
-			want: []disk.UsageStats{
+			want: []disk.Result{
 				{
 					Name:  "/",
 					Total: 500000000000,

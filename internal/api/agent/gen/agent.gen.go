@@ -86,8 +86,14 @@ type AgentInfo struct {
 	// PackageMgr Package manager.
 	PackageMgr *string `json:"package_mgr,omitempty"`
 
+	// PrimaryInterface Name of the interface used for the default route.
+	PrimaryInterface *string `json:"primary_interface,omitempty"`
+
 	// RegisteredAt When the agent last refreshed its heartbeat.
 	RegisteredAt *time.Time `json:"registered_at,omitempty"`
+
+	// Routes Network routing table entries.
+	Routes *[]RouteResponse `json:"routes,omitempty"`
 
 	// ServiceMgr Init system.
 	ServiceMgr *string `json:"service_mgr,omitempty"`
@@ -180,6 +186,27 @@ type OSInfoResponse struct {
 
 	// Version The version of the Linux distribution.
 	Version string `json:"version"`
+}
+
+// RouteResponse A network routing table entry.
+type RouteResponse struct {
+	// Destination Destination network address.
+	Destination string `json:"destination"`
+
+	// Flags Route flags.
+	Flags *string `json:"flags,omitempty"`
+
+	// Gateway Gateway address.
+	Gateway string `json:"gateway"`
+
+	// Interface Network interface name.
+	Interface string `json:"interface"`
+
+	// Mask Network mask in CIDR notation.
+	Mask *string `json:"mask,omitempty"`
+
+	// Metric Route metric.
+	Metric *int `json:"metric,omitempty"`
 }
 
 // TimelineEvent defines model for TimelineEvent.

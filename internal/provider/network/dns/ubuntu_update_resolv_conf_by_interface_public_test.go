@@ -62,7 +62,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		servers       []string
 		searchDomains []string
 		interfaceName string
-		want          *dns.Config
+		want          *dns.GetResult
 		wantErr       bool
 		wantErrType   error
 	}{
@@ -82,7 +82,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"8.8.8.8",
 					"9.9.9.9",
@@ -106,7 +106,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"foo.local",
 				"bar.local",
 			},
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"1.1.1.1",
 					"2.2.2.2",
@@ -130,7 +130,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"8.8.8.8",
 				"9.9.9.9",
 			},
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"8.8.8.8",
 					"9.9.9.9",
@@ -155,7 +155,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 				"8.8.8.8",
 				"9.9.9.9",
 			},
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"8.8.8.8",
 					"9.9.9.9",

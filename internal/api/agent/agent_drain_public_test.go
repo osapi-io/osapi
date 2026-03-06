@@ -67,14 +67,15 @@ func (s *AgentDrainPublicTestSuite) TearDownTest() {
 
 func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 	tests := []struct {
-		name         string
-		hostname     string
-		mockAgent    *jobtypes.AgentInfo
-		mockGetErr   error
-		mockWriteErr error
-		skipWrite    bool
-		mockSetDrain bool
-		validateFunc func(resp gen.DrainAgentResponseObject)
+		name            string
+		hostname        string
+		mockAgent       *jobtypes.AgentInfo
+		mockGetErr      error
+		mockWriteErr    error
+		skipWrite       bool
+		mockSetDrain    bool
+		mockSetDrainErr error
+		validateFunc    func(resp gen.DrainAgentResponseObject)
 	}{
 		{
 			name:     "success drains agent",
@@ -126,6 +127,51 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 				s.True(ok)
 			},
 		},
+		{
+			name:     "when SetDrainFlag fails returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateReady,
+			},
+			mockSetDrain:    true,
+			mockSetDrainErr: fmt.Errorf("kv connection failed"),
+			skipWrite:       true,
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				r, ok := resp.(gen.DrainAgent409JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "failed to set drain flag")
+			},
+		},
+		{
+			name:     "when WriteAgentTimelineEvent returns not found error returns 404",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateReady,
+			},
+			mockSetDrain: true,
+			mockWriteErr: fmt.Errorf("agent not found: server1"),
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				_, ok := resp.(gen.DrainAgent404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:     "when WriteAgentTimelineEvent returns other error returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateReady,
+			},
+			mockSetDrain: true,
+			mockWriteErr: fmt.Errorf("connection failed"),
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				r, ok := resp.(gen.DrainAgent409JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "connection failed")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -137,7 +183,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 			if tt.mockSetDrain {
 				s.mockJobClient.EXPECT().
 					SetDrainFlag(gomock.Any(), tt.hostname).
-					Return(nil)
+					Return(tt.mockSetDrainErr)
 			}
 
 			if !tt.skipWrite {

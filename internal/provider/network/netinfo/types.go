@@ -20,11 +20,33 @@
 
 package netinfo
 
-import "github.com/retr0h/osapi/internal/job"
+// InterfaceResult represents a network interface with its address.
+type InterfaceResult struct {
+	Name   string
+	IPv4   string
+	IPv6   string
+	MAC    string
+	Family string
+}
+
+// RouteResult represents a network routing table entry.
+type RouteResult struct {
+	Destination string
+	Gateway     string
+	Interface   string
+	Mask        string
+	Metric      int
+	Flags       string
+}
 
 // Provider implements the methods to interact with network interface information.
 type Provider interface {
 	// GetInterfaces retrieves non-loopback, up network interfaces
 	// with name, IPv4, and MAC address.
-	GetInterfaces() ([]job.NetworkInterface, error)
+	GetInterfaces() ([]InterfaceResult, error)
+	// GetRoutes returns the system routing table.
+	GetRoutes() ([]RouteResult, error)
+	// GetPrimaryInterface returns the name of the interface used
+	// for the default route.
+	GetPrimaryInterface() (string, error)
 }

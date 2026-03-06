@@ -60,7 +60,7 @@ func transitionTime(
 }
 
 func evaluateMemoryPressure(
-	stats *mem.Stats,
+	stats *mem.Result,
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {
@@ -85,7 +85,7 @@ func evaluateMemoryPressure(
 }
 
 func evaluateHighLoad(
-	loadAvg *load.AverageStats,
+	loadAvg *load.Result,
 	cpuCount int,
 	multiplier float64,
 	prev []job.Condition,
@@ -108,7 +108,7 @@ func evaluateHighLoad(
 }
 
 func evaluateDiskPressure(
-	disks []disk.UsageStats,
+	disks []disk.Result,
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {

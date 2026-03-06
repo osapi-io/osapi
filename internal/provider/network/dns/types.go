@@ -25,18 +25,18 @@ type Provider interface {
 	// GetResolvConfByInterface retrieves the DNS configuration.
 	GetResolvConfByInterface(
 		interfaceName string,
-	) (*Config, error)
+	) (*GetResult, error)
 	// UpdateResolvConfByInterface updates the DNS configuration.
-	// Returns a Result indicating whether the configuration was changed.
+	// Returns an UpdateResult indicating whether the configuration was changed.
 	UpdateResolvConfByInterface(
 		servers []string,
 		searchDomains []string,
 		interfaceName string,
-	) (*Result, error)
+	) (*UpdateResult, error)
 }
 
-// Config represents the DNS configuration with servers and search domains.
-type Config struct {
+// GetResult represents the DNS configuration with servers and search domains.
+type GetResult struct {
 	// List of DNS server IP addresses (IPv4 or IPv6)
 	DNSServers []string
 	// List of search domains for DNS resolution
@@ -45,8 +45,8 @@ type Config struct {
 	Changed bool `json:"changed"`
 }
 
-// Result represents the outcome of a DNS update operation.
-type Result struct {
+// UpdateResult represents the outcome of a DNS update operation.
+type UpdateResult struct {
 	// Changed indicates whether the DNS configuration was actually modified.
 	Changed bool
 }

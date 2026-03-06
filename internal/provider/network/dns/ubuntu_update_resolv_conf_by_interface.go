@@ -56,7 +56,7 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,
-) (*Result, error) {
+) (*UpdateResult, error) {
 	u.logger.Info(
 		"setting resolvectl configuration",
 		slog.String("servers", strings.Join(servers, ", ")),
@@ -84,7 +84,7 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 	if slices.Equal(servers, existingConfig.DNSServers) &&
 		slices.Equal(searchDomains, existingConfig.SearchDomains) {
 		u.logger.Info("dns configuration unchanged, skipping update")
-		return &Result{Changed: false}, nil
+		return &UpdateResult{Changed: false}, nil
 	}
 
 	// Set DNS servers
@@ -120,5 +120,5 @@ func (u *Ubuntu) UpdateResolvConfByInterface(
 		}
 	}
 
-	return &Result{Changed: true}, nil
+	return &UpdateResult{Changed: true}, nil
 }

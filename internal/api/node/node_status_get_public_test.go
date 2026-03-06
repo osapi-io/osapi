@@ -215,21 +215,21 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusHTTP() {
 					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.NodeStatusResponse{
 						Hostname: "default-hostname",
 						Uptime:   5 * time.Hour,
-						OSInfo: &host.OSInfo{
+						OSInfo: &host.Result{
 							Distribution: "Ubuntu",
 							Version:      "24.04",
 						},
-						LoadAverages: &load.AverageStats{
+						LoadAverages: &load.Result{
 							Load1:  1,
 							Load5:  0.5,
 							Load15: 0.2,
 						},
-						MemoryStats: &mem.Stats{
+						MemoryStats: &mem.Result{
 							Total:  8388608,
 							Free:   4194304,
 							Cached: 2097152,
 						},
-						DiskUsage: []disk.UsageStats{
+						DiskUsage: []disk.Result{
 							{
 								Name:  "/dev/disk1",
 								Total: 500000000000,
@@ -400,21 +400,21 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 						&jobtypes.NodeStatusResponse{
 							Hostname: "default-hostname",
 							Uptime:   5 * time.Hour,
-							OSInfo: &host.OSInfo{
+							OSInfo: &host.Result{
 								Distribution: "Ubuntu",
 								Version:      "24.04",
 							},
-							LoadAverages: &load.AverageStats{
+							LoadAverages: &load.Result{
 								Load1:  1,
 								Load5:  0.5,
 								Load15: 0.2,
 							},
-							MemoryStats: &mem.Stats{
+							MemoryStats: &mem.Result{
 								Total:  8388608,
 								Free:   4194304,
 								Cached: 2097152,
 							},
-							DiskUsage: []disk.UsageStats{
+							DiskUsage: []disk.Result{
 								{
 									Name:  "/dev/disk1",
 									Total: 500000000000,

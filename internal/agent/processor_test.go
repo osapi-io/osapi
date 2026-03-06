@@ -79,13 +79,13 @@ func (s *ProcessorTestSuite) SetupTest() {
 	// Use plain DNS mock to avoid hardcoded interface expectations
 	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 	// Set up expectations for eth0 interface used in tests
-	dnsMock.EXPECT().GetResolvConfByInterface("eth0").Return(&dns.Config{
+	dnsMock.EXPECT().GetResolvConfByInterface("eth0").Return(&dns.GetResult{
 		DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
 		SearchDomains: []string{"example.com"},
 	}, nil).AnyTimes()
 	dnsMock.EXPECT().
 		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(&dns.Result{Changed: true}, nil).
+		Return(&dns.UpdateResult{Changed: true}, nil).
 		AnyTimes()
 
 	// Use plain ping mock to avoid hardcoded address expectations

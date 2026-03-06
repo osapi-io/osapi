@@ -100,10 +100,10 @@ func (s *Node) getNodeOSBroadcast(
 	}, nil
 }
 
-// buildOSInfoResultItem converts host.OSInfo to an OSInfoResultItem.
+// buildOSInfoResultItem converts host.Result to an OSInfoResultItem.
 func buildOSInfoResultItem(
 	hostname string,
-	osInfo *host.OSInfo,
+	osInfo *host.Result,
 ) *gen.OSInfoResultItem {
 	item := &gen.OSInfoResultItem{
 		Hostname: hostname,

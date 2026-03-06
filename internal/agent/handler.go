@@ -187,6 +187,22 @@ func (a *Agent) handleJobMessage(
 		)
 	}
 
+	// Resolve @fact.X references in job request data
+	if a.cachedFacts != nil && len(jobRequest.Data) > 0 {
+		var dataMap map[string]any
+		if err := json.Unmarshal(jobRequest.Data, &dataMap); err == nil {
+			resolved, err := ResolveFacts(dataMap, a.cachedFacts, a.hostname)
+			if err != nil {
+				return fmt.Errorf("failed to resolve fact references: %w", err)
+			}
+			if resolved != nil {
+				if resolvedJSON, err := json.Marshal(resolved); err == nil {
+					jobRequest.Data = resolvedJSON
+				}
+			}
+		}
+	}
+
 	// Process the job
 	a.logger.InfoContext(
 		ctx,

@@ -233,7 +233,9 @@ func (a *Agent) startConsumers() {
 // goroutines to finish. After this returns, the agent is no longer
 // receiving new jobs.
 func (a *Agent) stopConsumers() {
-	a.consumerCancel()
+	if a.consumerCancel != nil {
+		a.consumerCancel()
+	}
 	a.consumerWg.Wait()
 }
 

@@ -85,10 +85,10 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 					Labels:       map[string]string{"group": "web"},
 					RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 					StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-					OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
+					OSInfo:       &host.Result{Distribution: "Ubuntu", Version: "24.04"},
 					Uptime:       5 * time.Hour,
-					LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-					MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+					LoadAverages: &load.Result{Load1: 0.5, Load5: 0.3, Load15: 0.2},
+					MemoryStats:  &mem.Result{Total: 8388608, Free: 4194304, Cached: 2097152},
 				},
 				{Hostname: "server2"},
 			},
@@ -173,6 +173,124 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 				s.Nil(iface1.Family)
 				s.Require().NotNil(a.Facts)
 				s.Equal("prod", (*a.Facts)["env"])
+			},
+		},
+		{
+			name: "success with routes and primary interface",
+			mockAgents: []jobtypes.AgentInfo{
+				{
+					Hostname:         "server1",
+					PrimaryInterface: "eth0",
+					Routes: []jobtypes.Route{
+						{
+							Destination: "0.0.0.0",
+							Gateway:     "192.168.1.1",
+							Interface:   "eth0",
+							Mask:        "/0",
+							Metric:      100,
+							Flags:       "0003",
+						},
+						{
+							Destination: "192.168.1.0",
+							Gateway:     "0.0.0.0",
+							Interface:   "eth0",
+						},
+					},
+				},
+			},
+			validateFunc: func(resp gen.GetAgentResponseObject) {
+				r, ok := resp.(gen.GetAgent200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+
+				a := r.Agents[0]
+				s.Require().NotNil(a.PrimaryInterface)
+				s.Equal("eth0", *a.PrimaryInterface)
+				s.Require().NotNil(a.Routes)
+				s.Len(*a.Routes, 2)
+				route0 := (*a.Routes)[0]
+				s.Equal("0.0.0.0", route0.Destination)
+				s.Equal("192.168.1.1", route0.Gateway)
+				s.Equal("eth0", route0.Interface)
+				s.Require().NotNil(route0.Mask)
+				s.Equal("/0", *route0.Mask)
+				s.Require().NotNil(route0.Metric)
+				s.Equal(100, *route0.Metric)
+				s.Require().NotNil(route0.Flags)
+				s.Equal("0003", *route0.Flags)
+				route1 := (*a.Routes)[1]
+				s.Equal("192.168.1.0", route1.Destination)
+				s.Nil(route1.Mask)
+				s.Nil(route1.Metric)
+				s.Nil(route1.Flags)
+			},
+		},
+		{
+			name: "success with scheduling fields",
+			mockAgents: []jobtypes.AgentInfo{
+				{
+					Hostname: "server1",
+					State:    jobtypes.AgentStateDraining,
+					Conditions: []jobtypes.Condition{
+						{
+							Type:               "MemoryPressure",
+							Status:             true,
+							LastTransitionTime: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+							Reason:             "memory above threshold",
+						},
+						{
+							Type:               "DiskPressure",
+							Status:             false,
+							LastTransitionTime: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+						},
+					},
+					Timeline: []jobtypes.TimelineEvent{
+						{
+							Timestamp: time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
+							Event:     "drain",
+							Hostname:  "server1",
+							Message:   "Drain initiated via API",
+							Error:     "some error",
+						},
+						{
+							Timestamp: time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
+							Event:     "ready",
+						},
+					},
+				},
+			},
+			validateFunc: func(resp gen.GetAgentResponseObject) {
+				r, ok := resp.(gen.GetAgent200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+
+				a := r.Agents[0]
+				s.Require().NotNil(a.State)
+				s.Equal(gen.AgentInfoState("Draining"), *a.State)
+				s.Require().NotNil(a.Conditions)
+				s.Len(*a.Conditions, 2)
+				c0 := (*a.Conditions)[0]
+				s.Equal(gen.NodeConditionType("MemoryPressure"), c0.Type)
+				s.True(c0.Status)
+				s.Require().NotNil(c0.Reason)
+				s.Equal("memory above threshold", *c0.Reason)
+				c1 := (*a.Conditions)[1]
+				s.Nil(c1.Reason)
+				s.Require().NotNil(a.Timeline)
+				s.Len(*a.Timeline, 2)
+				t0 := (*a.Timeline)[0]
+				s.Equal("drain", t0.Event)
+				s.Require().NotNil(t0.Hostname)
+				s.Equal("server1", *t0.Hostname)
+				s.Require().NotNil(t0.Message)
+				s.Equal("Drain initiated via API", *t0.Message)
+				s.Require().NotNil(t0.Error)
+				s.Equal("some error", *t0.Error)
+				t1 := (*a.Timeline)[1]
+				s.Equal("ready", t1.Event)
+				s.Nil(t1.Hostname)
+				s.Nil(t1.Message)
+				s.Nil(t1.Error)
 			},
 		},
 		{

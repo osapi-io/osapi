@@ -78,7 +78,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeMemory(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &mem.Stats{
+					Return("550e8400-e29b-41d4-a716-446655440000", &mem.Result{
 						Total:  8192,
 						Free:   4096,
 						Cached: 2048,
@@ -119,7 +119,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeMemoryBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Stats{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Result{
 						"server1": {Total: 8192, Free: 4096, Cached: 2048},
 						"server2": {Total: 16384, Free: 8192, Cached: 4096},
 					}, map[string]string{}, nil)
@@ -134,7 +134,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryNodeMemoryBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Stats{
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Result{
 						"server1": {Total: 8192, Free: 4096, Cached: 2048},
 					}, map[string]string{
 						"server2": "some error",

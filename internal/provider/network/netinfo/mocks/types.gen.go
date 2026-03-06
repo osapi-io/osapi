@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	job "github.com/retr0h/osapi/internal/job"
+	netinfo "github.com/retr0h/osapi/internal/provider/network/netinfo"
 )
 
 // MockProvider is a mock of Provider interface.
@@ -35,10 +35,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetInterfaces mocks base method.
-func (m *MockProvider) GetInterfaces() ([]job.NetworkInterface, error) {
+func (m *MockProvider) GetInterfaces() ([]netinfo.InterfaceResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetInterfaces")
-	ret0, _ := ret[0].([]job.NetworkInterface)
+	ret0, _ := ret[0].([]netinfo.InterfaceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -47,4 +47,34 @@ func (m *MockProvider) GetInterfaces() ([]job.NetworkInterface, error) {
 func (mr *MockProviderMockRecorder) GetInterfaces() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInterfaces", reflect.TypeOf((*MockProvider)(nil).GetInterfaces))
+}
+
+// GetPrimaryInterface mocks base method.
+func (m *MockProvider) GetPrimaryInterface() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrimaryInterface")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrimaryInterface indicates an expected call of GetPrimaryInterface.
+func (mr *MockProviderMockRecorder) GetPrimaryInterface() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryInterface", reflect.TypeOf((*MockProvider)(nil).GetPrimaryInterface))
+}
+
+// GetRoutes mocks base method.
+func (m *MockProvider) GetRoutes() ([]netinfo.RouteResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRoutes")
+	ret0, _ := ret[0].([]netinfo.RouteResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRoutes indicates an expected call of GetRoutes.
+func (mr *MockProviderMockRecorder) GetRoutes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoutes", reflect.TypeOf((*MockProvider)(nil).GetRoutes))
 }

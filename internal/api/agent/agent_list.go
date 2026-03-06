@@ -65,6 +65,19 @@ func buildAgentInfo(
 		Status:   status,
 	}
 
+	setIdentity(a, &info)
+	setSystem(a, &info)
+	setNetwork(a, &info)
+	setScheduling(a, &info)
+
+	return info
+}
+
+// setIdentity populates labels, timestamps, and basic identification fields.
+func setIdentity(
+	a *job.AgentInfo,
+	info *gen.AgentInfo,
+) {
 	if len(a.Labels) > 0 {
 		labels := a.Labels
 		info.Labels = &labels
@@ -83,6 +96,17 @@ func buildAgentInfo(
 		info.Uptime = &uptime
 	}
 
+	if len(a.Facts) > 0 {
+		facts := a.Facts
+		info.Facts = &facts
+	}
+}
+
+// setSystem populates OS, CPU, memory, and package/service manager fields.
+func setSystem(
+	a *job.AgentInfo,
+	info *gen.AgentInfo,
+) {
 	if a.OSInfo != nil {
 		info.OsInfo = &gen.OSInfoResponse{
 			Distribution: a.OSInfo.Distribution,
@@ -135,7 +159,13 @@ func buildAgentInfo(
 		pkgMgr := a.PackageMgr
 		info.PackageMgr = &pkgMgr
 	}
+}
 
+// setNetwork populates interfaces, primary interface, and routes.
+func setNetwork(
+	a *job.AgentInfo,
+	info *gen.AgentInfo,
+) {
 	if len(a.Interfaces) > 0 {
 		ifaces := make([]gen.NetworkInterfaceResponse, len(a.Interfaces))
 		for i, ni := range a.Interfaces {
@@ -162,11 +192,41 @@ func buildAgentInfo(
 		info.Interfaces = &ifaces
 	}
 
-	if len(a.Facts) > 0 {
-		facts := a.Facts
-		info.Facts = &facts
+	if a.PrimaryInterface != "" {
+		pi := a.PrimaryInterface
+		info.PrimaryInterface = &pi
 	}
 
+	if len(a.Routes) > 0 {
+		routes := make([]gen.RouteResponse, len(a.Routes))
+		for i, r := range a.Routes {
+			routes[i] = gen.RouteResponse{
+				Destination: r.Destination,
+				Gateway:     r.Gateway,
+				Interface:   r.Interface,
+			}
+			if r.Mask != "" {
+				mask := r.Mask
+				routes[i].Mask = &mask
+			}
+			if r.Metric != 0 {
+				metric := r.Metric
+				routes[i].Metric = &metric
+			}
+			if r.Flags != "" {
+				flags := r.Flags
+				routes[i].Flags = &flags
+			}
+		}
+		info.Routes = &routes
+	}
+}
+
+// setScheduling populates state, conditions, and timeline.
+func setScheduling(
+	a *job.AgentInfo,
+	info *gen.AgentInfo,
+) {
 	if a.State != "" {
 		state := gen.AgentInfoState(a.State)
 		info.State = &state
@@ -210,8 +270,6 @@ func buildAgentInfo(
 		}
 		info.Timeline = &timeline
 	}
-
-	return info
 }
 
 func formatDuration(

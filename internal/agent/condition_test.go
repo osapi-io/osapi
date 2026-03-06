@@ -190,14 +190,14 @@ func (s *ConditionTestSuite) TestTransitionTime() {
 func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 	tests := []struct {
 		name         string
-		stats        *mem.Stats
+		stats        *mem.Result
 		threshold    int
 		prev         []job.Condition
 		validateFunc func(job.Condition)
 	}{
 		{
 			name: "when usage above threshold returns true with reason",
-			stats: &mem.Stats{
+			stats: &mem.Result{
 				Total:     8 * 1024 * 1024 * 1024, // 8 GB
 				Available: 1 * 1024 * 1024 * 1024, // 1 GB available = 87.5% used
 			},
@@ -213,7 +213,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when usage below threshold returns false",
-			stats: &mem.Stats{
+			stats: &mem.Result{
 				Total:     8 * 1024 * 1024 * 1024, // 8 GB
 				Available: 6 * 1024 * 1024 * 1024, // 6 GB available = 25% used
 			},
@@ -238,7 +238,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when total is zero returns false",
-			stats: &mem.Stats{
+			stats: &mem.Result{
 				Total:     0,
 				Available: 0,
 			},
@@ -252,7 +252,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 		},
 		{
 			name: "when usage exactly at threshold returns false",
-			stats: &mem.Stats{
+			stats: &mem.Result{
 				Total:     100,
 				Available: 20, // 80% used, threshold is 80 (> not >=)
 			},
@@ -277,7 +277,7 @@ func (s *ConditionTestSuite) TestEvaluateMemoryPressure() {
 func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 	tests := []struct {
 		name         string
-		loadAvg      *load.AverageStats
+		loadAvg      *load.Result
 		cpuCount     int
 		multiplier   float64
 		prev         []job.Condition
@@ -285,7 +285,7 @@ func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 	}{
 		{
 			name: "when load above threshold returns true with reason",
-			loadAvg: &load.AverageStats{
+			loadAvg: &load.Result{
 				Load1:  8.5,
 				Load5:  7.0,
 				Load15: 6.0,
@@ -303,7 +303,7 @@ func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 		},
 		{
 			name: "when load below threshold returns false",
-			loadAvg: &load.AverageStats{
+			loadAvg: &load.Result{
 				Load1:  2.0,
 				Load5:  1.5,
 				Load15: 1.0,
@@ -331,7 +331,7 @@ func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 		},
 		{
 			name: "when cpu count is zero returns false",
-			loadAvg: &load.AverageStats{
+			loadAvg: &load.Result{
 				Load1:  8.5,
 				Load5:  7.0,
 				Load15: 6.0,
@@ -347,7 +347,7 @@ func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 		},
 		{
 			name: "when load exactly at threshold returns false",
-			loadAvg: &load.AverageStats{
+			loadAvg: &load.Result{
 				Load1:  8.0,
 				Load5:  5.0,
 				Load15: 3.0,
@@ -374,14 +374,14 @@ func (s *ConditionTestSuite) TestEvaluateHighLoad() {
 func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 	tests := []struct {
 		name         string
-		disks        []disk.UsageStats
+		disks        []disk.Result
 		threshold    int
 		prev         []job.Condition
 		validateFunc func(job.Condition)
 	}{
 		{
 			name: "when one disk above threshold returns true",
-			disks: []disk.UsageStats{
+			disks: []disk.Result{
 				{
 					Name:  "/dev/sda1",
 					Total: 100 * 1024 * 1024 * 1024, // 100 GB
@@ -401,7 +401,7 @@ func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 		},
 		{
 			name: "when all disks below threshold returns false",
-			disks: []disk.UsageStats{
+			disks: []disk.Result{
 				{
 					Name:  "/dev/sda1",
 					Total: 100 * 1024 * 1024 * 1024,
@@ -436,7 +436,7 @@ func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 		},
 		{
 			name:      "when disks is empty returns false",
-			disks:     []disk.UsageStats{},
+			disks:     []disk.Result{},
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
@@ -447,7 +447,7 @@ func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 		},
 		{
 			name: "when disk total is zero skips it",
-			disks: []disk.UsageStats{
+			disks: []disk.Result{
 				{
 					Name:  "/dev/sda1",
 					Total: 0,
@@ -465,7 +465,7 @@ func (s *ConditionTestSuite) TestEvaluateDiskPressure() {
 		},
 		{
 			name: "when second disk is above threshold reports it",
-			disks: []disk.UsageStats{
+			disks: []disk.Result{
 				{
 					Name:  "/dev/sda1",
 					Total: 100 * 1024 * 1024 * 1024,
@@ -510,7 +510,7 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status flips from false to true transition time updates",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
-					&mem.Stats{
+					&mem.Result{
 						Total:     100,
 						Available: 10, // 90% used
 					},
@@ -535,7 +535,7 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status stays true transition time is preserved",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
-					&mem.Stats{
+					&mem.Result{
 						Total:     100,
 						Available: 10, // 90% used
 					},
@@ -559,7 +559,7 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status flips from true to false transition time updates",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
-					&mem.Stats{
+					&mem.Result{
 						Total:     100,
 						Available: 80, // 20% used
 					},
@@ -584,7 +584,7 @@ func (s *ConditionTestSuite) TestLastTransitionTimeTracking() {
 			name: "when status stays false transition time is preserved",
 			evalFunc: func(prev []job.Condition) job.Condition {
 				return evaluateMemoryPressure(
-					&mem.Stats{
+					&mem.Result{
 						Total:     100,
 						Available: 80, // 20% used
 					},

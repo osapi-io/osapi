@@ -35,10 +35,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetResolvConfByInterface mocks base method.
-func (m *MockProvider) GetResolvConfByInterface(interfaceName string) (*dns.Config, error) {
+func (m *MockProvider) GetResolvConfByInterface(interfaceName string) (*dns.GetResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResolvConfByInterface", interfaceName)
-	ret0, _ := ret[0].(*dns.Config)
+	ret0, _ := ret[0].(*dns.GetResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -50,10 +50,10 @@ func (mr *MockProviderMockRecorder) GetResolvConfByInterface(interfaceName inter
 }
 
 // UpdateResolvConfByInterface mocks base method.
-func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) (*dns.Result, error) {
+func (m *MockProvider) UpdateResolvConfByInterface(servers, searchDomains []string, interfaceName string) (*dns.UpdateResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateResolvConfByInterface", servers, searchDomains, interfaceName)
-	ret0, _ := ret[0].(*dns.Result)
+	ret0, _ := ret[0].(*dns.UpdateResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

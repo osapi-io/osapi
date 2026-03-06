@@ -104,7 +104,7 @@ func (c *Client) QueryNetworkDNS(
 	ctx context.Context,
 	hostname string,
 	iface string,
-) (string, *dns.Config, string, error) {
+) (string, *dns.GetResult, string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"interface": iface,
 	})
@@ -125,7 +125,7 @@ func (c *Client) QueryNetworkDNS(
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
-	var result dns.Config
+	var result dns.GetResult
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		return "", nil, "", fmt.Errorf("failed to unmarshal DNS response: %w", err)
 	}
@@ -288,7 +288,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	ctx context.Context,
 	target string,
 	iface string,
-) (string, map[string]*dns.Config, map[string]string, error) {
+) (string, map[string]*dns.GetResult, map[string]string, error) {
 	data, _ := json.Marshal(map[string]interface{}{
 		"interface": iface,
 	})
@@ -305,7 +305,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*dns.Config)
+	results := make(map[string]*dns.GetResult)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
 		if resp.Status == "failed" {
@@ -313,7 +313,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 			continue
 		}
 
-		var result dns.Config
+		var result dns.GetResult
 		if err := json.Unmarshal(resp.Data, &result); err != nil {
 			continue
 		}
@@ -328,7 +328,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 func (c *Client) QueryNetworkDNSAll(
 	ctx context.Context,
 	iface string,
-) (string, map[string]*dns.Config, map[string]string, error) {
+) (string, map[string]*dns.GetResult, map[string]string, error) {
 	return c.QueryNetworkDNSBroadcast(ctx, job.BroadcastHost, iface)
 }
 
@@ -486,6 +486,8 @@ func (c *Client) mergeFacts(
 	info.ServiceMgr = facts.ServiceMgr
 	info.PackageMgr = facts.PackageMgr
 	info.Interfaces = facts.Interfaces
+	info.PrimaryInterface = facts.PrimaryInterface
+	info.Routes = facts.Routes
 	info.Facts = facts.Facts
 }
 

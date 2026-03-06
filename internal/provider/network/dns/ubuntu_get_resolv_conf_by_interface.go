@@ -52,7 +52,7 @@ import (
 // See `systemd-resolved.service(8)` manual page for further information.
 func (u *Ubuntu) GetResolvConfByInterface(
 	interfaceName string,
-) (*Config, error) {
+) (*GetResult, error) {
 	cmd := "resolvectl"
 	args := []string{"status", interfaceName}
 	output, err := u.execManager.RunCmd(cmd, args)
@@ -68,7 +68,7 @@ func (u *Ubuntu) GetResolvConfByInterface(
 		return nil, fmt.Errorf("interface %q does not exist", interfaceName)
 	}
 
-	config := &Config{}
+	config := &GetResult{}
 
 	// Parse DNS Servers
 	dnsServersRegex := regexp.MustCompile(`DNS Servers:\s+([^\n]+)`)

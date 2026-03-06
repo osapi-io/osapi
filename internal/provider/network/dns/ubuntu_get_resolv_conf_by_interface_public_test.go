@@ -60,7 +60,7 @@ func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 		name          string
 		setupMock     func() *mocks.MockManager
 		interfaceName string
-		want          *dns.Config
+		want          *dns.GetResult
 		wantErr       bool
 		wantErrType   error
 	}{
@@ -72,7 +72,7 @@ func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 				return mock
 			},
 			interfaceName: "wlp0s20f3",
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"192.168.1.1",
 					"8.8.8.8",
@@ -95,7 +95,7 @@ func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 				return mock
 			},
 			interfaceName: "wlp0s20f3",
-			want: &dns.Config{
+			want: &dns.GetResult{
 				DNSServers: []string{
 					"192.168.1.1",
 					"8.8.8.8",

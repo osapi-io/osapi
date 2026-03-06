@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 )
 
@@ -46,7 +45,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 		addrsFn      func(iface net.Interface) ([]net.Addr, error)
 		wantErr      bool
 		wantErrType  error
-		validateFunc func(result []job.NetworkInterface)
+		validateFunc func(result []netinfo.InterfaceResult)
 	}{
 		{
 			name: "when GetInterfaces Ok",
@@ -78,7 +77,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Equal("eth0", result[0].Name)
 				suite.Equal("00:11:22:33:44:55", result[0].MAC)
@@ -99,7 +98,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Empty(result)
 			},
 		},
@@ -124,7 +123,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}, nil
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Equal("192.168.1.10", result[0].IPv4)
 				suite.Empty(result[0].IPv6)
@@ -152,7 +151,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}, nil
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Empty(result[0].IPv4)
 				suite.Equal("fe80::1", result[0].IPv6)
@@ -181,7 +180,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}, nil
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Equal("10.0.0.5", result[0].IPv4)
 				suite.Equal("fe80::1", result[0].IPv6)
@@ -207,7 +206,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				return []net.Addr{}, nil
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Empty(result[0].IPv4)
 				suite.Empty(result[0].IPv6)
@@ -233,7 +232,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				return nil, assert.AnError
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Empty(result[0].IPv4)
 				suite.Empty(result[0].IPv6)
@@ -261,7 +260,7 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 				}, nil
 			},
 			wantErr: false,
-			validateFunc: func(result []job.NetworkInterface) {
+			validateFunc: func(result []netinfo.InterfaceResult) {
 				suite.Require().Len(result, 1)
 				suite.Empty(result[0].IPv4)
 				suite.Empty(result[0].IPv6)
@@ -282,17 +281,17 @@ func (suite *GetInterfacesPublicTestSuite) TestGetInterfaces() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			n := netinfo.New()
+			l := netinfo.NewLinuxProvider()
 
 			if tc.setupMock != nil {
-				n.InterfacesFn = tc.setupMock()
+				l.InterfacesFn = tc.setupMock()
 			}
 
 			if tc.addrsFn != nil {
-				n.AddrsFn = tc.addrsFn
+				l.AddrsFn = tc.addrsFn
 			}
 
-			got, err := n.GetInterfaces()
+			got, err := l.GetInterfaces()
 
 			if tc.wantErr {
 				suite.Error(err)

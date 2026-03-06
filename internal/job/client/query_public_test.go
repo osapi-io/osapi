@@ -1394,6 +1394,34 @@ func (s *QueryPublicTestSuite) TestListAgents() {
 			},
 		},
 		{
+			name:          "when key without agents prefix is skipped",
+			useRegistryKV: true,
+			setupMockKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"drain.server1", "agents.server1"}, nil)
+
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(
+					[]byte(
+						`{"hostname":"server1","registered_at":"2026-01-01T00:00:00Z"}`,
+					),
+				)
+				kv.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+			},
+			setupStateKV: func(kv *jobmocks.MockKeyValue) {
+				kv.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+			},
+			expectedCount: 1,
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Equal("server1", agents[0].Hostname)
+			},
+		},
+		{
 			name:          "when factsKV returns invalid JSON degrades gracefully",
 			useRegistryKV: true,
 			useFactsKV:    true,

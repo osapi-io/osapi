@@ -35,10 +35,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // GetLocalUsageStats mocks base method.
-func (m *MockProvider) GetLocalUsageStats() ([]disk.UsageStats, error) {
+func (m *MockProvider) GetLocalUsageStats() ([]disk.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLocalUsageStats")
-	ret0, _ := ret[0].([]disk.UsageStats)
+	ret0, _ := ret[0].([]disk.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

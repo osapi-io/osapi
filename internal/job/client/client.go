@@ -45,6 +45,9 @@ type Client struct {
 	stateKV    jetstream.KeyValue
 	timeout    time.Duration
 	streamName string
+	// JSONMarshalFn is the function used to marshal JSON. Defaults to json.Marshal.
+	// Exported for testing.
+	JSONMarshalFn func(v any) ([]byte, error)
 }
 
 // Options configures the jobs client.
@@ -77,14 +80,15 @@ func New(
 	}
 
 	return &Client{
-		logger:     logger,
-		natsClient: natsClient,
-		kv:         opts.KVBucket,
-		registryKV: opts.RegistryKV,
-		factsKV:    opts.FactsKV,
-		stateKV:    opts.StateKV,
-		streamName: opts.StreamName,
-		timeout:    opts.Timeout,
+		logger:        logger,
+		natsClient:    natsClient,
+		kv:            opts.KVBucket,
+		registryKV:    opts.RegistryKV,
+		factsKV:       opts.FactsKV,
+		stateKV:       opts.StateKV,
+		streamName:    opts.StreamName,
+		timeout:       opts.Timeout,
+		JSONMarshalFn: json.Marshal,
 	}, nil
 }
 

@@ -464,8 +464,8 @@ default:
 
 Agents collect **system facts** independently from the job system. Facts are
 typed system properties — architecture, kernel version, FQDN, CPU count, network
-interfaces, service manager, and package manager — gathered via providers on a
-60-second interval.
+interfaces, routes, primary interface, service manager, and package manager —
+gathered via providers on a 60-second interval.
 
 Facts are stored in a dedicated `agent-facts` KV bucket with a 5-minute TTL,
 separate from the `agent-registry` heartbeat bucket. This keeps the heartbeat
@@ -476,6 +476,11 @@ When the API serves an `AgentInfo` response (via `GET /node/{hostname}` or
 `GET /node`), it merges data from both KV buckets — registry for status, labels,
 and lightweight metrics, and facts for detailed system properties — into a
 single unified response.
+
+Facts also power **fact references** (`@fact.*`) in job parameters. When an
+agent processes a job, it replaces `@fact.interface.primary`, `@fact.hostname`,
+and other tokens with live values from its cached facts. See
+[System Facts](../features/system-facts.md) for the full reference.
 
 ## Operation Examples
 

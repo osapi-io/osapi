@@ -67,14 +67,15 @@ func (s *AgentUndrainPublicTestSuite) TearDownTest() {
 
 func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 	tests := []struct {
-		name            string
-		hostname        string
-		mockAgent       *jobtypes.AgentInfo
-		mockGetErr      error
-		mockWriteErr    error
-		skipWrite       bool
-		mockDeleteDrain bool
-		validateFunc    func(resp gen.UndrainAgentResponseObject)
+		name               string
+		hostname           string
+		mockAgent          *jobtypes.AgentInfo
+		mockGetErr         error
+		mockWriteErr       error
+		skipWrite          bool
+		mockDeleteDrain    bool
+		mockDeleteDrainErr error
+		validateFunc       func(resp gen.UndrainAgentResponseObject)
 	}{
 		{
 			name:     "success undrains draining agent",
@@ -140,6 +141,51 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 				s.True(ok)
 			},
 		},
+		{
+			name:     "when DeleteDrainFlag fails returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateDraining,
+			},
+			mockDeleteDrain:    true,
+			mockDeleteDrainErr: fmt.Errorf("kv connection failed"),
+			skipWrite:          true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				r, ok := resp.(gen.UndrainAgent409JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "failed to delete drain flag")
+			},
+		},
+		{
+			name:     "when WriteAgentTimelineEvent returns not found error returns 404",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateDraining,
+			},
+			mockDeleteDrain: true,
+			mockWriteErr:    fmt.Errorf("agent not found: server1"),
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:     "when WriteAgentTimelineEvent returns other error returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateDraining,
+			},
+			mockDeleteDrain: true,
+			mockWriteErr:    fmt.Errorf("connection failed"),
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				r, ok := resp.(gen.UndrainAgent409JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "connection failed")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -151,7 +197,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 			if tt.mockDeleteDrain {
 				s.mockJobClient.EXPECT().
 					DeleteDrainFlag(gomock.Any(), tt.hostname).
-					Return(nil)
+					Return(tt.mockDeleteDrainErr)
 			}
 
 			if !tt.skipWrite {

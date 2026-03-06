@@ -23,13 +23,13 @@ package mem
 // GetStats retrieves memory statistics of the system.
 // It returns a Stats struct with total, free, and cached memory in
 // bytes, and an error if something goes wrong.
-func (u *Ubuntu) GetStats() (*Stats, error) {
+func (u *Ubuntu) GetStats() (*Result, error) {
 	memInfo, err := u.VirtualMemoryFn()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Stats{
+	return &Result{
 		Total:     memInfo.Total,
 		Available: memInfo.Available,
 		Free:      memInfo.Free,
