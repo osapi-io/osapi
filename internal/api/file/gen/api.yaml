@@ -1,0 +1,346 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: File Management API
+  version: 1.0.0
+tags:
+  - name: file_operations
+    x-displayName: File
+    description: Object Store file management operations.
+
+paths:
+  /file:
+    post:
+      summary: Upload a file
+      description: Upload a file to the Object Store.
+      tags:
+        - file_operations
+      operationId: PostFile
+      security:
+        - BearerAuth:
+            - file:write
+      requestBody:
+        description: The file to upload.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUploadRequest'
+      responses:
+        '201':
+          description: File uploaded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error uploading file.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List stored files
+      description: List all files stored in the Object Store.
+      tags:
+        - file_operations
+      operationId: GetFiles
+      security:
+        - BearerAuth:
+            - file:read
+      responses:
+        '200':
+          description: List of stored files.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileListResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing files.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /file/{name}:
+    get:
+      summary: Get file metadata
+      description: Get metadata for a specific file in the Object Store.
+      tags:
+        - file_operations
+      operationId: GetFileByName
+      security:
+        - BearerAuth:
+            - file:read
+      parameters:
+        - $ref: '#/components/parameters/FileName'
+      responses:
+        '200':
+          description: File metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfoResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving file metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a file
+      description: Delete a file from the Object Store.
+      tags:
+        - file_operations
+      operationId: DeleteFileByName
+      security:
+        - BearerAuth:
+            - file:write
+      parameters:
+        - $ref: '#/components/parameters/FileName'
+      responses:
+        '200':
+          description: File deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeleteResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting file.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components -----------------------------------------------------
+
+components:
+  parameters:
+    FileName:
+      name: name
+      in: path
+      required: true
+      description: >
+        The name of the file in the Object Store.
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,max=255
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas ------------------------------------------------------
+
+    FileUploadRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the file.
+          example: "nginx.conf"
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        content:
+          type: string
+          format: byte
+          description: Base64-encoded file content.
+          example: "c2VydmVyIHsgbGlzdGVuIDgwOyB9"
+          x-oapi-codegen-extra-tags:
+            validate: required
+      required:
+        - name
+        - content
+
+    # -- Response schemas -----------------------------------------------------
+
+    FileInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the file.
+          example: "nginx.conf"
+        sha256:
+          type: string
+          description: SHA-256 hash of the file content.
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        size:
+          type: integer
+          description: File size in bytes.
+          example: 1024
+      required:
+        - name
+        - sha256
+        - size
+
+    FileUploadResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the uploaded file.
+          example: "nginx.conf"
+        sha256:
+          type: string
+          description: SHA-256 hash of the file content.
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        size:
+          type: integer
+          description: File size in bytes.
+          example: 1024
+      required:
+        - name
+        - sha256
+        - size
+
+    FileListResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInfo'
+          description: List of stored files.
+        total:
+          type: integer
+          description: Total number of files.
+          example: 5
+      required:
+        - files
+        - total
+
+    FileInfoResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the file.
+          example: "nginx.conf"
+        sha256:
+          type: string
+          description: SHA-256 hash of the file content.
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        size:
+          type: integer
+          description: File size in bytes.
+          example: 1024
+      required:
+        - name
+        - sha256
+        - size
+
+    FileDeleteResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the deleted file.
+          example: "nginx.conf"
+        deleted:
+          type: boolean
+          description: Whether the file was deleted.
+          example: true
+      required:
+        - name
+        - deleted

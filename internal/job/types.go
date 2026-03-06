@@ -125,6 +125,12 @@ const (
 	OperationCommandShellExecute = "command.shell.execute"
 )
 
+// File operations — manage file deployments and status.
+const (
+	OperationFileDeployExecute = "file.deploy.execute"
+	OperationFileStatusGet     = "file.status.get"
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
@@ -247,6 +253,19 @@ type NodeShutdownData struct {
 	DelaySeconds int32 `json:"delay_seconds,omitempty"`
 	// Message is an optional message to log or display before reboot/shutdown
 	Message string `json:"message,omitempty"`
+}
+
+// FileState represents a deployed file's state in the file-state KV.
+// Keyed by <hostname>.<sha256-of-path>.
+type FileState struct {
+	ObjectName  string `json:"object_name"`
+	Path        string `json:"path"`
+	SHA256      string `json:"sha256"`
+	Mode        string `json:"mode,omitempty"`
+	Owner       string `json:"owner,omitempty"`
+	Group       string `json:"group,omitempty"`
+	DeployedAt  string `json:"deployed_at"`
+	ContentType string `json:"content_type"`
 }
 
 // NetworkInterface represents a network interface with its address.
