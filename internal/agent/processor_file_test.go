@@ -33,8 +33,9 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/command"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
+	fileProv "github.com/retr0h/osapi/internal/provider/file"
+	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
@@ -44,24 +45,24 @@ import (
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
-type ProcessorCommandTestSuite struct {
+type ProcessorFileTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 }
 
-func (s *ProcessorCommandTestSuite) SetupTest() {
+func (s *ProcessorFileTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 }
 
-func (s *ProcessorCommandTestSuite) TearDownTest() {
+func (s *ProcessorFileTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
-	cmdMock command.Provider,
+func (s *ProcessorFileTestSuite) newAgentWithFileMock(
+	fileMock fileProv.Provider,
 ) *Agent {
 	return New(
 		afero.NewMemMapFs(),
@@ -76,163 +77,162 @@ func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
 		dnsMocks.NewPlainMockProvider(s.mockCtrl),
 		pingMocks.NewPlainMockProvider(s.mockCtrl),
 		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-		cmdMock,
-		nil,
+		commandMocks.NewPlainMockProvider(s.mockCtrl),
+		fileMock,
 		nil,
 		nil,
 	)
 }
 
-func (s *ProcessorCommandTestSuite) TestProcessCommandOperation() {
+func (s *ProcessorFileTestSuite) TestProcessFileOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func(*commandMocks.MockProvider)
+		setupMock   func(*fileMocks.MockProvider)
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
 	}{
 		{
-			name: "successful exec operation",
+			name: "successful deploy operation",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "exec.execute",
+				Category:  "file",
+				Operation: "deploy.execute",
 				Data: json.RawMessage(
-					`{"command":"ls","args":["-la"],"cwd":"/tmp","timeout":30}`,
+					`{"object_name":"app.conf","path":"/etc/app/app.conf","mode":"0644","content_type":"raw"}`,
 				),
 			},
-			setupMock: func(m *commandMocks.MockProvider) {
+			setupMock: func(m *fileMocks.MockProvider) {
 				m.EXPECT().
-					Exec(command.ExecParams{
-						Command: "ls",
-						Args:    []string{"-la"},
-						Cwd:     "/tmp",
-						Timeout: 30,
+					Deploy(gomock.Any(), fileProv.DeployRequest{
+						ObjectName:  "app.conf",
+						Path:        "/etc/app/app.conf",
+						Mode:        "0644",
+						ContentType: "raw",
 					}).
-					Return(&command.Result{
-						Stdout:     "total 0\n",
-						Stderr:     "",
-						ExitCode:   0,
-						DurationMs: 12,
+					Return(&fileProv.DeployResult{
+						Changed: true,
+						SHA256:  "abc123def456",
+						Path:    "/etc/app/app.conf",
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r command.Result
+				var r fileProv.DeployResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("total 0\n", r.Stdout)
-				s.Equal(0, r.ExitCode)
+				s.True(r.Changed)
+				s.Equal("abc123def456", r.SHA256)
+				s.Equal("/etc/app/app.conf", r.Path)
 			},
 		},
 		{
-			name: "successful shell operation",
+			name: "successful status operation",
 			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "shell.execute",
-				Data: json.RawMessage(
-					`{"command":"echo hello | tr a-z A-Z","cwd":"/tmp","timeout":30}`,
-				),
+				Type:      job.TypeQuery,
+				Category:  "file",
+				Operation: "status.get",
+				Data:      json.RawMessage(`{"path":"/etc/app/app.conf"}`),
 			},
-			setupMock: func(m *commandMocks.MockProvider) {
+			setupMock: func(m *fileMocks.MockProvider) {
 				m.EXPECT().
-					Shell(command.ShellParams{
-						Command: "echo hello | tr a-z A-Z",
-						Cwd:     "/tmp",
-						Timeout: 30,
+					Status(gomock.Any(), fileProv.StatusRequest{
+						Path: "/etc/app/app.conf",
 					}).
-					Return(&command.Result{
-						Stdout:     "HELLO\n",
-						Stderr:     "",
-						ExitCode:   0,
-						DurationMs: 5,
+					Return(&fileProv.StatusResult{
+						Path:   "/etc/app/app.conf",
+						Status: "in-sync",
+						SHA256: "abc123def456",
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r command.Result
+				var r fileProv.StatusResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("HELLO\n", r.Stdout)
+				s.Equal("in-sync", r.Status)
+				s.Equal("/etc/app/app.conf", r.Path)
+				s.Equal("abc123def456", r.SHA256)
 			},
 		},
 		{
-			name: "unsupported command operation",
+			name: "unsupported file operation",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "command",
+				Category:  "file",
 				Operation: "unknown.execute",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock:   func(_ *commandMocks.MockProvider) {},
+			setupMock:   func(_ *fileMocks.MockProvider) {},
 			expectError: true,
-			errorMsg:    "unsupported command operation",
+			errorMsg:    "unsupported file operation",
 		},
 		{
-			name: "exec with invalid JSON data",
+			name: "deploy with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "exec.execute",
+				Category:  "file",
+				Operation: "deploy.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *commandMocks.MockProvider) {},
+			setupMock:   func(_ *fileMocks.MockProvider) {},
 			expectError: true,
-			errorMsg:    "failed to parse command exec data",
+			errorMsg:    "failed to parse file deploy data",
 		},
 		{
-			name: "shell with invalid JSON data",
+			name: "status with invalid JSON data",
 			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "shell.execute",
+				Type:      job.TypeQuery,
+				Category:  "file",
+				Operation: "status.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *commandMocks.MockProvider) {},
+			setupMock:   func(_ *fileMocks.MockProvider) {},
 			expectError: true,
-			errorMsg:    "failed to parse command shell data",
+			errorMsg:    "failed to parse file status data",
 		},
 		{
-			name: "exec provider error",
+			name: "deploy provider error",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "exec.execute",
-				Data:      json.RawMessage(`{"command":"fail"}`),
+				Category:  "file",
+				Operation: "deploy.execute",
+				Data: json.RawMessage(
+					`{"object_name":"app.conf","path":"/etc/app/app.conf","content_type":"raw"}`,
+				),
 			},
-			setupMock: func(m *commandMocks.MockProvider) {
+			setupMock: func(m *fileMocks.MockProvider) {
 				m.EXPECT().
-					Exec(gomock.Any()).
-					Return(nil, errors.New("execution failed"))
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("object not found"))
 			},
 			expectError: true,
-			errorMsg:    "command exec failed",
+			errorMsg:    "file deploy failed",
 		},
 		{
-			name: "shell provider error",
+			name: "status provider error",
 			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "shell.execute",
-				Data:      json.RawMessage(`{"command":"fail"}`),
+				Type:      job.TypeQuery,
+				Category:  "file",
+				Operation: "status.get",
+				Data:      json.RawMessage(`{"path":"/etc/app/app.conf"}`),
 			},
-			setupMock: func(m *commandMocks.MockProvider) {
+			setupMock: func(m *fileMocks.MockProvider) {
 				m.EXPECT().
-					Shell(gomock.Any()).
-					Return(nil, errors.New("shell failed"))
+					Status(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("state KV unavailable"))
 			},
 			expectError: true,
-			errorMsg:    "command shell failed",
+			errorMsg:    "file status failed",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			cmdMock := commandMocks.NewMockProvider(s.mockCtrl)
-			tt.setupMock(cmdMock)
+			fMock := fileMocks.NewMockProvider(s.mockCtrl)
+			tt.setupMock(fMock)
 
-			a := s.newAgentWithCommandMock(cmdMock)
-			result, err := a.processCommandOperation(tt.jobRequest)
+			a := s.newAgentWithFileMock(fMock)
+			result, err := a.processFileOperation(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -249,27 +249,55 @@ func (s *ProcessorCommandTestSuite) TestProcessCommandOperation() {
 	}
 }
 
-func (s *ProcessorCommandTestSuite) TestGetCommandProvider() {
+func (s *ProcessorFileTestSuite) TestProcessFileOperationNilProvider() {
 	tests := []struct {
-		name string
+		name     string
+		errorMsg string
 	}{
 		{
-			name: "returns command provider",
+			name:     "returns error when file provider is nil",
+			errorMsg: "file provider not configured",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			cmdMock := commandMocks.NewPlainMockProvider(s.mockCtrl)
-			a := s.newAgentWithCommandMock(cmdMock)
+			a := s.newAgentWithFileMock(nil)
+			result, err := a.processFileOperation(job.Request{
+				Type:      job.TypeModify,
+				Category:  "file",
+				Operation: "deploy.execute",
+				Data:      json.RawMessage(`{}`),
+			})
 
-			provider := a.getCommandProvider()
+			s.Error(err)
+			s.Contains(err.Error(), tt.errorMsg)
+			s.Nil(result)
+		})
+	}
+}
+
+func (s *ProcessorFileTestSuite) TestGetFileProvider() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns file provider",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			fMock := fileMocks.NewPlainMockProvider(s.mockCtrl)
+			a := s.newAgentWithFileMock(fMock)
+
+			provider := a.getFileProvider()
 
 			s.NotNil(provider)
 		})
 	}
 }
 
-func TestProcessorCommandTestSuite(t *testing.T) {
-	suite.Run(t, new(ProcessorCommandTestSuite))
+func TestProcessorFileTestSuite(t *testing.T) {
+	suite.Run(t, new(ProcessorFileTestSuite))
 }

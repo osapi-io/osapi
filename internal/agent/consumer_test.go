@@ -104,6 +104,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		commandMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 

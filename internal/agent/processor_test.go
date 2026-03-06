@@ -35,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
+	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -104,6 +105,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 
 	netinfoMock := netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
+	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.agent = New(
 		appFs,
@@ -119,6 +121,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		pingMock,
 		netinfoMock,
 		commandMock,
+		fMock,
 		nil,
 		nil,
 	)
@@ -336,6 +339,40 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				err := json.Unmarshal(result, &response)
 				s.NoError(err)
 				s.Contains(response, "stdout")
+			},
+		},
+		{
+			name: "successful file deploy operation",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "file",
+				Operation: "deploy.execute",
+				Data: json.RawMessage(
+					`{"object_name":"app.conf","path":"/etc/mock/file.conf","content_type":"raw"}`,
+				),
+			},
+			expectError: false,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Equal(true, response["changed"])
+			},
+		},
+		{
+			name: "successful file status operation",
+			jobRequest: job.Request{
+				Type:      job.TypeQuery,
+				Category:  "file",
+				Operation: "status.get",
+				Data:      json.RawMessage(`{"path":"/etc/mock/file.conf"}`),
+			},
+			expectError: false,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Equal("in-sync", response["status"])
 			},
 		},
 		{
@@ -626,6 +663,10 @@ func (s *ProcessorTestSuite) TestProviderFactoryMethods() {
 			name:        "getCommandProvider",
 			getProvider: func() interface{} { return s.agent.getCommandProvider() },
 		},
+		{
+			name:        "getFileProvider",
+			getProvider: func() interface{} { return s.agent.getFileProvider() },
+		},
 	}
 
 	for _, tt := range tests {
@@ -666,6 +707,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -694,6 +736,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -718,6 +761,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 				)
@@ -746,6 +790,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -772,6 +817,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -796,6 +842,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 				)
@@ -858,6 +905,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -888,6 +936,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -914,6 +963,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					pingMock,
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 				)
