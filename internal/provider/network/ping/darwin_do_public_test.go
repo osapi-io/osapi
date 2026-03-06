@@ -161,6 +161,45 @@ func (suite *DarwinDoPublicTestSuite) TestDo() {
 	}
 }
 
+func (suite *DarwinDoPublicTestSuite) TestNewDarwinProvider() {
+	tests := []struct {
+		name         string
+		address      string
+		wantErr      bool
+		validateFunc func(p ping.Pinger)
+	}{
+		{
+			name:    "when valid address creates pinger",
+			address: "127.0.0.1",
+			validateFunc: func(p ping.Pinger) {
+				suite.NotNil(p)
+			},
+		},
+		{
+			name:    "when invalid address returns error",
+			address: "invalid-address",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			darwin := ping.NewDarwinProvider()
+
+			pinger, err := darwin.NewPingerFn(tc.address)
+
+			if tc.wantErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				if tc.validateFunc != nil {
+					tc.validateFunc(pinger)
+				}
+			}
+		})
+	}
+}
+
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestDarwinDoPublicTestSuite(t *testing.T) {

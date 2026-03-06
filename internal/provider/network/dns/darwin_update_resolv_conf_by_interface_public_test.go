@@ -168,6 +168,27 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 			wantErrType:   assert.AnError,
 		},
 		{
+			name: "when listallhardwareports errors",
+			setupMock: func() *execMocks.MockManager {
+				mock := execMocks.NewPlainMockManager(suite.ctrl)
+
+				mock.EXPECT().
+					RunCmd("scutil", []string{"--dns"}).
+					Return(darwinScutilExisting, nil)
+
+				mock.EXPECT().
+					RunCmd("networksetup", []string{"-listallhardwareports"}).
+					Return("", assert.AnError)
+
+				return mock
+			},
+			servers:       []string{"8.8.8.8"},
+			searchDomains: []string{},
+			interfaceName: "en0",
+			wantErr:       true,
+			wantErrType:   fmt.Errorf("failed to list hardware ports"),
+		},
+		{
 			name: "when interface not found in hardware ports",
 			setupMock: func() *execMocks.MockManager {
 				mock := execMocks.NewPlainMockManager(suite.ctrl)
