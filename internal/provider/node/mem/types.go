@@ -30,6 +30,8 @@ type Provider interface {
 type Stats struct {
 	// Total memory in bytes
 	Total uint64
+	// Available memory in bytes (free + reclaimable)
+	Available uint64
 	// Free memory in bytes
 	Free uint64
 	// Cached memory in bytes

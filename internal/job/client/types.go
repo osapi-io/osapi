@@ -228,6 +228,30 @@ type JobClient interface {
 		hostname string,
 	) (*job.AgentInfo, error)
 
+	// Agent timeline
+	WriteAgentTimelineEvent(
+		ctx context.Context,
+		hostname, event, message string,
+	) error
+	GetAgentTimeline(
+		ctx context.Context,
+		hostname string,
+	) ([]job.TimelineEvent, error)
+
+	// Agent drain flag
+	CheckDrainFlag(
+		ctx context.Context,
+		hostname string,
+	) bool
+	SetDrainFlag(
+		ctx context.Context,
+		hostname string,
+	) error
+	DeleteDrainFlag(
+		ctx context.Context,
+		hostname string,
+	) error
+
 	// Job deletion
 	DeleteJob(
 		ctx context.Context,

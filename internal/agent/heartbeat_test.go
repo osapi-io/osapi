@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
@@ -83,6 +84,14 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		s.mockKV,
 		nil,
 	)
+	s.agent.state = job.AgentStateReady
+
+	// writeRegistration now calls handleDrainDetection which checks drain flag.
+	// Default: no drain flag present.
+	s.mockJobClient.EXPECT().
+		CheckDrainFlag(gomock.Any(), "test-agent").
+		Return(false).
+		AnyTimes()
 }
 
 func (s *HeartbeatTestSuite) TearDownTest() {

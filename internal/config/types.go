@@ -93,6 +93,7 @@ type NATS struct {
 	Audit    NATSAudit    `mapstructure:"audit,omitempty"`
 	Registry NATSRegistry `mapstructure:"registry,omitempty"`
 	Facts    NATSFacts    `mapstructure:"facts,omitempty"`
+	State    NATSState    `mapstructure:"state,omitempty"`
 }
 
 // NATSAudit configuration for the audit log KV bucket.
@@ -119,6 +120,14 @@ type NATSFacts struct {
 	// Bucket is the KV bucket name for agent facts entries.
 	Bucket   string `mapstructure:"bucket"`
 	TTL      string `mapstructure:"ttl"`     // e.g. "1h"
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSState configuration for the agent state KV bucket (drain flags, timeline events).
+type NATSState struct {
+	// Bucket is the KV bucket name for persistent agent state.
+	Bucket   string `mapstructure:"bucket"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`
 }
@@ -258,6 +267,13 @@ type AgentFacts struct {
 	Interval string `mapstructure:"interval"` // e.g. "5m", "1h"
 }
 
+// AgentConditions holds threshold configuration for node conditions.
+type AgentConditions struct {
+	MemoryPressureThreshold int     `mapstructure:"memory_pressure_threshold"`
+	HighLoadMultiplier      float64 `mapstructure:"high_load_multiplier"`
+	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -274,4 +290,6 @@ type AgentConfig struct {
 	MaxJobs int `mapstructure:"max_jobs"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	Labels map[string]string `mapstructure:"labels"`
+	// Conditions holds threshold settings for node condition evaluation.
+	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 }

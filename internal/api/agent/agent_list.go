@@ -59,7 +59,7 @@ func (a *Agent) GetAgent(
 func buildAgentInfo(
 	a *job.AgentInfo,
 ) gen.AgentInfo {
-	status := gen.Ready
+	status := gen.AgentInfoStatusReady
 	info := gen.AgentInfo{
 		Hostname: a.Hostname,
 		Status:   status,
@@ -165,6 +165,50 @@ func buildAgentInfo(
 	if len(a.Facts) > 0 {
 		facts := a.Facts
 		info.Facts = &facts
+	}
+
+	if a.State != "" {
+		state := gen.AgentInfoState(a.State)
+		info.State = &state
+	}
+
+	if len(a.Conditions) > 0 {
+		conditions := make([]gen.NodeCondition, len(a.Conditions))
+		for i, c := range a.Conditions {
+			conditions[i] = gen.NodeCondition{
+				Type:               gen.NodeConditionType(c.Type),
+				Status:             c.Status,
+				LastTransitionTime: c.LastTransitionTime,
+			}
+			if c.Reason != "" {
+				reason := c.Reason
+				conditions[i].Reason = &reason
+			}
+		}
+		info.Conditions = &conditions
+	}
+
+	if len(a.Timeline) > 0 {
+		timeline := make([]gen.TimelineEvent, len(a.Timeline))
+		for i, te := range a.Timeline {
+			timeline[i] = gen.TimelineEvent{
+				Timestamp: te.Timestamp,
+				Event:     te.Event,
+			}
+			if te.Hostname != "" {
+				hostname := te.Hostname
+				timeline[i].Hostname = &hostname
+			}
+			if te.Message != "" {
+				message := te.Message
+				timeline[i].Message = &message
+			}
+			if te.Error != "" {
+				errStr := te.Error
+				timeline[i].Error = &errStr
+			}
+		}
+		info.Timeline = &timeline
 	}
 
 	return info

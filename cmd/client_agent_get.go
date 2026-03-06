@@ -64,6 +64,10 @@ func displayAgentGetDetail(
 	kvArgs := []string{"Hostname", data.Hostname, "Status", data.Status}
 	cli.PrintKV(kvArgs...)
 
+	if data.State != "" && data.State != "Ready" {
+		cli.PrintKV("State", data.State)
+	}
+
 	if len(data.Labels) > 0 {
 		cli.PrintKV("Labels", cli.FormatLabels(data.Labels))
 	}
@@ -137,6 +141,48 @@ func displayAgentGetDetail(
 			}
 			cli.PrintKV("Interface "+iface.Name, strings.Join(parts, "  "))
 		}
+	}
+
+	var sections []cli.Section
+
+	if len(data.Conditions) > 0 {
+		condRows := make([][]string, 0, len(data.Conditions))
+		for _, c := range data.Conditions {
+			status := "false"
+			if c.Status {
+				status = "true"
+			}
+			reason := c.Reason
+			since := ""
+			if !c.LastTransitionTime.IsZero() {
+				since = cli.FormatAge(time.Since(c.LastTransitionTime)) + " ago"
+			}
+			condRows = append(condRows, []string{c.Type, status, reason, since})
+		}
+		sections = append(sections, cli.Section{
+			Title:   "Conditions",
+			Headers: []string{"TYPE", "STATUS", "REASON", "SINCE"},
+			Rows:    condRows,
+		})
+	}
+
+	if len(data.Timeline) > 0 {
+		timelineRows := make([][]string, 0, len(data.Timeline))
+		for _, te := range data.Timeline {
+			timelineRows = append(
+				timelineRows,
+				[]string{te.Timestamp, te.Event, te.Hostname, te.Message, te.Error},
+			)
+		}
+		sections = append(sections, cli.Section{
+			Title:   "Timeline",
+			Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
+			Rows:    timelineRows,
+		})
+	}
+
+	for _, sec := range sections {
+		cli.PrintCompactTable([]cli.Section{sec})
 	}
 }
 

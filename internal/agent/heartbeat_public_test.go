@@ -100,6 +100,12 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 		{
 			name: "when registryKV is set registers and deregisters",
 			setupFunc: func() *agent.Agent {
+				// Drain check on each heartbeat tick (no drain flag present)
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-agent").
+					Return(false).
+					AnyTimes()
+
 				// Heartbeat initial write
 				s.mockKV.EXPECT().
 					Put(gomock.Any(), "agents.test_agent", gomock.Any()).

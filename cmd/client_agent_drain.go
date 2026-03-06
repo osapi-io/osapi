@@ -18,21 +18,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package mem
+package cmd
 
-// GetStats retrieves memory statistics of the system.
-// It returns a Stats struct with total, free, and cached memory in
-// bytes, and an error if something goes wrong.
-func (d *Darwin) GetStats() (*Stats, error) {
-	memInfo, err := d.VirtualMemoryFn()
-	if err != nil {
-		return nil, err
-	}
+import (
+	"fmt"
 
-	return &Stats{
-		Total:     memInfo.Total,
-		Available: memInfo.Available,
-		Free:      memInfo.Free,
-		Cached:    memInfo.Cached,
-	}, nil
+	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
+)
+
+// clientAgentDrainCmd represents the clientAgentDrain command.
+var clientAgentDrainCmd = &cobra.Command{
+	Use:   "drain",
+	Short: "Drain an agent",
+	Long:  `Stop an agent from accepting new jobs. In-flight jobs continue to completion.`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+		hostname, _ := cmd.Flags().GetString("hostname")
+
+		resp, err := sdkClient.Agent.Drain(ctx, hostname)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
+
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		cli.PrintKV("Hostname", hostname, "Status", "Draining")
+		cli.PrintKV("Message", resp.Data.Message)
+	},
+}
+
+func init() {
+	clientAgentCmd.AddCommand(clientAgentDrainCmd)
+	clientAgentDrainCmd.Flags().String("hostname", "", "Hostname of the agent to drain")
+	_ = clientAgentDrainCmd.MarkFlagRequired("hostname")
 }

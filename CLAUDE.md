@@ -266,6 +266,7 @@ Conventions:
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`,
   `*_test.go` → `{Name}TestSuite`
 - Table-driven structure with `validateFunc` callbacks
+- One suite method per function under test — all scenarios (success, errors, edge cases) as rows in one table
 - Avoid generic file names like `helpers.go` or `utils.go` — name
   files after what they contain
 

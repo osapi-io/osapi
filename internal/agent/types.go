@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -74,10 +75,27 @@ type Agent struct {
 	// startedAt records when the agent process started.
 	startedAt time.Time
 
+	// prevConditions tracks condition state between heartbeats.
+	prevConditions []job.Condition
+
+	// cpuCount cached from facts for HighLoad evaluation.
+	cpuCount int
+
+	// state is the agent's scheduling state (Ready, Draining, Cordoned).
+	state string
+
+	// hostname cached from Start for drain/undrain resubscribe.
+	hostname string
+
 	// Lifecycle management
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
+
+	// Consumer lifecycle for drain/undrain.
+	consumerCtx    context.Context
+	consumerCancel context.CancelFunc
+	consumerWg     sync.WaitGroup
 }
 
 // JobContext contains the context and data for a single job execution.

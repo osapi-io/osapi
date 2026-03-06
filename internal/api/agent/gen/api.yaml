@@ -110,6 +110,114 @@ paths:
             application/json:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /agent/{hostname}/drain:
+    post:
+      operationId: drainAgent
+      summary: Drain an agent
+      description: >
+        Stop the agent from accepting new jobs. In-flight jobs continue
+        to completion.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The hostname of the agent to drain.
+      responses:
+        '200':
+          description: Agent drain initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Agent already in requested state.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+  /agent/{hostname}/undrain:
+    post:
+      operationId: undrainAgent
+      summary: Undrain an agent
+      description: Resume accepting jobs on a drained agent.
+      tags:
+        - agent_operations
+      security:
+        - BearerAuth:
+            - agent:write
+      parameters:
+        - name: hostname
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The hostname of the agent to undrain.
+      responses:
+        '200':
+          description: Agent undrain initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Agent not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: Agent not in draining or cordoned state.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -200,6 +308,20 @@ components:
           type: object
           additionalProperties: true
           description: Extended facts from additional providers.
+        state:
+          type: string
+          enum: [Ready, Draining, Cordoned]
+          description: Agent scheduling state.
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeCondition'
+          description: Evaluated node conditions.
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          description: Agent state transition history.
       required:
         - hostname
         - status
@@ -287,3 +409,39 @@ components:
             - dual
       required:
         - name
+
+    NodeCondition:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [MemoryPressure, HighLoad, DiskPressure]
+        status:
+          type: boolean
+        reason:
+          type: string
+        last_transition_time:
+          type: string
+          format: date-time
+      required:
+        - type
+        - status
+        - last_transition_time
+
+    TimelineEvent:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        event:
+          type: string
+        hostname:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+      required:
+        - timestamp
+        - event

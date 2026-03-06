@@ -28,7 +28,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -40,12 +39,9 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/node/host"
-	"github.com/retr0h/osapi/internal/provider/node/load"
-	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type AgentGetPublicTestSuite struct {
+type AgentUndrainPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -56,7 +52,7 @@ type AgentGetPublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *AgentGetPublicTestSuite) SetupTest() {
+func (s *AgentUndrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
@@ -65,59 +61,82 @@ func (s *AgentGetPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *AgentGetPublicTestSuite) TearDownTest() {
+func (s *AgentUndrainPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
+func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 	tests := []struct {
-		name         string
-		hostname     string
-		mockAgent    *jobtypes.AgentInfo
-		mockError    error
-		validateFunc func(resp gen.GetAgentDetailsResponseObject)
+		name            string
+		hostname        string
+		mockAgent       *jobtypes.AgentInfo
+		mockGetErr      error
+		mockWriteErr    error
+		skipWrite       bool
+		mockDeleteDrain bool
+		validateFunc    func(resp gen.UndrainAgentResponseObject)
 	}{
 		{
-			name:     "success returns agent details",
+			name:     "success undrains draining agent",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname:     "server1",
-				Labels:       map[string]string{"group": "web"},
-				RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-				StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-				OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
-				Uptime:       5 * time.Hour,
-				LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-				MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+				Hostname: "server1",
+				State:    jobtypes.AgentStateDraining,
 			},
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				r, ok := resp.(gen.GetAgentDetails200JSONResponse)
+			mockDeleteDrain: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				r, ok := resp.(gen.UndrainAgent200JSONResponse)
 				s.True(ok)
-				s.Equal("server1", r.Hostname)
-				s.Equal(gen.AgentInfoStatusReady, r.Status)
-				s.NotNil(r.Labels)
-				s.NotNil(r.OsInfo)
-				s.Equal("Ubuntu", r.OsInfo.Distribution)
-				s.NotNil(r.LoadAverage)
-				s.NotNil(r.Memory)
-				s.NotNil(r.Uptime)
+				s.Contains(r.Message, "undrain initiated for agent server1")
 			},
 		},
 		{
-			name:      "agent not found returns 404",
-			hostname:  "unknown",
-			mockError: fmt.Errorf("agent not found: unknown"),
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				_, ok := resp.(gen.GetAgentDetails404JSONResponse)
+			name:     "success undrains cordoned agent",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateCordoned,
+			},
+			mockDeleteDrain: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				r, ok := resp.(gen.UndrainAgent200JSONResponse)
+				s.True(ok)
+				s.Contains(r.Message, "undrain initiated for agent server1")
+			},
+		},
+		{
+			name:       "agent not found returns 404",
+			hostname:   "unknown",
+			mockGetErr: fmt.Errorf("agent not found: unknown"),
+			skipWrite:  true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent404JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
-			name:      "client error returns 500",
-			hostname:  "server1",
-			mockError: fmt.Errorf("connection failed"),
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				_, ok := resp.(gen.GetAgentDetails500JSONResponse)
+			name:     "agent in ready state returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateReady,
+			},
+			skipWrite: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent409JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:     "agent with empty state returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    "",
+			},
+			skipWrite: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent409JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -127,9 +146,21 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
 				GetAgent(gomock.Any(), tt.hostname).
-				Return(tt.mockAgent, tt.mockError)
+				Return(tt.mockAgent, tt.mockGetErr)
 
-			resp, err := s.handler.GetAgentDetails(s.ctx, gen.GetAgentDetailsRequestObject{
+			if tt.mockDeleteDrain {
+				s.mockJobClient.EXPECT().
+					DeleteDrainFlag(gomock.Any(), tt.hostname).
+					Return(nil)
+			}
+
+			if !tt.skipWrite {
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), tt.hostname, "undrain", "Undrain initiated via API").
+					Return(tt.mockWriteErr)
+			}
+
+			resp, err := s.handler.UndrainAgent(s.ctx, gen.UndrainAgentRequestObject{
 				Hostname: tt.hostname,
 			})
 			s.NoError(err)
@@ -138,7 +169,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 	}
 }
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
+func (s *AgentUndrainPublicTestSuite) TestUndrainAgentValidationHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string
@@ -147,26 +178,26 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 		wantContains []string
 	}{
 		{
-			name:     "when agent exists returns details",
+			name:     "when draining agent exists returns 200",
 			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname:     "server1",
-						Labels:       map[string]string{"group": "web"},
-						RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-						StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-						OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
-						Uptime:       5 * time.Hour,
-						LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-						MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+						Hostname: "server1",
+						State:    jobtypes.AgentStateDraining,
 					}, nil)
+				mock.EXPECT().
+					DeleteDrainFlag(gomock.Any(), "server1").
+					Return(nil)
+				mock.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
+					Return(nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"server1"`, `"Ready"`, `"Ubuntu"`},
+			wantContains: []string{`"message"`, `undrain initiated`},
 		},
 		{
 			name:     "when agent not found returns 404",
@@ -182,17 +213,20 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 			wantContains: []string{`"error"`},
 		},
 		{
-			name:     "when client error returns 500",
+			name:     "when agent in ready state returns 409",
 			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
-					Return(nil, fmt.Errorf("connection failed"))
+					Return(&jobtypes.AgentInfo{
+						Hostname: "server1",
+						State:    jobtypes.AgentStateReady,
+					}, nil)
 				return mock
 			},
-			wantCode:     http.StatusInternalServerError,
-			wantContains: []string{`"error"`},
+			wantCode:     http.StatusConflict,
+			wantContains: []string{`"error"`, `not in draining or cordoned`},
 		},
 	}
 
@@ -207,8 +241,8 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
 			req := httptest.NewRequest(
-				http.MethodGet,
-				fmt.Sprintf("/agent/%s", tc.hostname),
+				http.MethodPost,
+				fmt.Sprintf("/agent/%s/undrain", tc.hostname),
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -223,9 +257,9 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 	}
 }
 
-const rbacAgentGetTestSigningKey = "test-signing-key-for-rbac-agent-get"
+const rbacAgentUndrainTestSigningKey = "test-signing-key-for-rbac-agent-undrain"
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
+func (s *AgentUndrainPublicTestSuite) TestUndrainAgentRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -250,10 +284,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacAgentGetTestSigningKey,
+					rbacAgentUndrainTestSigningKey,
 					[]string{"read"},
 					"test-user",
-					[]string{"network:read"},
+					[]string{"agent:read"},
 				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -265,10 +299,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			wantContains: []string{"Insufficient permissions"},
 		},
 		{
-			name: "when valid token with agent:read returns 200",
+			name: "when valid token with agent:write returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacAgentGetTestSigningKey,
+					rbacAgentUndrainTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -282,11 +316,18 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
 						Hostname: "server1",
+						State:    jobtypes.AgentStateDraining,
 					}, nil)
+				mock.EXPECT().
+					DeleteDrainFlag(gomock.Any(), "server1").
+					Return(nil)
+				mock.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain", "Undrain initiated via API").
+					Return(nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"server1"`, `"Ready"`},
+			wantContains: []string{`"message"`, `undrain initiated`},
 		},
 	}
 
@@ -298,7 +339,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 				API: config.API{
 					Server: config.Server{
 						Security: config.ServerSecurity{
-							SigningKey: rbacAgentGetTestSigningKey,
+							SigningKey: rbacAgentUndrainTestSigningKey,
 						},
 					},
 				},
@@ -309,8 +350,8 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodGet,
-				"/agent/server1",
+				http.MethodPost,
+				"/agent/server1/undrain",
 				nil,
 			)
 			tc.setupAuth(req)
@@ -326,6 +367,6 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 	}
 }
 
-func TestAgentGetPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(AgentGetPublicTestSuite))
+func TestAgentUndrainPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentUndrainPublicTestSuite))
 }

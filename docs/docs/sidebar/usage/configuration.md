@@ -23,47 +23,53 @@ Every config key can be overridden with an environment variable using the
 `OSAPI_` prefix. Dots and nested keys become underscores, and the name is
 uppercased:
 
-| Config Key                         | Environment Variable                     |
-| ---------------------------------- | ---------------------------------------- |
-| `debug`                            | `OSAPI_DEBUG`                            |
-| `api.server.port`                  | `OSAPI_API_SERVER_PORT`                  |
-| `api.server.nats.host`             | `OSAPI_API_SERVER_NATS_HOST`             |
-| `api.server.nats.port`             | `OSAPI_API_SERVER_NATS_PORT`             |
-| `api.server.nats.client_name`      | `OSAPI_API_SERVER_NATS_CLIENT_NAME`      |
-| `api.server.nats.namespace`        | `OSAPI_API_SERVER_NATS_NAMESPACE`        |
-| `api.server.nats.auth.type`        | `OSAPI_API_SERVER_NATS_AUTH_TYPE`        |
-| `api.server.security.signing_key`  | `OSAPI_API_SERVER_SECURITY_SIGNING_KEY`  |
-| `api.client.security.bearer_token` | `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN` |
-| `nats.server.host`                 | `OSAPI_NATS_SERVER_HOST`                 |
-| `nats.server.port`                 | `OSAPI_NATS_SERVER_PORT`                 |
-| `nats.server.namespace`            | `OSAPI_NATS_SERVER_NAMESPACE`            |
-| `nats.server.auth.type`            | `OSAPI_NATS_SERVER_AUTH_TYPE`            |
-| `nats.stream.name`                 | `OSAPI_NATS_STREAM_NAME`                 |
-| `nats.kv.bucket`                   | `OSAPI_NATS_KV_BUCKET`                   |
-| `nats.kv.response_bucket`          | `OSAPI_NATS_KV_RESPONSE_BUCKET`          |
-| `nats.audit.bucket`                | `OSAPI_NATS_AUDIT_BUCKET`                |
-| `nats.audit.ttl`                   | `OSAPI_NATS_AUDIT_TTL`                   |
-| `nats.audit.max_bytes`             | `OSAPI_NATS_AUDIT_MAX_BYTES`             |
-| `nats.audit.storage`               | `OSAPI_NATS_AUDIT_STORAGE`               |
-| `nats.audit.replicas`              | `OSAPI_NATS_AUDIT_REPLICAS`              |
-| `nats.registry.bucket`             | `OSAPI_NATS_REGISTRY_BUCKET`             |
-| `nats.registry.ttl`                | `OSAPI_NATS_REGISTRY_TTL`                |
-| `nats.registry.storage`            | `OSAPI_NATS_REGISTRY_STORAGE`            |
-| `nats.registry.replicas`           | `OSAPI_NATS_REGISTRY_REPLICAS`           |
-| `nats.facts.bucket`                | `OSAPI_NATS_FACTS_BUCKET`                |
-| `nats.facts.ttl`                   | `OSAPI_NATS_FACTS_TTL`                   |
-| `nats.facts.storage`               | `OSAPI_NATS_FACTS_STORAGE`               |
-| `nats.facts.replicas`              | `OSAPI_NATS_FACTS_REPLICAS`              |
-| `telemetry.tracing.enabled`        | `OSAPI_TELEMETRY_TRACING_ENABLED`        |
-| `telemetry.tracing.exporter`       | `OSAPI_TELEMETRY_TRACING_EXPORTER`       |
-| `telemetry.tracing.otlp_endpoint`  | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`  |
-| `agent.nats.host`                  | `OSAPI_AGENT_NATS_HOST`                  |
-| `agent.nats.port`                  | `OSAPI_AGENT_NATS_PORT`                  |
-| `agent.nats.client_name`           | `OSAPI_AGENT_NATS_CLIENT_NAME`           |
-| `agent.nats.namespace`             | `OSAPI_AGENT_NATS_NAMESPACE`             |
-| `agent.nats.auth.type`             | `OSAPI_AGENT_NATS_AUTH_TYPE`             |
-| `agent.hostname`                   | `OSAPI_AGENT_HOSTNAME`                   |
-| `agent.facts.interval`             | `OSAPI_AGENT_FACTS_INTERVAL`             |
+| Config Key                                   | Environment Variable                               |
+| -------------------------------------------- | -------------------------------------------------- |
+| `debug`                                      | `OSAPI_DEBUG`                                      |
+| `api.server.port`                            | `OSAPI_API_SERVER_PORT`                            |
+| `api.server.nats.host`                       | `OSAPI_API_SERVER_NATS_HOST`                       |
+| `api.server.nats.port`                       | `OSAPI_API_SERVER_NATS_PORT`                       |
+| `api.server.nats.client_name`                | `OSAPI_API_SERVER_NATS_CLIENT_NAME`                |
+| `api.server.nats.namespace`                  | `OSAPI_API_SERVER_NATS_NAMESPACE`                  |
+| `api.server.nats.auth.type`                  | `OSAPI_API_SERVER_NATS_AUTH_TYPE`                  |
+| `api.server.security.signing_key`            | `OSAPI_API_SERVER_SECURITY_SIGNING_KEY`            |
+| `api.client.security.bearer_token`           | `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN`           |
+| `nats.server.host`                           | `OSAPI_NATS_SERVER_HOST`                           |
+| `nats.server.port`                           | `OSAPI_NATS_SERVER_PORT`                           |
+| `nats.server.namespace`                      | `OSAPI_NATS_SERVER_NAMESPACE`                      |
+| `nats.server.auth.type`                      | `OSAPI_NATS_SERVER_AUTH_TYPE`                      |
+| `nats.stream.name`                           | `OSAPI_NATS_STREAM_NAME`                           |
+| `nats.kv.bucket`                             | `OSAPI_NATS_KV_BUCKET`                             |
+| `nats.kv.response_bucket`                    | `OSAPI_NATS_KV_RESPONSE_BUCKET`                    |
+| `nats.audit.bucket`                          | `OSAPI_NATS_AUDIT_BUCKET`                          |
+| `nats.audit.ttl`                             | `OSAPI_NATS_AUDIT_TTL`                             |
+| `nats.audit.max_bytes`                       | `OSAPI_NATS_AUDIT_MAX_BYTES`                       |
+| `nats.audit.storage`                         | `OSAPI_NATS_AUDIT_STORAGE`                         |
+| `nats.audit.replicas`                        | `OSAPI_NATS_AUDIT_REPLICAS`                        |
+| `nats.registry.bucket`                       | `OSAPI_NATS_REGISTRY_BUCKET`                       |
+| `nats.registry.ttl`                          | `OSAPI_NATS_REGISTRY_TTL`                          |
+| `nats.registry.storage`                      | `OSAPI_NATS_REGISTRY_STORAGE`                      |
+| `nats.registry.replicas`                     | `OSAPI_NATS_REGISTRY_REPLICAS`                     |
+| `nats.facts.bucket`                          | `OSAPI_NATS_FACTS_BUCKET`                          |
+| `nats.facts.ttl`                             | `OSAPI_NATS_FACTS_TTL`                             |
+| `nats.facts.storage`                         | `OSAPI_NATS_FACTS_STORAGE`                         |
+| `nats.facts.replicas`                        | `OSAPI_NATS_FACTS_REPLICAS`                        |
+| `nats.state.bucket`                          | `OSAPI_NATS_STATE_BUCKET`                          |
+| `nats.state.storage`                         | `OSAPI_NATS_STATE_STORAGE`                         |
+| `nats.state.replicas`                        | `OSAPI_NATS_STATE_REPLICAS`                        |
+| `telemetry.tracing.enabled`                  | `OSAPI_TELEMETRY_TRACING_ENABLED`                  |
+| `telemetry.tracing.exporter`                 | `OSAPI_TELEMETRY_TRACING_EXPORTER`                 |
+| `telemetry.tracing.otlp_endpoint`            | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`            |
+| `agent.nats.host`                            | `OSAPI_AGENT_NATS_HOST`                            |
+| `agent.nats.port`                            | `OSAPI_AGENT_NATS_PORT`                            |
+| `agent.nats.client_name`                     | `OSAPI_AGENT_NATS_CLIENT_NAME`                     |
+| `agent.nats.namespace`                       | `OSAPI_AGENT_NATS_NAMESPACE`                       |
+| `agent.nats.auth.type`                       | `OSAPI_AGENT_NATS_AUTH_TYPE`                       |
+| `agent.hostname`                             | `OSAPI_AGENT_HOSTNAME`                             |
+| `agent.facts.interval`                       | `OSAPI_AGENT_FACTS_INTERVAL`                       |
+| `agent.conditions.memory_pressure_threshold` | `OSAPI_AGENT_CONDITIONS_MEMORY_PRESSURE_THRESHOLD` |
+| `agent.conditions.high_load_multiplier`      | `OSAPI_AGENT_CONDITIONS_HIGH_LOAD_MULTIPLIER`      |
+| `agent.conditions.disk_pressure_threshold`   | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`   |
 
 Environment variables take precedence over file values.
 
@@ -127,11 +133,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                         |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
-| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                  |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                |
+| Role    | Permissions                                                                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute` |
+| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`                                                 |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`                                                                               |
 
 ### Custom Roles
 
@@ -226,9 +232,9 @@ api:
           - 'http://localhost:3001'
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
-      # Permissions: agent:read, node:read, network:read, network:write,
-      #              job:read, job:write, health:read, audit:read,
-      #              command:execute
+      # Permissions: agent:read, agent:write, node:read, network:read,
+      #              network:write, job:read, job:write, health:read,
+      #              audit:read, command:execute
       # roles:
       #   ops:
       #     permissions:
@@ -324,6 +330,16 @@ nats:
     # Number of KV replicas.
     replicas: 1
 
+  # ── State KV bucket ──────────────────────────────────────
+  state:
+    # KV bucket for persistent agent state (drain flags, timeline events).
+    # No TTL — operator actions persist indefinitely.
+    bucket: 'agent-state'
+    # Storage backend: "file" or "memory".
+    storage: 'file'
+    # Number of KV replicas.
+    replicas: 1
+
   # ── Dead Letter Queue ─────────────────────────────────────
   dlq:
     # Maximum age of messages in the DLQ.
@@ -379,6 +395,14 @@ agent:
   facts:
     # How often the agent collects and publishes facts.
     interval: '60s'
+  # Node condition thresholds.
+  conditions:
+    # Memory pressure threshold (percent used).
+    memory_pressure_threshold: 90
+    # High load multiplier (load1 / cpu_count).
+    high_load_multiplier: 2.0
+    # Disk pressure threshold (percent used).
+    disk_pressure_threshold: 90
   # Queue group for load-balanced (_any) subscriptions.
   queue_group: 'job-agents'
   # Agent hostname for direct routing. Defaults to the
@@ -481,6 +505,14 @@ agent:
 | `storage`  | string | `"file"` or `"memory"`            |
 | `replicas` | int    | Number of KV replicas             |
 
+### `nats.state`
+
+| Key        | Type   | Description                                   |
+| ---------- | ------ | --------------------------------------------- |
+| `bucket`   | string | KV bucket for persistent agent state (no TTL) |
+| `storage`  | string | `"file"` or `"memory"`                        |
+| `replicas` | int    | Number of KV replicas                         |
+
 ### `nats.dlq`
 
 | Key        | Type   | Description                       |
@@ -500,23 +532,26 @@ agent:
 
 ### `agent`
 
-| Key                        | Type              | Description                              |
-| -------------------------- | ----------------- | ---------------------------------------- |
-| `nats.host`                | string            | NATS server hostname                     |
-| `nats.port`                | int               | NATS server port                         |
-| `nats.client_name`         | string            | NATS client identification name          |
-| `nats.namespace`           | string            | Subject namespace prefix                 |
-| `nats.auth.type`           | string            | Auth type: `none`, `user_pass`           |
-| `nats.auth.username`       | string            | Username for `user_pass` auth            |
-| `nats.auth.password`       | string            | Password for `user_pass` auth            |
-| `consumer.name`            | string            | Durable consumer name                    |
-| `consumer.max_deliver`     | int               | Max redelivery attempts before DLQ       |
-| `consumer.ack_wait`        | string            | ACK timeout (Go duration)                |
-| `consumer.max_ack_pending` | int               | Max outstanding unacknowledged msgs      |
-| `consumer.replay_policy`   | string            | `"instant"` or `"original"`              |
-| `consumer.back_off`        | []string          | Backoff durations between redeliveries   |
-| `queue_group`              | string            | Queue group for load-balanced routing    |
-| `hostname`                 | string            | Agent hostname (defaults to OS hostname) |
-| `max_jobs`                 | int               | Max concurrent jobs                      |
-| `facts.interval`           | string            | How often the agent collects facts       |
-| `labels`                   | map[string]string | Key-value pairs for label-based routing  |
+| Key                                    | Type              | Description                                    |
+| -------------------------------------- | ----------------- | ---------------------------------------------- |
+| `nats.host`                            | string            | NATS server hostname                           |
+| `nats.port`                            | int               | NATS server port                               |
+| `nats.client_name`                     | string            | NATS client identification name                |
+| `nats.namespace`                       | string            | Subject namespace prefix                       |
+| `nats.auth.type`                       | string            | Auth type: `none`, `user_pass`                 |
+| `nats.auth.username`                   | string            | Username for `user_pass` auth                  |
+| `nats.auth.password`                   | string            | Password for `user_pass` auth                  |
+| `consumer.name`                        | string            | Durable consumer name                          |
+| `consumer.max_deliver`                 | int               | Max redelivery attempts before DLQ             |
+| `consumer.ack_wait`                    | string            | ACK timeout (Go duration)                      |
+| `consumer.max_ack_pending`             | int               | Max outstanding unacknowledged msgs            |
+| `consumer.replay_policy`               | string            | `"instant"` or `"original"`                    |
+| `consumer.back_off`                    | []string          | Backoff durations between redeliveries         |
+| `queue_group`                          | string            | Queue group for load-balanced routing          |
+| `hostname`                             | string            | Agent hostname (defaults to OS hostname)       |
+| `max_jobs`                             | int               | Max concurrent jobs                            |
+| `facts.interval`                       | string            | How often the agent collects facts             |
+| `conditions.memory_pressure_threshold` | int               | Memory pressure threshold percent (default 90) |
+| `conditions.high_load_multiplier`      | float             | Load multiplier over CPU count (default 2.0)   |
+| `conditions.disk_pressure_threshold`   | int               | Disk pressure threshold percent (default 90)   |
+| `labels`                               | map[string]string | Key-value pairs for label-based routing        |

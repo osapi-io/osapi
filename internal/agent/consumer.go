@@ -102,14 +102,14 @@ func (a *Agent) consumeQueryJobs(
 			continue
 		}
 
-		a.wg.Add(1)
+		a.consumerWg.Add(1)
 		go func(c struct {
 			name       string
 			filter     string
 			queueGroup string
 		},
 		) {
-			defer a.wg.Done()
+			defer a.consumerWg.Done()
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -194,14 +194,14 @@ func (a *Agent) consumeModifyJobs(
 			continue
 		}
 
-		a.wg.Add(1)
+		a.consumerWg.Add(1)
 		go func(c struct {
 			name       string
 			filter     string
 			queueGroup string
 		},
 		) {
-			defer a.wg.Done()
+			defer a.consumerWg.Done()
 
 			opts := &natsclient.ConsumeOptions{
 				QueueGroup:  c.queueGroup,
@@ -220,6 +220,21 @@ func (a *Agent) consumeModifyJobs(
 	}
 
 	return nil
+}
+
+// startConsumers creates a consumer context and starts all job consumers.
+func (a *Agent) startConsumers() {
+	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
+	_ = a.consumeQueryJobs(a.consumerCtx, a.hostname)
+	_ = a.consumeModifyJobs(a.consumerCtx, a.hostname)
+}
+
+// stopConsumers cancels the consumer context and waits for all consumer
+// goroutines to finish. After this returns, the agent is no longer
+// receiving new jobs.
+func (a *Agent) stopConsumers() {
+	a.consumerCancel()
+	a.consumerWg.Wait()
 }
 
 // handleJobMessageJS wraps the existing handleJobMessage for JetStream compatibility.

@@ -28,7 +28,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -40,12 +39,9 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/node/host"
-	"github.com/retr0h/osapi/internal/provider/node/load"
-	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type AgentGetPublicTestSuite struct {
+type AgentDrainPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -56,7 +52,7 @@ type AgentGetPublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *AgentGetPublicTestSuite) SetupTest() {
+func (s *AgentDrainPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apiagent.New(slog.Default(), s.mockJobClient)
@@ -65,59 +61,68 @@ func (s *AgentGetPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *AgentGetPublicTestSuite) TearDownTest() {
+func (s *AgentDrainPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
+func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 	tests := []struct {
 		name         string
 		hostname     string
 		mockAgent    *jobtypes.AgentInfo
-		mockError    error
-		validateFunc func(resp gen.GetAgentDetailsResponseObject)
+		mockGetErr   error
+		mockWriteErr error
+		skipWrite    bool
+		mockSetDrain bool
+		validateFunc func(resp gen.DrainAgentResponseObject)
 	}{
 		{
-			name:     "success returns agent details",
+			name:     "success drains agent",
 			hostname: "server1",
 			mockAgent: &jobtypes.AgentInfo{
-				Hostname:     "server1",
-				Labels:       map[string]string{"group": "web"},
-				RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-				StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-				OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
-				Uptime:       5 * time.Hour,
-				LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-				MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+				Hostname: "server1",
+				State:    jobtypes.AgentStateReady,
 			},
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				r, ok := resp.(gen.GetAgentDetails200JSONResponse)
+			mockSetDrain: true,
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				r, ok := resp.(gen.DrainAgent200JSONResponse)
 				s.True(ok)
-				s.Equal("server1", r.Hostname)
-				s.Equal(gen.AgentInfoStatusReady, r.Status)
-				s.NotNil(r.Labels)
-				s.NotNil(r.OsInfo)
-				s.Equal("Ubuntu", r.OsInfo.Distribution)
-				s.NotNil(r.LoadAverage)
-				s.NotNil(r.Memory)
-				s.NotNil(r.Uptime)
+				s.Contains(r.Message, "drain initiated for agent server1")
 			},
 		},
 		{
-			name:      "agent not found returns 404",
-			hostname:  "unknown",
-			mockError: fmt.Errorf("agent not found: unknown"),
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				_, ok := resp.(gen.GetAgentDetails404JSONResponse)
+			name:       "agent not found returns 404",
+			hostname:   "unknown",
+			mockGetErr: fmt.Errorf("agent not found: unknown"),
+			skipWrite:  true,
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				_, ok := resp.(gen.DrainAgent404JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
-			name:      "client error returns 500",
-			hostname:  "server1",
-			mockError: fmt.Errorf("connection failed"),
-			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
-				_, ok := resp.(gen.GetAgentDetails500JSONResponse)
+			name:     "agent already draining returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateDraining,
+			},
+			skipWrite: true,
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				_, ok := resp.(gen.DrainAgent409JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:     "agent already cordoned returns 409",
+			hostname: "server1",
+			mockAgent: &jobtypes.AgentInfo{
+				Hostname: "server1",
+				State:    jobtypes.AgentStateCordoned,
+			},
+			skipWrite: true,
+			validateFunc: func(resp gen.DrainAgentResponseObject) {
+				_, ok := resp.(gen.DrainAgent409JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -127,9 +132,21 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
 				GetAgent(gomock.Any(), tt.hostname).
-				Return(tt.mockAgent, tt.mockError)
+				Return(tt.mockAgent, tt.mockGetErr)
 
-			resp, err := s.handler.GetAgentDetails(s.ctx, gen.GetAgentDetailsRequestObject{
+			if tt.mockSetDrain {
+				s.mockJobClient.EXPECT().
+					SetDrainFlag(gomock.Any(), tt.hostname).
+					Return(nil)
+			}
+
+			if !tt.skipWrite {
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), tt.hostname, "drain", "Drain initiated via API").
+					Return(tt.mockWriteErr)
+			}
+
+			resp, err := s.handler.DrainAgent(s.ctx, gen.DrainAgentRequestObject{
 				Hostname: tt.hostname,
 			})
 			s.NoError(err)
@@ -138,7 +155,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 	}
 }
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
+func (s *AgentDrainPublicTestSuite) TestDrainAgentValidationHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string
@@ -147,26 +164,26 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 		wantContains []string
 	}{
 		{
-			name:     "when agent exists returns details",
+			name:     "when agent exists returns 200",
 			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
-						Hostname:     "server1",
-						Labels:       map[string]string{"group": "web"},
-						RegisteredAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-						StartedAt:    time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
-						OSInfo:       &host.OSInfo{Distribution: "Ubuntu", Version: "24.04"},
-						Uptime:       5 * time.Hour,
-						LoadAverages: &load.AverageStats{Load1: 0.5, Load5: 0.3, Load15: 0.2},
-						MemoryStats:  &mem.Stats{Total: 8388608, Free: 4194304, Cached: 2097152},
+						Hostname: "server1",
+						State:    jobtypes.AgentStateReady,
 					}, nil)
+				mock.EXPECT().
+					SetDrainFlag(gomock.Any(), "server1").
+					Return(nil)
+				mock.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
+					Return(nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"server1"`, `"Ready"`, `"Ubuntu"`},
+			wantContains: []string{`"message"`, `drain initiated`},
 		},
 		{
 			name:     "when agent not found returns 404",
@@ -182,17 +199,20 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 			wantContains: []string{`"error"`},
 		},
 		{
-			name:     "when client error returns 500",
+			name:     "when agent already draining returns 409",
 			hostname: "server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
 					GetAgent(gomock.Any(), "server1").
-					Return(nil, fmt.Errorf("connection failed"))
+					Return(&jobtypes.AgentInfo{
+						Hostname: "server1",
+						State:    jobtypes.AgentStateDraining,
+					}, nil)
 				return mock
 			},
-			wantCode:     http.StatusInternalServerError,
-			wantContains: []string{`"error"`},
+			wantCode:     http.StatusConflict,
+			wantContains: []string{`"error"`, `already in Draining`},
 		},
 	}
 
@@ -207,8 +227,8 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
 			req := httptest.NewRequest(
-				http.MethodGet,
-				fmt.Sprintf("/agent/%s", tc.hostname),
+				http.MethodPost,
+				fmt.Sprintf("/agent/%s/drain", tc.hostname),
 				nil,
 			)
 			rec := httptest.NewRecorder()
@@ -223,9 +243,9 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
 	}
 }
 
-const rbacAgentGetTestSigningKey = "test-signing-key-for-rbac-agent-get"
+const rbacAgentDrainTestSigningKey = "test-signing-key-for-rbac-agent-drain"
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
+func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -250,10 +270,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacAgentGetTestSigningKey,
+					rbacAgentDrainTestSigningKey,
 					[]string{"read"},
 					"test-user",
-					[]string{"network:read"},
+					[]string{"agent:read"},
 				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -265,10 +285,10 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			wantContains: []string{"Insufficient permissions"},
 		},
 		{
-			name: "when valid token with agent:read returns 200",
+			name: "when valid token with agent:write returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacAgentGetTestSigningKey,
+					rbacAgentDrainTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -282,11 +302,18 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 					GetAgent(gomock.Any(), "server1").
 					Return(&jobtypes.AgentInfo{
 						Hostname: "server1",
+						State:    jobtypes.AgentStateReady,
 					}, nil)
+				mock.EXPECT().
+					SetDrainFlag(gomock.Any(), "server1").
+					Return(nil)
+				mock.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), "server1", "drain", "Drain initiated via API").
+					Return(nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"server1"`, `"Ready"`},
+			wantContains: []string{`"message"`, `drain initiated`},
 		},
 	}
 
@@ -298,7 +325,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 				API: config.API{
 					Server: config.Server{
 						Security: config.ServerSecurity{
-							SigningKey: rbacAgentGetTestSigningKey,
+							SigningKey: rbacAgentDrainTestSigningKey,
 						},
 					},
 				},
@@ -309,8 +336,8 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodGet,
-				"/agent/server1",
+				http.MethodPost,
+				"/agent/server1/drain",
 				nil,
 			)
 			tc.setupAuth(req)
@@ -326,6 +353,6 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsRBACHTTP() {
 	}
 }
 
-func TestAgentGetPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(AgentGetPublicTestSuite))
+func TestAgentDrainPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentDrainPublicTestSuite))
 }

@@ -98,7 +98,7 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 				s.Equal(2, r.Total)
 				s.Len(r.Agents, 2)
 				s.Equal("server1", r.Agents[0].Hostname)
-				s.Equal(gen.Ready, r.Agents[0].Status)
+				s.Equal(gen.AgentInfoStatusReady, r.Agents[0].Status)
 				s.NotNil(r.Agents[0].Labels)
 				s.NotNil(r.Agents[0].RegisteredAt)
 				s.NotNil(r.Agents[0].StartedAt)
@@ -108,7 +108,7 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 				s.NotNil(r.Agents[0].Memory)
 				s.NotNil(r.Agents[0].Uptime)
 				s.Equal("server2", r.Agents[1].Hostname)
-				s.Equal(gen.Ready, r.Agents[1].Status)
+				s.Equal(gen.AgentInfoStatusReady, r.Agents[1].Status)
 			},
 		},
 		{
