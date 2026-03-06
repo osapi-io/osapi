@@ -54,7 +54,7 @@ $ osapi client node command exec \
     --target _all
 ```
 
-See [System Facts](/docs/sidebar/features/system-facts) for all available
+See [System Facts](../../../../../features/system-facts.md) for all available
 `@fact.*` references.
 
 ## JSON Output
