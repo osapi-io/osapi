@@ -85,7 +85,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 		validateFunc func(resp gen.PutNodeNetworkDNSResponseObject)
 	}{
 		{
-			name: "success",
+			name: "when success",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_any",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -121,7 +121,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "validation error empty hostname",
+			name: "when validation error empty hostname",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -138,7 +138,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "body validation error empty interface name",
+			name: "when body validation error empty interface name",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_any",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -154,7 +154,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "job client error",
+			name: "when job client error",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_any",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -179,7 +179,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "broadcast all success",
+			name: "when broadcast all success",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -215,7 +215,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "broadcast all with errors",
+			name: "when broadcast all with errors",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -262,7 +262,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
-			name: "broadcast all error",
+			name: "when broadcast all error",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",
 				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
@@ -385,6 +385,16 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSHTTP() {
 			},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{`"error"`, "SearchDomains", "hostname"},
+		},
+		{
+			name: "when unknown fact key interface rejected",
+			path: "/node/server1/network/dns",
+			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.primary_interface"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
 		},
 		{
 			name: "when target agent not found",

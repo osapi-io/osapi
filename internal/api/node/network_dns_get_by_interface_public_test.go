@@ -84,7 +84,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 		validateFunc func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject)
 	}{
 		{
-			name: "success",
+			name: "when success",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "eth0",
@@ -114,7 +114,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "validation error empty hostname",
+			name: "when validation error empty hostname",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "",
 				InterfaceName: "eth0",
@@ -128,7 +128,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "validation error empty interface name",
+			name: "when validation error empty interface name",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "",
@@ -142,7 +142,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "job client error",
+			name: "when job client error",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_any",
 				InterfaceName: "eth0",
@@ -158,7 +158,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all success",
+			name: "when broadcast all success",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -187,7 +187,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all with errors",
+			name: "when broadcast all with errors",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -225,7 +225,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
-			name: "broadcast all error",
+			name: "when broadcast all error",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",
 				InterfaceName: "eth0",
@@ -310,6 +310,15 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceHT
 		{
 			name: "when non-alphanum interface name",
 			path: "/node/server1/network/dns/eth-0!",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "alphanum_or_fact"},
+		},
+		{
+			name: "when unknown fact key rejected",
+			path: "/node/server1/network/dns/@fact.primary_interface",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},

@@ -170,6 +170,16 @@ func (s *ValidationPublicTestSuite) TestAlphanumOrFact() {
 			field:  "@notfact.x",
 			wantOK: false,
 		},
+		{
+			name:   "when unknown fact key",
+			field:  "@fact.primary_interface",
+			wantOK: false,
+		},
+		{
+			name:   "when fact with bare custom prefix",
+			field:  "@fact.custom.",
+			wantOK: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -224,6 +234,16 @@ func (s *ValidationPublicTestSuite) TestIpOrFact() {
 		{
 			name:   "when at-sign without fact",
 			field:  "@notfact.x",
+			wantOK: false,
+		},
+		{
+			name:   "when unknown fact key",
+			field:  "@fact.primary_interface",
+			wantOK: false,
+		},
+		{
+			name:   "when fact with bare custom prefix",
+			field:  "@fact.custom.",
 			wantOK: false,
 		},
 	}

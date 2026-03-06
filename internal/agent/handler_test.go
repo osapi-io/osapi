@@ -135,7 +135,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 		errorMsg    string
 	}{
 		{
-			name:  "successful status event write",
+			name:  "when successful status event write",
 			jobID: "test-job-123",
 			event: "started",
 			data:  map[string]interface{}{"agent_version": "1.0.0", "pid": 12345},
@@ -147,7 +147,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 			expectError: false,
 		},
 		{
-			name:  "status event write with nil data",
+			name:  "when status event write with nil data",
 			jobID: "test-job-456",
 			event: "completed",
 			data:  nil,
@@ -159,7 +159,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 			expectError: false,
 		},
 		{
-			name:  "status event write failure",
+			name:  "when status event write failure",
 			jobID: "test-job-789",
 			event: "failed",
 			data:  map[string]interface{}{"error": "processing failed"},
@@ -172,7 +172,7 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 			errorMsg:    "KV storage failed",
 		},
 		{
-			name:  "empty job ID",
+			name:  "when empty job ID",
 			jobID: "",
 			event: "started",
 			data:  map[string]interface{}{},
@@ -212,7 +212,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		errorMsg    string
 	}{
 		{
-			name: "successful job processing",
+			name: "when successful job processing",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("test-job-123"),
@@ -250,7 +250,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			expectError: false,
 		},
 		{
-			name: "job processing with failure",
+			name: "when job processing fails",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("test-job-456"),
@@ -289,7 +289,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "job processing failed",
 		},
 		{
-			name: "invalid subject format",
+			name: "when invalid subject format",
 			msg: &mockJetStreamMsg{
 				subject: "invalid",
 				data:    []byte("test-job-789"),
@@ -301,7 +301,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "failed to parse subject",
 		},
 		{
-			name: "job not found",
+			name: "when job not found",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("nonexistent-job"),
@@ -315,7 +315,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "job not found",
 		},
 		{
-			name: "invalid job data format",
+			name: "when invalid job data format",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("invalid-job"),
@@ -329,7 +329,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "failed to parse job data",
 		},
 		{
-			name: "missing job ID",
+			name: "when missing job ID",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("missing-id-job"),
@@ -348,7 +348,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "invalid job format: missing id",
 		},
 		{
-			name: "missing operation",
+			name: "when missing operation",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("missing-op-job"),
@@ -364,7 +364,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "invalid job format: missing operation",
 		},
 		{
-			name: "missing operation type",
+			name: "when missing operation type",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("missing-type-job"),
@@ -383,7 +383,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "invalid operation format: missing type field",
 		},
 		{
-			name: "invalid operation type format",
+			name: "when invalid operation type format",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("invalid-type-job"),
@@ -403,7 +403,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "invalid operation type format",
 		},
 		{
-			name: "acknowledged write error logged",
+			name: "when acknowledged write error logged",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("ack-err-job"),
@@ -438,7 +438,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			expectError: false,
 		},
 		{
-			name: "started write error logged",
+			name: "when started write error logged",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("start-err-job"),
@@ -473,7 +473,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			expectError: false,
 		},
 		{
-			name: "completed write error logged",
+			name: "when completed write error logged",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("comp-err-job"),
@@ -508,7 +508,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			expectError: false,
 		},
 		{
-			name: "failed write error logged",
+			name: "when failed write error logged",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("fail-err-job"),
@@ -544,7 +544,7 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			errorMsg:    "job processing failed",
 		},
 		{
-			name: "fact reference resolved in job data",
+			name: "when fact reference resolved in job data",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("fact-resolve-job"),
@@ -583,7 +583,45 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			expectError: false,
 		},
 		{
-			name: "unresolvable fact reference returns error",
+			name: "when fact reference with nil cached facts writes error to KV",
+			msg: &mockJetStreamMsg{
+				subject: "jobs.query.test-agent",
+				data:    []byte("fact-nil-job"),
+			},
+			setupMocks: func() {
+				s.agent.cachedFacts = nil
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.fact-nil-job").
+					Return([]byte(`{
+						"id": "fact-nil-job",
+						"operation": {
+							"type": "network.dns.get",
+							"data": {"interface": "@fact.interface.primary"}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", "failed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "fact-nil-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			expectError: true,
+			errorMsg:    "facts not available",
+		},
+		{
+			name: "when unresolvable fact reference writes error to KV",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("fact-fail-job"),
@@ -604,12 +642,24 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), "fact-fail-job", "acknowledged", gomock.Any(), gomock.Any()).
 					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", "failed", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "fact-fail-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					Return(nil)
 			},
 			expectError: true,
 			errorMsg:    "failed to resolve fact references",
 		},
 		{
-			name: "response storage failure",
+			name: "when response storage failure",
 			msg: &mockJetStreamMsg{
 				subject: "jobs.query.test-agent",
 				data:    []byte("storage-fail-job"),
@@ -675,7 +725,7 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 		expectError bool
 	}{
 		{
-			name:    "modify job type identification",
+			name:    "when modify job type identification",
 			subject: "jobs.modify.test-agent",
 			jobData: `{
 				"id": "modify-job-123",
