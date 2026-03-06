@@ -197,17 +197,13 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 					RunCmd("scutil", []string{"--dns"}).
 					Return(darwinScutilExisting, nil)
 
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
 				return mock
 			},
 			servers:       []string{"8.8.8.8"},
 			searchDomains: []string{},
 			interfaceName: "en99",
 			wantErr:       true,
-			wantErrType:   fmt.Errorf("no network service found for interface"),
+			wantErrType:   fmt.Errorf("does not exist"),
 		},
 		{
 			name: "when setdnsservers errors",

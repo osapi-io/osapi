@@ -31,7 +31,7 @@ import (
 //
 // It parses resolver blocks from scutil output, matching by interface name
 // via the `if_index` field. If no resolver matches the requested interface,
-// it falls back to the first resolver (system default).
+// it returns an error.
 //
 // Example scutil --dns output:
 //
@@ -79,11 +79,7 @@ func parseScutilDNS(
 		}
 	}
 
-	// Fall back to the first resolver (system default)
-	return &GetResult{
-		DNSServers:    blocks[0].nameservers,
-		SearchDomains: blocks[0].searchDomains,
-	}, nil
+	return nil, fmt.Errorf("interface %q does not exist", interfaceName)
 }
 
 var (

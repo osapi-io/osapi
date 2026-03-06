@@ -96,7 +96,7 @@ resolver #2
 			},
 		},
 		{
-			name: "when no interface match falls back to first resolver",
+			name: "when no interface match returns error",
 			setupMock: func() *execMocks.MockManager {
 				mock := execMocks.NewPlainMockManager(suite.ctrl)
 				output := `
@@ -118,9 +118,8 @@ resolver #2
 				return mock
 			},
 			interfaceName: "en5",
-			want: &dns.GetResult{
-				DNSServers: []string{"192.168.1.1", "8.8.8.8"},
-			},
+			wantErr:       true,
+			wantErrType:   fmt.Errorf("does not exist"),
 		},
 		{
 			name: "when scutil command errors",
