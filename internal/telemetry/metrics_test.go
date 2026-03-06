@@ -23,6 +23,7 @@ package telemetry
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -35,62 +36,68 @@ type InitMeterTestSuite struct {
 	suite.Suite
 }
 
-func (s *InitMeterTestSuite) TestInitMeterDefaultPath() {
+func (s *InitMeterTestSuite) TestInitMeter() {
 	tests := []struct {
-		name string
+		name         string
+		cfg          config.MetricsConfig
+		setupFn      func()
+		cleanupFn    func()
+		validateFunc func(http.Handler, string, func(context.Context) error, error)
 	}{
 		{
 			name: "when path is empty uses default /metrics",
+			cfg:  config.MetricsConfig{},
+			validateFunc: func(
+				handler http.Handler,
+				path string,
+				shutdown func(context.Context) error,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(handler)
+				s.Equal(DefaultMetricsPath, path)
+				s.NotNil(shutdown)
+				s.NoError(shutdown(context.Background()))
+			},
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			cfg := config.MetricsConfig{}
-
-			handler, path, shutdown, err := InitMeter(cfg)
-
-			s.NoError(err)
-			s.NotNil(handler)
-			s.Equal(DefaultMetricsPath, path)
-			s.NotNil(shutdown)
-			s.NoError(shutdown(context.Background()))
-		})
-	}
-}
-
-func (s *InitMeterTestSuite) TestInitMeterCustomPath() {
-	tests := []struct {
-		name string
-	}{
 		{
 			name: "when path is configured uses custom path",
+			cfg:  config.MetricsConfig{Path: "/custom/metrics"},
+			validateFunc: func(
+				handler http.Handler,
+				path string,
+				shutdown func(context.Context) error,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(handler)
+				s.Equal("/custom/metrics", path)
+				s.NotNil(shutdown)
+				s.NoError(shutdown(context.Background()))
+			},
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			cfg := config.MetricsConfig{
-				Path: "/custom/metrics",
-			}
-
-			handler, path, shutdown, err := InitMeter(cfg)
-
-			s.NoError(err)
-			s.NotNil(handler)
-			s.Equal("/custom/metrics", path)
-			s.NotNil(shutdown)
-			s.NoError(shutdown(context.Background()))
-		})
-	}
-}
-
-func (s *InitMeterTestSuite) TestInitMeterExporterError() {
-	tests := []struct {
-		name string
-	}{
 		{
 			name: "when prometheus exporter creation fails returns error",
+			cfg:  config.MetricsConfig{},
+			setupFn: func() {
+				prometheusNewFn = func(
+					_ ...prometheus.Option,
+				) (*prometheus.Exporter, error) {
+					return nil, errors.New("prometheus exporter failed")
+				}
+			},
+			validateFunc: func(
+				handler http.Handler,
+				path string,
+				shutdown func(context.Context) error,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(handler)
+				s.Empty(path)
+				s.Nil(shutdown)
+				s.Contains(err.Error(), "creating prometheus exporter")
+			},
 		},
 	}
 
@@ -99,21 +106,12 @@ func (s *InitMeterTestSuite) TestInitMeterExporterError() {
 			original := prometheusNewFn
 			defer func() { prometheusNewFn = original }()
 
-			prometheusNewFn = func(
-				_ ...prometheus.Option,
-			) (*prometheus.Exporter, error) {
-				return nil, errors.New("prometheus exporter failed")
+			if tc.setupFn != nil {
+				tc.setupFn()
 			}
 
-			cfg := config.MetricsConfig{}
-
-			handler, path, shutdown, err := InitMeter(cfg)
-
-			s.Error(err)
-			s.Nil(handler)
-			s.Empty(path)
-			s.Nil(shutdown)
-			s.Contains(err.Error(), "creating prometheus exporter")
+			handler, path, shutdown, err := InitMeter(tc.cfg)
+			tc.validateFunc(handler, path, shutdown, err)
 		})
 	}
 }

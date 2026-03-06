@@ -40,11 +40,12 @@ type targetInput struct {
 
 func (s *TargetPublicTestSuite) TestValidTarget() {
 	tests := []struct {
-		name        string
-		setupLister func()
-		input       targetInput
-		wantOK      bool
-		contains    []string
+		name         string
+		setupLister  func()
+		input        targetInput
+		wantOK       bool
+		contains     []string
+		validateFunc func()
 	}{
 		{
 			name: "when target is _any",
@@ -262,10 +263,41 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			input:  targetInput{Target: "server1"},
 			wantOK: false,
 		},
+		{
+			name: "when same target validated twice uses cache",
+			validateFunc: func() {
+				callCount := 0
+				validation.RegisterTargetValidator(
+					func(_ context.Context) ([]validation.AgentTarget, error) {
+						callCount++
+
+						return []validation.AgentTarget{
+							{Hostname: "server1"},
+						}, nil
+					},
+				)
+
+				// First call populates cache.
+				_, ok := validation.Struct(targetInput{Target: "server1"})
+				s.True(ok)
+				s.Equal(1, callCount)
+
+				// Second call should use cache, not call lister again.
+				_, ok = validation.Struct(targetInput{Target: "server1"})
+				s.True(ok)
+				s.Equal(1, callCount)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.validateFunc != nil {
+				tt.validateFunc()
+
+				return
+			}
+
 			tt.setupLister()
 
 			errMsg, ok := validation.Struct(tt.input)
@@ -278,28 +310,6 @@ func (s *TargetPublicTestSuite) TestValidTarget() {
 			}
 		})
 	}
-}
-
-func (s *TargetPublicTestSuite) TestValidTargetCacheHit() {
-	callCount := 0
-	validation.RegisterTargetValidator(
-		func(_ context.Context) ([]validation.AgentTarget, error) {
-			callCount++
-			return []validation.AgentTarget{
-				{Hostname: "server1"},
-			}, nil
-		},
-	)
-
-	// First call populates cache.
-	_, ok := validation.Struct(targetInput{Target: "server1"})
-	s.True(ok)
-	s.Equal(1, callCount)
-
-	// Second call should use cache, not call lister again.
-	_, ok = validation.Struct(targetInput{Target: "server1"})
-	s.True(ok)
-	s.Equal(1, callCount)
 }
 
 func TestTargetPublicTestSuite(t *testing.T) {
