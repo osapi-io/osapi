@@ -284,6 +284,73 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			wantErrMsg: "failed to update file state",
 		},
 		{
+			name: "when state KV has corrupt data proceeds to deploy",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return([]byte("not-json"))
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+		},
+		{
+			name: "when mode is invalid defaults to 0644",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "not-octal",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				info, err := appFs.Stat("/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(os.FileMode(0o644), info.Mode())
+			},
+		},
+		{
 			name: "when mode is set",
 			setupMock: func(
 				_ *gomock.Controller,

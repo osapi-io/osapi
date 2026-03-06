@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -92,6 +93,17 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 				s.True(ok)
 				s.Equal("nginx.conf", r.Name)
 				s.True(r.Deleted)
+			},
+		},
+		{
+			name:    "validation error name too long",
+			request: gen.DeleteFileByNameRequestObject{Name: strings.Repeat("a", 256)},
+			setupMock: func() {
+				// No mock calls expected; validation rejects before reaching obj store.
+			},
+			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
+				_, ok := resp.(gen.DeleteFileByName400JSONResponse)
+				s.True(ok)
 			},
 		},
 		{

@@ -36,6 +36,10 @@ func (f *File) DeleteFileByName(
 	ctx context.Context,
 	request gen.DeleteFileByNameRequestObject,
 ) (gen.DeleteFileByNameResponseObject, error) {
+	if errMsg, ok := validateFileName(request.Name); !ok {
+		return gen.DeleteFileByName400JSONResponse{Error: &errMsg}, nil
+	}
+
 	f.logger.Debug("file delete",
 		slog.String("name", request.Name),
 	)

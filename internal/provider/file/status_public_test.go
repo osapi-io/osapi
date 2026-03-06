@@ -152,6 +152,22 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 			},
 		},
 		{
+			name: "when state entry has invalid JSON",
+			setupMock: func() {
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return([]byte("not-json"))
+
+				suite.mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.StatusRequest{
+				Path: "/etc/nginx/nginx.conf",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to parse file state",
+		},
+		{
 			name: "when no state entry",
 			setupMock: func() {
 				suite.mockKV.EXPECT().

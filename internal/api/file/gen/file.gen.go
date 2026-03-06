@@ -318,6 +318,15 @@ func (response DeleteFileByName200JSONResponse) VisitDeleteFileByNameResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteFileByName400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteFileByName400JSONResponse) VisitDeleteFileByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteFileByName401JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteFileByName401JSONResponse) VisitDeleteFileByNameResponse(w http.ResponseWriter) error {
@@ -367,6 +376,15 @@ type GetFileByName200JSONResponse FileInfoResponse
 func (response GetFileByName200JSONResponse) VisitGetFileByNameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFileByName400JSONResponse externalRef0.ErrorResponse
+
+func (response GetFileByName400JSONResponse) VisitGetFileByNameResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

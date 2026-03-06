@@ -21,50 +21,66 @@
 package file
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"log/slog"
 	"strings"
+	"testing"
 
-	"github.com/nats-io/nats.go/jetstream"
-
-	"github.com/retr0h/osapi/internal/api/file/gen"
+	"github.com/stretchr/testify/suite"
 )
 
-// GetFileByName get metadata for a specific file in the Object Store.
-func (f *File) GetFileByName(
-	ctx context.Context,
-	request gen.GetFileByNameRequestObject,
-) (gen.GetFileByNameResponseObject, error) {
-	if errMsg, ok := validateFileName(request.Name); !ok {
-		return gen.GetFileByName400JSONResponse{Error: &errMsg}, nil
+type ValidateTestSuite struct {
+	suite.Suite
+}
+
+func (suite *ValidateTestSuite) TestValidateFileName() {
+	tests := []struct {
+		name  string
+		input string
+		valid bool
+	}{
+		{
+			name:  "when valid name",
+			input: "nginx.conf",
+			valid: true,
+		},
+		{
+			name:  "when valid name with path chars",
+			input: "app.conf.tmpl",
+			valid: true,
+		},
+		{
+			name:  "when empty name",
+			input: "",
+			valid: false,
+		},
+		{
+			name:  "when name exceeds 255 chars",
+			input: strings.Repeat("a", 256),
+			valid: false,
+		},
+		{
+			name:  "when name at max 255 chars",
+			input: strings.Repeat("a", 255),
+			valid: true,
+		},
 	}
 
-	f.logger.Debug("file get",
-		slog.String("name", request.Name),
-	)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			errMsg, ok := validateFileName(tc.input)
 
-	info, err := f.objStore.GetInfo(ctx, request.Name)
-	if err != nil {
-		if errors.Is(err, jetstream.ErrObjectNotFound) {
-			errMsg := fmt.Sprintf("file not found: %s", request.Name)
-			return gen.GetFileByName404JSONResponse{
-				Error: &errMsg,
-			}, nil
-		}
-
-		errMsg := fmt.Sprintf("failed to get file info: %s", err.Error())
-		return gen.GetFileByName500JSONResponse{
-			Error: &errMsg,
-		}, nil
+			if tc.valid {
+				suite.True(ok)
+				suite.Empty(errMsg)
+			} else {
+				suite.False(ok)
+				suite.NotEmpty(errMsg)
+			}
+		})
 	}
+}
 
-	sha256Hex := strings.TrimPrefix(info.Digest, "SHA-256=")
-
-	return gen.GetFileByName200JSONResponse{
-		Name:   info.Name,
-		Sha256: sha256Hex,
-		Size:   int(info.Size),
-	}, nil
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+func TestValidateTestSuite(t *testing.T) {
+	suite.Run(t, new(ValidateTestSuite))
 }

@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -91,6 +92,17 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 				s.Equal("nginx.conf", r.Name)
 				s.Equal("abc123def456", r.Sha256)
 				s.Equal(1024, r.Size)
+			},
+		},
+		{
+			name:    "validation error name too long",
+			request: gen.GetFileByNameRequestObject{Name: strings.Repeat("a", 256)},
+			setupMock: func() {
+				// No mock calls expected; validation rejects before reaching obj store.
+			},
+			validateFunc: func(resp gen.GetFileByNameResponseObject) {
+				_, ok := resp.(gen.GetFileByName400JSONResponse)
+				s.True(ok)
 			},
 		},
 		{

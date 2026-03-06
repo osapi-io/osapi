@@ -109,6 +109,13 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantChanged: true,
 		},
 		{
+			name:       "when template execution fails",
+			template:   "{{ call .Hostname }}",
+			hostname:   "web-01",
+			wantErr:    true,
+			wantErrMsg: "failed to render template",
+		},
+		{
 			name:       "when invalid template syntax",
 			template:   "{{ .Invalid",
 			hostname:   "web-01",

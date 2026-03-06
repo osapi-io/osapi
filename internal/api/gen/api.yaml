@@ -500,6 +500,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileInfoResponse'
+        '400':
+          description: Invalid file name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -542,6 +548,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileDeleteResponse'
+        '400':
+          description: Invalid file name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
