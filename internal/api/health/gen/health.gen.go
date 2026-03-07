@@ -126,6 +126,15 @@ type NATSInfo struct {
 	Version string `json:"version"`
 }
 
+// ObjectStoreInfo defines model for ObjectStoreInfo.
+type ObjectStoreInfo struct {
+	// Name Object Store bucket name.
+	Name string `json:"name"`
+
+	// Size Total bytes in the store.
+	Size int `json:"size"`
+}
+
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
 	// Error Error message when not ready.
@@ -147,6 +156,9 @@ type StatusResponse struct {
 	// KvBuckets KV bucket statistics.
 	KvBuckets *[]KVBucketInfo `json:"kv_buckets,omitempty"`
 	Nats      *NATSInfo       `json:"nats,omitempty"`
+
+	// ObjectStores Object Store statistics.
+	ObjectStores *[]ObjectStoreInfo `json:"object_stores,omitempty"`
 
 	// Status Overall health status.
 	Status string `json:"status"`

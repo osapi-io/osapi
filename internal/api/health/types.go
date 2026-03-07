@@ -36,6 +36,7 @@ type MetricsProvider interface {
 	GetNATSInfo(ctx context.Context) (*NATSMetrics, error)
 	GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
 	GetKVInfo(ctx context.Context) ([]KVMetrics, error)
+	GetObjectStoreInfo(ctx context.Context) ([]ObjectStoreMetrics, error)
 	GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
 	GetJobStats(ctx context.Context) (*JobMetrics, error)
 	GetAgentStats(ctx context.Context) (*AgentMetrics, error)
@@ -60,6 +61,12 @@ type KVMetrics struct {
 	Name  string
 	Keys  int
 	Bytes uint64
+}
+
+// ObjectStoreMetrics holds Object Store bucket statistics.
+type ObjectStoreMetrics struct {
+	Name string
+	Size uint64
 }
 
 // ConsumerMetrics holds JetStream consumer statistics.
@@ -102,12 +109,13 @@ type AgentDetail struct {
 
 // ClosureMetricsProvider implements MetricsProvider using function closures.
 type ClosureMetricsProvider struct {
-	NATSInfoFn      func(ctx context.Context) (*NATSMetrics, error)
-	StreamInfoFn    func(ctx context.Context) ([]StreamMetrics, error)
-	KVInfoFn        func(ctx context.Context) ([]KVMetrics, error)
-	ConsumerStatsFn func(ctx context.Context) (*ConsumerMetrics, error)
-	JobStatsFn      func(ctx context.Context) (*JobMetrics, error)
-	AgentStatsFn    func(ctx context.Context) (*AgentMetrics, error)
+	NATSInfoFn        func(ctx context.Context) (*NATSMetrics, error)
+	StreamInfoFn      func(ctx context.Context) ([]StreamMetrics, error)
+	KVInfoFn          func(ctx context.Context) ([]KVMetrics, error)
+	ObjectStoreInfoFn func(ctx context.Context) ([]ObjectStoreMetrics, error)
+	ConsumerStatsFn   func(ctx context.Context) (*ConsumerMetrics, error)
+	JobStatsFn        func(ctx context.Context) (*JobMetrics, error)
+	AgentStatsFn      func(ctx context.Context) (*AgentMetrics, error)
 }
 
 // GetNATSInfo delegates to the NATSInfoFn closure.
@@ -129,6 +137,13 @@ func (p *ClosureMetricsProvider) GetKVInfo(
 	ctx context.Context,
 ) ([]KVMetrics, error) {
 	return p.KVInfoFn(ctx)
+}
+
+// GetObjectStoreInfo delegates to the ObjectStoreInfoFn closure.
+func (p *ClosureMetricsProvider) GetObjectStoreInfo(
+	ctx context.Context,
+) ([]ObjectStoreMetrics, error) {
+	return p.ObjectStoreInfoFn(ctx)
 }
 
 // GetConsumerStats delegates to the ConsumerStatsFn closure.

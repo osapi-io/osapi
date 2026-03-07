@@ -104,6 +104,7 @@ func (h *Health) populateMetrics(
 		natsInfo      *NATSMetrics
 		streams       []StreamMetrics
 		kvBuckets     []KVMetrics
+		objectStores  []ObjectStoreMetrics
 		jobStats      *JobMetrics
 		agentStats    *AgentMetrics
 		consumerStats *ConsumerMetrics
@@ -151,6 +152,17 @@ func (h *Health) populateMetrics(
 		}
 		mu.Lock()
 		kvBuckets = b
+		mu.Unlock()
+	})
+
+	collect("object-stores", func() {
+		o, err := h.Metrics.GetObjectStoreInfo(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get Object Store info for status", "error", err)
+			return
+		}
+		mu.Lock()
+		objectStores = o
 		mu.Unlock()
 	})
 
@@ -220,6 +232,17 @@ func (h *Health) populateMetrics(
 			})
 		}
 		resp.KvBuckets = &bucketInfos
+	}
+
+	if objectStores != nil {
+		infos := make([]gen.ObjectStoreInfo, 0, len(objectStores))
+		for _, o := range objectStores {
+			infos = append(infos, gen.ObjectStoreInfo{
+				Name: o.Name,
+				Size: int(o.Size),
+			})
+		}
+		resp.ObjectStores = &infos
 	}
 
 	if jobStats != nil {

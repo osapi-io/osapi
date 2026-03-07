@@ -143,6 +143,14 @@ func displayStatusHealth(
 		))
 	}
 
+	// Object Stores
+	for _, o := range data.ObjectStores {
+		cli.PrintKV("Object Store", fmt.Sprintf(
+			"%s "+cli.DimStyle.Render("(%s)"),
+			o.Name, cli.FormatBytes(o.Size),
+		))
+	}
+
 	// Consumers last — the table can be long with many agents
 	if data.Consumers != nil {
 		fmt.Println()
