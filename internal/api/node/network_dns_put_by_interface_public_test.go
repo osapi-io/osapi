@@ -299,7 +299,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 	}
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSHTTP() {
+func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

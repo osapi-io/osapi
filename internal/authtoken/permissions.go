@@ -35,6 +35,8 @@ const (
 	PermHealthRead     Permission = "health:read"
 	PermAuditRead      Permission = "audit:read"
 	PermCommandExecute Permission = "command:execute"
+	PermFileRead       Permission = "file:read"
+	PermFileWrite      Permission = "file:write"
 )
 
 // AllPermissions is the full set of known permissions.
@@ -49,6 +51,8 @@ var AllPermissions = []Permission{
 	PermHealthRead,
 	PermAuditRead,
 	PermCommandExecute,
+	PermFileRead,
+	PermFileWrite,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -64,6 +68,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermHealthRead,
 		PermAuditRead,
 		PermCommandExecute,
+		PermFileRead,
+		PermFileWrite,
 	},
 	"write": {
 		PermAgentRead,
@@ -73,6 +79,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermJobRead,
 		PermJobWrite,
 		PermHealthRead,
+		PermFileRead,
+		PermFileWrite,
 	},
 	"read": {
 		PermAgentRead,
@@ -80,6 +88,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermNetworkRead,
 		PermJobRead,
 		PermHealthRead,
+		PermFileRead,
 	},
 }
 

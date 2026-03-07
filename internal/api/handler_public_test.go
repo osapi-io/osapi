@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
+	fileMocks "github.com/retr0h/osapi/internal/api/file/mocks"
 	"github.com/retr0h/osapi/internal/api/health"
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
@@ -332,6 +333,46 @@ func (s *HandlerPublicTestSuite) TestGetAuditHandler() {
 		s.Run(tt.name, func() {
 			store := &fakeAuditStore{}
 			handlers := s.server.GetAuditHandler(store)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetFileHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/file", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+			mockObjStore := fileMocks.NewMockObjectStoreManager(ctrl)
+
+			handlers := s.server.GetFileHandler(mockObjStore)
 
 			tt.validate(handlers)
 		})

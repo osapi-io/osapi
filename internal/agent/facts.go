@@ -152,6 +152,28 @@ func (a *Agent) writeFacts(
 	}
 }
 
+// GetFacts returns the agent's current facts as a flat map suitable for
+// template rendering. Returns nil if facts haven't been collected yet.
+// Uses JSON round-trip so the map automatically includes all fields
+// from FactsRegistration without hardcoding field names.
+func (a *Agent) GetFacts() map[string]any {
+	if a.cachedFacts == nil {
+		return nil
+	}
+
+	data, err := marshalJSON(a.cachedFacts)
+	if err != nil {
+		return nil
+	}
+
+	var result map[string]any
+	if err := unmarshalJSON(data, &result); err != nil {
+		return nil
+	}
+
+	return result
+}
+
 // factsKey returns the KV key for an agent's facts entry.
 func factsKey(
 	hostname string,

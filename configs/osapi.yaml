@@ -103,6 +103,17 @@ nats:
     storage: file
     replicas: 1
 
+  objects:
+    bucket: file-objects
+    max_bytes: 10737418240
+    storage: file
+    replicas: 1
+
+  file_state:
+    bucket: file-state
+    storage: file
+    replicas: 1
+
 telemetry:
   tracing:
     enabled: true

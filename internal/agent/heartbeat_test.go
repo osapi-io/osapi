@@ -81,6 +81,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		pingMocks.NewDefaultMockProvider(s.mockCtrl),
 		netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		nil,
 		s.mockKV,
 		nil,
 	)

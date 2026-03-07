@@ -108,10 +108,8 @@ func (c *Client) publishAndWait(
 	jobID := req.JobID
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
-	// Build operation type from category and operation
-	operationType := req.Category + "." + req.Operation
 	operationData := map[string]interface{}{
-		"type": operationType,
+		"type": req.Operation,
 		"data": req.Data,
 	}
 
@@ -205,10 +203,8 @@ func (c *Client) publishAndCollect(
 	jobID := req.JobID
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
-	// Build operation type from category and operation
-	operationType := req.Category + "." + req.Operation
 	operationData := map[string]interface{}{
-		"type": operationType,
+		"type": req.Operation,
 		"data": req.Data,
 	}
 

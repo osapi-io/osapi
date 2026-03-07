@@ -180,6 +180,22 @@ func setupJetStream(
 		}
 	}
 
+	// Create Object Store bucket for file content
+	if appConfig.NATS.Objects.Bucket != "" {
+		objStoreConfig := cli.BuildObjectStoreConfig(namespace, appConfig.NATS.Objects)
+		if _, err := nc.CreateOrUpdateObjectStore(ctx, objStoreConfig); err != nil {
+			return fmt.Errorf("create Object Store bucket %s: %w", objStoreConfig.Bucket, err)
+		}
+	}
+
+	// Create file-state KV bucket for deployment SHA tracking
+	if appConfig.NATS.FileState.Bucket != "" {
+		fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
+		if _, err := nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig); err != nil {
+			return fmt.Errorf("create file-state KV bucket %s: %w", fileStateKVConfig.Bucket, err)
+		}
+	}
+
 	// Create DLQ stream
 	dlqMaxAge, _ := time.ParseDuration(appConfig.NATS.DLQ.MaxAge)
 	dlqStorage := cli.ParseJetstreamStorageType(appConfig.NATS.DLQ.Storage)

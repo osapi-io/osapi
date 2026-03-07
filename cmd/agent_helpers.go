@@ -28,6 +28,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
+	fileProv "github.com/retr0h/osapi/internal/provider/file"
 )
 
 // setupAgent connects to NATS, creates providers, and builds the agent
@@ -47,6 +48,10 @@ func setupAgent(
 	providerFactory := agent.NewProviderFactory(log)
 	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := providerFactory.CreateProviders()
 
+	// Create file provider if Object Store and file-state KV are configured
+	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
+	fileProvider := createFileProvider(ctx, log, b, namespace, hostname)
+
 	a := agent.New(
 		appFs,
 		appConfig,
@@ -61,9 +66,46 @@ func setupAgent(
 		pingProvider,
 		netinfoProvider,
 		commandProvider,
+		fileProvider,
 		b.registryKV,
 		b.factsKV,
 	)
 
 	return a, b
+}
+
+// createFileProvider creates a file provider if Object Store and file-state KV
+// are configured. Returns nil if either is unavailable.
+func createFileProvider(
+	ctx context.Context,
+	log *slog.Logger,
+	b *natsBundle,
+	namespace string,
+	hostname string,
+) fileProv.Provider {
+	if appConfig.NATS.Objects.Bucket == "" || appConfig.NATS.FileState.Bucket == "" {
+		return nil
+	}
+
+	objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
+	objStore, err := b.nc.ObjectStore(ctx, objStoreName)
+	if err != nil {
+		log.Warn("Object Store not available, file operations disabled",
+			slog.String("bucket", objStoreName),
+			slog.String("error", err.Error()),
+		)
+		return nil
+	}
+
+	fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
+	fileStateKV, err := b.nc.CreateOrUpdateKVBucketWithConfig(ctx, fileStateKVConfig)
+	if err != nil {
+		log.Warn("file state KV not available, file operations disabled",
+			slog.String("bucket", fileStateKVConfig.Bucket),
+			slog.String("error", err.Error()),
+		)
+		return nil
+	}
+
+	return fileProv.New(log, appFs, objStore, fileStateKV, hostname)
 }

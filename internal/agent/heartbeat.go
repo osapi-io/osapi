@@ -38,6 +38,9 @@ var heartbeatInterval = 10 * time.Second
 // marshalJSON is a package-level variable for testing the marshal error path.
 var marshalJSON = json.Marshal
 
+// unmarshalJSON is a package-level variable for testing the unmarshal error path.
+var unmarshalJSON = json.Unmarshal
+
 // startHeartbeat writes the initial registration, spawns a goroutine that
 // refreshes the entry on a ticker, and deregisters on ctx.Done().
 func (a *Agent) startHeartbeat(

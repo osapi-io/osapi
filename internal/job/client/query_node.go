@@ -39,7 +39,7 @@ func (c *Client) QueryNodeDisk(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "disk.get",
+		Operation: job.OperationNodeDiskGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -69,7 +69,7 @@ func (c *Client) QueryNodeDiskBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "disk.get",
+		Operation: job.OperationNodeDiskGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -106,7 +106,7 @@ func (c *Client) QueryNodeMemory(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "memory.get",
+		Operation: job.OperationNodeMemoryGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -136,7 +136,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "memory.get",
+		Operation: job.OperationNodeMemoryGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -173,7 +173,7 @@ func (c *Client) QueryNodeLoad(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "load.get",
+		Operation: job.OperationNodeLoadGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -203,7 +203,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "load.get",
+		Operation: job.OperationNodeLoadGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -240,7 +240,7 @@ func (c *Client) QueryNodeOS(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "os.get",
+		Operation: job.OperationNodeOSGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -270,7 +270,7 @@ func (c *Client) QueryNodeOSBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "os.get",
+		Operation: job.OperationNodeOSGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -307,7 +307,7 @@ func (c *Client) QueryNodeUptime(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "uptime.get",
+		Operation: job.OperationNodeUptimeGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -337,7 +337,7 @@ func (c *Client) QueryNodeUptimeBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "uptime.get",
+		Operation: job.OperationNodeUptimeGet,
 		Data:      json.RawMessage(`{}`),
 	}
 

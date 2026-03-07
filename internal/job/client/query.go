@@ -39,7 +39,7 @@ func (c *Client) QueryNodeStatus(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "status.get",
+		Operation: job.OperationNodeStatusGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -69,7 +69,7 @@ func (c *Client) QueryNodeHostname(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "hostname.get",
+		Operation: job.OperationNodeHostnameGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -111,7 +111,7 @@ func (c *Client) QueryNetworkDNS(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "network",
-		Operation: "dns.get",
+		Operation: job.OperationNetworkDNSGet,
 		Data:      json.RawMessage(data),
 	}
 
@@ -149,7 +149,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "status.get",
+		Operation: job.OperationNodeStatusGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -201,7 +201,7 @@ func (c *Client) QueryNetworkPing(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "network",
-		Operation: "ping.do",
+		Operation: job.OperationNetworkPingDo,
 		Data:      json.RawMessage(data),
 	}
 
@@ -240,7 +240,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "node",
-		Operation: "hostname.get",
+		Operation: job.OperationNodeHostnameGet,
 		Data:      json.RawMessage(`{}`),
 	}
 
@@ -295,7 +295,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "network",
-		Operation: "dns.get",
+		Operation: job.OperationNetworkDNSGet,
 		Data:      json.RawMessage(data),
 	}
 
@@ -345,7 +345,7 @@ func (c *Client) QueryNetworkPingBroadcast(
 	req := &job.Request{
 		Type:      job.TypeQuery,
 		Category:  "network",
-		Operation: "ping.do",
+		Operation: job.OperationNetworkPingDo,
 		Data:      json.RawMessage(data),
 	}
 

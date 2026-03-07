@@ -208,7 +208,7 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByID() {
 	}
 }
 
-func (s *JobRetryPublicTestSuite) TestRetryJobByIDHTTP() {
+func (s *JobRetryPublicTestSuite) TestRetryJobByIDValidationHTTP() {
 	tests := []struct {
 		name         string
 		jobID        string

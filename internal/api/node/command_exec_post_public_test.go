@@ -368,7 +368,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 	}
 }
 
-func (s *CommandExecPostPublicTestSuite) TestPostCommandExecHTTP() {
+func (s *CommandExecPostPublicTestSuite) TestPostCommandExecValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

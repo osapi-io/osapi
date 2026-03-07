@@ -215,7 +215,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 	}
 }
 
-func (s *AgentUndrainPublicTestSuite) TestUndrainAgentValidationHTTP() {
+func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string

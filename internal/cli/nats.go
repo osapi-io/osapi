@@ -138,3 +138,33 @@ func BuildAuditKVConfig(
 		Replicas: auditCfg.Replicas,
 	}
 }
+
+// BuildObjectStoreConfig builds a jetstream.ObjectStoreConfig from objects config values.
+func BuildObjectStoreConfig(
+	namespace string,
+	objectsCfg config.NATSObjects,
+) jetstream.ObjectStoreConfig {
+	objectsBucket := job.ApplyNamespaceToInfraName(namespace, objectsCfg.Bucket)
+
+	return jetstream.ObjectStoreConfig{
+		Bucket:   objectsBucket,
+		MaxBytes: objectsCfg.MaxBytes,
+		Storage:  ParseJetstreamStorageType(objectsCfg.Storage),
+		Replicas: objectsCfg.Replicas,
+	}
+}
+
+// BuildFileStateKVConfig builds a jetstream.KeyValueConfig from file-state config values.
+// The file-state bucket has no TTL so deployment SHA tracking persists indefinitely.
+func BuildFileStateKVConfig(
+	namespace string,
+	fileStateCfg config.NATSFileState,
+) jetstream.KeyValueConfig {
+	fileStateBucket := job.ApplyNamespaceToInfraName(namespace, fileStateCfg.Bucket)
+
+	return jetstream.KeyValueConfig{
+		Bucket:   fileStateBucket,
+		Storage:  ParseJetstreamStorageType(fileStateCfg.Storage),
+		Replicas: fileStateCfg.Replicas,
+	}
+}

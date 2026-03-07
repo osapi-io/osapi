@@ -86,14 +86,16 @@ type NATSServerUser struct {
 
 // NATS configuration settings.
 type NATS struct {
-	Server   NATSServer   `mapstructure:"server,omitempty"`
-	Stream   NATSStream   `mapstructure:"stream,omitempty"`
-	KV       NATSKV       `mapstructure:"kv,omitempty"`
-	DLQ      NATSDLQ      `mapstructure:"dlq,omitempty"`
-	Audit    NATSAudit    `mapstructure:"audit,omitempty"`
-	Registry NATSRegistry `mapstructure:"registry,omitempty"`
-	Facts    NATSFacts    `mapstructure:"facts,omitempty"`
-	State    NATSState    `mapstructure:"state,omitempty"`
+	Server    NATSServer    `mapstructure:"server,omitempty"`
+	Stream    NATSStream    `mapstructure:"stream,omitempty"`
+	KV        NATSKV        `mapstructure:"kv,omitempty"`
+	DLQ       NATSDLQ       `mapstructure:"dlq,omitempty"`
+	Audit     NATSAudit     `mapstructure:"audit,omitempty"`
+	Registry  NATSRegistry  `mapstructure:"registry,omitempty"`
+	Facts     NATSFacts     `mapstructure:"facts,omitempty"`
+	State     NATSState     `mapstructure:"state,omitempty"`
+	Objects   NATSObjects   `mapstructure:"objects,omitempty"`
+	FileState NATSFileState `mapstructure:"file_state,omitempty"`
 }
 
 // NATSAudit configuration for the audit log KV bucket.
@@ -127,6 +129,24 @@ type NATSFacts struct {
 // NATSState configuration for the agent state KV bucket (drain flags, timeline events).
 type NATSState struct {
 	// Bucket is the KV bucket name for persistent agent state.
+	Bucket   string `mapstructure:"bucket"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSObjects configuration for the NATS Object Store bucket.
+type NATSObjects struct {
+	// Bucket is the Object Store bucket name for file content.
+	Bucket   string `mapstructure:"bucket"`
+	MaxBytes int64  `mapstructure:"max_bytes"`
+	Storage  string `mapstructure:"storage"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"`
+}
+
+// NATSFileState configuration for the file deployment state KV bucket.
+// No TTL — deployed file state persists until explicitly removed.
+type NATSFileState struct {
+	// Bucket is the KV bucket name for file deployment SHA tracking.
 	Bucket   string `mapstructure:"bucket"`
 	Storage  string `mapstructure:"storage"` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"`

@@ -399,3 +399,114 @@ func (suite *NATSPublicTestSuite) TestBuildAuditKVConfig() {
 		})
 	}
 }
+
+func (suite *NATSPublicTestSuite) TestBuildObjectStoreConfig() {
+	tests := []struct {
+		name       string
+		namespace  string
+		objectsCfg config.NATSObjects
+		validateFn func(jetstream.ObjectStoreConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			objectsCfg: config.NATSObjects{
+				Bucket:   "file-objects",
+				MaxBytes: 104857600,
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.ObjectStoreConfig) {
+				assert.Equal(suite.T(), "osapi-file-objects", cfg.Bucket)
+				assert.Equal(suite.T(), int64(104857600), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			objectsCfg: config.NATSObjects{
+				Bucket:   "file-objects",
+				MaxBytes: 52428800,
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.ObjectStoreConfig) {
+				assert.Equal(suite.T(), "file-objects", cfg.Bucket)
+				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when max_bytes is zero",
+			namespace: "osapi",
+			objectsCfg: config.NATSObjects{
+				Bucket:   "file-objects",
+				MaxBytes: 0,
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.ObjectStoreConfig) {
+				assert.Equal(suite.T(), "osapi-file-objects", cfg.Bucket)
+				assert.Equal(suite.T(), int64(0), cfg.MaxBytes)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildObjectStoreConfig(tc.namespace, tc.objectsCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}
+
+func (suite *NATSPublicTestSuite) TestBuildFileStateKVConfig() {
+	tests := []struct {
+		name         string
+		namespace    string
+		fileStateCfg config.NATSFileState
+		validateFn   func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set",
+			namespace: "osapi",
+			fileStateCfg: config.NATSFileState{
+				Bucket:   "file-state",
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-file-state", cfg.Bucket)
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:      "when namespace is empty",
+			namespace: "",
+			fileStateCfg: config.NATSFileState{
+				Bucket:   "file-state",
+				Storage:  "memory",
+				Replicas: 3,
+			},
+			validateFn: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "file-state", cfg.Bucket)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+				assert.Equal(suite.T(), 3, cfg.Replicas)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := cli.BuildFileStateKVConfig(tc.namespace, tc.fileStateCfg)
+
+			tc.validateFn(got)
+		})
+	}
+}

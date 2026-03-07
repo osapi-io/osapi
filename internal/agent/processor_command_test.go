@@ -79,6 +79,7 @@ func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
 		cmdMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 

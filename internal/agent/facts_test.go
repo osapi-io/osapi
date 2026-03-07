@@ -85,6 +85,7 @@ func (s *FactsTestSuite) SetupTest() {
 		s.mockNetinfo,
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
+		nil,
 		s.mockFactsKV,
 	)
 }
@@ -92,6 +93,7 @@ func (s *FactsTestSuite) SetupTest() {
 func (s *FactsTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 	marshalJSON = json.Marshal
+	unmarshalJSON = json.Unmarshal
 	factsInterval = 60 * time.Second
 }
 
@@ -241,6 +243,84 @@ func (s *FactsTestSuite) TestStartFactsRefresh() {
 
 			// Wait for goroutine to finish
 			s.agent.wg.Wait()
+		})
+	}
+}
+
+func (s *FactsTestSuite) TestGetFacts() {
+	tests := []struct {
+		name         string
+		setupFunc    func()
+		teardownFunc func()
+		validateFunc func(result map[string]any)
+	}{
+		{
+			name:      "when cachedFacts is nil returns nil",
+			setupFunc: func() {},
+			validateFunc: func(result map[string]any) {
+				s.Nil(result)
+			},
+		},
+		{
+			name: "when cachedFacts populated returns fact map",
+			setupFunc: func() {
+				s.agent.cachedFacts = &job.FactsRegistration{
+					Architecture: "amd64",
+					CPUCount:     4,
+					FQDN:         "test.local",
+				}
+			},
+			validateFunc: func(result map[string]any) {
+				s.Require().NotNil(result)
+				s.Equal("amd64", result["architecture"])
+				s.Equal(float64(4), result["cpu_count"])
+				s.Equal("test.local", result["fqdn"])
+			},
+		},
+		{
+			name: "when marshal fails returns nil",
+			setupFunc: func() {
+				s.agent.cachedFacts = &job.FactsRegistration{
+					Architecture: "amd64",
+				}
+				marshalJSON = func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal failure")
+				}
+			},
+			teardownFunc: func() {
+				marshalJSON = json.Marshal
+			},
+			validateFunc: func(result map[string]any) {
+				s.Nil(result)
+			},
+		},
+		{
+			name: "when unmarshal fails returns nil",
+			setupFunc: func() {
+				s.agent.cachedFacts = &job.FactsRegistration{
+					Architecture: "amd64",
+				}
+				unmarshalJSON = func(_ []byte, _ interface{}) error {
+					return fmt.Errorf("unmarshal failure")
+				}
+			},
+			teardownFunc: func() {
+				unmarshalJSON = json.Unmarshal
+			},
+			validateFunc: func(result map[string]any) {
+				s.Nil(result)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupFunc()
+			if tt.teardownFunc != nil {
+				defer tt.teardownFunc()
+			}
+			result := s.agent.GetFacts()
+			tt.validateFunc(result)
 		})
 	}
 }

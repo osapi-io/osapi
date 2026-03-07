@@ -253,7 +253,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 	}
 }
 
-func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceHTTP() {
+func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

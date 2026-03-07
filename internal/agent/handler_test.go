@@ -36,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
+	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -100,6 +101,7 @@ func (s *HandlerTestSuite) SetupTest() {
 
 	netinfoMock := netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
+	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.agent = New(
 		appFs,
@@ -115,6 +117,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		pingMock,
 		netinfoMock,
 		commandMock,
+		fMock,
 		nil,
 		nil,
 	)

@@ -138,7 +138,7 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 	}
 }
 
-func (s *AgentGetPublicTestSuite) TestGetAgentDetailsValidationHTTP() {
+func (s *AgentGetPublicTestSuite) TestGetAgentDetailsHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string

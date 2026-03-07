@@ -24,10 +24,13 @@ import (
 	"log/slog"
 
 	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Ubuntu implements the DNS interface for Ubuntu.
 type Ubuntu struct {
+	provider.FactsAware
+
 	logger      *slog.Logger
 	execManager exec.Manager
 }

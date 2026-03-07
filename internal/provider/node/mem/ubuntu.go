@@ -22,10 +22,14 @@ package mem
 
 import (
 	"github.com/shirou/gopsutil/v4/mem"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Ubuntu implements the Mem interface for Ubuntu.
 type Ubuntu struct {
+	provider.FactsAware
+
 	VirtualMemoryFn func() (*mem.VirtualMemoryStat, error)
 }
 

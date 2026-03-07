@@ -22,10 +22,14 @@ package ping
 
 import (
 	probing "github.com/prometheus-community/pro-bing"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Darwin implements the Ping interface for Darwin (macOS).
 type Darwin struct {
+	provider.FactsAware
+
 	NewPingerFn func(address string) (Pinger, error)
 }
 

@@ -21,8 +21,14 @@
 // Package ping provides network ping functionality.
 package ping
 
+import (
+	"github.com/retr0h/osapi/internal/provider"
+)
+
 // Linux implements the Ping interface for Linux.
-type Linux struct{}
+type Linux struct {
+	provider.FactsAware
+}
 
 // NewLinuxProvider factory to create a new Linux instance.
 func NewLinuxProvider() *Linux {

@@ -196,7 +196,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 	}
 }
 
-func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusHTTP() {
+func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -205,6 +205,15 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusHTTP() {
 		wantBody     string
 		wantContains []string
 	}{
+		{
+			name: "when empty hostname returns 400",
+			path: "/node/%20",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
 		{
 			name: "when get Ok",
 			path: "/node/server1",

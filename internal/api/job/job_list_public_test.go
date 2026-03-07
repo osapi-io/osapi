@@ -272,7 +272,7 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 	}
 }
 
-func (s *JobListPublicTestSuite) TestListJobsHTTP() {
+func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 	tests := []struct {
 		name         string
 		query        string

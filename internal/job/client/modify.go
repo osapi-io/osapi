@@ -44,7 +44,7 @@ func (c *Client) ModifyNetworkDNS(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "network",
-		Operation: "dns.update",
+		Operation: job.OperationNetworkDNSUpdate,
 		Data:      json.RawMessage(data),
 	}
 
@@ -89,7 +89,7 @@ func (c *Client) ModifyNetworkDNSBroadcast(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "network",
-		Operation: "dns.update",
+		Operation: job.OperationNetworkDNSUpdate,
 		Data:      json.RawMessage(data),
 	}
 

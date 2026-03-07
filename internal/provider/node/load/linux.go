@@ -21,8 +21,14 @@
 // Package load provides system load average statistics.
 package load
 
+import (
+	"github.com/retr0h/osapi/internal/provider"
+)
+
 // Linux implements the Load interface for Linux.
-type Linux struct{}
+type Linux struct {
+	provider.FactsAware
+}
 
 // NewLinuxProvider factory to create a new Linux instance.
 func NewLinuxProvider() *Linux {

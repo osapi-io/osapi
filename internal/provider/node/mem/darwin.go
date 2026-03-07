@@ -22,10 +22,14 @@ package mem
 
 import (
 	"github.com/shirou/gopsutil/v4/mem"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Darwin implements the Mem interface for Darwin (macOS).
 type Darwin struct {
+	provider.FactsAware
+
 	VirtualMemoryFn func() (*mem.VirtualMemoryStat, error)
 }
 

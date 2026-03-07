@@ -28,7 +28,9 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
+	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -53,10 +55,11 @@ func New(
 	pingProvider ping.Provider,
 	netinfoProvider netinfo.Provider,
 	commandProvider command.Provider,
+	fileProvider fileProv.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
-	return &Agent{
+	a := &Agent{
 		logger:          logger,
 		appConfig:       appConfig,
 		appFs:           appFs,
@@ -70,7 +73,25 @@ func New(
 		pingProvider:    pingProvider,
 		netinfoProvider: netinfoProvider,
 		commandProvider: commandProvider,
+		fileProvider:    fileProvider,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
 	}
+
+	// Wire agent facts into all providers so they can access the latest
+	// facts at execution time (e.g., for template rendering).
+	provider.WireProviderFacts(
+		a.GetFacts,
+		hostProvider,
+		diskProvider,
+		memProvider,
+		loadProvider,
+		dnsProvider,
+		pingProvider,
+		netinfoProvider,
+		commandProvider,
+		fileProvider,
+	)
+
+	return a
 }
