@@ -31,7 +31,7 @@ func (j *Job) GetJobStatus(
 	ctx context.Context,
 	_ gen.GetJobStatusRequestObject,
 ) (gen.GetJobStatusResponseObject, error) {
-	stats, err := j.JobClient.GetQueueStats(ctx)
+	stats, err := j.JobClient.GetQueueSummary(ctx)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetJobStatus500JSONResponse{
@@ -40,9 +40,8 @@ func (j *Job) GetJobStatus(
 	}
 
 	return gen.GetJobStatus200JSONResponse{
-		TotalJobs:       &stats.TotalJobs,
-		StatusCounts:    &stats.StatusCounts,
-		OperationCounts: &stats.OperationCounts,
-		DlqCount:        &stats.DLQCount,
+		TotalJobs:    &stats.TotalJobs,
+		StatusCounts: &stats.StatusCounts,
+		DlqCount:     &stats.DLQCount,
 	}, nil
 }

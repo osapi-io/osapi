@@ -114,7 +114,7 @@ type PostFileMultipartBody struct {
 // PostFileParams defines parameters for PostFile.
 type PostFileParams struct {
 	// Force When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.
-	Force *bool `form:"force,omitempty" json:"force,omitempty"`
+	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
 }
 
 // PostFileMultipartBodyContentType defines parameters for PostFile.

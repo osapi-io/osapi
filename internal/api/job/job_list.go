@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/api/job/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -44,9 +45,15 @@ func (j *Job) GetJob(
 		statusFilter = string(*request.Params.Status)
 	}
 
-	limit := 10
+	limit := client.DefaultPageSize
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
+	}
+	// Defense-in-depth: the OpenAPI validator rejects out-of-range limits
+	// before the handler runs, but we cap here too in case validation is
+	// ever misconfigured. ListJobs also caps internally.
+	if limit <= 0 || limit > client.MaxPageSize {
+		limit = client.DefaultPageSize
 	}
 
 	offset := 0
@@ -92,8 +99,10 @@ func (j *Job) GetJob(
 	}
 
 	totalItems := result.TotalCount
+	statusCounts := result.StatusCounts
 	return gen.GetJob200JSONResponse{
-		TotalItems: &totalItems,
-		Items:      &items,
+		TotalItems:   &totalItems,
+		StatusCounts: &statusCounts,
+		Items:        &items,
 	}, nil
 }

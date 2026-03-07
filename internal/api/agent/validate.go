@@ -20,36 +20,15 @@
 
 package agent
 
-import (
-	"context"
-	"strings"
+import "github.com/retr0h/osapi/internal/validation"
 
-	"github.com/retr0h/osapi/internal/api/agent/gen"
-)
-
-// GetAgentDetails retrieves detailed information about a specific agent.
-func (a *Agent) GetAgentDetails(
-	ctx context.Context,
-	request gen.GetAgentDetailsRequestObject,
-) (gen.GetAgentDetailsResponseObject, error) {
-	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetAgentDetails400JSONResponse{Error: &errMsg}, nil
-	}
-
-	agentInfo, err := a.JobClient.GetAgent(ctx, request.Hostname)
-	if err != nil {
-		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") {
-			return gen.GetAgentDetails404JSONResponse{
-				Error: &errMsg,
-			}, nil
-		}
-		return gen.GetAgentDetails500JSONResponse{
-			Error: &errMsg,
-		}, nil
-	}
-
-	info := buildAgentInfo(agentInfo)
-
-	return gen.GetAgentDetails200JSONResponse(info), nil
+// validateHostname validates a hostname path parameter using the shared
+// validator. Returns the error message and false if invalid.
+//
+// This exists because oapi-codegen does not generate validate tags on
+// path parameters in strict-server mode (upstream limitation).
+func validateHostname(
+	hostname string,
+) (string, bool) {
+	return validation.Var(hostname, "required,min=1,max=255")
 }

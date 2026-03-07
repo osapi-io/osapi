@@ -36,6 +36,13 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
+const (
+	// DefaultPageSize is the default number of jobs per page.
+	DefaultPageSize = 10
+	// MaxPageSize is the maximum allowed page size.
+	MaxPageSize = 100
+)
+
 // JobClient defines the interface for interacting with the jobs system.
 type JobClient interface {
 	// Job queue management operations
@@ -44,9 +51,6 @@ type JobClient interface {
 		operationData map[string]interface{},
 		targetHostname string,
 	) (*CreateJobResult, error)
-	GetQueueStats(
-		ctx context.Context,
-	) (*job.QueueStats, error)
 	GetQueueSummary(
 		ctx context.Context,
 	) (*job.QueueStats, error)
@@ -329,8 +333,9 @@ type CreateJobResult struct {
 
 // ListJobsResult represents the result of listing jobs with pagination.
 type ListJobsResult struct {
-	Jobs       []*job.QueuedJob
-	TotalCount int
+	Jobs         []*job.QueuedJob
+	TotalCount   int
+	StatusCounts map[string]int
 }
 
 // computedJobStatus represents the computed status from events
@@ -341,6 +346,11 @@ type computedJobStatus struct {
 	UpdatedAt   string
 	AgentStates map[string]job.AgentState
 	Timeline    []job.TimelineEvent
+}
+
+// lightJobInfo holds status derived from KV key names only (no reads).
+type lightJobInfo struct {
+	Status string
 }
 
 // Ensure Client implements JobClient interface

@@ -800,225 +800,6 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 	}
 }
 
-func (s *JobsPublicTestSuite) TestGetQueueStats() {
-	tests := []struct {
-		name         string
-		expectedErr  string
-		setupMocks   func()
-		expectedJobs int
-		expectedDLQ  int
-	}{
-		{
-			name: "no keys found",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, jetstream.ErrNoKeysFound)
-			},
-			expectedJobs: 0,
-			expectedDLQ:  0,
-		},
-		{
-			name:        "keys error",
-			expectedErr: "error fetching jobs",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, errors.New("connection failed"))
-			},
-		},
-		{
-			name: "get job error skipped",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-				s.mockKV.EXPECT().
-					Get(gomock.Any(), "jobs.job-1").
-					Return(nil, errors.New("kv error"))
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("no stream"))
-			},
-			expectedJobs: 0,
-		},
-		{
-			name: "invalid job JSON skipped",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(`not json`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("no stream"))
-			},
-			expectedJobs: 0,
-		},
-		{
-			name: "with DLQ info",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"}}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(&jetstream.StreamInfo{State: jetstream.StreamState{Msgs: 5}}, nil)
-			},
-			expectedJobs: 1,
-			expectedDLQ:  5,
-		},
-		{
-			name: "operation without type field",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"data":"some value"}}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("no stream"))
-			},
-			expectedJobs: 1,
-		},
-		{
-			name: "operation as non-map value",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":"string-value"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("no stream"))
-			},
-			expectedJobs: 1,
-		},
-		{
-			name: "non-jobs prefix keys skipped",
-			setupMocks: func() {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.submitted._api.100",
-					"responses.job-1.agent1.200",
-				}, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("no stream"))
-			},
-			expectedJobs: 0,
-		},
-		{
-			name: "with jobs and DLQ error",
-			setupMocks: func() {
-				keys := []string{"jobs.job-1", "jobs.job-2"}
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(keys, nil)
-
-				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry1.EXPECT().
-					Value().
-					Return([]byte(`{"id":"job-1","operation":{"type":"node.hostname.get"}}`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
-
-				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry2.EXPECT().
-					Value().
-					Return([]byte(`{"id":"job-2","operation":{"type":"node.status.get"}}`))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
-
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), "JOBS-DLQ").
-					Return(nil, errors.New("stream not found"))
-			},
-			expectedJobs: 2,
-			expectedDLQ:  0,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupMocks()
-
-			stats, err := s.jobsClient.GetQueueStats(s.ctx)
-
-			if tt.expectedErr != "" {
-				s.Error(err)
-				s.Contains(err.Error(), tt.expectedErr)
-			} else {
-				s.NoError(err)
-				s.NotNil(stats)
-				s.Equal(tt.expectedJobs, stats.TotalJobs)
-				if tt.expectedDLQ > 0 {
-					s.Equal(tt.expectedDLQ, stats.DLQCount)
-				}
-			}
-		})
-	}
-}
-
-func (s *JobsPublicTestSuite) TestGetQueueStatsDLQNameDerivedFromStreamName() {
-	tests := []struct {
-		name         string
-		streamName   string
-		expectedDLQ  string
-		setupMocks   func(dlqName string)
-		expectedMsgs int
-	}{
-		{
-			name:        "when stream name is JOBS",
-			streamName:  "JOBS",
-			expectedDLQ: "JOBS-DLQ",
-			setupMocks: func(dlqName string) {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{}, nil)
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), dlqName).
-					Return(&jetstream.StreamInfo{State: jetstream.StreamState{Msgs: 5}}, nil)
-			},
-			expectedMsgs: 5,
-		},
-		{
-			name:        "when stream name is namespaced",
-			streamName:  "osapi-JOBS",
-			expectedDLQ: "osapi-JOBS-DLQ",
-			setupMocks: func(dlqName string) {
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{}, nil)
-				s.mockNATSClient.EXPECT().
-					GetStreamInfo(gomock.Any(), dlqName).
-					Return(&jetstream.StreamInfo{State: jetstream.StreamState{Msgs: 3}}, nil)
-			},
-			expectedMsgs: 3,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupMocks(tt.expectedDLQ)
-
-			opts := &client.Options{
-				Timeout:    30 * time.Second,
-				KVBucket:   s.mockKV,
-				StreamName: tt.streamName,
-			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-			s.Require().NoError(err)
-
-			stats, err := c.GetQueueStats(s.ctx)
-			s.NoError(err)
-			s.NotNil(stats)
-			s.Equal(tt.expectedMsgs, stats.DLQCount)
-		})
-	}
-}
-
 func (s *JobsPublicTestSuite) TestListJobs() {
 	tests := []struct {
 		name               string
@@ -1047,7 +828,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
-			name: "returns all jobs no limit",
+			name: "returns all jobs default limit",
 			setupMocks: func() {
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
@@ -1072,13 +853,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:         "filters out non matching status",
 			statusFilter: "completed",
 			setupMocks: func() {
+				// No status keys → default "submitted", doesn't match "completed"
+				// Two-pass: no kv.Get needed for filtering
 				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
 			},
 			expectedJobs:       0,
 			expectedTotalCount: 0,
@@ -1194,17 +971,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			statusFilter: "submitted",
 			offset:       1,
 			setupMocks: func() {
+				// No status keys → all default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
 
-				// Reversed: job-3, job-2, job-1 — all submitted
-				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry3.EXPECT().Value().Return([]byte(
-					`{"id":"job-3","operation":{"type":"node.status.get"},"created":"2024-01-03T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-3").Return(mockEntry3, nil)
-
+				// Reversed: job-3, job-2, job-1. Offset 1 → page = [job-2, job-1]
+				// Only page items get kv.Get in Pass 2
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
@@ -1225,22 +998,18 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			statusFilter: "submitted",
 			limit:        1,
 			setupMocks: func() {
+				// No status keys → both default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
-				// Reversed: job-2, job-1 — both submitted
+				// Reversed: job-2, job-1. Limit 1 → page = [job-2]
+				// Only page item gets kv.Get in Pass 2
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
-
-				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 			},
 			expectedJobs:       1,
 			expectedTotalCount: 2,
@@ -1249,11 +1018,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:         "filter skips jobs with get error",
 			statusFilter: "submitted",
 			setupMocks: func() {
+				// No status keys → both default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-bad", "jobs.job-good"}, nil)
 
-				// Reversed: job-good, job-bad
+				// Reversed: job-good, job-bad — both match filter
+				// Pass 2: job-good Get fails, job-bad Get succeeds
 				s.mockKV.EXPECT().
 					Get(gomock.Any(), "jobs.job-good").
 					Return(nil, errors.New("kv error"))
@@ -1264,8 +1035,10 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bad").Return(mockEntry, nil)
 			},
-			expectedJobs:       1,
-			expectedTotalCount: 1,
+			expectedJobs: 1,
+			// totalCount is 2 because key-name-based counting finds
+			// both jobs matching the filter before Pass 2 Get errors
+			expectedTotalCount: 2,
 		},
 		{
 			name: "getJobStatusFromKeys with invalid JSON",
@@ -1280,6 +1053,31 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 			expectedJobs:       0,
 			expectedTotalCount: 1,
+		},
+		{
+			name:  "limit exceeding max capped to default",
+			limit: 200,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+
+				// Limit 200 → capped to DefaultPageSize (10)
+				// Both jobs are within page
+				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry2.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+
+				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry1.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+			},
+			expectedJobs:       2,
+			expectedTotalCount: 2,
 		},
 		{
 			name: "newest first ordering",

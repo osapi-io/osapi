@@ -34,6 +34,10 @@ func (a *Agent) DrainAgent(
 	ctx context.Context,
 	request gen.DrainAgentRequestObject,
 ) (gen.DrainAgentResponseObject, error) {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.DrainAgent400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 
 	agentInfo, err := a.JobClient.GetAgent(ctx, hostname)

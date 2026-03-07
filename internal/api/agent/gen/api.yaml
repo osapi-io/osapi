@@ -76,8 +76,15 @@ paths:
         - name: hostname
           in: path
           required: true
+          # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+          # validate tags in strict-server mode. Validation is handled
+          # manually in the handler.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to retrieve.
       responses:
         '200':
@@ -86,6 +93,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentInfo'
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -126,8 +139,15 @@ paths:
         - name: hostname
           in: path
           required: true
+          # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+          # validate tags in strict-server mode. Validation is handled
+          # manually in the handler.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to drain.
       responses:
         '200':
@@ -141,6 +161,12 @@ paths:
                     type: string
                 required:
                   - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -179,8 +205,15 @@ paths:
         - name: hostname
           in: path
           required: true
+          # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+          # validate tags in strict-server mode. Validation is handled
+          # manually in the handler.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to undrain.
       responses:
         '200':
@@ -194,6 +227,12 @@ paths:
                     type: string
                 required:
                   - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:

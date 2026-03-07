@@ -109,6 +109,36 @@ func (s *JobListPublicTestSuite) TestGetJob() {
 			},
 		},
 		{
+			name: "returns 400 when limit is zero",
+			request: func() gen.GetJobRequestObject {
+				l := 0
+				return gen.GetJobRequestObject{
+					Params: gen.GetJobParams{Limit: &l},
+				}
+			}(),
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob400JSONResponse)
+				s.True(ok)
+				s.NotNil(r.Error)
+			},
+		},
+		{
+			name: "returns 400 when limit exceeds max",
+			request: func() gen.GetJobRequestObject {
+				l := 101
+				return gen.GetJobRequestObject{
+					Params: gen.GetJobParams{Limit: &l},
+				}
+			}(),
+			expectMock: false,
+			validateFunc: func(resp gen.GetJobResponseObject) {
+				r, ok := resp.(gen.GetJob400JSONResponse)
+				s.True(ok)
+				s.NotNil(r.Error)
+			},
+		},
+		{
 			name: "returns 400 when offset is negative",
 			request: func() gen.GetJobRequestObject {
 				o := -1
@@ -335,6 +365,24 @@ func (s *JobListPublicTestSuite) TestListJobsValidationHTTP() {
 		{
 			name:  "when negative offset returns 400",
 			query: "?offset=-1",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name:  "when limit=0 returns 400",
+			query: "?limit=0",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name:  "when limit exceeds max returns 400",
+			query: "?limit=101",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},

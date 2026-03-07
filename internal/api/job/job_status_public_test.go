@@ -81,9 +81,6 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatus() {
 					"completed": 30,
 					"failed":    5,
 				},
-				OperationCounts: map[string]int{
-					"node.hostname.get": 15,
-				},
 				DLQCount: 2,
 			},
 			validateFunc: func(resp gen.GetJobStatusResponseObject) {
@@ -106,7 +103,7 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatus() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.mockJobClient.EXPECT().
-				GetQueueStats(gomock.Any()).
+				GetQueueSummary(gomock.Any()).
 				Return(tt.mockStats, tt.mockError)
 
 			resp, err := s.handler.GetJobStatus(s.ctx, gen.GetJobStatusRequestObject{})
@@ -128,15 +125,12 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatusHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					GetQueueStats(gomock.Any()).
+					GetQueueSummary(gomock.Any()).
 					Return(&jobtypes.QueueStats{
 						TotalJobs: 42,
 						StatusCounts: map[string]int{
 							"completed": 30,
 							"failed":    5,
-						},
-						OperationCounts: map[string]int{
-							"node.hostname.get": 15,
 						},
 						DLQCount: 2,
 					}, nil)
@@ -150,7 +144,7 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatusHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					GetQueueStats(gomock.Any()).
+					GetQueueSummary(gomock.Any()).
 					Return(nil, assert.AnError)
 				return mock
 			},
@@ -238,15 +232,12 @@ func (s *JobStatusPublicTestSuite) TestGetJobStatusRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					GetQueueStats(gomock.Any()).
+					GetQueueSummary(gomock.Any()).
 					Return(&jobtypes.QueueStats{
 						TotalJobs: 42,
 						StatusCounts: map[string]int{
 							"completed": 30,
 							"failed":    5,
-						},
-						OperationCounts: map[string]int{
-							"node.hostname.get": 15,
 						},
 						DLQCount: 2,
 					}, nil)

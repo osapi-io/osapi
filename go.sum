@@ -757,6 +757,8 @@ github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848 h1:ELW1sTVBn5
 github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848/go.mod h1:4rzeY9jiJF/+Ej4WNwqK5HQ2sflZrEs60GxQpg3Iya8=
 github.com/osapi-io/osapi-sdk v0.0.0-20260307073158-439e543a3013 h1:kcP1brAYrbrETk+8jgJKyGE8NI0zIvSg3hT5Y1oviT4=
 github.com/osapi-io/osapi-sdk v0.0.0-20260307073158-439e543a3013/go.mod h1:i9g4jaIL6NVo9MRpz33lAEnY4L7u6aO97/5hN4W3hGE=
+github.com/osapi-io/osapi-sdk v0.0.0-20260307192743-857786ce1c9e h1:sCg9f0Undm5zUdZ+oKESdplMhRvAlqmnMqKlyOoInX0=
+github.com/osapi-io/osapi-sdk v0.0.0-20260307192743-857786ce1c9e/go.mod h1:i9g4jaIL6NVo9MRpz33lAEnY4L7u6aO97/5hN4W3hGE=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.14.0 h1:dCI/t1iTdYGtkvCuBG2BgR6KZa83PTclw4U5n2wAllU=
 github.com/otiai10/copy v1.14.0/go.mod h1:ECfuL02W+/FkTWZWgQqXPWZgW9oeKCSQ5qVfSc4qc4w=

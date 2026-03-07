@@ -54,16 +54,9 @@ var clientJobListCmd = &cobra.Command{
 			return
 		}
 
-		// Get queue stats for summary
-		statsResp, err := sdkClient.Job.QueueStats(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
 		jobs := jobsResp.Data.Items
 		totalItems := jobsResp.Data.TotalItems
-		statusCounts := statsResp.Data.StatusCounts
+		statusCounts := jobsResp.Data.StatusCounts
 
 		if jsonOutput {
 			displayJobListJSON(jobs, totalItems, statusCounts, statusFilter, limitFlag, offsetFlag)
@@ -186,6 +179,6 @@ func init() {
 
 	clientJobListCmd.Flags().
 		String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure)")
-	clientJobListCmd.Flags().Int("limit", 10, "Limit number of jobs displayed (0 for no limit)")
+	clientJobListCmd.Flags().Int("limit", 10, "Maximum number of jobs per page (1-100, default 10)")
 	clientJobListCmd.Flags().Int("offset", 0, "Skip the first N jobs (for pagination)")
 }

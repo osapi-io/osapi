@@ -150,97 +150,8 @@ func (c *Client) CreateJob(
 	}, nil
 }
 
-// GetQueueStats returns statistics about the job queue.
-func (c *Client) GetQueueStats(
-	ctx context.Context,
-) (*job.QueueStats, error) {
-	c.logger.Debug("kv.keys",
-		slog.String("operation", "get_queue_stats"),
-	)
-	// Get all job keys from KV store
-	keys, err := c.kv.Keys(ctx)
-	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return &job.QueueStats{
-				TotalJobs: 0,
-				StatusCounts: map[string]int{
-					"submitted":  0,
-					"processing": 0,
-					"completed":  0,
-					"failed":     0,
-				},
-				OperationCounts: map[string]int{},
-				DLQCount:        0,
-			}, nil
-		}
-		return nil, fmt.Errorf("error fetching jobs: %w", err)
-	}
-
-	statusCounts := map[string]int{
-		"submitted":       0,
-		"processing":      0,
-		"completed":       0,
-		"failed":          0,
-		"partial_failure": 0,
-	}
-
-	operationCounts := map[string]int{}
-	jobCount := 0
-
-	// Process immutable jobs and compute status from events
-	for _, key := range keys {
-		// Only process "jobs." prefixed keys
-		if !strings.HasPrefix(key, "jobs.") {
-			continue
-		}
-
-		entry, err := c.kv.Get(ctx, key)
-		if err != nil {
-			continue
-		}
-
-		var jobData map[string]interface{}
-		if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
-			continue
-		}
-
-		jobID := strings.TrimPrefix(key, "jobs.")
-		jobCount++
-
-		// Compute status from events (reuse already-fetched keys)
-		computedStatus := c.computeStatusFromEvents(ctx, keys, jobID)
-		statusCounts[computedStatus.Status]++
-
-		// Track operation type
-		if jobOperationData, ok := jobData["operation"].(map[string]interface{}); ok {
-			if operationType, ok := jobOperationData["type"].(string); ok {
-				operationCounts[operationType]++
-			}
-		}
-	}
-
-	// Get DLQ count
-	dlqCount := 0
-	dlqName := c.streamName + "-DLQ"
-	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, dlqName)
-	if err != nil {
-		// DLQ might not exist, which is fine
-		c.logger.Debug("failed to get DLQ info", slog.String("error", err.Error()))
-	} else {
-		dlqCount = int(dlqInfo.State.Msgs)
-	}
-
-	return &job.QueueStats{
-		TotalJobs:       jobCount,
-		StatusCounts:    statusCounts,
-		OperationCounts: operationCounts,
-		DLQCount:        dlqCount,
-	}, nil
-}
-
-// GetQueueSummary returns lightweight job queue statistics derived from KV key
-// names only — no entry reads. This is much faster than GetQueueStats for large
-// queues and suitable for health/status dashboards.
+// GetQueueSummary returns job queue statistics derived from KV key names
+// only — no entry reads.
 func (c *Client) GetQueueSummary(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
@@ -259,54 +170,18 @@ func (c *Client) GetQueueSummary(
 		return nil, fmt.Errorf("error fetching keys: %w", err)
 	}
 
-	// Collect job IDs and their highest-priority status from key names.
-	// Key format: status.<jobID>.<event>.<agent>.<timestamp>
-	// Status priority: completed > failed > started > acknowledged > submitted
-	statusPriority := map[string]int{
-		"submitted":    0,
-		"acknowledged": 1,
-		"started":      2,
-		"failed":       3,
-		"completed":    4,
-		"retried":      4,
-	}
-
-	jobStatuses := make(map[string]string) // jobID -> highest status
-	for _, key := range keys {
-		if !strings.HasPrefix(key, "status.") {
-			continue
-		}
-		parts := strings.SplitN(key, ".", 4)
-		if len(parts) < 3 {
-			continue
-		}
-		jobID := parts[1]
-		event := parts[2]
-
-		cur, exists := jobStatuses[jobID]
-		if !exists || statusPriority[event] > statusPriority[cur] {
-			jobStatuses[jobID] = event
-		}
-	}
+	_, jobStatuses := computeStatusFromKeyNames(keys)
 
 	statusCounts := map[string]int{
-		"submitted":  0,
-		"processing": 0,
-		"completed":  0,
-		"failed":     0,
+		"submitted":       0,
+		"processing":      0,
+		"completed":       0,
+		"failed":          0,
+		"partial_failure": 0,
 	}
 
-	for _, status := range jobStatuses {
-		switch status {
-		case "completed", "retried":
-			statusCounts["completed"]++
-		case "failed":
-			statusCounts["failed"]++
-		case "started", "acknowledged":
-			statusCounts["processing"]++
-		default:
-			statusCounts["submitted"]++
-		}
+	for _, info := range jobStatuses {
+		statusCounts[info.Status]++
 	}
 
 	total := len(jobStatuses)
@@ -387,7 +262,8 @@ func (c *Client) GetJobStatus(
 }
 
 // ListJobs returns jobs filtered by status with server-side pagination.
-// limit=0 means no limit. offset=0 means start from beginning.
+// Uses a two-pass approach: Pass 1 derives status from key names only (fast),
+// Pass 2 fetches full details for the paginated page only.
 // Jobs are returned newest-first (reverse insertion order).
 func (c *Client) ListJobs(
 	ctx context.Context,
@@ -395,12 +271,18 @@ func (c *Client) ListJobs(
 	limit int,
 	offset int,
 ) (*ListJobsResult, error) {
+	// Cap limit to MaxPageSize
+	if limit <= 0 || limit > MaxPageSize {
+		limit = DefaultPageSize
+	}
+
 	c.logger.Debug("kv.keys",
 		slog.String("operation", "list_jobs"),
 		slog.String("status_filter", statusFilter),
 		slog.Int("limit", limit),
 		slog.Int("offset", offset),
 	)
+
 	allKeys, err := c.kv.Keys(ctx)
 	if err != nil {
 		if errors.Is(err, jetstream.ErrNoKeysFound) {
@@ -412,67 +294,71 @@ func (c *Client) ListJobs(
 		return nil, fmt.Errorf("error fetching jobs: %w", err)
 	}
 
-	// Extract job keys and reverse for newest-first ordering
-	var jobKeys []string
-	for _, key := range allKeys {
-		if strings.HasPrefix(key, "jobs.") {
-			jobID := strings.TrimPrefix(key, "jobs.")
-			if jobID != "" {
-				jobKeys = append(jobKeys, key)
-			}
-		}
+	// Pass 1: Light — key names only, no kv.Get()
+	orderedJobIDs, jobStatuses := computeStatusFromKeyNames(allKeys)
+
+	// Compute status counts from key-name-derived statuses (free — no extra reads)
+	statusCounts := map[string]int{
+		"submitted":       0,
+		"processing":      0,
+		"completed":       0,
+		"failed":          0,
+		"partial_failure": 0,
+	}
+	for _, info := range jobStatuses {
+		statusCounts[info.Status]++
+	}
+	// Jobs with no status events are "submitted" but not in jobStatuses
+	submittedOnly := len(orderedJobIDs) - len(jobStatuses)
+	if submittedOnly > 0 {
+		statusCounts["submitted"] += submittedOnly
 	}
 
-	// Reverse for newest-first (KV insertion order is chronological)
-	for i, j := 0, len(jobKeys)-1; i < j; i, j = i+1, j-1 {
-		jobKeys[i], jobKeys[j] = jobKeys[j], jobKeys[i]
+	// Filter + count (fast, no reads)
+	var matchingIDs []string
+	for _, id := range orderedJobIDs {
+		if statusFilter != "" {
+			info, exists := jobStatuses[id]
+			if !exists {
+				info = lightJobInfo{Status: "submitted"}
+			}
+			if info.Status != statusFilter {
+				continue
+			}
+		}
+		matchingIDs = append(matchingIDs, id)
+	}
+	totalCount := len(matchingIDs)
+
+	// Apply offset
+	if offset >= len(matchingIDs) {
+		return &ListJobsResult{
+			Jobs:         []*job.QueuedJob{},
+			TotalCount:   totalCount,
+			StatusCounts: statusCounts,
+		}, nil
+	}
+	matchingIDs = matchingIDs[offset:]
+
+	// Apply limit
+	if len(matchingIDs) > limit {
+		matchingIDs = matchingIDs[:limit]
 	}
 
 	c.logger.Debug("kv.keys",
-		slog.Int("total_job_keys", len(jobKeys)),
+		slog.Int("total_matching", totalCount),
+		slog.Int("page_size", len(matchingIDs)),
 		slog.Int("all_keys", len(allKeys)),
 	)
 
-	// No status filter: we know the total count immediately
-	if statusFilter == "" {
-		return c.listJobsNoFilter(ctx, allKeys, jobKeys, limit, offset), nil
-	}
-
-	// With status filter: scan all jobs to count matches and collect page
-	return c.listJobsWithFilter(ctx, allKeys, jobKeys, statusFilter, limit, offset), nil
-}
-
-// listJobsNoFilter handles pagination when no status filter is applied.
-func (c *Client) listJobsNoFilter(
-	ctx context.Context,
-	allKeys []string,
-	jobKeys []string,
-	limit int,
-	offset int,
-) *ListJobsResult {
-	totalCount := len(jobKeys)
-
-	// Apply offset
-	if offset >= len(jobKeys) {
-		return &ListJobsResult{
-			Jobs:       []*job.QueuedJob{},
-			TotalCount: totalCount,
-		}
-	}
-	jobKeys = jobKeys[offset:]
-
-	// Apply limit
-	if limit > 0 && len(jobKeys) > limit {
-		jobKeys = jobKeys[:limit]
-	}
-
+	// Pass 2: Heavy — kv.Get() only for the page
 	var jobs []*job.QueuedJob
-	for _, key := range jobKeys {
-		jobID := strings.TrimPrefix(key, "jobs.")
-		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, key, jobID)
+	for _, id := range matchingIDs {
+		jobKey := "jobs." + id
+		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, jobKey, id)
 		if err != nil {
 			c.logger.Debug("failed to get job status during list",
-				slog.String("job_id", jobID),
+				slog.String("job_id", id),
 				slog.String("error", err.Error()),
 			)
 			continue
@@ -485,61 +371,10 @@ func (c *Client) listJobsNoFilter(
 	}
 
 	return &ListJobsResult{
-		Jobs:       jobs,
-		TotalCount: totalCount,
-	}
-}
-
-// listJobsWithFilter handles pagination when a status filter is applied.
-func (c *Client) listJobsWithFilter(
-	ctx context.Context,
-	allKeys []string,
-	jobKeys []string,
-	statusFilter string,
-	limit int,
-	offset int,
-) *ListJobsResult {
-	var jobs []*job.QueuedJob
-	totalCount := 0
-	skipped := 0
-
-	for _, key := range jobKeys {
-		jobID := strings.TrimPrefix(key, "jobs.")
-		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, key, jobID)
-		if err != nil {
-			c.logger.Debug("failed to get job status during list",
-				slog.String("job_id", jobID),
-				slog.String("error", err.Error()),
-			)
-			continue
-		}
-
-		if jobInfo.Status != statusFilter {
-			continue
-		}
-
-		totalCount++
-
-		// Skip offset items
-		if skipped < offset {
-			skipped++
-			continue
-		}
-
-		// Collect items up to limit
-		if limit == 0 || len(jobs) < limit {
-			jobs = append(jobs, jobInfo)
-		}
-	}
-
-	if jobs == nil {
-		jobs = []*job.QueuedJob{}
-	}
-
-	return &ListJobsResult{
-		Jobs:       jobs,
-		TotalCount: totalCount,
-	}
+		Jobs:         jobs,
+		TotalCount:   totalCount,
+		StatusCounts: statusCounts,
+	}, nil
 }
 
 // getJobStatusFromKeys builds a QueuedJob using pre-fetched keys (no inner kv.Keys() call).
@@ -881,6 +716,113 @@ func (c *Client) DeleteJob(
 	}
 
 	return nil
+}
+
+// computeStatusFromKeyNames derives job statuses from KV key names only — no
+// kv.Get() calls. It returns ordered job IDs (newest-first from "jobs.*" keys)
+// and a map of per-job status computed using the same multi-agent logic as
+// computeStatusFromEvents but parsed entirely from key names.
+//
+// Key format: status.<jobID>.<event>.<hostname>.<timestamp>
+func computeStatusFromKeyNames(
+	keys []string,
+) ([]string, map[string]lightJobInfo) {
+	// Extract job IDs from jobs.* keys
+	var orderedJobIDs []string
+	for _, key := range keys {
+		if strings.HasPrefix(key, "jobs.") {
+			jobID := strings.TrimPrefix(key, "jobs.")
+			if jobID != "" {
+				orderedJobIDs = append(orderedJobIDs, jobID)
+			}
+		}
+	}
+
+	// Reverse for newest-first (KV insertion order is chronological)
+	for i, j := 0, len(orderedJobIDs)-1; i < j; i, j = i+1, j-1 {
+		orderedJobIDs[i], orderedJobIDs[j] = orderedJobIDs[j], orderedJobIDs[i]
+	}
+
+	// Parse status keys and track highest-priority event per (jobID, hostname)
+	statusPriority := map[string]int{
+		"submitted":    0,
+		"acknowledged": 1,
+		"started":      2,
+		"failed":       3,
+		"completed":    4,
+		"retried":      4,
+	}
+
+	// agentStates[jobID][hostname] = highest-priority event
+	agentStates := make(map[string]map[string]string)
+
+	for _, key := range keys {
+		if !strings.HasPrefix(key, "status.") {
+			continue
+		}
+		parts := strings.SplitN(key, ".", 5)
+		if len(parts) < 4 {
+			continue
+		}
+		jobID := parts[1]
+		event := parts[2]
+		hostname := parts[3]
+
+		if _, exists := agentStates[jobID]; !exists {
+			agentStates[jobID] = make(map[string]string)
+		}
+
+		cur, exists := agentStates[jobID][hostname]
+		if !exists || statusPriority[event] > statusPriority[cur] {
+			agentStates[jobID][hostname] = event
+		}
+	}
+
+	// Compute overall status per job using multi-agent logic
+	jobStatuses := make(map[string]lightJobInfo, len(agentStates))
+
+	for jobID, agents := range agentStates {
+		completed := 0
+		failed := 0
+		processing := 0
+		acknowledged := 0
+
+		for hostname, state := range agents {
+			if hostname == "_api" {
+				continue
+			}
+			switch state {
+			case "completed", "retried":
+				completed++
+			case "failed":
+				failed++
+			case "started":
+				processing++
+			case "acknowledged":
+				acknowledged++
+			}
+		}
+
+		totalAgents := completed + failed + processing + acknowledged
+
+		var status string
+		switch {
+		case totalAgents == 0:
+			status = "submitted"
+		case processing > 0 || acknowledged > 0:
+			status = "processing"
+		case failed > 0 && completed > 0:
+			status = "partial_failure"
+		case failed > 0:
+			status = "failed"
+		default:
+			status = "completed"
+		}
+
+		jobStatuses[jobID] = lightJobInfo{Status: status}
+	}
+
+	return orderedJobIDs, jobStatuses
 }
 
 // getJobResponses retrieves response data for a specific job

@@ -102,12 +102,13 @@ paths:
           in: query
           required: false
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
+            validate: omitempty,min=1,max=100
           schema:
             type: integer
-            minimum: 0
+            minimum: 1
+            maximum: 100
             default: 10
-          description: Maximum number of jobs to return. Use 0 for no limit.
+          description: Maximum number of jobs per page (1-100).
         - name: offset
           in: query
           required: false
@@ -430,6 +431,20 @@ components:
           type: integer
           description: Total number of jobs matching the filter.
           example: 42
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: >
+            Count of all jobs by status (submitted, processing, completed,
+            failed, partial_failure). Derived from key names during the
+            listing pass — no extra reads.
+          example:
+            submitted: 5
+            processing: 2
+            completed: 30
+            failed: 3
+            partial_failure: 2
         items:
           type: array
           items:
@@ -525,11 +540,6 @@ components:
           additionalProperties:
             type: integer
           description: Count of jobs by status.
-        operation_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by operation type.
         dlq_count:
           type: integer
           description: Number of jobs in the dead letter queue.

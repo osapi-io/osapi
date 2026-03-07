@@ -87,8 +87,12 @@ paths:
         - name: hostname
           in: path
           required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to retrieve.
       responses:
         '200':
@@ -97,6 +101,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentInfo'
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -138,8 +148,12 @@ paths:
         - name: hostname
           in: path
           required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to drain.
       responses:
         '200':
@@ -153,6 +167,12 @@ paths:
                     type: string
                 required:
                   - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -192,8 +212,12 @@ paths:
         - name: hostname
           in: path
           required: true
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
           schema:
             type: string
+            minLength: 1
+            maxLength: 255
           description: The hostname of the agent to undrain.
       responses:
         '200':
@@ -207,6 +231,12 @@ paths:
                     type: string
                 required:
                   - message
+        '400':
+          description: Invalid hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -412,6 +442,8 @@ paths:
         - name: force
           in: query
           required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
           description: >
             When true, bypass the digest check and always write the file.
             Returns changed=true regardless of whether the content differs from
@@ -770,12 +802,13 @@ paths:
           in: query
           required: false
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
+            validate: omitempty,min=1,max=100
           schema:
             type: integer
-            minimum: 0
+            minimum: 1
+            maximum: 100
             default: 10
-          description: Maximum number of jobs to return. Use 0 for no limit.
+          description: Maximum number of jobs per page (1-100).
         - name: offset
           in: query
           required: false
@@ -2505,6 +2538,20 @@ components:
           type: integer
           description: Total number of jobs matching the filter.
           example: 42
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: >
+            Count of all jobs by status (submitted, processing, completed,
+            failed, partial_failure). Derived from key names during the listing
+            pass — no extra reads.
+          example:
+            submitted: 5
+            processing: 2
+            completed: 30
+            failed: 3
+            partial_failure: 2
         items:
           type: array
           items:
@@ -2598,11 +2645,6 @@ components:
           additionalProperties:
             type: integer
           description: Count of jobs by status.
-        operation_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by operation type.
         dlq_count:
           type: integer
           description: Number of jobs in the dead letter queue.
