@@ -121,6 +121,9 @@ type JobDetailResponse struct {
 type ListJobsResponse struct {
 	Items *[]JobDetailResponse `json:"items,omitempty"`
 
+	// StatusCounts Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass — no extra reads.
+	StatusCounts *map[string]int `json:"status_counts,omitempty"`
+
 	// TotalItems Total number of jobs matching the filter.
 	TotalItems *int `json:"total_items,omitempty"`
 }
@@ -129,9 +132,6 @@ type ListJobsResponse struct {
 type QueueStatsResponse struct {
 	// DlqCount Number of jobs in the dead letter queue.
 	DlqCount *int `json:"dlq_count,omitempty"`
-
-	// OperationCounts Count of jobs by operation type.
-	OperationCounts *map[string]int `json:"operation_counts,omitempty"`
 
 	// StatusCounts Count of jobs by status.
 	StatusCounts *map[string]int `json:"status_counts,omitempty"`

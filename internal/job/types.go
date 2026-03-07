@@ -191,10 +191,9 @@ type TimelineEvent struct {
 
 // QueueStats represents statistics about the job queue.
 type QueueStats struct {
-	TotalJobs       int            `json:"total_jobs"`
-	StatusCounts    map[string]int `json:"status_counts"`
-	OperationCounts map[string]int `json:"operation_counts"`
-	DLQCount        int            `json:"dlq_count"`
+	TotalJobs    int            `json:"total_jobs"`
+	StatusCounts map[string]int `json:"status_counts"`
+	DLQCount     int            `json:"dlq_count"`
 }
 
 // Operation data structures for specific operations

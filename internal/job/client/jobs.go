@@ -150,97 +150,8 @@ func (c *Client) CreateJob(
 	}, nil
 }
 
-// GetQueueStats returns statistics about the job queue.
-func (c *Client) GetQueueStats(
-	ctx context.Context,
-) (*job.QueueStats, error) {
-	c.logger.Debug("kv.keys",
-		slog.String("operation", "get_queue_stats"),
-	)
-	// Get all job keys from KV store
-	keys, err := c.kv.Keys(ctx)
-	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return &job.QueueStats{
-				TotalJobs: 0,
-				StatusCounts: map[string]int{
-					"submitted":  0,
-					"processing": 0,
-					"completed":  0,
-					"failed":     0,
-				},
-				OperationCounts: map[string]int{},
-				DLQCount:        0,
-			}, nil
-		}
-		return nil, fmt.Errorf("error fetching jobs: %w", err)
-	}
-
-	statusCounts := map[string]int{
-		"submitted":       0,
-		"processing":      0,
-		"completed":       0,
-		"failed":          0,
-		"partial_failure": 0,
-	}
-
-	operationCounts := map[string]int{}
-	jobCount := 0
-
-	// Process immutable jobs and compute status from events
-	for _, key := range keys {
-		// Only process "jobs." prefixed keys
-		if !strings.HasPrefix(key, "jobs.") {
-			continue
-		}
-
-		entry, err := c.kv.Get(ctx, key)
-		if err != nil {
-			continue
-		}
-
-		var jobData map[string]interface{}
-		if err := json.Unmarshal(entry.Value(), &jobData); err != nil {
-			continue
-		}
-
-		jobID := strings.TrimPrefix(key, "jobs.")
-		jobCount++
-
-		// Compute status from events (reuse already-fetched keys)
-		computedStatus := c.computeStatusFromEvents(ctx, keys, jobID)
-		statusCounts[computedStatus.Status]++
-
-		// Track operation type
-		if jobOperationData, ok := jobData["operation"].(map[string]interface{}); ok {
-			if operationType, ok := jobOperationData["type"].(string); ok {
-				operationCounts[operationType]++
-			}
-		}
-	}
-
-	// Get DLQ count
-	dlqCount := 0
-	dlqName := c.streamName + "-DLQ"
-	dlqInfo, err := c.natsClient.GetStreamInfo(ctx, dlqName)
-	if err != nil {
-		// DLQ might not exist, which is fine
-		c.logger.Debug("failed to get DLQ info", slog.String("error", err.Error()))
-	} else {
-		dlqCount = int(dlqInfo.State.Msgs)
-	}
-
-	return &job.QueueStats{
-		TotalJobs:       jobCount,
-		StatusCounts:    statusCounts,
-		OperationCounts: operationCounts,
-		DLQCount:        dlqCount,
-	}, nil
-}
-
-// GetQueueSummary returns lightweight job queue statistics derived from KV key
-// names only — no entry reads. This is much faster than GetQueueStats for large
-// queues and suitable for health/status dashboards.
+// GetQueueSummary returns job queue statistics derived from KV key names
+// only — no entry reads.
 func (c *Client) GetQueueSummary(
 	ctx context.Context,
 ) (*job.QueueStats, error) {
@@ -386,6 +297,23 @@ func (c *Client) ListJobs(
 	// Pass 1: Light — key names only, no kv.Get()
 	orderedJobIDs, jobStatuses := computeStatusFromKeyNames(allKeys)
 
+	// Compute status counts from key-name-derived statuses (free — no extra reads)
+	statusCounts := map[string]int{
+		"submitted":       0,
+		"processing":      0,
+		"completed":       0,
+		"failed":          0,
+		"partial_failure": 0,
+	}
+	for _, info := range jobStatuses {
+		statusCounts[info.Status]++
+	}
+	// Jobs with no status events are "submitted" but not in jobStatuses
+	submittedOnly := len(orderedJobIDs) - len(jobStatuses)
+	if submittedOnly > 0 {
+		statusCounts["submitted"] += submittedOnly
+	}
+
 	// Filter + count (fast, no reads)
 	var matchingIDs []string
 	for _, id := range orderedJobIDs {
@@ -405,8 +333,9 @@ func (c *Client) ListJobs(
 	// Apply offset
 	if offset >= len(matchingIDs) {
 		return &ListJobsResult{
-			Jobs:       []*job.QueuedJob{},
-			TotalCount: totalCount,
+			Jobs:         []*job.QueuedJob{},
+			TotalCount:   totalCount,
+			StatusCounts: statusCounts,
 		}, nil
 	}
 	matchingIDs = matchingIDs[offset:]
@@ -442,8 +371,9 @@ func (c *Client) ListJobs(
 	}
 
 	return &ListJobsResult{
-		Jobs:       jobs,
-		TotalCount: totalCount,
+		Jobs:         jobs,
+		TotalCount:   totalCount,
+		StatusCounts: statusCounts,
 	}, nil
 }
 

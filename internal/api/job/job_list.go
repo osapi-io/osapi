@@ -99,8 +99,10 @@ func (j *Job) GetJob(
 	}
 
 	totalItems := result.TotalCount
+	statusCounts := result.StatusCounts
 	return gen.GetJob200JSONResponse{
-		TotalItems: &totalItems,
-		Items:      &items,
+		TotalItems:   &totalItems,
+		StatusCounts: &statusCounts,
+		Items:        &items,
 	}, nil
 }

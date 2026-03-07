@@ -54,16 +54,9 @@ var clientJobListCmd = &cobra.Command{
 			return
 		}
 
-		// Get queue stats for summary
-		statsResp, err := sdkClient.Job.QueueStats(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
 		jobs := jobsResp.Data.Items
 		totalItems := jobsResp.Data.TotalItems
-		statusCounts := statsResp.Data.StatusCounts
+		statusCounts := jobsResp.Data.StatusCounts
 
 		if jsonOutput {
 			displayJobListJSON(jobs, totalItems, statusCounts, statusFilter, limitFlag, offsetFlag)

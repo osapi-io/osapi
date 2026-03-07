@@ -51,9 +51,6 @@ type JobClient interface {
 		operationData map[string]interface{},
 		targetHostname string,
 	) (*CreateJobResult, error)
-	GetQueueStats(
-		ctx context.Context,
-	) (*job.QueueStats, error)
 	GetQueueSummary(
 		ctx context.Context,
 	) (*job.QueueStats, error)
@@ -336,8 +333,9 @@ type CreateJobResult struct {
 
 // ListJobsResult represents the result of listing jobs with pagination.
 type ListJobsResult struct {
-	Jobs       []*job.QueuedJob
-	TotalCount int
+	Jobs         []*job.QueuedJob
+	TotalCount   int
+	StatusCounts map[string]int
 }
 
 // computedJobStatus represents the computed status from events

@@ -2538,6 +2538,20 @@ components:
           type: integer
           description: Total number of jobs matching the filter.
           example: 42
+        status_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: >
+            Count of all jobs by status (submitted, processing, completed,
+            failed, partial_failure). Derived from key names during the listing
+            pass — no extra reads.
+          example:
+            submitted: 5
+            processing: 2
+            completed: 30
+            failed: 3
+            partial_failure: 2
         items:
           type: array
           items:
@@ -2631,11 +2645,6 @@ components:
           additionalProperties:
             type: integer
           description: Count of jobs by status.
-        operation_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by operation type.
         dlq_count:
           type: integer
           description: Number of jobs in the dead letter queue.

@@ -176,13 +176,6 @@ func fetchJobsStatus() string {
 		statusDisplay += fmt.Sprintf("  Dead Letter Queue: %d\n", stats.DlqCount)
 	}
 
-	if len(stats.OperationCounts) > 0 {
-		statusDisplay += "\nOperation Types:\n"
-		for opType, count := range stats.OperationCounts {
-			statusDisplay += fmt.Sprintf("  %s: %d\n", opType, count)
-		}
-	}
-
 	return statusDisplay
 }
 
@@ -215,7 +208,7 @@ and operation types with live refresh.`,
 			return
 		}
 
-		p := tea.NewProgram(initialJobsModel(pollIntervalSeconds))
+		p := tea.NewProgram(initialJobsModel(pollIntervalSeconds), tea.WithAltScreen())
 		_, err := p.Run()
 		if err != nil {
 			status := fetchJobsStatus()

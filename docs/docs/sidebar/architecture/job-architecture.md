@@ -346,17 +346,12 @@ GET /api/v1/jobs/{job-id}
 {
   "total_jobs": 42,
   "status_counts": {
-    "unprocessed": 5,
+    "submitted": 5,
     "processing": 2,
     "completed": 30,
     "failed": 5
   },
-  "operation_counts": {
-    "node.hostname.get": 15,
-    "node.status.get": 19,
-    "network.dns.get": 8,
-    "network.ping.do": 23
-  }
+  "dlq_count": 0
 }
 ```
 
