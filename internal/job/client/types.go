@@ -36,6 +36,13 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
+const (
+	// DefaultPageSize is the default number of jobs per page.
+	DefaultPageSize = 10
+	// MaxPageSize is the maximum allowed page size.
+	MaxPageSize = 100
+)
+
 // JobClient defines the interface for interacting with the jobs system.
 type JobClient interface {
 	// Job queue management operations
@@ -341,6 +348,11 @@ type computedJobStatus struct {
 	UpdatedAt   string
 	AgentStates map[string]job.AgentState
 	Timeline    []job.TimelineEvent
+}
+
+// lightJobInfo holds status derived from KV key names only (no reads).
+type lightJobInfo struct {
+	Status string
 }
 
 // Ensure Client implements JobClient interface

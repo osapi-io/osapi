@@ -33,6 +33,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/api/file/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostFile upload a file to the Object Store via multipart/form-data.
@@ -40,6 +41,13 @@ func (f *File) PostFile(
 	ctx context.Context,
 	request gen.PostFileRequestObject,
 ) (gen.PostFileResponseObject, error) {
+	// Defense-in-depth: the OpenAPI validator handles param validation before
+	// the handler runs, but we validate here too so the plumbing is in place
+	// if a future param adds stricter tags.
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.PostFile400JSONResponse{Error: &errMsg}, nil
+	}
+
 	name, contentType, fileData, errResp := f.parseMultipart(request)
 	if errResp != nil {
 		return errResp, nil

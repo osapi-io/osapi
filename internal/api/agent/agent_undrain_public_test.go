@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -69,6 +70,7 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 	tests := []struct {
 		name               string
 		hostname           string
+		skipMock           bool
 		mockAgent          *jobtypes.AgentInfo
 		mockGetErr         error
 		mockWriteErr       error
@@ -77,6 +79,26 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 		mockDeleteDrainErr error
 		validateFunc       func(resp gen.UndrainAgentResponseObject)
 	}{
+		{
+			name:      "returns 400 when hostname is empty",
+			hostname:  "",
+			skipMock:  true,
+			skipWrite: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:      "returns 400 when hostname exceeds max length",
+			hostname:  strings.Repeat("a", 256),
+			skipMock:  true,
+			skipWrite: true,
+			validateFunc: func(resp gen.UndrainAgentResponseObject) {
+				_, ok := resp.(gen.UndrainAgent400JSONResponse)
+				s.True(ok)
+			},
+		},
 		{
 			name:     "success undrains draining agent",
 			hostname: "server1",
@@ -190,9 +212,11 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgent() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				GetAgent(gomock.Any(), tt.hostname).
-				Return(tt.mockAgent, tt.mockGetErr)
+			if !tt.skipMock {
+				s.mockJobClient.EXPECT().
+					GetAgent(gomock.Any(), tt.hostname).
+					Return(tt.mockAgent, tt.mockGetErr)
+			}
 
 			if tt.mockDeleteDrain {
 				s.mockJobClient.EXPECT().
@@ -223,6 +247,15 @@ func (s *AgentUndrainPublicTestSuite) TestUndrainAgentHTTP() {
 		wantCode     int
 		wantContains []string
 	}{
+		{
+			name:     "when hostname exceeds max length returns 400",
+			hostname: strings.Repeat("a", 256),
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
 		{
 			name:     "when draining agent exists returns 200",
 			hostname: "server1",

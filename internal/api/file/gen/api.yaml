@@ -43,14 +43,8 @@ paths:
         - name: force
           in: query
           required: false
-          # x-oapi-codegen-extra-tags:
-          #   validate: omitempty
-          # NOTE: The tags above are intentionally commented out. The
-          # only param is an optional bool — validate:"omitempty" can
-          # never fail, so validation.Struct(Params) would be dead
-          # code. The middleware already type-validates the bool before
-          # the handler runs. Uncomment if a future param needs a
-          # stricter validate tag.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
           description: >
             When true, bypass the digest check and always write the
             file. Returns changed=true regardless of whether the

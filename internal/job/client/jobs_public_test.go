@@ -1047,7 +1047,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
-			name: "returns all jobs no limit",
+			name: "returns all jobs default limit",
 			setupMocks: func() {
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
@@ -1072,13 +1072,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:         "filters out non matching status",
 			statusFilter: "completed",
 			setupMocks: func() {
+				// No status keys → default "submitted", doesn't match "completed"
+				// Two-pass: no kv.Get needed for filtering
 				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{"jobs.job-1"}, nil)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry, nil)
 			},
 			expectedJobs:       0,
 			expectedTotalCount: 0,
@@ -1194,17 +1190,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			statusFilter: "submitted",
 			offset:       1,
 			setupMocks: func() {
+				// No status keys → all default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-1", "jobs.job-2", "jobs.job-3"}, nil)
 
-				// Reversed: job-3, job-2, job-1 — all submitted
-				mockEntry3 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry3.EXPECT().Value().Return([]byte(
-					`{"id":"job-3","operation":{"type":"node.status.get"},"created":"2024-01-03T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-3").Return(mockEntry3, nil)
-
+				// Reversed: job-3, job-2, job-1. Offset 1 → page = [job-2, job-1]
+				// Only page items get kv.Get in Pass 2
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
@@ -1225,22 +1217,18 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			statusFilter: "submitted",
 			limit:        1,
 			setupMocks: func() {
+				// No status keys → both default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
 
-				// Reversed: job-2, job-1 — both submitted
+				// Reversed: job-2, job-1. Limit 1 → page = [job-2]
+				// Only page item gets kv.Get in Pass 2
 				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockEntry2.EXPECT().Value().Return([]byte(
 					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
-
-				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
-				))
-				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
 			},
 			expectedJobs:       1,
 			expectedTotalCount: 2,
@@ -1249,11 +1237,13 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			name:         "filter skips jobs with get error",
 			statusFilter: "submitted",
 			setupMocks: func() {
+				// No status keys → both default "submitted"
 				s.mockKV.EXPECT().
 					Keys(gomock.Any()).
 					Return([]string{"jobs.job-bad", "jobs.job-good"}, nil)
 
-				// Reversed: job-good, job-bad
+				// Reversed: job-good, job-bad — both match filter
+				// Pass 2: job-good Get fails, job-bad Get succeeds
 				s.mockKV.EXPECT().
 					Get(gomock.Any(), "jobs.job-good").
 					Return(nil, errors.New("kv error"))
@@ -1264,8 +1254,10 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bad").Return(mockEntry, nil)
 			},
-			expectedJobs:       1,
-			expectedTotalCount: 1,
+			expectedJobs: 1,
+			// totalCount is 2 because key-name-based counting finds
+			// both jobs matching the filter before Pass 2 Get errors
+			expectedTotalCount: 2,
 		},
 		{
 			name: "getJobStatusFromKeys with invalid JSON",
@@ -1280,6 +1272,31 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 			expectedJobs:       0,
 			expectedTotalCount: 1,
+		},
+		{
+			name:  "limit exceeding max capped to default",
+			limit: 200,
+			setupMocks: func() {
+				s.mockKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
+
+				// Limit 200 → capped to DefaultPageSize (10)
+				// Both jobs are within page
+				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry2.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-2").Return(mockEntry2, nil)
+
+				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockEntry1.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockEntry1, nil)
+			},
+			expectedJobs:       2,
+			expectedTotalCount: 2,
 		},
 		{
 			name: "newest first ordering",

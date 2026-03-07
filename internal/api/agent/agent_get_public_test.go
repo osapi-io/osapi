@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -73,10 +74,29 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 	tests := []struct {
 		name         string
 		hostname     string
+		skipMock     bool
 		mockAgent    *jobtypes.AgentInfo
 		mockError    error
 		validateFunc func(resp gen.GetAgentDetailsResponseObject)
 	}{
+		{
+			name:     "returns 400 when hostname is empty",
+			hostname: "",
+			skipMock: true,
+			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
+				_, ok := resp.(gen.GetAgentDetails400JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name:     "returns 400 when hostname exceeds max length",
+			hostname: strings.Repeat("a", 256),
+			skipMock: true,
+			validateFunc: func(resp gen.GetAgentDetailsResponseObject) {
+				_, ok := resp.(gen.GetAgentDetails400JSONResponse)
+				s.True(ok)
+			},
+		},
 		{
 			name:     "success returns agent details",
 			hostname: "server1",
@@ -125,9 +145,11 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetails() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.mockJobClient.EXPECT().
-				GetAgent(gomock.Any(), tt.hostname).
-				Return(tt.mockAgent, tt.mockError)
+			if !tt.skipMock {
+				s.mockJobClient.EXPECT().
+					GetAgent(gomock.Any(), tt.hostname).
+					Return(tt.mockAgent, tt.mockError)
+			}
 
 			resp, err := s.handler.GetAgentDetails(s.ctx, gen.GetAgentDetailsRequestObject{
 				Hostname: tt.hostname,
@@ -146,6 +168,15 @@ func (s *AgentGetPublicTestSuite) TestGetAgentDetailsHTTP() {
 		wantCode     int
 		wantContains []string
 	}{
+		{
+			name:     "when hostname exceeds max length returns 400",
+			hostname: strings.Repeat("a", 256),
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
 		{
 			name:     "when agent exists returns details",
 			hostname: "server1",

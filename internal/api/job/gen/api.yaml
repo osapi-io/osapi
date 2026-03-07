@@ -102,12 +102,13 @@ paths:
           in: query
           required: false
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
+            validate: omitempty,min=1,max=100
           schema:
             type: integer
-            minimum: 0
+            minimum: 1
+            maximum: 100
             default: 10
-          description: Maximum number of jobs to return. Use 0 for no limit.
+          description: Maximum number of jobs per page (1-100).
         - name: offset
           in: query
           required: false

@@ -34,6 +34,10 @@ func (a *Agent) UndrainAgent(
 	ctx context.Context,
 	request gen.UndrainAgentRequestObject,
 ) (gen.UndrainAgentResponseObject, error) {
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.UndrainAgent400JSONResponse{Error: &errMsg}, nil
+	}
+
 	hostname := request.Hostname
 
 	agentInfo, err := a.JobClient.GetAgent(ctx, hostname)

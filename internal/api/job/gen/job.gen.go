@@ -151,8 +151,8 @@ type GetJobParams struct {
 	// Status Filter jobs by status.
 	Status *GetJobParamsStatus `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,oneof=submitted processing completed failed partial_failure"`
 
-	// Limit Maximum number of jobs to return. Use 0 for no limit.
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=0"`
+	// Limit Maximum number of jobs per page (1-100).
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 
 	// Offset Number of jobs to skip for pagination.
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`

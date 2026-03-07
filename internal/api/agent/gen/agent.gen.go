@@ -399,6 +399,15 @@ func (response GetAgentDetails200JSONResponse) VisitGetAgentDetailsResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetAgentDetails400JSONResponse externalRef0.ErrorResponse
+
+func (response GetAgentDetails400JSONResponse) VisitGetAgentDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetAgentDetails401JSONResponse externalRef0.ErrorResponse
 
 func (response GetAgentDetails401JSONResponse) VisitGetAgentDetailsResponse(w http.ResponseWriter) error {
@@ -454,6 +463,15 @@ func (response DrainAgent200JSONResponse) VisitDrainAgentResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DrainAgent400JSONResponse externalRef0.ErrorResponse
+
+func (response DrainAgent400JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DrainAgent401JSONResponse externalRef0.ErrorResponse
 
 func (response DrainAgent401JSONResponse) VisitDrainAgentResponse(w http.ResponseWriter) error {
@@ -505,6 +523,15 @@ type UndrainAgent200JSONResponse struct {
 func (response UndrainAgent200JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UndrainAgent400JSONResponse externalRef0.ErrorResponse
+
+func (response UndrainAgent400JSONResponse) VisitUndrainAgentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
