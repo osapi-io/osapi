@@ -37,7 +37,7 @@ into NATS JetStream:
 - **Agents** — Processes jobs, updates status, stores results
 
 All three use the **Job Client Layer** (`internal/job/client/`), which provides
-type-safe business logic operations (`CreateJob`, `GetQueueStats`,
+type-safe business logic operations (`CreateJob`, `GetQueueSummary`,
 `GetJobStatus`, `ListJobs`) on top of NATS JetStream.
 
 **NATS JetStream** provides three storage backends:
@@ -658,7 +658,7 @@ The `internal/job/` package contains shared domain types and two subpackages:
 | `client.go` | Publish-and-wait/collect with KV + stream        |
 | `query.go`  | Query operations (system status, hostname, etc.) |
 | `modify.go` | Modify operations (DNS updates)                  |
-| `jobs.go`   | CreateJob, RetryJob, GetJobStatus, GetQueueStats |
+| `jobs.go`   | CreateJob, RetryJob, GetJobStatus, ListJobs      |
 | `agent.go`  | WriteStatusEvent, WriteJobResponse               |
 | `types.go`  | Client-specific types and interfaces             |
 
@@ -765,11 +765,64 @@ osapi agent start
 
 ## Performance Optimizations
 
+### Two-Pass Job Listing
+
+Job listing uses a two-pass approach to avoid reading every job payload:
+
+**Pass 1 — Key-name scan (fast):** Calls `kv.Keys()` once to get all key names
+in the bucket. Job status is derived purely from key name patterns
+(`status.{id}.{event}.{hostname}.{ts}`) without any `kv.Get()` calls. This
+produces ordered job IDs, per-job status, and aggregate status counts — all from
+string parsing in memory.
+
+**Pass 2 — Page fetch (bounded):** Fetches full job details (`kv.Get()`) only
+for the paginated page. With `limit=10`, this is ~10 reads regardless of total
+queue size.
+
+```
+Pass 1: kv.Keys() → 1 call → parse key names → status for all jobs
+Pass 2: kv.Get()  → N calls → full details for page only (N = limit)
+```
+
+Queue statistics (`GetQueueSummary`) and the `ListJobs` status counts both use
+Pass 1 only — no `kv.Get()` calls at all.
+
+### Pagination Limits
+
+The API enforces a maximum page size of 100 (`MaxPageSize`). Requests with
+`limit=0` or `limit > 100` return 400. The default page size is 10.
+
+### Known Scalability Constraint: `kv.Keys()`
+
+The two-pass approach relies on `kv.Keys()`, which returns **all key names** in
+the bucket as a string slice. NATS JetStream does not support paginated key
+listing (`kv.Keys(prefix, limit, offset)`) — it is all or nothing.
+
+This is acceptable today because:
+
+- Key names are short strings (~80 bytes each)
+- The KV bucket has a 1-hour TTL, naturally bounding the key count
+- Even 100K keys as strings is only a few MB of memory
+
+However, at very large scale (millions of keys or longer/no TTL), `kv.Keys()`
+would become a bottleneck in both memory and latency. If this becomes a problem,
+potential approaches include:
+
+1. **Separate status index** — a dedicated KV key (e.g., `index.status.failed`)
+   maintaining a list of job IDs, updated on status transitions
+2. **External index** — move listing/filtering to a database (SQLite, Postgres)
+   while keeping NATS for job dispatch and processing
+3. **NATS KV watch** — use `kv.Watch()` to maintain an in-memory index
+   incrementally rather than scanning all keys on each request
+
+For now, the 1-hour TTL keeps the bucket bounded and `kv.Keys()` fast.
+
+### Other Optimizations
+
 1. **Batch Operations**: Agents can fetch multiple jobs per poll
 2. **Connection Pooling**: Reuse NATS connections
 3. **KV Caching**: Local caching of frequently accessed jobs
 4. **Stream Filtering**: Agents only receive relevant job types
-5. **Efficient Filtering**: Status-based key prefixes enable fast queries
 
 ## Error Handling
 

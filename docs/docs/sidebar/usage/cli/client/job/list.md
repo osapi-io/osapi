@@ -36,8 +36,8 @@ $ osapi client job list --status completed --limit 3
 
 ## Flags
 
-| Flag       | Description                                     | Default |
-| ---------- | ----------------------------------------------- | ------- |
-| `--status` | Filter by status (submitted, processing, etc.)  |         |
-| `--limit`  | Maximum number of jobs per page (1-100)          | 10      |
-| `--offset` | Skip the first N jobs (for pagination)          | 0       |
+| Flag       | Description                                    | Default |
+| ---------- | ---------------------------------------------- | ------- |
+| `--status` | Filter by status (submitted, processing, etc.) |         |
+| `--limit`  | Maximum number of jobs per page (1-100)        | 10      |
+| `--offset` | Skip the first N jobs (for pagination)         | 0       |
