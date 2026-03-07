@@ -1,0 +1,95 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package osapi
+
+import (
+	"fmt"
+
+	"github.com/retr0h/osapi/pkg/sdk/osapi/gen"
+)
+
+// Response wraps a domain type with raw JSON for CLI --json mode.
+type Response[T any] struct {
+	Data    T
+	rawJSON []byte
+}
+
+// NewResponse creates a Response with the given data and raw JSON body.
+func NewResponse[T any](
+	data T,
+	rawJSON []byte,
+) *Response[T] {
+	return &Response[T]{
+		Data:    data,
+		rawJSON: rawJSON,
+	}
+}
+
+// RawJSON returns the raw HTTP response body.
+func (r *Response[T]) RawJSON() []byte {
+	return r.rawJSON
+}
+
+// checkError inspects the HTTP status code and returns the appropriate
+// typed error. For success codes (200, 201, 202, 204) it returns nil.
+// The variadic responses are the parsed error body pointers from the
+// generated response struct (e.g., resp.JSON400, resp.JSON401, etc.).
+func checkError(
+	statusCode int,
+	responses ...*gen.ErrorResponse,
+) error {
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		return nil
+	}
+
+	msg := extractErrorMessage(statusCode, responses...)
+
+	switch statusCode {
+	case 400:
+		return &ValidationError{APIError{StatusCode: statusCode, Message: msg}}
+	case 401, 403:
+		return &AuthError{APIError{StatusCode: statusCode, Message: msg}}
+	case 404:
+		return &NotFoundError{APIError{StatusCode: statusCode, Message: msg}}
+	case 409:
+		return &ConflictError{APIError{StatusCode: statusCode, Message: msg}}
+	case 500:
+		return &ServerError{APIError{StatusCode: statusCode, Message: msg}}
+	default:
+		return &UnexpectedStatusError{APIError{StatusCode: statusCode, Message: msg}}
+	}
+}
+
+// extractErrorMessage finds the first non-nil error message from the
+// response pointers, or falls back to a generic message.
+func extractErrorMessage(
+	statusCode int,
+	responses ...*gen.ErrorResponse,
+) string {
+	for _, r := range responses {
+		if r != nil && r.Error != nil {
+			return *r.Error
+		}
+	}
+
+	return fmt.Sprintf("unexpected status %d", statusCode)
+}
