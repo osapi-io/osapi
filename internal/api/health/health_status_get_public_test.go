@@ -192,6 +192,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 10, Bytes: 2048},
 					}, nil
 				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{
+						{Name: "file-objects", Size: 5242880},
+					}, nil
+				},
 				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
 					return &health.ConsumerMetrics{
 						Total: 2,
@@ -236,6 +241,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Len(*r.KvBuckets, 1)
 				s.Equal("job-queue", (*r.KvBuckets)[0].Name)
 				s.Equal(10, (*r.KvBuckets)[0].Keys)
+
+				s.Require().NotNil(r.ObjectStores)
+				s.Len(*r.ObjectStores, 1)
+				s.Equal("file-objects", (*r.ObjectStores)[0].Name)
+				s.Equal(5242880, (*r.ObjectStores)[0].Size)
 
 				s.Require().NotNil(r.Consumers)
 				s.Equal(2, r.Consumers.Total)
@@ -284,6 +294,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 						{Name: "job-queue", Keys: 5, Bytes: 512},
 					}, nil
 				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return nil, fmt.Errorf("object store info unavailable")
+				},
 				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
 					return nil, fmt.Errorf("consumer stats unavailable")
 				},
@@ -302,6 +315,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Streams)
 				s.Require().NotNil(r.KvBuckets)
 				s.Len(*r.KvBuckets, 1)
+				s.Nil(r.ObjectStores)
 				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
@@ -323,6 +337,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
 					return nil, fmt.Errorf("kv info unavailable")
 				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return nil, fmt.Errorf("object store info unavailable")
+				},
 				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
 					return nil, fmt.Errorf("consumer stats unavailable")
 				},
@@ -340,6 +357,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Nats)
 				s.Nil(r.Streams)
 				s.Nil(r.KvBuckets)
+				s.Nil(r.ObjectStores)
 				s.Nil(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
@@ -395,6 +413,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 						{Name: "job-queue", Keys: 10, Bytes: 2048},
 					}, nil
 				},
+				ObjectStoreInfoFn: func(
+					_ context.Context,
+				) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{
+						{Name: "file-objects", Size: 5242880},
+					}, nil
+				},
 				ConsumerStatsFn: func(
 					_ context.Context,
 				) (*health.ConsumerMetrics, error) {
@@ -433,12 +458,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				`"nats"`,
 				`"streams"`,
 				`"kv_buckets"`,
+				`"object_stores"`,
 				`"consumers"`,
 				`"jobs"`,
 				`"agents"`,
 				`"web-01"`,
 				`"group=web.prod"`,
 				`"query_any_web_01"`,
+				`"file-objects"`,
 			},
 		},
 		{
@@ -556,6 +583,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 					_ context.Context,
 				) ([]health.KVMetrics, error) {
 					return []health.KVMetrics{}, nil
+				},
+				ObjectStoreInfoFn: func(
+					_ context.Context,
+				) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{}, nil
 				},
 				JobStatsFn: func(
 					_ context.Context,

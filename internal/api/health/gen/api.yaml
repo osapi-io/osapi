@@ -205,6 +205,21 @@ components:
         - keys
         - bytes
 
+    ObjectStoreInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Object Store bucket name.
+          example: "file-objects"
+        size:
+          type: integer
+          description: Total bytes in the store.
+          example: 5242880
+      required:
+        - name
+        - size
+
     JobStats:
       type: object
       properties:
@@ -353,6 +368,11 @@ components:
           items:
             $ref: '#/components/schemas/KVBucketInfo'
           description: KV bucket statistics.
+        object_stores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectStoreInfo'
+          description: Object Store statistics.
         jobs:
           $ref: '#/components/schemas/JobStats'
         agents:
