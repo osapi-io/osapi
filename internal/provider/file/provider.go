@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package file implements file deploy and status operations using NATS
+// Object Store for content and KV for state tracking.
 package file
 
 import (
@@ -30,11 +32,11 @@ import (
 )
 
 // Compile-time interface check.
-var _ Provider = (*FileProvider)(nil)
+var _ Provider = (*Service)(nil)
 
-// FileProvider implements the Provider interface for file deploy and status
+// Service implements the Provider interface for file deploy and status
 // operations using NATS Object Store for content and KV for state tracking.
-type FileProvider struct {
+type Service struct {
 	provider.FactsAware
 
 	logger   *slog.Logger
@@ -44,17 +46,17 @@ type FileProvider struct {
 	hostname string
 }
 
-// NewFileProvider creates a new FileProvider with the given dependencies.
+// New creates a new Service with the given dependencies.
 // Facts are not available at construction time; call SetFactsFunc after
 // the agent is initialized to wire template rendering to live facts.
-func NewFileProvider(
+func New(
 	logger *slog.Logger,
 	fs afero.Fs,
 	objStore jetstream.ObjectStore,
 	stateKV jetstream.KeyValue,
 	hostname string,
-) *FileProvider {
-	return &FileProvider{
+) *Service {
+	return &Service{
 		logger:   logger,
 		fs:       fs,
 		objStore: objStore,

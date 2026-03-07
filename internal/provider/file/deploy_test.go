@@ -91,7 +91,7 @@ func (suite *DeployTestSuite) TestDeploy() {
 
 			objStore, stateKV := tc.setupStubs()
 
-			provider := NewFileProvider(
+			provider := New(
 				suite.logger,
 				afero.NewMemMapFs(),
 				objStore,

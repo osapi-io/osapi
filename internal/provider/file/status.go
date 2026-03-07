@@ -33,7 +33,7 @@ import (
 // Status checks the current state of a deployed file against its expected
 // SHA-256 from the file-state KV. Returns "in-sync" if the file matches,
 // "drifted" if it differs, or "missing" if the file or state entry is absent.
-func (p *FileProvider) Status(
+func (p *Service) Status(
 	ctx context.Context,
 	req StatusRequest,
 ) (*StatusResult, error) {

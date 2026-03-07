@@ -43,7 +43,7 @@ var marshalJSON = json.Marshal
 // permissions. It uses SHA-256 checksums for idempotency: if the
 // content hasn't changed since the last deploy, the file is not
 // rewritten and changed is false.
-func (p *FileProvider) Deploy(
+func (p *Service) Deploy(
 	ctx context.Context,
 	req DeployRequest,
 ) (*DeployResult, error) {

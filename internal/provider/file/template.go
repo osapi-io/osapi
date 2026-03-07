@@ -38,7 +38,7 @@ type TemplateContext struct {
 
 // renderTemplate parses rawTemplate as a Go text/template and executes it
 // with the provider's cached facts, the supplied vars, and the hostname.
-func (p *FileProvider) renderTemplate(
+func (p *Service) renderTemplate(
 	rawTemplate []byte,
 	vars map[string]any,
 ) ([]byte, error) {

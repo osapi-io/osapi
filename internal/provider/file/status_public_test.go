@@ -193,7 +193,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				tc.setupMock()
 			}
 
-			provider := file.NewFileProvider(
+			provider := file.New(
 				suite.logger,
 				suite.appFs,
 				&stubObjectStore{},

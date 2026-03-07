@@ -191,7 +191,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 					Return(uint64(1), nil)
 			}
 
-			p := file.NewFileProvider(
+			p := file.New(
 				suite.logger,
 				appFs,
 				mockObj,

@@ -400,7 +400,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				tc.setupMock(ctrl, mockObj, mockKV, &appFs)
 			}
 
-			provider := file.NewFileProvider(
+			provider := file.New(
 				suite.logger,
 				appFs,
 				mockObj,
