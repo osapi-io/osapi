@@ -21,8 +21,14 @@
 // Package dns provides DNS configuration management.
 package dns
 
+import (
+	"github.com/retr0h/osapi/internal/provider"
+)
+
 // Linux implements the DNS interface for Linux.
-type Linux struct{}
+type Linux struct {
+	provider.FactsAware
+}
 
 // NewLinuxProvider factory to create a new Linux instance.
 func NewLinuxProvider() *Linux {

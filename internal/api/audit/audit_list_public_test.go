@@ -202,7 +202,7 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogs() {
 	}
 }
 
-func (s *AuditListPublicTestSuite) TestGetAuditLogsHTTP() {
+func (s *AuditListPublicTestSuite) TestGetAuditLogsValidationHTTP() {
 	tests := []struct {
 		name         string
 		query        string

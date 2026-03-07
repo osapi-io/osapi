@@ -22,10 +22,14 @@ package ping
 
 import (
 	probing "github.com/prometheus-community/pro-bing"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Ubuntu implements the Ping interface for Ubuntu.
 type Ubuntu struct {
+	provider.FactsAware
+
 	NewPingerFn func(address string) (Pinger, error)
 }
 

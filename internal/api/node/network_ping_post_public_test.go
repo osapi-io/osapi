@@ -275,7 +275,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 	}
 }
 
-func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingHTTP() {
+func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

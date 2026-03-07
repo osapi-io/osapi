@@ -35,6 +35,68 @@ $ osapi client node file deploy \
     --target _all
 ```
 
+## Template Rendering
+
+When `--content-type template` is set, file content is processed as a Go
+[text/template](https://pkg.go.dev/text/template) before being written to disk.
+The template context provides three top-level fields:
+
+| Field       | Type             | Description                                |
+| ----------- | ---------------- | ------------------------------------------ |
+| `.Facts`    | `map[string]any` | Agent's collected system facts             |
+| `.Vars`     | `map[string]any` | User-supplied variables from `--var` flags |
+| `.Hostname` | `string`         | Target agent's hostname                    |
+
+### Available Facts
+
+Facts are collected automatically by each agent and include all fields from the
+agent's fact registration: `architecture`, `kernel_version`, `cpu_count`,
+`fqdn`, `service_mgr`, `package_mgr`, `primary_interface`, `interfaces`,
+`routes`, plus any custom facts. Access them with `index`:
+
+```text
+arch={{ index .Facts "architecture" }}
+cpus={{ index .Facts "cpu_count" }}
+fqdn={{ index .Facts "fqdn" }}
+```
+
+### Template Examples
+
+Simple variable substitution:
+
+```text
+listen = {{ .Vars.listen_address }}
+workers = {{ .Vars.max_workers }}
+```
+
+Conditionals:
+
+```text
+{{ if eq .Vars.env "prod" }}
+log_level = warn
+{{ else }}
+log_level = debug
+{{ end }}
+```
+
+Host-specific configuration using facts:
+
+```text
+# Generated for {{ .Hostname }}
+server_name = {{ .Hostname }}
+arch = {{ index .Facts "architecture" }}
+cpus = {{ index .Facts "cpu_count" }}
+```
+
+Iterating over a list variable (`--var` values are strings, so pass lists via
+the SDK or orchestrator):
+
+```text
+{{ range .Vars.servers }}
+upstream {{ . }};
+{{ end }}
+```
+
 When targeting all hosts, the CLI prompts for confirmation:
 
 ```bash

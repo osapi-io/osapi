@@ -64,6 +64,10 @@ func (c *Client) ModifyFileDeploy(
 		return "", "", false, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
+	if resp.Status == "failed" {
+		return "", "", false, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
 	changed := resp.Changed != nil && *resp.Changed
 	return jobID, resp.Hostname, changed, nil
 }

@@ -22,10 +22,14 @@ package load
 
 import (
 	"github.com/shirou/gopsutil/v4/load"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Darwin implements the Load interface for Darwin (macOS).
 type Darwin struct {
+	provider.FactsAware
+
 	AvgFn func() (*load.AvgStat, error)
 }
 

@@ -31,6 +31,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -81,17 +82,26 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 				s.mockObjStore.EXPECT().
 					GetInfo(gomock.Any(), "nginx.conf").
 					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       1024,
-						Digest:     "SHA-256=abc123def456",
+						ObjectMeta: jetstream.ObjectMeta{
+							Name: "nginx.conf",
+							Headers: nats.Header{
+								"Osapi-Content-Type": []string{"raw"},
+							},
+						},
+						Size:   1024,
+						Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetFileByNameResponseObject) {
 				r, ok := resp.(gen.GetFileByName200JSONResponse)
 				s.True(ok)
 				s.Equal("nginx.conf", r.Name)
-				s.Equal("abc123def456", r.Sha256)
+				s.Equal(
+					"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+					r.Sha256,
+				)
 				s.Equal(1024, r.Size)
+				s.Equal("raw", r.ContentType)
 			},
 		},
 		{
@@ -146,7 +156,7 @@ func (s *FileGetPublicTestSuite) TestGetFileByName() {
 	}
 }
 
-func (s *FileGetPublicTestSuite) TestGetFileByNameHTTP() {
+func (s *FileGetPublicTestSuite) TestGetFileByNameValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -155,6 +165,15 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameHTTP() {
 		wantContains []string
 	}{
 		{
+			name: "when name too long returns 400",
+			path: "/file/" + strings.Repeat("a", 256),
+			setupMock: func() *mocks.MockObjectStoreManager {
+				return mocks.NewMockObjectStoreManager(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
+		{
 			name: "when get Ok",
 			path: "/file/nginx.conf",
 			setupMock: func() *mocks.MockObjectStoreManager {
@@ -162,14 +181,24 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameHTTP() {
 				mock.EXPECT().
 					GetInfo(gomock.Any(), "nginx.conf").
 					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       1024,
-						Digest:     "SHA-256=abc123",
+						ObjectMeta: jetstream.ObjectMeta{
+							Name: "nginx.conf",
+							Headers: nats.Header{
+								"Osapi-Content-Type": []string{"raw"},
+							},
+						},
+						Size:   1024,
+						Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 					}, nil)
 				return mock
 			},
-			wantCode:     http.StatusOK,
-			wantContains: []string{`"name":"nginx.conf"`, `"sha256":"abc123"`, `"size":1024`},
+			wantCode: http.StatusOK,
+			wantContains: []string{
+				`"name":"nginx.conf"`,
+				`"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`,
+				`"size":1024`,
+				`"content_type":"raw"`,
+			},
 		},
 		{
 			name: "when not found",
@@ -280,9 +309,14 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameRBACHTTP() {
 				mock.EXPECT().
 					GetInfo(gomock.Any(), "nginx.conf").
 					Return(&jetstream.ObjectInfo{
-						ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-						Size:       1024,
-						Digest:     "SHA-256=abc123",
+						ObjectMeta: jetstream.ObjectMeta{
+							Name: "nginx.conf",
+							Headers: nats.Header{
+								"Osapi-Content-Type": []string{"raw"},
+							},
+						},
+						Size:   1024,
+						Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 					}, nil)
 				return mock
 			},

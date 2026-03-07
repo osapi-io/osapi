@@ -36,6 +36,9 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
+// marshalJSON is a package-level variable for testing the marshal error path.
+var marshalJSON = json.Marshal
+
 // Deploy writes file content to the target path with the specified
 // permissions. It uses SHA-256 checksums for idempotency: if the
 // content hasn't changed since the last deploy, the file is not
@@ -96,7 +99,7 @@ func (p *FileProvider) Deploy(
 		ContentType: req.ContentType,
 	}
 
-	stateBytes, err := json.Marshal(state)
+	stateBytes, err := marshalJSON(state)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal file state: %w", err)
 	}

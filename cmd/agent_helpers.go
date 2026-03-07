@@ -107,5 +107,5 @@ func createFileProvider(
 		return nil
 	}
 
-	return fileProv.NewFileProvider(log, appFs, objStore, fileStateKV, hostname, nil)
+	return fileProv.NewFileProvider(log, appFs, objStore, fileStateKV, hostname)
 }

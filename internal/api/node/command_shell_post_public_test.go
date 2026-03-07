@@ -344,7 +344,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 	}
 }
 
-func (s *CommandShellPostPublicTestSuite) TestPostCommandShellHTTP() {
+func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

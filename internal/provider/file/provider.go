@@ -25,6 +25,8 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Compile-time interface check.
@@ -33,29 +35,30 @@ var _ Provider = (*FileProvider)(nil)
 // FileProvider implements the Provider interface for file deploy and status
 // operations using NATS Object Store for content and KV for state tracking.
 type FileProvider struct {
-	logger      *slog.Logger
-	fs          afero.Fs
-	objStore    jetstream.ObjectStore
-	stateKV     jetstream.KeyValue
-	hostname    string
-	cachedFacts map[string]any
+	provider.FactsAware
+
+	logger   *slog.Logger
+	fs       afero.Fs
+	objStore jetstream.ObjectStore
+	stateKV  jetstream.KeyValue
+	hostname string
 }
 
 // NewFileProvider creates a new FileProvider with the given dependencies.
+// Facts are not available at construction time; call SetFactsFunc after
+// the agent is initialized to wire template rendering to live facts.
 func NewFileProvider(
 	logger *slog.Logger,
 	fs afero.Fs,
 	objStore jetstream.ObjectStore,
 	stateKV jetstream.KeyValue,
 	hostname string,
-	cachedFacts map[string]any,
 ) *FileProvider {
 	return &FileProvider{
-		logger:      logger,
-		fs:          fs,
-		objStore:    objStore,
-		stateKV:     stateKV,
-		hostname:    hostname,
-		cachedFacts: cachedFacts,
+		logger:   logger,
+		fs:       fs,
+		objStore: objStore,
+		stateKV:  stateKV,
+		hostname: hostname,
 	}
 }

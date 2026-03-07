@@ -22,6 +22,7 @@ package file
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -60,11 +61,21 @@ func (f *File) GetFileByName(
 		}, nil
 	}
 
-	sha256Hex := strings.TrimPrefix(info.Digest, "SHA-256=")
+	digestB64 := strings.TrimPrefix(info.Digest, "SHA-256=")
+	sha256Hex := digestB64
+	if digestBytes, err := base64.URLEncoding.DecodeString(digestB64); err == nil {
+		sha256Hex = fmt.Sprintf("%x", digestBytes)
+	}
+
+	contentType := ""
+	if info.Headers != nil {
+		contentType = info.Headers.Get("Osapi-Content-Type")
+	}
 
 	return gen.GetFileByName200JSONResponse{
-		Name:   info.Name,
-		Sha256: sha256Hex,
-		Size:   int(info.Size),
+		Name:        info.Name,
+		Sha256:      sha256Hex,
+		Size:        int(info.Size),
+		ContentType: contentType,
 	}, nil
 }

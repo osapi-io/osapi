@@ -104,6 +104,7 @@ const (
 	OperationNodeLoadGet     = "node.load.get"
 	OperationNodeMemoryGet   = "node.memory.get"
 	OperationNodeDiskGet     = "node.disk.get"
+	OperationNodeOSGet       = "node.os.get"
 )
 
 // Network operations - operations that can modify network configuration

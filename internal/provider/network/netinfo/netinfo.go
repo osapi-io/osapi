@@ -23,12 +23,16 @@ package netinfo
 
 import (
 	"net"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Netinfo provides cross-platform network interface information.
 // Platform-specific types (Linux, Darwin) embed this for shared
 // interface enumeration and add their own route implementations.
 type Netinfo struct {
+	provider.FactsAware
+
 	InterfacesFn func() ([]net.Interface, error)
 	AddrsFn      func(iface net.Interface) ([]net.Addr, error)
 }

@@ -199,7 +199,6 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 				&stubObjectStore{},
 				suite.mockKV,
 				"test-host",
-				nil,
 			)
 
 			got, err := provider.Status(suite.ctx, tc.req)

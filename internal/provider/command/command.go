@@ -25,10 +25,13 @@ import (
 	"log/slog"
 
 	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Executor implements the Provider interface for command execution.
 type Executor struct {
+	provider.FactsAware
+
 	logger      *slog.Logger
 	execManager exec.Manager
 }

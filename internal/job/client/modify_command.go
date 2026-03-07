@@ -47,7 +47,7 @@ func (c *Client) ModifyCommandExec(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "command",
-		Operation: "exec.execute",
+		Operation: job.OperationCommandExecExecute,
 		Data:      json.RawMessage(data),
 	}
 
@@ -87,7 +87,7 @@ func (c *Client) ModifyCommandExecBroadcast(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "command",
-		Operation: "exec.execute",
+		Operation: job.OperationCommandExecExecute,
 		Data:      json.RawMessage(data),
 	}
 
@@ -131,7 +131,7 @@ func (c *Client) ModifyCommandShell(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "command",
-		Operation: "shell.execute",
+		Operation: job.OperationCommandShellExecute,
 		Data:      json.RawMessage(data),
 	}
 
@@ -169,7 +169,7 @@ func (c *Client) ModifyCommandShellBroadcast(
 	req := &job.Request{
 		Type:      job.TypeModify,
 		Category:  "command",
-		Operation: "shell.execute",
+		Operation: job.OperationCommandShellExecute,
 		Data:      json.RawMessage(data),
 	}
 

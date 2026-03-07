@@ -21,11 +21,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	osapi "github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/retr0h/osapi/internal/cli"
 )
 
@@ -38,20 +40,33 @@ var clientFileUploadCmd = &cobra.Command{
 		ctx := cmd.Context()
 		name, _ := cmd.Flags().GetString("name")
 		filePath, _ := cmd.Flags().GetString("file")
+		contentType, _ := cmd.Flags().GetString("content-type")
+		force, _ := cmd.Flags().GetBool("force")
 
-		data, err := os.ReadFile(filePath)
+		f, err := os.Open(filePath)
 		if err != nil {
-			cli.LogFatal(logger, "failed to read file", err)
+			cli.LogFatal(logger, "failed to open file", err)
+		}
+		defer func() { _ = f.Close() }()
+
+		var opts []osapi.UploadOption
+		if force {
+			opts = append(opts, osapi.WithForce())
 		}
 
-		resp, err := sdkClient.File.Upload(ctx, name, data)
+		resp, err := sdkClient.File.Upload(ctx, name, contentType, f, opts...)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
 		}
 
 		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
+			rawJSON := resp.RawJSON()
+			if rawJSON == nil {
+				out, _ := json.Marshal(resp.Data)
+				rawJSON = out
+			}
+			fmt.Println(string(rawJSON))
 			return
 		}
 
@@ -59,6 +74,8 @@ var clientFileUploadCmd = &cobra.Command{
 		cli.PrintKV("Name", resp.Data.Name)
 		cli.PrintKV("SHA256", resp.Data.SHA256)
 		cli.PrintKV("Size", fmt.Sprintf("%d", resp.Data.Size))
+		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
+		cli.PrintKV("Content-Type", resp.Data.ContentType)
 	},
 }
 
@@ -69,6 +86,10 @@ func init() {
 		String("name", "", "Name for the file in the Object Store (required)")
 	clientFileUploadCmd.PersistentFlags().
 		String("file", "", "Path to the local file to upload (required)")
+	clientFileUploadCmd.PersistentFlags().
+		String("content-type", "raw", "File type: raw or template (default raw)")
+	clientFileUploadCmd.PersistentFlags().
+		Bool("force", false, "Force upload even if file already exists with different content")
 
 	_ = clientFileUploadCmd.MarkPersistentFlagRequired("name")
 	_ = clientFileUploadCmd.MarkPersistentFlagRequired("file")

@@ -22,8 +22,12 @@ package file
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/api/file/gen"
 )
@@ -37,6 +41,13 @@ func (f *File) GetFiles(
 
 	objects, err := f.objStore.List(ctx)
 	if err != nil {
+		if errors.Is(err, jetstream.ErrNoObjectsFound) {
+			return gen.GetFiles200JSONResponse{
+				Files: []gen.FileInfo{},
+				Total: 0,
+			}, nil
+		}
+
 		errMsg := fmt.Sprintf("failed to list files: %s", err.Error())
 		return gen.GetFiles500JSONResponse{
 			Error: &errMsg,
@@ -49,12 +60,22 @@ func (f *File) GetFiles(
 			continue
 		}
 
-		sha256Hex := strings.TrimPrefix(obj.Digest, "SHA-256=")
+		digestB64 := strings.TrimPrefix(obj.Digest, "SHA-256=")
+		sha256Hex := digestB64
+		if digestBytes, err := base64.URLEncoding.DecodeString(digestB64); err == nil {
+			sha256Hex = fmt.Sprintf("%x", digestBytes)
+		}
+
+		contentType := ""
+		if obj.Headers != nil {
+			contentType = obj.Headers.Get("Osapi-Content-Type")
+		}
 
 		files = append(files, gen.FileInfo{
-			Name:   obj.Name,
-			Sha256: sha256Hex,
-			Size:   int(obj.Size),
+			Name:        obj.Name,
+			Sha256:      sha256Hex,
+			Size:        int(obj.Size),
+			ContentType: contentType,
 		})
 	}
 

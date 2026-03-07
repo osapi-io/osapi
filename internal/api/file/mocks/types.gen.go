@@ -6,6 +6,7 @@ package mocks
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -107,6 +108,21 @@ func (mr *MockObjectStoreManagerMockRecorder) List(ctx interface{}, opts ...inte
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockObjectStoreManager)(nil).List), varargs...)
+}
+
+// Put mocks base method.
+func (m *MockObjectStoreManager) Put(ctx context.Context, meta jetstream.ObjectMeta, reader io.Reader) (*jetstream.ObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Put", ctx, meta, reader)
+	ret0, _ := ret[0].(*jetstream.ObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Put indicates an expected call of Put.
+func (mr *MockObjectStoreManagerMockRecorder) Put(ctx, meta, reader interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockObjectStoreManager)(nil).Put), ctx, meta, reader)
 }
 
 // PutBytes mocks base method.

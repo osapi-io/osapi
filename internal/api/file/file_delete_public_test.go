@@ -166,7 +166,7 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 	}
 }
 
-func (s *FileDeletePublicTestSuite) TestDeleteFileByNameHTTP() {
+func (s *FileDeletePublicTestSuite) TestDeleteFileByNameValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -174,6 +174,15 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByNameHTTP() {
 		wantCode     int
 		wantContains []string
 	}{
+		{
+			name: "when name too long returns 400",
+			path: "/file/" + strings.Repeat("a", 256),
+			setupMock: func() *mocks.MockObjectStoreManager {
+				return mocks.NewMockObjectStoreManager(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`},
+		},
 		{
 			name: "when delete Ok",
 			path: "/file/nginx.conf",

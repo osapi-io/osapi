@@ -22,10 +22,14 @@ package load
 
 import (
 	"github.com/shirou/gopsutil/v4/load"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Ubuntu implements the Mem interface for Ubuntu.
 type Ubuntu struct {
+	provider.FactsAware
+
 	AvgFn func() (*load.AvgStat, error)
 }
 

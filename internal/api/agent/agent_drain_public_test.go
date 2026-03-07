@@ -201,7 +201,7 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgent() {
 	}
 }
 
-func (s *AgentDrainPublicTestSuite) TestDrainAgentValidationHTTP() {
+func (s *AgentDrainPublicTestSuite) TestDrainAgentHTTP() {
 	tests := []struct {
 		name         string
 		hostname     string

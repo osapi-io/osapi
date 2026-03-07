@@ -50,14 +50,23 @@ Reports whether the file is in-sync, drifted, or missing.`,
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Job ID", resp.Data.JobID)
-		cli.PrintKV("Hostname", resp.Data.Hostname)
-		cli.PrintKV("Path", resp.Data.Path)
-		cli.PrintKV("Status", resp.Data.Status)
-		if resp.Data.SHA256 != "" {
-			cli.PrintKV("SHA256", resp.Data.SHA256)
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
+
+		sha := ""
+		if resp.Data.SHA256 != "" {
+			sha = resp.Data.SHA256
+		}
+		results := []cli.ResultRow{
+			{
+				Hostname: resp.Data.Hostname,
+				Fields:   []string{resp.Data.Path, resp.Data.Status, sha},
+			},
+		}
+		headers, rows := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS", "SHA256"})
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

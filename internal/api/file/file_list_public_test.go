@@ -30,6 +30,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -79,14 +80,24 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 					List(gomock.Any()).
 					Return([]*jetstream.ObjectInfo{
 						{
-							ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-							Size:       1024,
-							Digest:     "SHA-256=abc123",
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "nginx.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   1024,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 						},
 						{
-							ObjectMeta: jetstream.ObjectMeta{Name: "app.yaml"},
-							Size:       512,
-							Digest:     "SHA-256=def456",
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "app.yaml",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"template"},
+								},
+							},
+							Size:   512,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 						},
 					}, nil)
 			},
@@ -96,8 +107,13 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 				s.Equal(2, r.Total)
 				s.Len(r.Files, 2)
 				s.Equal("nginx.conf", r.Files[0].Name)
-				s.Equal("abc123", r.Files[0].Sha256)
+				s.Equal(
+					"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+					r.Files[0].Sha256,
+				)
 				s.Equal(1024, r.Files[0].Size)
+				s.Equal("raw", r.Files[0].ContentType)
+				s.Equal("template", r.Files[1].ContentType)
 			},
 		},
 		{
@@ -115,20 +131,39 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 			},
 		},
 		{
+			name: "when ErrNoObjectsFound returns empty list",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return(nil, jetstream.ErrNoObjectsFound)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				r, ok := resp.(gen.GetFiles200JSONResponse)
+				s.True(ok)
+				s.Equal(0, r.Total)
+				s.Empty(r.Files)
+			},
+		},
+		{
 			name: "filters deleted objects",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
 					List(gomock.Any()).
 					Return([]*jetstream.ObjectInfo{
 						{
-							ObjectMeta: jetstream.ObjectMeta{Name: "active.conf"},
-							Size:       100,
-							Digest:     "SHA-256=aaa",
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "active.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   100,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 						},
 						{
 							ObjectMeta: jetstream.ObjectMeta{Name: "deleted.conf"},
 							Size:       200,
-							Digest:     "SHA-256=bbb",
+							Digest:     "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 							Deleted:    true,
 						},
 					}, nil)
@@ -181,15 +216,20 @@ func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
 					List(gomock.Any()).
 					Return([]*jetstream.ObjectInfo{
 						{
-							ObjectMeta: jetstream.ObjectMeta{Name: "nginx.conf"},
-							Size:       1024,
-							Digest:     "SHA-256=abc123",
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "nginx.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   1024,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
 						},
 					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"files"`, `"nginx.conf"`, `"total":1`},
+			wantContains: []string{`"files"`, `"nginx.conf"`, `"total":1`, `"content_type":"raw"`},
 		},
 		{
 			name: "when object store error",

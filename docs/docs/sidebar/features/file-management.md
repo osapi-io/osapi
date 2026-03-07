@@ -37,9 +37,19 @@ three states: `in-sync`, `drifted`, or `missing`.
 
 ### File Upload Flow
 
-1. The CLI (or API client) posts a base64-encoded file to the API server.
-2. The API server stores the file in the NATS Object Store and returns the file
-   name, SHA-256, and size.
+1. The CLI (or SDK) computes a SHA-256 of the local file and calls
+   `GET /file/{name}` to check whether the Object Store already holds the same
+   content. If the SHA matches, the upload is skipped entirely (no bytes sent
+   over the network).
+2. If the file is new (404) or the SHA differs, the CLI sends the file via
+   multipart `POST /file`.
+3. On the server side, if a file with the same name already exists and the
+   content differs, the server rejects the upload with **409 Conflict** unless
+   `?force=true` is passed.
+4. If the content is identical, the server returns `changed: false` without
+   rewriting the object.
+5. With `--force`, both the SDK pre-check and the server-side digest guard are
+   bypassed — the file is always written and `changed: true` is returned.
 
 ### File Deploy Flow
 

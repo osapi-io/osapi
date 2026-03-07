@@ -220,7 +220,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 	}
 }
 
-func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusHTTP() {
+func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

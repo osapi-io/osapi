@@ -279,7 +279,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 	}
 }
 
-func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployHTTP() {
+func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

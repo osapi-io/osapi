@@ -24,10 +24,14 @@ import (
 	"log/slog"
 
 	"github.com/shirou/gopsutil/v4/disk"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Darwin implements the Disk interface for Darwin (macOS).
 type Darwin struct {
+	provider.FactsAware
+
 	logger       *slog.Logger
 	PartitionsFn func(all bool) ([]disk.PartitionStat, error)
 	UsageFn      func(path string) (*disk.UsageStat, error)

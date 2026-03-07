@@ -96,6 +96,17 @@ func (s *FilePublicTestSuite) TestModifyFileDeploy() {
 			expectChanged: false,
 		},
 		{
+			name:     "when job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "failed to get object: not found",
+				"data": {}
+			}`,
+			expectError:   true,
+			errorContains: "job failed",
+		},
+		{
 			name:          "when publish fails",
 			hostname:      "server1",
 			mockError:     errors.New("connection failed"),

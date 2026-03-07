@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/file"
 )
 
@@ -54,7 +55,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 		name        string
 		template    string
 		vars        map[string]any
-		facts       map[string]any
+		factsFn     provider.FactsFunc
 		hostname    string
 		wantContent string
 		wantErr     bool
@@ -85,9 +86,11 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantChanged: true,
 		},
 		{
-			name:        "when facts available",
-			template:    `arch: {{ index .Facts "architecture" }}`,
-			facts:       map[string]any{"architecture": "amd64"},
+			name:     "when facts available",
+			template: `arch: {{ index .Facts "architecture" }}`,
+			factsFn: func() map[string]any {
+				return map[string]any{"architecture": "amd64"}
+			},
 			hostname:    "web-01",
 			wantContent: "arch: amd64",
 			wantChanged: true,
@@ -95,7 +98,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 		{
 			name:        "when nil facts",
 			template:    "{{ .Hostname }}",
-			facts:       nil,
+			factsFn:     nil,
 			hostname:    "web-01",
 			wantContent: "web-01",
 			wantChanged: true,
@@ -139,9 +142,11 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			wantChanged: true,
 		},
 		{
-			name:        "when facts and vars combined",
-			template:    `host={{ .Hostname }} arch={{ index .Facts "architecture" }} env={{ .Vars.env }}`,
-			facts:       map[string]any{"architecture": "arm64"},
+			name:     "when facts and vars combined",
+			template: `host={{ .Hostname }} arch={{ index .Facts "architecture" }} env={{ .Vars.env }}`,
+			factsFn: func() map[string]any {
+				return map[string]any{"architecture": "arm64"}
+			},
 			vars:        map[string]any{"env": "staging"},
 			hostname:    "web-02",
 			wantContent: "host=web-02 arch=arm64 env=staging",
@@ -186,16 +191,18 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 					Return(uint64(1), nil)
 			}
 
-			provider := file.NewFileProvider(
+			p := file.NewFileProvider(
 				suite.logger,
 				appFs,
 				mockObj,
 				mockKV,
 				tc.hostname,
-				tc.facts,
 			)
+			if tc.factsFn != nil {
+				p.SetFactsFunc(tc.factsFn)
+			}
 
-			got, err := provider.Deploy(suite.ctx, file.DeployRequest{
+			got, err := p.Deploy(suite.ctx, file.DeployRequest{
 				ObjectName:  "test.conf",
 				Path:        "/etc/test.conf",
 				ContentType: "template",

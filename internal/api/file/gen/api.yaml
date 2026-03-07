@@ -39,13 +39,54 @@ paths:
       security:
         - BearerAuth:
             - file:write
+      parameters:
+        - name: force
+          in: query
+          required: false
+          # x-oapi-codegen-extra-tags:
+          #   validate: omitempty
+          # NOTE: The tags above are intentionally commented out. The
+          # only param is an optional bool — validate:"omitempty" can
+          # never fail, so validation.Struct(Params) would be dead
+          # code. The middleware already type-validates the bool before
+          # the handler runs. Uncomment if a future param needs a
+          # stricter validate tag.
+          description: >
+            When true, bypass the digest check and always write the
+            file. Returns changed=true regardless of whether the
+            content differs from the existing object.
+          schema:
+            type: boolean
+            default: false
       requestBody:
         description: The file to upload.
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/FileUploadRequest'
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the file in the Object Store.
+                  example: "nginx.conf"
+                content_type:
+                  type: string
+                  description: >
+                    How the file should be treated during deploy. "raw"
+                    writes bytes as-is; "template" renders with Go
+                    text/template and agent facts.
+                  default: raw
+                  enum:
+                    - raw
+                    - template
+                file:
+                  type: string
+                  format: binary
+                  description: The file content.
+              required:
+                - name
+                - file
       responses:
         '201':
           description: File uploaded successfully.
@@ -67,6 +108,14 @@ paths:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            File already exists with different content. Use
+            ?force=true to overwrite.
           content:
             application/json:
               schema:
@@ -242,28 +291,6 @@ components:
     ErrorResponse:
       $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-    # -- Request schemas ------------------------------------------------------
-
-    FileUploadRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the file.
-          example: "nginx.conf"
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        content:
-          type: string
-          format: byte
-          description: Base64-encoded file content.
-          example: "c2VydmVyIHsgbGlzdGVuIDgwOyB9"
-          x-oapi-codegen-extra-tags:
-            validate: required
-      required:
-        - name
-        - content
-
     # -- Response schemas -----------------------------------------------------
 
     FileInfo:
@@ -281,10 +308,17 @@ components:
           type: integer
           description: File size in bytes.
           example: 1024
+        content_type:
+          type: string
+          description: >
+            How the file should be treated during deploy (raw or
+            template).
+          example: "raw"
       required:
         - name
         - sha256
         - size
+        - content_type
 
     FileUploadResponse:
       type: object
@@ -301,10 +335,24 @@ components:
           type: integer
           description: File size in bytes.
           example: 1024
+        changed:
+          type: boolean
+          description: >
+            Whether the file content changed. False when the Object
+            Store already held an object with the same SHA-256 digest.
+          example: true
+        content_type:
+          type: string
+          description: >
+            How the file should be treated during deploy (raw or
+            template).
+          example: "raw"
       required:
         - name
         - sha256
         - size
+        - changed
+        - content_type
 
     FileListResponse:
       type: object
@@ -337,10 +385,17 @@ components:
           type: integer
           description: File size in bytes.
           example: 1024
+        content_type:
+          type: string
+          description: >
+            How the file should be treated during deploy (raw or
+            template).
+          example: "raw"
       required:
         - name
         - sha256
         - size
+        - content_type
 
     FileDeleteResponse:
       type: object

@@ -406,7 +406,6 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				mockObj,
 				mockKV,
 				"test-host",
-				nil,
 			)
 
 			got, err := provider.Deploy(suite.ctx, tc.req)

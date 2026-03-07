@@ -7,16 +7,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	externalRef0 "github.com/retr0h/osapi/internal/api/common/gen"
 )
 
 const (
 	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
+// Defines values for PostFileMultipartBodyContentType.
+const (
+	Raw      PostFileMultipartBodyContentType = "raw"
+	Template PostFileMultipartBodyContentType = "template"
 )
 
 // ErrorResponse defines model for ErrorResponse.
@@ -33,6 +41,9 @@ type FileDeleteResponse struct {
 
 // FileInfo defines model for FileInfo.
 type FileInfo struct {
+	// ContentType How the file should be treated during deploy (raw or template).
+	ContentType string `json:"content_type"`
+
 	// Name The name of the file.
 	Name string `json:"name"`
 
@@ -45,6 +56,9 @@ type FileInfo struct {
 
 // FileInfoResponse defines model for FileInfoResponse.
 type FileInfoResponse struct {
+	// ContentType How the file should be treated during deploy (raw or template).
+	ContentType string `json:"content_type"`
+
 	// Name The name of the file.
 	Name string `json:"name"`
 
@@ -64,17 +78,14 @@ type FileListResponse struct {
 	Total int `json:"total"`
 }
 
-// FileUploadRequest defines model for FileUploadRequest.
-type FileUploadRequest struct {
-	// Content Base64-encoded file content.
-	Content []byte `json:"content" validate:"required"`
-
-	// Name The name of the file.
-	Name string `json:"name" validate:"required,min=1,max=255"`
-}
-
 // FileUploadResponse defines model for FileUploadResponse.
 type FileUploadResponse struct {
+	// Changed Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest.
+	Changed bool `json:"changed"`
+
+	// ContentType How the file should be treated during deploy (raw or template).
+	ContentType string `json:"content_type"`
+
 	// Name The name of the uploaded file.
 	Name string `json:"name"`
 
@@ -88,8 +99,29 @@ type FileUploadResponse struct {
 // FileName defines model for FileName.
 type FileName = string
 
-// PostFileJSONRequestBody defines body for PostFile for application/json ContentType.
-type PostFileJSONRequestBody = FileUploadRequest
+// PostFileMultipartBody defines parameters for PostFile.
+type PostFileMultipartBody struct {
+	// ContentType How the file should be treated during deploy. "raw" writes bytes as-is; "template" renders with Go text/template and agent facts.
+	ContentType *PostFileMultipartBodyContentType `json:"content_type,omitempty"`
+
+	// File The file content.
+	File openapi_types.File `json:"file"`
+
+	// Name The name of the file in the Object Store.
+	Name string `json:"name"`
+}
+
+// PostFileParams defines parameters for PostFile.
+type PostFileParams struct {
+	// Force When true, bypass the digest check and always write the file. Returns changed=true regardless of whether the content differs from the existing object.
+	Force *bool `form:"force,omitempty" json:"force,omitempty"`
+}
+
+// PostFileMultipartBodyContentType defines parameters for PostFile.
+type PostFileMultipartBodyContentType string
+
+// PostFileMultipartRequestBody defines body for PostFile for multipart/form-data ContentType.
+type PostFileMultipartRequestBody PostFileMultipartBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -98,7 +130,7 @@ type ServerInterface interface {
 	GetFiles(ctx echo.Context) error
 	// Upload a file
 	// (POST /file)
-	PostFile(ctx echo.Context) error
+	PostFile(ctx echo.Context, params PostFileParams) error
 	// Delete a file
 	// (DELETE /file/{name})
 	DeleteFileByName(ctx echo.Context, name FileName) error
@@ -129,8 +161,17 @@ func (w *ServerInterfaceWrapper) PostFile(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{"file:write"})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostFileParams
+	// ------------- Optional query parameter "force" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "force", ctx.QueryParams(), &params.Force)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter force: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostFile(ctx)
+	err = w.Handler.PostFile(ctx, params)
 	return err
 }
 
@@ -249,7 +290,8 @@ func (response GetFiles500JSONResponse) VisitGetFilesResponse(w http.ResponseWri
 }
 
 type PostFileRequestObject struct {
-	Body *PostFileJSONRequestBody
+	Params PostFileParams
+	Body   *multipart.Reader
 }
 
 type PostFileResponseObject interface {
@@ -288,6 +330,15 @@ type PostFile403JSONResponse externalRef0.ErrorResponse
 func (response PostFile403JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostFile409JSONResponse externalRef0.ErrorResponse
+
+func (response PostFile409JSONResponse) VisitPostFileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -477,14 +528,16 @@ func (sh *strictHandler) GetFiles(ctx echo.Context) error {
 }
 
 // PostFile operation middleware
-func (sh *strictHandler) PostFile(ctx echo.Context) error {
+func (sh *strictHandler) PostFile(ctx echo.Context, params PostFileParams) error {
 	var request PostFileRequestObject
 
-	var body PostFileJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
+	request.Params = params
+
+	if reader, err := ctx.Request().MultipartReader(); err != nil {
 		return err
+	} else {
+		request.Body = reader
 	}
-	request.Body = &body
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.PostFile(ctx.Request().Context(), request.(PostFileRequestObject))

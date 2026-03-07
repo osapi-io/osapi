@@ -22,6 +22,7 @@ package file
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -31,6 +32,13 @@ import (
 // needed by the file API handlers. This minimal interface enables
 // straightforward mocking in tests.
 type ObjectStoreManager interface {
+	// Put stores data from a reader under the given metadata.
+	Put(
+		ctx context.Context,
+		meta jetstream.ObjectMeta,
+		reader io.Reader,
+	) (*jetstream.ObjectInfo, error)
+
 	// PutBytes stores data under the given name.
 	PutBytes(ctx context.Context, name string, data []byte) (*jetstream.ObjectInfo, error)
 

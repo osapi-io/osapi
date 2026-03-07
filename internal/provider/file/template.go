@@ -48,7 +48,7 @@ func (p *FileProvider) renderTemplate(
 	}
 
 	ctx := TemplateContext{
-		Facts:    p.cachedFacts,
+		Facts:    p.Facts(),
 		Vars:     vars,
 		Hostname: p.hostname,
 	}

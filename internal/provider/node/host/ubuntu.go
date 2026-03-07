@@ -26,10 +26,14 @@ import (
 	"runtime"
 
 	"github.com/shirou/gopsutil/v4/host"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Ubuntu implements the Mem interface for Ubuntu.
 type Ubuntu struct {
+	provider.FactsAware
+
 	InfoFn     func() (*host.InfoStat, error)
 	HostnameFn func() (string, error)
 	NumCPUFn   func() int

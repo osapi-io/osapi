@@ -177,15 +177,15 @@ func connectNATSBundle(
 		}
 	}
 
-	// Get Object Store handle for file management API
+	// Create or update Object Store bucket for file management API
 	var objStore file.ObjectStoreManager
 	if appConfig.NATS.Objects.Bucket != "" {
-		objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
+		objStoreConfig := cli.BuildObjectStoreConfig(namespace, appConfig.NATS.Objects)
 		var objErr error
-		objStore, objErr = nc.ObjectStore(ctx, objStoreName)
+		objStore, objErr = nc.CreateOrUpdateObjectStore(ctx, objStoreConfig)
 		if objErr != nil {
 			log.Warn("Object Store not available, file endpoints disabled",
-				slog.String("bucket", objStoreName),
+				slog.String("bucket", objStoreConfig.Bucket),
 				slog.String("error", objErr.Error()))
 		}
 	}

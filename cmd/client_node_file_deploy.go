@@ -79,10 +79,21 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Job ID", resp.Data.JobID)
-		cli.PrintKV("Hostname", resp.Data.Hostname)
-		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
+
+		changed := resp.Data.Changed
+		changedPtr := &changed
+		results := []cli.MutationResultRow{
+			{
+				Hostname: resp.Data.Hostname,
+				Changed:  changedPtr,
+			},
+		}
+		headers, rows := cli.BuildMutationTable(results, nil)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

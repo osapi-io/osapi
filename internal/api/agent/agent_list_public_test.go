@@ -326,7 +326,7 @@ func (s *AgentListPublicTestSuite) TestGetAgent() {
 	}
 }
 
-func (s *AgentListPublicTestSuite) TestGetAgentValidationHTTP() {
+func (s *AgentListPublicTestSuite) TestGetAgentHTTP() {
 	tests := []struct {
 		name         string
 		setupJobMock func() *jobmocks.MockJobClient

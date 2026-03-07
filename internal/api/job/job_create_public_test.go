@@ -189,7 +189,7 @@ func (s *JobCreatePublicTestSuite) TestPostJob() {
 	}
 }
 
-func (s *JobCreatePublicTestSuite) TestPostJobHTTP() {
+func (s *JobCreatePublicTestSuite) TestPostJobValidationHTTP() {
 	tests := []struct {
 		name         string
 		body         string
