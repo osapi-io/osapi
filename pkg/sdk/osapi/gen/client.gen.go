@@ -901,18 +901,6 @@ type PingResponse struct {
 	PacketsSent *int `json:"packets_sent,omitempty"`
 }
 
-// QueueStatsResponse defines model for QueueStatsResponse.
-type QueueStatsResponse struct {
-	// DlqCount Number of jobs in the dead letter queue.
-	DlqCount *int `json:"dlq_count,omitempty"`
-
-	// StatusCounts Count of jobs by status.
-	StatusCounts *map[string]int `json:"status_counts,omitempty"`
-
-	// TotalJobs Total number of jobs in the queue.
-	TotalJobs *int `json:"total_jobs,omitempty"`
-}
-
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
 	// Error Error message when not ready.
@@ -1228,9 +1216,6 @@ type ClientInterface interface {
 
 	PostJob(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetJobStatus request
-	GetJobStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DeleteJobByID request
 	DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1494,18 +1479,6 @@ func (c *Client) PostJobWithBody(ctx context.Context, contentType string, body i
 
 func (c *Client) PostJob(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostJobRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetJobStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetJobStatusRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2419,33 +2392,6 @@ func NewPostJobRequestWithBody(server string, contentType string, body io.Reader
 	return req, nil
 }
 
-// NewGetJobStatusRequest generates requests for GetJobStatus
-func NewGetJobStatusRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/job/status")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewDeleteJobByIDRequest generates requests for DeleteJobByID
 func NewDeleteJobByIDRequest(server string, id openapi_types.UUID) (*http.Request, error) {
 	var err error
@@ -3242,9 +3188,6 @@ type ClientWithResponsesInterface interface {
 
 	PostJobWithResponse(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*PostJobResponse, error)
 
-	// GetJobStatusWithResponse request
-	GetJobStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobStatusResponse, error)
-
 	// DeleteJobByIDWithResponse request
 	DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
 
@@ -3723,31 +3666,6 @@ func (r PostJobResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostJobResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetJobStatusResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *QueueStatsResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetJobStatusResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetJobStatusResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -4370,15 +4288,6 @@ func (c *ClientWithResponses) PostJobWithResponse(ctx context.Context, body Post
 		return nil, err
 	}
 	return ParsePostJobResponse(rsp)
-}
-
-// GetJobStatusWithResponse request returning *GetJobStatusResponse
-func (c *ClientWithResponses) GetJobStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJobStatusResponse, error) {
-	rsp, err := c.GetJobStatus(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetJobStatusResponse(rsp)
 }
 
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
@@ -5405,53 +5314,6 @@ func ParsePostJobResponse(rsp *http.Response) (*PostJobResponse, error) {
 			return nil, err
 		}
 		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetJobStatusResponse parses an HTTP response from a GetJobStatusWithResponse call
-func ParseGetJobStatusResponse(rsp *http.Response) (*GetJobStatusResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetJobStatusResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest QueueStatsResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse

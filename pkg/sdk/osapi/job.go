@@ -167,29 +167,6 @@ func (s *JobService) List(
 	return NewResponse(jobListFromGen(resp.JSON200), resp.Body), nil
 }
 
-// QueueStats retrieves job queue statistics.
-func (s *JobService) QueueStats(
-	ctx context.Context,
-) (*Response[QueueStats], error) {
-	resp, err := s.client.GetJobStatusWithResponse(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("queue stats: %w", err)
-	}
-
-	if err := checkError(resp.StatusCode(), resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return NewResponse(queueStatsFromGen(resp.JSON200), resp.Body), nil
-}
-
 // Retry retries a failed job by ID, optionally on a different target.
 func (s *JobService) Retry(
 	ctx context.Context,

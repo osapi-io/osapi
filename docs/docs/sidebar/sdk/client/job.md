@@ -15,7 +15,6 @@ Async job queue operations.
 | `List(ctx, params)`              | List jobs with optional filters |
 | `Delete(ctx, id)`                | Delete a job by UUID            |
 | `Retry(ctx, id, target)`         | Retry a failed job              |
-| `QueueStats(ctx)`                | Retrieve queue statistics       |
 
 ## Usage
 

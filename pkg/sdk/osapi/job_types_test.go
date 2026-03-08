@@ -304,58 +304,6 @@ func (suite *JobTypesTestSuite) TestJobListFromGen() {
 	}
 }
 
-func (suite *JobTypesTestSuite) TestQueueStatsFromGen() {
-	tests := []struct {
-		name         string
-		input        *gen.QueueStatsResponse
-		validateFunc func(QueueStats)
-	}{
-		{
-			name: "when all fields are populated",
-			input: func() *gen.QueueStatsResponse {
-				totalJobs := 100
-				dlqCount := 5
-				statusCounts := map[string]int{
-					"pending":   30,
-					"completed": 60,
-					"failed":    10,
-				}
-
-				return &gen.QueueStatsResponse{
-					TotalJobs:    &totalJobs,
-					DlqCount:     &dlqCount,
-					StatusCounts: &statusCounts,
-				}
-			}(),
-			validateFunc: func(qs QueueStats) {
-				suite.Equal(100, qs.TotalJobs)
-				suite.Equal(5, qs.DlqCount)
-				suite.Equal(map[string]int{
-					"pending":   30,
-					"completed": 60,
-					"failed":    10,
-				}, qs.StatusCounts)
-			},
-		},
-		{
-			name:  "when all fields are nil",
-			input: &gen.QueueStatsResponse{},
-			validateFunc: func(qs QueueStats) {
-				suite.Equal(0, qs.TotalJobs)
-				suite.Equal(0, qs.DlqCount)
-				suite.Nil(qs.StatusCounts)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			result := queueStatsFromGen(tc.input)
-			tc.validateFunc(result)
-		})
-	}
-}
-
 func TestJobTypesTestSuite(t *testing.T) {
 	suite.Run(t, new(JobTypesTestSuite))
 }

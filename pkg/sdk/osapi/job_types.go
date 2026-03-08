@@ -69,13 +69,6 @@ type JobList struct {
 	StatusCounts map[string]int
 }
 
-// QueueStats represents job queue statistics.
-type QueueStats struct {
-	TotalJobs    int
-	DlqCount     int
-	StatusCounts map[string]int
-}
-
 // jobCreatedFromGen converts a gen.CreateJobResponse to a JobCreated.
 func jobCreatedFromGen(
 	g *gen.CreateJobResponse,
@@ -238,25 +231,4 @@ func jobListFromGen(
 	}
 
 	return jl
-}
-
-// queueStatsFromGen converts a gen.QueueStatsResponse to QueueStats.
-func queueStatsFromGen(
-	g *gen.QueueStatsResponse,
-) QueueStats {
-	qs := QueueStats{}
-
-	if g.TotalJobs != nil {
-		qs.TotalJobs = *g.TotalJobs
-	}
-
-	if g.DlqCount != nil {
-		qs.DlqCount = *g.DlqCount
-	}
-
-	if g.StatusCounts != nil {
-		qs.StatusCounts = *g.StatusCounts
-	}
-
-	return qs
 }

@@ -83,12 +83,4 @@ func main() {
 		fmt.Printf("  %s  status=%s  op=%v\n",
 			j.ID, j.Status, j.Operation)
 	}
-
-	// Queue statistics.
-	stats, err := client.Job.QueueStats(ctx)
-	if err != nil {
-		log.Fatalf("queue stats: %v", err)
-	}
-
-	fmt.Printf("\nQueue: %d total jobs\n", stats.Data.TotalJobs)
 }

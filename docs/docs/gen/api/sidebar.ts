@@ -168,12 +168,6 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "gen/api/get-queue-statistics",
-          label: "Get queue statistics",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "gen/api/get-job-by-id",
           label: "Get job detail",
           className: "api-method get",

@@ -37,8 +37,8 @@ into NATS JetStream:
 - **Agents** — Processes jobs, updates status, stores results
 
 All three use the **Job Client Layer** (`internal/job/client/`), which provides
-type-safe business logic operations (`CreateJob`, `GetQueueSummary`,
-`GetJobStatus`, `ListJobs`) on top of NATS JetStream.
+type-safe business logic operations (`CreateJob`, `GetJobStatus`, `ListJobs`) on
+top of NATS JetStream.
 
 **NATS JetStream** provides three storage backends:
 
@@ -340,21 +340,6 @@ GET /api/v1/jobs/{job-id}
 - Status events (`status.{id}.*`)
 - Agent responses (`responses.{id}.*`)
 
-### Queue Statistics
-
-```json
-{
-  "total_jobs": 42,
-  "status_counts": {
-    "submitted": 5,
-    "processing": 2,
-    "completed": 30,
-    "failed": 5
-  },
-  "dlq_count": 0
-}
-```
-
 ## Agent Implementation
 
 ### Processing Flow
@@ -627,9 +612,6 @@ osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
 
 # Run job and wait for completion
 osapi client job run --json-file operation.json --timeout 60
-
-# Monitor queue status
-osapi client job status --poll-interval-seconds 5
 
 # Delete a job
 osapi client job delete --job-id uuid-12345
