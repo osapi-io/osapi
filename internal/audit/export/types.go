@@ -23,13 +23,13 @@ package export
 import (
 	"context"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // Exporter writes audit entries to a backend.
 type Exporter interface {
 	Open(ctx context.Context) error
-	Write(ctx context.Context, entry osapi.AuditEntry) error
+	Write(ctx context.Context, entry client.AuditEntry) error
 	Close(ctx context.Context) error
 }
 
@@ -39,7 +39,7 @@ type Fetcher func(
 	ctx context.Context,
 	limit int,
 	offset int,
-) ([]osapi.AuditEntry, int, error)
+) ([]client.AuditEntry, int, error)
 
 // Result holds export outcome.
 type Result struct {

@@ -31,7 +31,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // Theme colors for terminal UI rendering.
@@ -492,7 +492,7 @@ func HandleError(
 	err error,
 	logger *slog.Logger,
 ) {
-	var apiErr *osapi.APIError
+	var apiErr *client.APIError
 	if errors.As(err, &apiErr) {
 		logger.Error(
 			"api error",
@@ -509,7 +509,7 @@ func HandleError(
 // DisplayJobDetail displays detailed job information from domain types.
 // Used by both job get and job run commands.
 func DisplayJobDetail(
-	resp *osapi.JobDetail,
+	resp *client.JobDetail,
 ) {
 	// Display job metadata
 	fmt.Println()

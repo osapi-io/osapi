@@ -23,7 +23,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -62,7 +62,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 // For a single non-broadcast result, shows detailed output; otherwise shows a summary table.
 func displayNodeStatusCollection(
 	target string,
-	data *osapi.Collection[osapi.NodeStatus],
+	data *client.Collection[client.NodeStatus],
 ) {
 	if len(data.Results) == 1 && target != "_all" {
 		displayNodeStatusDetail(&data.Results[0])
@@ -105,7 +105,7 @@ func displayNodeStatusCollection(
 
 // displayNodeStatusDetail renders a single node status response with full details.
 func displayNodeStatusDetail(
-	data *osapi.NodeStatus,
+	data *client.NodeStatus,
 ) {
 	fmt.Println()
 

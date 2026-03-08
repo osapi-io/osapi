@@ -25,7 +25,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -53,7 +53,7 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			}
 		}
 
-		resp, err := sdkClient.Node.Exec(ctx, osapi.ExecRequest{
+		resp, err := sdkClient.Node.Exec(ctx, client.ExecRequest{
 			Command: command,
 			Args:    args,
 			Cwd:     cwd,
@@ -124,7 +124,7 @@ var clientNodeCommandExecCmd = &cobra.Command{
 }
 
 func buildRawResults(
-	items []osapi.CommandResult,
+	items []client.CommandResult,
 ) []cli.RawResult {
 	results := make([]cli.RawResult, 0, len(items))
 	for _, r := range items {

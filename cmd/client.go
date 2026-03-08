@@ -24,7 +24,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	sdkClient      *osapi.Client
+	sdkClient      *client.Client
 	tracerShutdown func(context.Context) error
 )
 
@@ -61,10 +61,10 @@ var clientCmd = &cobra.Command{
 			slog.String("api.client.url", appConfig.API.URL),
 		)
 
-		sdkClient = osapi.New(
+		sdkClient = client.New(
 			appConfig.API.URL,
 			appConfig.API.Client.Security.BearerToken,
-			osapi.WithLogger(logger),
+			client.WithLogger(logger),
 		)
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {

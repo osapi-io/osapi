@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit/export"
@@ -47,8 +47,8 @@ func (suite *ExportPublicTestSuite) SetupTest() {
 
 func (suite *ExportPublicTestSuite) newEntry(
 	user string,
-) osapi.AuditEntry {
-	return osapi.AuditEntry{
+) client.AuditEntry {
+	return client.AuditEntry{
 		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
 		User:         user,
@@ -71,7 +71,7 @@ func (suite *ExportPublicTestSuite) TestRun() {
 	}{
 		{
 			name: "when no entries returns zero counts",
-			fetcher: func(_ context.Context, _, _ int) ([]osapi.AuditEntry, int, error) {
+			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
 			exporter:  &mockExporter{},
@@ -86,8 +86,8 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when single page exports all entries",
-			fetcher: func(_ context.Context, _, _ int) ([]osapi.AuditEntry, int, error) {
-				return []osapi.AuditEntry{
+			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
+				return []client.AuditEntry{
 					suite.newEntry("alice@example.com"),
 					suite.newEntry("bob@example.com"),
 				}, 2, nil
@@ -105,7 +105,7 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when multi-page paginates correctly",
-			fetcher: newPagedFetcher([][]osapi.AuditEntry{
+			fetcher: newPagedFetcher([][]client.AuditEntry{
 				{suite.newEntry("alice@example.com"), suite.newEntry("bob@example.com")},
 				{suite.newEntry("charlie@example.com")},
 			}, 3),
@@ -120,11 +120,11 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when fetcher errors returns partial result",
-			fetcher: func(_ context.Context, _, offset int) ([]osapi.AuditEntry, int, error) {
+			fetcher: func(_ context.Context, _, offset int) ([]client.AuditEntry, int, error) {
 				if offset > 0 {
 					return nil, 0, fmt.Errorf("connection lost")
 				}
-				return []osapi.AuditEntry{suite.newEntry("alice@example.com")}, 3, nil
+				return []client.AuditEntry{suite.newEntry("alice@example.com")}, 3, nil
 			},
 			exporter:  &mockExporter{},
 			batchSize: 1,
@@ -138,8 +138,8 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when write errors returns partial result",
-			fetcher: func(_ context.Context, _, _ int) ([]osapi.AuditEntry, int, error) {
-				return []osapi.AuditEntry{suite.newEntry("alice@example.com")}, 1, nil
+			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
+				return []client.AuditEntry{suite.newEntry("alice@example.com")}, 1, nil
 			},
 			exporter:  &mockExporter{writeErr: fmt.Errorf("disk full")},
 			batchSize: 100,
@@ -151,7 +151,7 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when open errors returns nil result",
-			fetcher: func(_ context.Context, _, _ int) ([]osapi.AuditEntry, int, error) {
+			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
 			exporter:  &mockExporter{openErr: fmt.Errorf("permission denied")},
@@ -164,7 +164,7 @@ func (suite *ExportPublicTestSuite) TestRun() {
 		},
 		{
 			name: "when close errors logs warning but returns result",
-			fetcher: func(_ context.Context, _, _ int) ([]osapi.AuditEntry, int, error) {
+			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
 			exporter:  &mockExporter{closeErr: fmt.Errorf("close failed")},
@@ -201,7 +201,7 @@ func (suite *ExportPublicTestSuite) TestRunProgress() {
 	}{
 		{
 			name: "when multi-page calls progress after each batch",
-			fetcher: newPagedFetcher([][]osapi.AuditEntry{
+			fetcher: newPagedFetcher([][]client.AuditEntry{
 				{suite.newEntry("alice@example.com"), suite.newEntry("bob@example.com")},
 				{suite.newEntry("charlie@example.com")},
 			}, 3),
@@ -245,7 +245,7 @@ func TestExportPublicTestSuite(t *testing.T) {
 type mockExporter struct {
 	opened   bool
 	closed   bool
-	entries  []osapi.AuditEntry
+	entries  []client.AuditEntry
 	openErr  error
 	writeErr error
 	closeErr error
@@ -263,7 +263,7 @@ func (m *mockExporter) Open(
 
 func (m *mockExporter) Write(
 	_ context.Context,
-	entry osapi.AuditEntry,
+	entry client.AuditEntry,
 ) error {
 	if m.writeErr != nil {
 		return m.writeErr
@@ -286,14 +286,14 @@ type progressCall struct {
 
 // newPagedFetcher creates a fetcher that returns pages of entries based on offset.
 func newPagedFetcher(
-	pages [][]osapi.AuditEntry,
+	pages [][]client.AuditEntry,
 	total int,
 ) export.Fetcher {
 	return func(
 		_ context.Context,
 		limit int,
 		offset int,
-	) ([]osapi.AuditEntry, int, error) {
+	) ([]client.AuditEntry, int, error) {
 		_ = limit
 		pageIdx := 0
 		remaining := offset

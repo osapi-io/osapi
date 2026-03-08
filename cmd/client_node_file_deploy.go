@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -59,7 +59,7 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 
 		vars := parseVarFlags(varFlags)
 
-		resp, err := sdkClient.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+		resp, err := sdkClient.Node.FileDeploy(ctx, client.FileDeployOpts{
 			Target:      host,
 			ObjectName:  objectName,
 			Path:        path,

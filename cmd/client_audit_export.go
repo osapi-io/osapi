@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/audit/export"
@@ -60,7 +60,7 @@ entry as a JSON line (JSONL format). Requires audit:read permission.
 
 func writeExport(
 	ctx context.Context,
-	items []osapi.AuditEntry,
+	items []client.AuditEntry,
 	totalItems int,
 ) {
 	var exporter export.Exporter

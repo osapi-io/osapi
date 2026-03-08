@@ -29,7 +29,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -108,7 +108,7 @@ This combines job submission and retrieval into a single command for convenience
 
 func checkJobComplete(
 	ctx context.Context,
-	jobService *osapi.JobService,
+	jobService *client.JobService,
 	jobID string,
 ) bool {
 	resp, err := jobService.Get(ctx, jobID)

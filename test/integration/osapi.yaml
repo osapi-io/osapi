@@ -59,6 +59,29 @@ nats:
     storage: memory
     replicas: 1
 
+  facts:
+    bucket: agent-facts
+    ttl: 5m
+    storage: memory
+    replicas: 1
+
+  state:
+    bucket: agent-state
+    storage: memory
+    replicas: 1
+
+  objects:
+    bucket: file-objects
+    max_bytes: 104857600
+    storage: memory
+    replicas: 1
+    max_chunk_size: 262144
+
+  file_state:
+    bucket: file-state
+    storage: memory
+    replicas: 1
+
   dlq:
     max_age: 7d
     max_msgs: 1000

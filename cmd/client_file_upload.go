@@ -28,7 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	osapi "github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientFileUploadCmd represents the clientFileUpload command.
@@ -49,9 +49,9 @@ var clientFileUploadCmd = &cobra.Command{
 		}
 		defer func() { _ = f.Close() }()
 
-		var opts []osapi.UploadOption
+		var opts []client.UploadOption
 		if force {
-			opts = append(opts, osapi.WithForce())
+			opts = append(opts, client.WithForce())
 		}
 
 		resp, err := sdkClient.File.Upload(ctx, name, contentType, f, opts...)

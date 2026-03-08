@@ -22,7 +22,7 @@ fmt.Print(text)
 ## Example
 
 See
-[`examples/sdk/osapi/metrics.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/metrics.go)
+[`examples/sdk/client/metrics.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/metrics.go)
 for a complete working example.
 
 ## Permissions

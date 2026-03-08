@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`osapi/` client library, `orchestrator/` DAG runner)
+- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner)
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
@@ -171,7 +171,7 @@ Create `internal/api/{domain}/`:
 
 ### Step 5: Update SDK
 
-The SDK client library lives in `pkg/sdk/osapi/`. Its generated HTTP client
+The SDK client library lives in `pkg/sdk/client/`. Its generated HTTP client
 uses the same combined OpenAPI spec as the server
 (`internal/api/gen/api.yaml`).
 
@@ -180,15 +180,15 @@ uses the same combined OpenAPI spec as the server
 1. Make changes to `internal/api/{domain}/gen/api.yaml` in this repo
 2. Run `just generate` to regenerate server code (this also regenerates the
    combined spec via `redocly join`)
-3. Run `go generate ./pkg/sdk/osapi/gen/...` to regenerate the SDK client
-4. Update the SDK service wrappers in `pkg/sdk/osapi/{domain}.go` if new
+3. Run `go generate ./pkg/sdk/client/gen/...` to regenerate the SDK client
+4. Update the SDK service wrappers in `pkg/sdk/client/{domain}.go` if new
    response codes were added
 5. Update CLI switch blocks in `cmd/` if new response codes were added
 
 **When adding a new API domain:**
 
-1. Add a service wrapper in `pkg/sdk/osapi/{domain}.go`
-2. Run `go generate ./pkg/sdk/osapi/gen/...` to pick up the new domain's
+1. Add a service wrapper in `pkg/sdk/client/{domain}.go`
+2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
    spec from the combined `api.yaml`
 
 ### Step 6: CLI Commands
@@ -253,7 +253,11 @@ Three test layers:
   middleware with mocked backends.
 - **Integration tests** (`test/integration/`) — build and start a real
   `osapi` binary, exercise CLI commands end-to-end. Guarded by
-  `//go:build integration` tag, run with `just go::unit-int`.
+  `//go:build integration` tag, run with `just go::unit-int`. New API
+  domains should include a `{domain}_test.go` smoke suite. Write tests
+  (mutations) must be guarded by `skipWrite(s.T())` so CI can run
+  read-only tests by default (`OSAPI_INTEGRATION_WRITES=1` enables
+  writes).
 
 Conventions:
 - ALL tests in `internal/job/` MUST use `testify/suite` with table-driven patterns

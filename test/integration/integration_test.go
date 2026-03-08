@@ -236,6 +236,20 @@ func skipWrite(
 	}
 }
 
+func writeTempFile(
+	t *testing.T,
+	content string,
+) string {
+	t.Helper()
+
+	path := filepath.Join(t.TempDir(), "upload.txt")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	return path
+}
+
 func writeJobFile(
 	t *testing.T,
 	data map[string]any,
