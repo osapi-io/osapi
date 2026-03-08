@@ -119,6 +119,8 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal(3, *r.Results[0].PacketsSent)
 				s.Require().NotNil(r.Results[0].PacketsReceived)
 				s.Equal(3, *r.Results[0].PacketsReceived)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -200,7 +202,13 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 					)
 			},
 			validateFunc: func(resp gen.PostNodeNetworkPingResponseObject) {
-				s.NotNil(resp)
+				r, ok := resp.(gen.PostNodeNetworkPing200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.False(*result.Changed)
+				}
 			},
 		},
 		{

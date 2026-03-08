@@ -115,8 +115,11 @@ func buildDiskResultItem(
 		disksSlice = append(disksSlice, disk)
 	}
 
+	changed := false
+
 	return &gen.DiskResultItem{
 		Hostname: hostname,
 		Disks:    &disksSlice,
+		Changed:  &changed,
 	}
 }

@@ -121,6 +121,8 @@ func buildPingResponse(
 	hostname string,
 	r *ping.Result,
 ) gen.PingResponse {
+	changed := false
+
 	return gen.PingResponse{
 		Hostname:        hostname,
 		AvgRtt:          durationToString(&r.AvgRTT),
@@ -129,6 +131,7 @@ func buildPingResponse(
 		PacketLoss:      &r.PacketLoss,
 		PacketsReceived: &r.PacketsReceived,
 		PacketsSent:     &r.PacketsSent,
+		Changed:         &changed,
 	}
 }
 

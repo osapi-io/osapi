@@ -63,7 +63,11 @@ func (s *Node) GetNodeHostname(
 		displayHostname = agent.Hostname
 	}
 
-	resp := gen.HostnameResponse{Hostname: displayHostname}
+	changed := false
+	resp := gen.HostnameResponse{
+		Hostname: displayHostname,
+		Changed:  &changed,
+	}
 	if agent != nil && len(agent.Labels) > 0 {
 		resp.Labels = &agent.Labels
 	}
@@ -88,9 +92,13 @@ func (s *Node) getNodeHostnameBroadcast(
 		}, nil
 	}
 
+	changed := false
 	var responses []gen.HostnameResponse
 	for _, w := range results {
-		r := gen.HostnameResponse{Hostname: w.Hostname}
+		r := gen.HostnameResponse{
+			Hostname: w.Hostname,
+			Changed:  &changed,
+		}
 		if len(w.Labels) > 0 {
 			r.Labels = &w.Labels
 		}

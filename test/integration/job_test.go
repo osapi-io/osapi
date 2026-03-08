@@ -92,11 +92,10 @@ func (s *JobSmokeSuite) TestJobGet() {
 			) {
 				s.Require().Equal(0, exitCode)
 
-				var result struct {
-					ID string `json:"id"`
-				}
+				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
-				s.Equal(jobID, result.ID)
+				s.Equal(jobID, result["id"])
+				s.Contains(result, "changed")
 			},
 		},
 	}

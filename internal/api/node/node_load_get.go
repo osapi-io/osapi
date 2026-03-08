@@ -105,8 +105,10 @@ func buildLoadResultItem(
 	hostname string,
 	loadStats *load.Result,
 ) *gen.LoadResultItem {
+	changed := false
 	item := &gen.LoadResultItem{
 		Hostname: hostname,
+		Changed:  &changed,
 	}
 
 	if loadStats != nil {

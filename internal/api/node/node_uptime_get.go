@@ -105,9 +105,11 @@ func buildUptimeResponse(
 	uptimeResp *job.NodeUptimeResponse,
 ) *gen.UptimeResponse {
 	uptime := uptimeResp.Uptime
+	changed := false
 
 	return &gen.UptimeResponse{
 		Hostname: hostname,
 		Uptime:   &uptime,
+		Changed:  &changed,
 	}
 }

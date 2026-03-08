@@ -44,6 +44,7 @@ type Disk struct {
 type HostnameResult struct {
 	Hostname string
 	Error    string
+	Changed  bool
 	Labels   map[string]string
 }
 
@@ -52,6 +53,7 @@ type NodeStatus struct {
 	Hostname    string
 	Uptime      string
 	Error       string
+	Changed     bool
 	Disks       []Disk
 	LoadAverage *LoadAverage
 	Memory      *Memory
@@ -62,6 +64,7 @@ type NodeStatus struct {
 type DiskResult struct {
 	Hostname string
 	Error    string
+	Changed  bool
 	Disks    []Disk
 }
 
@@ -69,6 +72,7 @@ type DiskResult struct {
 type MemoryResult struct {
 	Hostname string
 	Error    string
+	Changed  bool
 	Memory   *Memory
 }
 
@@ -76,6 +80,7 @@ type MemoryResult struct {
 type LoadResult struct {
 	Hostname    string
 	Error       string
+	Changed     bool
 	LoadAverage *LoadAverage
 }
 
@@ -83,6 +88,7 @@ type LoadResult struct {
 type OSInfoResult struct {
 	Hostname string
 	Error    string
+	Changed  bool
 	OSInfo   *OSInfo
 }
 
@@ -91,12 +97,14 @@ type UptimeResult struct {
 	Hostname string
 	Uptime   string
 	Error    string
+	Changed  bool
 }
 
 // DNSConfig represents DNS configuration from a single agent.
 type DNSConfig struct {
 	Hostname      string
 	Error         string
+	Changed       bool
 	Servers       []string
 	SearchDomains []string
 }
@@ -113,6 +121,7 @@ type DNSUpdateResult struct {
 type PingResult struct {
 	Hostname        string
 	Error           string
+	Changed         bool
 	PacketsSent     int
 	PacketsReceived int
 	PacketLoss      float64
@@ -272,6 +281,7 @@ func hostnameCollectionFromGen(
 		hr := HostnameResult{
 			Hostname: r.Hostname,
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 		}
 
 		if r.Labels != nil {
@@ -297,6 +307,7 @@ func nodeStatusCollectionFromGen(
 			Hostname:    r.Hostname,
 			Uptime:      derefString(r.Uptime),
 			Error:       derefString(r.Error),
+			Changed:     derefBool(r.Changed),
 			Disks:       disksFromGen(r.Disks),
 			LoadAverage: loadAverageFromGen(r.LoadAverage),
 			Memory:      memoryFromGen(r.Memory),
@@ -319,6 +330,7 @@ func diskCollectionFromGen(
 		results = append(results, DiskResult{
 			Hostname: r.Hostname,
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 			Disks:    disksFromGen(r.Disks),
 		})
 	}
@@ -338,6 +350,7 @@ func memoryCollectionFromGen(
 		results = append(results, MemoryResult{
 			Hostname: r.Hostname,
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 			Memory:   memoryFromGen(r.Memory),
 		})
 	}
@@ -357,6 +370,7 @@ func loadCollectionFromGen(
 		results = append(results, LoadResult{
 			Hostname:    r.Hostname,
 			Error:       derefString(r.Error),
+			Changed:     derefBool(r.Changed),
 			LoadAverage: loadAverageFromGen(r.LoadAverage),
 		})
 	}
@@ -376,6 +390,7 @@ func osInfoCollectionFromGen(
 		results = append(results, OSInfoResult{
 			Hostname: r.Hostname,
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 			OSInfo:   osInfoFromGen(r.OsInfo),
 		})
 	}
@@ -396,6 +411,7 @@ func uptimeCollectionFromGen(
 			Hostname: r.Hostname,
 			Uptime:   derefString(r.Uptime),
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 		})
 	}
 
@@ -414,6 +430,7 @@ func dnsConfigCollectionFromGen(
 		dc := DNSConfig{
 			Hostname: r.Hostname,
 			Error:    derefString(r.Error),
+			Changed:  derefBool(r.Changed),
 		}
 
 		if r.Servers != nil {
@@ -462,6 +479,7 @@ func pingCollectionFromGen(
 		results = append(results, PingResult{
 			Hostname:        r.Hostname,
 			Error:           derefString(r.Error),
+			Changed:         derefBool(r.Changed),
 			PacketsSent:     derefInt(r.PacketsSent),
 			PacketsReceived: derefInt(r.PacketsReceived),
 			PacketLoss:      derefFloat64(r.PacketLoss),

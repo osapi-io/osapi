@@ -97,8 +97,11 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
-				_, ok := resp.(gen.GetNodeDisk200JSONResponse)
+				r, ok := resp.(gen.GetNodeDisk200JSONResponse)
 				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -145,7 +148,13 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
-				s.NotNil(resp)
+				r, ok := resp.(gen.GetNodeDisk200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.False(*result.Changed)
+				}
 			},
 		},
 		{

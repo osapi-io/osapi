@@ -64,6 +64,8 @@ func (s *CommandSmokeSuite) TestCommandExec() {
 				s.Require().True(ok)
 				s.Contains(first["stdout"].(string), "hello")
 				s.Equal(float64(0), first["exit_code"])
+				s.Contains(first, "changed")
+				s.Equal(true, first["changed"])
 			},
 		},
 	}
@@ -107,6 +109,8 @@ func (s *CommandSmokeSuite) TestCommandShell() {
 				s.Require().True(ok)
 				s.Contains(first["stdout"].(string), "hello")
 				s.Equal(float64(0), first["exit_code"])
+				s.Contains(first, "changed")
+				s.Equal(true, first["changed"])
 			},
 		},
 	}
