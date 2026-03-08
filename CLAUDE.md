@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`osapi-sdk`** - External SDK for programmatic REST API access (sibling repo, linked via `replace` in `go.mod`)
+- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`osapi/` client library, `orchestrator/` DAG runner)
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
@@ -171,29 +171,25 @@ Create `internal/api/{domain}/`:
 
 ### Step 5: Update SDK
 
-The `osapi-sdk` (sibling repo) provides the generated HTTP client used by
-the CLI. The SDK syncs its `api.yaml` files from this repo via `gilt`
-overlay (configured in `osapi-sdk/.gilt.yml`). When `just generate` runs
-in the SDK, gilt pulls the latest specs from osapi's `main` branch and
-regenerates the client code.
+The SDK client library lives in `pkg/sdk/osapi/`. Its generated HTTP client
+uses the same combined OpenAPI spec as the server
+(`internal/api/gen/api.yaml`).
+
+**When modifying existing API specs:**
+
+1. Make changes to `internal/api/{domain}/gen/api.yaml` in this repo
+2. Run `just generate` to regenerate server code (this also regenerates the
+   combined spec via `redocly join`)
+3. Run `go generate ./pkg/sdk/osapi/gen/...` to regenerate the SDK client
+4. Update the SDK service wrappers in `pkg/sdk/osapi/{domain}.go` if new
+   response codes were added
+5. Update CLI switch blocks in `cmd/` if new response codes were added
 
 **When adding a new API domain:**
 
-1. Add the domain's `api.yaml` to `osapi-sdk/pkg/osapi/gen/{domain}/`
-2. Run `just generate` in the SDK repo to regenerate the merged spec and
-   client code
-3. Add a service wrapper in `osapi-sdk/pkg/osapi/{domain}.go`
-
-**When modifying existing API specs** (adding responses, parameters, or
-schemas to existing endpoints):
-
-1. Make changes to `internal/api/{domain}/gen/api.yaml` in this repo
-2. Run `just generate` here to regenerate server code
-3. After merging to `main`, run `just generate` in `osapi-sdk` — gilt
-   will pull the updated specs and regenerate the client
-4. Update the SDK service wrappers and CLI switch blocks if new response
-   codes were added (e.g., adding a 404 response requires a
-   `case http.StatusNotFound:` in the CLI)
+1. Add a service wrapper in `pkg/sdk/osapi/{domain}.go`
+2. Run `go generate ./pkg/sdk/osapi/gen/...` to pick up the new domain's
+   spec from the combined `api.yaml`
 
 ### Step 6: CLI Commands
 

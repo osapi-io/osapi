@@ -11,4 +11,4 @@ result.xml
 test/vendor/
 tmp/
 
-osapi
+/osapi

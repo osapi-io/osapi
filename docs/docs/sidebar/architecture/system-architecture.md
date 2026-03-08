@@ -16,7 +16,7 @@ The system is organized into six layers, top to bottom:
 | Layer                      | Package                                 | Role                                                                     |
 | -------------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
 | **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                         |
-| **SDK Client**             | `osapi-sdk` (external)                  | OpenAPI-generated client used by CLI                                     |
+| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                     |
 | **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                          |
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                   |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts`      |
@@ -24,7 +24,7 @@ The system is organized into six layers, top to bottom:
 
 ```mermaid
 graph TD
-    CLI["CLI (cmd/)"] --> SDK["SDK Client (osapi-sdk)"]
+    CLI["CLI (cmd/)"] --> SDK["SDK Client (pkg/sdk/osapi)"]
     SDK --> API["REST API (internal/api/)"]
     API --> JobClient["Job Client (internal/job/client/)"]
     JobClient --> NATS["NATS JetStream"]

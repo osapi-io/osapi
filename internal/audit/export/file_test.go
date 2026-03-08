@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/osapi"
 	"github.com/stretchr/testify/suite"
 )
 

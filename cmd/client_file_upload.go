@@ -27,8 +27,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	osapi "github.com/osapi-io/osapi-sdk/pkg/osapi"
 	"github.com/retr0h/osapi/internal/cli"
+	osapi "github.com/retr0h/osapi/pkg/sdk/osapi"
 )
 
 // clientFileUploadCmd represents the clientFileUpload command.

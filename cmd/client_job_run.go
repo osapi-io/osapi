@@ -29,7 +29,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/osapi"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"

@@ -18,7 +18,6 @@ require (
 	github.com/oapi-codegen/runtime v1.2.0
 	github.com/osapi-io/nats-client v0.0.0-20260306210421-d68b2a0f287b
 	github.com/osapi-io/nats-server v0.0.0-20260216201410-1f33dfc63848
-	github.com/osapi-io/osapi-sdk v0.0.0-20260307192743-857786ce1c9e
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/samber/slog-echo v1.21.0
@@ -144,7 +143,7 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.1 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
-	github.com/golangci/golangci-lint/v2 v2.11.1 // indirect
+	github.com/golangci/golangci-lint/v2 v2.11.2 // indirect
 	github.com/golangci/golines v0.15.0 // indirect
 	github.com/golangci/misspell v0.8.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.2 // indirect
