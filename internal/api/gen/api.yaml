@@ -2540,6 +2540,12 @@ components:
           additionalProperties: true
         result:
           description: The result data if completed.
+        changed:
+          type: boolean
+          nullable: true
+          description: >-
+            Whether the operation modified system state. Null for pending/failed
+            jobs; true/false for completed jobs.
         error:
           type: string
           description: Error message if failed.
@@ -2559,6 +2565,9 @@ components:
                 type: string
               data:
                 description: Agent result data.
+              changed:
+                type: boolean
+                nullable: true
               error:
                 type: string
               hostname:

@@ -250,10 +250,11 @@ func (c *Client) GetJobStatus(
 		queuedJob.Operation = operation
 	}
 
-	// Populate Result from single-agent response
+	// Populate Result and Changed from single-agent response
 	if len(responses) == 1 {
 		for _, resp := range responses {
 			queuedJob.Result = resp.Data
+			queuedJob.Changed = resp.Changed
 			break
 		}
 	}

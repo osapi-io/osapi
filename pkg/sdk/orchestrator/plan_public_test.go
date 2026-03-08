@@ -26,10 +26,11 @@ func TestPlanPublicTestSuite(t *testing.T) {
 
 // pollResponse describes one GET /job/{id} response from opServer.
 type pollResponse struct {
-	status string // "pending", "completed", "failed", or "" (omit field)
-	result any    // nil, map[string]any, string
-	err    string // error message for failed jobs
-	code   int    // HTTP status code (0 = 200)
+	status  string // "pending", "completed", "failed", or "" (omit field)
+	result  any    // nil, map[string]any, string
+	changed *bool  // top-level changed field (nil = omit)
+	err     string // error message for failed jobs
+	code    int    // HTTP status code (0 = 200)
 }
 
 // opServer creates an httptest.Server that handles job create + poll.
@@ -87,6 +88,9 @@ func opServer(
 			}
 			if pr.result != nil {
 				resp["result"] = pr.result
+			}
+			if pr.changed != nil {
+				resp["changed"] = *pr.changed
 			}
 			if pr.err != "" {
 				resp["error"] = pr.err
@@ -524,16 +528,19 @@ func (s *PlanPublicTestSuite) TestRunOpTask() {
 		validateFunc  func(report *orchestrator.Report, err error)
 	}{
 		{
-			name:       "completed with changed true in result data",
+			name:       "completed with changed true",
 			createCode: http.StatusCreated,
-			pollResponses: []pollResponse{
-				{status: "pending"},
-				{status: "completed", result: map[string]any{
-					"changed": true,
-					"success": true,
-					"message": "DNS updated",
-				}},
-			},
+			pollResponses: func() []pollResponse {
+				changed := true
+				return []pollResponse{
+					{status: "pending"},
+					{status: "completed", changed: &changed, result: map[string]any{
+						"changed": true,
+						"success": true,
+						"message": "DNS updated",
+					}},
+				}
+			}(),
 			op: &orchestrator.Op{
 				Operation: "network.dns.update",
 				Target:    "_any",
@@ -546,15 +553,18 @@ func (s *PlanPublicTestSuite) TestRunOpTask() {
 			},
 		},
 		{
-			name:       "completed with changed false in result data",
+			name:       "completed with changed false",
 			createCode: http.StatusCreated,
-			pollResponses: []pollResponse{
-				{status: "pending"},
-				{status: "completed", result: map[string]any{
-					"hostname": "web-01",
-					"changed":  false,
-				}},
-			},
+			pollResponses: func() []pollResponse {
+				changed := false
+				return []pollResponse{
+					{status: "pending"},
+					{status: "completed", changed: &changed, result: map[string]any{
+						"hostname": "web-01",
+						"changed":  false,
+					}},
+				}
+			}(),
 			op: &orchestrator.Op{
 				Operation: "node.hostname.get",
 				Target:    "_any",
@@ -617,10 +627,17 @@ func (s *PlanPublicTestSuite) TestRunOpTask() {
 		{
 			name:       "polls past nil status",
 			createCode: http.StatusCreated,
-			pollResponses: []pollResponse{
-				{status: ""},
-				{status: "completed", result: map[string]any{"changed": true}},
-			},
+			pollResponses: func() []pollResponse {
+				changed := true
+				return []pollResponse{
+					{status: ""},
+					{
+						status:  "completed",
+						result:  map[string]any{"changed": true},
+						changed: &changed,
+					},
+				}
+			}(),
 			op: &orchestrator.Op{
 				Operation: "node.hostname.get",
 				Target:    "_any",

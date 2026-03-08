@@ -157,6 +157,9 @@ type QueuedJob struct {
 	StatusHistory []interface{} `json:"status_history,omitempty"`
 	// Result contains the output when the job is completed (optional)
 	Result json.RawMessage `json:"result,omitempty"`
+	// Changed indicates whether the operation modified system state.
+	// Nil for query operations; set for mutation operations.
+	Changed *bool `json:"changed,omitempty"`
 	// Error contains error details if the job failed (optional)
 	Error string `json:"error,omitempty"`
 	// Hostname identifies which agent processed this job (optional)

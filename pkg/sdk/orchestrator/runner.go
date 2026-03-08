@@ -535,7 +535,10 @@ func (r *runner) pollJob(
 					}
 				}
 
-				changed, _ := data["changed"].(bool)
+				changed := false
+				if job.Changed != nil {
+					changed = *job.Changed
+				}
 				delete(data, "changed")
 
 				return &Result{Changed: changed, Data: data}, nil

@@ -95,6 +95,7 @@ func (j *Job) GetJob(
 			_ = json.Unmarshal(qj.Result, &result)
 			item.Result = result
 		}
+		item.Changed = qj.Changed
 		items = append(items, item)
 	}
 

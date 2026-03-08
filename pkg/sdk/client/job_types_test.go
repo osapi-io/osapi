@@ -101,6 +101,7 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 				errMsg := "something failed"
 				operation := map[string]interface{}{"type": "node.hostname"}
 				result := map[string]interface{}{"hostname": "web-01"}
+				changed := true
 
 				agentStatus := "completed"
 				agentDuration := "1.5s"
@@ -120,8 +121,10 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 				respHostname := "web-01"
 				respStatus := "completed"
 				respError := ""
+				respChanged := true
 				respData := map[string]interface{}{"hostname": "web-01"}
 				responses := map[string]struct {
+					Changed  *bool       `json:"changed"`
 					Data     interface{} `json:"data,omitempty"`
 					Error    *string     `json:"error,omitempty"`
 					Hostname *string     `json:"hostname,omitempty"`
@@ -131,6 +134,7 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 						Hostname: &respHostname,
 						Status:   &respStatus,
 						Error:    &respError,
+						Changed:  &respChanged,
 						Data:     respData,
 					},
 				}
@@ -165,6 +169,7 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 					Error:       &errMsg,
 					Operation:   &operation,
 					Result:      result,
+					Changed:     &changed,
 					AgentStates: &agentStates,
 					Responses:   &responses,
 					Timeline:    &timeline,
@@ -179,6 +184,8 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 				suite.Equal("something failed", j.Error)
 				suite.Equal(map[string]interface{}{"type": "node.hostname"}, j.Operation)
 				suite.Equal(map[string]interface{}{"hostname": "web-01"}, j.Result)
+				suite.NotNil(j.Changed)
+				suite.True(*j.Changed)
 
 				suite.Len(j.AgentStates, 1)
 				suite.Equal("completed", j.AgentStates["web-01"].Status)
@@ -189,6 +196,8 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 				suite.Equal("web-01", j.Responses["web-01"].Hostname)
 				suite.Equal("completed", j.Responses["web-01"].Status)
 				suite.Empty(j.Responses["web-01"].Error)
+				suite.NotNil(j.Responses["web-01"].Changed)
+				suite.True(*j.Responses["web-01"].Changed)
 				suite.Equal(
 					map[string]interface{}{"hostname": "web-01"},
 					j.Responses["web-01"].Data,
@@ -212,6 +221,7 @@ func (suite *JobTypesTestSuite) TestJobDetailFromGen() {
 				suite.Empty(j.Created)
 				suite.Empty(j.UpdatedAt)
 				suite.Empty(j.Error)
+				suite.Nil(j.Changed)
 				suite.Nil(j.Operation)
 				suite.Nil(j.Result)
 				suite.Nil(j.AgentStates)

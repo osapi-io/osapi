@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates file management: upload, check for changes,
 // force upload, list, get metadata, deploy to an agent, check status,
 // and delete.

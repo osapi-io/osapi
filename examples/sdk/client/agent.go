@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates the AgentService: listing the fleet and
 // retrieving rich facts for a specific agent — OS info, load averages,
 // memory stats, network interfaces, labels, and lifecycle timestamps.

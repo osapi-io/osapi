@@ -48,5 +48,5 @@ type GetResult struct {
 // UpdateResult represents the outcome of a DNS update operation.
 type UpdateResult struct {
 	// Changed indicates whether the DNS configuration was actually modified.
-	Changed bool
+	Changed bool `json:"changed"`
 }

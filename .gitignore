@@ -12,3 +12,10 @@ test/vendor/
 tmp/
 
 /osapi
+
+# Compiled example binaries
+examples/**
+!examples/**/
+!examples/**/*.go
+!examples/**/*.mod
+!examples/**/*.sum

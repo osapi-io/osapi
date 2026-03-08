@@ -40,6 +40,7 @@ type JobDetail struct {
 	Created     string
 	UpdatedAt   string
 	Error       string
+	Changed     *bool
 	Operation   map[string]any
 	Result      any
 	AgentStates map[string]AgentState
@@ -59,6 +60,7 @@ type AgentJobResponse struct {
 	Hostname string
 	Status   string
 	Error    string
+	Changed  *bool
 	Data     any
 }
 
@@ -124,6 +126,7 @@ func jobDetailFromGen(
 	}
 
 	j.Result = g.Result
+	j.Changed = g.Changed
 
 	if g.AgentStates != nil {
 		states := make(map[string]AgentState, len(*g.AgentStates))
@@ -152,7 +155,8 @@ func jobDetailFromGen(
 		responses := make(map[string]AgentJobResponse, len(*g.Responses))
 		for k, v := range *g.Responses {
 			r := AgentJobResponse{
-				Data: v.Data,
+				Data:    v.Data,
+				Changed: v.Changed,
 			}
 
 			if v.Hostname != nil {
