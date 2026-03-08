@@ -149,6 +149,58 @@ const config: Config = {
           docId: 'sidebar/usage/usage'
         },
         {
+          type: 'dropdown',
+          label: 'SDK',
+          position: 'left',
+          items: [
+            {
+              type: 'doc',
+              label: 'Overview',
+              docId: 'sidebar/sdk/sdk'
+            },
+            {
+              type: 'doc',
+              label: 'Client',
+              docId: 'sidebar/sdk/client/client'
+            },
+            {
+              type: 'doc',
+              label: 'Agent',
+              docId: 'sidebar/sdk/client/agent'
+            },
+            {
+              type: 'doc',
+              label: 'Audit',
+              docId: 'sidebar/sdk/client/audit'
+            },
+            {
+              type: 'doc',
+              label: 'File',
+              docId: 'sidebar/sdk/client/file'
+            },
+            {
+              type: 'doc',
+              label: 'Health',
+              docId: 'sidebar/sdk/client/health'
+            },
+            {
+              type: 'doc',
+              label: 'Job',
+              docId: 'sidebar/sdk/client/job'
+            },
+            {
+              type: 'doc',
+              label: 'Metrics',
+              docId: 'sidebar/sdk/client/metrics'
+            },
+            {
+              type: 'doc',
+              label: 'Node',
+              docId: 'sidebar/sdk/client/node'
+            }
+          ]
+        },
+        {
           label: 'API',
           position: 'left',
           to: '/category/api'
@@ -257,10 +309,8 @@ const config: Config = {
         docsPluginId: 'classic',
         config: {
           osapi: {
-            specPath: '../../osapi-sdk/pkg/osapi/gen/api.yaml',
+            specPath: '../internal/api/gen/api.yaml',
             outputDir: 'docs/gen/api',
-            downloadUrl:
-              'https://github.com/osapi-io/osapi-sdk/blob/main/pkg/osapi/gen/api.yaml',
             sidebarOptions: {
               groupPathsBy: 'tag',
               categoryLinkSource: 'tag'
