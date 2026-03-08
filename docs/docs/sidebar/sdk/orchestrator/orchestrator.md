@@ -91,17 +91,19 @@ bring their own formatting.
 
 ## Error Strategies
 
-| Strategy            | Behavior                                        |
-| ------------------- | ----------------------------------------------- |
-| `StopAll` (default) | Fail fast, cancel everything                    |
-| `Continue`          | Skip dependents, keep running independent tasks |
-| `Retry(n)`          | Retry n times before failing                    |
+| Strategy                          | Behavior                                        |
+| --------------------------------- | ----------------------------------------------- |
+| `StopAll` (default)               | Fail fast, cancel everything                    |
+| `Continue`                        | Skip dependents, keep running independent tasks |
+| `Retry(n)`                        | Retry n times immediately before failing        |
+| `Retry(n, WithRetryBackoff(...))` | Retry n times with exponential backoff          |
 
 Strategies can be set at plan level or overridden per-task:
 
 ```go
 plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
-task.OnError(orchestrator.Retry(3)) // override for this task
+task.OnError(orchestrator.Retry(3))                                                  // immediate
+task.OnError(orchestrator.Retry(3, orchestrator.WithRetryBackoff(1*time.Second, 30*time.Second))) // backoff
 ```
 
 ## Result Types

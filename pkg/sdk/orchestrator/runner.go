@@ -2,11 +2,13 @@ package orchestrator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
@@ -332,6 +334,7 @@ func (r *runner) runTask(
 
 	client := r.plan.client
 
+retryLoop:
 	for attempt := range maxAttempts {
 		if t.fnr != nil {
 			r.mu.Lock()
@@ -351,6 +354,19 @@ func (r *runner) runTask(
 
 		if attempt < maxAttempts-1 {
 			r.callOnRetry(t, attempt+1, err)
+
+			// Backoff between retries if configured.
+			if strategy.initialInterval > 0 {
+				delay := strategy.backoffDelay(attempt)
+
+				select {
+				case <-ctx.Done():
+					err = ctx.Err()
+
+					break retryLoop
+				case <-time.After(delay):
+				}
+			}
 		}
 	}
 
@@ -688,76 +704,117 @@ func (r *runner) executeOp(
 // When expectedAgents > 0 (broadcast), the poller waits until the
 // expected number of per-agent responses have arrived before returning,
 // even if the server already reports "completed".
+//
+// Transient HTTP errors (404, 500) are retried with exponential backoff.
+// Non-transient errors (401, 403, network) fail immediately.
 func (r *runner) pollJob(
 	ctx context.Context,
 	jobID string,
 	expectedAgents int,
 ) (*Result, error) {
-	ticker := time.NewTicker(DefaultPollInterval)
-	defer ticker.Stop()
+	b := backoff.NewExponentialBackOff()
+	b.InitialInterval = DefaultPollInterval
+	b.MaxInterval = 5 * time.Second
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-ticker.C:
-			resp, err := r.plan.client.Job.Get(ctx, jobID)
-			if err != nil {
-				return nil, fmt.Errorf("poll job %s: %w", jobID, err)
-			}
+		default:
+		}
 
-			job := resp.Data
+		resp, err := r.plan.client.Job.Get(ctx, jobID)
+		if err != nil {
+			if isTransient(err) {
+				wait := b.NextBackOff()
 
-			switch job.Status {
-			case "completed":
-				// For broadcast jobs, keep polling until all expected
-				// agents have written their responses.
-				if expectedAgents > 0 && len(job.Responses) < expectedAgents {
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(wait):
 					continue
 				}
+			}
 
-				data := make(map[string]any)
-				if job.Result != nil {
-					if m, ok := job.Result.(map[string]any); ok {
-						data = m
-					}
+			return nil, fmt.Errorf("poll job %s: %w", jobID, err)
+		}
+
+		job := resp.Data
+
+		switch job.Status {
+		case "completed":
+			// For broadcast jobs, keep polling until all expected
+			// agents have written their responses.
+			if expectedAgents > 0 && len(job.Responses) < expectedAgents {
+				wait := b.NextBackOff()
+
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(wait):
+					continue
 				}
+			}
 
-				changed := false
-				if job.Changed != nil {
-					changed = *job.Changed
+			data := make(map[string]any)
+			if job.Result != nil {
+				if m, ok := job.Result.(map[string]any); ok {
+					data = m
 				}
-				delete(data, "changed")
+			}
 
-				jobDur, perHost := parseAgentDurations(job.AgentStates)
+			changed := false
+			if job.Changed != nil {
+				changed = *job.Changed
+			}
+			delete(data, "changed")
 
-				result := &Result{
-					JobID:          jobID,
-					Changed:        changed,
-					Data:           data,
-					JobDuration:    jobDur,
-					agentDurations: perHost,
-				}
+			jobDur, perHost := parseAgentDurations(job.AgentStates)
 
-				// Build HostResults from per-agent Responses.
-				if len(job.Responses) > 0 {
-					result.HostResults = hostResultsFromResponses(
-						job.Responses,
-						perHost,
-					)
-				}
+			result := &Result{
+				JobID:          jobID,
+				Changed:        changed,
+				Data:           data,
+				JobDuration:    jobDur,
+				agentDurations: perHost,
+			}
 
-				return result, nil
-			case "failed":
-				errMsg := "job failed"
-				if job.Error != "" {
-					errMsg = job.Error
-				}
+			// Build HostResults from per-agent Responses.
+			if len(job.Responses) > 0 {
+				result.HostResults = hostResultsFromResponses(
+					job.Responses,
+					perHost,
+				)
+			}
 
-				return nil, fmt.Errorf("job %s: %s", jobID, errMsg)
+			return result, nil
+		case "failed":
+			errMsg := "job failed"
+			if job.Error != "" {
+				errMsg = job.Error
+			}
+
+			return nil, fmt.Errorf("job %s: %s", jobID, errMsg)
+		default:
+			// Not terminal yet — backoff and poll again.
+			wait := b.NextBackOff()
+
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(wait):
 			}
 		}
 	}
+}
+
+// isTransient returns true for HTTP errors that should be retried
+// during job polling (404 = result not yet written, 500 = server hiccup).
+func isTransient(err error) bool {
+	var notFound *client.NotFoundError
+	var serverErr *client.ServerError
+
+	return errors.As(err, &notFound) || errors.As(err, &serverErr)
 }
 
 // levelize groups tasks into levels where all tasks in a level can
