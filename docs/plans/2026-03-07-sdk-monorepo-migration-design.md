@@ -142,9 +142,9 @@ directories. Landing page uses `<DocCardList />` cards.
 - **README.md**: Add SDK link in the docs/features section. Remove sibling repo
   references.
 - **CLAUDE.md**: Update SDK references to reflect `pkg/sdk/` location. Simplify
-  "Adding a New API Domain" Step 5 — no gilt, just
-  `go generate ./pkg/sdk/...`. Remove sibling repo references but keep SDK
-  documentation (now pointing to in-repo paths).
+  "Adding a New API Domain" Step 5 — no gilt, just `go generate ./pkg/sdk/...`.
+  Remove sibling repo references but keep SDK documentation (now pointing to
+  in-repo paths).
 - **docusaurus.config.ts**: Add "SDK" to the navbar Features dropdown.
 
 ## Cleanup
@@ -155,8 +155,7 @@ directories. Landing page uses `<DocCardList />` cards.
 - Update `pkg/sdk/osapi/gen/cfg.yaml` to reference `internal/api/gen/api.yaml`
 - Remove `generate.go` gilt step (oapi-codegen only)
 - Flatten `osapi-sdk/examples/osapi/` → `examples/sdk/osapi/`
-- Update all `cmd/*.go` imports:
-  `github.com/osapi-io/osapi-sdk/pkg/osapi` →
+- Update all `cmd/*.go` imports: `github.com/osapi-io/osapi-sdk/pkg/osapi` →
   `github.com/retr0h/osapi/pkg/sdk/osapi`
 - Remove `github.com/osapi-io/osapi-sdk` from `go.mod`
 - Create Docusaurus client pages

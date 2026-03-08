@@ -44,5 +44,5 @@ for a complete working example.
 
 ## Permissions
 
-Read operations require `job:read`. Write operations (create, delete,
-retry) require `job:write`.
+Read operations require `job:read`. Write operations (create, delete, retry)
+require `job:write`.

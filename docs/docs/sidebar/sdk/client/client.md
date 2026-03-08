@@ -4,9 +4,8 @@ sidebar_position: 1
 
 # Client
 
-The `osapi` package provides a typed Go client for the OSAPI REST API.
-Create a client with `New()` and use domain-specific services to interact
-with the API.
+The `osapi` package provides a typed Go client for the OSAPI REST API. Create a
+client with `New()` and use domain-specific services to interact with the API.
 
 ## Quick Start
 
@@ -32,13 +31,13 @@ resp, err := client.Node.Hostname(ctx, "_any")
 
 ## Client Options
 
-| Option                         | Description                       |
-| ------------------------------ | --------------------------------- |
-| `WithLogger(logger)`           | Set custom `slog.Logger`          |
-| `WithHTTPTransport(transport)` | Set custom `http.RoundTripper`    |
+| Option                         | Description                    |
+| ------------------------------ | ------------------------------ |
+| `WithLogger(logger)`           | Set custom `slog.Logger`       |
+| `WithHTTPTransport(transport)` | Set custom `http.RoundTripper` |
 
-`WithLogger` defaults to `slog.Default()`. `WithHTTPTransport` sets
-the base transport for HTTP requests.
+`WithLogger` defaults to `slog.Default()`. `WithHTTPTransport` sets the base
+transport for HTTP requests.
 
 ## Targeting
 

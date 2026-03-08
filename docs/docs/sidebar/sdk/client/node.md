@@ -4,9 +4,9 @@ sidebar_position: 8
 
 # NodeService
 
-Node management, network configuration, and command execution. This is
-the largest service -- it combines node info, network, and command
-operations that all target a specific host.
+Node management, network configuration, and command execution. This is the
+largest service -- it combines node info, network, and command operations that
+all target a specific host.
 
 ## Methods
 
@@ -24,11 +24,11 @@ operations that all target a specific host.
 
 ### Network
 
-| Method                                           | Description            |
-| ------------------------------------------------ | ---------------------- |
-| `GetDNS(ctx, target, iface)`                     | Get DNS config         |
-| `UpdateDNS(ctx, target, iface, servers, search)` | Update DNS servers     |
-| `Ping(ctx, target, address)`                     | Ping a host            |
+| Method                                           | Description        |
+| ------------------------------------------------ | ------------------ |
+| `GetDNS(ctx, target, iface)`                     | Get DNS config     |
+| `UpdateDNS(ctx, target, iface, servers, search)` | Update DNS servers |
+| `Ping(ctx, target, address)`                     | Ping a host        |
 
 ### Command
 
@@ -44,8 +44,8 @@ operations that all target a specific host.
 | `FileDeploy(ctx, opts)`         | Deploy file to agent with SHA check |
 | `FileStatus(ctx, target, path)` | Check deployed file status          |
 
-See [`FileService`](file.md) for Object Store operations (upload, list,
-get, delete) and `FileDeployOpts` details.
+See [`FileService`](file.md) for Object Store operations (upload, list, get,
+delete) and `FileDeployOpts` details.
 
 ## Usage
 
@@ -103,7 +103,6 @@ for network and command examples.
 
 ## Permissions
 
-Node info requires `node:read`. Network read requires `network:read`.
-DNS updates require `network:write`. Commands require
-`command:execute`. File deploy requires `file:write`. File status
-requires `file:read`.
+Node info requires `node:read`. Network read requires `network:read`. DNS
+updates require `network:write`. Commands require `command:execute`. File deploy
+requires `file:write`. File status requires `file:read`.

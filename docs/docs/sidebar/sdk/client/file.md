@@ -4,15 +4,14 @@ sidebar_position: 4
 
 # FileService
 
-File management operations for the OSAPI Object Store. Upload, list,
-inspect, and delete files that can be deployed to agents via
-`Node.FileDeploy`.
+File management operations for the OSAPI Object Store. Upload, list, inspect,
+and delete files that can be deployed to agents via `Node.FileDeploy`.
 
 ## Methods
 
 ### Object Store
 
-| Method                          | Description                     |
+| Method                          | Description                                     |
 | ------------------------------- | ----------------------------------------------- |
 | `Upload(ctx, name, ct, r, ...)` | Upload file content to Object Store             |
 | `Changed(ctx, name, r)`         | Check if local content differs from stored file |
@@ -22,8 +21,8 @@ inspect, and delete files that can be deployed to agents via
 
 ### Node File Operations
 
-File deploy and status methods live on `NodeService` because they
-target a specific host:
+File deploy and status methods live on `NodeService` because they target a
+specific host:
 
 | Method                          | Description                         |
 | ------------------------------- | ----------------------------------- |
@@ -36,7 +35,7 @@ target a specific host:
 | ------------- | -------------- | -------- | ------------------------------------ |
 | `ObjectName`  | string         | Yes      | Name of the file in Object Store     |
 | `Path`        | string         | Yes      | Destination path on the target host  |
-| `ContentType` | string         | Yes      | `"raw"` or `"template"`             |
+| `ContentType` | string         | Yes      | `"raw"` or `"template"`              |
 | `Mode`        | string         | No       | File permission mode (e.g. `"0644"`) |
 | `Owner`       | string         | No       | File owner user                      |
 | `Group`       | string         | No       | File owner group                     |
@@ -109,28 +108,26 @@ resp, err := client.Node.FileStatus(
 
 ## Targeting
 
-`FileDeploy` and `FileStatus` accept any valid target: `_any`, `_all`,
-a hostname, or a label selector (`key:value`).
+`FileDeploy` and `FileStatus` accept any valid target: `_any`, `_all`, a
+hostname, or a label selector (`key:value`).
 
-Object Store operations (`Upload`, `List`, `Get`, `Delete`) are
-server-side and do not use targeting.
+Object Store operations (`Upload`, `List`, `Get`, `Delete`) are server-side and
+do not use targeting.
 
 ## Change Detection
 
-`Upload` computes a SHA-256 of the file content locally before
-uploading. If the hash matches the stored file, the upload is skipped
-and `Changed: false` is returned. Use `WithForce()` to bypass this
-check.
+`Upload` computes a SHA-256 of the file content locally before uploading. If the
+hash matches the stored file, the upload is skipped and `Changed: false` is
+returned. Use `WithForce()` to bypass this check.
 
-`Changed` performs the same SHA-256 comparison without uploading. It
-returns `Changed: true` when the file does not exist or the content
-differs.
+`Changed` performs the same SHA-256 comparison without uploading. It returns
+`Changed: true` when the file does not exist or the content differs.
 
 ## Idempotency
 
-`FileDeploy` compares the SHA-256 of the Object Store content against
-the deployed file. If the hashes match, the file is not rewritten and
-the response reports `Changed: false`.
+`FileDeploy` compares the SHA-256 of the Object Store content against the
+deployed file. If the hashes match, the file is not rewritten and the response
+reports `Changed: false`.
 
 ## Example
 
@@ -140,6 +137,5 @@ for a complete working example.
 
 ## Permissions
 
-Object Store operations require `file:read` (list, get) or `file:write`
-(upload, delete). Deploy requires `file:write`. Status requires
-`file:read`.
+Object Store operations require `file:read` (list, get) or `file:write` (upload,
+delete). Deploy requires `file:write`. Status requires `file:read`.

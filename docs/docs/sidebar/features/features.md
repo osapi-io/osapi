@@ -4,8 +4,7 @@ sidebar_position: 3
 
 # Features
 
-OSAPI provides a comprehensive set of features for managing Linux
-systems.
+OSAPI provides a comprehensive set of features for managing Linux systems.
 
 <!-- prettier-ignore-start -->
 

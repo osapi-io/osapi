@@ -35,5 +35,5 @@ for a complete working example.
 
 ## Permissions
 
-`Liveness` and `Ready` are unauthenticated. `Status` requires
-`health:read` permission.
+`Liveness` and `Ready` are unauthenticated. `Status` requires `health:read`
+permission.

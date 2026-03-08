@@ -7,9 +7,9 @@
 as `pkg/sdk/osapi/`, flatten examples, add Docusaurus SDK docs, and update all
 references.
 
-**Architecture:** Copy `osapi-sdk/pkg/osapi/` into `pkg/sdk/osapi/`, rewrite
-the codegen to read the server's combined spec directly (no gilt), update all 18
-Go import paths, flatten 9 example directories into individual files, create
+**Architecture:** Copy `osapi-sdk/pkg/osapi/` into `pkg/sdk/osapi/`, rewrite the
+codegen to read the server's combined spec directly (no gilt), update all 18 Go
+import paths, flatten 9 example directories into individual files, create
 Docusaurus SDK sidebar pages, and clean up CLAUDE.md/README.md references.
 
 **Tech Stack:** Go, oapi-codegen, Docusaurus, Cobra CLI
@@ -125,9 +125,8 @@ git commit -m "feat(sdk): copy client library into pkg/sdk/osapi"
 
 **Step 1: Update all Go imports**
 
-In every file listed below, replace
-`"github.com/osapi-io/osapi-sdk/pkg/osapi"` with
-`"github.com/retr0h/osapi/pkg/sdk/osapi"`:
+In every file listed below, replace `"github.com/osapi-io/osapi-sdk/pkg/osapi"`
+with `"github.com/retr0h/osapi/pkg/sdk/osapi"`:
 
 - `cmd/client.go`
 - `cmd/client_agent_get.go`
@@ -208,20 +207,20 @@ cd examples/sdk/osapi && go mod tidy
 
 **Step 2: Create flattened example files**
 
-Copy each example's `main.go` into a single file, updating the import path.
-Each file is `package main` and self-contained.
+Copy each example's `main.go` into a single file, updating the import path. Each
+file is `package main` and self-contained.
 
 From `../osapi-sdk/examples/osapi/`:
 
-| Source directory | Target file |
-|---|---|
-| `health/main.go` | `examples/sdk/osapi/health.go` |
-| `node/main.go` | `examples/sdk/osapi/node.go` |
-| `agent/main.go` | `examples/sdk/osapi/agent.go` |
-| `audit/main.go` | `examples/sdk/osapi/audit.go` |
+| Source directory  | Target file                     |
+| ----------------- | ------------------------------- |
+| `health/main.go`  | `examples/sdk/osapi/health.go`  |
+| `node/main.go`    | `examples/sdk/osapi/node.go`    |
+| `agent/main.go`   | `examples/sdk/osapi/agent.go`   |
+| `audit/main.go`   | `examples/sdk/osapi/audit.go`   |
 | `command/main.go` | `examples/sdk/osapi/command.go` |
-| `file/main.go` | `examples/sdk/osapi/file.go` |
-| `job/main.go` | `examples/sdk/osapi/job.go` |
+| `file/main.go`    | `examples/sdk/osapi/file.go`    |
+| `job/main.go`     | `examples/sdk/osapi/job.go`     |
 | `metrics/main.go` | `examples/sdk/osapi/metrics.go` |
 | `network/main.go` | `examples/sdk/osapi/network.go` |
 
@@ -243,9 +242,9 @@ with:
 cd examples/sdk/osapi && go build ./...
 ```
 
-Note: `go build ./...` on `package main` files in the same directory will
-verify they all compile. They won't run without a live server, but compilation
-proves imports are correct.
+Note: `go build ./...` on `package main` files in the same directory will verify
+they all compile. They won't run without a live server, but compilation proves
+imports are correct.
 
 **Step 4: Commit**
 
@@ -314,8 +313,7 @@ Add "SDK" to the Features navbar dropdown:
 ```
 
 Update the `specPath` for the API docs plugin from
-`../../osapi-sdk/pkg/osapi/gen/api.yaml` to
-`../internal/api/gen/api.yaml`.
+`../../osapi-sdk/pkg/osapi/gen/api.yaml` to `../internal/api/gen/api.yaml`.
 
 **Step 5: Update the API docs specPath**
 
@@ -375,9 +373,8 @@ Replace the entire Step 5 section (lines ~174-196) with:
 ```markdown
 ### Step 5: Update SDK
 
-The SDK client library lives in `pkg/sdk/osapi/`. Its generated HTTP client
-uses the same combined OpenAPI spec as the server
-(`internal/api/gen/api.yaml`).
+The SDK client library lives in `pkg/sdk/osapi/`. Its generated HTTP client uses
+the same combined OpenAPI spec as the server (`internal/api/gen/api.yaml`).
 
 **When modifying existing API specs:**
 
@@ -392,15 +389,14 @@ uses the same combined OpenAPI spec as the server
 **When adding a new API domain:**
 
 1. Add a service wrapper in `pkg/sdk/osapi/{domain}.go`
-2. Run `go generate ./pkg/sdk/osapi/gen/...` to pick up the new domain's
-   spec from the combined `api.yaml`
+2. Run `go generate ./pkg/sdk/osapi/gen/...` to pick up the new domain's spec
+   from the combined `api.yaml`
 ```
 
 **Step 3: Remove sibling repo references**
 
-Remove any remaining references to `osapi-sdk` as a "sibling repo" or
-"external" dependency. Keep documentation about the SDK but update paths to
-`pkg/sdk/`.
+Remove any remaining references to `osapi-sdk` as a "sibling repo" or "external"
+dependency. Keep documentation about the SDK but update paths to `pkg/sdk/`.
 
 **Step 4: Commit**
 
@@ -421,8 +417,7 @@ git commit -m "docs: update CLAUDE.md for in-repo SDK"
 **Step 1: Update README.md**
 
 Replace the "Sister Projects" section. Remove `osapi-sdk` from the sister
-projects table (it's now in-repo). Add an SDK link in the Documentation
-section:
+projects table (it's now in-repo). Add an SDK link in the Documentation section:
 
 ```markdown
 ## 📖 Documentation
@@ -434,8 +429,8 @@ section:
 - [Architecture](https://osapi-io.github.io/osapi/sidebar/architecture/)
 ```
 
-If `osapi-orchestrator` is still a separate repo, keep it in sister projects
-but remove `osapi-sdk`.
+If `osapi-orchestrator` is still a separate repo, keep it in sister projects but
+remove `osapi-sdk`.
 
 **Step 2: Update system-architecture.md**
 
@@ -506,22 +501,22 @@ cd docs && bun run build
 
 ## Files Summary
 
-| Action | Path |
-|---|---|
-| Create | `pkg/sdk/osapi/*.go` (all source + test files) |
-| Create | `pkg/sdk/osapi/gen/cfg.yaml` |
-| Create | `pkg/sdk/osapi/gen/generate.go` |
-| Create | `pkg/sdk/osapi/gen/client.gen.go` |
-| Create | `examples/sdk/osapi/go.mod` |
-| Create | `examples/sdk/osapi/*.go` (9 example files) |
-| Create | `docs/docs/sidebar/sdk/sdk.md` |
-| Create | `docs/docs/sidebar/sdk/client/client.md` |
-| Create | `docs/docs/sidebar/sdk/client/{service}.md` (7 files) |
-| Modify | `cmd/*.go` (11 files — import path) |
-| Modify | `internal/audit/export/*.go` (5 files — import path) |
+| Action | Path                                                    |
+| ------ | ------------------------------------------------------- |
+| Create | `pkg/sdk/osapi/*.go` (all source + test files)          |
+| Create | `pkg/sdk/osapi/gen/cfg.yaml`                            |
+| Create | `pkg/sdk/osapi/gen/generate.go`                         |
+| Create | `pkg/sdk/osapi/gen/client.gen.go`                       |
+| Create | `examples/sdk/osapi/go.mod`                             |
+| Create | `examples/sdk/osapi/*.go` (9 example files)             |
+| Create | `docs/docs/sidebar/sdk/sdk.md`                          |
+| Create | `docs/docs/sidebar/sdk/client/client.md`                |
+| Create | `docs/docs/sidebar/sdk/client/{service}.md` (7 files)   |
+| Modify | `cmd/*.go` (11 files — import path)                     |
+| Modify | `internal/audit/export/*.go` (5 files — import path)    |
 | Modify | `internal/cli/ui.go`, `ui_public_test.go` (import path) |
-| Modify | `go.mod` (remove external SDK) |
-| Modify | `CLAUDE.md` |
-| Modify | `README.md` |
+| Modify | `go.mod` (remove external SDK)                          |
+| Modify | `CLAUDE.md`                                             |
+| Modify | `README.md`                                             |
 | Modify | `docs/docs/sidebar/architecture/system-architecture.md` |
-| Modify | `docs/docusaurus.config.ts` |
+| Modify | `docs/docusaurus.config.ts`                             |
