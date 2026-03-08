@@ -69,4 +69,5 @@ failures) fail immediately.
 
 See
 [`examples/sdk/orchestrator/features/retry.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/features/retry.go)
-for a complete working example.
+for a complete working example that simulates transient failures to demonstrate
+all three retry strategies.

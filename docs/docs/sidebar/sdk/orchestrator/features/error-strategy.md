@@ -8,11 +8,11 @@ Control what happens when a task fails.
 
 ## Strategies
 
-| Strategy                         | Behavior                                        |
-| -------------------------------- | ----------------------------------------------- |
-| `StopAll` (default)              | Fail fast, cancel everything                    |
-| `Continue`                       | Skip dependents, keep running independent tasks |
-| `Retry(n)`                       | Retry n times immediately before failing        |
+| Strategy                          | Behavior                                        |
+| --------------------------------- | ----------------------------------------------- |
+| `StopAll` (default)               | Fail fast, cancel everything                    |
+| `Continue`                        | Skip dependents, keep running independent tasks |
+| `Retry(n)`                        | Retry n times immediately before failing        |
 | `Retry(n, WithRetryBackoff(...))` | Retry n times with exponential backoff          |
 
 ## Usage

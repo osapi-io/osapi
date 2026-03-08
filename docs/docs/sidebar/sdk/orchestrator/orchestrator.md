@@ -91,11 +91,11 @@ bring their own formatting.
 
 ## Error Strategies
 
-| Strategy                         | Behavior                                        |
-| -------------------------------- | ----------------------------------------------- |
-| `StopAll` (default)              | Fail fast, cancel everything                    |
-| `Continue`                       | Skip dependents, keep running independent tasks |
-| `Retry(n)`                       | Retry n times immediately before failing        |
+| Strategy                          | Behavior                                        |
+| --------------------------------- | ----------------------------------------------- |
+| `StopAll` (default)               | Fail fast, cancel everything                    |
+| `Continue`                        | Skip dependents, keep running independent tasks |
+| `Retry(n)`                        | Retry n times immediately before failing        |
 | `Retry(n, WithRetryBackoff(...))` | Retry n times with exponential backoff          |
 
 Strategies can be set at plan level or overridden per-task:
