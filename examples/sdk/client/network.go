@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates network operations: reading DNS config
 // and running a ping check.
 //

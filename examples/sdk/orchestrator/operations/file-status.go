@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates the file.status.get operation, which
 // checks the status of a deployed file on the target node.
 //

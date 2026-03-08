@@ -371,6 +371,46 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			responseCount:  1,
 		},
 		{
+			name:  "completed agent response propagates changed to queued job",
+			jobID: "job-changed",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-changed","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z","subject":"jobs.modify.server1"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-changed").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
+					"status.job-changed.completed.agent1.100",
+					"responses.job-changed.agent1.200",
+				}, nil)
+
+				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				compEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-changed","event":"completed","hostname":"agent1","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-changed.completed.agent1.100").
+					Return(compEntry, nil)
+
+				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				respEntry.EXPECT().Value().Return([]byte(
+					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":true,"hostname":"agent1"}`,
+				))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "responses.job-changed.agent1.200").
+					Return(respEntry, nil)
+			},
+			expectedStatus: "completed",
+			agentCount:     1,
+			responseCount:  1,
+			validateFunc: func(qj *job.QueuedJob) {
+				s.NotNil(qj.Changed, "QueuedJob.Changed should be set from response")
+				s.True(*qj.Changed)
+			},
+		},
+		{
 			name:  "failed agent with error",
 			jobID: "job-1",
 			setupMocks: func() {

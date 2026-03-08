@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates the NodeService: querying status, hostname,
 // OS info, disk, memory, load averages, and uptime from a target node.
 //

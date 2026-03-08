@@ -591,6 +591,9 @@ type JobDetailResponse struct {
 		Status   *string `json:"status,omitempty"`
 	} `json:"agent_states,omitempty"`
 
+	// Changed Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs.
+	Changed *bool `json:"changed"`
+
 	// Created Creation timestamp.
 	Created *string `json:"created,omitempty"`
 
@@ -608,6 +611,8 @@ type JobDetailResponse struct {
 
 	// Responses Per-agent response data for broadcast jobs.
 	Responses *map[string]struct {
+		Changed *bool `json:"changed"`
+
 		// Data Agent result data.
 		Data     interface{} `json:"data,omitempty"`
 		Error    *string     `json:"error,omitempty"`

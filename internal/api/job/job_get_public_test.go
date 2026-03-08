@@ -99,6 +99,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.Nil(r.Hostname)
 				s.Nil(r.UpdatedAt)
 				s.Nil(r.Result)
+				s.Nil(r.Changed)
 			},
 		},
 		{
@@ -134,6 +135,29 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
+			name: "changed field propagated from queued job",
+			request: gen.GetJobByIDRequestObject{
+				Id: uuid.MustParse("ee0e8400-e29b-41d4-a716-446655440000"),
+			},
+			mockJob: func() *jobtypes.QueuedJob {
+				changed := true
+				return &jobtypes.QueuedJob{
+					ID:      "ee0e8400-e29b-41d4-a716-446655440000",
+					Status:  "completed",
+					Created: "2025-06-14T10:00:00Z",
+					Result:  json.RawMessage(`{"path":"/etc/hosts"}`),
+					Changed: &changed,
+				}
+			}(),
+			expectMock: true,
+			validateFunc: func(resp gen.GetJobByIDResponseObject) {
+				r, ok := resp.(gen.GetJobByID200JSONResponse)
+				s.True(ok)
+				s.NotNil(r.Changed)
+				s.True(*r.Changed)
+			},
+		},
+		{
 			name: "not found",
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("770e8400-e29b-41d4-a716-446655440000"),
@@ -158,37 +182,43 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
-			name: "broadcast job with multiple responses",
+			name: "broadcast job with multiple responses includes changed",
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("990e8400-e29b-41d4-a716-446655440000"),
 			},
-			mockJob: &jobtypes.QueuedJob{
-				ID:      "990e8400-e29b-41d4-a716-446655440000",
-				Status:  "completed",
-				Created: "2025-06-14T10:00:00Z",
-				Responses: map[string]jobtypes.Response{
-					"server1": {
-						Status:   "completed",
-						Hostname: "server1",
-						Data:     json.RawMessage(`{"hostname":"server1"}`),
+			mockJob: func() *jobtypes.QueuedJob {
+				changedTrue := true
+				changedFalse := false
+				return &jobtypes.QueuedJob{
+					ID:      "990e8400-e29b-41d4-a716-446655440000",
+					Status:  "completed",
+					Created: "2025-06-14T10:00:00Z",
+					Responses: map[string]jobtypes.Response{
+						"server1": {
+							Status:   "completed",
+							Hostname: "server1",
+							Data:     json.RawMessage(`{"hostname":"server1"}`),
+							Changed:  &changedTrue,
+						},
+						"server2": {
+							Status:   "completed",
+							Hostname: "server2",
+							Data:     json.RawMessage(`{"hostname":"server2"}`),
+							Changed:  &changedFalse,
+						},
 					},
-					"server2": {
-						Status:   "completed",
-						Hostname: "server2",
-						Data:     json.RawMessage(`{"hostname":"server2"}`),
+					AgentStates: map[string]jobtypes.AgentState{
+						"server1": {
+							Status:   "completed",
+							Duration: "1.5s",
+						},
+						"server2": {
+							Status:   "completed",
+							Duration: "2.1s",
+						},
 					},
-				},
-				AgentStates: map[string]jobtypes.AgentState{
-					"server1": {
-						Status:   "completed",
-						Duration: "1.5s",
-					},
-					"server2": {
-						Status:   "completed",
-						Duration: "2.1s",
-					},
-				},
-			},
+				}
+			}(),
 			expectMock: true,
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
@@ -197,6 +227,12 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 				s.Equal("completed", *r.Status)
 				s.NotNil(r.Responses)
 				s.Len(*r.Responses, 2)
+				// Verify per-agent Changed is propagated
+				respMap := *r.Responses
+				s.NotNil(respMap["server1"].Changed)
+				s.True(*respMap["server1"].Changed)
+				s.NotNil(respMap["server2"].Changed)
+				s.False(*respMap["server2"].Changed)
 				s.NotNil(r.AgentStates)
 				s.Len(*r.AgentStates, 2)
 			},
@@ -378,16 +414,18 @@ func (s *JobGetPublicTestSuite) TestGetJobByIDHTTP() {
 		wantContains []string
 	}{
 		{
-			name:  "when valid uuid",
+			name:  "when valid uuid with changed field",
 			jobID: "550e8400-e29b-41d4-a716-446655440000",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				changed := true
 				mock.EXPECT().
 					GetJobStatus(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").
 					Return(&jobtypes.QueuedJob{
 						ID:      "550e8400-e29b-41d4-a716-446655440000",
 						Status:  "completed",
 						Created: "2026-02-19T00:00:00Z",
+						Changed: &changed,
 					}, nil)
 				return mock
 			},
@@ -395,6 +433,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByIDHTTP() {
 			wantContains: []string{
 				`"id":"550e8400-e29b-41d4-a716-446655440000"`,
 				`"status":"completed"`,
+				`"changed":true`,
 			},
 		},
 		{

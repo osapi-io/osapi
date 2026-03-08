@@ -36,4 +36,6 @@ type Result struct {
 	Used uint64
 	// Free disk space in bytes
 	Free uint64
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }

@@ -64,6 +64,8 @@ type StatusResult struct {
 	Status string `json:"status"`
 	// SHA256 is the current SHA-256 hash of the file on disk, if present.
 	SHA256 string `json:"sha256,omitempty"`
+	// Changed indicates whether system state was modified.
+	Changed bool `json:"changed"`
 }
 
 // Provider defines the interface for file operations.
