@@ -80,6 +80,8 @@ type FileStatusResult struct {
 	Path     string
 	Status   string
 	SHA256   string
+	Changed  bool
+	Error    string
 }
 
 // fileUploadFromGen converts a gen.FileUploadResponse to a FileUpload.
@@ -157,6 +159,8 @@ func fileStatusResultFromGen(
 		Hostname: g.Hostname,
 		Path:     g.Path,
 		Status:   g.Status,
+		Changed:  derefBool(g.Changed),
+		Error:    derefString(g.Error),
 	}
 
 	if g.Sha256 != nil {

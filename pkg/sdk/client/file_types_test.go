@@ -212,6 +212,8 @@ func (suite *FileTypesTestSuite) TestFileDeployResultFromGen() {
 
 func (suite *FileTypesTestSuite) TestFileStatusResultFromGen() {
 	sha := "abc123"
+	changed := false
+	errMsg := "deploy failed"
 
 	tests := []struct {
 		name         string
@@ -226,6 +228,8 @@ func (suite *FileTypesTestSuite) TestFileStatusResultFromGen() {
 				Path:     "/etc/nginx/nginx.conf",
 				Status:   "in-sync",
 				Sha256:   &sha,
+				Changed:  &changed,
+				Error:    &errMsg,
 			},
 			validateFunc: func(result FileStatusResult) {
 				suite.Equal("job-789", result.JobID)
@@ -233,6 +237,8 @@ func (suite *FileTypesTestSuite) TestFileStatusResultFromGen() {
 				suite.Equal("/etc/nginx/nginx.conf", result.Path)
 				suite.Equal("in-sync", result.Status)
 				suite.Equal("abc123", result.SHA256)
+				suite.False(result.Changed)
+				suite.Equal("deploy failed", result.Error)
 			},
 		},
 		{
@@ -247,6 +253,8 @@ func (suite *FileTypesTestSuite) TestFileStatusResultFromGen() {
 			validateFunc: func(result FileStatusResult) {
 				suite.Equal("missing", result.Status)
 				suite.Empty(result.SHA256)
+				suite.False(result.Changed)
+				suite.Empty(result.Error)
 			},
 		},
 	}

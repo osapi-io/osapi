@@ -236,6 +236,7 @@ func (suite *NodeTypesTestSuite) TestHostnameCollectionFromGen() {
 			input: func() *gen.HostnameCollectionResponse {
 				labels := map[string]string{"group": "web", "env": "prod"}
 				errMsg := "timeout"
+				changed := false
 
 				return &gen.HostnameCollectionResponse{
 					JobId: &testUUID,
@@ -243,10 +244,12 @@ func (suite *NodeTypesTestSuite) TestHostnameCollectionFromGen() {
 						{
 							Hostname: "web-01",
 							Labels:   &labels,
+							Changed:  &changed,
 						},
 						{
 							Hostname: "web-02",
 							Error:    &errMsg,
+							Changed:  &changed,
 						},
 					},
 				}
@@ -258,10 +261,12 @@ func (suite *NodeTypesTestSuite) TestHostnameCollectionFromGen() {
 				suite.Equal("web-01", c.Results[0].Hostname)
 				suite.Equal(map[string]string{"group": "web", "env": "prod"}, c.Results[0].Labels)
 				suite.Empty(c.Results[0].Error)
+				suite.False(c.Results[0].Changed)
 
 				suite.Equal("web-02", c.Results[1].Hostname)
 				suite.Equal("timeout", c.Results[1].Error)
 				suite.Nil(c.Results[1].Labels)
+				suite.False(c.Results[1].Changed)
 			},
 		},
 		{
@@ -277,6 +282,7 @@ func (suite *NodeTypesTestSuite) TestHostnameCollectionFromGen() {
 				suite.Equal("minimal-host", c.Results[0].Hostname)
 				suite.Empty(c.Results[0].Error)
 				suite.Nil(c.Results[0].Labels)
+				suite.False(c.Results[0].Changed)
 			},
 		},
 	}
@@ -318,6 +324,7 @@ func (suite *NodeTypesTestSuite) TestNodeStatusCollectionFromGen() {
 			name: "when all sub-types are populated",
 			input: func() *gen.NodeStatusCollectionResponse {
 				uptime := "5d 3h 22m"
+				changed := false
 				disks := gen.DisksResponse{
 					{
 						Name:  "/dev/sda1",
@@ -333,6 +340,7 @@ func (suite *NodeTypesTestSuite) TestNodeStatusCollectionFromGen() {
 						{
 							Hostname: "web-01",
 							Uptime:   &uptime,
+							Changed:  &changed,
 							Disks:    &disks,
 							LoadAverage: &gen.LoadAverageResponse{
 								N1min:  0.5,
@@ -360,6 +368,7 @@ func (suite *NodeTypesTestSuite) TestNodeStatusCollectionFromGen() {
 				suite.Equal("web-01", ns.Hostname)
 				suite.Equal("5d 3h 22m", ns.Uptime)
 				suite.Empty(ns.Error)
+				suite.False(ns.Changed)
 
 				suite.Require().Len(ns.Disks, 1)
 				suite.Equal("/dev/sda1", ns.Disks[0].Name)
@@ -395,6 +404,7 @@ func (suite *NodeTypesTestSuite) TestNodeStatusCollectionFromGen() {
 				suite.Equal("minimal-host", ns.Hostname)
 				suite.Empty(ns.Uptime)
 				suite.Empty(ns.Error)
+				suite.False(ns.Changed)
 				suite.Nil(ns.Disks)
 				suite.Nil(ns.LoadAverage)
 				suite.Nil(ns.Memory)
@@ -439,6 +449,7 @@ func (suite *NodeTypesTestSuite) TestDiskCollectionFromGen() {
 		{
 			name: "when disks are populated",
 			input: func() *gen.DiskCollectionResponse {
+				changed := false
 				disks := gen.DisksResponse{
 					{
 						Name:  "/dev/sda1",
@@ -459,6 +470,7 @@ func (suite *NodeTypesTestSuite) TestDiskCollectionFromGen() {
 					Results: []gen.DiskResultItem{
 						{
 							Hostname: "web-01",
+							Changed:  &changed,
 							Disks:    &disks,
 						},
 					},
@@ -471,6 +483,7 @@ func (suite *NodeTypesTestSuite) TestDiskCollectionFromGen() {
 				dr := c.Results[0]
 				suite.Equal("web-01", dr.Hostname)
 				suite.Empty(dr.Error)
+				suite.False(dr.Changed)
 				suite.Require().Len(dr.Disks, 2)
 				suite.Equal("/dev/sda1", dr.Disks[0].Name)
 				suite.Equal(500000000000, dr.Disks[0].Total)
@@ -490,6 +503,7 @@ func (suite *NodeTypesTestSuite) TestDiskCollectionFromGen() {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 				suite.Equal("web-01", c.Results[0].Hostname)
+				suite.False(c.Results[0].Changed)
 				suite.Nil(c.Results[0].Disks)
 			},
 		},
@@ -635,12 +649,14 @@ func (suite *NodeTypesTestSuite) TestDNSConfigCollectionFromGen() {
 			input: func() *gen.DNSConfigCollectionResponse {
 				servers := []string{"8.8.8.8", "8.8.4.4"}
 				searchDomains := []string{"example.com", "local"}
+				changed := false
 
 				return &gen.DNSConfigCollectionResponse{
 					JobId: &testUUID,
 					Results: []gen.DNSConfigResponse{
 						{
 							Hostname:      "web-01",
+							Changed:       &changed,
 							Servers:       &servers,
 							SearchDomains: &searchDomains,
 						},
@@ -654,6 +670,7 @@ func (suite *NodeTypesTestSuite) TestDNSConfigCollectionFromGen() {
 				dc := c.Results[0]
 				suite.Equal("web-01", dc.Hostname)
 				suite.Empty(dc.Error)
+				suite.False(dc.Changed)
 				suite.Equal([]string{"8.8.8.8", "8.8.4.4"}, dc.Servers)
 				suite.Equal([]string{"example.com", "local"}, dc.SearchDomains)
 			},
@@ -669,6 +686,7 @@ func (suite *NodeTypesTestSuite) TestDNSConfigCollectionFromGen() {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 				suite.Equal("web-01", c.Results[0].Hostname)
+				suite.False(c.Results[0].Changed)
 				suite.Nil(c.Results[0].Servers)
 				suite.Nil(c.Results[0].SearchDomains)
 			},
@@ -739,11 +757,13 @@ func (suite *NodeTypesTestSuite) TestPingCollectionFromGen() {
 				minRtt := "1.234ms"
 				avgRtt := "2.345ms"
 				maxRtt := "3.456ms"
+				changed := false
 
 				return &gen.PingCollectionResponse{
 					Results: []gen.PingResponse{
 						{
 							Hostname:        "web-01",
+							Changed:         &changed,
 							PacketsSent:     &packetsSent,
 							PacketsReceived: &packetsReceived,
 							PacketLoss:      &packetLoss,
@@ -766,6 +786,7 @@ func (suite *NodeTypesTestSuite) TestPingCollectionFromGen() {
 				suite.Equal("2.345ms", pr.AvgRtt)
 				suite.Equal("3.456ms", pr.MaxRtt)
 				suite.Empty(pr.Error)
+				suite.False(pr.Changed)
 			},
 		},
 	}

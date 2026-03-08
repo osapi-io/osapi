@@ -111,6 +111,8 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 				s.Equal([]string{"8.8.8.8"}, *r.Results[0].Servers)
 				s.Require().NotNil(r.Results[0].SearchDomains)
 				s.Equal([]string{"example.com"}, *r.Results[0].SearchDomains)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -183,7 +185,13 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 					)
 			},
 			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
-				s.NotNil(resp)
+				r, ok := resp.(gen.GetNodeNetworkDNSByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.False(*result.Changed)
+				}
 			},
 		},
 		{

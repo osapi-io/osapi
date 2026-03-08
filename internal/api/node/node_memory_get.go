@@ -105,8 +105,10 @@ func buildMemoryResultItem(
 	hostname string,
 	memStats *mem.Result,
 ) *gen.MemoryResultItem {
+	changed := false
 	item := &gen.MemoryResultItem{
 		Hostname: hostname,
+		Changed:  &changed,
 	}
 
 	if memStats != nil {

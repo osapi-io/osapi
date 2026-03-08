@@ -94,8 +94,11 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 					}, "agent1", nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
-				_, ok := resp.(gen.GetNodeUptime200JSONResponse)
+				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
 				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -134,7 +137,13 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
-				s.NotNil(resp)
+				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.False(*result.Changed)
+				}
 			},
 		},
 		{

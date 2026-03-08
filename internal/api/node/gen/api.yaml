@@ -870,6 +870,9 @@ components:
           type: string
           description: The uptime of the system.
           example: "0 days, 4 hours, 1 minute"
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -895,6 +898,9 @@ components:
           $ref: '#/components/schemas/DisksResponse'
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -914,6 +920,9 @@ components:
           additionalProperties:
             type: string
           description: Key-value labels configured on the agent.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -928,6 +937,9 @@ components:
           description: The hostname of the agent.
         disks:
           $ref: '#/components/schemas/DisksResponse'
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -942,6 +954,9 @@ components:
           description: The hostname of the agent.
         memory:
           $ref: '#/components/schemas/MemoryResponse'
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -956,6 +971,9 @@ components:
           description: The hostname of the agent.
         load_average:
           $ref: '#/components/schemas/LoadAverageResponse'
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -970,6 +988,9 @@ components:
           description: The hostname of the agent.
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -1119,6 +1140,9 @@ components:
           description: >
             Maximum round-trip time in Go time.Duration format.
           example: "24.309240ms"
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -1157,6 +1181,9 @@ components:
           description: List of search domains.
           items:
             type: string
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -1316,6 +1343,12 @@ components:
         sha256:
           type: string
           description: Current SHA-256 of the file on disk.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
       required: [job_id, hostname, path, status]
 
     # ── Command schemas ────────────────────────────────────

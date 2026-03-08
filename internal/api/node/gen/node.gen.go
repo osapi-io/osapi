@@ -99,6 +99,9 @@ type DNSConfigCollectionResponse struct {
 
 // DNSConfigResponse defines model for DNSConfigResponse.
 type DNSConfigResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -167,6 +170,9 @@ type DiskResponse struct {
 
 // DiskResultItem defines model for DiskResultItem.
 type DiskResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Disks List of local disk usage information.
 	Disks *DisksResponse `json:"disks,omitempty"`
 
@@ -230,6 +236,12 @@ type FileStatusRequest struct {
 
 // FileStatusResponse defines model for FileStatusResponse.
 type FileStatusResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
 
@@ -255,6 +267,9 @@ type HostnameCollectionResponse struct {
 
 // HostnameResponse The hostname of the system.
 type HostnameResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -286,6 +301,9 @@ type LoadCollectionResponse struct {
 
 // LoadResultItem defines model for LoadResultItem.
 type LoadResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -317,6 +335,9 @@ type MemoryResponse struct {
 
 // MemoryResultItem defines model for MemoryResultItem.
 type MemoryResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -336,6 +357,9 @@ type NodeStatusCollectionResponse struct {
 
 // NodeStatusResponse defines model for NodeStatusResponse.
 type NodeStatusResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Disks List of local disk usage information.
 	Disks *DisksResponse `json:"disks,omitempty"`
 
@@ -376,6 +400,9 @@ type OSInfoResponse struct {
 
 // OSInfoResultItem defines model for OSInfoResultItem.
 type OSInfoResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -397,6 +424,9 @@ type PingCollectionResponse struct {
 type PingResponse struct {
 	// AvgRtt Average round-trip time in Go time.Duration format.
 	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
@@ -429,6 +459,9 @@ type UptimeCollectionResponse struct {
 
 // UptimeResponse System uptime information.
 type UptimeResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 

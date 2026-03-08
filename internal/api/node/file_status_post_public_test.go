@@ -119,6 +119,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 				s.Equal("in-sync", r.Status)
 				s.Require().NotNil(r.Sha256)
 				s.Equal("abc123def456", *r.Sha256)
+				s.Require().NotNil(r.Changed)
+				s.False(*r.Changed)
 			},
 		},
 		{
@@ -151,6 +153,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 				s.True(ok)
 				s.Equal("missing", r.Status)
 				s.Nil(r.Sha256)
+				s.Require().NotNil(r.Changed)
+				s.False(*r.Changed)
 			},
 		},
 		{

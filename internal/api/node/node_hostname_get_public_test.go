@@ -101,6 +101,8 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 				s.Equal("my-hostname", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Labels)
 				s.Equal(map[string]string{"group": "web"}, *r.Results[0].Labels)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -156,7 +158,13 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
-				s.NotNil(resp)
+				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+				for _, result := range r.Results {
+					s.Require().NotNil(result.Changed)
+					s.False(*result.Changed)
+				}
 			},
 		},
 		{
@@ -243,7 +251,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 				return mock
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"default-hostname"}]}`,
+			wantBody: `{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"changed":false,"hostname":"default-hostname"}]}`,
 		},
 		{
 			name: "when job client errors",

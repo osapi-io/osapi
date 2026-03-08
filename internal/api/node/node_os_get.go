@@ -105,8 +105,10 @@ func buildOSInfoResultItem(
 	hostname string,
 	osInfo *host.Result,
 ) *gen.OSInfoResultItem {
+	changed := false
 	item := &gen.OSInfoResultItem{
 		Hostname: hostname,
+		Changed:  &changed,
 	}
 
 	if osInfo != nil {

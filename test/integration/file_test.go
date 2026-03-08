@@ -161,6 +161,7 @@ func (s *FileSmokeSuite) TestFileDeployStatus() {
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
 				s.NotEmpty(result["job_id"])
+				s.Contains(result, "changed")
 			},
 		},
 		{
@@ -179,6 +180,7 @@ func (s *FileSmokeSuite) TestFileDeployStatus() {
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
 				s.NotEmpty(result["job_id"])
+				s.Contains(result, "changed")
 			},
 		},
 	}

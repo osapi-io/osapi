@@ -68,6 +68,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 
 	searchDomains := dnsConfig.SearchDomains
 	servers := dnsConfig.DNSServers
+	changed := false
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeNetworkDNSByInterface200JSONResponse{
@@ -77,6 +78,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 				Hostname:      agentHostname,
 				Servers:       &servers,
 				SearchDomains: &searchDomains,
+				Changed:       &changed,
 			},
 		},
 	}, nil
@@ -96,6 +98,7 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
+	changed := false
 	var responses []gen.DNSConfigResponse
 	for host, cfg := range results {
 		servers := cfg.DNSServers
@@ -104,6 +107,7 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 			Hostname:      host,
 			Servers:       &servers,
 			SearchDomains: &searchDomains,
+			Changed:       &changed,
 		})
 	}
 	for host, errMsg := range errs {

@@ -64,6 +64,11 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 				results, ok := result["results"].([]any)
 				s.Require().True(ok)
 				s.GreaterOrEqual(len(results), 1)
+
+				first, ok := results[0].(map[string]any)
+				s.Require().True(ok)
+				s.Contains(first, "changed")
+				s.Equal(false, first["changed"])
 			},
 		},
 	}
@@ -153,6 +158,11 @@ func (s *NetworkSmokeSuite) TestNetworkPingPost() {
 				results, ok := result["results"].([]any)
 				s.Require().True(ok)
 				s.GreaterOrEqual(len(results), 1)
+
+				first, ok := results[0].(map[string]any)
+				s.Require().True(ok)
+				s.Contains(first, "changed")
+				s.Equal(false, first["changed"])
 			},
 		},
 	}

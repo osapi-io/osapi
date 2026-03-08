@@ -111,10 +111,12 @@ func buildNodeStatusResponse(
 	}
 
 	uptime := formatDuration(status.Uptime)
+	changed := false
 	resp := gen.NodeStatusResponse{
 		Hostname: status.Hostname,
 		Uptime:   &uptime,
 		Disks:    &disksSlice,
+		Changed:  &changed,
 	}
 
 	if status.LoadAverages != nil {

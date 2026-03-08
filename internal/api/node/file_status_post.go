@@ -63,11 +63,13 @@ func (s *Node) PostNodeFileStatus(
 		}, nil
 	}
 
+	changed := false
 	resp := gen.PostNodeFileStatus200JSONResponse{
 		JobId:    jobID,
 		Hostname: agentHostname,
 		Path:     result.Path,
 		Status:   result.Status,
+		Changed:  &changed,
 	}
 
 	if result.SHA256 != "" {
