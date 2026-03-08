@@ -77,7 +77,7 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 }
 
 func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "DNS_UPDATE")
 
 	tests := []struct {
 		name         string
@@ -126,6 +126,8 @@ func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
 }
 
 func (s *NetworkSmokeSuite) TestNetworkPingPost() {
+	skipWriteOp(s.T(), "PING")
+
 	if runtime.GOOS == "darwin" {
 		s.T().Skip("ICMP ping requires root on macOS")
 	}

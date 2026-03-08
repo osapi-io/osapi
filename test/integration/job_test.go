@@ -110,7 +110,7 @@ func (s *JobSmokeSuite) TestJobGet() {
 }
 
 func (s *JobSmokeSuite) TestJobDelete() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "JOB_DELETE")
 
 	triggerOut, _, triggerCode := runCLI(
 		"client", "node", "command", "shell",
@@ -151,7 +151,7 @@ func (s *JobSmokeSuite) TestJobDelete() {
 }
 
 func (s *JobSmokeSuite) TestJobAdd() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "JOB_ADD")
 
 	jobFile := writeJobFile(s.T(), map[string]any{
 		"operation": "node.hostname",
@@ -191,7 +191,7 @@ func (s *JobSmokeSuite) TestJobAdd() {
 }
 
 func (s *JobSmokeSuite) TestJobRun() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "JOB_RUN")
 
 	jobFile := writeJobFile(s.T(), map[string]any{
 		"operation": "node.hostname",
@@ -237,7 +237,7 @@ func (s *JobSmokeSuite) TestJobRun() {
 }
 
 func (s *JobSmokeSuite) TestJobRetry() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "JOB_RETRY")
 
 	triggerOut, _, triggerCode := runCLI(
 		"client", "node", "command", "shell",

@@ -110,7 +110,7 @@ func (s *AgentSmokeSuite) TestAgentGet() {
 }
 
 func (s *AgentSmokeSuite) TestAgentDrainUndrain() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "AGENT_DRAIN")
 
 	listOut, _, listCode := runCLI("client", "agent", "list", "--json")
 	s.Require().Equal(0, listCode)

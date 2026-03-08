@@ -236,6 +236,23 @@ func skipWrite(
 	}
 }
 
+// skipWriteOp skips a mutating test unless the global OSAPI_INTEGRATION_WRITES=1
+// or the operation-specific override is set (e.g., OSAPI_INTEGRATION_WRITE_PING=1).
+func skipWriteOp(
+	t *testing.T,
+	op string,
+) {
+	t.Helper()
+
+	envVar := "OSAPI_INTEGRATION_WRITE_" + op
+	if !runWrites && os.Getenv(envVar) != "1" {
+		t.Skip(fmt.Sprintf(
+			"skipping write test (set OSAPI_INTEGRATION_WRITES=1 or %s=1)",
+			envVar,
+		))
+	}
+}
+
 func writeTempFile(
 	t *testing.T,
 	content string,
