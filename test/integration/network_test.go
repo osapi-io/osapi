@@ -23,6 +23,7 @@
 package integration_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -47,7 +48,7 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 				"dns",
 				"get",
 				"--interface-name",
-				"eth0",
+				"@fact.interface.primary",
 				"--json",
 			},
 			validateFunc: func(
@@ -92,7 +93,7 @@ func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
 				"dns",
 				"update",
 				"--interface-name",
-				"eth0",
+				"@fact.interface.primary",
 				"--servers",
 				"1.1.1.1,8.8.8.8",
 				"--search-domains",
@@ -125,6 +126,10 @@ func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
 }
 
 func (s *NetworkSmokeSuite) TestNetworkPingPost() {
+	if runtime.GOOS == "darwin" {
+		s.T().Skip("ICMP ping requires root on macOS")
+	}
+
 	tests := []struct {
 		name         string
 		args         []string
