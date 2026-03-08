@@ -22,56 +22,23 @@ them to be used as appliances.
 
 <img src="asset/demo.gif" alt="OSAPI demo" />
 
-## ✨ Features
-
-| | |
-|---|---|
-| 🖥️ **[Node Management][]** | Hostname, uptime, OS info, disk, memory, load |
-| 🌐 **[Network Management][]** | DNS read/update, ping |
-| ⚙️ **[Command Execution][]** | Remote exec and shell across managed hosts |
-| 📁 **[File Management][]** | Upload, deploy, and template files with SHA-based idempotency |
-| 📊 **[System Facts][]** | Agent-collected system facts — architecture, kernel, FQDN, CPUs, network interfaces, service/package manager |
-| 🔄 **[Agent Lifecycle][]** | Node conditions (memory, disk, load pressure), graceful drain/cordon for maintenance |
-| ⚡ **[Async Job System][]** | NATS JetStream with KV-first architecture — broadcast, load-balanced, and label-based routing across hosts |
-| 💚 **[Health][] & [Metrics][]** | Liveness, readiness, system status endpoints, Prometheus `/metrics` |
-| 📋 **[Audit Logging][]** | Structured API audit trail in NATS KV with 30-day retention and admin-only read access |
-| 🔐 **[Auth & RBAC][]** | JWT with fine-grained `resource:verb` permissions, built-in and custom roles, direct permission grants |
-| 🔍 **[Distributed Tracing][]** | OpenTelemetry with trace context propagation across HTTP and NATS |
-| 🖥️ **CLI Parity** | Every API operation has a CLI equivalent with `--json` for scripting |
-| 🏢 **Multi-Tenant** | Namespace isolation lets multiple deployments share a single NATS cluster |
-
-[Node Management]: https://osapi-io.github.io/osapi/sidebar/features/node-management
-[Network Management]: https://osapi-io.github.io/osapi/sidebar/features/network-management
-[Command Execution]: https://osapi-io.github.io/osapi/sidebar/features/command-execution
-[File Management]: https://osapi-io.github.io/osapi/sidebar/features/file-management
-[Async Job System]: https://osapi-io.github.io/osapi/sidebar/features/job-system
-[Health]: https://osapi-io.github.io/osapi/sidebar/features/health-checks
-[Metrics]: https://osapi-io.github.io/osapi/sidebar/features/metrics
-[Audit Logging]: https://osapi-io.github.io/osapi/sidebar/features/audit-logging
-[Auth & RBAC]: https://osapi-io.github.io/osapi/sidebar/features/authentication
-[Distributed Tracing]: https://osapi-io.github.io/osapi/sidebar/features/distributed-tracing
-
 ## 📖 Documentation
 
-[Features][] | [Architecture][] | [Getting Started][] | [API][] | [Usage][] | [Roadmap][]
+[Getting Started][] | [API][] | [Usage][] | [SDK][]
 
-[Features]: https://osapi-io.github.io/osapi/category/features
-[Architecture]: https://osapi-io.github.io/osapi/sidebar/architecture
 [Getting Started]: https://osapi-io.github.io/osapi/
 [API]: https://osapi-io.github.io/osapi/category/api
 [Usage]: https://osapi-io.github.io/osapi/sidebar/usage
-[Roadmap]: https://osapi-io.github.io/osapi/sidebar/development/roadmap
+[SDK]: https://osapi-io.github.io/osapi/sidebar/sdk/sdk
 
 ## 🔗 Sister Projects
 
 | Project | Description |
 | --- | --- |
-| [osapi-sdk][] | Go SDK for OSAPI — client library and orchestration primitives |
 | [osapi-orchestrator][] | A Go package for orchestrating operations across OSAPI-managed hosts — typed operations, chaining, conditions, and result decoding built on top of the osapi-sdk engine |
 | [nats-client][] | A Go package for connecting to and interacting with a NATS server |
 | [nats-server][] | A Go package for running an embedded NATS server |
 
-[osapi-sdk]: https://github.com/osapi-io/osapi-sdk
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 [nats-client]: https://github.com/osapi-io/nats-client
 [nats-server]: https://github.com/osapi-io/nats-server
@@ -80,6 +47,4 @@ them to be used as appliances.
 
 The [MIT][] License.
 
-[Agent Lifecycle]: https://osapi-io.github.io/osapi/sidebar/features/agent-lifecycle
-[System Facts]: https://osapi-io.github.io/osapi/sidebar/features/node-management
 [MIT]: LICENSE
