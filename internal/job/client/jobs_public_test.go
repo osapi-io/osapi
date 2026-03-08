@@ -37,6 +37,25 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
+// mockKeyLister implements jetstream.KeyLister for testing.
+type mockKeyLister struct {
+	ch  chan string
+	err error
+}
+
+func (m *mockKeyLister) Keys() <-chan string { return m.ch }
+func (m *mockKeyLister) Stop() error         { return m.err }
+
+// newMockKeyLister returns a KeyLister that yields the given keys then closes.
+func newMockKeyLister(keys []string) *mockKeyLister {
+	ch := make(chan string, len(keys))
+	for _, k := range keys {
+		ch <- k
+	}
+	close(ch)
+	return &mockKeyLister{ch: ch}
+}
+
 type JobsPublicTestSuite struct {
 	suite.Suite
 
@@ -290,7 +309,12 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					"operation": {"type": "node.hostname.get"}
 				}`))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-123").Return(mockEntry, nil)
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-123.>").
+					Return(newMockKeyLister(nil), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-123.>").
+					Return(newMockKeyLister(nil), nil)
 			},
 			expectedStatus: "submitted",
 		},
@@ -324,12 +348,18 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.acknowledged.agent1.100",
-					"status.job-1.started.agent1.200",
-					"status.job-1.completed.agent1.300",
-					"responses.job-1.agent1.400",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.acknowledged.agent1.100",
+						"status.job-1.started.agent1.200",
+						"status.job-1.completed.agent1.300",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister([]string{
+						"responses.job-1.agent1.400",
+					}), nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -380,10 +410,16 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-changed").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-changed.completed.agent1.100",
-					"responses.job-changed.agent1.200",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-changed.>").
+					Return(newMockKeyLister([]string{
+						"status.job-changed.completed.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-changed.>").
+					Return(newMockKeyLister([]string{
+						"responses.job-changed.agent1.200",
+					}), nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -420,10 +456,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.started.agent1.100",
-					"status.job-1.failed.agent1.200",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.started.agent1.100",
+						"status.job-1.failed.agent1.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -457,10 +498,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.completed.agent1.100",
-					"status.job-1.failed.agent2.200",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.completed.agent1.100",
+						"status.job-1.failed.agent2.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -493,10 +539,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.acknowledged.agent1.100",
-					"status.job-1.started.agent1.200",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.acknowledged.agent1.100",
+						"status.job-1.started.agent1.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -529,9 +580,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.completed.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.completed.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				s.mockKV.EXPECT().
 					Get(gomock.Any(), "status.job-1.completed.agent1.100").
@@ -549,9 +605,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.completed.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.completed.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				invalidEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				invalidEntry.EXPECT().Value().Return([]byte(`invalid json`))
@@ -562,7 +623,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			expectedStatus: "submitted",
 		},
 		{
-			name:        "keys error returns error",
+			name:        "status keys error returns error",
 			jobID:       "job-1",
 			expectedErr: "failed to get status events",
 			setupMocks: func() {
@@ -572,7 +633,9 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return(nil, errors.New("connection failed"))
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(nil, errors.New("connection failed"))
 			},
 		},
 		{
@@ -585,9 +648,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"responses.job-1.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister(nil), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister([]string{
+						"responses.job-1.agent1.100",
+					}), nil)
 
 				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				respEntry.EXPECT().Value().Return([]byte(`not json`))
@@ -608,9 +676,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"responses.job-1.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister(nil), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister([]string{
+						"responses.job-1.agent1.100",
+					}), nil)
 
 				s.mockKV.EXPECT().
 					Get(gomock.Any(), "responses.job-1.agent1.100").
@@ -629,10 +702,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.completed.agent1.300",
-					"status.job-1.started.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.completed.agent1.300",
+						"status.job-1.started.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				compEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				compEntry.EXPECT().Value().Return([]byte(
@@ -663,9 +741,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.acknowledged.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.acknowledged.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				ackEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				ackEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -690,12 +773,17 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
 				// Simulate NATS redelivery: two started/failed cycles
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.started.agent1.100",
-					"status.job-1.failed.agent1.200",
-					"status.job-1.started.agent1.300",
-					"status.job-1.failed.agent1.400",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.started.agent1.100",
+						"status.job-1.failed.agent1.200",
+						"status.job-1.started.agent1.300",
+						"status.job-1.failed.agent1.400",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				// First attempt: started at T+0, failed at T+1s
 				start1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
@@ -754,10 +842,15 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.started.agent1.100",
-					"status.job-1.completed.agent1.200",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.started.agent1.100",
+						"status.job-1.completed.agent1.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				startEntry.EXPECT().Value().Return([]byte(
@@ -792,9 +885,14 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-1.completed.agent1.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister([]string{
+						"status.job-1.completed.agent1.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(newMockKeyLister(nil), nil)
 
 				badEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				badEntry.EXPECT().Value().Return([]byte(
@@ -805,6 +903,90 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					Return(badEntry, nil)
 			},
 			expectedStatus: "submitted",
+		},
+		{
+			name:        "response keys collection error returns error",
+			jobID:       "job-1",
+			expectedErr: "failed to get response keys",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-1").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-1.>").
+					Return(newMockKeyLister(nil), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-1.>").
+					Return(nil, errors.New("connection failed"))
+			},
+		},
+		{
+			name:  "broadcast aggregates Changed from multiple responses",
+			jobID: "job-bc",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-bc","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-bc").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-bc.>").
+					Return(newMockKeyLister([]string{
+						"status.job-bc.completed.agent1.100",
+						"status.job-bc.completed.agent2.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-bc.>").
+					Return(newMockKeyLister([]string{
+						"responses.job-bc.agent1.300",
+						"responses.job-bc.agent2.400",
+					}), nil)
+
+				comp1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				comp1.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-bc","event":"completed","hostname":"agent1","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-bc.completed.agent1.100").
+					Return(comp1, nil)
+
+				comp2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				comp2.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-bc","event":"completed","hostname":"agent2","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-bc.completed.agent2.200").
+					Return(comp2, nil)
+
+				resp1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				resp1.EXPECT().Value().Return([]byte(
+					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":true,"hostname":"agent1"}`,
+				))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "responses.job-bc.agent1.300").
+					Return(resp1, nil)
+
+				resp2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				resp2.EXPECT().Value().Return([]byte(
+					`{"status":"completed","data":"eyJ0ZXN0IjogdHJ1ZX0=","changed":false,"hostname":"agent2"}`,
+				))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "responses.job-bc.agent2.400").
+					Return(resp2, nil)
+			},
+			expectedStatus: "completed",
+			agentCount:     2,
+			responseCount:  2,
+			validateFunc: func(qj *job.QueuedJob) {
+				s.NotNil(qj.Changed, "broadcast Changed should be set")
+				s.True(*qj.Changed, "broadcast Changed should be true when any host changed")
+			},
 		},
 	}
 
@@ -1251,11 +1433,16 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-original.submitted._api.100",
-					"status.job-original.failed.agent1.200",
-					"status.job-original.retried._api.300",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-original.>").
+					Return(newMockKeyLister([]string{
+						"status.job-original.submitted._api.100",
+						"status.job-original.failed.agent1.200",
+						"status.job-original.retried._api.300",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-original.>").
+					Return(newMockKeyLister(nil), nil)
 
 				submitEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				submitEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
@@ -1309,9 +1496,14 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 				))
 				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-original-2").Return(mockJobEntry, nil)
 
-				s.mockKV.EXPECT().Keys(gomock.Any()).Return([]string{
-					"status.job-original-2.retried._api.100",
-				}, nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-original-2.>").
+					Return(newMockKeyLister([]string{
+						"status.job-original-2.retried._api.100",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-original-2.>").
+					Return(newMockKeyLister(nil), nil)
 
 				retriedEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				retriedEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(

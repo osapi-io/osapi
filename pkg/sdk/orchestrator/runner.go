@@ -3,8 +3,11 @@ package orchestrator
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // runner executes a validated plan.
@@ -354,9 +357,19 @@ func (r *runner) runTask(
 	elapsed := time.Since(start)
 
 	if err != nil {
+		// Preserve the full result for partial failures (e.g. broadcast
+		// commands where some hosts succeeded and others failed).
+		// Guards like OnlyIfChanged and OnlyIfFailed inspect r.results,
+		// so they need Changed, HostResults, etc.
+		failedResult := &Result{Status: StatusFailed}
+		if result != nil {
+			result.Status = StatusFailed
+			failedResult = result
+		}
+
 		r.mu.Lock()
 		r.failed[t.name] = true
-		r.results[t.name] = &Result{Status: StatusFailed}
+		r.results[t.name] = failedResult
 		r.mu.Unlock()
 
 		tr := TaskResult{
@@ -364,6 +377,14 @@ func (r *runner) runTask(
 			Status:   StatusFailed,
 			Duration: elapsed,
 			Error:    err,
+		}
+
+		if result != nil {
+			tr.JobID = result.JobID
+			tr.JobDuration = result.JobDuration
+			tr.Data = result.Data
+			tr.HostResults = result.HostResults
+			tr.Changed = result.Changed
 		}
 
 		r.callAfterTask(t, tr)
@@ -388,6 +409,7 @@ func (r *runner) runTask(
 		Status:      status,
 		Changed:     result.Changed,
 		Duration:    elapsed,
+		JobDuration: result.JobDuration,
 		Data:        result.Data,
 		HostResults: result.HostResults,
 	}
@@ -395,6 +417,72 @@ func (r *runner) runTask(
 	r.callAfterTask(t, tr)
 
 	return tr
+}
+
+// hostResultsFromResponses builds HostResults from the per-agent Responses
+// map returned by the API for broadcast jobs.
+func hostResultsFromResponses(
+	responses map[string]client.AgentJobResponse,
+	agentDurations map[string]time.Duration,
+) []HostResult {
+	results := make([]HostResult, 0, len(responses))
+
+	for hostname, resp := range responses {
+		hr := HostResult{
+			Hostname: hostname,
+		}
+
+		if resp.Changed != nil {
+			hr.Changed = *resp.Changed
+		}
+
+		if resp.Error != "" {
+			hr.Error = resp.Error
+		}
+
+		if resp.Data != nil {
+			if m, ok := resp.Data.(map[string]any); ok {
+				hr.Data = m
+			}
+		}
+
+		if d, ok := agentDurations[hostname]; ok {
+			hr.JobDuration = d
+		}
+
+		results = append(results, hr)
+	}
+
+	return results
+}
+
+// parseAgentDurations returns the longest agent-side execution duration and
+// a per-hostname duration map from AgentStates.
+func parseAgentDurations(
+	states map[string]client.AgentState,
+) (time.Duration, map[string]time.Duration) {
+	var longest time.Duration
+
+	perHost := make(map[string]time.Duration, len(states))
+
+	for hostname, s := range states {
+		if s.Duration == "" {
+			continue
+		}
+
+		d, err := time.ParseDuration(s.Duration)
+		if err != nil {
+			continue
+		}
+
+		perHost[hostname] = d
+
+		if d > longest {
+			longest = d
+		}
+	}
+
+	return longest, perHost
 }
 
 // DefaultPollInterval is the interval between job status polls.
@@ -409,9 +497,11 @@ func isCommandOp(
 }
 
 // extractHostResults parses per-agent results from a broadcast
-// collection response.
+// collection response, enriching each result with the agent-side
+// execution duration when available.
 func extractHostResults(
 	data map[string]any,
+	agentDurations map[string]time.Duration,
 ) []HostResult {
 	resultsRaw, ok := data["results"]
 	if !ok {
@@ -437,6 +527,10 @@ func extractHostResults(
 
 		if h, ok := m["hostname"].(string); ok {
 			hr.Hostname = h
+
+			if d, ok := agentDurations[h]; ok {
+				hr.JobDuration = d
+			}
 		}
 
 		if c, ok := m["changed"].(bool); ok {
@@ -453,6 +547,58 @@ func extractHostResults(
 	return hostResults
 }
 
+// countExpectedAgents returns the number of agents expected to respond
+// for broadcast targets. Returns 0 for non-broadcast targets.
+// Mirrors the server-side CountExpectedAgents logic: excludes agents
+// in Cordoned or Draining state, and uses exact-or-dotted-prefix
+// matching for label selectors.
+func (r *runner) countExpectedAgents(
+	ctx context.Context,
+	target string,
+) int {
+	if !IsBroadcastTarget(target) {
+		return 0
+	}
+
+	resp, err := r.plan.client.Agent.List(ctx)
+	if err != nil {
+		return 0
+	}
+
+	if target == "_all" {
+		count := 0
+		for _, agent := range resp.Data.Agents {
+			if agent.State != "Cordoned" && agent.State != "Draining" {
+				count++
+			}
+		}
+
+		return count
+	}
+
+	// Label selector: "key:value" — count agents whose label value
+	// equals or is a dotted-prefix of the target value.
+	// IsBroadcastTarget already confirmed ":" exists, so SplitN
+	// always produces exactly 2 parts.
+	parts := strings.SplitN(target, ":", 2)
+	key, value := parts[0], parts[1]
+	count := 0
+
+	for _, agent := range resp.Data.Agents {
+		if agent.State == "Cordoned" || agent.State == "Draining" {
+			continue
+		}
+
+		if agentVal, ok := agent.Labels[key]; ok {
+			if agentVal == value || strings.HasPrefix(agentVal, value+".") {
+				count++
+			}
+		}
+	}
+
+	return count
+}
+
 // executeOp submits a declarative Op as a job via the SDK and polls
 // for completion.
 func (r *runner) executeOp(
@@ -466,6 +612,10 @@ func (r *runner) executeOp(
 			op.Operation,
 		)
 	}
+
+	// For broadcast targets, determine how many agents should respond
+	// before we consider the job complete.
+	expectedAgents := r.countExpectedAgents(ctx, op.Target)
 
 	operation := map[string]interface{}{
 		"type": op.Operation,
@@ -482,19 +632,46 @@ func (r *runner) executeOp(
 
 	jobID := createResp.Data.JobID
 
-	result, err := r.pollJob(ctx, jobID)
+	result, err := r.pollJob(ctx, jobID, expectedAgents)
 	if err != nil {
 		return nil, err
 	}
 
-	// Extract per-host results for broadcast targets.
+	// Only populate per-host results for broadcast targets.
 	if IsBroadcastTarget(op.Target) {
-		result.HostResults = extractHostResults(result.Data)
+		// Prefer HostResults from Responses (populated by pollJob);
+		// fall back to parsing an embedded results array in Data.
+		if len(result.HostResults) == 0 {
+			result.HostResults = extractHostResults(result.Data, result.agentDurations)
+		}
+	} else {
+		// Non-broadcast targets should not show per-host breakdown.
+		result.HostResults = nil
 	}
 
 	// Non-zero exit for command operations = failure.
 	if isCommandOp(op.Operation) {
-		if exitCode, ok := result.Data["exit_code"].(float64); ok && exitCode != 0 {
+		if IsBroadcastTarget(op.Target) {
+			// Check per-host exit codes for broadcast commands.
+			anyFailed := false
+
+			for i, hr := range result.HostResults {
+				if ec, ok := hr.Data["exit_code"].(float64); ok && ec != 0 {
+					result.HostResults[i].Error = fmt.Sprintf(
+						"command exited with code %d",
+						int(ec),
+					)
+
+					anyFailed = true
+				}
+			}
+
+			if anyFailed {
+				result.Status = StatusFailed
+
+				return result, fmt.Errorf("command failed on one or more hosts")
+			}
+		} else if exitCode, ok := result.Data["exit_code"].(float64); ok && exitCode != 0 {
 			result.Status = StatusFailed
 
 			return result, fmt.Errorf(
@@ -508,9 +685,13 @@ func (r *runner) executeOp(
 }
 
 // pollJob polls a job until it reaches a terminal state.
+// When expectedAgents > 0 (broadcast), the poller waits until the
+// expected number of per-agent responses have arrived before returning,
+// even if the server already reports "completed".
 func (r *runner) pollJob(
 	ctx context.Context,
 	jobID string,
+	expectedAgents int,
 ) (*Result, error) {
 	ticker := time.NewTicker(DefaultPollInterval)
 	defer ticker.Stop()
@@ -529,6 +710,12 @@ func (r *runner) pollJob(
 
 			switch job.Status {
 			case "completed":
+				// For broadcast jobs, keep polling until all expected
+				// agents have written their responses.
+				if expectedAgents > 0 && len(job.Responses) < expectedAgents {
+					continue
+				}
+
 				data := make(map[string]any)
 				if job.Result != nil {
 					if m, ok := job.Result.(map[string]any); ok {
@@ -542,7 +729,25 @@ func (r *runner) pollJob(
 				}
 				delete(data, "changed")
 
-				return &Result{JobID: jobID, Changed: changed, Data: data}, nil
+				jobDur, perHost := parseAgentDurations(job.AgentStates)
+
+				result := &Result{
+					JobID:          jobID,
+					Changed:        changed,
+					Data:           data,
+					JobDuration:    jobDur,
+					agentDurations: perHost,
+				}
+
+				// Build HostResults from per-agent Responses.
+				if len(job.Responses) > 0 {
+					result.HostResults = hostResultsFromResponses(
+						job.Responses,
+						perHost,
+					)
+				}
+
+				return result, nil
 			case "failed":
 				errMsg := "job failed"
 				if job.Error != "" {

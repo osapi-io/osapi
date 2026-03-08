@@ -221,17 +221,23 @@ func (c *Client) GetJobStatus(
 		return nil, fmt.Errorf("failed to parse job data: %w", err)
 	}
 
-	// Get all status events for this job
-	statusKeys, err := c.kv.Keys(ctx)
+	// Get status event keys for this job (server-side filtered)
+	statusKeys, err := collectKeys(ctx, c.kv, "status."+jobID+".>")
 	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
 		return nil, fmt.Errorf("failed to get status events: %w", err)
+	}
+
+	// Get response keys for this job (server-side filtered)
+	responseKeys, err := collectKeys(ctx, c.kv, "responses."+jobID+".>")
+	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+		return nil, fmt.Errorf("failed to get response keys: %w", err)
 	}
 
 	// Compute current status from events
 	computedStatus := c.computeStatusFromEvents(ctx, statusKeys, jobID)
 
 	// Get response data for this job
-	responses := c.getJobResponses(ctx, statusKeys, jobID)
+	responses := c.getJobResponses(ctx, responseKeys, jobID)
 
 	queuedJob := &job.QueuedJob{
 		ID:          jobID,
@@ -250,12 +256,26 @@ func (c *Client) GetJobStatus(
 		queuedJob.Operation = operation
 	}
 
-	// Populate Result and Changed from single-agent response
-	if len(responses) == 1 {
+	// Populate Result and Changed from responses.
+	switch len(responses) {
+	case 1:
 		for _, resp := range responses {
 			queuedJob.Result = resp.Data
 			queuedJob.Changed = resp.Changed
-			break
+		}
+	default:
+		// Broadcast: aggregate Changed as OR of all per-host values.
+		anyChanged := false
+		for _, resp := range responses {
+			if resp.Changed != nil && *resp.Changed {
+				anyChanged = true
+
+				break
+			}
+		}
+
+		if anyChanged {
+			queuedJob.Changed = &anyChanged
 		}
 	}
 
@@ -423,6 +443,25 @@ func (c *Client) getJobStatusFromKeys(
 	}
 
 	return queuedJob, nil
+}
+
+// collectKeys wraps ListKeysFiltered and drains the KeyLister channel into a []string.
+func collectKeys(
+	ctx context.Context,
+	kv jetstream.KeyValue,
+	filter string,
+) ([]string, error) {
+	lister, err := kv.ListKeysFiltered(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	for key := range lister.Keys() {
+		keys = append(keys, key)
+	}
+
+	return keys, nil
 }
 
 // getStringField safely extracts a string field from a map.

@@ -81,8 +81,8 @@ func (j *Job) GetJobByID(
 	}
 	resp.Changed = qj.Changed
 
-	// Expose per-agent responses for broadcast jobs
-	if len(qj.Responses) > 1 {
+	// Expose per-agent responses for broadcast jobs.
+	if len(qj.Responses) > 0 {
 		respMap := make(map[string]struct {
 			Changed  *bool       `json:"changed"`
 			Data     interface{} `json:"data,omitempty"`

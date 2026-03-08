@@ -687,11 +687,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 					WriteStatusEvent(gomock.Any(), "storage-fail-job", "started", gomock.Any(), gomock.Any()).
 					Return(nil)
 
-				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-job", "completed", gomock.Any(), gomock.Any()).
-					Return(nil)
-
-				// Mock response write failure
+				// Response is written before the status event; failure
+				// here prevents the completed event from being written.
 				s.mockJobClient.EXPECT().
 					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
 					Return(errors.New("storage failure"))
