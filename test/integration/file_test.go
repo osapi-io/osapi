@@ -64,7 +64,7 @@ func (s *FileSmokeSuite) TestFileList() {
 }
 
 func (s *FileSmokeSuite) TestFileUploadGetDelete() {
-	skipWrite(s.T())
+	skipWriteOp(s.T(), "FILE_UPLOAD")
 
 	filePath := writeTempFile(s.T(), "integration-test-content\n")
 
@@ -117,6 +117,86 @@ func (s *FileSmokeSuite) TestFileUploadGetDelete() {
 	s.Require().NoError(parseJSON(deleteOut, &deleteResp))
 	s.Equal("test-int.conf", deleteResp.Name)
 	s.True(deleteResp.Deleted)
+}
+
+func (s *FileSmokeSuite) TestFileDeployStatus() {
+	skipWriteOp(s.T(), "FILE_DEPLOY")
+
+	filePath := writeTempFile(s.T(), "deploy-test-content\n")
+
+	// Upload the file first so it exists in Object Store.
+	uploadOut, _, uploadCode := runCLI(
+		"client", "file", "upload",
+		"--name", "test-deploy.conf",
+		"--file", filePath,
+		"--json",
+	)
+	s.Require().Equal(0, uploadCode)
+
+	var uploadResp struct {
+		Name string `json:"name"`
+	}
+	s.Require().NoError(parseJSON(uploadOut, &uploadResp))
+	s.Equal("test-deploy.conf", uploadResp.Name)
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "deploys a file to the host",
+			args: []string{
+				"client", "node", "file", "deploy",
+				"--object", "test-deploy.conf",
+				"--path", "/tmp/osapi-deploy-test.conf",
+				"--json",
+			},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result map[string]any
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.NotEmpty(result["job_id"])
+			},
+		},
+		{
+			name: "checks file deployment status",
+			args: []string{
+				"client", "node", "file", "status",
+				"--path", "/tmp/osapi-deploy-test.conf",
+				"--json",
+			},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result map[string]any
+				s.Require().NoError(parseJSON(stdout, &result))
+				s.NotEmpty(result["job_id"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+
+	// Clean up the uploaded file.
+	_, _, deleteCode := runCLI(
+		"client", "file", "delete",
+		"--name", "test-deploy.conf",
+		"--json",
+	)
+	s.Require().Equal(0, deleteCode)
 }
 
 func TestFileSmokeSuite(
