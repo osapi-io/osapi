@@ -31,7 +31,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/osapi"
 )
 
 // Theme colors for terminal UI rendering.

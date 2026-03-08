@@ -27,7 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	osapi "github.com/osapi-io/osapi-sdk/pkg/osapi"
+	osapi "github.com/retr0h/osapi/pkg/sdk/osapi"
 	"github.com/retr0h/osapi/internal/cli"
 )
 

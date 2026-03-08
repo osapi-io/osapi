@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/osapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
