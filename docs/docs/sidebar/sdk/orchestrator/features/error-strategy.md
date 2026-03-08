@@ -8,11 +8,12 @@ Control what happens when a task fails.
 
 ## Strategies
 
-| Strategy            | Behavior                                        |
-| ------------------- | ----------------------------------------------- |
-| `StopAll` (default) | Fail fast, cancel everything                    |
-| `Continue`          | Skip dependents, keep running independent tasks |
-| `Retry(n)`          | Retry n times before failing                    |
+| Strategy                         | Behavior                                        |
+| -------------------------------- | ----------------------------------------------- |
+| `StopAll` (default)              | Fail fast, cancel everything                    |
+| `Continue`                       | Skip dependents, keep running independent tasks |
+| `Retry(n)`                       | Retry n times immediately before failing        |
+| `Retry(n, WithRetryBackoff(...))` | Retry n times with exponential backoff          |
 
 ## Usage
 
@@ -24,8 +25,13 @@ plan := orchestrator.NewPlan(client,
     orchestrator.OnError(orchestrator.Continue),
 )
 
-// Task-level override.
+// Task-level override: immediate retry.
 task.OnError(orchestrator.Retry(3))
+
+// Task-level override: retry with exponential backoff.
+task.OnError(orchestrator.Retry(3,
+    orchestrator.WithRetryBackoff(1*time.Second, 30*time.Second),
+))
 ```
 
 With `Continue`, independent tasks keep running when one fails. With `StopAll`,

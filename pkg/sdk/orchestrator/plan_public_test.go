@@ -515,6 +515,111 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		s.Equal(2, attempts)
 		s.Equal(orchestrator.StatusChanged, report.Tasks[0].Status)
 	})
+
+	s.Run("retry with backoff delays between attempts", func() {
+		attempts := 0
+		var timestamps []time.Time
+
+		plan := orchestrator.NewPlan(
+			nil,
+			orchestrator.OnError(orchestrator.Retry(
+				2,
+				orchestrator.WithRetryBackoff(
+					50*time.Millisecond,
+					200*time.Millisecond,
+				),
+			)),
+		)
+
+		plan.TaskFunc("flaky", func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*orchestrator.Result, error) {
+			timestamps = append(timestamps, time.Now())
+			attempts++
+			if attempts < 3 {
+				return nil, fmt.Errorf("attempt %d failed", attempts)
+			}
+
+			return &orchestrator.Result{Changed: true}, nil
+		})
+
+		report, err := plan.Run(context.Background())
+		s.NoError(err)
+		s.Equal(3, attempts)
+		s.Equal(orchestrator.StatusChanged, report.Tasks[0].Status)
+
+		// Verify delays between attempts (at least initial interval).
+		s.Require().Len(timestamps, 3)
+		gap1 := timestamps[1].Sub(timestamps[0])
+		s.GreaterOrEqual(gap1, 40*time.Millisecond)
+	})
+
+	s.Run("retry without backoff retries immediately", func() {
+		attempts := 0
+		var timestamps []time.Time
+
+		plan := orchestrator.NewPlan(
+			nil,
+			orchestrator.OnError(orchestrator.Retry(1)),
+		)
+
+		plan.TaskFunc("flaky", func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*orchestrator.Result, error) {
+			timestamps = append(timestamps, time.Now())
+			attempts++
+			if attempts < 2 {
+				return nil, fmt.Errorf("attempt %d failed", attempts)
+			}
+
+			return &orchestrator.Result{Changed: true}, nil
+		})
+
+		report, err := plan.Run(context.Background())
+		s.NoError(err)
+		s.Equal(2, attempts)
+		s.Equal(orchestrator.StatusChanged, report.Tasks[0].Status)
+
+		// Without backoff, retries should be near-instant.
+		s.Require().Len(timestamps, 2)
+		gap := timestamps[1].Sub(timestamps[0])
+		s.Less(gap, 20*time.Millisecond)
+	})
+
+	s.Run("retry backoff respects context cancellation", func() {
+		attempts := 0
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+		defer cancel()
+
+		plan := orchestrator.NewPlan(
+			nil,
+			orchestrator.OnError(orchestrator.Retry(
+				10,
+				orchestrator.WithRetryBackoff(
+					5*time.Second,
+					30*time.Second,
+				),
+			)),
+		)
+
+		plan.TaskFunc("flaky", func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*orchestrator.Result, error) {
+			attempts++
+
+			return nil, fmt.Errorf("attempt %d failed", attempts)
+		})
+
+		_, err := plan.Run(ctx)
+		s.Error(err)
+		// Should only get 1 attempt because backoff (5s) is longer
+		// than context timeout (30ms).
+		s.Equal(1, attempts)
+	})
 }
 
 func (s *PlanPublicTestSuite) TestRunOpTask() {
@@ -784,15 +889,84 @@ func (s *PlanPublicTestSuite) TestRunOpTaskErrors() {
 			},
 		},
 		{
-			name:       "poll returns server error",
+			name:       "poll retries transient 500 then succeeds",
+			createCode: http.StatusCreated,
+			pollResponses: func() []pollResponse {
+				changed := false
+				return []pollResponse{
+					{code: http.StatusInternalServerError},
+					{code: http.StatusInternalServerError},
+					{status: "completed", changed: &changed, result: map[string]any{
+						"hostname": "web-01",
+					}},
+				}
+			}(),
+			useServer: true,
+			validateFunc: func(report *orchestrator.Report, err error) {
+				s.Require().NoError(err)
+				s.Equal(orchestrator.StatusUnchanged, report.Tasks[0].Status)
+			},
+		},
+		{
+			name:       "poll retries transient 404 then succeeds",
+			createCode: http.StatusCreated,
+			pollResponses: func() []pollResponse {
+				changed := false
+				return []pollResponse{
+					{code: http.StatusNotFound},
+					{code: http.StatusNotFound},
+					{status: "completed", changed: &changed, result: map[string]any{
+						"hostname": "web-01",
+					}},
+				}
+			}(),
+			useServer: true,
+			validateFunc: func(report *orchestrator.Report, err error) {
+				s.Require().NoError(err)
+				s.Equal(orchestrator.StatusUnchanged, report.Tasks[0].Status)
+			},
+		},
+		{
+			name:       "poll fails immediately on 401",
 			createCode: http.StatusCreated,
 			pollResponses: []pollResponse{
-				{code: http.StatusInternalServerError},
+				{code: http.StatusUnauthorized},
 			},
 			useServer: true,
 			validateFunc: func(_ *orchestrator.Report, err error) {
 				s.Error(err)
 				s.Contains(err.Error(), "poll job")
+			},
+		},
+		{
+			name:       "poll transient error times out via context",
+			createCode: http.StatusCreated,
+			pollResponses: []pollResponse{
+				{code: http.StatusNotFound},
+				{code: http.StatusNotFound},
+				{code: http.StatusNotFound},
+			},
+			useServer:    true,
+			useContext:   true,
+			pollInterval: 5 * time.Second,
+			validateFunc: func(_ *orchestrator.Report, err error) {
+				s.Error(err)
+				s.ErrorIs(err, context.DeadlineExceeded)
+			},
+		},
+		{
+			name:       "poll pending status times out via context during backoff",
+			createCode: http.StatusCreated,
+			pollResponses: []pollResponse{
+				{status: "pending"},
+				{status: "pending"},
+			},
+			useServer:    true,
+			useContext:   true,
+			pollInterval: 5 * time.Second,
+			validateFunc: func(_ *orchestrator.Report, err error) {
+				s.Error(err)
+				s.ErrorIs(err, context.DeadlineExceeded)
 			},
 		},
 		{

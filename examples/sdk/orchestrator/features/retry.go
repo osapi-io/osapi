@@ -20,9 +20,14 @@
 
 // Package main demonstrates Retry(n) for automatic retry on failure.
 //
+// Two tasks show different retry strategies:
+//   - get-load: immediate retry (no delay between attempts)
+//   - get-uptime: retry with exponential backoff (~1s, ~2s, ~4s delays)
+//
 // DAG:
 //
-//	get-load [retry:3]
+//	get-load    [retry:3]
+//	get-uptime  [retry:3, backoff:1s-30s]
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run retry.go
 package main
@@ -32,6 +37,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
@@ -62,11 +68,21 @@ func main() {
 
 	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
 
+	// Immediate retry: no delay between attempts.
 	getLoad := plan.Task("get-load", &orchestrator.Op{
 		Operation: "node.load.get",
 		Target:    "_any",
 	})
 	getLoad.OnError(orchestrator.Retry(3))
+
+	// Retry with exponential backoff: ~1s, ~2s, ~4s between attempts.
+	getUptime := plan.Task("get-uptime", &orchestrator.Op{
+		Operation: "node.uptime.get",
+		Target:    "_any",
+	})
+	getUptime.OnError(orchestrator.Retry(3,
+		orchestrator.WithRetryBackoff(1*time.Second, 30*time.Second),
+	))
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

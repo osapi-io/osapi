@@ -1,11 +1,17 @@
 package orchestrator
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+	"time"
+)
 
 // ErrorStrategy defines how the runner handles task failures.
 type ErrorStrategy struct {
-	kind       string
-	retryCount int
+	kind            string
+	retryCount      int
+	initialInterval time.Duration
+	maxInterval     time.Duration
 }
 
 // StopAll cancels all remaining tasks on first failure.
@@ -15,12 +21,48 @@ var StopAll = ErrorStrategy{kind: "stop_all"}
 // independent tasks.
 var Continue = ErrorStrategy{kind: "continue"}
 
+// RetryOption configures retry behavior.
+type RetryOption func(*ErrorStrategy)
+
+// WithRetryBackoff enables exponential backoff between retry attempts
+// with the given initial and maximum intervals.
+func WithRetryBackoff(
+	initial time.Duration,
+	maxInterval time.Duration,
+) RetryOption {
+	return func(s *ErrorStrategy) {
+		s.initialInterval = initial
+		s.maxInterval = maxInterval
+	}
+}
+
 // Retry returns a strategy that retries a failed task n times
-// before failing.
+// before failing. Options configure backoff behavior.
 func Retry(
 	n int,
+	opts ...RetryOption,
 ) ErrorStrategy {
-	return ErrorStrategy{kind: "retry", retryCount: n}
+	s := ErrorStrategy{kind: "retry", retryCount: n}
+	for _, opt := range opts {
+		opt(&s)
+	}
+
+	return s
+}
+
+// backoffDelay returns the delay for the given attempt using
+// exponential backoff clamped to maxInterval.
+func (e ErrorStrategy) backoffDelay(
+	attempt int,
+) time.Duration {
+	delay := time.Duration(
+		float64(e.initialInterval) * math.Pow(2, float64(attempt)),
+	)
+	if delay > e.maxInterval {
+		delay = e.maxInterval
+	}
+
+	return delay
 }
 
 // String returns a human-readable representation of the strategy.
