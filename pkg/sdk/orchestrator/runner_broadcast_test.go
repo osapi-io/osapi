@@ -231,6 +231,48 @@ func jobTestServer(
 	}))
 }
 
+func (s *RunnerBroadcastTestSuite) TestExecuteOpPopulatesJobID() {
+	tests := []struct {
+		name      string
+		jobResult map[string]any
+		wantJobID string
+	}{
+		{
+			name:      "op result carries job ID",
+			jobResult: map[string]any{"hostname": "web-01"},
+			wantJobID: "11111111-1111-1111-1111-111111111111",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			origInterval := DefaultPollInterval
+			DefaultPollInterval = 10 * time.Millisecond
+
+			defer func() {
+				DefaultPollInterval = origInterval
+			}()
+
+			srv := jobTestServer(tt.jobResult)
+			defer srv.Close()
+
+			client := osapiclient.New(srv.URL, "test-token")
+			plan := NewPlan(client, OnError(StopAll))
+
+			plan.Task("get-hostname", &Op{
+				Operation: "node.hostname.get",
+				Target:    "_any",
+			})
+
+			report, err := plan.Run(context.Background())
+
+			s.Require().NoError(err)
+			s.Require().Len(report.Tasks, 1)
+			s.Equal(tt.wantJobID, report.Tasks[0].JobID)
+		})
+	}
+}
+
 func (s *RunnerBroadcastTestSuite) TestExecuteOpBroadcast() {
 	tests := []struct {
 		name            string

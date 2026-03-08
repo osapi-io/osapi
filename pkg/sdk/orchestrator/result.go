@@ -34,6 +34,7 @@ type HostResult struct {
 
 // Result is the outcome of a single task execution.
 type Result struct {
+	JobID       string
 	Changed     bool
 	Data        map[string]any
 	Status      Status
@@ -42,6 +43,7 @@ type Result struct {
 
 // TaskResult records the full execution details of a task.
 type TaskResult struct {
+	JobID       string
 	Name        string
 	Status      Status
 	Changed     bool

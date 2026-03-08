@@ -383,6 +383,7 @@ func (r *runner) runTask(
 	r.mu.Unlock()
 
 	tr := TaskResult{
+		JobID:       result.JobID,
 		Name:        t.name,
 		Status:      status,
 		Changed:     result.Changed,
@@ -541,7 +542,7 @@ func (r *runner) pollJob(
 				}
 				delete(data, "changed")
 
-				return &Result{Changed: changed, Data: data}, nil
+				return &Result{JobID: jobID, Changed: changed, Data: data}, nil
 			case "failed":
 				errMsg := "job failed"
 				if job.Error != "" {
