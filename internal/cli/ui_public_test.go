@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -573,29 +573,29 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 	}{
 		{
 			name: "when auth error logs api error with status code",
-			err: &osapi.AuthError{
-				APIError: osapi.APIError{StatusCode: 403, Message: "insufficient permissions"},
+			err: &client.AuthError{
+				APIError: client.APIError{StatusCode: 403, Message: "insufficient permissions"},
 			},
 			wantInLog: "insufficient permissions",
 		},
 		{
 			name: "when not found error logs api error with status code",
-			err: &osapi.NotFoundError{
-				APIError: osapi.APIError{StatusCode: 404, Message: "job not found"},
+			err: &client.NotFoundError{
+				APIError: client.APIError{StatusCode: 404, Message: "job not found"},
 			},
 			wantInLog: "job not found",
 		},
 		{
 			name: "when validation error logs api error with status code",
-			err: &osapi.ValidationError{
-				APIError: osapi.APIError{StatusCode: 400, Message: "invalid input"},
+			err: &client.ValidationError{
+				APIError: client.APIError{StatusCode: 400, Message: "invalid input"},
 			},
 			wantInLog: "invalid input",
 		},
 		{
 			name: "when server error logs api error with status code",
-			err: &osapi.ServerError{
-				APIError: osapi.APIError{StatusCode: 500, Message: "internal server error"},
+			err: &client.ServerError{
+				APIError: client.APIError{StatusCode: 500, Message: "internal server error"},
 			},
 			wantInLog: "internal server error",
 		},
@@ -863,17 +863,17 @@ func (suite *UIPublicTestSuite) TestFormatBytes() {
 func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 	tests := []struct {
 		name string
-		resp *osapi.JobDetail
+		resp *client.JobDetail
 	}{
 		{
 			name: "when minimal response displays job info",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				Status: "completed",
 			},
 		},
 		{
 			name: "when full response displays all sections",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				ID:        "550e8400-e29b-41d4-a716-446655440000",
 				Status:    "completed",
 				Hostname:  "web-01",
@@ -882,7 +882,7 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 				Error:     "timeout",
 				Operation: map[string]any{"type": "node.hostname"},
 				Result:    map[string]any{"hostname": "web-01"},
-				Timeline: []osapi.TimelineEvent{
+				Timeline: []client.TimelineEvent{
 					{
 						Event:     "completed",
 						Timestamp: "2026-01-01T00:01:00Z",
@@ -890,13 +890,13 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 						Message:   "job completed",
 					},
 				},
-				AgentStates: map[string]osapi.AgentState{
+				AgentStates: map[string]client.AgentState{
 					"web-01": {
 						Status:   "completed",
 						Duration: "1.5s",
 					},
 				},
-				Responses: map[string]osapi.AgentJobResponse{
+				Responses: map[string]client.AgentJobResponse{
 					"web-01": {
 						Status: "ok",
 						Data:   map[string]string{"key": "val"},
@@ -906,9 +906,9 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 		},
 		{
 			name: "when agent states with multiple agents shows summary",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				Status: "completed",
-				AgentStates: map[string]osapi.AgentState{
+				AgentStates: map[string]client.AgentState{
 					"web-01": {Status: "completed", Duration: "1s"},
 					"web-02": {Status: "failed", Duration: "1s", Error: "error"},
 					"web-03": {Status: "started", Duration: "1s"},
@@ -917,9 +917,9 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 		},
 		{
 			name: "when response has nil data shows no data placeholder",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				Status: "completed",
-				Responses: map[string]osapi.AgentJobResponse{
+				Responses: map[string]client.AgentJobResponse{
 					"web-01": {
 						Status: "ok",
 						Data:   nil,
@@ -929,9 +929,9 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 		},
 		{
 			name: "when response has error shows error message",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				Status: "failed",
-				Responses: map[string]osapi.AgentJobResponse{
+				Responses: map[string]client.AgentJobResponse{
 					"web-01": {
 						Status: "failed",
 						Error:  "timeout",
@@ -941,9 +941,9 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 		},
 		{
 			name: "when timeline has error shows error message",
-			resp: &osapi.JobDetail{
+			resp: &client.JobDetail{
 				Status: "failed",
-				Timeline: []osapi.TimelineEvent{
+				Timeline: []client.TimelineEvent{
 					{
 						Event:     "failed",
 						Timestamp: "2026-01-01T00:01:00Z",

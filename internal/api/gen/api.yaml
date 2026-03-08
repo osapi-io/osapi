@@ -850,41 +850,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /job/status:
-    servers: []
-    get:
-      summary: Get queue statistics
-      description: Retrieve statistics about the job queue.
-      tags:
-        - Job_Management_API_job_operations
-      security:
-        - BearerAuth:
-            - job:read
-      responses:
-        '200':
-          description: Queue statistics.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueueStatsResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving queue statistics.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /job/{id}:
     servers: []
     get:
@@ -2633,21 +2598,6 @@ components:
               error:
                 type: string
                 description: Error details if applicable.
-    QueueStatsResponse:
-      type: object
-      properties:
-        total_jobs:
-          type: integer
-          description: Total number of jobs in the queue.
-          example: 42
-        status_counts:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Count of jobs by status.
-        dlq_count:
-          type: integer
-          description: Number of jobs in the dead letter queue.
     DiskResponse:
       type: object
       description: Local disk usage information.

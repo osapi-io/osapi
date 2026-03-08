@@ -128,18 +128,6 @@ type ListJobsResponse struct {
 	TotalItems *int `json:"total_items,omitempty"`
 }
 
-// QueueStatsResponse defines model for QueueStatsResponse.
-type QueueStatsResponse struct {
-	// DlqCount Number of jobs in the dead letter queue.
-	DlqCount *int `json:"dlq_count,omitempty"`
-
-	// StatusCounts Count of jobs by status.
-	StatusCounts *map[string]int `json:"status_counts,omitempty"`
-
-	// TotalJobs Total number of jobs in the queue.
-	TotalJobs *int `json:"total_jobs,omitempty"`
-}
-
 // RetryJobRequest defines model for RetryJobRequest.
 type RetryJobRequest struct {
 	// TargetHostname Override target hostname for the retried job. Defaults to _any if not specified.
@@ -175,9 +163,6 @@ type ServerInterface interface {
 	// Create a new job
 	// (POST /job)
 	PostJob(ctx echo.Context) error
-	// Get queue statistics
-	// (GET /job/status)
-	GetJobStatus(ctx echo.Context) error
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx echo.Context, id openapi_types.UUID) error
@@ -236,17 +221,6 @@ func (w *ServerInterfaceWrapper) PostJob(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostJob(ctx)
-	return err
-}
-
-// GetJobStatus converts echo context to params.
-func (w *ServerInterfaceWrapper) GetJobStatus(ctx echo.Context) error {
-	var err error
-
-	ctx.Set(BearerAuthScopes, []string{"job:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetJobStatus(ctx)
 	return err
 }
 
@@ -334,7 +308,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/job", wrapper.GetJob)
 	router.POST(baseURL+"/job", wrapper.PostJob)
-	router.GET(baseURL+"/job/status", wrapper.GetJobStatus)
 	router.DELETE(baseURL+"/job/:id", wrapper.DeleteJobByID)
 	router.GET(baseURL+"/job/:id", wrapper.GetJobByID)
 	router.POST(baseURL+"/job/:id/retry", wrapper.RetryJobByID)
@@ -441,49 +414,6 @@ func (response PostJob403JSONResponse) VisitPostJobResponse(w http.ResponseWrite
 type PostJob500JSONResponse externalRef0.ErrorResponse
 
 func (response PostJob500JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetJobStatusRequestObject struct {
-}
-
-type GetJobStatusResponseObject interface {
-	VisitGetJobStatusResponse(w http.ResponseWriter) error
-}
-
-type GetJobStatus200JSONResponse QueueStatsResponse
-
-func (response GetJobStatus200JSONResponse) VisitGetJobStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetJobStatus401JSONResponse externalRef0.ErrorResponse
-
-func (response GetJobStatus401JSONResponse) VisitGetJobStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetJobStatus403JSONResponse externalRef0.ErrorResponse
-
-func (response GetJobStatus403JSONResponse) VisitGetJobStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetJobStatus500JSONResponse externalRef0.ErrorResponse
-
-func (response GetJobStatus500JSONResponse) VisitGetJobStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -684,9 +614,6 @@ type StrictServerInterface interface {
 	// Create a new job
 	// (POST /job)
 	PostJob(ctx context.Context, request PostJobRequestObject) (PostJobResponseObject, error)
-	// Get queue statistics
-	// (GET /job/status)
-	GetJobStatus(ctx context.Context, request GetJobStatusRequestObject) (GetJobStatusResponseObject, error)
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx context.Context, request DeleteJobByIDRequestObject) (DeleteJobByIDResponseObject, error)
@@ -758,29 +685,6 @@ func (sh *strictHandler) PostJob(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(PostJobResponseObject); ok {
 		return validResponse.VisitPostJobResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetJobStatus operation middleware
-func (sh *strictHandler) GetJobStatus(ctx echo.Context) error {
-	var request GetJobStatusRequestObject
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetJobStatus(ctx.Request().Context(), request.(GetJobStatusRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetJobStatus")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetJobStatusResponseObject); ok {
-		return validResponse.VisitGetJobStatusResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

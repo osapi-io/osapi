@@ -15,7 +15,6 @@ Async job queue operations.
 | `List(ctx, params)`              | List jobs with optional filters |
 | `Delete(ctx, id)`                | Delete a job by UUID            |
 | `Retry(ctx, id, target)`         | Retry a failed job              |
-| `QueueStats(ctx)`                | Retrieve queue statistics       |
 
 ## Usage
 
@@ -27,7 +26,7 @@ resp, err := client.Job.Create(ctx, map[string]any{
 }, "_any")
 
 // List completed jobs
-resp, err := client.Job.List(ctx, osapi.ListParams{
+resp, err := client.Job.List(ctx, client.ListParams{
     Status: "completed",
     Limit:  20,
 })
@@ -39,7 +38,7 @@ resp, err := client.Job.Retry(ctx, "uuid-string", "_any")
 ## Example
 
 See
-[`examples/sdk/osapi/job.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/job.go)
+[`examples/sdk/client/job.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/job.go)
 for a complete working example.
 
 ## Permissions

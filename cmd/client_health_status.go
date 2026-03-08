@@ -23,7 +23,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -55,7 +55,7 @@ Requires authentication.
 
 // displayStatusHealth renders health status output with system metrics.
 func displayStatusHealth(
-	data *osapi.SystemStatus,
+	data *client.SystemStatus,
 ) {
 	fmt.Println()
 	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)

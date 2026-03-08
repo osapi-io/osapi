@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -44,7 +44,7 @@ var clientJobListCmd = &cobra.Command{
 		offsetFlag, _ := cmd.Flags().GetInt("offset")
 
 		// Get jobs list (server-side pagination)
-		jobsResp, err := sdkClient.Job.List(ctx, osapi.ListParams{
+		jobsResp, err := sdkClient.Job.List(ctx, client.ListParams{
 			Status: statusFilter,
 			Limit:  limitFlag,
 			Offset: offsetFlag,
@@ -76,7 +76,7 @@ var clientJobListCmd = &cobra.Command{
 }
 
 func displayJobListJSON(
-	jobs []osapi.JobDetail,
+	jobs []client.JobDetail,
 	totalItems int,
 	statusCounts map[string]int,
 	statusFilter string,
@@ -129,7 +129,7 @@ func displayJobListSummary(
 }
 
 func displayJobListTable(
-	jobs []osapi.JobDetail,
+	jobs []client.JobDetail,
 ) {
 	if len(jobs) == 0 {
 		return

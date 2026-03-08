@@ -109,36 +109,6 @@ func (s *JobSmokeSuite) TestJobGet() {
 	}
 }
 
-func (s *JobSmokeSuite) TestJobStatus() {
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns queue stats with total_jobs",
-			args: []string{"client", "job", "status", "--json"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				s.Require().NoError(parseJSON(stdout, &result))
-				s.Contains(result, "total_jobs")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
-
 func (s *JobSmokeSuite) TestJobDelete() {
 	skipWrite(s.T())
 

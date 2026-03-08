@@ -29,17 +29,15 @@ them to be used as appliances.
 [Getting Started]: https://osapi-io.github.io/osapi/
 [API]: https://osapi-io.github.io/osapi/category/api
 [Usage]: https://osapi-io.github.io/osapi/sidebar/usage
-[SDK]: https://osapi-io.github.io/osapi/sidebar/sdk/sdk
+[SDK]: https://osapi-io.github.io/osapi/sidebar/sdk
 
 ## 🔗 Sister Projects
 
 | Project | Description |
 | --- | --- |
-| [osapi-orchestrator][] | A Go package for orchestrating operations across OSAPI-managed hosts — typed operations, chaining, conditions, and result decoding built on top of the osapi-sdk engine |
 | [nats-client][] | A Go package for connecting to and interacting with a NATS server |
 | [nats-server][] | A Go package for running an embedded NATS server |
 
-[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 [nats-client]: https://github.com/osapi-io/nats-client
 [nats-server]: https://github.com/osapi-io/nats-server
 

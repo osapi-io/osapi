@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit/export"
@@ -51,8 +51,8 @@ func (suite *FileExporterPublicTestSuite) SetupTest() {
 
 func (suite *FileExporterPublicTestSuite) newEntry(
 	user string,
-) osapi.AuditEntry {
-	return osapi.AuditEntry{
+) client.AuditEntry {
+	return client.AuditEntry{
 		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
 		User:         user,
@@ -68,17 +68,17 @@ func (suite *FileExporterPublicTestSuite) newEntry(
 func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 	tests := []struct {
 		name         string
-		entries      []osapi.AuditEntry
+		entries      []client.AuditEntry
 		validateFunc func(path string)
 	}{
 		{
 			name:    "when single entry writes valid JSONL",
-			entries: []osapi.AuditEntry{suite.newEntry("alice@example.com")},
+			entries: []client.AuditEntry{suite.newEntry("alice@example.com")},
 			validateFunc: func(path string) {
 				lines := suite.readLines(path)
 				suite.Len(lines, 1)
 
-				var entry osapi.AuditEntry
+				var entry client.AuditEntry
 				err := json.Unmarshal([]byte(lines[0]), &entry)
 				suite.NoError(err)
 				suite.Equal("alice@example.com", entry.User)
@@ -86,7 +86,7 @@ func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 		},
 		{
 			name: "when multiple entries writes valid JSONL",
-			entries: []osapi.AuditEntry{
+			entries: []client.AuditEntry{
 				suite.newEntry("alice@example.com"),
 				suite.newEntry("bob@example.com"),
 				suite.newEntry("charlie@example.com"),
@@ -96,7 +96,7 @@ func (suite *FileExporterPublicTestSuite) TestOpenWriteClose() {
 				suite.Len(lines, 3)
 
 				for i, user := range []string{"alice@example.com", "bob@example.com", "charlie@example.com"} {
-					var entry osapi.AuditEntry
+					var entry client.AuditEntry
 					err := json.Unmarshal([]byte(lines[i]), &entry)
 					suite.NoError(err)
 					suite.Equal(user, entry.User)

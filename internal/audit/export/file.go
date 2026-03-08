@@ -28,7 +28,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // marshalJSON is a package-level variable for testing the marshal error path.
@@ -99,7 +99,7 @@ func (e *FileExporter) Open(
 // Write marshals an audit entry to JSON and writes it as a single line.
 func (e *FileExporter) Write(
 	_ context.Context,
-	entry osapi.AuditEntry,
+	entry client.AuditEntry,
 ) error {
 	if e.writer == nil {
 		return fmt.Errorf("exporter not opened")

@@ -64,20 +64,20 @@ resp, err := client.Node.UpdateDNS(
 )
 
 // Execute a command
-resp, err := client.Node.Exec(ctx, osapi.ExecRequest{
+resp, err := client.Node.Exec(ctx, client.ExecRequest{
     Command: "apt",
     Args:    []string{"install", "-y", "nginx"},
     Target:  "_all",
 })
 
 // Execute a shell command
-resp, err := client.Node.Shell(ctx, osapi.ShellRequest{
+resp, err := client.Node.Shell(ctx, client.ShellRequest{
     Command: "ps aux | grep nginx",
     Target:  "_any",
 })
 
 // Deploy a file
-resp, err := client.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
     ObjectName:  "nginx.conf",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "raw",
@@ -94,11 +94,11 @@ resp, err := client.Node.FileStatus(
 ## Examples
 
 See
-[`examples/sdk/osapi/node.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/node.go)
+[`examples/sdk/client/node.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/node.go)
 for node info, and
-[`examples/sdk/osapi/network.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/network.go)
+[`examples/sdk/client/network.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/network.go)
 and
-[`examples/sdk/osapi/command.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/command.go)
+[`examples/sdk/client/command.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/command.go)
 for network and command examples.
 
 ## Permissions

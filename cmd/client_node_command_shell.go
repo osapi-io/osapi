@@ -25,7 +25,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -52,7 +52,7 @@ var clientNodeCommandShellCmd = &cobra.Command{
 			}
 		}
 
-		resp, err := sdkClient.Node.Shell(ctx, osapi.ShellRequest{
+		resp, err := sdkClient.Node.Shell(ctx, client.ShellRequest{
 			Command: command,
 			Cwd:     cwd,
 			Timeout: timeout,

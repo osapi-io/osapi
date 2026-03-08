@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -37,7 +37,7 @@ type FileTestSuite struct {
 }
 
 func (s *FileTestSuite) TestWriteNewlineError() {
-	entry := osapi.AuditEntry{
+	entry := client.AuditEntry{
 		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
 		User:         "user@example.com",

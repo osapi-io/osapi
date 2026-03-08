@@ -26,7 +26,7 @@ resp, err := client.Agent.Get(ctx, "web-01")
 ## Example
 
 See
-[`examples/sdk/osapi/agent.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/agent.go)
+[`examples/sdk/client/agent.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/agent.go)
 for a complete working example.
 
 ## Permissions

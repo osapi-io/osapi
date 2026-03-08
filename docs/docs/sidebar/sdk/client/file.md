@@ -59,7 +59,7 @@ resp, err := client.File.Upload(
 // Force upload — skip SHA-256 check, always write.
 resp, err := client.File.Upload(
     ctx, "nginx.conf", "raw", bytes.NewReader(data),
-    osapi.WithForce(),
+    client.WithForce(),
 )
 
 // Check if content differs without uploading.
@@ -78,7 +78,7 @@ resp, err := client.File.Get(ctx, "nginx.conf")
 resp, err := client.File.Delete(ctx, "nginx.conf")
 
 // Deploy a raw file to a specific host.
-resp, err := client.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
     ObjectName:  "nginx.conf",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "raw",
@@ -89,7 +89,7 @@ resp, err := client.Node.FileDeploy(ctx, osapi.FileDeployOpts{
 })
 
 // Deploy a template file with variables.
-resp, err := client.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
@@ -132,7 +132,7 @@ reports `Changed: false`.
 ## Example
 
 See
-[`examples/sdk/osapi/file.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/osapi/file.go)
+[`examples/sdk/client/file.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/file.go)
 for a complete working example.
 
 ## Permissions

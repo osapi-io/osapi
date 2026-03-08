@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/retr0h/osapi/pkg/sdk/osapi"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -57,7 +57,7 @@ var clientAgentGetCmd = &cobra.Command{
 
 // displayAgentGetDetail renders detailed agent information in PrintKV style.
 func displayAgentGetDetail(
-	data *osapi.Agent,
+	data *client.Agent,
 ) {
 	fmt.Println()
 

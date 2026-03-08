@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Client
+# Client Library
 
 The `osapi` package provides a typed Go client for the OSAPI REST API. Create a
 client with `New()` and use domain-specific services to interact with the API.
@@ -10,9 +10,9 @@ client with `New()` and use domain-specific services to interact with the API.
 ## Quick Start
 
 ```go
-import "github.com/retr0h/osapi/pkg/sdk/osapi"
+import "github.com/retr0h/osapi/pkg/sdk/client"
 
-client := osapi.New("http://localhost:8080", "your-jwt-token")
+client := client.New("http://localhost:8080", "your-jwt-token")
 
 resp, err := client.Node.Hostname(ctx, "_any")
 ```

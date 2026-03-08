@@ -154,13 +154,14 @@ const config: Config = {
           position: 'left',
           items: [
             {
-              type: 'doc',
-              label: 'Overview',
-              docId: 'sidebar/sdk/sdk'
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Client Library</small>',
+              className: 'dropdown-header'
             },
             {
               type: 'doc',
-              label: 'Client',
+              label: 'Overview',
               docId: 'sidebar/sdk/client/client'
             },
             {
@@ -197,6 +198,87 @@ const config: Config = {
               type: 'doc',
               label: 'Node',
               docId: 'sidebar/sdk/client/node'
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.3rem 0;">',
+              className: 'dropdown-separator'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Orchestrator</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Overview',
+              docId: 'sidebar/sdk/orchestrator/orchestrator'
+            },
+            {
+              type: 'doc',
+              label: 'Basic',
+              docId: 'sidebar/sdk/orchestrator/features/basic'
+            },
+            {
+              type: 'doc',
+              label: 'Task Functions',
+              docId: 'sidebar/sdk/orchestrator/features/task-func'
+            },
+            {
+              type: 'doc',
+              label: 'Parallel',
+              docId: 'sidebar/sdk/orchestrator/features/parallel'
+            },
+            {
+              type: 'doc',
+              label: 'Guards',
+              docId: 'sidebar/sdk/orchestrator/features/guards'
+            },
+            {
+              type: 'doc',
+              label: 'Only If Changed',
+              docId: 'sidebar/sdk/orchestrator/features/only-if-changed'
+            },
+            {
+              type: 'doc',
+              label: 'Hooks',
+              docId: 'sidebar/sdk/orchestrator/features/hooks'
+            },
+            {
+              type: 'doc',
+              label: 'Error Strategies',
+              docId: 'sidebar/sdk/orchestrator/features/error-strategy'
+            },
+            {
+              type: 'doc',
+              label: 'Failure Recovery',
+              docId: 'sidebar/sdk/orchestrator/features/only-if-failed'
+            },
+            {
+              type: 'doc',
+              label: 'Retry',
+              docId: 'sidebar/sdk/orchestrator/features/retry'
+            },
+            {
+              type: 'doc',
+              label: 'Broadcast',
+              docId: 'sidebar/sdk/orchestrator/features/broadcast'
+            },
+            {
+              type: 'doc',
+              label: 'File Deploy',
+              docId: 'sidebar/sdk/orchestrator/features/file-deploy-workflow'
+            },
+            {
+              type: 'doc',
+              label: 'Result Decode',
+              docId: 'sidebar/sdk/orchestrator/features/result-decode'
+            },
+            {
+              type: 'doc',
+              label: 'Introspection',
+              docId: 'sidebar/sdk/orchestrator/features/introspection'
             }
           ]
         },
