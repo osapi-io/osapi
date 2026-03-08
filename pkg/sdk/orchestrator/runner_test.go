@@ -420,3 +420,54 @@ func (s *RunnerTestSuite) TestTaskResultCarriesData() {
 		})
 	}
 }
+
+func (s *RunnerTestSuite) TestRunTaskPreservesResultOnError() {
+	tests := []struct {
+		name            string
+		setup           func() *Plan
+		taskName        string
+		wantChanged     bool
+		wantHostResults int
+	}{
+		{
+			name: "TaskFunc error preserves Changed and HostResults",
+			setup: func() *Plan {
+				plan := NewPlan(nil, OnError(Continue))
+
+				plan.TaskFunc("failing", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*Result, error) {
+					return &Result{
+						Changed: true,
+						HostResults: []HostResult{
+							{Hostname: "web-01", Changed: true},
+							{Hostname: "web-02", Error: "timeout"},
+						},
+					}, fmt.Errorf("partial failure")
+				})
+
+				return plan
+			},
+			taskName:        "failing",
+			wantChanged:     true,
+			wantHostResults: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			plan := tt.setup()
+			runner := newRunner(plan)
+
+			_, err := runner.run(context.Background())
+			_ = err
+
+			result := runner.results.Get(tt.taskName)
+			s.Require().NotNil(result)
+			s.Equal(StatusFailed, result.Status)
+			s.Equal(tt.wantChanged, result.Changed)
+			s.Len(result.HostResults, tt.wantHostResults)
+		})
+	}
+}

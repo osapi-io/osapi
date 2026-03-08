@@ -259,18 +259,6 @@ func (a *Agent) handleJobMessage(
 		)
 		response.Status = job.StatusFailed
 		response.Error = err.Error()
-
-		// Write failed event
-		if err := a.writeStatusEvent(ctx, jobKey, "failed", map[string]interface{}{
-			"error":       err.Error(),
-			"duration_ms": time.Since(startTime).Milliseconds(),
-		}); err != nil {
-			a.logger.ErrorContext(
-				ctx,
-				"failed to write failed event",
-				slog.String("error", err.Error()),
-			)
-		}
 	} else {
 		response.Status = job.StatusCompleted
 		response.Data = result
@@ -279,19 +267,13 @@ func (a *Agent) handleJobMessage(
 		if jobRequest.Type == job.TypeModify {
 			response.Changed = extractChanged(result)
 		}
-
-		// Write completed event
-		if err := a.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
-			"duration_ms": time.Since(startTime).Milliseconds(),
-			"result_size": len(result),
-		}); err != nil {
-			a.logger.ErrorContext(ctx, "failed to write completed event", slog.String("error", err.Error()))
-		}
 	}
 
 	response.Timestamp = time.Now()
 
-	// Store response using job client
+	// Store response before writing the status event. Polling clients
+	// use the status event to decide completion — the response data
+	// must already be in KV when they read it.
 	var errorMsg string
 	if response.Error != "" {
 		errorMsg = response.Error
@@ -301,6 +283,27 @@ func (a *Agent) handleJobMessage(
 		response.Data, string(response.Status), errorMsg, response.Changed)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
+	}
+
+	// Write terminal status event after the response is persisted.
+	if response.Status == job.StatusFailed {
+		if err := a.writeStatusEvent(ctx, jobKey, "failed", map[string]interface{}{
+			"error":       response.Error,
+			"duration_ms": time.Since(startTime).Milliseconds(),
+		}); err != nil {
+			a.logger.ErrorContext(
+				ctx,
+				"failed to write failed event",
+				slog.String("error", err.Error()),
+			)
+		}
+	} else {
+		if err := a.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
+			"duration_ms": time.Since(startTime).Milliseconds(),
+			"result_size": len(result),
+		}); err != nil {
+			a.logger.ErrorContext(ctx, "failed to write completed event", slog.String("error", err.Error()))
+		}
 	}
 
 	// NOTE: We no longer update the original job - it remains immutable.

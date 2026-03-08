@@ -26,19 +26,22 @@ const (
 // HostResult represents a single host's response within a broadcast
 // operation.
 type HostResult struct {
-	Hostname string
-	Changed  bool
-	Error    string
-	Data     map[string]any
+	Hostname    string
+	Changed     bool
+	Error       string
+	Data        map[string]any
+	JobDuration time.Duration
 }
 
 // Result is the outcome of a single task execution.
 type Result struct {
-	JobID       string
-	Changed     bool
-	Data        map[string]any
-	Status      Status
-	HostResults []HostResult
+	JobID          string
+	Changed        bool
+	Data           map[string]any
+	Status         Status
+	JobDuration    time.Duration
+	HostResults    []HostResult
+	agentDurations map[string]time.Duration // per-host durations from AgentStates
 }
 
 // TaskResult records the full execution details of a task.
@@ -48,6 +51,7 @@ type TaskResult struct {
 	Status      Status
 	Changed     bool
 	Duration    time.Duration
+	JobDuration time.Duration
 	Error       error
 	Data        map[string]any
 	HostResults []HostResult

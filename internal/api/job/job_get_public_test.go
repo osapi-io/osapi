@@ -238,7 +238,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			},
 		},
 		{
-			name: "single response omits responses map",
+			name: "single response includes responses map",
 			request: gen.GetJobByIDRequestObject{
 				Id: uuid.MustParse("aa0e8400-e29b-41d4-a716-446655440000"),
 			},
@@ -259,7 +259,8 @@ func (s *JobGetPublicTestSuite) TestGetJobByID() {
 			validateFunc: func(resp gen.GetJobByIDResponseObject) {
 				r, ok := resp.(gen.GetJobByID200JSONResponse)
 				s.True(ok)
-				s.Nil(r.Responses)
+				s.NotNil(r.Responses)
+				s.Len(*r.Responses, 1)
 				s.NotNil(r.Result)
 			},
 		},
