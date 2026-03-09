@@ -27,17 +27,14 @@ sequenceDiagram
     participant NATS
     participant Agent
 
-    CLI->>API: POST /job
+    CLI->>API: domain endpoint (e.g. GET /node/{host}/hostname)
     API->>NATS: store job in KV
     API->>NATS: publish notification
-    API-->>CLI: 201 (job_id)
+    API-->>CLI: 200 (result + job_id)
     NATS->>Agent: deliver notification
     Agent->>NATS: read job from KV
     Agent->>Agent: execute operation
     Agent->>NATS: write result to KV
-    CLI->>API: GET /job/{id}
-    API->>NATS: read result from KV
-    API-->>CLI: 200 (result)
 ```
 
 ## Job Routing
@@ -69,10 +66,12 @@ stateDiagram-v2
     Retryable --> Pending: retry
 ```
 
-Jobs can be listed, inspected, deleted, and retried through the API and CLI. See
-[CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples, or the
-[API Reference](/gen/api/job-management-api-job-operations) for the REST
-endpoints.
+Jobs are created implicitly when you call a domain endpoint (e.g.,
+`GET /node/{hostname}/hostname`). Once created, jobs can be listed,
+inspected, deleted, and retried through the job API and CLI. See
+[CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples,
+or the [API Reference](/gen/api/job-management-api-job-operations) for the
+REST endpoints.
 
 ## Configuration
 
@@ -98,12 +97,17 @@ NATS stream, consumer, and DLQ settings.
 
 ## Permissions
 
-| Operation     | Permission  |
-| ------------- | ----------- |
-| Create job    | `job:write` |
-| List/get jobs | `job:read`  |
-| Delete job    | `job:write` |
-| Retry job     | `job:write` |
+| Operation     | Permission                                    |
+| ------------- | --------------------------------------------- |
+| Create job    | Domain-specific (e.g., `node:read`, `network:write`) |
+| List/get jobs | `job:read`                                    |
+| Delete job    | `job:write`                                   |
+| Retry job     | `job:write`                                   |
+
+Jobs are created implicitly through typed domain endpoints, so the
+permission required to create a job depends on the operation being
+performed. For example, reading a hostname requires `node:read`, while
+updating DNS requires `network:write`.
 
 ## Related
 

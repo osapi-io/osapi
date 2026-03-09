@@ -32,8 +32,9 @@ routing, and comprehensive job lifecycle management.
 The system has three entry points that all funnel through a shared client layer
 into NATS JetStream:
 
-- **REST API** — Creates jobs, queries status, returns results
-- **Jobs CLI** — Adds jobs, lists/inspects queue, monitors status
+- **REST API** — Creates jobs via domain endpoints, queries status,
+  returns results
+- **Jobs CLI** — Lists/inspects queue, monitors status, retries jobs
 - **Agents** — Processes jobs, updates status, stores results
 
 All three use the **Job Client Layer** (`internal/job/client/`), which provides
@@ -264,19 +265,19 @@ const (
 
 ### 1. Job Submission
 
-```go
-// Via API
-POST /api/v1/jobs
-{
-  "operation": {
-    "type": "network.dns.get",
-    "data": {"interface": "eth0"}
-  },
-  "target_hostname": "_any"
-}
+Jobs are created through typed domain endpoints rather than a generic job
+creation API. Each domain endpoint (e.g., `GET /node/{hostname}/hostname`,
+`PUT /node/{hostname}/network/dns/{interface}`) creates a job internally
+and returns the job ID. This ensures type safety and proper validation at
+the API layer.
 
-// Via CLI
-osapi client job add --json-file dns-query.json --target-hostname _any
+```bash
+# Get hostname — creates a job internally, returns job_id
+osapi client node hostname --target web-01
+
+# Update DNS — creates a job internally, returns job_id
+osapi client node network dns update --target web-01 \
+    --interface eth0 --servers 8.8.8.8,1.1.1.1
 ```
 
 ### 2. Job States
@@ -515,17 +516,14 @@ and other tokens with live values from its cached facts. See
 
 ## REST API Integration
 
-### Job Creation Endpoint
+### Job Creation
+
+Jobs are created implicitly through typed domain endpoints. There is no
+generic `POST /api/jobs` endpoint. Each domain endpoint creates a job
+internally and returns a response that includes the `job_id`:
 
 ```http
-POST /api/jobs
-Content-Type: application/json
-
-{
-  "type": "node.hostname.get",
-  "data": {},
-  "target_hostname": "_any"
-}
+GET /api/v1/node/{hostname}/hostname
 ```
 
 **Response:**
@@ -533,10 +531,13 @@ Content-Type: application/json
 ```json
 {
   "job_id": "uuid-12345",
-  "status": "created",
-  "revision": 1
+  "hostname": "server-01",
+  "changed": false
 }
 ```
+
+The caller can use the returned `job_id` to inspect the job later via
+`GET /api/v1/jobs/{job_id}`.
 
 ### Job Retry Endpoint
 
@@ -601,17 +602,11 @@ GET /api/jobs/{job_id}
 ### Job Management
 
 ```bash
-# Add a job
-osapi client job add --json-file operation.json --target-hostname _any
-
 # List jobs
 osapi client job list --status unprocessed --limit 10
 
 # Get job details
 osapi client job get --job-id 550e8400-e29b-41d4-a716-446655440000
-
-# Run job and wait for completion
-osapi client job run --json-file operation.json --timeout 60
 
 # Delete a job
 osapi client job delete --job-id uuid-12345
@@ -619,6 +614,10 @@ osapi client job delete --job-id uuid-12345
 # Retry a failed/stuck job
 osapi client job retry --job-id 550e8400-...
 ```
+
+Jobs are created through domain-specific commands (e.g.,
+`osapi client node hostname`, `osapi client node network dns update`)
+rather than a generic `job add` command.
 
 ## Package Architecture
 
@@ -686,8 +685,9 @@ The `internal/job/` package contains shared domain types and two subpackages:
 **Supports True Broadcast:**
 
 ```bash
-# Send DNS update to ALL servers
-osapi client job add --target-hostname _all --json-file dns-update.json
+# Update DNS on ALL servers
+osapi client node network dns update --target _all \
+    --interface eth0 --servers 8.8.8.8,1.1.1.1
 
 # Results: Each server processes independently
 # - server1: completed (2.1s)
@@ -699,8 +699,8 @@ osapi client job add --target-hostname _all --json-file dns-update.json
 **Load Balancing with Failover:**
 
 ```bash
-# Send to ANY available server
-osapi client job add --target-hostname _any --json-file system-check.json
+# Get hostname from ANY available server
+osapi client node hostname --target _any
 
 # Results: First available agent processes
 # Automatic failover if agent fails
