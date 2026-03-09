@@ -266,4 +266,3 @@ func writeTempFile(
 
 	return path
 }
-

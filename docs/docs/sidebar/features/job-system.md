@@ -67,11 +67,11 @@ stateDiagram-v2
 ```
 
 Jobs are created implicitly when you call a domain endpoint (e.g.,
-`GET /node/{hostname}/hostname`). Once created, jobs can be listed,
-inspected, deleted, and retried through the job API and CLI. See
-[CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples,
-or the [API Reference](/gen/api/job-management-api-job-operations) for the
-REST endpoints.
+`GET /node/{hostname}/hostname`). Once created, jobs can be listed, inspected,
+deleted, and retried through the job API and CLI. See
+[CLI Reference](../usage/cli/client/job/job.mdx) for usage and examples, or the
+[API Reference](/gen/api/job-management-api-job-operations) for the REST
+endpoints.
 
 ## Configuration
 
@@ -97,17 +97,17 @@ NATS stream, consumer, and DLQ settings.
 
 ## Permissions
 
-| Operation     | Permission                                    |
-| ------------- | --------------------------------------------- |
+| Operation     | Permission                                           |
+| ------------- | ---------------------------------------------------- |
 | Create job    | Domain-specific (e.g., `node:read`, `network:write`) |
-| List/get jobs | `job:read`                                    |
-| Delete job    | `job:write`                                   |
-| Retry job     | `job:write`                                   |
+| List/get jobs | `job:read`                                           |
+| Delete job    | `job:write`                                          |
+| Retry job     | `job:write`                                          |
 
-Jobs are created implicitly through typed domain endpoints, so the
-permission required to create a job depends on the operation being
-performed. For example, reading a hostname requires `node:read`, while
-updating DNS requires `network:write`.
+Jobs are created implicitly through typed domain endpoints, so the permission
+required to create a job depends on the operation being performed. For example,
+reading a hostname requires `node:read`, while updating DNS requires
+`network:write`.
 
 ## Related
 

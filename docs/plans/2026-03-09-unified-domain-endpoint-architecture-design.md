@@ -114,11 +114,11 @@ Domain endpoints handle `_all` and label selector targets internally via
 
 ## Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Remove `POST /job` | Yes | Eliminates duplicate path, forces typed validation |
-| Synchronous domain endpoints | Keep `publishAndWait` | Simple consumer DX, orchestrator uses goroutines for parallelism |
-| Broadcast handling | Delegate to domain endpoints | One implementation, orchestrator stays simple |
-| Result types | Typed per operation | Type safety over generic maps |
-| Versioning | Breaking change, no v2 | Project is early enough |
-| Job ID in responses | Keep | Essential for debugging when things break |
+| Decision                     | Choice                       | Rationale                                                        |
+| ---------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| Remove `POST /job`           | Yes                          | Eliminates duplicate path, forces typed validation               |
+| Synchronous domain endpoints | Keep `publishAndWait`        | Simple consumer DX, orchestrator uses goroutines for parallelism |
+| Broadcast handling           | Delegate to domain endpoints | One implementation, orchestrator stays simple                    |
+| Result types                 | Typed per operation          | Type safety over generic maps                                    |
+| Versioning                   | Breaking change, no v2       | Project is early enough                                          |
+| Job ID in responses          | Keep                         | Essential for debugging when things break                        |

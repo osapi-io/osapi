@@ -20,12 +20,12 @@ and broadcast collection internally via `publishAndWait`.
 
 ## Repo Layout
 
-| Repo | Path | Role |
-|------|------|------|
-| osapi | `pkg/sdk/orchestrator/` | SDK orchestrator engine |
-| osapi | `pkg/sdk/client/` | SDK client (typed service methods) |
-| osapi | `internal/api/job/` | Job API endpoints |
-| osapi-orchestrator | `pkg/orchestrator/` | User-facing DSL |
+| Repo               | Path                    | Role                               |
+| ------------------ | ----------------------- | ---------------------------------- |
+| osapi              | `pkg/sdk/orchestrator/` | SDK orchestrator engine            |
+| osapi              | `pkg/sdk/client/`       | SDK client (typed service methods) |
+| osapi              | `internal/api/job/`     | Job API endpoints                  |
+| osapi-orchestrator | `pkg/orchestrator/`     | User-facing DSL                    |
 
 Changes span both repos. osapi changes land first (SDK engine + API), then
 osapi-orchestrator (DSL layer).
@@ -37,6 +37,7 @@ osapi-orchestrator (DSL layer).
 Remove the job creation endpoint. List, get, delete, retry, and stats remain.
 
 **Files:**
+
 - Modify: `osapi/internal/api/job/gen/api.yaml` — remove `post` under `/job`
 - Modify: `osapi/internal/api/job/job_create.go` — delete file
 - Modify: `osapi/internal/api/job/job_create_public_test.go` — delete file
@@ -46,8 +47,8 @@ Remove the job creation endpoint. List, get, delete, retry, and stats remain.
 - Modify: `osapi/internal/job/client/jobs_public_test.go` — remove CreateJob
   test cases
 - Modify: `osapi/pkg/sdk/client/job.go` — remove `Create` method
-- Modify: `osapi/pkg/sdk/client/job_types.go` — remove `JobCreated` type if
-  only used by Create
+- Modify: `osapi/pkg/sdk/client/job_types.go` — remove `JobCreated` type if only
+  used by Create
 
 **Step 1:** Remove `post` operation from `/job` path in the OpenAPI spec.
 
@@ -82,6 +83,7 @@ Strip the generic job creation and polling machinery from the SDK orchestrator.
 After this, the SDK engine only supports `TaskFunc` (and `TaskFuncWithResults`).
 
 **Files:**
+
 - Modify: `osapi/pkg/sdk/orchestrator/plan.go` — remove `Task(name, op)` method
   that accepts `*Op`
 - Modify: `osapi/pkg/sdk/orchestrator/runner.go` — remove `executeOp`,
@@ -90,8 +92,8 @@ After this, the SDK engine only supports `TaskFunc` (and `TaskFuncWithResults`).
   `IsBroadcastTarget`
 - Modify: `osapi/pkg/sdk/orchestrator/result.go` — remove `Op` struct, remove
   `agentDurations` internal field from `Result`
-- Modify: `osapi/pkg/sdk/orchestrator/runner_test.go` — remove tests for
-  removed functions (`TestBackoffDelay`, `TestIsTransient`,
+- Modify: `osapi/pkg/sdk/orchestrator/runner_test.go` — remove tests for removed
+  functions (`TestBackoffDelay`, `TestIsTransient`,
   `TestRunTaskStoresResultForAllPaths` if it uses Op)
 - Modify: `osapi/pkg/sdk/orchestrator/runner_broadcast_test.go` — remove tests
   for removed functions (`TestIsBroadcastTarget`, `TestExtractHostResults`,
@@ -100,13 +102,13 @@ After this, the SDK engine only supports `TaskFunc` (and `TaskFuncWithResults`).
   `TestPollJob*`)
 - Modify: `osapi/pkg/sdk/orchestrator/plan_public_test.go` — update
   `TestRunOpTask` and `TestRunOpTaskErrors` to use TaskFunc instead of Op
-- Modify: `osapi/pkg/sdk/orchestrator/options.go` — check if backoff imports
-  are still needed (they won't be if pollJob is removed)
+- Modify: `osapi/pkg/sdk/orchestrator/options.go` — check if backoff imports are
+  still needed (they won't be if pollJob is removed)
 
 **Step 1:** Remove the `Op` struct from `result.go`.
 
-**Step 2:** Remove `Task(name string, op *Op)` from `plan.go`. Keep
-`TaskFunc` and `TaskFuncWithResults`.
+**Step 2:** Remove `Task(name string, op *Op)` from `plan.go`. Keep `TaskFunc`
+and `TaskFuncWithResults`.
 
 **Step 3:** Remove all polling and broadcast functions from `runner.go`:
 `executeOp`, `pollJob`, `countExpectedAgents`, `hostResultsFromResponses`,
@@ -121,10 +123,11 @@ if no longer needed in `runner.go`.
 
 **Step 6:** Delete or update tests. Remove all test methods that exercise
 removed code. Update `TestRunOpTask`/`TestRunOpTaskErrors` in
-`plan_public_test.go` — these should be converted to use `TaskFunc` calls
-that hit a test HTTP server through SDK client methods.
+`plan_public_test.go` — these should be converted to use `TaskFunc` calls that
+hit a test HTTP server through SDK client methods.
 
-**Step 7:** Run `go build ./...` and `go test ./pkg/sdk/orchestrator/... -count=1`.
+**Step 7:** Run `go build ./...` and
+`go test ./pkg/sdk/orchestrator/... -count=1`.
 
 **Step 8:** Commit.
 
@@ -145,6 +148,7 @@ SDK client calls. This follows the existing pattern used by HealthCheck,
 FileUpload, FileChanged, AgentList, and AgentGet.
 
 **Files:**
+
 - Modify: `osapi-orchestrator/pkg/orchestrator/ops.go` — rewrite 13 methods
 - Modify: `osapi-orchestrator/pkg/orchestrator/ops_test.go` — update tests
 - Modify: `osapi-orchestrator/pkg/orchestrator/ops_public_test.go` — update
@@ -153,6 +157,7 @@ FileUpload, FileChanged, AgentList, and AgentGet.
   `newStep` if no longer used
 
 **Before (example):**
+
 ```go
 func (o *Orchestrator) NodeHostnameGet(target string) *Step {
     return o.newStep(&sdk.Op{
@@ -163,6 +168,7 @@ func (o *Orchestrator) NodeHostnameGet(target string) *Step {
 ```
 
 **After (example):**
+
 ```go
 func (o *Orchestrator) NodeHostnameGet(target string) *Step {
     name := o.nextOpName("get-hostname")
@@ -190,21 +196,21 @@ operation-constant-based name generation (or reuse existing name logic).
 **Step 2:** Convert each method one at a time. The 13 methods and their SDK
 client calls:
 
-| DSL Method | SDK Call | Notes |
-|------------|----------|-------|
-| `NodeHostnameGet(target)` | `c.Node.Hostname(ctx, target)` | |
-| `NodeStatusGet(target)` | `c.Node.Status(ctx, target)` | |
-| `NodeUptimeGet(target)` | `c.Node.Uptime(ctx, target)` | |
-| `NodeDiskGet(target)` | `c.Node.Disk(ctx, target)` | |
-| `NodeMemoryGet(target)` | `c.Node.Memory(ctx, target)` | |
-| `NodeLoadGet(target)` | `c.Node.Load(ctx, target)` | |
-| `NetworkDNSGet(target, iface)` | `c.Node.GetDNS(ctx, target, iface)` | |
-| `NetworkDNSUpdate(target, iface, servers, search)` | `c.Node.UpdateDNS(ctx, target, iface, servers, search)` | |
-| `NetworkPingDo(target, addr)` | `c.Node.Ping(ctx, target, addr)` | |
-| `CommandExec(target, cmd, args)` | `c.Node.Exec(ctx, ExecRequest{...})` | Build ExecRequest |
-| `CommandShell(target, cmd)` | `c.Node.Shell(ctx, ShellRequest{...})` | Build ShellRequest |
-| `FileDeploy(target, opts)` | `c.Node.FileDeploy(ctx, FileDeployOpts{...})` | Map opts |
-| `FileStatusGet(target, path)` | `c.Node.FileStatus(ctx, target, path)` | |
+| DSL Method                                         | SDK Call                                                | Notes              |
+| -------------------------------------------------- | ------------------------------------------------------- | ------------------ |
+| `NodeHostnameGet(target)`                          | `c.Node.Hostname(ctx, target)`                          |                    |
+| `NodeStatusGet(target)`                            | `c.Node.Status(ctx, target)`                            |                    |
+| `NodeUptimeGet(target)`                            | `c.Node.Uptime(ctx, target)`                            |                    |
+| `NodeDiskGet(target)`                              | `c.Node.Disk(ctx, target)`                              |                    |
+| `NodeMemoryGet(target)`                            | `c.Node.Memory(ctx, target)`                            |                    |
+| `NodeLoadGet(target)`                              | `c.Node.Load(ctx, target)`                              |                    |
+| `NetworkDNSGet(target, iface)`                     | `c.Node.GetDNS(ctx, target, iface)`                     |                    |
+| `NetworkDNSUpdate(target, iface, servers, search)` | `c.Node.UpdateDNS(ctx, target, iface, servers, search)` |                    |
+| `NetworkPingDo(target, addr)`                      | `c.Node.Ping(ctx, target, addr)`                        |                    |
+| `CommandExec(target, cmd, args)`                   | `c.Node.Exec(ctx, ExecRequest{...})`                    | Build ExecRequest  |
+| `CommandShell(target, cmd)`                        | `c.Node.Shell(ctx, ShellRequest{...})`                  | Build ShellRequest |
+| `FileDeploy(target, opts)`                         | `c.Node.FileDeploy(ctx, FileDeployOpts{...})`           | Map opts           |
+| `FileStatusGet(target, path)`                      | `c.Node.FileStatus(ctx, target, path)`                  |                    |
 
 **Step 3:** Remove the operation constants (`opNodeHostnameGet`, etc.) and
 `newStep` method — they are no longer needed.
@@ -236,6 +242,7 @@ signatures are unchanged, so most examples should compile without modification.
 Verify each one.
 
 **Files:**
+
 - Check: `osapi-orchestrator/examples/features/*.go`
 - Check: `osapi-orchestrator/examples/operations/*.go`
 
@@ -251,16 +258,17 @@ compilation.
 ### Task 5: Update documentation
 
 **Files:**
-- Modify: `osapi-orchestrator/docs/features/README.md` — update if it
-  references Op or job creation
-- Modify: `osapi-orchestrator/docs/gen/orchestrator.md` — regenerate
-- Modify: `osapi/docs/docs/sidebar/architecture/job-architecture.md` — note
-  that POST /job was removed
-- Modify: `osapi/docs/docs/sidebar/architecture/system-architecture.md` —
-  update endpoint tables
 
-**Step 1:** Regenerate API docs: `just generate` in osapi,
-`just docs::generate` in osapi-orchestrator (if applicable).
+- Modify: `osapi-orchestrator/docs/features/README.md` — update if it references
+  Op or job creation
+- Modify: `osapi-orchestrator/docs/gen/orchestrator.md` — regenerate
+- Modify: `osapi/docs/docs/sidebar/architecture/job-architecture.md` — note that
+  POST /job was removed
+- Modify: `osapi/docs/docs/sidebar/architecture/system-architecture.md` — update
+  endpoint tables
+
+**Step 1:** Regenerate API docs: `just generate` in osapi, `just docs::generate`
+in osapi-orchestrator (if applicable).
 
 **Step 2:** Update architecture docs to reflect that domain endpoints are the
 sole job creation path.
@@ -274,6 +282,7 @@ sole job creation path.
 After removing `JobService.Create`, verify the SDK client's job module is clean.
 
 **Files:**
+
 - Modify: `osapi/pkg/sdk/client/job.go` — verify Create is gone
 - Modify: `osapi/pkg/sdk/client/gen/` — regenerate from updated OpenAPI spec
   (POST /job removed)
@@ -304,8 +313,8 @@ client from the updated combined spec.
 
 ## Ordering
 
-Tasks 1 and 2 are in osapi and can be done together on one branch. Task 3 is
-in osapi-orchestrator and depends on Tasks 1-2 being published (or linked via
+Tasks 1 and 2 are in osapi and can be done together on one branch. Task 3 is in
+osapi-orchestrator and depends on Tasks 1-2 being published (or linked via
 `replace`). Tasks 4-6 are follow-ups. Task 7 is final verification.
 
 ## What Does NOT Change

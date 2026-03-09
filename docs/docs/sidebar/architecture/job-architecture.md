@@ -32,8 +32,8 @@ routing, and comprehensive job lifecycle management.
 The system has three entry points that all funnel through a shared client layer
 into NATS JetStream:
 
-- **REST API** — Creates jobs via domain endpoints, queries status,
-  returns results
+- **REST API** — Creates jobs via domain endpoints, queries status, returns
+  results
 - **Jobs CLI** — Lists/inspects queue, monitors status, retries jobs
 - **Agents** — Processes jobs, updates status, stores results
 
@@ -267,9 +267,9 @@ const (
 
 Jobs are created through typed domain endpoints rather than a generic job
 creation API. Each domain endpoint (e.g., `GET /node/{hostname}/hostname`,
-`PUT /node/{hostname}/network/dns/{interface}`) creates a job internally
-and returns the job ID. This ensures type safety and proper validation at
-the API layer.
+`PUT /node/{hostname}/network/dns/{interface}`) creates a job internally and
+returns the job ID. This ensures type safety and proper validation at the API
+layer.
 
 ```bash
 # Get hostname — creates a job internally, returns job_id
@@ -518,9 +518,9 @@ and other tokens with live values from its cached facts. See
 
 ### Job Creation
 
-Jobs are created implicitly through typed domain endpoints. There is no
-generic `POST /api/jobs` endpoint. Each domain endpoint creates a job
-internally and returns a response that includes the `job_id`:
+Jobs are created implicitly through typed domain endpoints. There is no generic
+`POST /api/jobs` endpoint. Each domain endpoint creates a job internally and
+returns a response that includes the `job_id`:
 
 ```http
 GET /api/v1/node/{hostname}/hostname
@@ -616,8 +616,8 @@ osapi client job retry --job-id 550e8400-...
 ```
 
 Jobs are created through domain-specific commands (e.g.,
-`osapi client node hostname`, `osapi client node network dns update`)
-rather than a generic `job add` command.
+`osapi client node hostname`, `osapi client node network dns update`) rather
+than a generic `job add` command.
 
 ## Package Architecture
 
