@@ -29,52 +29,6 @@ tags:
     description: Operations related to the job queue.
 paths:
   /job:
-    post:
-      summary: Create a new job
-      description: Submit a new job to the queue for processing.
-      tags:
-        - job_operations
-      security:
-        - BearerAuth:
-            - job:write
-      requestBody:
-        description: The job to create.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateJobRequest'
-      responses:
-        '201':
-          description: The job was created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateJobResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating job.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
     get:
       summary: List jobs
       description: Retrieve jobs, optionally filtered by status.
@@ -332,25 +286,6 @@ components:
   schemas:
     ErrorResponse:
       $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-
-    CreateJobRequest:
-      type: object
-      properties:
-        operation:
-          type: object
-          description: The operation to perform, as a JSON object.
-          additionalProperties: true
-          x-oapi-codegen-extra-tags:
-            validate: required
-        target_hostname:
-          type: string
-          description: The target hostname for routing (_any, _all, or specific hostname).
-          example: "_any"
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,valid_target
-      required:
-        - operation
-        - target_hostname
 
     CreateJobResponse:
       type: object
