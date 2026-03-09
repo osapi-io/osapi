@@ -34,36 +34,6 @@ type JobService struct {
 	client *gen.ClientWithResponses
 }
 
-// Create creates a new job with the given operation and target.
-func (s *JobService) Create(
-	ctx context.Context,
-	operation map[string]interface{},
-	target string,
-) (*Response[JobCreated], error) {
-	body := gen.CreateJobRequest{
-		Operation:      operation,
-		TargetHostname: target,
-	}
-
-	resp, err := s.client.PostJobWithResponse(ctx, body)
-	if err != nil {
-		return nil, fmt.Errorf("create job: %w", err)
-	}
-
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON201 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return NewResponse(jobCreatedFromGen(resp.JSON201), resp.Body), nil
-}
-
 // Get retrieves a job by ID.
 func (s *JobService) Get(
 	ctx context.Context,

@@ -44,17 +44,6 @@ func (p *Plan) Config() PlanConfig {
 	return p.config
 }
 
-// Task creates a declarative task, adds it to the plan, and returns it.
-func (p *Plan) Task(
-	name string,
-	op *Op,
-) *Task {
-	t := NewTask(name, op)
-	p.tasks = append(p.tasks, t)
-
-	return t
-}
-
 // TaskFunc creates a functional task, adds it to the plan, and
 // returns it.
 func (p *Plan) TaskFunc(
@@ -105,12 +94,7 @@ func (p *Plan) Explain() string {
 		}
 
 		for _, t := range level {
-			kind := "op"
-			if t.IsFunc() {
-				kind = "fn"
-			}
-
-			fmt.Fprintf(&b, "  %s [%s]", t.name, kind)
+			fmt.Fprintf(&b, "  %s [fn]", t.name)
 
 			if len(t.deps) > 0 {
 				names := make([]string, len(t.deps))

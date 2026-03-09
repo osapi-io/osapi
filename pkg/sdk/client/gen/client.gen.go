@@ -302,15 +302,6 @@ type ConsumerStats struct {
 	Total int `json:"total"`
 }
 
-// CreateJobRequest defines model for CreateJobRequest.
-type CreateJobRequest struct {
-	// Operation The operation to perform, as a JSON object.
-	Operation map[string]interface{} `json:"operation" validate:"required"`
-
-	// TargetHostname The target hostname for routing (_any, _all, or specific hostname).
-	TargetHostname string `json:"target_hostname" validate:"required,min=1,valid_target"`
-}
-
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
@@ -1107,9 +1098,6 @@ type PostNodeNetworkPingJSONBody struct {
 // PostFileMultipartRequestBody defines body for PostFile for multipart/form-data ContentType.
 type PostFileMultipartRequestBody PostFileMultipartBody
 
-// PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
-type PostJobJSONRequestBody = CreateJobRequest
-
 // RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
 type RetryJobByIDJSONRequestBody = RetryJobRequest
 
@@ -1248,11 +1236,6 @@ type ClientInterface interface {
 
 	// GetJob request
 	GetJob(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostJobWithBody request with any body
-	PostJobWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostJob(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteJobByID request
 	DeleteJobByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1493,30 +1476,6 @@ func (c *Client) GetHealthStatus(ctx context.Context, reqEditors ...RequestEdito
 
 func (c *Client) GetJob(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetJobRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostJobWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostJobRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostJob(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostJobRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2390,46 +2349,6 @@ func NewGetJobRequest(server string, params *GetJobParams) (*http.Request, error
 	return req, nil
 }
 
-// NewPostJobRequest calls the generic PostJob builder with application/json body
-func NewPostJobRequest(server string, body PostJobJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostJobRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostJobRequestWithBody generates requests for PostJob with any type of body
-func NewPostJobRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/job")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewDeleteJobByIDRequest generates requests for DeleteJobByID
 func NewDeleteJobByIDRequest(server string, id openapi_types.UUID) (*http.Request, error) {
 	var err error
@@ -3221,11 +3140,6 @@ type ClientWithResponsesInterface interface {
 	// GetJobWithResponse request
 	GetJobWithResponse(ctx context.Context, params *GetJobParams, reqEditors ...RequestEditorFn) (*GetJobResponse, error)
 
-	// PostJobWithBodyWithResponse request with any body
-	PostJobWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostJobResponse, error)
-
-	PostJobWithResponse(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*PostJobResponse, error)
-
 	// DeleteJobByIDWithResponse request
 	DeleteJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteJobByIDResponse, error)
 
@@ -3678,32 +3592,6 @@ func (r GetJobResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetJobResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostJobResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *CreateJobResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostJobResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostJobResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -4309,23 +4197,6 @@ func (c *ClientWithResponses) GetJobWithResponse(ctx context.Context, params *Ge
 		return nil, err
 	}
 	return ParseGetJobResponse(rsp)
-}
-
-// PostJobWithBodyWithResponse request with arbitrary body returning *PostJobResponse
-func (c *ClientWithResponses) PostJobWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostJobResponse, error) {
-	rsp, err := c.PostJobWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostJobResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostJobWithResponse(ctx context.Context, body PostJobJSONRequestBody, reqEditors ...RequestEditorFn) (*PostJobResponse, error) {
-	rsp, err := c.PostJob(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostJobResponse(rsp)
 }
 
 // DeleteJobByIDWithResponse request returning *DeleteJobByIDResponse
@@ -5291,60 +5162,6 @@ func ParseGetJobResponse(rsp *http.Response) (*GetJobResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostJobResponse parses an HTTP response from a PostJobWithResponse call
-func ParsePostJobResponse(rsp *http.Response) (*PostJobResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostJobResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest CreateJobResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

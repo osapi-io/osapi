@@ -35,13 +35,12 @@ type HostResult struct {
 
 // Result is the outcome of a single task execution.
 type Result struct {
-	JobID          string
-	Changed        bool
-	Data           map[string]any
-	Status         Status
-	JobDuration    time.Duration
-	HostResults    []HostResult
-	agentDurations map[string]time.Duration // per-host durations from AgentStates
+	JobID       string
+	Changed     bool
+	Data        map[string]any
+	Status      Status
+	JobDuration time.Duration
+	HostResults []HostResult
 }
 
 // TaskResult records the full execution details of a task.

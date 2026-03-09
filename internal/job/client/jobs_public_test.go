@@ -127,161 +127,6 @@ func (s *JobsPublicTestSuite) TestNew() {
 	}
 }
 
-func (s *JobsPublicTestSuite) TestCreateJob() {
-	tests := []struct {
-		name          string
-		operationData map[string]interface{}
-		targetHost    string
-		expectedErr   string
-		setupMocks    func()
-	}{
-		{
-			name: "successful job creation",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": map[string]string{"param": "value"},
-			},
-			targetHost: "server1",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil).
-					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
-			},
-		},
-		{
-			name: "missing operation type",
-			operationData: map[string]interface{}{
-				"data": map[string]string{"param": "value"},
-			},
-			targetHost:  "server1",
-			expectedErr: "invalid operation format: missing type field",
-			setupMocks:  func() {},
-		},
-		{
-			name: "KV storage error",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": map[string]string{"param": "value"},
-			},
-			targetHost:  "server1",
-			expectedErr: "failed to store job in KV",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(0), errors.New("kv error"))
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-			},
-		},
-		{
-			name: "modify operation routes to modify subject",
-			operationData: map[string]interface{}{
-				"type": "network.dns.update",
-				"data": map[string]string{"interface": "eth0"},
-			},
-			targetHost: "server1",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil).
-					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
-			},
-		},
-		{
-			name: "empty target hostname defaults to any",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": map[string]string{},
-			},
-			targetHost: "",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil).
-					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
-			},
-		},
-		{
-			name: "publish notification error",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": map[string]string{},
-			},
-			targetHost:  "server1",
-			expectedErr: "failed to send notification",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil).
-					Times(2)
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(errors.New("publish failed"))
-			},
-		},
-		{
-			name: "unmarshalable operation data",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": make(chan int),
-			},
-			targetHost:  "server1",
-			expectedErr: "failed to marshal job with status",
-			setupMocks:  func() {},
-		},
-		{
-			name: "status event put error is logged not returned",
-			operationData: map[string]interface{}{
-				"type": "node.hostname.get",
-				"data": map[string]string{},
-			},
-			targetHost: "server1",
-			setupMocks: func() {
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				s.mockKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(0), errors.New("status put failed"))
-				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupMocks()
-
-			result, err := s.jobsClient.CreateJob(s.ctx, tt.operationData, tt.targetHost)
-
-			if tt.expectedErr != "" {
-				s.Error(err)
-				s.Contains(err.Error(), tt.expectedErr)
-			} else {
-				s.NoError(err)
-				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
-			}
-		})
-	}
-}
-
 func (s *JobsPublicTestSuite) TestGetJobStatus() {
 	now := time.Now().Format(time.RFC3339)
 
@@ -1530,6 +1375,114 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 			s.NoError(err)
 			s.NotNil(qj)
 			tt.validateFunc(qj)
+		})
+	}
+}
+
+func (s *JobsPublicTestSuite) TestCreateJob() {
+	tests := []struct {
+		name        string
+		opData      map[string]interface{}
+		target      string
+		expectedErr string
+		setupMocks  func()
+	}{
+		{
+			name: "missing type field returns error",
+			opData: map[string]interface{}{
+				"data": "no-type",
+			},
+			target:      "_any",
+			expectedErr: "invalid operation format: missing type field",
+			setupMocks:  func() {},
+		},
+		{
+			name: "marshal failure returns error",
+			opData: map[string]interface{}{
+				"type":          "node.hostname.get",
+				"unmarshalable": make(chan int),
+			},
+			target:      "_any",
+			expectedErr: "failed to marshal job with status",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+			},
+		},
+		{
+			name: "modify operation uses modify prefix",
+			opData: map[string]interface{}{
+				"type": "network.dns.update",
+				"data": map[string]interface{}{},
+			},
+			target: "web-01",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil).
+					Times(2)
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+		},
+		{
+			name: "status event put failure is logged not returned",
+			opData: map[string]interface{}{
+				"type": "node.hostname.get",
+				"data": map[string]interface{}{},
+			},
+			target: "_any",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				// First put succeeds (job storage)
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				// Second put fails (status event)
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(0), errors.New("status event write failed"))
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+		},
+		{
+			name: "publish failure returns error",
+			opData: map[string]interface{}{
+				"type": "node.hostname.get",
+				"data": map[string]interface{}{},
+			},
+			target: "_any",
+			setupMocks: func() {
+				s.mockKV.EXPECT().Bucket().Return("test-bucket").AnyTimes()
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil).
+					Times(2)
+				s.mockNATSClient.EXPECT().
+					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("publish failed"))
+			},
+			expectedErr: "failed to send notification",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			result, err := s.jobsClient.CreateJob(s.ctx, tt.opData, tt.target)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+			} else {
+				s.NoError(err)
+				s.NotEmpty(result.JobID)
+				s.Equal("created", result.Status)
+			}
 		})
 	}
 }

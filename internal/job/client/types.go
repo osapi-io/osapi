@@ -46,11 +46,6 @@ const (
 // JobClient defines the interface for interacting with the jobs system.
 type JobClient interface {
 	// Job queue management operations
-	CreateJob(
-		ctx context.Context,
-		operationData map[string]interface{},
-		targetHostname string,
-	) (*CreateJobResult, error)
 	GetQueueSummary(
 		ctx context.Context,
 	) (*job.QueueStats, error)

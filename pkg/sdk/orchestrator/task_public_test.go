@@ -18,6 +18,14 @@ func TestTaskPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TaskPublicTestSuite))
 }
 
+// noop is a no-op TaskFn for tests that only need a valid task.
+func noop(
+	_ context.Context,
+	_ *osapiclient.Client,
+) (*orchestrator.Result, error) {
+	return &orchestrator.Result{}, nil
+}
+
 func (s *TaskPublicTestSuite) TestDependsOn() {
 	tests := []struct {
 		name       string
@@ -45,9 +53,9 @@ func (s *TaskPublicTestSuite) TestDependsOn() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := orchestrator.NewTask("a", &orchestrator.Op{Operation: "noop"})
-			b := orchestrator.NewTask("b", &orchestrator.Op{Operation: "noop"})
-			c := orchestrator.NewTask("c", &orchestrator.Op{Operation: "noop"})
+			a := orchestrator.NewTaskFunc("a", noop)
+			b := orchestrator.NewTaskFunc("b", noop)
+			c := orchestrator.NewTaskFunc("c", noop)
 			tt.setupDeps(a, b, c)
 
 			tasks := map[string]*orchestrator.Task{"a": a, "b": b, "c": c}
@@ -57,15 +65,15 @@ func (s *TaskPublicTestSuite) TestDependsOn() {
 }
 
 func (s *TaskPublicTestSuite) TestOnlyIfChanged() {
-	task := orchestrator.NewTask("t", &orchestrator.Op{Operation: "noop"})
-	dep := orchestrator.NewTask("dep", &orchestrator.Op{Operation: "noop"})
+	task := orchestrator.NewTaskFunc("t", noop)
+	dep := orchestrator.NewTaskFunc("dep", noop)
 	task.DependsOn(dep).OnlyIfChanged()
 
 	s.True(task.RequiresChange())
 }
 
 func (s *TaskPublicTestSuite) TestWhen() {
-	task := orchestrator.NewTask("t", &orchestrator.Op{Operation: "noop"})
+	task := orchestrator.NewTaskFunc("t", noop)
 	called := false
 	task.When(func(_ orchestrator.Results) bool {
 		called = true
@@ -109,10 +117,7 @@ func (s *TaskPublicTestSuite) TestSetName() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			task := orchestrator.NewTask(
-				tt.initial,
-				&orchestrator.Op{Operation: "noop"},
-			)
+			task := orchestrator.NewTaskFunc(tt.initial, noop)
 			task.SetName(tt.renamed)
 			s.Equal(tt.wantName, task.Name())
 		})
@@ -139,10 +144,7 @@ func (s *TaskPublicTestSuite) TestWhenWithReason() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			task := orchestrator.NewTask(
-				"t",
-				&orchestrator.Op{Operation: "noop"},
-			)
+			task := orchestrator.NewTaskFunc("t", noop)
 			task.WhenWithReason(func(_ orchestrator.Results) bool {
 				return tt.guardResult
 			}, tt.reason)
@@ -155,32 +157,14 @@ func (s *TaskPublicTestSuite) TestWhenWithReason() {
 }
 
 func (s *TaskPublicTestSuite) TestOnErrorOverride() {
-	task := orchestrator.NewTask("t", &orchestrator.Op{Operation: "noop"})
+	task := orchestrator.NewTaskFunc("t", noop)
 	task.OnError(orchestrator.Continue)
 
 	s.NotNil(task.ErrorStrategy())
 	s.Equal("continue", task.ErrorStrategy().String())
 }
 
-func (s *TaskPublicTestSuite) TestOperation() {
-	op := &orchestrator.Op{Operation: "node.hostname.get", Target: "_any"}
-	task := orchestrator.NewTask("t", op)
-
-	s.Equal(op, task.Operation())
-
-	fnTask := orchestrator.NewTaskFunc("fn", func(
-		_ context.Context,
-		_ *osapiclient.Client,
-	) (*orchestrator.Result, error) {
-		return nil, nil
-	})
-	s.Nil(fnTask.Operation())
-}
-
 func (s *TaskPublicTestSuite) TestFn() {
-	task := orchestrator.NewTask("t", &orchestrator.Op{Operation: "noop"})
-	s.Nil(task.Fn())
-
 	fnTask := orchestrator.NewTaskFunc("fn", func(
 		_ context.Context,
 		_ *osapiclient.Client,

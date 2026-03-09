@@ -117,17 +117,15 @@ sequenceDiagram
     participant NATS
     participant Agent
 
-    CLI->>API: POST /api/v1/jobs
+    CLI->>API: GET /api/v1/node/{hostname}/hostname
     API->>NATS: store job in KV
     API->>NATS: publish notification
-    API-->>CLI: 201 (job_id)
     NATS->>Agent: deliver notification
     Agent->>NATS: read job from KV
     Agent->>Agent: execute operation
     Agent->>NATS: write result to KV
-    CLI->>API: GET /api/v1/jobs/{id}
     API->>NATS: read result from KV
-    API-->>CLI: 200 (result)
+    API-->>CLI: 200 (result + job_id)
 ```
 
 The API server never touches the operating system directly. It's a thin

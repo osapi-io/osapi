@@ -73,21 +73,6 @@ func (mr *MockJobClientMockRecorder) ConsumeJobs(arg0, arg1, arg2, arg3, arg4 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeJobs", reflect.TypeOf((*MockJobClient)(nil).ConsumeJobs), arg0, arg1, arg2, arg3, arg4)
 }
 
-// CreateJob mocks base method.
-func (m *MockJobClient) CreateJob(arg0 context.Context, arg1 map[string]interface{}, arg2 string) (*client0.CreateJobResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateJob", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*client0.CreateJobResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateJob indicates an expected call of CreateJob.
-func (mr *MockJobClientMockRecorder) CreateJob(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJob", reflect.TypeOf((*MockJobClient)(nil).CreateJob), arg0, arg1, arg2)
-}
-
 // CreateOrUpdateConsumer mocks base method.
 func (m *MockJobClient) CreateOrUpdateConsumer(arg0 context.Context, arg1 string, arg2 jetstream.ConsumerConfig) error {
 	m.ctrl.T.Helper()

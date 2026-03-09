@@ -29,15 +29,6 @@ const (
 	Submitted      GetJobParamsStatus = "submitted"
 )
 
-// CreateJobRequest defines model for CreateJobRequest.
-type CreateJobRequest struct {
-	// Operation The operation to perform, as a JSON object.
-	Operation map[string]interface{} `json:"operation" validate:"required"`
-
-	// TargetHostname The target hostname for routing (_any, _all, or specific hostname).
-	TargetHostname string `json:"target_hostname" validate:"required,min=1,valid_target"`
-}
-
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
@@ -154,9 +145,6 @@ type GetJobParams struct {
 // GetJobParamsStatus defines parameters for GetJob.
 type GetJobParamsStatus string
 
-// PostJobJSONRequestBody defines body for PostJob for application/json ContentType.
-type PostJobJSONRequestBody = CreateJobRequest
-
 // RetryJobByIDJSONRequestBody defines body for RetryJobByID for application/json ContentType.
 type RetryJobByIDJSONRequestBody = RetryJobRequest
 
@@ -165,9 +153,6 @@ type ServerInterface interface {
 	// List jobs
 	// (GET /job)
 	GetJob(ctx echo.Context, params GetJobParams) error
-	// Create a new job
-	// (POST /job)
-	PostJob(ctx echo.Context) error
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx echo.Context, id openapi_types.UUID) error
@@ -215,17 +200,6 @@ func (w *ServerInterfaceWrapper) GetJob(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetJob(ctx, params)
-	return err
-}
-
-// PostJob converts echo context to params.
-func (w *ServerInterfaceWrapper) PostJob(ctx echo.Context) error {
-	var err error
-
-	ctx.Set(BearerAuthScopes, []string{"job:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostJob(ctx)
 	return err
 }
 
@@ -312,7 +286,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/job", wrapper.GetJob)
-	router.POST(baseURL+"/job", wrapper.PostJob)
 	router.DELETE(baseURL+"/job/:id", wrapper.DeleteJobByID)
 	router.GET(baseURL+"/job/:id", wrapper.GetJobByID)
 	router.POST(baseURL+"/job/:id/retry", wrapper.RetryJobByID)
@@ -366,59 +339,6 @@ func (response GetJob403JSONResponse) VisitGetJobResponse(w http.ResponseWriter)
 type GetJob500JSONResponse externalRef0.ErrorResponse
 
 func (response GetJob500JSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostJobRequestObject struct {
-	Body *PostJobJSONRequestBody
-}
-
-type PostJobResponseObject interface {
-	VisitPostJobResponse(w http.ResponseWriter) error
-}
-
-type PostJob201JSONResponse CreateJobResponse
-
-func (response PostJob201JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostJob400JSONResponse externalRef0.ErrorResponse
-
-func (response PostJob400JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostJob401JSONResponse externalRef0.ErrorResponse
-
-func (response PostJob401JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostJob403JSONResponse externalRef0.ErrorResponse
-
-func (response PostJob403JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostJob500JSONResponse externalRef0.ErrorResponse
-
-func (response PostJob500JSONResponse) VisitPostJobResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -616,9 +536,6 @@ type StrictServerInterface interface {
 	// List jobs
 	// (GET /job)
 	GetJob(ctx context.Context, request GetJobRequestObject) (GetJobResponseObject, error)
-	// Create a new job
-	// (POST /job)
-	PostJob(ctx context.Context, request PostJobRequestObject) (PostJobResponseObject, error)
 	// Delete a job
 	// (DELETE /job/{id})
 	DeleteJobByID(ctx context.Context, request DeleteJobByIDRequestObject) (DeleteJobByIDResponseObject, error)
@@ -661,35 +578,6 @@ func (sh *strictHandler) GetJob(ctx echo.Context, params GetJobParams) error {
 		return err
 	} else if validResponse, ok := response.(GetJobResponseObject); ok {
 		return validResponse.VisitGetJobResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostJob operation middleware
-func (sh *strictHandler) PostJob(ctx echo.Context) error {
-	var request PostJobRequestObject
-
-	var body PostJobJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostJob(ctx.Request().Context(), request.(PostJobRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostJob")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostJobResponseObject); ok {
-		return validResponse.VisitPostJobResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

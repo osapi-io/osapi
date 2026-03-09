@@ -1,10 +1,12 @@
 package orchestrator_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
@@ -92,9 +94,14 @@ func (s *OptionsPublicTestSuite) TestWithHooks() {
 	s.NotNil(cfg.Hooks.BeforeTask)
 
 	// Create a task to pass to the callback.
-	t := orchestrator.NewTask(
+	t := orchestrator.NewTaskFunc(
 		"test",
-		&orchestrator.Op{Operation: "node.hostname.get", Target: "_any"},
+		func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*orchestrator.Result, error) {
+			return &orchestrator.Result{}, nil
+		},
 	)
 	cfg.Hooks.BeforeTask(t)
 	s.True(called)

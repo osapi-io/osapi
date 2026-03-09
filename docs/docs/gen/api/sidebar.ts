@@ -156,12 +156,6 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/create-a-new-job",
-          label: "Create a new job",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
           id: "gen/api/list-jobs",
           label: "List jobs",
           className: "api-method get",

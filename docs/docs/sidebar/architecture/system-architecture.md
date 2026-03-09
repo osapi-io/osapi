@@ -55,7 +55,7 @@ The `osapi` binary exposes four top-level command groups:
 ### CLI (`cmd/`)
 
 The CLI is a [Cobra][] command tree. Each file maps to a single command (e.g.,
-`client_job_add.go` implements `osapi client job add`). The CLI layer is thin
+`client_job_get.go` implements `osapi client job get`). The CLI layer is thin
 wiring: it parses flags, reads config via Viper, and delegates to the
 appropriate internal package.
 
@@ -68,7 +68,7 @@ subpackages:
 | Package                | Responsibility                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------- |
 | `internal/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
-| `internal/api/job/`    | Job queue endpoints (create, get, list, delete, status)                          |
+| `internal/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                           |
 | `internal/api/health/` | Health check endpoints (liveness, readiness, status)                             |
 | `internal/api/common/` | Shared middleware, error handling, collection responses                          |
 | (metrics)              | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
@@ -249,7 +249,7 @@ osapi client health status       # system status with metrics (requires auth)
 
 ## Request Flow
 
-A typical operation (e.g., `node.hostname.get`) follows these steps:
+A typical operation (e.g., getting the hostname) follows these steps:
 
 ```mermaid
 sequenceDiagram
@@ -260,19 +260,17 @@ sequenceDiagram
     participant Agent
     participant Provider
 
-    CLI->>API: POST /api/v1/jobs
+    CLI->>API: GET /api/v1/node/{hostname}/hostname
     API->>JC: CreateJob()
     JC->>NATS: store job in KV (job-queue)
     JC->>NATS: publish notification to JOBS stream
-    API-->>CLI: 201 (job_id)
     NATS->>Agent: deliver stream notification
     Agent->>NATS: fetch immutable job from KV
     Agent->>Provider: execute operation
     Provider-->>Agent: result
     Agent->>NATS: write status events + result to KV
-    CLI->>API: GET /api/v1/jobs/{id}
     API->>NATS: read computed status from KV
-    API-->>CLI: 200 (result)
+    API-->>CLI: 200 (result + job_id)
 ```
 
 ## Security

@@ -266,22 +266,3 @@ func writeTempFile(
 
 	return path
 }
-
-func writeJobFile(
-	t *testing.T,
-	data map[string]any,
-) string {
-	t.Helper()
-
-	b, err := json.Marshal(data)
-	if err != nil {
-		t.Fatalf("marshal job file: %v", err)
-	}
-
-	path := filepath.Join(t.TempDir(), "job.json")
-	if err := os.WriteFile(path, b, 0o644); err != nil {
-		t.Fatalf("write job file: %v", err)
-	}
-
-	return path
-}

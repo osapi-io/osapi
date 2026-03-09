@@ -2,10 +2,7 @@ package orchestrator
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,6 +20,13 @@ func TestRunnerTestSuite(t *testing.T) {
 }
 
 func (s *RunnerTestSuite) TestLevelize() {
+	noop := func(
+		_ context.Context,
+		_ *osapiclient.Client,
+	) (*Result, error) {
+		return &Result{}, nil
+	}
+
 	tests := []struct {
 		name       string
 		setup      func() []*Task
@@ -31,9 +35,9 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "linear chain has 3 levels",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
-				c := NewTask("c", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
+				c := NewTaskFunc("c", noop)
 				b.DependsOn(a)
 				c.DependsOn(b)
 
@@ -44,10 +48,10 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "diamond has 3 levels",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
-				c := NewTask("c", &Op{Operation: "noop"})
-				d := NewTask("d", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
+				c := NewTaskFunc("c", noop)
+				d := NewTaskFunc("d", noop)
 				b.DependsOn(a)
 				c.DependsOn(a)
 				d.DependsOn(b, c)
@@ -59,8 +63,8 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "independent tasks in 1 level",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
 
 				return []*Task{a, b}
 			},
@@ -425,89 +429,6 @@ func (s *RunnerTestSuite) TestTaskResultCarriesData() {
 	}
 }
 
-func (s *RunnerTestSuite) TestPollJobContextCancellation() {
-	tests := []struct {
-		name           string
-		setupCtx       func() (context.Context, context.CancelFunc)
-		setupServer    func() *httptest.Server
-		expectedAgents int
-		validateFunc   func(result *Result, err error)
-	}{
-		{
-			name: "pre-cancelled context returns immediately",
-			setupCtx: func() (context.Context, context.CancelFunc) {
-				ctx, cancel := context.WithCancel(context.Background())
-				cancel()
-
-				return ctx, cancel
-			},
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(
-					w http.ResponseWriter,
-					_ *http.Request,
-				) {
-					w.WriteHeader(http.StatusOK)
-				}))
-			},
-			expectedAgents: 0,
-			validateFunc: func(_ *Result, err error) {
-				s.Error(err)
-				s.ErrorIs(err, context.Canceled)
-			},
-		},
-		{
-			name: "broadcast waiting times out via context during backoff",
-			setupCtx: func() (context.Context, context.CancelFunc) {
-				return context.WithTimeout(
-					context.Background(),
-					50*time.Millisecond,
-				)
-			},
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(
-					w http.ResponseWriter,
-					_ *http.Request,
-				) {
-					w.Header().Set("Content-Type", "application/json")
-					// Return "completed" but with 0 responses — broadcast
-					// expects 2 agents.
-					_ = json.NewEncoder(w).Encode(map[string]any{
-						"id":     "00000000-0000-0000-0000-000000000099",
-						"status": "completed",
-					})
-				}))
-			},
-			expectedAgents: 2,
-			validateFunc: func(_ *Result, err error) {
-				s.Error(err)
-				s.ErrorIs(err, context.DeadlineExceeded)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			orig := DefaultPollInterval
-			DefaultPollInterval = 5 * time.Second
-			defer func() { DefaultPollInterval = orig }()
-
-			ctx, cancel := tt.setupCtx()
-			defer cancel()
-
-			srv := tt.setupServer()
-			defer srv.Close()
-
-			client := osapiclient.New(srv.URL, "test-token")
-
-			plan := NewPlan(client)
-			r := newRunner(plan)
-
-			result, err := r.pollJob(ctx, "00000000-0000-0000-0000-000000000099", tt.expectedAgents)
-			tt.validateFunc(result, err)
-		})
-	}
-}
-
 func (s *RunnerTestSuite) TestBackoffDelay() {
 	tests := []struct {
 		name    string
@@ -550,55 +471,6 @@ func (s *RunnerTestSuite) TestBackoffDelay() {
 
 			got := strategy.backoffDelay(tt.attempt)
 			s.Equal(tt.want, got)
-		})
-	}
-}
-
-func (s *RunnerTestSuite) TestIsTransient() {
-	tests := []struct {
-		name string
-		err  error
-		want bool
-	}{
-		{
-			name: "NotFoundError is transient",
-			err: &osapiclient.NotFoundError{
-				APIError: osapiclient.APIError{StatusCode: 404, Message: "not found"},
-			},
-			want: true,
-		},
-		{
-			name: "ServerError is transient",
-			err: &osapiclient.ServerError{
-				APIError: osapiclient.APIError{StatusCode: 500, Message: "internal error"},
-			},
-			want: true,
-		},
-		{
-			name: "AuthError is not transient",
-			err: &osapiclient.AuthError{
-				APIError: osapiclient.APIError{StatusCode: 401, Message: "unauthorized"},
-			},
-			want: false,
-		},
-		{
-			name: "generic error is not transient",
-			err:  fmt.Errorf("network error"),
-			want: false,
-		},
-		{
-			name: "wrapped NotFoundError is transient",
-			err: fmt.Errorf(
-				"get job: %w",
-				&osapiclient.NotFoundError{APIError: osapiclient.APIError{StatusCode: 404}},
-			),
-			want: true,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			s.Equal(tt.want, isTransient(tt.err))
 		})
 	}
 }
