@@ -2,17 +2,9 @@ package orchestrator
 
 import (
 	"context"
-	"strings"
 
 	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
 )
-
-// Op represents a declarative SDK operation.
-type Op struct {
-	Operation string
-	Target    string
-	Params    map[string]any
-}
 
 // TaskFn is the signature for functional tasks. The client
 // parameter provides access to the OSAPI SDK for making API calls.
@@ -35,7 +27,6 @@ type GuardFn func(results Results) bool
 // Task is a unit of work in an orchestration plan.
 type Task struct {
 	name           string
-	op             *Op
 	fn             TaskFn
 	fnr            TaskFnWithResults
 	deps           []*Task
@@ -43,17 +34,6 @@ type Task struct {
 	guardReason    string
 	requiresChange bool
 	errorStrategy  *ErrorStrategy
-}
-
-// NewTask creates a declarative task wrapping an SDK operation.
-func NewTask(
-	name string,
-	op *Op,
-) *Task {
-	return &Task{
-		name: name,
-		op:   op,
-	}
 }
 
 // NewTaskFunc creates a functional task with custom logic.
@@ -96,13 +76,7 @@ func (t *Task) IsFunc() bool {
 	return t.fn != nil || t.fnr != nil
 }
 
-// Operation returns the declarative operation, or nil for functional
-// tasks.
-func (t *Task) Operation() *Op {
-	return t.op
-}
-
-// Fn returns the task function, or nil for declarative tasks.
+// Fn returns the task function, or nil if not set.
 func (t *Task) Fn() TaskFn {
 	return t.fn
 }
@@ -167,12 +141,4 @@ func (t *Task) OnError(
 // use the plan default.
 func (t *Task) ErrorStrategy() *ErrorStrategy {
 	return t.errorStrategy
-}
-
-// IsBroadcastTarget returns true if the target addresses multiple
-// agents (broadcast or label selector).
-func IsBroadcastTarget(
-	target string,
-) bool {
-	return target == "_all" || strings.Contains(target, ":")
 }

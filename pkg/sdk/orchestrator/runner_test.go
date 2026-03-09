@@ -20,6 +20,13 @@ func TestRunnerTestSuite(t *testing.T) {
 }
 
 func (s *RunnerTestSuite) TestLevelize() {
+	noop := func(
+		_ context.Context,
+		_ *osapiclient.Client,
+	) (*Result, error) {
+		return &Result{}, nil
+	}
+
 	tests := []struct {
 		name       string
 		setup      func() []*Task
@@ -28,9 +35,9 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "linear chain has 3 levels",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
-				c := NewTask("c", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
+				c := NewTaskFunc("c", noop)
 				b.DependsOn(a)
 				c.DependsOn(b)
 
@@ -41,10 +48,10 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "diamond has 3 levels",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
-				c := NewTask("c", &Op{Operation: "noop"})
-				d := NewTask("d", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
+				c := NewTaskFunc("c", noop)
+				d := NewTaskFunc("d", noop)
 				b.DependsOn(a)
 				c.DependsOn(a)
 				d.DependsOn(b, c)
@@ -56,8 +63,8 @@ func (s *RunnerTestSuite) TestLevelize() {
 		{
 			name: "independent tasks in 1 level",
 			setup: func() []*Task {
-				a := NewTask("a", &Op{Operation: "noop"})
-				b := NewTask("b", &Op{Operation: "noop"})
+				a := NewTaskFunc("a", noop)
+				b := NewTaskFunc("b", noop)
 
 				return []*Task{a, b}
 			},

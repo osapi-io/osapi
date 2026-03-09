@@ -2,7 +2,6 @@ package orchestrator
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -337,11 +336,8 @@ retryLoop:
 			r.mu.Unlock()
 
 			result, err = t.fnr(ctx, client, results)
-		} else if t.fn != nil {
-			result, err = t.fn(ctx, client)
 		} else {
-			result = nil
-			err = fmt.Errorf("task %q: Op-based tasks are no longer supported; use TaskFunc instead", t.name)
+			result, err = t.fn(ctx, client)
 		}
 
 		if err == nil {
@@ -430,10 +426,6 @@ retryLoop:
 
 	return tr
 }
-
-// DefaultPollInterval is the default interval between job status polls.
-// Deprecated: kept for backward compatibility; will be removed in a future release.
-var DefaultPollInterval = 500 * time.Millisecond
 
 // levelize groups tasks into levels where all tasks in a level can
 // run concurrently (all dependencies are in earlier levels).

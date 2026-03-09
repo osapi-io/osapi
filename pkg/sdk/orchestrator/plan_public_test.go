@@ -137,8 +137,8 @@ func (s *PlanPublicTestSuite) TestRun() {
 
 	s.Run("cycle detection returns error", func() {
 		plan := orchestrator.NewPlan(nil)
-		a := plan.Task("a", &orchestrator.Op{Operation: "noop"})
-		b := plan.Task("b", &orchestrator.Op{Operation: "noop"})
+		a := plan.TaskFunc("a", taskFunc(false, nil))
+		b := plan.TaskFunc("b", taskFunc(false, nil))
 		a.DependsOn(b)
 		b.DependsOn(a)
 
@@ -800,8 +800,8 @@ func (s *PlanPublicTestSuite) TestLevels() {
 		{
 			name: "returns error for invalid plan",
 			setup: func(plan *orchestrator.Plan) {
-				a := plan.Task("a", &orchestrator.Op{Operation: "noop"})
-				b := plan.Task("b", &orchestrator.Op{Operation: "noop"})
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(false, nil))
 				a.DependsOn(b)
 				b.DependsOn(a)
 			},
@@ -848,8 +848,8 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		{
 			name: "invalid plan returns error string",
 			setup: func(plan *orchestrator.Plan) {
-				a := plan.Task("a", &orchestrator.Op{Operation: "noop"})
-				b := plan.Task("b", &orchestrator.Op{Operation: "noop"})
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(false, nil))
 				a.DependsOn(b)
 				b.DependsOn(a)
 			},
@@ -865,15 +865,6 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				"Plan: 2 tasks, 1 levels",
 				"Level 0 (parallel):",
 			},
-		},
-		{
-			name: "op task shown as op",
-			setup: func(plan *orchestrator.Plan) {
-				plan.Task("install", &orchestrator.Op{
-					Operation: "node.hostname.get",
-				})
-			},
-			contains: []string{"install [op]"},
 		},
 		{
 			name: "guard shown in flags",
