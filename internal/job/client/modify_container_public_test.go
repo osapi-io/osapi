@@ -143,6 +143,563 @@ func (s *ModifyContainerPublicTestSuite) TestModifyContainerCreate() {
 	}
 }
 
+func (s *ModifyContainerPublicTestSuite) TestModifyContainerStart() {
+	tests := []struct {
+		name          string
+		target        string
+		id            string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			id:     "abc123",
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Container started successfully"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			id:     "abc123",
+			responseData: `{
+				"status": "failed",
+				"error": "container not found"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: container not found",
+		},
+		{
+			name:          "publish error",
+			target:        "server1",
+			id:            "abc123",
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyContainerStart(
+				s.ctx,
+				tt.target,
+				tt.id,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestModifyContainerStop() {
+	timeout := 10
+	tests := []struct {
+		name          string
+		target        string
+		id            string
+		data          *job.ContainerStopData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success with timeout",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerStopData{Timeout: &timeout},
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Container stopped successfully"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "success without timeout",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerStopData{},
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Container stopped successfully"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerStopData{},
+			responseData: `{
+				"status": "failed",
+				"error": "container not running"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: container not running",
+		},
+		{
+			name:          "publish error",
+			target:        "server1",
+			id:            "abc123",
+			data:          &job.ContainerStopData{},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyContainerStop(
+				s.ctx,
+				tt.target,
+				tt.id,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestModifyContainerRemove() {
+	tests := []struct {
+		name          string
+		target        string
+		id            string
+		data          *job.ContainerRemoveData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success with force",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerRemoveData{Force: true},
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Container removed successfully"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "success without force",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerRemoveData{Force: false},
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Container removed successfully"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			id:     "abc123",
+			data:   &job.ContainerRemoveData{},
+			responseData: `{
+				"status": "failed",
+				"error": "container is running"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: container is running",
+		},
+		{
+			name:          "publish error",
+			target:        "server1",
+			id:            "abc123",
+			data:          &job.ContainerRemoveData{},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyContainerRemove(
+				s.ctx,
+				tt.target,
+				tt.id,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestQueryContainerList() {
+	tests := []struct {
+		name          string
+		target        string
+		data          *job.ContainerListData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			data: &job.ContainerListData{
+				State: "running",
+				Limit: 10,
+			},
+			responseData: `{
+				"status": "completed",
+				"data": [{"id":"abc123","name":"web","state":"running"}]
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			data:   &job.ContainerListData{},
+			responseData: `{
+				"status": "failed",
+				"error": "runtime not available"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: runtime not available",
+		},
+		{
+			name:          "publish error",
+			target:        "server1",
+			data:          &job.ContainerListData{},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.QueryContainerList(
+				s.ctx,
+				tt.target,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestQueryContainerInspect() {
+	tests := []struct {
+		name          string
+		target        string
+		id            string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			id:     "abc123",
+			responseData: `{
+				"status": "completed",
+				"data": {"id":"abc123","name":"web","state":"running"}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			id:     "abc123",
+			responseData: `{
+				"status": "failed",
+				"error": "container not found"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: container not found",
+		},
+		{
+			name:          "publish error",
+			target:        "server1",
+			id:            "abc123",
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.QueryContainerInspect(
+				s.ctx,
+				tt.target,
+				tt.id,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestModifyContainerExec() {
+	tests := []struct {
+		name          string
+		target        string
+		id            string
+		data          *job.ContainerExecData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			id:     "abc123",
+			data: &job.ContainerExecData{
+				Command: []string{"ls", "-la"},
+			},
+			responseData: `{
+				"status": "completed",
+				"data": {"stdout":"output","stderr":"","exit_code":0}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			id:     "abc123",
+			data: &job.ContainerExecData{
+				Command: []string{"bad-cmd"},
+			},
+			responseData: `{
+				"status": "failed",
+				"error": "command not found"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: command not found",
+		},
+		{
+			name:   "publish error",
+			target: "server1",
+			id:     "abc123",
+			data: &job.ContainerExecData{
+				Command: []string{"ls"},
+			},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyContainerExec(
+				s.ctx,
+				tt.target,
+				tt.id,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ModifyContainerPublicTestSuite) TestModifyContainerPull() {
+	tests := []struct {
+		name          string
+		target        string
+		data          *job.ContainerPullData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			data: &job.ContainerPullData{
+				Image: "nginx:latest",
+			},
+			responseData: `{
+				"status": "completed",
+				"data": {"image_id":"sha256:abc","tag":"latest","size":2048}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			data: &job.ContainerPullData{
+				Image: "invalid:image",
+			},
+			responseData: `{
+				"status": "failed",
+				"error": "image not found"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: image not found",
+		},
+		{
+			name:   "publish error",
+			target: "server1",
+			data: &job.ContainerPullData{
+				Image: "nginx:latest",
+			},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyContainerPull(
+				s.ctx,
+				tt.target,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
 func TestModifyContainerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ModifyContainerPublicTestSuite))
 }
