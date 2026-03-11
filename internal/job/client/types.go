@@ -237,6 +237,51 @@ type JobClient interface {
 		path string,
 	) (string, *file.StatusResult, string, error)
 
+	// Container operations
+	ModifyContainerCreate(
+		ctx context.Context,
+		target string,
+		data *job.ContainerCreateData,
+	) (*job.Response, error)
+	ModifyContainerStart(
+		ctx context.Context,
+		target string,
+		id string,
+	) (*job.Response, error)
+	ModifyContainerStop(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.ContainerStopData,
+	) (*job.Response, error)
+	ModifyContainerRemove(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.ContainerRemoveData,
+	) (*job.Response, error)
+	QueryContainerList(
+		ctx context.Context,
+		target string,
+		data *job.ContainerListData,
+	) (*job.Response, error)
+	QueryContainerInspect(
+		ctx context.Context,
+		target string,
+		id string,
+	) (*job.Response, error)
+	ModifyContainerExec(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.ContainerExecData,
+	) (*job.Response, error)
+	ModifyContainerPull(
+		ctx context.Context,
+		target string,
+		data *job.ContainerPullData,
+	) (*job.Response, error)
+
 	// Agent discovery
 	ListAgents(
 		ctx context.Context,
