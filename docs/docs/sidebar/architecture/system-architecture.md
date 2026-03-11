@@ -65,14 +65,14 @@ The API server is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                    | Responsibility                                                                   |
-| -------------------------- | -------------------------------------------------------------------------------- |
-| `internal/api/node/`       | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
-| `internal/api/container/`  | Container endpoints (create, list, inspect, start, stop, remove, exec, pull)     |
-| `internal/api/job/`        | Job queue endpoints (get, list, delete, retry, status)                           |
-| `internal/api/health/`     | Health check endpoints (liveness, readiness, status)                             |
-| `internal/api/common/`     | Shared middleware, error handling, collection responses                          |
-| (metrics)                  | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
+| Package                   | Responsibility                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| `internal/api/node/`      | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
+| `internal/api/container/` | Container endpoints (create, list, inspect, start, stop, remove, exec, pull)     |
+| `internal/api/job/`       | Job queue endpoints (get, list, delete, retry, status)                           |
+| `internal/api/health/`    | Health check endpoints (liveness, readiness, status)                             |
+| `internal/api/common/`    | Shared middleware, error handling, collection responses                          |
+| (metrics)                 | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection

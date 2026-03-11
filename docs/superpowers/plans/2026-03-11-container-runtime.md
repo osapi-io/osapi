@@ -1,19 +1,19 @@
 # Container Runtime Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development
-> (if subagents available) or superpowers:executing-plans to implement this plan.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> (if subagents available) or superpowers:executing-plans to implement this
+> plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add container lifecycle management (Docker), a `provider run`
 subcommand for running providers inside containers, and an orchestrator DSL
 layer for composing host and container operations.
 
 **Architecture:** A `runtime.Driver` interface abstracts container runtimes with
-Docker as the first implementation via the Go SDK. Container lifecycle is exposed
-as a new API domain under `/node/{hostname}/container`. A hidden `provider run`
-CLI subcommand executes individual provider operations with JSON I/O, enabling
-the orchestrator DSL's `In(target)` to transparently run providers inside
-containers via `docker exec`.
+Docker as the first implementation via the Go SDK. Container lifecycle is
+exposed as a new API domain under `/node/{hostname}/container`. A hidden
+`provider run` CLI subcommand executes individual provider operations with JSON
+I/O, enabling the orchestrator DSL's `In(target)` to transparently run providers
+inside containers via `docker exec`.
 
 **Tech Stack:** Go, Docker Go SDK (`github.com/docker/docker/client`),
 oapi-codegen, Echo, testify/suite, NATS JetStream
@@ -27,6 +27,7 @@ oapi-codegen, Echo, testify/suite, NATS JetStream
 ### Task 1: Runtime Driver Interface Types
 
 **Files:**
+
 - Create: `internal/provider/container/runtime/driver.go`
 
 - [ ] **Step 1: Write the driver interface and types**
@@ -147,8 +148,8 @@ type PullResult struct {
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `go build ./internal/provider/container/runtime/...`
-Expected: compiles with no errors
+Run: `go build ./internal/provider/container/runtime/...` Expected: compiles
+with no errors
 
 - [ ] **Step 3: Commit**
 
@@ -162,6 +163,7 @@ git commit -m "feat(container): add runtime driver interface and types"
 ### Task 2: Docker Driver Implementation
 
 **Files:**
+
 - Create: `internal/provider/container/runtime/docker/docker.go`
 - Create: `internal/provider/container/runtime/docker/docker_public_test.go`
 
@@ -172,9 +174,9 @@ Run: `go get github.com/docker/docker@latest`
 - [ ] **Step 2: Write failing tests for the Docker driver**
 
 Create the test suite with table-driven tests. Since the Docker driver talks to
-a real Docker socket, tests should use an interface mock or be structured so they
-can run against a real Docker daemon in integration. For unit tests, mock the
-Docker client interface.
+a real Docker socket, tests should use an interface mock or be structured so
+they can run against a real Docker daemon in integration. For unit tests, mock
+the Docker client interface.
 
 ```go
 package docker_test
@@ -231,7 +233,8 @@ func TestDockerDriverPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `go test -run TestDockerDriverPublicTestSuite -v ./internal/provider/container/runtime/docker/...`
+Run:
+`go test -run TestDockerDriverPublicTestSuite -v ./internal/provider/container/runtime/docker/...`
 Expected: FAIL — `docker` package does not exist
 
 - [ ] **Step 4: Write the Docker driver implementation**
@@ -296,13 +299,14 @@ Follow the multi-line function signature convention from CLAUDE.md.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `go test -run TestDockerDriverPublicTestSuite -v ./internal/provider/container/runtime/docker/...`
+Run:
+`go test -run TestDockerDriverPublicTestSuite -v ./internal/provider/container/runtime/docker/...`
 Expected: PASS
 
 - [ ] **Step 6: Verify compilation**
 
-Run: `go build ./internal/provider/container/runtime/...`
-Expected: compiles with no errors
+Run: `go build ./internal/provider/container/runtime/...` Expected: compiles
+with no errors
 
 - [ ] **Step 7: Commit**
 
@@ -316,6 +320,7 @@ git commit -m "feat(container): add Docker runtime driver implementation"
 ### Task 3: Container Provider Service
 
 **Files:**
+
 - Create: `internal/provider/container/provider.go`
 - Create: `internal/provider/container/types.go`
 - Create: `internal/provider/container/provider_public_test.go`
@@ -396,7 +401,8 @@ func TestProviderPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `go test -run TestProviderPublicTestSuite -v ./internal/provider/container/...`
+Run:
+`go test -run TestProviderPublicTestSuite -v ./internal/provider/container/...`
 Expected: FAIL — `container.New` not defined
 
 - [ ] **Step 4: Write the provider implementation**
@@ -424,12 +430,13 @@ func New(
 }
 ```
 
-Implement each method, delegating to `s.driver` with a background context.
-Each method is a thin pass-through that creates a context and calls the driver.
+Implement each method, delegating to `s.driver` with a background context. Each
+method is a thin pass-through that creates a context and calls the driver.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `go test -run TestProviderPublicTestSuite -v ./internal/provider/container/...`
+Run:
+`go test -run TestProviderPublicTestSuite -v ./internal/provider/container/...`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -446,6 +453,7 @@ git commit -m "feat(container): add container provider service"
 ### Task 4: Job Types and Operation Constants
 
 **Files:**
+
 - Modify: `internal/job/types.go`
 - Modify: `internal/job/subjects.go`
 
@@ -539,8 +547,7 @@ const (
 
 - [ ] **Step 4: Verify compilation**
 
-Run: `go build ./internal/job/...`
-Expected: compiles
+Run: `go build ./internal/job/...` Expected: compiles
 
 - [ ] **Step 5: Commit**
 
@@ -554,6 +561,7 @@ git commit -m "feat(container): add container job types and operation constants"
 ### Task 5: Job Client Container Methods
 
 **Files:**
+
 - Create: `internal/job/client/modify_container.go`
 - Create: `internal/job/client/modify_container_public_test.go`
 - Modify: `internal/job/client/types.go` (add methods to `JobClient` interface)
@@ -565,33 +573,35 @@ operation. Follow the existing pattern from `ModifyCommandExec`.
 
 - [ ] **Step 2: Write failing tests**
 
-Create `internal/job/client/modify_container_public_test.go` following the
-same table-driven suite pattern as
+Create `internal/job/client/modify_container_public_test.go` following the same
+table-driven suite pattern as
 `internal/job/client/modify_command_public_test.go`. Test the `Create` method
 first as the representative case — success, job failure, and publish error.
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `go test -run TestModifyContainerPublicTestSuite -v ./internal/job/client/...`
+Run:
+`go test -run TestModifyContainerPublicTestSuite -v ./internal/job/client/...`
 Expected: FAIL — methods not implemented
 
 - [ ] **Step 4: Implement the job client container methods**
 
 Create `internal/job/client/modify_container.go`. Each method marshals the
-appropriate data struct, builds a `job.Request` with category `"container"`
-and the correct operation constant, then calls `publishAndWait`. Follow
-the pattern from `internal/job/client/modify_command.go:33-62`.
+appropriate data struct, builds a `job.Request` with category `"container"` and
+the correct operation constant, then calls `publishAndWait`. Follow the pattern
+from `internal/job/client/modify_command.go:33-62`.
 
 Implement: `ModifyContainerCreate`, `ModifyContainerStart`,
 `ModifyContainerStop`, `ModifyContainerRemove`, `QueryContainerList`,
 `QueryContainerInspect`, `ModifyContainerExec`, `ModifyContainerPull`.
 
-Note: `List` and `Inspect` are query operations (`job.TypeQuery`), while
-all others are modify operations (`job.TypeModify`).
+Note: `List` and `Inspect` are query operations (`job.TypeQuery`), while all
+others are modify operations (`job.TypeModify`).
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `go test -run TestModifyContainerPublicTestSuite -v ./internal/job/client/...`
+Run:
+`go test -run TestModifyContainerPublicTestSuite -v ./internal/job/client/...`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -608,6 +618,7 @@ git commit -m "feat(container): add container job client methods"
 ### Task 6: Agent Processor Container Dispatch
 
 **Files:**
+
 - Modify: `internal/agent/types.go`
 - Modify: `internal/agent/factory.go`
 - Modify: `internal/agent/processor.go`
@@ -647,18 +658,18 @@ if err == nil {
 }
 ```
 
-Update `CreateProviders` return signature to include the container provider
-as the 9th return value.
+Update `CreateProviders` return signature to include the container provider as
+the 9th return value.
 
 **IMPORTANT: This changes the return signature.** The following callers must
 also be updated in this step:
 
 - `internal/agent/agent.go` — the `New()` constructor must accept a
   `containerProv.Provider` parameter and assign it to the struct field
-- `cmd/agent_helpers.go` or wherever `CreateProviders()` is called — update
-  the call site to capture the 9th return value and pass it to `agent.New()`
-- All existing test files that call `agent.New()` — pass `nil` as the
-  container provider parameter. Affected files include:
+- `cmd/agent_helpers.go` or wherever `CreateProviders()` is called — update the
+  call site to capture the 9th return value and pass it to `agent.New()`
+- All existing test files that call `agent.New()` — pass `nil` as the container
+  provider parameter. Affected files include:
   - `internal/agent/processor_command_test.go`
   - `internal/agent/processor_file_test.go`
   - `internal/agent/processor_test.go`
@@ -681,9 +692,9 @@ case "container":
 Create `internal/agent/processor_container_test.go` with `package agent`
 (internal test — matches existing `processor_command_test.go` pattern since
 `processContainerOperation` is unexported). Use a table-driven test for
-`processContainerOperation`. Test the nil-provider case (returns
-"container runtime not available" error) and a successful dispatch case
-with a mock provider.
+`processContainerOperation`. Test the nil-provider case (returns "container
+runtime not available" error) and a successful dispatch case with a mock
+provider.
 
 - [ ] **Step 5: Run test to verify it fails**
 
@@ -695,21 +706,22 @@ Expected: FAIL — `processContainerOperation` not defined
 Create `internal/agent/processor_container.go`:
 
 Note: The existing processor dispatch (`processJobOperation`) does not pass
-context to sub-processors. Since the container provider is the first to
-require `context.Context`, the processor chain needs context propagation.
-Either thread `context.Context` through from `processJobOperation` or use
-`context.Background()` as a starting point (matching the existing pattern
-where processors don't receive context). The preferred approach is to add
-context to `processContainerOperation` and update the dispatch call:
+context to sub-processors. Since the container provider is the first to require
+`context.Context`, the processor chain needs context propagation. Either thread
+`context.Context` through from `processJobOperation` or use
+`context.Background()` as a starting point (matching the existing pattern where
+processors don't receive context). The preferred approach is to add context to
+`processContainerOperation` and update the dispatch call:
 
 In `processor.go`, change the container case to:
+
 ```go
 case "container":
     return a.processContainerOperation(ctx, jobRequest)
 ```
 
-Where `ctx` is derived from the handler's context (check how
-`handleJobMessage` creates/receives its context).
+Where `ctx` is derived from the handler's context (check how `handleJobMessage`
+creates/receives its context).
 
 ```go
 package agent
@@ -775,8 +787,8 @@ Expected: PASS
 
 - [ ] **Step 8: Run full test suite**
 
-Run: `just go::unit`
-Expected: all tests pass (no regressions from agent changes)
+Run: `just go::unit` Expected: all tests pass (no regressions from agent
+changes)
 
 - [ ] **Step 9: Commit**
 
@@ -794,6 +806,7 @@ git commit -m "feat(container): add agent container processor dispatch"
 ### Task 7: OpenAPI Specification
 
 **Files:**
+
 - Create: `internal/api/container/gen/api.yaml`
 - Create: `internal/api/container/gen/cfg.yaml`
 - Create: `internal/api/container/gen/generate.go`
@@ -804,29 +817,31 @@ Create `internal/api/container/gen/api.yaml`. Model it after
 `internal/api/node/gen/api.yaml`. Key differences:
 
 - All paths under `/node/{hostname}/container`
-- `{id}` parameter uses `type: string` with `pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`
-  (not `format: uuid`)
+- `{id}` parameter uses `type: string` with
+  `pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$` (not `format: uuid`)
 - Security scopes: `container:read`, `container:write`, `container:execute`
 - Request body validation via `x-oapi-codegen-extra-tags`
 - Error responses: 400, 401, 403, 404, 409, 500 per the spec
 
 Define these paths:
+
 - `POST /node/{hostname}/container` — CreateContainer
 - `GET /node/{hostname}/container` — ListContainers
 - `GET /node/{hostname}/container/{id}` — InspectContainer
 - `POST /node/{hostname}/container/{id}/start` — StartContainer
 - `POST /node/{hostname}/container/{id}/stop` — StopContainer
-- `DELETE /node/{hostname}/container/{id}` — RemoveContainer (force as query param)
+- `DELETE /node/{hostname}/container/{id}` — RemoveContainer (force as query
+  param)
 - `POST /node/{hostname}/container/{id}/exec` — ExecContainer
 - `POST /node/{hostname}/container/pull` — PullImage
 
 Define schemas: `ContainerCreateRequest`, `ContainerExecRequest`,
-`ContainerStopRequest`, `ContainerPullRequest`,
-`ContainerResponse`, `ContainerDetailResponse`,
-`ContainerListResponse`, `ContainerExecResponse`,
+`ContainerStopRequest`, `ContainerPullRequest`, `ContainerResponse`,
+`ContainerDetailResponse`, `ContainerListResponse`, `ContainerExecResponse`,
 `ContainerResultCollectionResponse`.
 
 Use `x-oapi-codegen-extra-tags` for validation:
+
 ```yaml
 properties:
   image:
@@ -872,13 +887,12 @@ package gen
 
 - [ ] **Step 4: Run code generation**
 
-Run: `go generate ./internal/api/container/gen/...`
-Expected: `container.gen.go` is generated with no errors
+Run: `go generate ./internal/api/container/gen/...` Expected: `container.gen.go`
+is generated with no errors
 
 - [ ] **Step 5: Verify compilation**
 
-Run: `go build ./internal/api/container/...`
-Expected: compiles
+Run: `go build ./internal/api/container/...` Expected: compiles
 
 - [ ] **Step 6: Commit**
 
@@ -892,6 +906,7 @@ git commit -m "feat(container): add OpenAPI spec and code generation"
 ### Task 8: Container API Handler
 
 **Files:**
+
 - Create: `internal/api/container/types.go`
 - Create: `internal/api/container/container.go`
 - Create: `internal/api/container/container_create.go`
@@ -911,8 +926,8 @@ git commit -m "feat(container): add OpenAPI spec and code generation"
 - Create: `internal/api/container/container_pull.go`
 - Create: `internal/api/container/container_pull_public_test.go`
 
-This task implements one handler at a time, TDD-style. The `create` handler
-is shown in detail as the template; remaining handlers follow the same pattern.
+This task implements one handler at a time, TDD-style. The `create` handler is
+shown in detail as the template; remaining handlers follow the same pattern.
 
 - [ ] **Step 1: Write types.go**
 
@@ -963,6 +978,7 @@ func New(
 
 Create `container_create_public_test.go`. Follow the pattern from
 `internal/api/node/command_exec_post_public_test.go`:
+
 - Test validation failure (missing image → 400)
 - Test success (202 with job ID and container info)
 - Test error (500 from job client)
@@ -971,12 +987,14 @@ Create `container_create_public_test.go`. Follow the pattern from
 
 - [ ] **Step 4: Run test to verify it fails**
 
-Run: `go test -run TestContainerCreatePublicTestSuite -v ./internal/api/container/...`
+Run:
+`go test -run TestContainerCreatePublicTestSuite -v ./internal/api/container/...`
 Expected: FAIL
 
 - [ ] **Step 5: Implement CreateContainer handler**
 
 Follow `internal/api/node/command_exec_post.go` as the template:
+
 - Validate hostname with `validateHostname`
 - Validate request body with `validation.Struct`
 - Call `s.JobClient.ModifyContainerCreate`
@@ -984,7 +1002,8 @@ Follow `internal/api/node/command_exec_post.go` as the template:
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `go test -run TestContainerCreatePublicTestSuite -v ./internal/api/container/...`
+Run:
+`go test -run TestContainerCreatePublicTestSuite -v ./internal/api/container/...`
 Expected: PASS
 
 - [ ] **Step 7: Commit create handler**
@@ -999,6 +1018,7 @@ git commit -m "feat(container): add create container handler"
 - [ ] **Step 8: Implement remaining handlers (TDD cycle each)**
 
 For each of: `list`, `inspect`, `start`, `stop`, `remove`, `exec`, `pull`:
+
 1. Write the failing test file
 2. Run test → FAIL
 3. Write the handler
@@ -1012,8 +1032,7 @@ Commit message pattern: `feat(container): add {operation} container handler`
 
 - [ ] **Step 9: Run full test suite**
 
-Run: `just go::unit`
-Expected: all tests pass
+Run: `just go::unit` Expected: all tests pass
 
 - [ ] **Step 10: Commit if any remaining files**
 
@@ -1024,6 +1043,7 @@ Expected: all tests pass
 ### Task 9: Permissions
 
 **Files:**
+
 - Modify: `internal/authtoken/permissions.go`
 
 - [ ] **Step 1: Add container permission constants**
@@ -1048,8 +1068,8 @@ Append the three new permissions.
 
 - [ ] **Step 4: Run existing auth tests**
 
-Run: `go test -v ./internal/authtoken/...`
-Expected: PASS (or update any tests that assert on the full permission set)
+Run: `go test -v ./internal/authtoken/...` Expected: PASS (or update any tests
+that assert on the full permission set)
 
 - [ ] **Step 5: Commit**
 
@@ -1063,13 +1083,14 @@ git commit -m "feat(container): add container permissions and role mappings"
 ### Task 10: Server Handler Wiring
 
 **Files:**
+
 - Create: `internal/api/handler_container.go`
 - Modify: `internal/api/handler_public_test.go`
 - Modify: `cmd/api_helpers.go`
 - Modify: `cmd/api_server_start.go`
 
-Note: `internal/api/handler.go` does NOT need modification. It only contains
-the `RegisterHandlers()` pass-through method. Handler wiring happens in
+Note: `internal/api/handler.go` does NOT need modification. It only contains the
+`RegisterHandlers()` pass-through method. Handler wiring happens in
 `cmd/api_helpers.go:registerAPIHandlers()`.
 
 - [ ] **Step 1: Write failing test for GetContainerHandler**
@@ -1112,8 +1133,8 @@ func (s *HandlerPublicTestSuite) TestGetContainerHandler() {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestGetContainerHandler -v ./internal/api/...`
-Expected: FAIL — `GetContainerHandler` not defined
+Run: `go test -run TestGetContainerHandler -v ./internal/api/...` Expected: FAIL
+— `GetContainerHandler` not defined
 
 - [ ] **Step 3: Implement GetContainerHandler**
 
@@ -1166,8 +1187,7 @@ func (s *Server) GetContainerHandler(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestGetContainerHandler -v ./internal/api/...`
-Expected: PASS
+Run: `go test -run TestGetContainerHandler -v ./internal/api/...` Expected: PASS
 
 - [ ] **Step 5: Add to ServerManager interface**
 
@@ -1189,24 +1209,22 @@ handlers = append(handlers, sm.GetContainerHandler(jc)...)
 - [ ] **Step 7: Wire startup dependencies**
 
 In `cmd/api_server_start.go`, ensure the container handler is passed. Since
-`GetContainerHandler` takes only a `jobClient` (same as `GetNodeHandler`),
-no new dependencies are needed — it's already wired through the existing
+`GetContainerHandler` takes only a `jobClient` (same as `GetNodeHandler`), no
+new dependencies are needed — it's already wired through the existing
 `registerAPIHandlers` call after step 6.
 
 - [ ] **Step 8: Regenerate combined spec**
 
-Run: `just generate`
-Expected: combined spec at `internal/api/gen/api.yaml` includes container paths
+Run: `just generate` Expected: combined spec at `internal/api/gen/api.yaml`
+includes container paths
 
 - [ ] **Step 9: Verify full build**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 - [ ] **Step 10: Run full test suite**
 
-Run: `just go::unit`
-Expected: all tests pass
+Run: `just go::unit` Expected: all tests pass
 
 - [ ] **Step 11: Commit**
 
@@ -1223,23 +1241,23 @@ git commit -m "feat(container): wire container handler into API server"
 ### Task 11: SDK Client Container Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/container.go`
 - Modify: `pkg/sdk/client/client.go` (add Container field)
 
 - [ ] **Step 1: Regenerate SDK client from combined spec**
 
-Run: `go generate ./pkg/sdk/client/gen/...`
-Expected: SDK client picks up new container endpoints
+Run: `go generate ./pkg/sdk/client/gen/...` Expected: SDK client picks up new
+container endpoints
 
 - [ ] **Step 2: Write the ContainerService**
 
-Create `pkg/sdk/client/container.go`. Follow `pkg/sdk/client/health.go` for
-the service wrapper pattern. Each method calls the generated client method,
-handles response codes (200/202, 400, 401, 403, 404, 409, 500), and returns
-typed results.
+Create `pkg/sdk/client/container.go`. Follow `pkg/sdk/client/health.go` for the
+service wrapper pattern. Each method calls the generated client method, handles
+response codes (200/202, 400, 401, 403, 404, 409, 500), and returns typed
+results.
 
-Methods: `Create`, `List`, `Inspect`, `Start`, `Stop`, `Remove`, `Exec`,
-`Pull`.
+Methods: `Create`, `List`, `Inspect`, `Start`, `Stop`, `Remove`, `Exec`, `Pull`.
 
 - [ ] **Step 3: Add Container field to Client**
 
@@ -1253,8 +1271,7 @@ Initialize it in the constructor.
 
 - [ ] **Step 4: Verify compilation**
 
-Run: `go build ./pkg/sdk/...`
-Expected: compiles
+Run: `go build ./pkg/sdk/...` Expected: compiles
 
 - [ ] **Step 5: Commit**
 
@@ -1269,6 +1286,7 @@ git commit -m "feat(container): add SDK container service"
 ### Task 12: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_container.go`
 - Create: `cmd/client_container_create.go`
 - Create: `cmd/client_container_list.go`
@@ -1303,40 +1321,38 @@ func init() {
 
 - [ ] **Step 2: Write create subcommand**
 
-Create `cmd/client_container_create.go`. Follow
-`cmd/client_health_status.go` for the pattern. Use flags:
-`--target` (required), `--image` (required), `--name`, `--env`,
-`--port`, `--volume`, `--auto-start`, `--json`.
+Create `cmd/client_container_create.go`. Follow `cmd/client_health_status.go`
+for the pattern. Use flags: `--target` (required), `--image` (required),
+`--name`, `--env`, `--port`, `--volume`, `--auto-start`, `--json`.
 
-Handle all response codes in the switch block: 202, 400
-(`handleUnknownError`), 401/403 (`handleAuthError`), 500
-(`handleUnknownError`).
+Handle all response codes in the switch block: 202, 400 (`handleUnknownError`),
+401/403 (`handleAuthError`), 500 (`handleUnknownError`).
 
 - [ ] **Step 3: Write remaining subcommands**
 
 For each operation: `list`, `inspect`, `start`, `stop`, `remove`, `exec`,
 `pull`. Each subcommand:
+
 - Registers under `clientContainerCmd`
-- Uses flags (e.g., `--id` for operations on a specific container,
-  `--target` for node targeting)
+- Uses flags (e.g., `--id` for operations on a specific container, `--target`
+  for node targeting)
 - Supports `--json` for raw output
 - Handles all API response codes
 
 Commit message pattern per batch:
+
 ```bash
 git commit -m "feat(container): add container CLI commands"
 ```
 
 - [ ] **Step 4: Verify build**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 - [ ] **Step 5: Verify help output**
 
-Run: `go run main.go client container --help`
-Expected: shows subcommands (create, list, inspect, start, stop, remove,
-exec, pull)
+Run: `go run main.go client container --help` Expected: shows subcommands
+(create, list, inspect, start, stop, remove, exec, pull)
 
 - [ ] **Step 6: Commit**
 
@@ -1352,6 +1368,7 @@ git commit -m "feat(container): add container CLI commands"
 ### Task 13: Provider Registry
 
 **Files:**
+
 - Create: `internal/provider/registry/registry.go`
 - Create: `internal/provider/registry/registry_public_test.go`
 
@@ -1431,7 +1448,8 @@ func TestRegistryPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestRegistryPublicTestSuite -v ./internal/provider/registry/...`
+Run:
+`go test -run TestRegistryPublicTestSuite -v ./internal/provider/registry/...`
 Expected: FAIL
 
 - [ ] **Step 3: Implement the registry**
@@ -1494,7 +1512,8 @@ func (r *Registry) Lookup(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestRegistryPublicTestSuite -v ./internal/provider/registry/...`
+Run:
+`go test -run TestRegistryPublicTestSuite -v ./internal/provider/registry/...`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1509,12 +1528,13 @@ git commit -m "feat(container): add provider runtime registry"
 ### Task 14: Provider Run CLI Subcommand
 
 **Files:**
+
 - Create: `cmd/provider_run.go`
 
 - [ ] **Step 1: Write the provider run command**
 
-Create `cmd/provider_run.go`. This is a hidden command
-(`Hidden: true` on the Cobra command). It:
+Create `cmd/provider_run.go`. This is a hidden command (`Hidden: true` on the
+Cobra command). It:
 
 1. Takes positional args: `provider` and `operation`
 2. Takes `--data` flag for JSON input
@@ -1602,13 +1622,12 @@ proof of concept. More providers get registered as they are built.
 
 - [ ] **Step 3: Verify build**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 - [ ] **Step 4: Verify hidden from help**
 
-Run: `go run main.go --help`
-Expected: `provider` does NOT appear in the command list
+Run: `go run main.go --help` Expected: `provider` does NOT appear in the command
+list
 
 - [ ] **Step 5: Commit**
 
@@ -1624,6 +1643,7 @@ git commit -m "feat(container): add hidden provider run subcommand"
 ### Task 15: RuntimeTarget Interface
 
 **Files:**
+
 - Create: `pkg/sdk/orchestrator/runtime_target.go`
 - Create: `pkg/sdk/orchestrator/runtime_target_public_test.go`
 
@@ -1660,6 +1680,7 @@ git commit -m "feat(container): add RuntimeTarget interface"
 ### Task 16: Docker RuntimeTarget Implementation
 
 **Files:**
+
 - Create: `pkg/sdk/orchestrator/docker_target.go`
 - Create: `pkg/sdk/orchestrator/docker_target_public_test.go`
 
@@ -1670,14 +1691,15 @@ runtime type, and that `ExecProvider` constructs the correct exec call.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestDockerTargetPublicTestSuite -v ./pkg/sdk/orchestrator/...`
+Run:
+`go test -run TestDockerTargetPublicTestSuite -v ./pkg/sdk/orchestrator/...`
 Expected: FAIL
 
 - [ ] **Step 3: Implement DockerTarget**
 
 Note: The orchestrator lives in `pkg/sdk/` which should not import `internal/`
-packages directly. Instead of importing `runtime.Driver`, we inject an
-`ExecFn` function type that the caller wires to the Docker driver.
+packages directly. Instead of importing `runtime.Driver`, we inject an `ExecFn`
+function type that the caller wires to the Docker driver.
 
 ```go
 package orchestrator
@@ -1752,8 +1774,8 @@ func (t *DockerTarget) ExecProvider(
 }
 ```
 
-The caller (e.g., `cmd/` or the user's orchestrator code) wires the `ExecFn`
-by closing over the Docker driver:
+The caller (e.g., `cmd/` or the user's orchestrator code) wires the `ExecFn` by
+closing over the Docker driver:
 
 ```go
 execFn := func(ctx context.Context, id string, cmd []string) (string, string, int, error) {
@@ -1768,7 +1790,8 @@ target := orchestrator.NewDockerTarget("web", "ubuntu:24.04", execFn)
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestDockerTargetPublicTestSuite -v ./pkg/sdk/orchestrator/...`
+Run:
+`go test -run TestDockerTargetPublicTestSuite -v ./pkg/sdk/orchestrator/...`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1784,14 +1807,15 @@ git commit -m "feat(container): add Docker RuntimeTarget implementation"
 ### Task 17: Plan.Docker() and Plan.In() Methods
 
 **Files:**
+
 - Create: `pkg/sdk/orchestrator/plan_in.go`
 - Create: `pkg/sdk/orchestrator/plan_in_public_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
-Test that `p.Docker()` returns a `*DockerTarget` with correct name/image.
-Test that `p.In()` returns a `ScopedPlan` and that `TaskFunc` on the scoped
-plan adds a task to the parent plan.
+Test that `p.Docker()` returns a `*DockerTarget` with correct name/image. Test
+that `p.In()` returns a `ScopedPlan` and that `TaskFunc` on the scoped plan adds
+a task to the parent plan.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -1854,9 +1878,9 @@ func (sp *ScopedPlan) TaskFuncWithResults(
 Note: The full client-interception layer (where SDK calls automatically route
 through `docker exec` + `provider run`) is more complex. This initial
 implementation provides the `In()` scoping mechanism. The interception layer
-that replaces the HTTP transport with Docker exec is the next evolution —
-for now, task functions inside `In()` can manually use `target.ExecProvider()`
-to run providers in the container.
+that replaces the HTTP transport with Docker exec is the next evolution — for
+now, task functions inside `In()` can manually use `target.ExecProvider()` to
+run providers in the container.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -1871,8 +1895,7 @@ field to `PlanConfig` and a `WithDockerExecFn(fn ExecFn)` plan option. The
 
 - [ ] **Step 6: Run full orchestrator tests**
 
-Run: `go test -v ./pkg/sdk/orchestrator/...`
-Expected: all tests pass
+Run: `go test -v ./pkg/sdk/orchestrator/...` Expected: all tests pass
 
 - [ ] **Step 7: Commit**
 
@@ -1890,6 +1913,7 @@ git commit -m "feat(container): add Plan.Docker() and Plan.In() DSL methods"
 ### Task 18: Documentation
 
 **Files:**
+
 - Create: `docs/docs/sidebar/features/container-management.md`
 - Create: `docs/docs/sidebar/usage/cli/client/container/container.md`
 - Create: `docs/docs/sidebar/usage/cli/client/container/create.md`
@@ -1906,8 +1930,8 @@ git commit -m "feat(container): add Plan.Docker() and Plan.In() DSL methods"
 
 - [ ] **Step 1: Write feature page**
 
-Create `docs/docs/sidebar/features/container-management.md`. Follow the
-template from existing feature pages in the `features/` directory.
+Create `docs/docs/sidebar/features/container-management.md`. Follow the template
+from existing feature pages in the `features/` directory.
 
 - [ ] **Step 2: Write CLI documentation pages**
 
@@ -1921,10 +1945,9 @@ Add "Container Management" to the Features navbar dropdown.
 - [ ] **Step 4: Update configuration.md**
 
 Add a note that no new configuration sections are needed for container
-management (Docker socket is auto-detected). Also update the Permissions
-table to include `container:read`, `container:write`, `container:execute`
-and update the role mappings table to show which roles get which container
-permissions.
+management (Docker socket is auto-detected). Also update the Permissions table
+to include `container:read`, `container:write`, `container:execute` and update
+the role mappings table to show which roles get which container permissions.
 
 - [ ] **Step 5: Update system-architecture.md**
 
@@ -1932,8 +1955,7 @@ Add container endpoints to the endpoint tables.
 
 - [ ] **Step 6: Check docs formatting**
 
-Run: `just docs::fmt-check`
-Expected: passes (or fix formatting)
+Run: `just docs::fmt-check` Expected: passes (or fix formatting)
 
 - [ ] **Step 7: Commit**
 
@@ -1947,16 +1969,18 @@ git commit -m "docs: add container management documentation"
 ### Task 19: Integration Test Smoke Suite
 
 **Files:**
+
 - Create: `test/integration/container_test.go`
 
 Note: Integration tests require a running Docker daemon. They are guarded by
-`//go:build integration` and run with `just go::unit-int`. This task creates
-a minimal smoke test. Write tests (mutations) must be guarded by
+`//go:build integration` and run with `just go::unit-int`. This task creates a
+minimal smoke test. Write tests (mutations) must be guarded by
 `skipWrite(s.T())`.
 
 - [ ] **Step 1: Create integration test file**
 
 Follow existing patterns in `test/integration/`. The test should:
+
 - Create a container (`POST /node/{hostname}/container`)
 - List containers and verify it appears
 - Inspect the container
@@ -1977,28 +2001,23 @@ git commit -m "test(container): add integration test smoke suite"
 
 - [ ] **Step 1: Regenerate all specs and code**
 
-Run: `just generate`
-Expected: no errors, all generated files up to date
+Run: `just generate` Expected: no errors, all generated files up to date
 
 - [ ] **Step 2: Build**
 
-Run: `go build ./...`
-Expected: compiles
+Run: `go build ./...` Expected: compiles
 
 - [ ] **Step 3: Run all unit tests**
 
-Run: `just go::unit`
-Expected: all tests pass
+Run: `just go::unit` Expected: all tests pass
 
 - [ ] **Step 4: Run linter**
 
-Run: `just go::vet`
-Expected: no lint errors
+Run: `just go::vet` Expected: no lint errors
 
 - [ ] **Step 5: Run full test suite with coverage**
 
-Run: `just test`
-Expected: all checks pass (lint + unit + coverage)
+Run: `just test` Expected: all checks pass (lint + unit + coverage)
 
 - [ ] **Step 6: Verify new packages have 100% coverage**
 
@@ -2013,12 +2032,12 @@ go tool cover -func=.coverage/cover.out | grep -E 'container|registry' | grep -v
 Expected: **no output** (all container and registry packages at 100%).
 
 If any lines are uncovered, add tests before proceeding. The `.coverignore`
-already excludes `/cmd/`, `/gen/`, `main.go`, and `/mocks/`, so handler
-tests in `internal/api/container/` and provider tests in
-`internal/provider/container/` are what matter.
+already excludes `/cmd/`, `/gen/`, `main.go`, and `/mocks/`, so handler tests in
+`internal/api/container/` and provider tests in `internal/provider/container/`
+are what matter.
 
-Also verify that overall project coverage did not decrease by comparing with
-the Codecov baseline. Run:
+Also verify that overall project coverage did not decrease by comparing with the
+Codecov baseline. Run:
 
 ```bash
 go tool cover -func=.coverage/cover.out | tail -1

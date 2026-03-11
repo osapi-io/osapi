@@ -104,7 +104,9 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"stdout":"file1\nfile2","stderr":"","exit_code":0}`),
+						Data: json.RawMessage(
+							`{"stdout":"file1\nfile2","stderr":"","exit_code":0}`,
+						),
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {

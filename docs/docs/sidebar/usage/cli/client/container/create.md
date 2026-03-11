@@ -13,8 +13,8 @@ $ osapi client container create --image nginx:latest
   State:        running
 ```
 
-Create a named container with environment variables, port mappings, and
-volume mounts:
+Create a named container with environment variables, port mappings, and volume
+mounts:
 
 ```bash
 $ osapi client container create \
@@ -53,13 +53,13 @@ $ osapi client container create --image nginx:latest --json
 
 ## Flags
 
-| Flag             | Description                                              | Default |
-| ---------------- | -------------------------------------------------------- | ------- |
-| `--image`        | Container image reference (**required**)                 |         |
-| `--name`         | Optional name for the container                          |         |
-| `--env`          | Environment variable in `KEY=VALUE` format (repeatable)  | `[]`    |
-| `--port`         | Port mapping in `host:container` format (repeatable)     | `[]`    |
-| `--volume`       | Volume mount in `host:container` format (repeatable)     | `[]`    |
-| `--auto-start`   | Start the container immediately after creation           | `true`  |
-| `-T, --target`   | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`     | Output raw JSON response                                 |         |
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `--image`      | Container image reference (**required**)                 |         |
+| `--name`       | Optional name for the container                          |         |
+| `--env`        | Environment variable in `KEY=VALUE` format (repeatable)  | `[]`    |
+| `--port`       | Port mapping in `host:container` format (repeatable)     | `[]`    |
+| `--volume`     | Volume mount in `host:container` format (repeatable)     | `[]`    |
+| `--auto-start` | Start the container immediately after creation           | `true`  |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `-j, --json`   | Output raw JSON response                                 |         |

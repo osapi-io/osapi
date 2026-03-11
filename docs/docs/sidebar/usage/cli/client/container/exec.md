@@ -43,11 +43,11 @@ $ osapi client container exec --id my-nginx --command "ls" --json
 
 ## Flags
 
-| Flag             | Description                                              | Default |
-| ---------------- | -------------------------------------------------------- | ------- |
-| `--id`           | Container ID or name to exec in (**required**)           |         |
-| `--command`      | Command to execute, comma-separated (**required**)       |         |
-| `--env`          | Environment variable in `KEY=VALUE` format (repeatable)  | `[]`    |
-| `--working-dir`  | Working directory inside the container                   |         |
-| `-T, --target`   | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
-| `-j, --json`     | Output raw JSON response                                 |         |
+| Flag            | Description                                              | Default |
+| --------------- | -------------------------------------------------------- | ------- |
+| `--id`          | Container ID or name to exec in (**required**)           |         |
+| `--command`     | Command to execute, comma-separated (**required**)       |         |
+| `--env`         | Environment variable in `KEY=VALUE` format (repeatable)  | `[]`    |
+| `--working-dir` | Working directory inside the container                   |         |
+| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `-j, --json`    | Output raw JSON response                                 |         |

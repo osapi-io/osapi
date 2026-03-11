@@ -102,7 +102,9 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"image_id":"sha256:abc123","tag":"latest","size":12345}`),
+						Data: json.RawMessage(
+							`{"image_id":"sha256:abc123","tag":"latest","size":12345}`,
+						),
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerPullResponseObject) {
@@ -207,7 +209,9 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPullValidationHTTP()
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"image_id":"sha256:abc123","tag":"latest","size":12345}`),
+						Data: json.RawMessage(
+							`{"image_id":"sha256:abc123","tag":"latest","size":12345}`,
+						),
 					}, nil)
 				return mock
 			},

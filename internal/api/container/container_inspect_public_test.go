@@ -186,7 +186,9 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerByIdValidationHTTP
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running"}`),
+						Data: json.RawMessage(
+							`{"id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running"}`,
+						),
 					}, nil)
 				return mock
 			},

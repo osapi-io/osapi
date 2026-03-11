@@ -70,7 +70,14 @@ func (m *mockDockerClient) ContainerCreate(
 	containerName string,
 ) (container.CreateResponse, error) {
 	if m.containerCreateFunc != nil {
-		return m.containerCreateFunc(ctx, config, hostConfig, networkConfig, platform, containerName)
+		return m.containerCreateFunc(
+			ctx,
+			config,
+			hostConfig,
+			networkConfig,
+			platform,
+			containerName,
+		)
 	}
 
 	return container.CreateResponse{ID: "test-container-id"}, nil
