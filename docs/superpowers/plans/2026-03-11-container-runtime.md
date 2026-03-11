@@ -1003,7 +1003,10 @@ For each of: `list`, `inspect`, `start`, `stop`, `remove`, `exec`, `pull`:
 2. Run test → FAIL
 3. Write the handler
 4. Run test → PASS
-5. Commit
+5. Verify coverage:
+   `go test -coverprofile=cover.out ./internal/api/container/ && go tool cover -func=cover.out | grep -v '100.0%'`
+   Expected: no uncovered lines in the new handler file
+6. Commit
 
 Commit message pattern: `feat(container): add {operation} container handler`
 
@@ -1992,12 +1995,39 @@ Expected: all tests pass
 Run: `just go::vet`
 Expected: no lint errors
 
-- [ ] **Step 5: Run full test suite**
+- [ ] **Step 5: Run full test suite with coverage**
 
 Run: `just test`
 Expected: all checks pass (lint + unit + coverage)
 
-- [ ] **Step 6: Commit any formatting fixes**
+- [ ] **Step 6: Verify new packages have 100% coverage**
+
+Run coverage and check that every new package has 100% line coverage:
+
+```bash
+go test -race -coverprofile=.coverage/cover.out -v ./...
+grep -v -f .coverignore .coverage/cover.out > .coverage/cover.tmp && mv .coverage/cover.tmp .coverage/cover.out
+go tool cover -func=.coverage/cover.out | grep -E 'container|registry' | grep -v '100.0%'
+```
+
+Expected: **no output** (all container and registry packages at 100%).
+
+If any lines are uncovered, add tests before proceeding. The `.coverignore`
+already excludes `/cmd/`, `/gen/`, `main.go`, and `/mocks/`, so handler
+tests in `internal/api/container/` and provider tests in
+`internal/provider/container/` are what matter.
+
+Also verify that overall project coverage did not decrease by comparing with
+the Codecov baseline. Run:
+
+```bash
+go tool cover -func=.coverage/cover.out | tail -1
+```
+
+This shows the total coverage percentage. It should be at or above the
+pre-existing level.
+
+- [ ] **Step 7: Commit any formatting fixes**
 
 If `just go::fmt` produces changes:
 
