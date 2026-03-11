@@ -379,6 +379,42 @@ func (s *HandlerPublicTestSuite) TestGetFileHandler() {
 	}
 }
 
+func (s *HandlerPublicTestSuite) TestGetContainerHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns container handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname/container", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetContainerHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
 func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 	tests := []struct {
 		name string
