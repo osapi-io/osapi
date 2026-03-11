@@ -66,6 +66,10 @@ type Client struct {
 	// File provides file management operations (upload, list, get, delete).
 	File *FileService
 
+	// Container provides container management operations (create, list,
+	// inspect, start, stop, remove, exec, pull).
+	Container *ContainerService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -135,6 +139,7 @@ func New(
 		baseURL: baseURL,
 	}
 	c.File = &FileService{client: httpClient}
+	c.Container = &ContainerService{client: httpClient}
 
 	return c
 }
