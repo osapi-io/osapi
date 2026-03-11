@@ -105,6 +105,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 }
 

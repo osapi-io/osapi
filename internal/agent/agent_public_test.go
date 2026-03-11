@@ -110,6 +110,7 @@ func (s *AgentPublicTestSuite) TestNew() {
 				nil,
 				nil,
 				nil,
+				nil,
 			)
 
 			s.NotNil(a)
@@ -150,6 +151,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
 					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -200,6 +202,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
 					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,

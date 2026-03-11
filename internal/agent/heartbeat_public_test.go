@@ -144,6 +144,7 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 					nil,
+					nil,
 					s.mockKV,
 					nil,
 				)
@@ -183,6 +184,7 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					pingMocks.NewDefaultMockProvider(s.mockCtrl),
 					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,

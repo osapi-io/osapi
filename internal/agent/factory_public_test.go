@@ -64,7 +64,7 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 		s.Run(tt.name, func() {
 			factory := agent.NewProviderFactory(slog.Default())
 
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, _ := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -74,6 +74,7 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 			s.NotNil(pingProvider)
 			s.NotNil(netinfoProvider)
 			s.NotNil(commandProvider)
+			// containerProvider can be nil if Docker is not available
 		})
 	}
 }

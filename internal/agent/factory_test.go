@@ -78,7 +78,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			factoryHostInfoFn = tt.setupMock()
 
 			factory := NewProviderFactory(slog.Default())
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, _ := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -88,6 +88,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			s.NotNil(pingProvider)
 			s.NotNil(netinfoProvider)
 			s.NotNil(commandProvider)
+			// containerProvider (9th return value) can be nil if Docker is not available
 		})
 	}
 }

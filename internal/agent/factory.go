@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 	"strings"
 
@@ -28,6 +29,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
+	containerProv "github.com/retr0h/osapi/internal/provider/container"
+	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -64,6 +67,7 @@ func (f *ProviderFactory) CreateProviders() (
 	ping.Provider,
 	netinfo.Provider,
 	command.Provider,
+	containerProv.Provider,
 ) {
 	info, _ := factoryHostInfoFn()
 	platform := strings.ToLower(info.Platform)
@@ -150,5 +154,20 @@ func (f *ProviderFactory) CreateProviders() (
 	// Create command provider (cross-platform, uses exec.Manager)
 	commandProvider := command.New(f.logger, execManager)
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider
+	// Create container provider (conditional on Docker availability)
+	var containerProvider containerProv.Provider
+	dockerDriver, err := docker.New()
+	if err == nil {
+		if pingErr := dockerDriver.Ping(context.Background()); pingErr == nil {
+			containerProvider = containerProv.New(dockerDriver)
+		} else {
+			f.logger.Info("Docker not available, container operations disabled",
+				slog.String("error", pingErr.Error()))
+		}
+	} else {
+		f.logger.Info("Docker client creation failed, container operations disabled",
+			slog.String("error", err.Error()))
+	}
+
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, containerProvider
 }

@@ -288,6 +288,96 @@ func (mr *MockJobClientMockRecorder) ModifyCommandShellBroadcast(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyCommandShellBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyCommandShellBroadcast), arg0, arg1, arg2, arg3, arg4)
 }
 
+// ModifyContainerCreate mocks base method.
+func (m *MockJobClient) ModifyContainerCreate(arg0 context.Context, arg1 string, arg2 *job.ContainerCreateData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerCreate", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerCreate indicates an expected call of ModifyContainerCreate.
+func (mr *MockJobClientMockRecorder) ModifyContainerCreate(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerCreate", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerCreate), arg0, arg1, arg2)
+}
+
+// ModifyContainerExec mocks base method.
+func (m *MockJobClient) ModifyContainerExec(arg0 context.Context, arg1, arg2 string, arg3 *job.ContainerExecData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerExec", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerExec indicates an expected call of ModifyContainerExec.
+func (mr *MockJobClientMockRecorder) ModifyContainerExec(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerExec", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerExec), arg0, arg1, arg2, arg3)
+}
+
+// ModifyContainerPull mocks base method.
+func (m *MockJobClient) ModifyContainerPull(arg0 context.Context, arg1 string, arg2 *job.ContainerPullData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerPull", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerPull indicates an expected call of ModifyContainerPull.
+func (mr *MockJobClientMockRecorder) ModifyContainerPull(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerPull", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerPull), arg0, arg1, arg2)
+}
+
+// ModifyContainerRemove mocks base method.
+func (m *MockJobClient) ModifyContainerRemove(arg0 context.Context, arg1, arg2 string, arg3 *job.ContainerRemoveData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerRemove", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerRemove indicates an expected call of ModifyContainerRemove.
+func (mr *MockJobClientMockRecorder) ModifyContainerRemove(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerRemove", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerRemove), arg0, arg1, arg2, arg3)
+}
+
+// ModifyContainerStart mocks base method.
+func (m *MockJobClient) ModifyContainerStart(arg0 context.Context, arg1, arg2 string) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerStart", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerStart indicates an expected call of ModifyContainerStart.
+func (mr *MockJobClientMockRecorder) ModifyContainerStart(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerStart", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerStart), arg0, arg1, arg2)
+}
+
+// ModifyContainerStop mocks base method.
+func (m *MockJobClient) ModifyContainerStop(arg0 context.Context, arg1, arg2 string, arg3 *job.ContainerStopData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyContainerStop", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyContainerStop indicates an expected call of ModifyContainerStop.
+func (mr *MockJobClientMockRecorder) ModifyContainerStop(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyContainerStop", reflect.TypeOf((*MockJobClient)(nil).ModifyContainerStop), arg0, arg1, arg2, arg3)
+}
+
 // ModifyFileDeploy mocks base method.
 func (m *MockJobClient) ModifyFileDeploy(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string, arg8 map[string]interface{}) (string, string, bool, error) {
 	m.ctrl.T.Helper()
@@ -371,6 +461,36 @@ func (m *MockJobClient) ModifyNetworkDNSBroadcast(arg0 context.Context, arg1 str
 func (mr *MockJobClientMockRecorder) ModifyNetworkDNSBroadcast(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyNetworkDNSBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyNetworkDNSBroadcast), arg0, arg1, arg2, arg3, arg4)
+}
+
+// QueryContainerInspect mocks base method.
+func (m *MockJobClient) QueryContainerInspect(arg0 context.Context, arg1, arg2 string) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryContainerInspect", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryContainerInspect indicates an expected call of QueryContainerInspect.
+func (mr *MockJobClientMockRecorder) QueryContainerInspect(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryContainerInspect", reflect.TypeOf((*MockJobClient)(nil).QueryContainerInspect), arg0, arg1, arg2)
+}
+
+// QueryContainerList mocks base method.
+func (m *MockJobClient) QueryContainerList(arg0 context.Context, arg1 string, arg2 *job.ContainerListData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryContainerList", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryContainerList indicates an expected call of QueryContainerList.
+func (mr *MockJobClientMockRecorder) QueryContainerList(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryContainerList", reflect.TypeOf((*MockJobClient)(nil).QueryContainerList), arg0, arg1, arg2)
 }
 
 // QueryFileStatus mocks base method.

@@ -124,6 +124,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		fMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 
@@ -708,6 +709,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -734,6 +736,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -764,6 +767,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -788,6 +792,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -818,6 +823,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -842,6 +848,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -906,6 +913,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -937,6 +945,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -963,6 +972,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					pingMock,
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
