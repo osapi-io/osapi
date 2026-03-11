@@ -156,6 +156,85 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 			},
 		},
 		{
+			name: "success with working dir",
+			request: gen.PostNodeContainerExecRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerExecJSONRequestBody{
+					Command:    []string{"ls", "-la"},
+					WorkingDir: strPtr("/app"),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyContainerExec(
+						gomock.Any(),
+						"server1",
+						"abc123",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data: json.RawMessage(
+							`{"stdout":"app files","stderr":"","exit_code":0}`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerExec202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Stdout)
+				s.Equal("app files", *r.Results[0].Stdout)
+				s.Require().NotNil(r.Results[0].ExitCode)
+				s.Equal(0, *r.Results[0].ExitCode)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
+			name: "success with nil response data",
+			request: gen.PostNodeContainerExecRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerExecJSONRequestBody{
+					Command: []string{"ls"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyContainerExec(
+						gomock.Any(),
+						"server1",
+						"abc123",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data:     nil,
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerExec202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Stdout)
+				s.Equal("", *r.Results[0].Stdout)
+				s.Require().NotNil(r.Results[0].Stderr)
+				s.Equal("", *r.Results[0].Stderr)
+				s.Require().NotNil(r.Results[0].ExitCode)
+				s.Equal(0, *r.Results[0].ExitCode)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNodeContainerExecRequestObject{
 				Hostname: "server1",

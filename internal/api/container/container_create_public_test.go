@@ -149,6 +149,72 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainer() {
 			},
 		},
 		{
+			name: "success with explicit auto_start false",
+			request: gen.PostNodeContainerRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeContainerJSONRequestBody{
+					Image:     "nginx:latest",
+					AutoStart: boolPtr(false),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyContainerCreate(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data:     json.RawMessage(`{"id":"xyz789"}`),
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerResponseObject) {
+				r, ok := resp.(gen.PostNodeContainer202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Id)
+				s.Equal("xyz789", *r.Results[0].Id)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
+			name: "success with nil response data",
+			request: gen.PostNodeContainerRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeContainerJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyContainerCreate(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+						Data:     nil,
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerResponseObject) {
+				r, ok := resp.(gen.PostNodeContainer202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Nil(r.Results[0].Id)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNodeContainerRequestObject{
 				Hostname: "server1",

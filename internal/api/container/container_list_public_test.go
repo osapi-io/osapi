@@ -134,6 +134,123 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 			},
 		},
 		{
+			name: "validation error invalid limit",
+			request: gen.GetNodeContainerRequestObject{
+				Hostname: "server1",
+				Params: gen.GetNodeContainerParams{
+					Limit: intPtr(0),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainer400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "Limit")
+			},
+		},
+		{
+			name: "success with limit param",
+			request: gen.GetNodeContainerRequestObject{
+				Hostname: "server1",
+				Params: gen.GetNodeContainerParams{
+					State: &stateAll,
+					Limit: intPtr(5),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryContainerList(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`[{"id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z"}]`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Containers)
+				s.Len(*r.Results[0].Containers, 1)
+				c := (*r.Results[0].Containers)[0]
+				s.Equal("abc123", *c.Id)
+				s.Require().NotNil(c.Created)
+				s.Equal("2026-01-01T00:00:00Z", *c.Created)
+			},
+		},
+		{
+			name: "success with nil response data",
+			request: gen.GetNodeContainerRequestObject{
+				Hostname: "server1",
+				Params: gen.GetNodeContainerParams{
+					State: &stateAll,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryContainerList(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data:     nil,
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Containers)
+				s.Empty(*r.Results[0].Containers)
+			},
+		},
+		{
+			name: "success with empty created field",
+			request: gen.GetNodeContainerRequestObject{
+				Hostname: "server1",
+				Params: gen.GetNodeContainerParams{
+					State: &stateAll,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryContainerList(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`[{"id":"x","name":"n","image":"i","state":"running","created":""}]`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Containers)
+				s.Len(*r.Results[0].Containers, 1)
+				c := (*r.Results[0].Containers)[0]
+				s.Equal("x", *c.Id)
+				s.Nil(c.Created)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.GetNodeContainerRequestObject{
 				Hostname: "server1",

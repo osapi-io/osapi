@@ -377,6 +377,17 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			},
 		},
 		{
+			name: "container category routes to container processor",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "container",
+				Operation: "container.create",
+				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
+			},
+			expectError: true,
+			errorMsg:    "container runtime not available",
+		},
+		{
 			name: "unsupported job category",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,

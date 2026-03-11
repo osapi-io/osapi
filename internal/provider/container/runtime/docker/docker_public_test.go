@@ -1,8 +1,13 @@
 package docker_test
 
 import (
+	"bufio"
 	"context"
+	"errors"
+	"fmt"
 	"io"
+	"net"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +17,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
 
@@ -203,6 +209,42 @@ func (m *mockDockerClient) ImageInspectWithRaw(
 	}, nil, nil
 }
 
+// newHijackedResponse creates a HijackedResponse with the given content
+// suitable for testing. It uses a pipe-based net.Conn so Close() does not panic.
+func newHijackedResponse(
+	content string,
+) types.HijackedResponse {
+	serverConn, clientConn := net.Pipe()
+	serverConn.Close()
+
+	return types.HijackedResponse{
+		Conn:   clientConn,
+		Reader: bufio.NewReader(strings.NewReader(content)),
+	}
+}
+
+// errorConn is a net.Conn that always returns an error on Read.
+type errorConn struct {
+	net.Conn
+}
+
+func (c *errorConn) Read(
+	_ []byte,
+) (int, error) {
+	return 0, errors.New("forced read error")
+}
+
+func (c *errorConn) Close() error {
+	return nil
+}
+
+func newErrorHijackedResponse() types.HijackedResponse {
+	return types.HijackedResponse{
+		Conn:   &errorConn{},
+		Reader: bufio.NewReader(&errorConn{}),
+	}
+}
+
 type DockerDriverPublicTestSuite struct {
 	suite.Suite
 	ctx context.Context
@@ -215,6 +257,7 @@ func (s *DockerDriverPublicTestSuite) SetupTest() {
 func (s *DockerDriverPublicTestSuite) TestNew() {
 	tests := []struct {
 		name         string
+		setupEnv     func() (cleanup func())
 		validateFunc func(d runtime.Driver, err error)
 	}{
 		{
@@ -227,10 +270,38 @@ func (s *DockerDriverPublicTestSuite) TestNew() {
 				s.NotNil(d)
 			},
 		},
+		{
+			name: "returns error when docker client creation fails",
+			setupEnv: func() (cleanup func()) {
+				orig, existed := os.LookupEnv("DOCKER_HOST")
+				os.Setenv("DOCKER_HOST", "tcp://invalid:::::port")
+
+				return func() {
+					if existed {
+						os.Setenv("DOCKER_HOST", orig)
+					} else {
+						os.Unsetenv("DOCKER_HOST")
+					}
+				}
+			},
+			validateFunc: func(
+				d runtime.Driver,
+				err error,
+			) {
+				s.Error(err)
+				s.Contains(err.Error(), "create docker client")
+				s.Nil(d)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.setupEnv != nil {
+				cleanup := tt.setupEnv()
+				defer cleanup()
+			}
+
 			d, err := docker.New()
 			tt.validateFunc(d, err)
 		})
@@ -256,6 +327,22 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 				err error,
 			) {
 				s.NoError(err)
+			},
+		},
+		{
+			name: "returns error when ping fails",
+			mockClient: &mockDockerClient{
+				pingFunc: func(
+					_ context.Context,
+				) (types.Ping, error) {
+					return types.Ping{}, fmt.Errorf("connection refused")
+				},
+			},
+			validateFunc: func(
+				err error,
+			) {
+				s.Error(err)
+				s.Contains(err.Error(), "ping docker daemon")
 			},
 		},
 	}
@@ -307,19 +394,19 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 			name: "successful container creation with auto-start",
 			mockClient: &mockDockerClient{
 				containerCreateFunc: func(
-					ctx context.Context,
-					config *container.Config,
-					hostConfig *container.HostConfig,
-					networkConfig *network.NetworkingConfig,
-					platform *ocispec.Platform,
-					containerName string,
+					_ context.Context,
+					_ *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
 				) (container.CreateResponse, error) {
 					return container.CreateResponse{ID: "test-id-auto"}, nil
 				},
 				containerStartFunc: func(
-					ctx context.Context,
-					containerID string,
-					options container.StartOptions,
+					_ context.Context,
+					_ string,
+					_ container.StartOptions,
 				) error {
 					return nil
 				},
@@ -336,6 +423,199 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 				s.NoError(err)
 				s.NotNil(c)
 				s.Equal("test-id-auto", c.ID)
+			},
+		},
+		{
+			name: "with command set",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					config *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					s.Equal([]string(config.Cmd), []string{"echo", "hello"})
+
+					return container.CreateResponse{ID: "cmd-id"}, nil
+				},
+			},
+			params: runtime.CreateParams{
+				Image:   "alpine:latest",
+				Name:    "test-cmd",
+				Command: []string{"echo", "hello"},
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("cmd-id", c.ID)
+			},
+		},
+		{
+			name: "with env map",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					config *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					s.Len(config.Env, 1)
+					s.Contains(config.Env[0], "FOO=bar")
+
+					return container.CreateResponse{ID: "env-id"}, nil
+				},
+			},
+			params: runtime.CreateParams{
+				Image: "alpine:latest",
+				Name:  "test-env",
+				Env:   map[string]string{"FOO": "bar"},
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("env-id", c.ID)
+			},
+		},
+		{
+			name: "with ports",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					config *container.Config,
+					hostConfig *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					s.NotNil(config.ExposedPorts)
+					s.NotNil(hostConfig.PortBindings)
+					containerPort := nat.Port("80/tcp")
+					s.Contains(hostConfig.PortBindings, containerPort)
+					s.Equal("8080", hostConfig.PortBindings[containerPort][0].HostPort)
+
+					return container.CreateResponse{ID: "ports-id"}, nil
+				},
+			},
+			params: runtime.CreateParams{
+				Image: "nginx:latest",
+				Name:  "test-ports",
+				Ports: []runtime.PortMapping{
+					{Host: 8080, Container: 80},
+				},
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("ports-id", c.ID)
+			},
+		},
+		{
+			name: "with volumes",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					_ *container.Config,
+					hostConfig *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					s.Len(hostConfig.Mounts, 1)
+					s.Equal("/host/data", hostConfig.Mounts[0].Source)
+					s.Equal("/container/data", hostConfig.Mounts[0].Target)
+
+					return container.CreateResponse{ID: "vols-id"}, nil
+				},
+			},
+			params: runtime.CreateParams{
+				Image: "nginx:latest",
+				Name:  "test-vols",
+				Volumes: []runtime.VolumeMapping{
+					{Host: "/host/data", Container: "/container/data"},
+				},
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(c)
+				s.Equal("vols-id", c.ID)
+			},
+		},
+		{
+			name: "returns error when container create fails",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					_ *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					return container.CreateResponse{}, fmt.Errorf("image not found")
+				},
+			},
+			params: runtime.CreateParams{
+				Image: "nonexistent:latest",
+				Name:  "test-fail",
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(c)
+				s.Contains(err.Error(), "create container")
+			},
+		},
+		{
+			name: "returns error when auto-start fails",
+			mockClient: &mockDockerClient{
+				containerCreateFunc: func(
+					_ context.Context,
+					_ *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
+				) (container.CreateResponse, error) {
+					return container.CreateResponse{ID: "autostart-fail-id"}, nil
+				},
+				containerStartFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.StartOptions,
+				) error {
+					return fmt.Errorf("start failed")
+				},
+			},
+			params: runtime.CreateParams{
+				Image:     "nginx:latest",
+				Name:      "test-autostart-fail",
+				AutoStart: true,
+			},
+			validateFunc: func(
+				c *runtime.Container,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(c)
+				s.Contains(err.Error(), "auto-start container")
 			},
 		},
 	}
@@ -360,9 +640,9 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 			name: "successful start",
 			mockClient: &mockDockerClient{
 				containerStartFunc: func(
-					ctx context.Context,
-					containerID string,
-					options container.StartOptions,
+					_ context.Context,
+					_ string,
+					_ container.StartOptions,
 				) error {
 					return nil
 				},
@@ -372,6 +652,25 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 				err error,
 			) {
 				s.NoError(err)
+			},
+		},
+		{
+			name: "returns error when start fails",
+			mockClient: &mockDockerClient{
+				containerStartFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.StartOptions,
+				) error {
+					return fmt.Errorf("container not found")
+				},
+			},
+			containerID: "missing-id",
+			validateFunc: func(
+				err error,
+			) {
+				s.Error(err)
+				s.Contains(err.Error(), "start container")
 			},
 		},
 	}
@@ -398,10 +697,12 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 			name: "successful stop with timeout",
 			mockClient: &mockDockerClient{
 				containerStopFunc: func(
-					ctx context.Context,
-					containerID string,
+					_ context.Context,
+					_ string,
 					options container.StopOptions,
 				) error {
+					s.NotNil(options.Timeout)
+
 					return nil
 				},
 			},
@@ -411,6 +712,47 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 				err error,
 			) {
 				s.NoError(err)
+			},
+		},
+		{
+			name: "successful stop with nil timeout",
+			mockClient: &mockDockerClient{
+				containerStopFunc: func(
+					_ context.Context,
+					_ string,
+					options container.StopOptions,
+				) error {
+					s.Nil(options.Timeout)
+
+					return nil
+				},
+			},
+			containerID: "test-id",
+			timeout:     nil,
+			validateFunc: func(
+				err error,
+			) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "returns error when stop fails",
+			mockClient: &mockDockerClient{
+				containerStopFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.StopOptions,
+				) error {
+					return fmt.Errorf("container not running")
+				},
+			},
+			containerID: "stopped-id",
+			timeout:     nil,
+			validateFunc: func(
+				err error,
+			) {
+				s.Error(err)
+				s.Contains(err.Error(), "stop container")
 			},
 		},
 	}
@@ -436,9 +778,9 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 			name: "successful remove with force",
 			mockClient: &mockDockerClient{
 				containerRemoveFunc: func(
-					ctx context.Context,
-					containerID string,
-					options container.RemoveOptions,
+					_ context.Context,
+					_ string,
+					_ container.RemoveOptions,
 				) error {
 					return nil
 				},
@@ -449,6 +791,26 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 				err error,
 			) {
 				s.NoError(err)
+			},
+		},
+		{
+			name: "returns error when remove fails",
+			mockClient: &mockDockerClient{
+				containerRemoveFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.RemoveOptions,
+				) error {
+					return fmt.Errorf("container is running")
+				},
+			},
+			containerID: "running-id",
+			force:       false,
+			validateFunc: func(
+				err error,
+			) {
+				s.Error(err)
+				s.Contains(err.Error(), "remove container")
 			},
 		},
 	}
@@ -473,9 +835,11 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 			name: "successful list all containers",
 			mockClient: &mockDockerClient{
 				containerListFunc: func(
-					ctx context.Context,
+					_ context.Context,
 					options container.ListOptions,
 				) ([]types.Container, error) {
+					s.True(options.All)
+
 					return []types.Container{
 						{
 							ID:      "test-id-1",
@@ -495,6 +859,139 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				s.NoError(err)
 				s.Len(containers, 1)
 				s.Equal("test-id-1", containers[0].ID)
+			},
+		},
+		{
+			name: "state running sets all to false",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					options container.ListOptions,
+				) ([]types.Container, error) {
+					s.False(options.All)
+
+					return []types.Container{}, nil
+				},
+			},
+			params: runtime.ListParams{State: "running"},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(containers)
+			},
+		},
+		{
+			name: "state stopped sets filter",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					options container.ListOptions,
+				) ([]types.Container, error) {
+					s.True(options.All)
+					s.NotNil(options.Filters)
+
+					return []types.Container{}, nil
+				},
+			},
+			params: runtime.ListParams{State: "stopped"},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(containers)
+			},
+		},
+		{
+			name: "default empty state",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					options container.ListOptions,
+				) ([]types.Container, error) {
+					s.False(options.All)
+
+					return []types.Container{}, nil
+				},
+			},
+			params: runtime.ListParams{State: ""},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(containers)
+			},
+		},
+		{
+			name: "with limit",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					options container.ListOptions,
+				) ([]types.Container, error) {
+					s.Equal(5, options.Limit)
+
+					return []types.Container{}, nil
+				},
+			},
+			params: runtime.ListParams{State: "all", Limit: 5},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(containers)
+			},
+		},
+		{
+			name: "container with empty names slice",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					_ container.ListOptions,
+				) ([]types.Container, error) {
+					return []types.Container{
+						{
+							ID:      "no-name-id",
+							Names:   []string{},
+							Image:   "alpine:latest",
+							State:   "running",
+							Created: time.Now().Unix(),
+						},
+					}, nil
+				},
+			},
+			params: runtime.ListParams{State: "all"},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.NoError(err)
+				s.Len(containers, 1)
+				s.Equal("", containers[0].Name)
+			},
+		},
+		{
+			name: "returns error when list fails",
+			mockClient: &mockDockerClient{
+				containerListFunc: func(
+					_ context.Context,
+					_ container.ListOptions,
+				) ([]types.Container, error) {
+					return nil, fmt.Errorf("daemon error")
+				},
+			},
+			params: runtime.ListParams{State: "all"},
+			validateFunc: func(
+				containers []runtime.Container,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(containers)
+				s.Contains(err.Error(), "list containers")
 			},
 		},
 	}
@@ -519,8 +1016,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			name: "successful inspect",
 			mockClient: &mockDockerClient{
 				containerInspectFunc: func(
-					ctx context.Context,
-					containerID string,
+					_ context.Context,
+					_ string,
 				) (types.ContainerJSON, error) {
 					return types.ContainerJSON{
 						ContainerJSONBase: &types.ContainerJSONBase{
@@ -541,6 +1038,229 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				s.NoError(err)
 				s.NotNil(detail)
 				s.Equal("test-id", detail.ID)
+				s.Equal("running", detail.State)
+			},
+		},
+		{
+			name: "nil state returns unknown",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:      "nil-state-id",
+							Name:    "/nil-state",
+							State:   nil,
+							Created: time.Now().Format(time.RFC3339Nano),
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+					}, nil
+				},
+			},
+			containerID: "nil-state-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.Equal("unknown", detail.State)
+			},
+		},
+		{
+			name: "invalid created timestamp falls back to now",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:      "bad-time-id",
+							Name:    "/bad-time",
+							State:   &types.ContainerState{Status: "running"},
+							Created: "not-a-valid-timestamp",
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+					}, nil
+				},
+			},
+			containerID: "bad-time-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.WithinDuration(time.Now(), detail.Created, 5*time.Second)
+			},
+		},
+		{
+			name: "with network settings",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:      "net-id",
+							Name:    "/net-container",
+							State:   &types.ContainerState{Status: "running"},
+							Created: time.Now().Format(time.RFC3339Nano),
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+						NetworkSettings: &types.NetworkSettings{
+							Networks: map[string]*network.EndpointSettings{
+								"bridge": {
+									IPAddress: "172.17.0.2",
+									Gateway:   "172.17.0.1",
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			containerID: "net-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.NotNil(detail.NetworkSettings)
+				s.Equal("172.17.0.2", detail.NetworkSettings.IPAddress)
+				s.Equal("172.17.0.1", detail.NetworkSettings.Gateway)
+			},
+		},
+		{
+			name: "with port bindings",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:   "ports-id",
+							Name: "/ports-container",
+							State: &types.ContainerState{
+								Status: "running",
+							},
+							Created: time.Now().Format(time.RFC3339Nano),
+							HostConfig: &container.HostConfig{
+								PortBindings: nat.PortMap{
+									"80/tcp": []nat.PortBinding{
+										{HostPort: "8080"},
+									},
+								},
+							},
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+					}, nil
+				},
+			},
+			containerID: "ports-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.Len(detail.Ports, 1)
+				s.Equal(8080, detail.Ports[0].Host)
+				s.Equal(80, detail.Ports[0].Container)
+			},
+		},
+		{
+			name: "with mounts",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:      "mounts-id",
+							Name:    "/mounts-container",
+							State:   &types.ContainerState{Status: "running"},
+							Created: time.Now().Format(time.RFC3339Nano),
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+						Mounts: []types.MountPoint{
+							{
+								Source:      "/host/path",
+								Destination: "/container/path",
+							},
+						},
+					}, nil
+				},
+			},
+			containerID: "mounts-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.Len(detail.Mounts, 1)
+				s.Equal("/host/path", detail.Mounts[0].Host)
+				s.Equal("/container/path", detail.Mounts[0].Container)
+			},
+		},
+		{
+			name: "with health status",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{
+						ContainerJSONBase: &types.ContainerJSONBase{
+							ID:   "health-id",
+							Name: "/health-container",
+							State: &types.ContainerState{
+								Status: "running",
+								Health: &types.Health{
+									Status: "healthy",
+								},
+							},
+							Created: time.Now().Format(time.RFC3339Nano),
+						},
+						Config: &container.Config{Image: "nginx:latest"},
+					}, nil
+				},
+			},
+			containerID: "health-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(detail)
+				s.Equal("healthy", detail.Health)
+			},
+		},
+		{
+			name: "returns error when inspect fails",
+			mockClient: &mockDockerClient{
+				containerInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ContainerJSON, error) {
+					return types.ContainerJSON{}, fmt.Errorf("no such container")
+				},
+			},
+			containerID: "missing-id",
+			validateFunc: func(
+				detail *runtime.ContainerDetail,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(detail)
+				s.Contains(err.Error(), "inspect container")
 			},
 		},
 	}
@@ -550,6 +1270,269 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			d := docker.NewWithClient(tt.mockClient)
 			detail, err := d.Inspect(s.ctx, tt.containerID)
 			tt.validateFunc(detail, err)
+		})
+	}
+}
+
+func (s *DockerDriverPublicTestSuite) TestExec() {
+	tests := []struct {
+		name         string
+		mockClient   *mockDockerClient
+		containerID  string
+		params       runtime.ExecParams
+		validateFunc func(result *runtime.ExecResult, err error)
+	}{
+		{
+			name: "successful exec",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					config container.ExecOptions,
+				) (types.IDResponse, error) {
+					s.Equal([]string{"echo", "hello"}, config.Cmd)
+					s.True(config.AttachStdout)
+					s.True(config.AttachStderr)
+
+					return types.IDResponse{ID: "exec-id"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return newHijackedResponse("hello\n"), nil
+				},
+				containerExecInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (container.ExecInspect, error) {
+					return container.ExecInspect{ExitCode: 0}, nil
+				},
+			},
+			containerID: "test-id",
+			params: runtime.ExecParams{
+				Command: []string{"echo", "hello"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+				s.Equal("hello\n", result.Stdout)
+				s.Equal(0, result.ExitCode)
+			},
+		},
+		{
+			name: "with env set",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					config container.ExecOptions,
+				) (types.IDResponse, error) {
+					s.Len(config.Env, 1)
+					s.Contains(config.Env[0], "MY_VAR=value")
+
+					return types.IDResponse{ID: "exec-env-id"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return newHijackedResponse(""), nil
+				},
+				containerExecInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (container.ExecInspect, error) {
+					return container.ExecInspect{ExitCode: 0}, nil
+				},
+			},
+			containerID: "test-id",
+			params: runtime.ExecParams{
+				Command: []string{"env"},
+				Env:     map[string]string{"MY_VAR": "value"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+			},
+		},
+		{
+			name: "with working dir set",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					config container.ExecOptions,
+				) (types.IDResponse, error) {
+					s.Equal("/app", config.WorkingDir)
+
+					return types.IDResponse{ID: "exec-wd-id"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return newHijackedResponse(""), nil
+				},
+				containerExecInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (container.ExecInspect, error) {
+					return container.ExecInspect{ExitCode: 0}, nil
+				},
+			},
+			containerID: "test-id",
+			params: runtime.ExecParams{
+				Command:    []string{"pwd"},
+				WorkingDir: "/app",
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+			},
+		},
+		{
+			name: "returns error when exec create fails",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecOptions,
+				) (types.IDResponse, error) {
+					return types.IDResponse{}, fmt.Errorf("container not running")
+				},
+			},
+			containerID: "stopped-id",
+			params: runtime.ExecParams{
+				Command: []string{"ls"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "create exec")
+			},
+		},
+		{
+			name: "returns error when exec attach fails",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecOptions,
+				) (types.IDResponse, error) {
+					return types.IDResponse{ID: "exec-attach-fail"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return types.HijackedResponse{}, fmt.Errorf("attach failed")
+				},
+			},
+			containerID: "test-id",
+			params: runtime.ExecParams{
+				Command: []string{"ls"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "attach exec")
+			},
+		},
+		{
+			name: "returns error when io.Copy read fails",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecOptions,
+				) (types.IDResponse, error) {
+					return types.IDResponse{ID: "exec-read-fail"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return newErrorHijackedResponse(), nil
+				},
+			},
+			containerID: "container-1",
+			params: runtime.ExecParams{
+				Command: []string{"ls"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "read exec output")
+			},
+		},
+		{
+			name: "returns error when exec inspect fails",
+			mockClient: &mockDockerClient{
+				containerExecCreateFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecOptions,
+				) (types.IDResponse, error) {
+					return types.IDResponse{ID: "exec-inspect-fail"}, nil
+				},
+				containerExecAttachFunc: func(
+					_ context.Context,
+					_ string,
+					_ container.ExecStartOptions,
+				) (types.HijackedResponse, error) {
+					return newHijackedResponse(""), nil
+				},
+				containerExecInspectFunc: func(
+					_ context.Context,
+					_ string,
+				) (container.ExecInspect, error) {
+					return container.ExecInspect{}, fmt.Errorf("inspect failed")
+				},
+			},
+			containerID: "test-id",
+			params: runtime.ExecParams{
+				Command: []string{"ls"},
+			},
+			validateFunc: func(
+				result *runtime.ExecResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "inspect exec")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			d := docker.NewWithClient(tt.mockClient)
+			result, err := d.Exec(s.ctx, tt.containerID, tt.params)
+			tt.validateFunc(result, err)
 		})
 	}
 }
@@ -565,15 +1548,15 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			name: "successful image pull",
 			mockClient: &mockDockerClient{
 				imagePullFunc: func(
-					ctx context.Context,
-					ref string,
-					options image.PullOptions,
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
 				) (io.ReadCloser, error) {
 					return io.NopCloser(strings.NewReader("{}")), nil
 				},
 				imageInspectWithRawFunc: func(
-					ctx context.Context,
-					imageID string,
+					_ context.Context,
+					_ string,
 				) (types.ImageInspect, []byte, error) {
 					return types.ImageInspect{
 						ID:       "sha256:test123",
@@ -592,6 +1575,142 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 				s.Equal("sha256:test123", result.ImageID)
 				s.Equal("latest", result.Tag)
 				s.Equal(int64(2048), result.Size)
+			},
+		},
+		{
+			name: "successful pull with status digest in last event",
+			mockClient: &mockDockerClient{
+				imagePullFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
+				) (io.ReadCloser, error) {
+					events := `{"status":"Pulling from library/nginx"}
+{"status":"Status","id":"sha256:digest-from-event"}`
+
+					return io.NopCloser(strings.NewReader(events)), nil
+				},
+				imageInspectWithRawFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ImageInspect, []byte, error) {
+					return types.ImageInspect{
+						ID:       "sha256:inspect-id",
+						RepoTags: []string{"nginx:1.25"},
+						Size:     4096,
+					}, nil, nil
+				},
+			},
+			imageName: "nginx:1.25",
+			validateFunc: func(
+				result *runtime.PullResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+				s.Equal("1.25", result.Tag)
+				s.Equal(int64(4096), result.Size)
+			},
+		},
+		{
+			name: "returns error when pull fails",
+			mockClient: &mockDockerClient{
+				imagePullFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
+				) (io.ReadCloser, error) {
+					return nil, fmt.Errorf("registry unavailable")
+				},
+			},
+			imageName: "nonexistent:latest",
+			validateFunc: func(
+				result *runtime.PullResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "pull image")
+			},
+		},
+		{
+			name: "returns error on decode failure",
+			mockClient: &mockDockerClient{
+				imagePullFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
+				) (io.ReadCloser, error) {
+					// Valid JSON followed by malformed JSON
+					return io.NopCloser(strings.NewReader("{}\n{invalid json")), nil
+				},
+			},
+			imageName: "nginx:latest",
+			validateFunc: func(
+				result *runtime.PullResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "decode pull response")
+			},
+		},
+		{
+			name: "image with no repo tags defaults to latest",
+			mockClient: &mockDockerClient{
+				imagePullFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
+				) (io.ReadCloser, error) {
+					return io.NopCloser(strings.NewReader("{}")), nil
+				},
+				imageInspectWithRawFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ImageInspect, []byte, error) {
+					return types.ImageInspect{
+						ID:       "sha256:no-tags",
+						RepoTags: []string{},
+						Size:     512,
+					}, nil, nil
+				},
+			},
+			imageName: "custom-image",
+			validateFunc: func(
+				result *runtime.PullResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+				s.Equal("latest", result.Tag)
+			},
+		},
+		{
+			name: "returns error when image inspect fails",
+			mockClient: &mockDockerClient{
+				imagePullFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.PullOptions,
+				) (io.ReadCloser, error) {
+					return io.NopCloser(strings.NewReader("{}")), nil
+				},
+				imageInspectWithRawFunc: func(
+					_ context.Context,
+					_ string,
+				) (types.ImageInspect, []byte, error) {
+					return types.ImageInspect{}, nil, fmt.Errorf("image not found")
+				},
+			},
+			imageName: "nginx:latest",
+			validateFunc: func(
+				result *runtime.PullResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "inspect pulled image")
 			},
 		},
 	}

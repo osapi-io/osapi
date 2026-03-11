@@ -43,6 +43,9 @@ import (
 // factoryHostInfoFn is the function used to get host info (injectable for testing).
 var factoryHostInfoFn = host.Info
 
+// factoryDockerNewFn is the function used to create a Docker driver (injectable for testing).
+var factoryDockerNewFn = docker.New
+
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
@@ -156,7 +159,7 @@ func (f *ProviderFactory) CreateProviders() (
 
 	// Create container provider (conditional on Docker availability)
 	var containerProvider containerProv.Provider
-	dockerDriver, err := docker.New()
+	dockerDriver, err := factoryDockerNewFn()
 	if err == nil {
 		if pingErr := dockerDriver.Ping(context.Background()); pingErr == nil {
 			containerProvider = containerProv.New(dockerDriver)
