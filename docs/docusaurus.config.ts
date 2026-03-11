@@ -122,6 +122,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Container Management',
+              docId: 'sidebar/features/container-management'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },
