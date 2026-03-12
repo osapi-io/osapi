@@ -6,6 +6,7 @@ Execute a command inside a running container on the target node:
 $ osapi client container exec --id my-nginx --command "ls,-la,/"
 
   Job ID:    550e8400-e29b-41d4-a716-446655440000
+
   Hostname:  server1
   Exit Code: 0
   Stdout:    total 80

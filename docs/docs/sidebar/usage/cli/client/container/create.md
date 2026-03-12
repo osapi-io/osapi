@@ -6,6 +6,7 @@ Create a new container on the target node from the specified image:
 $ osapi client container create --image nginx:latest
 
   Job ID:       550e8400-e29b-41d4-a716-446655440000
+
   Hostname:     server1
   Container ID: a1b2c3d4e5f6
   Name:         eager_turing

@@ -5,6 +5,8 @@ List containers on the target node:
 ```bash
 $ osapi client container list
 
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
   server1
   ID            NAME        IMAGE          STATE    CREATED
   a1b2c3d4e5f6  my-nginx    nginx:latest   running  2024-01-15T10:30:00Z

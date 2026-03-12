@@ -6,6 +6,7 @@ Get detailed information about a specific container:
 $ osapi client container inspect --id a1b2c3d4e5f6
 
   Job ID:          550e8400-e29b-41d4-a716-446655440000
+
   Hostname:        server1
   ID:              a1b2c3d4e5f6
   Name:            my-nginx

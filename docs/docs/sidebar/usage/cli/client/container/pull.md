@@ -6,6 +6,7 @@ Pull a container image on the target node:
 $ osapi client container pull --image nginx:latest
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
+
   Hostname: server1
   Image ID: sha256:a1b2c3d4...
   Tag:      latest
