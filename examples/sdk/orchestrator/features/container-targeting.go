@@ -60,7 +60,7 @@ func main() {
 		target = "_any"
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
@@ -72,7 +72,7 @@ func main() {
 	// WithDockerExecFn is required for Plan.Docker() to work.
 	// In a real application, this would use the Docker SDK's
 	// ContainerExecCreate/ContainerExecAttach APIs.
-	plan := orchestrator.NewPlan(client,
+	plan := orchestrator.NewPlan(apiClient,
 		orchestrator.WithHooks(hooks),
 	)
 
