@@ -40,22 +40,30 @@ report, err := plan.Run(context.Background())
 Operations are the building blocks of orchestration plans. Each operation maps
 to an OSAPI job type that agents execute.
 
-| Operation                                                | Description            | Idempotent | Category |
-| -------------------------------------------------------- | ---------------------- | ---------- | -------- |
-| [`command.exec.execute`](operations/command-exec.md)     | Execute a command      | No         | Command  |
-| [`command.shell.execute`](operations/command-shell.md)   | Execute a shell string | No         | Command  |
-| [`file.deploy.execute`](operations/file-deploy.md)       | Deploy file to agent   | Yes        | File     |
-| [`file.status.get`](operations/file-status.md)           | Check file status      | Read-only  | File     |
-| [`file.upload`](operations/file-upload.md)               | Upload to Object Store | Yes        | File     |
-| [`network.dns.get`](operations/network-dns-get.md)       | Get DNS configuration  | Read-only  | Network  |
-| [`network.dns.update`](operations/network-dns-update.md) | Update DNS servers     | Yes        | Network  |
-| [`network.ping.do`](operations/network-ping.md)          | Ping a host            | Read-only  | Network  |
-| [`node.hostname.get`](operations/node-hostname.md)       | Get system hostname    | Read-only  | Node     |
-| [`node.status.get`](operations/node-status.md)           | Get node status        | Read-only  | Node     |
-| [`node.disk.get`](operations/node-disk.md)               | Get disk usage         | Read-only  | Node     |
-| [`node.memory.get`](operations/node-memory.md)           | Get memory stats       | Read-only  | Node     |
-| [`node.uptime.get`](operations/node-uptime.md)           | Get system uptime      | Read-only  | Node     |
-| [`node.load.get`](operations/node-load.md)               | Get load averages      | Read-only  | Node     |
+| Operation                                                    | Description            | Idempotent | Category  |
+| ------------------------------------------------------------ | ---------------------- | ---------- | --------- |
+| [`command.exec.execute`](operations/command-exec.md)         | Execute a command      | No         | Command   |
+| [`command.shell.execute`](operations/command-shell.md)       | Execute a shell string | No         | Command   |
+| [`file.deploy.execute`](operations/file-deploy.md)           | Deploy file to agent   | Yes        | File      |
+| [`file.status.get`](operations/file-status.md)               | Check file status      | Read-only  | File      |
+| [`file.upload`](operations/file-upload.md)                   | Upload to Object Store | Yes        | File      |
+| [`network.dns.get`](operations/network-dns-get.md)           | Get DNS configuration  | Read-only  | Network   |
+| [`network.dns.update`](operations/network-dns-update.md)     | Update DNS servers     | Yes        | Network   |
+| [`network.ping.do`](operations/network-ping.md)              | Ping a host            | Read-only  | Network   |
+| [`node.hostname.get`](operations/node-hostname.md)           | Get system hostname    | Read-only  | Node      |
+| [`node.status.get`](operations/node-status.md)               | Get node status        | Read-only  | Node      |
+| [`node.disk.get`](operations/node-disk.md)                   | Get disk usage         | Read-only  | Node      |
+| [`node.memory.get`](operations/node-memory.md)               | Get memory stats       | Read-only  | Node      |
+| [`node.uptime.get`](operations/node-uptime.md)               | Get system uptime      | Read-only  | Node      |
+| [`node.load.get`](operations/node-load.md)                   | Get load averages      | Read-only  | Node      |
+| [`container.create.execute`](operations/container-create.md) | Create a container     | No         | Container |
+| [`container.list.get`](operations/container-list.md)         | List containers        | Read-only  | Container |
+| [`container.inspect.get`](operations/container-inspect.md)   | Inspect a container    | Read-only  | Container |
+| [`container.start.execute`](operations/container-start.md)   | Start a container      | No         | Container |
+| [`container.stop.execute`](operations/container-stop.md)     | Stop a container       | No         | Container |
+| [`container.remove.execute`](operations/container-remove.md) | Remove a container     | No         | Container |
+| [`container.exec.execute`](operations/container-exec.md)     | Exec in a container    | No         | Container |
+| [`container.pull.execute`](operations/container-pull.md)     | Pull a container image | No         | Container |
 
 ### Idempotency
 
@@ -172,21 +180,22 @@ dependency outputs.
 
 ## Features
 
-| Feature                                             | Description                          |
-| --------------------------------------------------- | ------------------------------------ |
-| [Basic Plans](features/basic.md)                    | Tasks, dependencies, and execution   |
-| [Task Functions](features/task-func.md)             | Custom Go logic with TaskFunc        |
-| [Parallel Execution](features/parallel.md)          | Concurrent tasks at the same level   |
-| [Guards](features/guards.md)                        | Conditional execution with When      |
-| [Only If Changed](features/only-if-changed.md)      | Skip unless dependencies changed     |
-| [Lifecycle Hooks](features/hooks.md)                | Callbacks at every execution stage   |
-| [Error Strategies](features/error-strategy.md)      | StopAll, Continue, and Retry         |
-| [Failure Recovery](features/only-if-failed.md)      | Recovery tasks on upstream failure   |
-| [Retry](features/retry.md)                          | Automatic retry on failure           |
-| [Broadcast](features/broadcast.md)                  | Multi-host targeting and HostResults |
-| [File Deployment](features/file-deploy-workflow.md) | Upload, deploy, and verify workflow  |
-| [Result Decode](features/result-decode.md)          | Post-run and inter-task data access  |
-| [Introspection](features/introspection.md)          | Explain, Levels, and Validate        |
+| Feature                                                | Description                          |
+| ------------------------------------------------------ | ------------------------------------ |
+| [Basic Plans](features/basic.md)                       | Tasks, dependencies, and execution   |
+| [Task Functions](features/task-func.md)                | Custom Go logic with TaskFunc        |
+| [Parallel Execution](features/parallel.md)             | Concurrent tasks at the same level   |
+| [Guards](features/guards.md)                           | Conditional execution with When      |
+| [Only If Changed](features/only-if-changed.md)         | Skip unless dependencies changed     |
+| [Lifecycle Hooks](features/hooks.md)                   | Callbacks at every execution stage   |
+| [Error Strategies](features/error-strategy.md)         | StopAll, Continue, and Retry         |
+| [Failure Recovery](features/only-if-failed.md)         | Recovery tasks on upstream failure   |
+| [Retry](features/retry.md)                             | Automatic retry on failure           |
+| [Broadcast](features/broadcast.md)                     | Multi-host targeting and HostResults |
+| [File Deployment](features/file-deploy-workflow.md)    | Upload, deploy, and verify workflow  |
+| [Result Decode](features/result-decode.md)             | Post-run and inter-task data access  |
+| [Introspection](features/introspection.md)             | Explain, Levels, and Validate        |
+| [Container Targeting](features/container-targeting.md) | Run providers inside containers      |
 
 ## Examples
 

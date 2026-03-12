@@ -131,12 +131,48 @@ osapi token generate -r write -u user@example.com \
   -p container:execute
 ```
 
+## Orchestrator DSL
+
+The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK supports container
+operations through the
+[Container Targeting](../sdk/orchestrator/features/container-targeting.md)
+feature. Use `Plan.Docker()` and `Plan.In()` to create containers and run
+existing providers inside them without rewriting any code:
+
+```go
+plan := orchestrator.NewPlan(client, orchestrator.WithDockerExecFn(execFn))
+web := plan.Docker("web-server", "nginx:alpine")
+
+create := plan.TaskFunc("create", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+    return c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+        Image: "nginx:alpine",
+        Name:  ptr("web-server"),
+    })
+})
+
+plan.In(web).TaskFunc("check-config", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+    // Runs inside the container via docker exec + provider run
+    return c.Container.Exec(ctx, "_any", "web-server", gen.ContainerExecRequest{
+        Command: []string{"nginx", "-t"},
+    })
+}).DependsOn(create)
+```
+
+The transport changes from HTTP to `docker exec` + `provider run`, but the SDK
+interface is identical. See the
+[container targeting feature page](../sdk/orchestrator/features/container-targeting.md)
+for details and the
+[operations reference](../sdk/orchestrator/orchestrator.md#operations) for all
+container operations.
+
 ## Related
 
 - [CLI Reference](../usage/cli/client/container/container.mdx) -- container
   management commands
 - [API Reference](/gen/api/container-management-api-container-operations) --
   REST API documentation
+- [Orchestrator Container Targeting](../sdk/orchestrator/features/container-targeting.md)
+  -- DSL for running providers inside containers
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
 - [Architecture](../architecture/architecture.md) -- system design overview
