@@ -27,8 +27,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/provider/registry"
 )
 
 var providerRunData string
@@ -51,7 +49,10 @@ var providerRunCmd = &cobra.Command{
 			return fmt.Errorf("unknown provider/operation: %s/%s", providerName, operationName)
 		}
 
-		params := spec.NewParams()
+		var params any
+		if spec.NewParams != nil {
+			params = spec.NewParams()
+		}
 		if providerRunData != "" && params != nil {
 			if err := json.Unmarshal([]byte(providerRunData), params); err != nil {
 				return fmt.Errorf("parse input data: %w", err)
@@ -86,9 +87,3 @@ func init() {
 	rootCmd.AddCommand(providerCmd)
 }
 
-// buildProviderRegistry creates a registry with all known provider operations.
-// This is a minimal initial implementation -- more providers will be registered
-// as the provider run feature matures.
-func buildProviderRegistry() *registry.Registry {
-	return registry.New()
-}

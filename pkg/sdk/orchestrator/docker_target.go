@@ -23,6 +23,8 @@ package orchestrator
 import (
 	"context"
 	"fmt"
+	"runtime"
+	"sync"
 )
 
 // ExecFn executes a command inside a container and returns stdout/stderr/exit code.
@@ -33,10 +35,17 @@ type ExecFn func(
 ) (stdout, stderr string, exitCode int, err error)
 
 // DockerTarget implements RuntimeTarget for Docker containers.
+// It automatically deploys the osapi binary into the container
+// on first use via Prepare.
 type DockerTarget struct {
-	name   string
-	image  string
-	execFn ExecFn
+	name        string
+	image       string
+	execFn      ExecFn
+	binaryURL   string
+	skipPrepare bool
+
+	prepareOnce sync.Once
+	prepareErr  error
 }
 
 // NewDockerTarget creates a new Docker runtime target.
@@ -67,13 +76,83 @@ func (t *DockerTarget) Image() string {
 	return t.image
 }
 
-// ExecProvider runs a provider operation inside this container via docker exec.
+// SetBinaryURL overrides the GitHub release URL for the osapi binary.
+func (t *DockerTarget) SetBinaryURL(
+	url string,
+) {
+	t.binaryURL = url
+}
+
+// SetSkipPrepare disables automatic binary deployment.
+func (t *DockerTarget) SetSkipPrepare(
+	skip bool,
+) {
+	t.skipPrepare = skip
+}
+
+// Prepare ensures the osapi binary is deployed inside the container.
+// It resolves the binary URL (from GitHub releases or a custom URL),
+// downloads it inside the container, and makes it executable.
+// Subsequent calls are no-ops.
+func (t *DockerTarget) Prepare(
+	ctx context.Context,
+) error {
+	if t.skipPrepare {
+		return nil
+	}
+
+	t.prepareOnce.Do(func() {
+		t.prepareErr = t.doPrepare(ctx)
+	})
+
+	return t.prepareErr
+}
+
+// doPrepare performs the actual binary deployment.
+func (t *DockerTarget) doPrepare(
+	ctx context.Context,
+) error {
+	url := t.binaryURL
+	if url == "" {
+		var err error
+
+		url, err = resolveLatestBinaryURL(ctx, "linux", runtime.GOARCH)
+		if err != nil {
+			return fmt.Errorf("resolve osapi binary: %w", err)
+		}
+	}
+
+	script := deployScript(url)
+
+	_, stderr, exitCode, err := t.execFn(
+		ctx,
+		t.name,
+		[]string{"sh", "-c", script},
+	)
+	if err != nil {
+		return fmt.Errorf("deploy osapi binary: %w", err)
+	}
+
+	if exitCode != 0 {
+		return fmt.Errorf("deploy osapi binary (exit %d): %s", exitCode, stderr)
+	}
+
+	return nil
+}
+
+// ExecProvider runs a provider operation inside this container via
+// docker exec. On first call it automatically deploys the osapi binary
+// unless WithOSAPIBinarySkip was set.
 func (t *DockerTarget) ExecProvider(
 	ctx context.Context,
 	provider string,
 	operation string,
 	data []byte,
 ) ([]byte, error) {
+	if err := t.Prepare(ctx); err != nil {
+		return nil, err
+	}
+
 	cmd := []string{"/osapi", "provider", "run", provider, operation}
 	if len(data) > 0 {
 		cmd = append(cmd, "--data", string(data))

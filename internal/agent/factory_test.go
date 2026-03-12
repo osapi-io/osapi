@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
+	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
 // testDockerClient is a minimal mock that satisfies dockerclient.APIClient
@@ -141,14 +142,14 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			originalHost := factoryHostInfoFn
+			originalHost := platform.HostInfoFn
 			originalDocker := factoryDockerNewFn
 			defer func() {
-				factoryHostInfoFn = originalHost
+				platform.HostInfoFn = originalHost
 				factoryDockerNewFn = originalDocker
 			}()
 
-			factoryHostInfoFn = tt.setupMock()
+			platform.HostInfoFn = tt.setupMock()
 			if tt.setupDocker != nil {
 				tt.setupDocker()
 			}
