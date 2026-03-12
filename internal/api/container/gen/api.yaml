@@ -167,7 +167,7 @@ paths:
         Get detailed information about a specific container.
       tags:
         - container_operations
-      operationId: GetNodeContainerById
+      operationId: GetNodeContainerByID
       security:
         - BearerAuth:
             - container:read
@@ -219,7 +219,7 @@ paths:
         parameter to remove a running container.
       tags:
         - container_operations
-      operationId: DeleteNodeContainerById
+      operationId: DeleteNodeContainerByID
       security:
         - BearerAuth:
             - container:write

@@ -391,7 +391,7 @@ func (d *Driver) Pull(
 	if err != nil {
 		return nil, fmt.Errorf("pull image: %w", err)
 	}
-	defer pullResp.Close()
+	defer func() { _ = pullResp.Close() }()
 
 	// Read pull output to ensure completion
 	var lastEvent map[string]interface{}
@@ -409,7 +409,7 @@ func (d *Driver) Pull(
 	}
 
 	// Inspect the pulled image to get details
-	inspectResp, _, err := d.client.ImageInspectWithRaw(ctx, imageName)
+	inspectResp, err := d.client.ImageInspect(ctx, imageName)
 	if err != nil {
 		return nil, fmt.Errorf("inspect pulled image: %w", err)
 	}

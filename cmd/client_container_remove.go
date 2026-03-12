@@ -40,7 +40,7 @@ var clientContainerRemoveCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		force, _ := cmd.Flags().GetBool("force")
 
-		params := &gen.DeleteNodeContainerByIdParams{}
+		params := &gen.DeleteNodeContainerByIDParams{}
 		if force {
 			params.Force = &force
 		}

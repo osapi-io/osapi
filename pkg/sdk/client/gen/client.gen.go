@@ -1363,8 +1363,8 @@ type GetNodeContainerParams struct {
 // GetNodeContainerParamsState defines parameters for GetNodeContainer.
 type GetNodeContainerParamsState string
 
-// DeleteNodeContainerByIdParams defines parameters for DeleteNodeContainerById.
-type DeleteNodeContainerByIdParams struct {
+// DeleteNodeContainerByIDParams defines parameters for DeleteNodeContainerByID.
+type DeleteNodeContainerByIDParams struct {
 	// Force Force removal of a running container.
 	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
 }
@@ -1566,11 +1566,11 @@ type ClientInterface interface {
 
 	PostNodeContainerPull(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteNodeContainerById request
-	DeleteNodeContainerById(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteNodeContainerByID request
+	DeleteNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeContainerById request
-	GetNodeContainerById(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeContainerByID request
+	GetNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeContainerExecWithBody request with any body
 	PostNodeContainerExecWithBody(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1978,8 +1978,8 @@ func (c *Client) PostNodeContainerPull(ctx context.Context, hostname Hostname, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeContainerById(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeContainerByIdRequest(c.Server, hostname, id, params)
+func (c *Client) DeleteNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeContainerByIDRequest(c.Server, hostname, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1990,8 +1990,8 @@ func (c *Client) DeleteNodeContainerById(ctx context.Context, hostname Hostname,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeContainerById(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeContainerByIdRequest(c.Server, hostname, id)
+func (c *Client) GetNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeContainerByIDRequest(c.Server, hostname, id)
 	if err != nil {
 		return nil, err
 	}
@@ -3226,8 +3226,8 @@ func NewPostNodeContainerPullRequestWithBody(server string, hostname Hostname, c
 	return req, nil
 }
 
-// NewDeleteNodeContainerByIdRequest generates requests for DeleteNodeContainerById
-func NewDeleteNodeContainerByIdRequest(server string, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIdParams) (*http.Request, error) {
+// NewDeleteNodeContainerByIDRequest generates requests for DeleteNodeContainerByID
+func NewDeleteNodeContainerByIDRequest(server string, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3289,8 +3289,8 @@ func NewDeleteNodeContainerByIdRequest(server string, hostname Hostname, id Cont
 	return req, nil
 }
 
-// NewGetNodeContainerByIdRequest generates requests for GetNodeContainerById
-func NewGetNodeContainerByIdRequest(server string, hostname Hostname, id ContainerId) (*http.Request, error) {
+// NewGetNodeContainerByIDRequest generates requests for GetNodeContainerByID
+func NewGetNodeContainerByIDRequest(server string, hostname Hostname, id ContainerId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4064,11 +4064,11 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeContainerPullWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerPullResponse, error)
 
-	// DeleteNodeContainerByIdWithResponse request
-	DeleteNodeContainerByIdWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIdParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIdResponse, error)
+	// DeleteNodeContainerByIDWithResponse request
+	DeleteNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIDResponse, error)
 
-	// GetNodeContainerByIdWithResponse request
-	GetNodeContainerByIdWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIdResponse, error)
+	// GetNodeContainerByIDWithResponse request
+	GetNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIDResponse, error)
 
 	// PostNodeContainerExecWithBodyWithResponse request with any body
 	PostNodeContainerExecWithBodyWithResponse(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerExecResponse, error)
@@ -4753,7 +4753,7 @@ func (r PostNodeContainerPullResponse) StatusCode() int {
 	return 0
 }
 
-type DeleteNodeContainerByIdResponse struct {
+type DeleteNodeContainerByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON202      *ContainerActionCollectionResponse
@@ -4765,7 +4765,7 @@ type DeleteNodeContainerByIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteNodeContainerByIdResponse) Status() string {
+func (r DeleteNodeContainerByIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4773,14 +4773,14 @@ func (r DeleteNodeContainerByIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeContainerByIdResponse) StatusCode() int {
+func (r DeleteNodeContainerByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetNodeContainerByIdResponse struct {
+type GetNodeContainerByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ContainerDetailCollectionResponse
@@ -4792,7 +4792,7 @@ type GetNodeContainerByIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeContainerByIdResponse) Status() string {
+func (r GetNodeContainerByIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4800,7 +4800,7 @@ func (r GetNodeContainerByIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeContainerByIdResponse) StatusCode() int {
+func (r GetNodeContainerByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5452,22 +5452,22 @@ func (c *ClientWithResponses) PostNodeContainerPullWithResponse(ctx context.Cont
 	return ParsePostNodeContainerPullResponse(rsp)
 }
 
-// DeleteNodeContainerByIdWithResponse request returning *DeleteNodeContainerByIdResponse
-func (c *ClientWithResponses) DeleteNodeContainerByIdWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIdParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIdResponse, error) {
-	rsp, err := c.DeleteNodeContainerById(ctx, hostname, id, params, reqEditors...)
+// DeleteNodeContainerByIDWithResponse request returning *DeleteNodeContainerByIDResponse
+func (c *ClientWithResponses) DeleteNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIDResponse, error) {
+	rsp, err := c.DeleteNodeContainerByID(ctx, hostname, id, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeContainerByIdResponse(rsp)
+	return ParseDeleteNodeContainerByIDResponse(rsp)
 }
 
-// GetNodeContainerByIdWithResponse request returning *GetNodeContainerByIdResponse
-func (c *ClientWithResponses) GetNodeContainerByIdWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIdResponse, error) {
-	rsp, err := c.GetNodeContainerById(ctx, hostname, id, reqEditors...)
+// GetNodeContainerByIDWithResponse request returning *GetNodeContainerByIDResponse
+func (c *ClientWithResponses) GetNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIDResponse, error) {
+	rsp, err := c.GetNodeContainerByID(ctx, hostname, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeContainerByIdResponse(rsp)
+	return ParseGetNodeContainerByIDResponse(rsp)
 }
 
 // PostNodeContainerExecWithBodyWithResponse request with arbitrary body returning *PostNodeContainerExecResponse
@@ -6932,15 +6932,15 @@ func ParsePostNodeContainerPullResponse(rsp *http.Response) (*PostNodeContainerP
 	return response, nil
 }
 
-// ParseDeleteNodeContainerByIdResponse parses an HTTP response from a DeleteNodeContainerByIdWithResponse call
-func ParseDeleteNodeContainerByIdResponse(rsp *http.Response) (*DeleteNodeContainerByIdResponse, error) {
+// ParseDeleteNodeContainerByIDResponse parses an HTTP response from a DeleteNodeContainerByIDWithResponse call
+func ParseDeleteNodeContainerByIDResponse(rsp *http.Response) (*DeleteNodeContainerByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteNodeContainerByIdResponse{
+	response := &DeleteNodeContainerByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -6993,15 +6993,15 @@ func ParseDeleteNodeContainerByIdResponse(rsp *http.Response) (*DeleteNodeContai
 	return response, nil
 }
 
-// ParseGetNodeContainerByIdResponse parses an HTTP response from a GetNodeContainerByIdWithResponse call
-func ParseGetNodeContainerByIdResponse(rsp *http.Response) (*GetNodeContainerByIdResponse, error) {
+// ParseGetNodeContainerByIDResponse parses an HTTP response from a GetNodeContainerByIDWithResponse call
+func ParseGetNodeContainerByIDResponse(rsp *http.Response) (*GetNodeContainerByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeContainerByIdResponse{
+	response := &GetNodeContainerByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

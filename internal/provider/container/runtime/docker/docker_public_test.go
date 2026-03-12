@@ -40,13 +40,13 @@ type mockDockerClient struct {
 	containerStartFunc      func(ctx context.Context, containerID string, options container.StartOptions) error
 	containerStopFunc       func(ctx context.Context, containerID string, options container.StopOptions) error
 	containerRemoveFunc     func(ctx context.Context, containerID string, options container.RemoveOptions) error
-	containerListFunc       func(ctx context.Context, options container.ListOptions) ([]types.Container, error)
-	containerInspectFunc    func(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	containerListFunc       func(ctx context.Context, options container.ListOptions) ([]container.Summary, error)
+	containerInspectFunc    func(ctx context.Context, containerID string) (container.InspectResponse, error)
 	containerExecCreateFunc func(
 		ctx context.Context,
 		containerID string,
 		config container.ExecOptions,
-	) (types.IDResponse, error)
+	) (container.ExecCreateResponse, error)
 	containerExecAttachFunc func(
 		ctx context.Context,
 		execID string,
@@ -54,7 +54,7 @@ type mockDockerClient struct {
 	) (types.HijackedResponse, error)
 	containerExecInspectFunc func(ctx context.Context, execID string) (container.ExecInspect, error)
 	imagePullFunc            func(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error)
-	imageInspectWithRawFunc  func(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
+	imageInspectFunc         func(ctx context.Context, imageID string, options ...dockerclient.ImageInspectOption) (image.InspectResponse, error)
 }
 
 func (m *mockDockerClient) Ping(
@@ -128,35 +128,35 @@ func (m *mockDockerClient) ContainerRemove(
 func (m *mockDockerClient) ContainerList(
 	ctx context.Context,
 	options container.ListOptions,
-) ([]types.Container, error) {
+) ([]container.Summary, error) {
 	if m.containerListFunc != nil {
 		return m.containerListFunc(ctx, options)
 	}
 
-	return []types.Container{}, nil
+	return []container.Summary{}, nil
 }
 
 func (m *mockDockerClient) ContainerInspect(
 	ctx context.Context,
 	containerID string,
-) (types.ContainerJSON, error) {
+) (container.InspectResponse, error) {
 	if m.containerInspectFunc != nil {
 		return m.containerInspectFunc(ctx, containerID)
 	}
 
-	return types.ContainerJSON{}, nil
+	return container.InspectResponse{}, nil
 }
 
 func (m *mockDockerClient) ContainerExecCreate(
 	ctx context.Context,
 	containerID string,
 	config container.ExecOptions,
-) (types.IDResponse, error) {
+) (container.ExecCreateResponse, error) {
 	if m.containerExecCreateFunc != nil {
 		return m.containerExecCreateFunc(ctx, containerID, config)
 	}
 
-	return types.IDResponse{ID: "test-exec-id"}, nil
+	return container.ExecCreateResponse{ID: "test-exec-id"}, nil
 }
 
 func (m *mockDockerClient) ContainerExecAttach(
@@ -194,19 +194,20 @@ func (m *mockDockerClient) ImagePull(
 	return io.NopCloser(strings.NewReader("{}")), nil
 }
 
-func (m *mockDockerClient) ImageInspectWithRaw(
+func (m *mockDockerClient) ImageInspect(
 	ctx context.Context,
 	imageID string,
-) (types.ImageInspect, []byte, error) {
-	if m.imageInspectWithRawFunc != nil {
-		return m.imageInspectWithRawFunc(ctx, imageID)
+	options ...dockerclient.ImageInspectOption,
+) (image.InspectResponse, error) {
+	if m.imageInspectFunc != nil {
+		return m.imageInspectFunc(ctx, imageID, options...)
 	}
 
-	return types.ImageInspect{
+	return image.InspectResponse{
 		ID:       "sha256:test",
 		RepoTags: []string{"nginx:latest"},
 		Size:     1024,
-	}, nil, nil
+	}, nil
 }
 
 // newHijackedResponse creates a HijackedResponse with the given content
@@ -215,7 +216,7 @@ func newHijackedResponse(
 	content string,
 ) types.HijackedResponse {
 	serverConn, clientConn := net.Pipe()
-	serverConn.Close()
+	_ = serverConn.Close()
 
 	return types.HijackedResponse{
 		Conn:   clientConn,
@@ -274,13 +275,13 @@ func (s *DockerDriverPublicTestSuite) TestNew() {
 			name: "returns error when docker client creation fails",
 			setupEnv: func() (cleanup func()) {
 				orig, existed := os.LookupEnv("DOCKER_HOST")
-				os.Setenv("DOCKER_HOST", "tcp://invalid:::::port")
+				_ = os.Setenv("DOCKER_HOST", "tcp://invalid:::::port")
 
 				return func() {
 					if existed {
-						os.Setenv("DOCKER_HOST", orig)
+						_ = os.Setenv("DOCKER_HOST", orig)
 					} else {
-						os.Unsetenv("DOCKER_HOST")
+						_ = os.Unsetenv("DOCKER_HOST")
 					}
 				}
 			},
@@ -318,7 +319,7 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 			name: "successful ping",
 			mockClient: &mockDockerClient{
 				pingFunc: func(
-					ctx context.Context,
+					_ context.Context,
 				) (types.Ping, error) {
 					return types.Ping{APIVersion: "1.45"}, nil
 				},
@@ -367,12 +368,12 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 			name: "successful container creation",
 			mockClient: &mockDockerClient{
 				containerCreateFunc: func(
-					ctx context.Context,
-					config *container.Config,
-					hostConfig *container.HostConfig,
-					networkConfig *network.NetworkingConfig,
-					platform *ocispec.Platform,
-					containerName string,
+					_ context.Context,
+					_ *container.Config,
+					_ *container.HostConfig,
+					_ *network.NetworkingConfig,
+					_ *ocispec.Platform,
+					_ string,
 				) (container.CreateResponse, error) {
 					return container.CreateResponse{ID: "test-id"}, nil
 				},
@@ -837,10 +838,10 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					options container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					s.True(options.All)
 
-					return []types.Container{
+					return []container.Summary{
 						{
 							ID:      "test-id-1",
 							Names:   []string{"/test-container-1"},
@@ -867,10 +868,10 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					options container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					s.False(options.All)
 
-					return []types.Container{}, nil
+					return []container.Summary{}, nil
 				},
 			},
 			params: runtime.ListParams{State: "running"},
@@ -888,11 +889,11 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					options container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					s.True(options.All)
 					s.NotNil(options.Filters)
 
-					return []types.Container{}, nil
+					return []container.Summary{}, nil
 				},
 			},
 			params: runtime.ListParams{State: "stopped"},
@@ -910,10 +911,10 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					options container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					s.False(options.All)
 
-					return []types.Container{}, nil
+					return []container.Summary{}, nil
 				},
 			},
 			params: runtime.ListParams{State: ""},
@@ -931,10 +932,10 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					options container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					s.Equal(5, options.Limit)
 
-					return []types.Container{}, nil
+					return []container.Summary{}, nil
 				},
 			},
 			params: runtime.ListParams{State: "all", Limit: 5},
@@ -952,8 +953,8 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					_ container.ListOptions,
-				) ([]types.Container, error) {
-					return []types.Container{
+				) ([]container.Summary, error) {
+					return []container.Summary{
 						{
 							ID:      "no-name-id",
 							Names:   []string{},
@@ -980,7 +981,7 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 				containerListFunc: func(
 					_ context.Context,
 					_ container.ListOptions,
-				) ([]types.Container, error) {
+				) ([]container.Summary, error) {
 					return nil, fmt.Errorf("daemon error")
 				},
 			},
@@ -1018,12 +1019,12 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "test-id",
 							Name:    "/test-container",
-							State:   &types.ContainerState{Status: "running"},
+							State:   &container.State{Status: "running"},
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
@@ -1047,9 +1048,9 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "nil-state-id",
 							Name:    "/nil-state",
 							State:   nil,
@@ -1075,12 +1076,12 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "bad-time-id",
 							Name:    "/bad-time",
-							State:   &types.ContainerState{Status: "running"},
+							State:   &container.State{Status: "running"},
 							Created: "not-a-valid-timestamp",
 						},
 						Config: &container.Config{Image: "nginx:latest"},
@@ -1103,16 +1104,16 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "net-id",
 							Name:    "/net-container",
-							State:   &types.ContainerState{Status: "running"},
+							State:   &container.State{Status: "running"},
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-						NetworkSettings: &types.NetworkSettings{
+						NetworkSettings: &container.NetworkSettings{
 							Networks: map[string]*network.EndpointSettings{
 								"bridge": {
 									IPAddress: "172.17.0.2",
@@ -1141,12 +1142,12 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:   "ports-id",
 							Name: "/ports-container",
-							State: &types.ContainerState{
+							State: &container.State{
 								Status: "running",
 							},
 							Created: time.Now().Format(time.RFC3339Nano),
@@ -1180,16 +1181,16 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "mounts-id",
 							Name:    "/mounts-container",
-							State:   &types.ContainerState{Status: "running"},
+							State:   &container.State{Status: "running"},
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-						Mounts: []types.MountPoint{
+						Mounts: []container.MountPoint{
 							{
 								Source:      "/host/path",
 								Destination: "/container/path",
@@ -1216,14 +1217,14 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{
-						ContainerJSONBase: &types.ContainerJSONBase{
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{
+						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:   "health-id",
 							Name: "/health-container",
-							State: &types.ContainerState{
+							State: &container.State{
 								Status: "running",
-								Health: &types.Health{
+								Health: &container.Health{
 									Status: "healthy",
 								},
 							},
@@ -1249,8 +1250,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 				containerInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ContainerJSON, error) {
-					return types.ContainerJSON{}, fmt.Errorf("no such container")
+				) (container.InspectResponse, error) {
+					return container.InspectResponse{}, fmt.Errorf("no such container")
 				},
 			},
 			containerID: "missing-id",
@@ -1289,12 +1290,12 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					config container.ExecOptions,
-				) (types.IDResponse, error) {
+				) (container.ExecCreateResponse, error) {
 					s.Equal([]string{"echo", "hello"}, config.Cmd)
 					s.True(config.AttachStdout)
 					s.True(config.AttachStderr)
 
-					return types.IDResponse{ID: "exec-id"}, nil
+					return container.ExecCreateResponse{ID: "exec-id"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1331,11 +1332,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					config container.ExecOptions,
-				) (types.IDResponse, error) {
+				) (container.ExecCreateResponse, error) {
 					s.Len(config.Env, 1)
 					s.Contains(config.Env[0], "MY_VAR=value")
 
-					return types.IDResponse{ID: "exec-env-id"}, nil
+					return container.ExecCreateResponse{ID: "exec-env-id"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1371,10 +1372,10 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					config container.ExecOptions,
-				) (types.IDResponse, error) {
+				) (container.ExecCreateResponse, error) {
 					s.Equal("/app", config.WorkingDir)
 
-					return types.IDResponse{ID: "exec-wd-id"}, nil
+					return container.ExecCreateResponse{ID: "exec-wd-id"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1410,8 +1411,8 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					_ container.ExecOptions,
-				) (types.IDResponse, error) {
-					return types.IDResponse{}, fmt.Errorf("container not running")
+				) (container.ExecCreateResponse, error) {
+					return container.ExecCreateResponse{}, fmt.Errorf("container not running")
 				},
 			},
 			containerID: "stopped-id",
@@ -1434,8 +1435,8 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					_ container.ExecOptions,
-				) (types.IDResponse, error) {
-					return types.IDResponse{ID: "exec-attach-fail"}, nil
+				) (container.ExecCreateResponse, error) {
+					return container.ExecCreateResponse{ID: "exec-attach-fail"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1465,8 +1466,8 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					_ container.ExecOptions,
-				) (types.IDResponse, error) {
-					return types.IDResponse{ID: "exec-read-fail"}, nil
+				) (container.ExecCreateResponse, error) {
+					return container.ExecCreateResponse{ID: "exec-read-fail"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1496,8 +1497,8 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 					_ context.Context,
 					_ string,
 					_ container.ExecOptions,
-				) (types.IDResponse, error) {
-					return types.IDResponse{ID: "exec-inspect-fail"}, nil
+				) (container.ExecCreateResponse, error) {
+					return container.ExecCreateResponse{ID: "exec-inspect-fail"}, nil
 				},
 				containerExecAttachFunc: func(
 					_ context.Context,
@@ -1554,15 +1555,16 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 				) (io.ReadCloser, error) {
 					return io.NopCloser(strings.NewReader("{}")), nil
 				},
-				imageInspectWithRawFunc: func(
+				imageInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ImageInspect, []byte, error) {
-					return types.ImageInspect{
+					_ ...dockerclient.ImageInspectOption,
+				) (image.InspectResponse, error) {
+					return image.InspectResponse{
 						ID:       "sha256:test123",
 						RepoTags: []string{"nginx:latest"},
 						Size:     2048,
-					}, nil, nil
+					}, nil
 				},
 			},
 			imageName: "nginx:latest",
@@ -1590,15 +1592,16 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 
 					return io.NopCloser(strings.NewReader(events)), nil
 				},
-				imageInspectWithRawFunc: func(
+				imageInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ImageInspect, []byte, error) {
-					return types.ImageInspect{
+					_ ...dockerclient.ImageInspectOption,
+				) (image.InspectResponse, error) {
+					return image.InspectResponse{
 						ID:       "sha256:inspect-id",
 						RepoTags: []string{"nginx:1.25"},
 						Size:     4096,
-					}, nil, nil
+					}, nil
 				},
 			},
 			imageName: "nginx:1.25",
@@ -1665,15 +1668,16 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 				) (io.ReadCloser, error) {
 					return io.NopCloser(strings.NewReader("{}")), nil
 				},
-				imageInspectWithRawFunc: func(
+				imageInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ImageInspect, []byte, error) {
-					return types.ImageInspect{
+					_ ...dockerclient.ImageInspectOption,
+				) (image.InspectResponse, error) {
+					return image.InspectResponse{
 						ID:       "sha256:no-tags",
 						RepoTags: []string{},
 						Size:     512,
-					}, nil, nil
+					}, nil
 				},
 			},
 			imageName: "custom-image",
@@ -1696,11 +1700,12 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 				) (io.ReadCloser, error) {
 					return io.NopCloser(strings.NewReader("{}")), nil
 				},
-				imageInspectWithRawFunc: func(
+				imageInspectFunc: func(
 					_ context.Context,
 					_ string,
-				) (types.ImageInspect, []byte, error) {
-					return types.ImageInspect{}, nil, fmt.Errorf("image not found")
+					_ ...dockerclient.ImageInspectOption,
+				) (image.InspectResponse, error) {
+					return image.InspectResponse{}, fmt.Errorf("image not found")
 				},
 			},
 			imageName: "nginx:latest",

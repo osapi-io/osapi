@@ -30,13 +30,13 @@ import (
 	"github.com/retr0h/osapi/internal/api/container/gen"
 )
 
-// GetNodeContainerById inspects a container on a target node.
-func (s *Container) GetNodeContainerById(
+// GetNodeContainerByID inspects a container on a target node.
+func (s *Container) GetNodeContainerByID(
 	ctx context.Context,
-	request gen.GetNodeContainerByIdRequestObject,
-) (gen.GetNodeContainerByIdResponseObject, error) {
+	request gen.GetNodeContainerByIDRequestObject,
+) (gen.GetNodeContainerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeContainerById400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -50,7 +50,7 @@ func (s *Container) GetNodeContainerById(
 	resp, err := s.JobClient.QueryContainerInspect(ctx, hostname, id)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeContainerById500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var detail struct {
@@ -97,7 +97,7 @@ func (s *Container) GetNodeContainerById(
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 
-	return gen.GetNodeContainerById200JSONResponse{
+	return gen.GetNodeContainerByID200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.ContainerDetailResponse{
 			{

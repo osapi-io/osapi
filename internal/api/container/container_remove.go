@@ -30,13 +30,13 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// DeleteNodeContainerById removes a container from a target node.
-func (s *Container) DeleteNodeContainerById(
+// DeleteNodeContainerByID removes a container from a target node.
+func (s *Container) DeleteNodeContainerByID(
 	ctx context.Context,
-	request gen.DeleteNodeContainerByIdRequestObject,
-) (gen.DeleteNodeContainerByIdResponseObject, error) {
+	request gen.DeleteNodeContainerByIDRequestObject,
+) (gen.DeleteNodeContainerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeContainerById400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -56,14 +56,14 @@ func (s *Container) DeleteNodeContainerById(
 	resp, err := s.JobClient.ModifyContainerRemove(ctx, hostname, id, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerById500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	msg := "container removed"
 
-	return gen.DeleteNodeContainerById202JSONResponse{
+	return gen.DeleteNodeContainerByID202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.ContainerActionResultItem{
 			{

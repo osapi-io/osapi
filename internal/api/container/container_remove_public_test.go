@@ -74,19 +74,19 @@ func (s *ContainerRemovePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
+func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 	tests := []struct {
 		name         string
-		request      gen.DeleteNodeContainerByIdRequestObject
+		request      gen.DeleteNodeContainerByIDRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.DeleteNodeContainerByIdResponseObject)
+		validateFunc func(resp gen.DeleteNodeContainerByIDResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.DeleteNodeContainerByIdRequestObject{
+			request: gen.DeleteNodeContainerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIdParams{},
+				Params:   gen.DeleteNodeContainerByIDParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -102,8 +102,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIdResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerById202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerByID202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -117,10 +117,10 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 		},
 		{
 			name: "success with force",
-			request: gen.DeleteNodeContainerByIdRequestObject{
+			request: gen.DeleteNodeContainerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIdParams{Force: boolPtr(true)},
+				Params:   gen.DeleteNodeContainerByIDParams{Force: boolPtr(true)},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -136,22 +136,22 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIdResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerById202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerByID202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.DeleteNodeContainerByIdRequestObject{
+			request: gen.DeleteNodeContainerByIDRequestObject{
 				Hostname: "",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIdParams{},
+				Params:   gen.DeleteNodeContainerByIDParams{},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.DeleteNodeContainerByIdResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerById400JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerByID400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -159,10 +159,10 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 		},
 		{
 			name: "job client error",
-			request: gen.DeleteNodeContainerByIdRequestObject{
+			request: gen.DeleteNodeContainerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIdParams{},
+				Params:   gen.DeleteNodeContainerByIDParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -174,8 +174,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIdResponseObject) {
-				_, ok := resp.(gen.DeleteNodeContainerById500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerByID500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -185,14 +185,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerById() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.DeleteNodeContainerById(s.ctx, tt.request)
+			resp, err := s.handler.DeleteNodeContainerByID(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIdValidationHTTP() {
+func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIDValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

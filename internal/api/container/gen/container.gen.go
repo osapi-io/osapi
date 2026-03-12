@@ -300,8 +300,8 @@ type GetNodeContainerParams struct {
 // GetNodeContainerParamsState defines parameters for GetNodeContainer.
 type GetNodeContainerParamsState string
 
-// DeleteNodeContainerByIdParams defines parameters for DeleteNodeContainerById.
-type DeleteNodeContainerByIdParams struct {
+// DeleteNodeContainerByIDParams defines parameters for DeleteNodeContainerByID.
+type DeleteNodeContainerByIDParams struct {
 	// Force Force removal of a running container.
 	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
 }
@@ -331,10 +331,10 @@ type ServerInterface interface {
 	PostNodeContainerPull(ctx echo.Context, hostname Hostname) error
 	// Remove a container
 	// (DELETE /node/{hostname}/container/{id})
-	DeleteNodeContainerById(ctx echo.Context, hostname Hostname, id ContainerId, params DeleteNodeContainerByIdParams) error
+	DeleteNodeContainerByID(ctx echo.Context, hostname Hostname, id ContainerId, params DeleteNodeContainerByIDParams) error
 	// Inspect a container
 	// (GET /node/{hostname}/container/{id})
-	GetNodeContainerById(ctx echo.Context, hostname Hostname, id ContainerId) error
+	GetNodeContainerByID(ctx echo.Context, hostname Hostname, id ContainerId) error
 	// Execute a command in a container
 	// (POST /node/{hostname}/container/{id}/exec)
 	PostNodeContainerExec(ctx echo.Context, hostname Hostname, id ContainerId) error
@@ -421,8 +421,8 @@ func (w *ServerInterfaceWrapper) PostNodeContainerPull(ctx echo.Context) error {
 	return err
 }
 
-// DeleteNodeContainerById converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteNodeContainerById(ctx echo.Context) error {
+// DeleteNodeContainerByID converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNodeContainerByID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -443,7 +443,7 @@ func (w *ServerInterfaceWrapper) DeleteNodeContainerById(ctx echo.Context) error
 	ctx.Set(BearerAuthScopes, []string{"container:write"})
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params DeleteNodeContainerByIdParams
+	var params DeleteNodeContainerByIDParams
 	// ------------- Optional query parameter "force" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "force", ctx.QueryParams(), &params.Force)
@@ -452,12 +452,12 @@ func (w *ServerInterfaceWrapper) DeleteNodeContainerById(ctx echo.Context) error
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteNodeContainerById(ctx, hostname, id, params)
+	err = w.Handler.DeleteNodeContainerByID(ctx, hostname, id, params)
 	return err
 }
 
-// GetNodeContainerById converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeContainerById(ctx echo.Context) error {
+// GetNodeContainerByID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeContainerByID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -478,7 +478,7 @@ func (w *ServerInterfaceWrapper) GetNodeContainerById(ctx echo.Context) error {
 	ctx.Set(BearerAuthScopes, []string{"container:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeContainerById(ctx, hostname, id)
+	err = w.Handler.GetNodeContainerByID(ctx, hostname, id)
 	return err
 }
 
@@ -591,8 +591,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/node/:hostname/container", wrapper.GetNodeContainer)
 	router.POST(baseURL+"/node/:hostname/container", wrapper.PostNodeContainer)
 	router.POST(baseURL+"/node/:hostname/container/pull", wrapper.PostNodeContainerPull)
-	router.DELETE(baseURL+"/node/:hostname/container/:id", wrapper.DeleteNodeContainerById)
-	router.GET(baseURL+"/node/:hostname/container/:id", wrapper.GetNodeContainerById)
+	router.DELETE(baseURL+"/node/:hostname/container/:id", wrapper.DeleteNodeContainerByID)
+	router.GET(baseURL+"/node/:hostname/container/:id", wrapper.GetNodeContainerByID)
 	router.POST(baseURL+"/node/:hostname/container/:id/exec", wrapper.PostNodeContainerExec)
 	router.POST(baseURL+"/node/:hostname/container/:id/start", wrapper.PostNodeContainerStart)
 	router.POST(baseURL+"/node/:hostname/container/:id/stop", wrapper.PostNodeContainerStop)
@@ -761,127 +761,127 @@ func (response PostNodeContainerPull500JSONResponse) VisitPostNodeContainerPullR
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerByIdRequestObject struct {
+type DeleteNodeContainerByIDRequestObject struct {
 	Hostname Hostname    `json:"hostname"`
 	Id       ContainerId `json:"id"`
-	Params   DeleteNodeContainerByIdParams
+	Params   DeleteNodeContainerByIDParams
 }
 
-type DeleteNodeContainerByIdResponseObject interface {
-	VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error
+type DeleteNodeContainerByIDResponseObject interface {
+	VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error
 }
 
-type DeleteNodeContainerById202JSONResponse ContainerActionCollectionResponse
+type DeleteNodeContainerByID202JSONResponse ContainerActionCollectionResponse
 
-func (response DeleteNodeContainerById202JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID202JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(202)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerById400JSONResponse externalRef0.ErrorResponse
+type DeleteNodeContainerByID400JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeContainerById400JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID400JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerById401JSONResponse externalRef0.ErrorResponse
+type DeleteNodeContainerByID401JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeContainerById401JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID401JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerById403JSONResponse externalRef0.ErrorResponse
+type DeleteNodeContainerByID403JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeContainerById403JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID403JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerById404JSONResponse externalRef0.ErrorResponse
+type DeleteNodeContainerByID404JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeContainerById404JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID404JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeContainerById500JSONResponse externalRef0.ErrorResponse
+type DeleteNodeContainerByID500JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeContainerById500JSONResponse) VisitDeleteNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response DeleteNodeContainerByID500JSONResponse) VisitDeleteNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerByIdRequestObject struct {
+type GetNodeContainerByIDRequestObject struct {
 	Hostname Hostname    `json:"hostname"`
 	Id       ContainerId `json:"id"`
 }
 
-type GetNodeContainerByIdResponseObject interface {
-	VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error
+type GetNodeContainerByIDResponseObject interface {
+	VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error
 }
 
-type GetNodeContainerById200JSONResponse ContainerDetailCollectionResponse
+type GetNodeContainerByID200JSONResponse ContainerDetailCollectionResponse
 
-func (response GetNodeContainerById200JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID200JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerById400JSONResponse externalRef0.ErrorResponse
+type GetNodeContainerByID400JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeContainerById400JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID400JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerById401JSONResponse externalRef0.ErrorResponse
+type GetNodeContainerByID401JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeContainerById401JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID401JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerById403JSONResponse externalRef0.ErrorResponse
+type GetNodeContainerByID403JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeContainerById403JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID403JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerById404JSONResponse externalRef0.ErrorResponse
+type GetNodeContainerByID404JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeContainerById404JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID404JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeContainerById500JSONResponse externalRef0.ErrorResponse
+type GetNodeContainerByID500JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeContainerById500JSONResponse) VisitGetNodeContainerByIdResponse(w http.ResponseWriter) error {
+func (response GetNodeContainerByID500JSONResponse) VisitGetNodeContainerByIDResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1092,10 +1092,10 @@ type StrictServerInterface interface {
 	PostNodeContainerPull(ctx context.Context, request PostNodeContainerPullRequestObject) (PostNodeContainerPullResponseObject, error)
 	// Remove a container
 	// (DELETE /node/{hostname}/container/{id})
-	DeleteNodeContainerById(ctx context.Context, request DeleteNodeContainerByIdRequestObject) (DeleteNodeContainerByIdResponseObject, error)
+	DeleteNodeContainerByID(ctx context.Context, request DeleteNodeContainerByIDRequestObject) (DeleteNodeContainerByIDResponseObject, error)
 	// Inspect a container
 	// (GET /node/{hostname}/container/{id})
-	GetNodeContainerById(ctx context.Context, request GetNodeContainerByIdRequestObject) (GetNodeContainerByIdResponseObject, error)
+	GetNodeContainerByID(ctx context.Context, request GetNodeContainerByIDRequestObject) (GetNodeContainerByIDResponseObject, error)
 	// Execute a command in a container
 	// (POST /node/{hostname}/container/{id}/exec)
 	PostNodeContainerExec(ctx context.Context, request PostNodeContainerExecRequestObject) (PostNodeContainerExecResponseObject, error)
@@ -1207,53 +1207,53 @@ func (sh *strictHandler) PostNodeContainerPull(ctx echo.Context, hostname Hostna
 	return nil
 }
 
-// DeleteNodeContainerById operation middleware
-func (sh *strictHandler) DeleteNodeContainerById(ctx echo.Context, hostname Hostname, id ContainerId, params DeleteNodeContainerByIdParams) error {
-	var request DeleteNodeContainerByIdRequestObject
+// DeleteNodeContainerByID operation middleware
+func (sh *strictHandler) DeleteNodeContainerByID(ctx echo.Context, hostname Hostname, id ContainerId, params DeleteNodeContainerByIDParams) error {
+	var request DeleteNodeContainerByIDRequestObject
 
 	request.Hostname = hostname
 	request.Id = id
 	request.Params = params
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteNodeContainerById(ctx.Request().Context(), request.(DeleteNodeContainerByIdRequestObject))
+		return sh.ssi.DeleteNodeContainerByID(ctx.Request().Context(), request.(DeleteNodeContainerByIDRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteNodeContainerById")
+		handler = middleware(handler, "DeleteNodeContainerByID")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(DeleteNodeContainerByIdResponseObject); ok {
-		return validResponse.VisitDeleteNodeContainerByIdResponse(ctx.Response())
+	} else if validResponse, ok := response.(DeleteNodeContainerByIDResponseObject); ok {
+		return validResponse.VisitDeleteNodeContainerByIDResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// GetNodeContainerById operation middleware
-func (sh *strictHandler) GetNodeContainerById(ctx echo.Context, hostname Hostname, id ContainerId) error {
-	var request GetNodeContainerByIdRequestObject
+// GetNodeContainerByID operation middleware
+func (sh *strictHandler) GetNodeContainerByID(ctx echo.Context, hostname Hostname, id ContainerId) error {
+	var request GetNodeContainerByIDRequestObject
 
 	request.Hostname = hostname
 	request.Id = id
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeContainerById(ctx.Request().Context(), request.(GetNodeContainerByIdRequestObject))
+		return sh.ssi.GetNodeContainerByID(ctx.Request().Context(), request.(GetNodeContainerByIDRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeContainerById")
+		handler = middleware(handler, "GetNodeContainerByID")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetNodeContainerByIdResponseObject); ok {
-		return validResponse.VisitGetNodeContainerByIdResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetNodeContainerByIDResponseObject); ok {
+		return validResponse.VisitGetNodeContainerByIDResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

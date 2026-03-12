@@ -68,7 +68,7 @@ var providerRunCmd = &cobra.Command{
 			return fmt.Errorf("marshal result: %w", err)
 		}
 
-		fmt.Fprintln(os.Stdout, string(output))
+		_, _ = fmt.Fprintln(os.Stdout, string(output))
 
 		return nil
 	},

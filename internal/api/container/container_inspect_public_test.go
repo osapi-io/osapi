@@ -75,16 +75,16 @@ func (s *ContainerInspectPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
+func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerByID() {
 	tests := []struct {
 		name         string
-		request      gen.GetNodeContainerByIdRequestObject
+		request      gen.GetNodeContainerByIDRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.GetNodeContainerByIdResponseObject)
+		validateFunc func(resp gen.GetNodeContainerByIDResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.GetNodeContainerByIdRequestObject{
+			request: gen.GetNodeContainerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
 			},
@@ -107,8 +107,8 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
 						}`),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeContainerByIdResponseObject) {
-				r, ok := resp.(gen.GetNodeContainerById200JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerByIDResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerByID200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -123,13 +123,13 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.GetNodeContainerByIdRequestObject{
+			request: gen.GetNodeContainerByIDRequestObject{
 				Hostname: "",
 				Id:       "abc123",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.GetNodeContainerByIdResponseObject) {
-				r, ok := resp.(gen.GetNodeContainerById400JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerByIDResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerByID400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -137,7 +137,7 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
 		},
 		{
 			name: "job client error",
-			request: gen.GetNodeContainerByIdRequestObject{
+			request: gen.GetNodeContainerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
 			},
@@ -150,8 +150,8 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeContainerByIdResponseObject) {
-				_, ok := resp.(gen.GetNodeContainerById500JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerByIDResponseObject) {
+				_, ok := resp.(gen.GetNodeContainerByID500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -161,14 +161,14 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerById() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.GetNodeContainerById(s.ctx, tt.request)
+			resp, err := s.handler.GetNodeContainerByID(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerByIdValidationHTTP() {
+func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerByIDValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string

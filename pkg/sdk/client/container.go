@@ -100,7 +100,7 @@ func (s *ContainerService) Inspect(
 	hostname string,
 	id string,
 ) (*Response[Collection[ContainerDetailResult]], error) {
-	resp, err := s.client.GetNodeContainerByIdWithResponse(ctx, hostname, id)
+	resp, err := s.client.GetNodeContainerByIDWithResponse(ctx, hostname, id)
 	if err != nil {
 		return nil, fmt.Errorf("inspect container: %w", err)
 	}
@@ -196,9 +196,9 @@ func (s *ContainerService) Remove(
 	ctx context.Context,
 	hostname string,
 	id string,
-	params *gen.DeleteNodeContainerByIdParams,
+	params *gen.DeleteNodeContainerByIDParams,
 ) (*Response[Collection[ContainerActionResult]], error) {
-	resp, err := s.client.DeleteNodeContainerByIdWithResponse(ctx, hostname, id, params)
+	resp, err := s.client.DeleteNodeContainerByIDWithResponse(ctx, hostname, id, params)
 	if err != nil {
 		return nil, fmt.Errorf("remove container: %w", err)
 	}
