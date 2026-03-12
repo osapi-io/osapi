@@ -141,6 +141,8 @@ configure them — see the Features section:
 - [Network Management](../features/network-management.md) — DNS, ping
 - [Command Execution](../features/command-execution.md) — exec, shell
 - [File Management](../features/file-management.md) — upload, deploy, templates
+- [Container Management](../features/container-management.md) — Docker
+  lifecycle, exec, pull
 - [Job System](../features/job-system.md) — async job processing and routing
 - [Audit Logging](../features/audit-logging.md) — API audit trail and export
 - [Health Checks](../features/health-checks.md) — liveness, readiness, status

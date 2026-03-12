@@ -284,6 +284,11 @@ const config: Config = {
               type: 'doc',
               label: 'Introspection',
               docId: 'sidebar/sdk/orchestrator/features/introspection'
+            },
+            {
+              type: 'doc',
+              label: 'Container Targeting',
+              docId: 'sidebar/sdk/orchestrator/features/container-targeting'
             }
           ]
         },
