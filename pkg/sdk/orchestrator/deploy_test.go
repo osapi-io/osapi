@@ -51,8 +51,14 @@ func (suite *DeployTestSuite) TestMatchAsset() {
 			name: "matches linux amd64 asset",
 			assets: []releaseAsset{
 				{Name: "osapi_1.0.0_darwin_all", BrowserDownloadURL: "https://example.com/darwin"},
-				{Name: "osapi_1.0.0_linux_amd64", BrowserDownloadURL: "https://example.com/linux_amd64"},
-				{Name: "osapi_1.0.0_linux_arm64", BrowserDownloadURL: "https://example.com/linux_arm64"},
+				{
+					Name:               "osapi_1.0.0_linux_amd64",
+					BrowserDownloadURL: "https://example.com/linux_amd64",
+				},
+				{
+					Name:               "osapi_1.0.0_linux_arm64",
+					BrowserDownloadURL: "https://example.com/linux_arm64",
+				},
 			},
 			goos:   "linux",
 			goarch: "amd64",
@@ -64,8 +70,14 @@ func (suite *DeployTestSuite) TestMatchAsset() {
 		{
 			name: "matches linux arm64 asset",
 			assets: []releaseAsset{
-				{Name: "osapi_1.0.0_linux_amd64", BrowserDownloadURL: "https://example.com/linux_amd64"},
-				{Name: "osapi_1.0.0_linux_arm64", BrowserDownloadURL: "https://example.com/linux_arm64"},
+				{
+					Name:               "osapi_1.0.0_linux_amd64",
+					BrowserDownloadURL: "https://example.com/linux_amd64",
+				},
+				{
+					Name:               "osapi_1.0.0_linux_arm64",
+					BrowserDownloadURL: "https://example.com/linux_arm64",
+				},
 			},
 			goos:   "linux",
 			goarch: "arm64",
@@ -120,7 +132,10 @@ func (suite *DeployTestSuite) TestResolveFromURL() {
 				release := githubRelease{
 					TagName: "v1.0.0",
 					Assets: []releaseAsset{
-						{Name: "osapi_1.0.0_linux_amd64", BrowserDownloadURL: "https://github.com/retr0h/osapi/releases/download/v1.0.0/osapi_1.0.0_linux_amd64"},
+						{
+							Name:               "osapi_1.0.0_linux_amd64",
+							BrowserDownloadURL: "https://github.com/retr0h/osapi/releases/download/v1.0.0/osapi_1.0.0_linux_amd64",
+						},
 					},
 				}
 				w.Header().Set("Content-Type", "application/json")
@@ -163,7 +178,10 @@ func (suite *DeployTestSuite) TestResolveFromURL() {
 				release := githubRelease{
 					TagName: "v1.0.0",
 					Assets: []releaseAsset{
-						{Name: "osapi_1.0.0_darwin_all", BrowserDownloadURL: "https://example.com/darwin"},
+						{
+							Name:               "osapi_1.0.0_darwin_all",
+							BrowserDownloadURL: "https://example.com/darwin",
+						},
 					},
 				}
 				w.Header().Set("Content-Type", "application/json")
@@ -206,8 +224,14 @@ func (suite *DeployTestSuite) TestResolveLatestBinaryURL() {
 				release := githubRelease{
 					TagName: "v1.0.0",
 					Assets: []releaseAsset{
-						{Name: "osapi_1.0.0_linux_arm64", BrowserDownloadURL: "https://example.com/arm64"},
-						{Name: "osapi_1.0.0_linux_amd64", BrowserDownloadURL: "https://example.com/amd64"},
+						{
+							Name:               "osapi_1.0.0_linux_arm64",
+							BrowserDownloadURL: "https://example.com/arm64",
+						},
+						{
+							Name:               "osapi_1.0.0_linux_amd64",
+							BrowserDownloadURL: "https://example.com/amd64",
+						},
 					},
 				}
 				w.Header().Set("Content-Type", "application/json")

@@ -547,7 +547,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\n=== Summary: %s in %s ===\n", report.Summary(), report.Duration.Truncate(time.Millisecond))
+	fmt.Printf(
+		"\n=== Summary: %s in %s ===\n",
+		report.Summary(),
+		report.Duration.Truncate(time.Millisecond),
+	)
 }
 
 // findProjectRoot walks up from the current directory to find go.mod.

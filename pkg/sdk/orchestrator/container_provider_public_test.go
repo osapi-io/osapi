@@ -184,8 +184,10 @@ func (suite *ContainerProviderPublicTestSuite) TestGetMemStats() {
 		validateFunc func(result *orchestrator.MemStats, err error)
 	}{
 		{
-			name:     "parses memory stats",
-			response: []byte(`{"Total":8192000000,"Available":4096000000,"Free":2048000000,"Cached":1024000000}`),
+			name: "parses memory stats",
+			response: []byte(
+				`{"Total":8192000000,"Available":4096000000,"Free":2048000000,"Cached":1024000000}`,
+			),
 			validateFunc: func(result *orchestrator.MemStats, err error) {
 				assert.NoError(suite.T(), err)
 				assert.Equal(suite.T(), uint64(8192000000), result.Total)
@@ -259,7 +261,9 @@ func (suite *ContainerProviderPublicTestSuite) TestExec() {
 				Command: "uname",
 				Args:    []string{"-a"},
 			},
-			response: []byte(`{"stdout":"Linux container 5.15.0\n","stderr":"","exit_code":0,"duration_ms":5,"changed":true}`),
+			response: []byte(
+				`{"stdout":"Linux container 5.15.0\n","stderr":"","exit_code":0,"duration_ms":5,"changed":true}`,
+			),
 			validateFunc: func(result *orchestrator.CommandResult, err error, lastData []byte) {
 				assert.NoError(suite.T(), err)
 				assert.Equal(suite.T(), "Linux container 5.15.0\n", result.Stdout)
@@ -671,8 +675,10 @@ func (suite *ContainerProviderPublicTestSuite) TestGetDiskUsage() {
 		validateFunc func(result []orchestrator.DiskUsage, err error)
 	}{
 		{
-			name:     "returns disk usage",
-			response: []byte(`[{"Name":"/","Total":50000000000,"Used":25000000000,"Free":25000000000}]`),
+			name: "returns disk usage",
+			response: []byte(
+				`[{"Name":"/","Total":50000000000,"Used":25000000000,"Free":25000000000}]`,
+			),
 			validateFunc: func(result []orchestrator.DiskUsage, err error) {
 				assert.NoError(suite.T(), err)
 				assert.Len(suite.T(), result, 1)
@@ -723,9 +729,11 @@ func (suite *ContainerProviderPublicTestSuite) TestGetDNS() {
 		validateFunc func(result *orchestrator.DNSGetResult, err error, lastData []byte)
 	}{
 		{
-			name:     "returns dns config",
-			iface:    "eth0",
-			response: []byte(`{"DNSServers":["8.8.8.8","8.8.4.4"],"SearchDomains":["example.com"]}`),
+			name:  "returns dns config",
+			iface: "eth0",
+			response: []byte(
+				`{"DNSServers":["8.8.8.8","8.8.4.4"],"SearchDomains":["example.com"]}`,
+			),
 			validateFunc: func(result *orchestrator.DNSGetResult, err error, lastData []byte) {
 				assert.NoError(suite.T(), err)
 				assert.Equal(suite.T(), []string{"8.8.8.8", "8.8.4.4"}, result.DNSServers)
