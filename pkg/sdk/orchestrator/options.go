@@ -95,10 +95,10 @@ type Hooks struct {
 
 // PlanConfig holds plan-level configuration.
 type PlanConfig struct {
-	OnErrorStrategy ErrorStrategy
-	Hooks           *Hooks
-	DockerExecFn    ExecFn
-	DockerBinaryURL string
+	OnErrorStrategy  ErrorStrategy
+	Hooks            *Hooks
+	DockerExecFn     ExecFn
+	DockerBinaryURL  string
 	DockerSkipDeploy bool
 }
 

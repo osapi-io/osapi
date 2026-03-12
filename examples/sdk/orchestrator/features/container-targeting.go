@@ -55,8 +55,10 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
-const containerName = "example-provider-container"
-const containerImage = "ubuntu:24.04"
+const (
+	containerName  = "example-provider-container"
+	containerImage = "ubuntu:24.04"
+)
 
 func ptr(s string) *string { return &s }
 

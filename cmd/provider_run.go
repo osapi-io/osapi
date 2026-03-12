@@ -86,4 +86,3 @@ func init() {
 	providerCmd.AddCommand(providerRunCmd)
 	rootCmd.AddCommand(providerCmd)
 }
-
