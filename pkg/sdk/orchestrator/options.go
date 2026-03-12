@@ -97,6 +97,7 @@ type Hooks struct {
 type PlanConfig struct {
 	OnErrorStrategy ErrorStrategy
 	Hooks           *Hooks
+	DockerExecFn    ExecFn
 }
 
 // PlanOption is a functional option for NewPlan.
@@ -117,5 +118,15 @@ func WithHooks(
 ) PlanOption {
 	return func(cfg *PlanConfig) {
 		cfg.Hooks = &hooks
+	}
+}
+
+// WithDockerExecFn sets the exec function used by Plan.Docker() to
+// execute commands inside Docker containers.
+func WithDockerExecFn(
+	fn ExecFn,
+) PlanOption {
+	return func(cfg *PlanConfig) {
+		cfg.DockerExecFn = fn
 	}
 }

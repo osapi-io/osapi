@@ -65,13 +65,14 @@ The API server is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                | Responsibility                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| `internal/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
-| `internal/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                           |
-| `internal/api/health/` | Health check endpoints (liveness, readiness, status)                             |
-| `internal/api/common/` | Shared middleware, error handling, collection responses                          |
-| (metrics)              | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
+| Package                   | Responsibility                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| `internal/api/node/`      | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
+| `internal/api/container/` | Container endpoints (create, list, inspect, start, stop, remove, exec, pull)     |
+| `internal/api/job/`       | Job queue endpoints (get, list, delete, retry, status)                           |
+| `internal/api/health/`    | Health check endpoints (liveness, readiness, status)                             |
+| `internal/api/common/`    | Shared middleware, error handling, collection responses                          |
+| (metrics)                 | Prometheus endpoint (`/metrics`) via OpenTelemetry                               |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -98,16 +99,17 @@ For the full deep dive see [Job System Architecture](job-architecture.md).
 Providers implement the actual system operations behind a common interface. Each
 provider is selected at runtime through a platform-aware factory pattern.
 
-| Domain          | Providers                      |
-| --------------- | ------------------------------ |
-| `node/host`     | Hostname, uptime, OS info      |
-| `node/disk`     | Disk usage statistics          |
-| `node/mem`      | Memory usage statistics        |
-| `node/load`     | Load average statistics        |
-| `network/dns`   | DNS configuration (get/update) |
-| `network/ping`  | Ping execution and statistics  |
-| `command/exec`  | Direct command execution       |
-| `command/shell` | Shell command execution        |
+| Domain              | Providers                                         |
+| ------------------- | ------------------------------------------------- |
+| `node/host`         | Hostname, uptime, OS info                         |
+| `node/disk`         | Disk usage statistics                             |
+| `node/mem`          | Memory usage statistics                           |
+| `node/load`         | Load average statistics                           |
+| `network/dns`       | DNS configuration (get/update)                    |
+| `network/ping`      | Ping execution and statistics                     |
+| `command/exec`      | Direct command execution                          |
+| `command/shell`     | Shell command execution                           |
+| `container/runtime` | Container lifecycle (create, start, stop, remove) |
 
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the

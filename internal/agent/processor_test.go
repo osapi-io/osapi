@@ -124,6 +124,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		fMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 
@@ -374,6 +375,17 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 				s.NoError(err)
 				s.Equal("in-sync", response["status"])
 			},
+		},
+		{
+			name: "container category routes to container processor",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "container",
+				Operation: "create.execute",
+				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
+			},
+			expectError: true,
+			errorMsg:    "container runtime not available",
 		},
 		{
 			name: "unsupported job category",
@@ -708,6 +720,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -734,6 +747,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -764,6 +778,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -788,6 +803,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -818,6 +834,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -842,6 +859,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -906,6 +924,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -937,6 +956,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -963,6 +983,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					pingMock,
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,

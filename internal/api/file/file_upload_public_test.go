@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -360,6 +361,19 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "name is required")
+			},
+		},
+		{
+			name: "validation error name too long",
+			request: gen.PostFileRequestObject{
+				Body: makeMultipartReader(strings.Repeat("a", 256), "raw", fileContent),
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostFileResponseObject) {
+				r, ok := resp.(gen.PostFile400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "name is required and must be 1-255 characters")
 			},
 		},
 		{

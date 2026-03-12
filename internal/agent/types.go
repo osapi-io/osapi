@@ -33,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
+	containerProv "github.com/retr0h/osapi/internal/provider/container"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -69,6 +70,9 @@ type Agent struct {
 
 	// File provider
 	fileProvider fileProv.Provider
+
+	// Container provider
+	containerProvider containerProv.Provider
 
 	// Registry KV for heartbeat registration
 	registryKV jetstream.KeyValue
