@@ -60,8 +60,9 @@ Container operations follow the same request flow as all OSAPI operations:
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label. See [CLI Reference](../usage/cli/client/container/container.mdx) for
-usage and examples, or the [API Reference](/gen/api/node-container) for the REST
-endpoints.
+usage and examples, or the
+[API Reference](/gen/api/container-management-api-container-operations) for the
+REST endpoints.
 
 ### Runtime Drivers
 
@@ -134,7 +135,8 @@ osapi token generate -r write -u user@example.com \
 
 - [CLI Reference](../usage/cli/client/container/container.mdx) -- container
   management commands
-- [API Reference](/gen/api/node-container) -- REST API documentation
+- [API Reference](/gen/api/container-management-api-container-operations) --
+  REST API documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
 - [Architecture](../architecture/architecture.md) -- system design overview
