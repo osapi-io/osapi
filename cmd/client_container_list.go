@@ -75,8 +75,12 @@ var clientContainerListCmd = &cobra.Command{
 
 			rows := make([][]string, 0, len(r.Containers))
 			for _, c := range r.Containers {
+				shortID := c.ID
+				if len(shortID) > 12 {
+					shortID = shortID[:12]
+				}
 				rows = append(rows, []string{
-					c.ID,
+					shortID,
 					c.Name,
 					c.Image,
 					c.State,
