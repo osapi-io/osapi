@@ -23,9 +23,6 @@ package agent
 import (
 	"context"
 	"log/slog"
-	"strings"
-
-	"github.com/shirou/gopsutil/v4/host"
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
@@ -38,10 +35,8 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
-
-// factoryHostInfoFn is the function used to get host info (injectable for testing).
-var factoryHostInfoFn = host.Info
 
 // factoryDockerNewFn is the function used to create a Docker driver (injectable for testing).
 var factoryDockerNewFn = docker.New
@@ -72,19 +67,15 @@ func (f *ProviderFactory) CreateProviders() (
 	command.Provider,
 	containerProv.Provider,
 ) {
-	info, _ := factoryHostInfoFn()
-	platform := strings.ToLower(info.Platform)
-	if platform == "" && strings.ToLower(info.OS) == "darwin" {
-		platform = "darwin"
-	}
+	plat := platform.Detect()
 
-	if platform == "darwin" {
+	if plat == "darwin" {
 		f.logger.Info("running on darwin")
 	}
 
 	// Create system providers
 	var hostProvider nodeHost.Provider
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		hostProvider = nodeHost.NewUbuntuProvider()
 	case "darwin":
@@ -94,7 +85,7 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	var diskProvider disk.Provider
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		diskProvider = disk.NewUbuntuProvider(f.logger)
 	case "darwin":
@@ -104,7 +95,7 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	var memProvider mem.Provider
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		memProvider = mem.NewUbuntuProvider()
 	case "darwin":
@@ -114,7 +105,7 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	var loadProvider load.Provider
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		loadProvider = load.NewUbuntuProvider()
 	case "darwin":
@@ -126,7 +117,7 @@ func (f *ProviderFactory) CreateProviders() (
 	// Create network providers
 	var dnsProvider dns.Provider
 	execManager := exec.New(f.logger)
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)
 	case "darwin":
@@ -136,7 +127,7 @@ func (f *ProviderFactory) CreateProviders() (
 	}
 
 	var pingProvider ping.Provider
-	switch platform {
+	switch plat {
 	case "ubuntu":
 		pingProvider = ping.NewUbuntuProvider()
 	case "darwin":
@@ -147,7 +138,7 @@ func (f *ProviderFactory) CreateProviders() (
 
 	// Create network info provider
 	var netinfoProvider netinfo.Provider
-	switch platform {
+	switch plat {
 	case "darwin":
 		netinfoProvider = netinfo.NewDarwinProvider(execManager)
 	default:

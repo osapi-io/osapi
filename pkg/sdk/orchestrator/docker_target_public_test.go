@@ -175,6 +175,8 @@ func (s *DockerTargetPublicTestSuite) TestExecProvider() {
 			}
 
 			target := orchestrator.NewDockerTarget("web", "ubuntu:24.04", execFn)
+			target.SetSkipPrepare(true)
+
 			result, err := target.ExecProvider(
 				context.Background(),
 				tt.provider,

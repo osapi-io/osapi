@@ -36,7 +36,10 @@ func (p *Plan) In(
 	}
 }
 
-// Docker creates a DockerTarget bound to this plan.
+// Docker creates a DockerTarget bound to this plan. The target
+// automatically deploys the osapi binary into the container on first
+// provider call. Use WithOSAPIBinaryURL to override the download
+// source, or WithOSAPIBinarySkip if the binary is pre-installed.
 // Panics if no ExecFn was provided via WithDockerExecFn option.
 func (p *Plan) Docker(
 	name string,
@@ -46,7 +49,11 @@ func (p *Plan) Docker(
 		panic("orchestrator: Plan.Docker() called without WithDockerExecFn option")
 	}
 
-	return NewDockerTarget(name, image, p.dockerExecFn)
+	t := NewDockerTarget(name, image, p.dockerExecFn)
+	t.binaryURL = p.dockerBinaryURL
+	t.skipPrepare = p.dockerSkipDeploy
+
+	return t
 }
 
 // Target returns the runtime target for this scoped plan.
