@@ -86,6 +86,84 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Container",
+      link: {
+        type: "doc",
+        id: "gen/api/container-management-api-container-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-container",
+          label: "Create a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-container",
+          label: "List containers",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-by-id",
+          label: "Inspect a container",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-container-by-id",
+          label: "Remove a container",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-start",
+          label: "Start a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-stop",
+          label: "Stop a container",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Container/Exec",
+      link: {
+        type: "doc",
+        id: "gen/api/container-management-api-container-exec",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-exec",
+          label: "Execute a command in a container",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Container/Image",
+      link: {
+        type: "doc",
+        id: "gen/api/container-management-api-container-image",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-pull",
+          label: "Pull a container image",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "File",
       link: {
         type: "doc",

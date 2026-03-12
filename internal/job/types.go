@@ -132,6 +132,18 @@ const (
 	OperationFileStatusGet     = "file.status.get"
 )
 
+// Container operation types
+const (
+	OperationContainerCreate  = "container.create.execute"
+	OperationContainerStart   = "container.start.execute"
+	OperationContainerStop    = "container.stop.execute"
+	OperationContainerRemove  = "container.remove.execute"
+	OperationContainerList    = "container.list.get"
+	OperationContainerInspect = "container.inspect.get"
+	OperationContainerExec    = "container.exec.execute"
+	OperationContainerPull    = "container.pull.execute"
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
@@ -246,6 +258,60 @@ type CommandShellData struct {
 	Cwd string `json:"cwd,omitempty"`
 	// Timeout is the timeout in seconds
 	Timeout int `json:"timeout,omitempty"`
+}
+
+// ContainerCreateData represents data for container creation.
+type ContainerCreateData struct {
+	Image     string            `json:"image"`
+	Name      string            `json:"name,omitempty"`
+	Command   []string          `json:"command,omitempty"`
+	Env       map[string]string `json:"env,omitempty"`
+	Ports     []PortMapping     `json:"ports,omitempty"`
+	Volumes   []VolumeMapping   `json:"volumes,omitempty"`
+	AutoStart bool              `json:"auto_start,omitempty"`
+}
+
+// PortMapping maps a host port to a container port (job layer).
+// Intentionally duplicated from runtime.PortMapping to keep the job
+// layer decoupled from the provider layer. Both have the same shape.
+type PortMapping struct {
+	Host      int `json:"host"`
+	Container int `json:"container"`
+}
+
+// VolumeMapping maps a host path to a container path (job layer).
+// Intentionally duplicated from runtime.VolumeMapping for the same reason.
+type VolumeMapping struct {
+	Host      string `json:"host"`
+	Container string `json:"container"`
+}
+
+// ContainerStopData represents data for stopping a container.
+type ContainerStopData struct {
+	Timeout *int `json:"timeout,omitempty"`
+}
+
+// ContainerRemoveData represents data for removing a container.
+type ContainerRemoveData struct {
+	Force bool `json:"force,omitempty"`
+}
+
+// ContainerListData represents data for listing containers.
+type ContainerListData struct {
+	State string `json:"state,omitempty"`
+	Limit int    `json:"limit,omitempty"`
+}
+
+// ContainerExecData represents data for executing a command in a container.
+type ContainerExecData struct {
+	Command    []string          `json:"command"`
+	Env        map[string]string `json:"env,omitempty"`
+	WorkingDir string            `json:"working_dir,omitempty"`
+}
+
+// ContainerPullData represents data for pulling an image.
+type ContainerPullData struct {
+	Image string `json:"image"`
 }
 
 // NodeShutdownData represents data for node shutdown/reboot operations

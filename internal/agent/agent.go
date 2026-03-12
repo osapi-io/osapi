@@ -30,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
+	containerProv "github.com/retr0h/osapi/internal/provider/container"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -56,26 +57,28 @@ func New(
 	netinfoProvider netinfo.Provider,
 	commandProvider command.Provider,
 	fileProvider fileProv.Provider,
+	containerProvider containerProv.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
 	a := &Agent{
-		logger:          logger,
-		appConfig:       appConfig,
-		appFs:           appFs,
-		jobClient:       jobClient,
-		streamName:      streamName,
-		hostProvider:    hostProvider,
-		diskProvider:    diskProvider,
-		memProvider:     memProvider,
-		loadProvider:    loadProvider,
-		dnsProvider:     dnsProvider,
-		pingProvider:    pingProvider,
-		netinfoProvider: netinfoProvider,
-		commandProvider: commandProvider,
-		fileProvider:    fileProvider,
-		registryKV:      registryKV,
-		factsKV:         factsKV,
+		logger:            logger,
+		appConfig:         appConfig,
+		appFs:             appFs,
+		jobClient:         jobClient,
+		streamName:        streamName,
+		hostProvider:      hostProvider,
+		diskProvider:      diskProvider,
+		memProvider:       memProvider,
+		loadProvider:      loadProvider,
+		dnsProvider:       dnsProvider,
+		pingProvider:      pingProvider,
+		netinfoProvider:   netinfoProvider,
+		commandProvider:   commandProvider,
+		fileProvider:      fileProvider,
+		containerProvider: containerProvider,
+		registryKV:        registryKV,
+		factsKV:           factsKV,
 	}
 
 	// Wire agent facts into all providers so they can access the latest
@@ -91,6 +94,7 @@ func New(
 		netinfoProvider,
 		commandProvider,
 		fileProvider,
+		containerProvider,
 	)
 
 	return a

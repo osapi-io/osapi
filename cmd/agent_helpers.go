@@ -46,7 +46,7 @@ func setupAgent(
 	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
 
 	providerFactory := agent.NewProviderFactory(log)
-	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := providerFactory.CreateProviders()
+	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, containerProvider := providerFactory.CreateProviders()
 
 	// Create file provider if Object Store and file-state KV are configured
 	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
@@ -67,6 +67,7 @@ func setupAgent(
 		netinfoProvider,
 		commandProvider,
 		fileProvider,
+		containerProvider,
 		b.registryKV,
 		b.factsKV,
 	)

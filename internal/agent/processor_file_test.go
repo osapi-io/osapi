@@ -81,6 +81,7 @@ func (s *ProcessorFileTestSuite) newAgentWithFileMock(
 		fileMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 

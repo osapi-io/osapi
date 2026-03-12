@@ -79,6 +79,7 @@ func (s *DrainTestSuite) SetupTest() {
 		netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
+		nil,
 		s.mockKV,
 		nil,
 	)

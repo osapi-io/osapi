@@ -120,6 +120,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		fMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 

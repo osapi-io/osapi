@@ -21,12 +21,35 @@
 package agent
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 
+	"github.com/docker/docker/api/types"
+	dockerclient "github.com/docker/docker/client"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
 )
+
+// testDockerClient is a minimal mock that satisfies dockerclient.APIClient
+// by embedding the interface and overriding only Ping.
+type testDockerClient struct {
+	dockerclient.APIClient
+	pingErr error
+}
+
+func (c *testDockerClient) Ping(
+	_ context.Context,
+) (types.Ping, error) {
+	if c.pingErr != nil {
+		return types.Ping{}, c.pingErr
+	}
+	return types.Ping{}, nil
+}
 
 type FactoryTestSuite struct {
 	suite.Suite
@@ -34,8 +57,10 @@ type FactoryTestSuite struct {
 
 func (s *FactoryTestSuite) TestCreateProviders() {
 	tests := []struct {
-		name      string
-		setupMock func() func() (*host.InfoStat, error)
+		name          string
+		setupMock     func() func() (*host.InfoStat, error)
+		setupDocker   func()
+		wantContainer bool
 	}{
 		{
 			name: "creates ubuntu providers when platform is ubuntu",
@@ -68,17 +93,68 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 				}
 			},
 		},
+		{
+			name: "docker New error disables container provider",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{Platform: "Ubuntu"}, nil
+				}
+			},
+			setupDocker: func() {
+				factoryDockerNewFn = func() (*docker.Driver, error) {
+					return nil, fmt.Errorf("docker not installed")
+				}
+			},
+			wantContainer: false,
+		},
+		{
+			name: "docker Ping error disables container provider",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{Platform: "Ubuntu"}, nil
+				}
+			},
+			setupDocker: func() {
+				factoryDockerNewFn = func() (*docker.Driver, error) {
+					return docker.NewWithClient(&testDockerClient{
+						pingErr: errors.New("connection refused"),
+					}), nil
+				}
+			},
+			wantContainer: false,
+		},
+		{
+			name: "docker available enables container provider",
+			setupMock: func() func() (*host.InfoStat, error) {
+				return func() (*host.InfoStat, error) {
+					return &host.InfoStat{Platform: "Ubuntu"}, nil
+				}
+			},
+			setupDocker: func() {
+				factoryDockerNewFn = func() (*docker.Driver, error) {
+					return docker.NewWithClient(&testDockerClient{}), nil
+				}
+			},
+			wantContainer: true,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			original := factoryHostInfoFn
-			defer func() { factoryHostInfoFn = original }()
+			originalHost := factoryHostInfoFn
+			originalDocker := factoryDockerNewFn
+			defer func() {
+				factoryHostInfoFn = originalHost
+				factoryDockerNewFn = originalDocker
+			}()
 
 			factoryHostInfoFn = tt.setupMock()
+			if tt.setupDocker != nil {
+				tt.setupDocker()
+			}
 
 			factory := NewProviderFactory(slog.Default())
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, containerProvider := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -88,6 +164,10 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			s.NotNil(pingProvider)
 			s.NotNil(netinfoProvider)
 			s.NotNil(commandProvider)
+
+			if tt.wantContainer {
+				s.NotNil(containerProvider)
+			}
 		})
 	}
 }
