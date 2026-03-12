@@ -215,7 +215,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIdValidationHT
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"container removed"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"container removed"`},
 		},
 		{
 			name: "when target agent not found",

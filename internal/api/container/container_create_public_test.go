@@ -275,7 +275,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerValidationHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"agent1"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"agent1"`},
 		},
 		{
 			name: "when missing image",

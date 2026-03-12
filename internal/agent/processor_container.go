@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -40,22 +41,25 @@ func (a *Agent) processContainerOperation(
 
 	ctx := context.Background()
 
-	switch jobRequest.Operation {
-	case job.OperationContainerCreate:
+	// Extract base operation from dotted operation (e.g., "create.execute" -> "create")
+	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
+
+	switch baseOperation {
+	case "create":
 		return a.processContainerCreate(ctx, jobRequest)
-	case job.OperationContainerStart:
+	case "start":
 		return a.processContainerStart(ctx, jobRequest)
-	case job.OperationContainerStop:
+	case "stop":
 		return a.processContainerStop(ctx, jobRequest)
-	case job.OperationContainerRemove:
+	case "remove":
 		return a.processContainerRemove(ctx, jobRequest)
-	case job.OperationContainerList:
+	case "list":
 		return a.processContainerList(ctx, jobRequest)
-	case job.OperationContainerInspect:
+	case "inspect":
 		return a.processContainerInspect(ctx, jobRequest)
-	case job.OperationContainerExec:
+	case "exec":
 		return a.processContainerExec(ctx, jobRequest)
-	case job.OperationContainerPull:
+	case "pull":
 		return a.processContainerPull(ctx, jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported container operation: %s", jobRequest.Operation)

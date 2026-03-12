@@ -193,7 +193,7 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerByIdValidationHTTP
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"results"`, `"abc123"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"abc123"`},
 		},
 		{
 			name: "when target agent not found",

@@ -381,7 +381,7 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: "container.create",
+				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			expectError: true,

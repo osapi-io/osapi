@@ -236,7 +236,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStopValidationHTTP()
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"container stopped"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"container stopped"`},
 		},
 		{
 			name: "when invalid timeout",

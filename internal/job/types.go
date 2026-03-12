@@ -134,14 +134,14 @@ const (
 
 // Container operation types
 const (
-	OperationContainerCreate  = "container.create"
-	OperationContainerStart   = "container.start"
-	OperationContainerStop    = "container.stop"
-	OperationContainerRemove  = "container.remove"
-	OperationContainerList    = "container.list"
-	OperationContainerInspect = "container.inspect"
-	OperationContainerExec    = "container.exec"
-	OperationContainerPull    = "container.pull"
+	OperationContainerCreate  = "container.create.execute"
+	OperationContainerStart   = "container.start.execute"
+	OperationContainerStop    = "container.stop.execute"
+	OperationContainerRemove  = "container.remove.execute"
+	OperationContainerList    = "container.list.get"
+	OperationContainerInspect = "container.inspect.get"
+	OperationContainerExec    = "container.exec.execute"
+	OperationContainerPull    = "container.pull.execute"
 )
 
 // Operation represents an operation in the new hierarchical format

@@ -183,7 +183,7 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerStartValidationHTTP
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"container started"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"container started"`},
 		},
 		{
 			name: "when target agent not found",

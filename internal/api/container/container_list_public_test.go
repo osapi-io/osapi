@@ -306,7 +306,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerValidationHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"results"`},
+			wantContains: []string{`"job_id"`, `"results"`},
 		},
 		{
 			name: "when target agent not found",

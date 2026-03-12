@@ -297,7 +297,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExecValidationHTTP()
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"stdout"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"stdout"`},
 		},
 		{
 			name: "when missing command",

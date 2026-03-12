@@ -43,7 +43,7 @@ func (c *Client) ModifyContainerCreate(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -51,6 +51,8 @@ func (c *Client) ModifyContainerCreate(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -71,7 +73,7 @@ func (c *Client) ModifyContainerStart(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -79,6 +81,8 @@ func (c *Client) ModifyContainerStart(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -107,7 +111,7 @@ func (c *Client) ModifyContainerStop(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -115,6 +119,8 @@ func (c *Client) ModifyContainerStop(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -143,7 +149,7 @@ func (c *Client) ModifyContainerRemove(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -151,6 +157,8 @@ func (c *Client) ModifyContainerRemove(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -170,7 +178,7 @@ func (c *Client) QueryContainerList(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -178,6 +186,8 @@ func (c *Client) QueryContainerList(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -198,7 +208,7 @@ func (c *Client) QueryContainerInspect(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -206,6 +216,8 @@ func (c *Client) QueryContainerInspect(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -238,7 +250,7 @@ func (c *Client) ModifyContainerExec(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -246,6 +258,8 @@ func (c *Client) ModifyContainerExec(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }
@@ -265,7 +279,7 @@ func (c *Client) ModifyContainerPull(
 	}
 
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
-	_, resp, err := c.publishAndWait(ctx, subject, req)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
@@ -273,6 +287,8 @@ func (c *Client) ModifyContainerPull(
 	if resp.Status == "failed" {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
+
+	resp.JobID = jobID
 
 	return resp, nil
 }

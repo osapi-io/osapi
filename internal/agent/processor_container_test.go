@@ -102,7 +102,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerCreate,
+				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			setupMock:   nil,
@@ -114,7 +114,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerCreate,
+				Operation: "create.execute",
 				Data: json.RawMessage(
 					`{"image":"nginx:latest","name":"web","auto_start":true}`,
 				),
@@ -146,7 +146,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerCreate,
+				Operation: "create.execute",
 				Data: json.RawMessage(
 					`{"image":"nginx:latest","name":"web","ports":[{"host":8080,"container":80}],"volumes":[{"host":"/data","container":"/var/data"}]}`,
 				),
@@ -182,7 +182,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: "container.unknown",
+				Operation: "unknown.get",
 				Data:      json.RawMessage(`{}`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -194,7 +194,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerCreate,
+				Operation: "create.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -206,7 +206,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerCreate,
+				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -223,7 +223,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStart,
+				Operation: "start.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -243,7 +243,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStart,
+				Operation: "start.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -255,7 +255,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStart,
+				Operation: "start.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -272,7 +272,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStop,
+				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123","timeout":10}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -292,7 +292,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStop,
+				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -312,7 +312,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStop,
+				Operation: "stop.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -324,7 +324,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerStop,
+				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123","timeout":10}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -341,7 +341,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerRemove,
+				Operation: "remove.execute",
 				Data:      json.RawMessage(`{"id":"abc123","force":true}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -361,7 +361,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerRemove,
+				Operation: "remove.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -373,7 +373,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerRemove,
+				Operation: "remove.execute",
 				Data:      json.RawMessage(`{"id":"abc123","force":false}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -390,7 +390,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerList,
+				Operation: "list.get",
 				Data:      json.RawMessage(`{"state":"running","limit":10}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -416,7 +416,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerList,
+				Operation: "list.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -428,7 +428,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerList,
+				Operation: "list.get",
 				Data:      json.RawMessage(`{"state":"all"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -445,7 +445,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerInspect,
+				Operation: "inspect.get",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -467,7 +467,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerInspect,
+				Operation: "inspect.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -479,7 +479,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerInspect,
+				Operation: "inspect.get",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -496,7 +496,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerExec,
+				Operation: "exec.execute",
 				Data:      json.RawMessage(`{"id":"abc123","command":["ls","-la"]}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -522,7 +522,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerExec,
+				Operation: "exec.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -534,7 +534,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerExec,
+				Operation: "exec.execute",
 				Data:      json.RawMessage(`{"id":"abc123","command":["ls"]}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -551,7 +551,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerPull,
+				Operation: "pull.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
@@ -573,7 +573,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerPull,
+				Operation: "pull.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock:   func(_ *containerMocks.MockProvider) {},
@@ -585,7 +585,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "container",
-				Operation: job.OperationContainerPull,
+				Operation: "pull.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			setupMock: func(m *containerMocks.MockProvider) {
