@@ -103,9 +103,9 @@ authentication settings.
 | `POST /node/{hostname}/container/docker/{id}/exec`  | `docker:execute` |
 | `POST /node/{hostname}/container/docker/pull`       | `docker:write`   |
 
-The `admin` role includes `docker:read`, `docker:write`, and `docker:execute`.
-The `write` role includes `docker:read` and `docker:write`. The `read` role
-includes only `docker:read`.
+The `admin` role includes `docker:read`, `docker:write`, and
+`docker:execute`. The `write` role includes `docker:read` and
+`docker:write`. The `read` role includes only `docker:read`.
 
 Container exec is a privileged operation similar to command execution. Only the
 `admin` role includes `docker:execute` by default. Grant it to other roles or
@@ -142,7 +142,7 @@ plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue)
 
 pull := plan.TaskFunc("pull-image",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
+        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
             Image: "nginx:alpine",
         })
         if err != nil {
@@ -155,7 +155,7 @@ pull := plan.TaskFunc("pull-image",
 create := plan.TaskFunc("create-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         autoStart := true
-        _, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+        _, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
             Image:     "nginx:alpine",
             Name:      ptr("web-server"),
             AutoStart: &autoStart,
@@ -170,8 +170,8 @@ create.DependsOn(pull)
 
 exec := plan.TaskFunc("check-config",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Exec(ctx, "_any", "web-server",
-            gen.ContainerExecRequest{Command: []string{"nginx", "-t"}})
+        _, err := c.Docker.Exec(ctx, "_any", "web-server",
+            gen.DockerExecRequest{Command: []string{"nginx", "-t"}})
         if err != nil {
             return nil, err
         }
