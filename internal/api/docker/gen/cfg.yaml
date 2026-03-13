@@ -20,7 +20,7 @@
 
 ---
 package: gen
-output: container.gen.go
+output: docker.gen.go
 generate:
   models: true
   echo-server: true

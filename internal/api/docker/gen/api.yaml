@@ -21,34 +21,34 @@
 ---
 openapi: 3.0.0
 info:
-  title: Container Management API
+  title: Docker Management API
   version: 1.0.0
 tags:
-  - name: container_operations
-    x-displayName: Node/Container
-    description: Container lifecycle operations on a target node.
-  - name: container_exec
-    x-displayName: Node/Container/Exec
+  - name: docker_operations
+    x-displayName: Node/Docker
+    description: Docker lifecycle operations on a target node.
+  - name: docker_exec
+    x-displayName: Node/Docker/Exec
     description: Command execution inside containers on a target node.
-  - name: container_image
-    x-displayName: Node/Container/Image
-    description: Container image operations on a target node.
+  - name: docker_image
+    x-displayName: Node/Docker/Image
+    description: Docker image operations on a target node.
 
 paths:
-  # ── Container lifecycle ─────────────────────────────────────
+  # ── Docker lifecycle ──────────────────────────────────────
 
-  /node/{hostname}/container:
+  /node/{hostname}/container/docker:
     post:
       summary: Create a container
       description: >
         Create a new container on the target node. Returns a job ID
         for tracking the asynchronous operation.
       tags:
-        - container_operations
-      operationId: PostNodeContainer
+        - docker_operations
+      operationId: PostNodeContainerDocker
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
@@ -57,14 +57,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerCreateRequest'
+              $ref: '#/components/schemas/DockerCreateRequest'
       responses:
         '202':
           description: Container creation accepted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResultCollectionResponse'
+                $ref: '#/components/schemas/DockerResultCollectionResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -95,11 +95,11 @@ paths:
       description: >
         List containers on the target node, optionally filtered by state.
       tags:
-        - container_operations
-      operationId: GetNodeContainer
+        - docker_operations
+      operationId: GetNodeContainerDocker
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - name: state
@@ -134,7 +134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerListCollectionResponse'
+                $ref: '#/components/schemas/DockerListCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -160,27 +160,27 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/{id}:
+  /node/{hostname}/container/docker/{id}:
     get:
       summary: Inspect a container
       description: >
         Get detailed information about a specific container.
       tags:
-        - container_operations
-      operationId: GetNodeContainerByID
+        - docker_operations
+      operationId: GetNodeContainerDockerByID
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/ContainerId'
+        - $ref: '#/components/parameters/DockerId'
       responses:
         '200':
           description: Container detail.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerDetailCollectionResponse'
+                $ref: '#/components/schemas/DockerDetailCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -218,14 +218,14 @@ paths:
         Remove a container from the target node. Use the force query
         parameter to remove a running container.
       tags:
-        - container_operations
-      operationId: DeleteNodeContainerByID
+        - docker_operations
+      operationId: DeleteNodeContainerDockerByID
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/ContainerId'
+        - $ref: '#/components/parameters/DockerId'
         - name: force
           in: query
           required: false
@@ -242,7 +242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerActionCollectionResponse'
+                $ref: '#/components/schemas/DockerActionCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -274,27 +274,27 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/{id}/start:
+  /node/{hostname}/container/docker/{id}/start:
     post:
       summary: Start a container
       description: >
         Start a stopped container on the target node.
       tags:
-        - container_operations
-      operationId: PostNodeContainerStart
+        - docker_operations
+      operationId: PostNodeContainerDockerStart
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/ContainerId'
+        - $ref: '#/components/parameters/DockerId'
       responses:
         '202':
           description: Container start accepted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerActionCollectionResponse'
+                $ref: '#/components/schemas/DockerActionCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -326,35 +326,35 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  /node/{hostname}/container/{id}/stop:
+  /node/{hostname}/container/docker/{id}/stop:
     post:
       summary: Stop a container
       description: >
         Stop a running container on the target node. Optionally
         specify a timeout before the container is killed.
       tags:
-        - container_operations
-      operationId: PostNodeContainerStop
+        - docker_operations
+      operationId: PostNodeContainerDockerStop
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/ContainerId'
+        - $ref: '#/components/parameters/DockerId'
       requestBody:
         description: Optional stop parameters.
         required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerStopRequest'
+              $ref: '#/components/schemas/DockerStopRequest'
       responses:
         '202':
           description: Container stop accepted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerActionCollectionResponse'
+                $ref: '#/components/schemas/DockerActionCollectionResponse'
         '400':
           description: Invalid request parameters.
           content:
@@ -386,36 +386,36 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  # ── Container exec ──────────────────────────────────────────
+  # ── Docker exec ────────────────────────────────────────────
 
-  /node/{hostname}/container/{id}/exec:
+  /node/{hostname}/container/docker/{id}/exec:
     post:
       summary: Execute a command in a container
       description: >
         Execute a command inside a running container on the target node.
       tags:
-        - container_exec
-      operationId: PostNodeContainerExec
+        - docker_exec
+      operationId: PostNodeContainerDockerExec
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/ContainerId'
+        - $ref: '#/components/parameters/DockerId'
       requestBody:
         description: The command to execute inside the container.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerExecRequest'
+              $ref: '#/components/schemas/DockerExecRequest'
       responses:
         '202':
           description: Container exec accepted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerExecCollectionResponse'
+                $ref: '#/components/schemas/DockerExecCollectionResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -447,19 +447,19 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
-  # ── Container image ─────────────────────────────────────────
+  # ── Docker image ───────────────────────────────────────────
 
-  /node/{hostname}/container/pull:
+  /node/{hostname}/container/docker/pull:
     post:
       summary: Pull a container image
       description: >
         Pull a container image on the target node.
       tags:
-        - container_image
-      operationId: PostNodeContainerPull
+        - docker_image
+      operationId: PostNodeContainerDockerPull
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
@@ -468,14 +468,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerPullRequest'
+              $ref: '#/components/schemas/DockerPullRequest'
       responses:
         '202':
           description: Image pull accepted.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerPullCollectionResponse'
+                $ref: '#/components/schemas/DockerPullCollectionResponse'
         '400':
           description: Invalid request payload.
           content:
@@ -521,7 +521,7 @@ components:
         type: string
         minLength: 1
 
-    ContainerId:
+    DockerId:
       name: id
       in: path
       required: true
@@ -551,7 +551,7 @@ components:
 
     # ── Request schemas ───────────────────────────────────────
 
-    ContainerCreateRequest:
+    DockerCreateRequest:
       type: object
       properties:
         image:
@@ -599,7 +599,7 @@ components:
       required:
         - image
 
-    ContainerStopRequest:
+    DockerStopRequest:
       type: object
       properties:
         timeout:
@@ -613,7 +613,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=0,max=300
 
-    ContainerExecRequest:
+    DockerExecRequest:
       type: object
       properties:
         command:
@@ -636,7 +636,7 @@ components:
       required:
         - command
 
-    ContainerPullRequest:
+    DockerPullRequest:
       type: object
       properties:
         image:
@@ -652,7 +652,7 @@ components:
 
     # ── Response schemas ──────────────────────────────────────
 
-    ContainerResponse:
+    DockerResponse:
       type: object
       description: Summary information about a container.
       properties:
@@ -688,7 +688,7 @@ components:
       required:
         - hostname
 
-    ContainerDetailResponse:
+    DockerDetailResponse:
       type: object
       description: Detailed information about a container.
       properties:
@@ -750,7 +750,7 @@ components:
       required:
         - hostname
 
-    ContainerActionResultItem:
+    DockerActionResultItem:
       type: object
       description: Result of a container lifecycle action.
       properties:
@@ -773,7 +773,7 @@ components:
       required:
         - hostname
 
-    ContainerExecResultItem:
+    DockerExecResultItem:
       type: object
       description: Result of a command execution inside a container.
       properties:
@@ -798,7 +798,7 @@ components:
       required:
         - hostname
 
-    ContainerPullResultItem:
+    DockerPullResultItem:
       type: object
       description: Result of an image pull operation.
       properties:
@@ -826,7 +826,7 @@ components:
       required:
         - hostname
 
-    ContainerListItem:
+    DockerListItem:
       type: object
       description: Container summary for list operations.
       properties:
@@ -837,7 +837,7 @@ components:
           type: array
           description: List of containers on this agent.
           items:
-            $ref: '#/components/schemas/ContainerSummary'
+            $ref: '#/components/schemas/DockerSummary'
         changed:
           type: boolean
           description: Whether the operation modified system state.
@@ -847,7 +847,7 @@ components:
       required:
         - hostname
 
-    ContainerSummary:
+    DockerSummary:
       type: object
       description: Brief container summary.
       properties:
@@ -874,7 +874,7 @@ components:
 
     # ── Collection responses ──────────────────────────────────
 
-    ContainerResultCollectionResponse:
+    DockerResultCollectionResponse:
       type: object
       properties:
         job_id:
@@ -885,11 +885,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerResponse'
+            $ref: '#/components/schemas/DockerResponse'
       required:
         - results
 
-    ContainerListCollectionResponse:
+    DockerListCollectionResponse:
       type: object
       properties:
         job_id:
@@ -900,11 +900,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerListItem'
+            $ref: '#/components/schemas/DockerListItem'
       required:
         - results
 
-    ContainerDetailCollectionResponse:
+    DockerDetailCollectionResponse:
       type: object
       properties:
         job_id:
@@ -915,11 +915,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerDetailResponse'
+            $ref: '#/components/schemas/DockerDetailResponse'
       required:
         - results
 
-    ContainerActionCollectionResponse:
+    DockerActionCollectionResponse:
       type: object
       properties:
         job_id:
@@ -930,11 +930,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerActionResultItem'
+            $ref: '#/components/schemas/DockerActionResultItem'
       required:
         - results
 
-    ContainerExecCollectionResponse:
+    DockerExecCollectionResponse:
       type: object
       properties:
         job_id:
@@ -945,11 +945,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerExecResultItem'
+            $ref: '#/components/schemas/DockerExecResultItem'
       required:
         - results
 
-    ContainerPullCollectionResponse:
+    DockerPullCollectionResponse:
       type: object
       properties:
         job_id:
@@ -960,6 +960,6 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/ContainerPullResultItem'
+            $ref: '#/components/schemas/DockerPullResultItem'
       required:
         - results
