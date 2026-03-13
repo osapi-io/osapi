@@ -18,9 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates orchestrating container lifecycle operations
-// through the standard OSAPI SDK client. The plan composes pull, create,
-// exec, inspect, and cleanup as a DAG of TaskFunc steps.
+// Package main demonstrates orchestrating Docker container lifecycle
+// operations using the DSL helpers. The plan composes pull, create,
+// exec, inspect, and cleanup as a DAG.
 //
 // Expected output statuses:
 //
@@ -96,226 +96,63 @@ func main() {
 
 	// ── Pull image ───────────────────────────────────────────────
 
-	pull := plan.TaskFunc(
-		"pull-image",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
-				Image: containerImage,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("pull: %w", err)
-			}
-
-			r := resp.Data.Results[0]
-
-			return &orchestrator.Result{
-				Changed: true,
-				Data:    map[string]any{"image_id": r.ImageID},
-			}, nil
-		},
-	)
+	pull := plan.DockerPull("pull-image", target, containerImage)
 
 	// ── Create container ─────────────────────────────────────────
 
 	autoStart := true
-	create := plan.TaskFunc(
-		"create-container",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
-				Image:     containerImage,
-				Name:      ptr(containerName),
-				AutoStart: &autoStart,
-				Command:   &[]string{"sleep", "600"},
-			})
-			if err != nil {
-				return nil, fmt.Errorf("create: %w", err)
-			}
-
-			r := resp.Data.Results[0]
-
-			return &orchestrator.Result{
-				Changed: true,
-				Data:    map[string]any{"id": r.ID, "name": r.Name},
-			}, nil
+	create := plan.DockerCreate("create-container", target,
+		gen.DockerCreateRequest{
+			Image:     containerImage,
+			Name:      ptr(containerName),
+			AutoStart: &autoStart,
+			Command:   &[]string{"sleep", "600"},
 		},
 	)
 	create.DependsOn(pull)
 
 	// ── Exec: run commands inside the container ──────────────────
 
-	execHostname := plan.TaskFunc(
-		"exec-hostname",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Exec(
-				ctx,
-				target,
-				containerName,
-				gen.DockerExecRequest{
-					Command: []string{"hostname"},
-				},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("exec: %w", err)
-			}
+	plan.DockerExec("exec-hostname", target, containerName,
+		gen.DockerExecRequest{Command: []string{"hostname"}},
+	).DependsOn(create)
 
-			r := resp.Data.Results[0]
-			fmt.Printf("    hostname = %s", r.Stdout)
+	plan.DockerExec("exec-uname", target, containerName,
+		gen.DockerExecRequest{Command: []string{"uname", "-a"}},
+	).DependsOn(create)
 
-			return &orchestrator.Result{
-				Changed: true,
-				Data: map[string]any{
-					"stdout":    r.Stdout,
-					"exit_code": r.ExitCode,
-				},
-			}, nil
+	plan.DockerExec("exec-os-release", target, containerName,
+		gen.DockerExecRequest{
+			Command: []string{"sh", "-c", "head -2 /etc/os-release"},
 		},
-	)
-	execHostname.DependsOn(create)
-
-	execUname := plan.TaskFunc(
-		"exec-uname",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Exec(
-				ctx,
-				target,
-				containerName,
-				gen.DockerExecRequest{
-					Command: []string{"uname", "-a"},
-				},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("exec: %w", err)
-			}
-
-			r := resp.Data.Results[0]
-			fmt.Printf("    uname -a = %s", r.Stdout)
-
-			return &orchestrator.Result{
-				Changed: true,
-				Data:    map[string]any{"exit_code": r.ExitCode},
-			}, nil
-		},
-	)
-	execUname.DependsOn(create)
-
-	execOSRelease := plan.TaskFunc(
-		"exec-os-release",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Exec(
-				ctx,
-				target,
-				containerName,
-				gen.DockerExecRequest{
-					Command: []string{"sh", "-c", "head -2 /etc/os-release"},
-				},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("exec: %w", err)
-			}
-
-			r := resp.Data.Results[0]
-			fmt.Printf("    os-release =\n%s", r.Stdout)
-
-			return &orchestrator.Result{
-				Changed: true,
-				Data:    map[string]any{"exit_code": r.ExitCode},
-			}, nil
-		},
-	)
-	execOSRelease.DependsOn(create)
+	).DependsOn(create)
 
 	// ── Inspect: read-only, reports unchanged ────────────────────
 
-	inspect := plan.TaskFunc(
-		"inspect-container",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Inspect(ctx, target, containerName)
-			if err != nil {
-				return nil, fmt.Errorf("inspect: %w", err)
-			}
-
-			r := resp.Data.Results[0]
-			fmt.Printf("    state = %s  image = %s\n", r.State, r.Image)
-
-			return &orchestrator.Result{
-				Data: map[string]any{
-					"state": r.State,
-					"image": r.Image,
-				},
-			}, nil
-		},
-	)
-	inspect.DependsOn(create)
+	plan.DockerInspect("inspect-container", target, containerName).
+		DependsOn(create)
 
 	// ── Deliberately failing task: shows StatusFailed ─────────────
-	//
-	// Returning an error from the task function marks it as failed.
-	// With OnError(Continue), independent tasks keep running but
-	// any task that DependsOn this one would be skipped.
 
-	deliberatelyFails := plan.TaskFunc(
-		"deliberately-fails",
+	plan.TaskFunc("deliberately-fails",
 		func(
 			_ context.Context,
 			_ *client.Client,
 		) (*orchestrator.Result, error) {
 			return nil, fmt.Errorf("this task always fails to demonstrate error reporting")
 		},
-	)
-	deliberatelyFails.DependsOn(create)
+	).DependsOn(create)
 
 	// ── Cleanup ──────────────────────────────────────────────────
-	//
-	// Depends on all operational tasks EXCEPT deliberately-fails so
-	// cleanup is not skipped when OnError(Continue) is active.
 
-	cleanup := plan.TaskFunc(
-		"cleanup",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			force := true
-			_, err := c.Docker.Remove(
-				ctx,
-				target,
-				containerName,
-				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("remove: %w", err)
-			}
-
-			return &orchestrator.Result{Changed: true}, nil
-		},
-	)
-	cleanup.DependsOn(execHostname, execUname, execOSRelease, inspect)
-
-	// Suppress unused variable warning — deliberately-fails has no
-	// dependents by design.
-	_ = deliberatelyFails
+	force := true
+	plan.DockerRemove("cleanup", target, containerName,
+		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+	).DependsOn(create)
 
 	// ── Run ──────────────────────────────────────────────────────
 
-	fmt.Println("=== Container Orchestration Example ===")
+	fmt.Println("=== Docker Orchestration Example ===")
 	fmt.Println()
 
 	report, err := plan.Run(context.Background())
