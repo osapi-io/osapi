@@ -37,9 +37,9 @@ const (
 	PermCommandExecute   Permission = "command:execute"
 	PermFileRead         Permission = "file:read"
 	PermFileWrite        Permission = "file:write"
-	PermContainerRead    Permission = "container:read"
-	PermContainerWrite   Permission = "container:write"
-	PermContainerExecute Permission = "container:execute"
+	PermDockerRead       Permission = "docker:read"
+	PermDockerWrite      Permission = "docker:write"
+	PermDockerExecute    Permission = "docker:execute"
 )
 
 // AllPermissions is the full set of known permissions.
@@ -56,9 +56,9 @@ var AllPermissions = []Permission{
 	PermCommandExecute,
 	PermFileRead,
 	PermFileWrite,
-	PermContainerRead,
-	PermContainerWrite,
-	PermContainerExecute,
+	PermDockerRead,
+	PermDockerWrite,
+	PermDockerExecute,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -76,9 +76,9 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermCommandExecute,
 		PermFileRead,
 		PermFileWrite,
-		PermContainerRead,
-		PermContainerWrite,
-		PermContainerExecute,
+		PermDockerRead,
+		PermDockerWrite,
+		PermDockerExecute,
 	},
 	"write": {
 		PermAgentRead,
@@ -90,8 +90,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermHealthRead,
 		PermFileRead,
 		PermFileWrite,
-		PermContainerRead,
-		PermContainerWrite,
+		PermDockerRead,
+		PermDockerWrite,
 	},
 	"read": {
 		PermAgentRead,
@@ -100,7 +100,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermJobRead,
 		PermHealthRead,
 		PermFileRead,
-		PermContainerRead,
+		PermDockerRead,
 	},
 }
 

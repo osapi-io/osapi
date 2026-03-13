@@ -448,7 +448,7 @@ paths:
       operationId: PostNodeContainer
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
@@ -498,7 +498,7 @@ paths:
       operationId: GetNodeContainer
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - name: state
@@ -569,7 +569,7 @@ paths:
       operationId: GetNodeContainerByID
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/ContainerId'
@@ -620,7 +620,7 @@ paths:
       operationId: DeleteNodeContainerByID
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/ContainerId'
@@ -682,7 +682,7 @@ paths:
       operationId: PostNodeContainerStart
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/ContainerId'
@@ -735,7 +735,7 @@ paths:
       operationId: PostNodeContainerStop
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/ContainerId'
@@ -794,7 +794,7 @@ paths:
       operationId: PostNodeContainerExec
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - $ref: '#/components/parameters/ContainerId'
@@ -853,7 +853,7 @@ paths:
       operationId: PostNodeContainerPull
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
