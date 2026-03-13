@@ -678,7 +678,7 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			d := dockerprov.NewWithClient(tt.mockClient)
-			err := d.Start(s.ctx, tt.containerID)
+			_, err := d.Start(s.ctx, tt.containerID)
 			tt.validateFunc(err)
 		})
 	}
@@ -760,7 +760,7 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			d := dockerprov.NewWithClient(tt.mockClient)
-			err := d.Stop(s.ctx, tt.containerID, tt.timeout)
+			_, err := d.Stop(s.ctx, tt.containerID, tt.timeout)
 			tt.validateFunc(err)
 		})
 	}
@@ -818,7 +818,7 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			d := dockerprov.NewWithClient(tt.mockClient)
-			err := d.Remove(s.ctx, tt.containerID, tt.force)
+			_, err := d.Remove(s.ctx, tt.containerID, tt.force)
 			tt.validateFunc(err)
 		})
 	}

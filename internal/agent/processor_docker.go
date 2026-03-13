@@ -115,13 +115,11 @@ func (a *Agent) processDockerStart(
 		return nil, fmt.Errorf("unmarshal start data: %w", err)
 	}
 
-	if err := a.dockerProvider.Start(ctx, data.ID); err != nil {
+	result, err := a.dockerProvider.Start(ctx, data.ID)
+	if err != nil {
 		return nil, err
 	}
 
-	result := map[string]interface{}{
-		"message": "Container started successfully",
-	}
 	return json.Marshal(result)
 }
 
@@ -144,13 +142,11 @@ func (a *Agent) processDockerStop(
 		timeout = &d
 	}
 
-	if err := a.dockerProvider.Stop(ctx, data.ID, timeout); err != nil {
+	result, err := a.dockerProvider.Stop(ctx, data.ID, timeout)
+	if err != nil {
 		return nil, err
 	}
 
-	result := map[string]interface{}{
-		"message": "Container stopped successfully",
-	}
 	return json.Marshal(result)
 }
 
@@ -167,13 +163,11 @@ func (a *Agent) processDockerRemove(
 		return nil, fmt.Errorf("unmarshal remove data: %w", err)
 	}
 
-	if err := a.dockerProvider.Remove(ctx, data.ID, data.Force); err != nil {
+	result, err := a.dockerProvider.Remove(ctx, data.ID, data.Force)
+	if err != nil {
 		return nil, err
 	}
 
-	result := map[string]interface{}{
-		"message": "Container removed successfully",
-	}
 	return json.Marshal(result)
 }
 

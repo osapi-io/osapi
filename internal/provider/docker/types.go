@@ -22,19 +22,19 @@ type Provider interface {
 	Start(
 		ctx context.Context,
 		id string,
-	) error
+	) (*ActionResult, error)
 
 	Stop(
 		ctx context.Context,
 		id string,
 		timeout *time.Duration,
-	) error
+	) (*ActionResult, error)
 
 	Remove(
 		ctx context.Context,
 		id string,
 		force bool,
-	) error
+	) (*ActionResult, error)
 
 	List(
 		ctx context.Context,
@@ -103,6 +103,13 @@ type Container struct {
 	Image   string    `json:"image"`
 	State   string    `json:"state"`
 	Created time.Time `json:"created"`
+	Changed bool      `json:"changed"`
+}
+
+// ActionResult holds the result of a lifecycle action (start, stop, remove).
+type ActionResult struct {
+	Message string `json:"message"`
+	Changed bool   `json:"changed"`
 }
 
 // ContainerDetail holds detailed info for a container.
@@ -135,6 +142,7 @@ type ExecResult struct {
 	Stdout   string `json:"stdout"`
 	Stderr   string `json:"stderr"`
 	ExitCode int    `json:"exit_code"`
+	Changed  bool   `json:"changed"`
 }
 
 // PullResult contains the result of an image pull.
@@ -142,4 +150,5 @@ type PullResult struct {
 	ImageID string `json:"image_id"`
 	Tag     string `json:"tag"`
 	Size    int64  `json:"size"`
+	Changed bool   `json:"changed"`
 }

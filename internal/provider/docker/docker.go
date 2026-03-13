@@ -129,7 +129,7 @@ func (d *Client) Create(
 
 	// Start the container if AutoStart is enabled
 	if params.AutoStart {
-		if err := d.Start(ctx, resp.ID); err != nil {
+		if _, err := d.Start(ctx, resp.ID); err != nil {
 			return nil, fmt.Errorf("auto-start container: %w", err)
 		}
 	}
@@ -141,6 +141,7 @@ func (d *Client) Create(
 		Image:   params.Image,
 		State:   "created",
 		Created: time.Now(),
+		Changed: true,
 	}, nil
 }
 
@@ -148,12 +149,15 @@ func (d *Client) Create(
 func (d *Client) Start(
 	ctx context.Context,
 	id string,
-) error {
+) (*ActionResult, error) {
 	if err := d.client.ContainerStart(ctx, id, container.StartOptions{}); err != nil {
-		return fmt.Errorf("start container: %w", err)
+		return nil, fmt.Errorf("start container: %w", err)
 	}
 
-	return nil
+	return &ActionResult{
+		Message: "Container started successfully",
+		Changed: true,
+	}, nil
 }
 
 // Stop stops a running container with an optional timeout.
@@ -161,7 +165,7 @@ func (d *Client) Stop(
 	ctx context.Context,
 	id string,
 	timeout *time.Duration,
-) error {
+) (*ActionResult, error) {
 	opts := container.StopOptions{}
 	if timeout != nil {
 		seconds := int(timeout.Seconds())
@@ -169,10 +173,13 @@ func (d *Client) Stop(
 	}
 
 	if err := d.client.ContainerStop(ctx, id, opts); err != nil {
-		return fmt.Errorf("stop container: %w", err)
+		return nil, fmt.Errorf("stop container: %w", err)
 	}
 
-	return nil
+	return &ActionResult{
+		Message: "Container stopped successfully",
+		Changed: true,
+	}, nil
 }
 
 // Remove removes a container.
@@ -180,16 +187,19 @@ func (d *Client) Remove(
 	ctx context.Context,
 	id string,
 	force bool,
-) error {
+) (*ActionResult, error) {
 	opts := container.RemoveOptions{
 		Force: force,
 	}
 
 	if err := d.client.ContainerRemove(ctx, id, opts); err != nil {
-		return fmt.Errorf("remove container: %w", err)
+		return nil, fmt.Errorf("remove container: %w", err)
 	}
 
-	return nil
+	return &ActionResult{
+		Message: "Container removed successfully",
+		Changed: true,
+	}, nil
 }
 
 // List returns a list of containers matching the given parameters.
@@ -377,6 +387,7 @@ func (d *Client) Exec(
 		Stdout:   stdout.String(),
 		Stderr:   stderr.String(),
 		ExitCode: inspectResp.ExitCode,
+		Changed:  true,
 	}, nil
 }
 
@@ -424,6 +435,7 @@ func (d *Client) Pull(
 		ImageID: inspectResp.ID,
 		Tag:     tag,
 		Size:    inspectResp.Size,
+		Changed: true,
 	}
 
 	// Extract digest from last event if available

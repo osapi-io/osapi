@@ -126,18 +126,20 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 						AutoStart: true,
 					}).
 					Return(&dockerProv.Container{
-						ID:    "abc123",
-						Name:  "web",
-						Image: "nginx:latest",
-						State: "created",
+						ID:      "abc123",
+						Name:    "web",
+						Image:   "nginx:latest",
+						State:   "created",
+						Changed: true,
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r dockerProv.Container
+				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("abc123", r.ID)
-				s.Equal("web", r.Name)
+				s.Equal("abc123", r["id"])
+				s.Equal("web", r["name"])
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -163,17 +165,19 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 						},
 					}).
 					Return(&dockerProv.Container{
-						ID:    "def456",
-						Name:  "web",
-						Image: "nginx:latest",
-						State: "created",
+						ID:      "def456",
+						Name:    "web",
+						Image:   "nginx:latest",
+						State:   "created",
+						Changed: true,
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r dockerProv.Container
+				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("def456", r.ID)
+				s.Equal("def456", r["id"])
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -228,13 +232,17 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Start(gomock.Any(), "abc123").
-					Return(nil)
+					Return(&dockerProv.ActionResult{
+						Message: "Container started successfully",
+						Changed: true,
+					}, nil)
 			},
 			validate: func(result json.RawMessage) {
 				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Contains(r, "message")
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -260,7 +268,7 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Start(gomock.Any(), "abc123").
-					Return(errors.New("start failed"))
+					Return(nil, errors.New("start failed"))
 			},
 			expectError: true,
 			errorMsg:    "start failed",
@@ -277,13 +285,17 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", gomock.Any()).
-					Return(nil)
+					Return(&dockerProv.ActionResult{
+						Message: "Container stopped successfully",
+						Changed: true,
+					}, nil)
 			},
 			validate: func(result json.RawMessage) {
 				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Contains(r, "message")
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -297,13 +309,17 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", (*time.Duration)(nil)).
-					Return(nil)
+					Return(&dockerProv.ActionResult{
+						Message: "Container stopped successfully",
+						Changed: true,
+					}, nil)
 			},
 			validate: func(result json.RawMessage) {
 				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Contains(r, "message")
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -329,7 +345,7 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", gomock.Any()).
-					Return(errors.New("stop failed"))
+					Return(nil, errors.New("stop failed"))
 			},
 			expectError: true,
 			errorMsg:    "stop failed",
@@ -346,13 +362,17 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Remove(gomock.Any(), "abc123", true).
-					Return(nil)
+					Return(&dockerProv.ActionResult{
+						Message: "Container removed successfully",
+						Changed: true,
+					}, nil)
 			},
 			validate: func(result json.RawMessage) {
 				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Contains(r, "message")
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -378,7 +398,7 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Remove(gomock.Any(), "abc123", false).
-					Return(errors.New("remove failed"))
+					Return(nil, errors.New("remove failed"))
 			},
 			expectError: true,
 			errorMsg:    "remove failed",
@@ -506,14 +526,16 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 					Return(&dockerProv.ExecResult{
 						Stdout:   "output",
 						ExitCode: 0,
+						Changed:  true,
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r dockerProv.ExecResult
+				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("output", r.Stdout)
-				s.Equal(0, r.ExitCode)
+				s.Equal("output", r["stdout"])
+				s.Equal(float64(0), r["exit_code"])
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
@@ -558,13 +580,15 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 					Pull(gomock.Any(), "nginx:latest").
 					Return(&dockerProv.PullResult{
 						ImageID: "sha256:abc",
+						Changed: true,
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r dockerProv.PullResult
+				var r map[string]interface{}
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
-				s.Equal("sha256:abc", r.ImageID)
+				s.Equal("sha256:abc", r["image_id"])
+				s.Equal(true, r["changed"])
 			},
 		},
 		{
