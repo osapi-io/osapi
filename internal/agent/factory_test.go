@@ -117,7 +117,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			},
 			setupDocker: func() {
 				factoryDockerNewFn = func() (*dockerProv.Client, error) {
-					return dockerProv.NewWithClient(&testDockerClient{
+					return dockerProv.NewDriverWithClient(&testDockerClient{
 						pingErr: errors.New("connection refused"),
 					}), nil
 				}
@@ -133,7 +133,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			},
 			setupDocker: func() {
 				factoryDockerNewFn = func() (*dockerProv.Client, error) {
-					return dockerProv.NewWithClient(&testDockerClient{}), nil
+					return dockerProv.NewDriverWithClient(&testDockerClient{}), nil
 				}
 			},
 			wantContainer: true,

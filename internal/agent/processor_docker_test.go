@@ -126,15 +126,14 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 						AutoStart: true,
 					}).
 					Return(&dockerProv.Container{
-						ID:      "abc123",
-						Name:    "web",
-						Image:   "nginx:latest",
-						State:   "created",
-						Changed: true,
+						ID:    "abc123",
+						Name:  "web",
+						Image: "nginx:latest",
+						State: "created",
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r map[string]interface{}
+				var r dockerProv.Container
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("abc123", r["id"])
@@ -165,15 +164,14 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 						},
 					}).
 					Return(&dockerProv.Container{
-						ID:      "def456",
-						Name:    "web",
-						Image:   "nginx:latest",
-						State:   "created",
-						Changed: true,
+						ID:    "def456",
+						Name:  "web",
+						Image: "nginx:latest",
+						State: "created",
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r map[string]interface{}
+				var r dockerProv.Container
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("def456", r["id"])
@@ -530,7 +528,7 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r map[string]interface{}
+				var r dockerProv.ExecResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("output", r["stdout"])
@@ -584,7 +582,7 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r map[string]interface{}
+				var r dockerProv.PullResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("sha256:abc", r["image_id"])

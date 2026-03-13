@@ -102,9 +102,12 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			_, _ = c.Docker.Remove(ctx, target, containerName,
-				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
-			)
+			resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
+				Image: containerImage,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("pull: %w", err)
+			}
 
 			return &orchestrator.Result{Changed: false}, nil
 		},
@@ -119,7 +122,7 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Create(ctx, target, gen.ContainerCreateRequest{
+			resp, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
 				Image:     containerImage,
 				Name:      ptr(containerName),
 				AutoStart: &autoStart,
@@ -147,11 +150,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"hostname"},
 				},
 			)
@@ -179,11 +182,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"uname", "-a"},
 				},
 			)
@@ -208,11 +211,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"sh", "-c", "head -2 /etc/os-release"},
 				},
 			)
@@ -239,7 +242,7 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Inspect(ctx, target, containerName)
+			resp, err := c.Docker.Inspect(ctx, target, containerName)
 			if err != nil {
 				return nil, fmt.Errorf("inspect: %w", err)
 			}
@@ -279,9 +282,22 @@ func main() {
 	// Depends on all operational tasks EXCEPT deliberately-fails so
 	// cleanup is not skipped when OnError(Continue) is active.
 
-	plan.DockerRemove("cleanup", target, containerName,
-		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
-	).DependsOn(execHostname, execUname, execOS, inspect)
+	cleanup := plan.TaskFunc(
+		"cleanup",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			force := true
+			_, err := c.Docker.Remove(
+				ctx,
+				target,
+				containerName,
+				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+			)
+			if err != nil {
+				return nil, fmt.Errorf("remove: %w", err)
+			}
 
 			return &orchestrator.Result{Changed: true}, nil
 		},

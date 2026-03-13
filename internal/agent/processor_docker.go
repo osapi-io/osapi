@@ -35,7 +35,7 @@ import (
 func (a *Agent) processDockerOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	if a.dockerProvider == nil {
+	if a.containerProvider == nil {
 		return nil, fmt.Errorf("docker runtime not available")
 	}
 
@@ -87,7 +87,7 @@ func (a *Agent) processDockerCreate(
 		volumes = append(volumes, dockerProv.VolumeMapping{Host: v.Host, Container: v.Container})
 	}
 
-	result, err := a.dockerProvider.Create(ctx, dockerProv.CreateParams{
+	result, err := a.containerProvider.Create(ctx, dockerProv.CreateParams{
 		Image:     data.Image,
 		Name:      data.Name,
 		Command:   data.Command,
@@ -181,7 +181,7 @@ func (a *Agent) processDockerList(
 		return nil, fmt.Errorf("unmarshal list data: %w", err)
 	}
 
-	result, err := a.dockerProvider.List(ctx, dockerProv.ListParams{
+	result, err := a.containerProvider.List(ctx, dockerProv.ListParams{
 		State: data.State,
 		Limit: data.Limit,
 	})
@@ -227,7 +227,7 @@ func (a *Agent) processDockerExec(
 		return nil, fmt.Errorf("unmarshal exec data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
+	result, err := a.containerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
 		Command:    data.Command,
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
