@@ -133,16 +133,16 @@ osapi token generate -r write -u user@example.com \
 
 ## Orchestrator
 
-The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose
-container operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and
-cleanup steps chain together with dependencies and guards:
+The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose container
+operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and cleanup
+steps chain together with dependencies and guards:
 
 ```go
 plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
 
 pull := plan.TaskFunc("pull-image",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
+        _, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
             Image: "nginx:alpine",
         })
         if err != nil {
@@ -155,7 +155,7 @@ pull := plan.TaskFunc("pull-image",
 create := plan.TaskFunc("create-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         autoStart := true
-        _, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
+        _, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
             Image:     "nginx:alpine",
             Name:      ptr("web-server"),
             AutoStart: &autoStart,
@@ -170,8 +170,8 @@ create.DependsOn(pull)
 
 exec := plan.TaskFunc("check-config",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Docker.Exec(ctx, "_any", "web-server",
-            gen.DockerExecRequest{Command: []string{"nginx", "-t"}})
+        _, err := c.Container.Exec(ctx, "_any", "web-server",
+            gen.ContainerExecRequest{Command: []string{"nginx", "-t"}})
         if err != nil {
             return nil, err
         }
@@ -189,8 +189,8 @@ for a complete working example.
 
 - [CLI Reference](../usage/cli/client/container/container.mdx) -- container
   management commands
-- [API Reference](/gen/api/docker-management-api-docker-operations) -- REST API
-  documentation
+- [API Reference](/gen/api/container-management-api-container-operations) --
+  REST API documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
 - [Architecture](../architecture/architecture.md) -- system design overview
