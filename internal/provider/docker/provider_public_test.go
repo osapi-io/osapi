@@ -1,4 +1,4 @@
-package container_test
+package docker_test
 
 import (
 	"context"
@@ -9,24 +9,23 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/container"
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
-	runtimeMocks "github.com/retr0h/osapi/internal/provider/container/runtime/mocks"
+	dockerprov "github.com/retr0h/osapi/internal/provider/docker"
+	"github.com/retr0h/osapi/internal/provider/docker/mocks"
 )
 
 type ProviderPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl   *gomock.Controller
-	mockDriver *runtimeMocks.MockDriver
-	service    *container.Service
+	mockDriver *mocks.MockDriver
+	service    *dockerprov.Service
 	ctx        context.Context
 }
 
 func (s *ProviderPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockDriver = runtimeMocks.NewMockDriver(s.mockCtrl)
-	s.service = container.New(s.mockDriver)
+	s.mockDriver = mocks.NewMockDriver(s.mockCtrl)
+	s.service = dockerprov.New(s.mockDriver)
 	s.ctx = context.Background()
 }
 
@@ -39,11 +38,11 @@ func (
 ) TestNew() {
 	tests := []struct {
 		name         string
-		validateFunc func(p container.Provider)
+		validateFunc func(p dockerprov.Provider)
 	}{
 		{
 			name: "returns non-nil provider",
-			validateFunc: func(p container.Provider) {
+			validateFunc: func(p dockerprov.Provider) {
 				s.NotNil(p)
 			},
 		},
@@ -51,8 +50,8 @@ func (
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var driver runtime.Driver // nil driver for unit test
-			p := container.New(driver)
+			var driver dockerprov.Driver // nil driver for unit test
+			p := dockerprov.New(driver)
 			tt.validateFunc(p)
 		})
 	}
@@ -63,23 +62,23 @@ func (
 ) TestCreate() {
 	tests := []struct {
 		name         string
-		params       runtime.CreateParams
+		params       dockerprov.CreateParams
 		setupMock    func()
-		validateFunc func(*runtime.Container, error)
+		validateFunc func(*dockerprov.Container, error)
 	}{
 		{
 			name: "delegates to driver and returns result",
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
 				Name:  "web",
 			},
 			setupMock: func() {
 				s.mockDriver.EXPECT().
-					Create(gomock.Any(), runtime.CreateParams{
+					Create(gomock.Any(), dockerprov.CreateParams{
 						Image: "nginx:latest",
 						Name:  "web",
 					}).
-					Return(&runtime.Container{
+					Return(&dockerprov.Container{
 						ID:    "abc123",
 						Name:  "web",
 						Image: "nginx:latest",
@@ -87,7 +86,7 @@ func (
 					}, nil)
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -98,7 +97,7 @@ func (
 		},
 		{
 			name: "returns error from driver",
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "invalid:image",
 			},
 			setupMock: func() {
@@ -107,7 +106,7 @@ func (
 					Return(nil, errors.New("image not found"))
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.Error(err)
@@ -299,28 +298,28 @@ func (
 ) TestList() {
 	tests := []struct {
 		name         string
-		params       runtime.ListParams
+		params       dockerprov.ListParams
 		setupMock    func()
-		validateFunc func([]runtime.Container, error)
+		validateFunc func([]dockerprov.Container, error)
 	}{
 		{
 			name: "delegates to driver and returns containers",
-			params: runtime.ListParams{
+			params: dockerprov.ListParams{
 				State: "running",
 				Limit: 10,
 			},
 			setupMock: func() {
 				s.mockDriver.EXPECT().
-					List(gomock.Any(), runtime.ListParams{
+					List(gomock.Any(), dockerprov.ListParams{
 						State: "running",
 						Limit: 10,
 					}).
-					Return([]runtime.Container{
+					Return([]dockerprov.Container{
 						{ID: "abc123", Name: "web", State: "running"},
 					}, nil)
 			},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -330,14 +329,14 @@ func (
 		},
 		{
 			name:   "returns error from driver",
-			params: runtime.ListParams{State: "all"},
+			params: dockerprov.ListParams{State: "all"},
 			setupMock: func() {
 				s.mockDriver.EXPECT().
 					List(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("list failed"))
 			},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.Error(err)
@@ -363,7 +362,7 @@ func (
 		name         string
 		id           string
 		setupMock    func()
-		validateFunc func(*runtime.ContainerDetail, error)
+		validateFunc func(*dockerprov.ContainerDetail, error)
 	}{
 		{
 			name: "delegates to driver and returns detail",
@@ -371,12 +370,12 @@ func (
 			setupMock: func() {
 				s.mockDriver.EXPECT().
 					Inspect(gomock.Any(), "abc123").
-					Return(&runtime.ContainerDetail{
-						Container: runtime.Container{ID: "abc123"},
+					Return(&dockerprov.ContainerDetail{
+						Container: dockerprov.Container{ID: "abc123"},
 					}, nil)
 			},
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -393,7 +392,7 @@ func (
 					Return(nil, errors.New("inspect failed"))
 			},
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.Error(err)
@@ -418,28 +417,28 @@ func (
 	tests := []struct {
 		name         string
 		id           string
-		params       runtime.ExecParams
+		params       dockerprov.ExecParams
 		setupMock    func()
-		validateFunc func(*runtime.ExecResult, error)
+		validateFunc func(*dockerprov.ExecResult, error)
 	}{
 		{
 			name: "delegates to driver and returns result",
 			id:   "abc123",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls", "-la"},
 			},
 			setupMock: func() {
 				s.mockDriver.EXPECT().
-					Exec(gomock.Any(), "abc123", runtime.ExecParams{
+					Exec(gomock.Any(), "abc123", dockerprov.ExecParams{
 						Command: []string{"ls", "-la"},
 					}).
-					Return(&runtime.ExecResult{
+					Return(&dockerprov.ExecResult{
 						Stdout:   "output",
 						ExitCode: 0,
 					}, nil)
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -451,7 +450,7 @@ func (
 		{
 			name: "returns error from driver",
 			id:   "abc123",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls"},
 			},
 			setupMock: func() {
@@ -460,7 +459,7 @@ func (
 					Return(nil, errors.New("exec failed"))
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.Error(err)
@@ -486,7 +485,7 @@ func (
 		name         string
 		image        string
 		setupMock    func()
-		validateFunc func(*runtime.PullResult, error)
+		validateFunc func(*dockerprov.PullResult, error)
 	}{
 		{
 			name:  "delegates to driver and returns result",
@@ -494,14 +493,14 @@ func (
 			setupMock: func() {
 				s.mockDriver.EXPECT().
 					Pull(gomock.Any(), "nginx:latest").
-					Return(&runtime.PullResult{
+					Return(&dockerprov.PullResult{
 						ImageID: "sha256:abc",
 						Tag:     "latest",
 						Size:    2048,
 					}, nil)
 			},
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -520,7 +519,7 @@ func (
 					Return(nil, errors.New("pull failed"))
 			},
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.Error(err)

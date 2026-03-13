@@ -26,16 +26,16 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 )
 
-// PostNodeContainerStart starts a container on a target node.
-func (s *Container) PostNodeContainerStart(
+// PostNodeContainerDockerStart starts a container on a target node.
+func (s *Container) PostNodeContainerDockerStart(
 	ctx context.Context,
-	request gen.PostNodeContainerStartRequestObject,
-) (gen.PostNodeContainerStartResponseObject, error) {
+	request gen.PostNodeContainerDockerStartRequestObject,
+) (gen.PostNodeContainerDockerStartResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerStart400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -46,19 +46,19 @@ func (s *Container) PostNodeContainerStart(
 		slog.String("id", id),
 	)
 
-	resp, err := s.JobClient.ModifyContainerStart(ctx, hostname, id)
+	resp, err := s.JobClient.ModifyDockerStart(ctx, hostname, id)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerStart500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
 	}
 
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	msg := "container started"
 
-	return gen.PostNodeContainerStart202JSONResponse{
+	return gen.PostNodeContainerDockerStart202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerActionResultItem{
+		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
 				Id:       &id,

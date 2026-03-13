@@ -102,7 +102,7 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Pull(ctx, target, gen.ContainerPullRequest{
+			resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
 				Image: containerImage,
 			})
 			if err != nil {
@@ -127,7 +127,7 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Create(ctx, target, gen.ContainerCreateRequest{
+			resp, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
 				Image:     containerImage,
 				Name:      ptr(containerName),
 				AutoStart: &autoStart,
@@ -155,11 +155,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"hostname"},
 				},
 			)
@@ -187,11 +187,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"uname", "-a"},
 				},
 			)
@@ -216,11 +216,11 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Exec(
+			resp, err := c.Docker.Exec(
 				ctx,
 				target,
 				containerName,
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"sh", "-c", "head -2 /etc/os-release"},
 				},
 			)
@@ -247,7 +247,7 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Container.Inspect(ctx, target, containerName)
+			resp, err := c.Docker.Inspect(ctx, target, containerName)
 			if err != nil {
 				return nil, fmt.Errorf("inspect: %w", err)
 			}
@@ -294,11 +294,11 @@ func main() {
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			force := true
-			_, err := c.Container.Remove(
+			_, err := c.Docker.Remove(
 				ctx,
 				target,
 				containerName,
-				&gen.DeleteNodeContainerByIDParams{Force: &force},
+				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
 			)
 			if err != nil {
 				return nil, fmt.Errorf("remove: %w", err)

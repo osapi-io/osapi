@@ -27,28 +27,28 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainerExec executes a command in a container on a target node.
-func (s *Container) PostNodeContainerExec(
+// PostNodeContainerDockerExec executes a command in a container on a target node.
+func (s *Container) PostNodeContainerDockerExec(
 	ctx context.Context,
-	request gen.PostNodeContainerExecRequestObject,
-) (gen.PostNodeContainerExecResponseObject, error) {
+	request gen.PostNodeContainerDockerExecRequestObject,
+) (gen.PostNodeContainerDockerExecResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerExec400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeContainerExec400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
 	id := request.Id
 
-	data := &job.ContainerExecData{
+	data := &job.DockerExecData{
 		Command: request.Body.Command,
 		Env:     envSliceToMap(request.Body.Env),
 	}
@@ -62,10 +62,10 @@ func (s *Container) PostNodeContainerExec(
 		slog.Any("command", data.Command),
 	)
 
-	resp, err := s.JobClient.ModifyContainerExec(ctx, hostname, id, data)
+	resp, err := s.JobClient.ModifyDockerExec(ctx, hostname, id, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerExec500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var execResult struct {
@@ -83,9 +83,9 @@ func (s *Container) PostNodeContainerExec(
 	stderr := execResult.Stderr
 	exitCode := execResult.ExitCode
 
-	return gen.PostNodeContainerExec202JSONResponse{
+	return gen.PostNodeContainerDockerExec202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerExecResultItem{
+		Results: []gen.DockerExecResultItem{
 			{
 				Hostname: resp.Hostname,
 				Stdout:   &stdout,

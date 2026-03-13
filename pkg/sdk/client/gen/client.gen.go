@@ -76,11 +76,11 @@ const (
 	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
 )
 
-// Defines values for GetNodeContainerParamsState.
+// Defines values for GetNodeContainerDockerParamsState.
 const (
-	All     GetNodeContainerParamsState = "all"
-	Running GetNodeContainerParamsState = "running"
-	Stopped GetNodeContainerParamsState = "stopped"
+	All     GetNodeContainerDockerParamsState = "all"
+	Running GetNodeContainerDockerParamsState = "running"
+	Stopped GetNodeContainerDockerParamsState = "stopped"
 )
 
 // AgentDetail defines model for AgentDetail.
@@ -309,258 +309,6 @@ type ConsumerStats struct {
 	Total int `json:"total"`
 }
 
-// ContainerActionCollectionResponse defines model for ContainerActionCollectionResponse.
-type ContainerActionCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID         `json:"job_id,omitempty"`
-	Results []ContainerActionResultItem `json:"results"`
-}
-
-// ContainerActionResultItem Result of a container lifecycle action.
-type ContainerActionResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Id Container identifier.
-	Id *string `json:"id,omitempty"`
-
-	// Message Status message.
-	Message *string `json:"message,omitempty"`
-}
-
-// ContainerCreateRequest defines model for ContainerCreateRequest.
-type ContainerCreateRequest struct {
-	// AutoStart Whether to start the container immediately after creation. Defaults to true.
-	AutoStart *bool `json:"auto_start,omitempty"`
-
-	// Command Command to run in the container.
-	Command *[]string `json:"command,omitempty"`
-
-	// Env Environment variables in KEY=VALUE format.
-	Env *[]string `json:"env,omitempty"`
-
-	// Image Container image reference (e.g., "nginx:latest").
-	Image string `json:"image" validate:"required,min=1"`
-
-	// Name Optional name for the container.
-	Name *string `json:"name,omitempty"`
-
-	// Ports Port mappings in host_port:container_port format.
-	Ports *[]string `json:"ports,omitempty"`
-
-	// Volumes Volume mounts in host_path:container_path format.
-	Volumes *[]string `json:"volumes,omitempty"`
-}
-
-// ContainerDetailCollectionResponse defines model for ContainerDetailCollectionResponse.
-type ContainerDetailCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID       `json:"job_id,omitempty"`
-	Results []ContainerDetailResponse `json:"results"`
-}
-
-// ContainerDetailResponse Detailed information about a container.
-type ContainerDetailResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Created Container creation timestamp.
-	Created *string `json:"created,omitempty"`
-
-	// Env Environment variables.
-	Env *[]string `json:"env,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Health Health check status if configured.
-	Health *string `json:"health,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Id Container identifier.
-	Id *string `json:"id,omitempty"`
-
-	// Image Image used by the container.
-	Image *string `json:"image,omitempty"`
-
-	// Mounts Volume mounts.
-	Mounts *[]string `json:"mounts,omitempty"`
-
-	// Name Container name.
-	Name *string `json:"name,omitempty"`
-
-	// NetworkSettings Network configuration.
-	NetworkSettings *map[string]string `json:"network_settings,omitempty"`
-
-	// Ports Port mappings.
-	Ports *[]string `json:"ports,omitempty"`
-
-	// State Current container state.
-	State *string `json:"state,omitempty"`
-}
-
-// ContainerExecCollectionResponse defines model for ContainerExecCollectionResponse.
-type ContainerExecCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID       `json:"job_id,omitempty"`
-	Results []ContainerExecResultItem `json:"results"`
-}
-
-// ContainerExecRequest defines model for ContainerExecRequest.
-type ContainerExecRequest struct {
-	// Command Command to execute inside the container.
-	Command []string `json:"command" validate:"required,min=1"`
-
-	// Env Additional environment variables in KEY=VALUE format.
-	Env *[]string `json:"env,omitempty"`
-
-	// WorkingDir Working directory inside the container.
-	WorkingDir *string `json:"working_dir,omitempty"`
-}
-
-// ContainerExecResultItem Result of a command execution inside a container.
-type ContainerExecResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// ExitCode Exit code of the command.
-	ExitCode *int `json:"exit_code,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Stderr Standard error output of the command.
-	Stderr *string `json:"stderr,omitempty"`
-
-	// Stdout Standard output of the command.
-	Stdout *string `json:"stdout,omitempty"`
-}
-
-// ContainerListCollectionResponse defines model for ContainerListCollectionResponse.
-type ContainerListCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []ContainerListItem `json:"results"`
-}
-
-// ContainerListItem Container summary for list operations.
-type ContainerListItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Containers List of containers on this agent.
-	Containers *[]ContainerSummary `json:"containers,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-}
-
-// ContainerPullCollectionResponse defines model for ContainerPullCollectionResponse.
-type ContainerPullCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID       `json:"job_id,omitempty"`
-	Results []ContainerPullResultItem `json:"results"`
-}
-
-// ContainerPullRequest defines model for ContainerPullRequest.
-type ContainerPullRequest struct {
-	// Image Image reference to pull (e.g., "nginx:latest", "docker.io/library/alpine:3.18").
-	Image string `json:"image" validate:"required,min=1"`
-}
-
-// ContainerPullResultItem Result of an image pull operation.
-type ContainerPullResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// ImageId The pulled image ID.
-	ImageId *string `json:"image_id,omitempty"`
-
-	// Size Image size in bytes.
-	Size *int64 `json:"size,omitempty"`
-
-	// Tag The image tag that was pulled.
-	Tag *string `json:"tag,omitempty"`
-}
-
-// ContainerResponse Summary information about a container.
-type ContainerResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Created Container creation timestamp.
-	Created *string `json:"created,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Id Container identifier.
-	Id *string `json:"id,omitempty"`
-
-	// Image Image used by the container.
-	Image *string `json:"image,omitempty"`
-
-	// Name Container name.
-	Name *string `json:"name,omitempty"`
-
-	// State Current container state.
-	State *string `json:"state,omitempty"`
-}
-
-// ContainerResultCollectionResponse defines model for ContainerResultCollectionResponse.
-type ContainerResultCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []ContainerResponse `json:"results"`
-}
-
-// ContainerStopRequest defines model for ContainerStopRequest.
-type ContainerStopRequest struct {
-	// Timeout Seconds to wait before killing the container. Defaults to 10.
-	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=0,max=300"`
-}
-
-// ContainerSummary Brief container summary.
-type ContainerSummary struct {
-	// Created Container creation timestamp.
-	Created *string `json:"created,omitempty"`
-
-	// Id Container identifier.
-	Id *string `json:"id,omitempty"`
-
-	// Image Image used by the container.
-	Image *string `json:"image,omitempty"`
-
-	// Name Container name.
-	Name *string `json:"name,omitempty"`
-
-	// State Current container state.
-	State *string `json:"state,omitempty"`
-}
-
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
@@ -671,6 +419,258 @@ type DiskResultItem struct {
 
 // DisksResponse List of local disk usage information.
 type DisksResponse = []DiskResponse
+
+// DockerActionCollectionResponse defines model for DockerActionCollectionResponse.
+type DockerActionCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []DockerActionResultItem `json:"results"`
+}
+
+// DockerActionResultItem Result of a container lifecycle action.
+type DockerActionResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Id Container identifier.
+	Id *string `json:"id,omitempty"`
+
+	// Message Status message.
+	Message *string `json:"message,omitempty"`
+}
+
+// DockerCreateRequest defines model for DockerCreateRequest.
+type DockerCreateRequest struct {
+	// AutoStart Whether to start the container immediately after creation. Defaults to true.
+	AutoStart *bool `json:"auto_start,omitempty"`
+
+	// Command Command to run in the container.
+	Command *[]string `json:"command,omitempty"`
+
+	// Env Environment variables in KEY=VALUE format.
+	Env *[]string `json:"env,omitempty"`
+
+	// Image Container image reference (e.g., "nginx:latest").
+	Image string `json:"image" validate:"required,min=1"`
+
+	// Name Optional name for the container.
+	Name *string `json:"name,omitempty"`
+
+	// Ports Port mappings in host_port:container_port format.
+	Ports *[]string `json:"ports,omitempty"`
+
+	// Volumes Volume mounts in host_path:container_path format.
+	Volumes *[]string `json:"volumes,omitempty"`
+}
+
+// DockerDetailCollectionResponse defines model for DockerDetailCollectionResponse.
+type DockerDetailCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []DockerDetailResponse `json:"results"`
+}
+
+// DockerDetailResponse Detailed information about a container.
+type DockerDetailResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Created Container creation timestamp.
+	Created *string `json:"created,omitempty"`
+
+	// Env Environment variables.
+	Env *[]string `json:"env,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Health Health check status if configured.
+	Health *string `json:"health,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Id Container identifier.
+	Id *string `json:"id,omitempty"`
+
+	// Image Image used by the container.
+	Image *string `json:"image,omitempty"`
+
+	// Mounts Volume mounts.
+	Mounts *[]string `json:"mounts,omitempty"`
+
+	// Name Container name.
+	Name *string `json:"name,omitempty"`
+
+	// NetworkSettings Network configuration.
+	NetworkSettings *map[string]string `json:"network_settings,omitempty"`
+
+	// Ports Port mappings.
+	Ports *[]string `json:"ports,omitempty"`
+
+	// State Current container state.
+	State *string `json:"state,omitempty"`
+}
+
+// DockerExecCollectionResponse defines model for DockerExecCollectionResponse.
+type DockerExecCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []DockerExecResultItem `json:"results"`
+}
+
+// DockerExecRequest defines model for DockerExecRequest.
+type DockerExecRequest struct {
+	// Command Command to execute inside the container.
+	Command []string `json:"command" validate:"required,min=1"`
+
+	// Env Additional environment variables in KEY=VALUE format.
+	Env *[]string `json:"env,omitempty"`
+
+	// WorkingDir Working directory inside the container.
+	WorkingDir *string `json:"working_dir,omitempty"`
+}
+
+// DockerExecResultItem Result of a command execution inside a container.
+type DockerExecResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// ExitCode Exit code of the command.
+	ExitCode *int `json:"exit_code,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Stderr Standard error output of the command.
+	Stderr *string `json:"stderr,omitempty"`
+
+	// Stdout Standard output of the command.
+	Stdout *string `json:"stdout,omitempty"`
+}
+
+// DockerListCollectionResponse defines model for DockerListCollectionResponse.
+type DockerListCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []DockerListItem    `json:"results"`
+}
+
+// DockerListItem Container summary for list operations.
+type DockerListItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Containers List of containers on this agent.
+	Containers *[]DockerSummary `json:"containers,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+}
+
+// DockerPullCollectionResponse defines model for DockerPullCollectionResponse.
+type DockerPullCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []DockerPullResultItem `json:"results"`
+}
+
+// DockerPullRequest defines model for DockerPullRequest.
+type DockerPullRequest struct {
+	// Image Image reference to pull (e.g., "nginx:latest", "docker.io/library/alpine:3.18").
+	Image string `json:"image" validate:"required,min=1"`
+}
+
+// DockerPullResultItem Result of an image pull operation.
+type DockerPullResultItem struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// ImageId The pulled image ID.
+	ImageId *string `json:"image_id,omitempty"`
+
+	// Size Image size in bytes.
+	Size *int64 `json:"size,omitempty"`
+
+	// Tag The image tag that was pulled.
+	Tag *string `json:"tag,omitempty"`
+}
+
+// DockerResponse Summary information about a container.
+type DockerResponse struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Created Container creation timestamp.
+	Created *string `json:"created,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Id Container identifier.
+	Id *string `json:"id,omitempty"`
+
+	// Image Image used by the container.
+	Image *string `json:"image,omitempty"`
+
+	// Name Container name.
+	Name *string `json:"name,omitempty"`
+
+	// State Current container state.
+	State *string `json:"state,omitempty"`
+}
+
+// DockerResultCollectionResponse defines model for DockerResultCollectionResponse.
+type DockerResultCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []DockerResponse    `json:"results"`
+}
+
+// DockerStopRequest defines model for DockerStopRequest.
+type DockerStopRequest struct {
+	// Timeout Seconds to wait before killing the container. Defaults to 10.
+	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=0,max=300"`
+}
+
+// DockerSummary Brief container summary.
+type DockerSummary struct {
+	// Created Container creation timestamp.
+	Created *string `json:"created,omitempty"`
+
+	// Id Container identifier.
+	Id *string `json:"id,omitempty"`
+
+	// Image Image used by the container.
+	Image *string `json:"image,omitempty"`
+
+	// Name Container name.
+	Name *string `json:"name,omitempty"`
+
+	// State Current container state.
+	State *string `json:"state,omitempty"`
+}
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
@@ -1297,8 +1297,8 @@ type UptimeResponse struct {
 	Uptime *string `json:"uptime,omitempty"`
 }
 
-// ContainerId defines model for ContainerId.
-type ContainerId = string
+// DockerId defines model for DockerId.
+type DockerId = string
 
 // FileName defines model for FileName.
 type FileName = string
@@ -1351,20 +1351,20 @@ type GetJobParams struct {
 // GetJobParamsStatus defines parameters for GetJob.
 type GetJobParamsStatus string
 
-// GetNodeContainerParams defines parameters for GetNodeContainer.
-type GetNodeContainerParams struct {
+// GetNodeContainerDockerParams defines parameters for GetNodeContainerDocker.
+type GetNodeContainerDockerParams struct {
 	// State Filter containers by state. Defaults to "all".
-	State *GetNodeContainerParamsState `form:"state,omitempty" json:"state,omitempty" validate:"omitempty,oneof=running stopped all"`
+	State *GetNodeContainerDockerParamsState `form:"state,omitempty" json:"state,omitempty" validate:"omitempty,oneof=running stopped all"`
 
 	// Limit Maximum number of containers to return.
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// GetNodeContainerParamsState defines parameters for GetNodeContainer.
-type GetNodeContainerParamsState string
+// GetNodeContainerDockerParamsState defines parameters for GetNodeContainerDocker.
+type GetNodeContainerDockerParamsState string
 
-// DeleteNodeContainerByIDParams defines parameters for DeleteNodeContainerByID.
-type DeleteNodeContainerByIDParams struct {
+// DeleteNodeContainerDockerByIDParams defines parameters for DeleteNodeContainerDockerByID.
+type DeleteNodeContainerDockerByIDParams struct {
 	// Force Force removal of a running container.
 	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
 }
@@ -1387,17 +1387,17 @@ type PostNodeCommandExecJSONRequestBody = CommandExecRequest
 // PostNodeCommandShellJSONRequestBody defines body for PostNodeCommandShell for application/json ContentType.
 type PostNodeCommandShellJSONRequestBody = CommandShellRequest
 
-// PostNodeContainerJSONRequestBody defines body for PostNodeContainer for application/json ContentType.
-type PostNodeContainerJSONRequestBody = ContainerCreateRequest
+// PostNodeContainerDockerJSONRequestBody defines body for PostNodeContainerDocker for application/json ContentType.
+type PostNodeContainerDockerJSONRequestBody = DockerCreateRequest
 
-// PostNodeContainerPullJSONRequestBody defines body for PostNodeContainerPull for application/json ContentType.
-type PostNodeContainerPullJSONRequestBody = ContainerPullRequest
+// PostNodeContainerDockerPullJSONRequestBody defines body for PostNodeContainerDockerPull for application/json ContentType.
+type PostNodeContainerDockerPullJSONRequestBody = DockerPullRequest
 
-// PostNodeContainerExecJSONRequestBody defines body for PostNodeContainerExec for application/json ContentType.
-type PostNodeContainerExecJSONRequestBody = ContainerExecRequest
+// PostNodeContainerDockerExecJSONRequestBody defines body for PostNodeContainerDockerExec for application/json ContentType.
+type PostNodeContainerDockerExecJSONRequestBody = DockerExecRequest
 
-// PostNodeContainerStopJSONRequestBody defines body for PostNodeContainerStop for application/json ContentType.
-type PostNodeContainerStopJSONRequestBody = ContainerStopRequest
+// PostNodeContainerDockerStopJSONRequestBody defines body for PostNodeContainerDockerStop for application/json ContentType.
+type PostNodeContainerDockerStopJSONRequestBody = DockerStopRequest
 
 // PostNodeFileDeployJSONRequestBody defines body for PostNodeFileDeploy for application/json ContentType.
 type PostNodeFileDeployJSONRequestBody = FileDeployRequest
@@ -1553,37 +1553,37 @@ type ClientInterface interface {
 
 	PostNodeCommandShell(ctx context.Context, hostname Hostname, body PostNodeCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeContainer request
-	GetNodeContainer(ctx context.Context, hostname Hostname, params *GetNodeContainerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeContainerDocker request
+	GetNodeContainerDocker(ctx context.Context, hostname Hostname, params *GetNodeContainerDockerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeContainerWithBody request with any body
-	PostNodeContainerWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeContainerDockerWithBody request with any body
+	PostNodeContainerDockerWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeContainer(ctx context.Context, hostname Hostname, body PostNodeContainerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeContainerDocker(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeContainerPullWithBody request with any body
-	PostNodeContainerPullWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeContainerDockerPullWithBody request with any body
+	PostNodeContainerDockerPullWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeContainerPull(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeContainerDockerPull(ctx context.Context, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteNodeContainerByID request
-	DeleteNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteNodeContainerDockerByID request
+	DeleteNodeContainerDockerByID(ctx context.Context, hostname Hostname, id DockerId, params *DeleteNodeContainerDockerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeContainerByID request
-	GetNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeContainerDockerByID request
+	GetNodeContainerDockerByID(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeContainerExecWithBody request with any body
-	PostNodeContainerExecWithBody(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeContainerDockerExecWithBody request with any body
+	PostNodeContainerDockerExecWithBody(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeContainerExec(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeContainerDockerExec(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeContainerStart request
-	PostNodeContainerStart(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeContainerDockerStart request
+	PostNodeContainerDockerStart(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeContainerStopWithBody request with any body
-	PostNodeContainerStopWithBody(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeContainerDockerStopWithBody request with any body
+	PostNodeContainerDockerStopWithBody(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeContainerStop(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeContainerDockerStop(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeDisk request
 	GetNodeDisk(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1918,8 +1918,8 @@ func (c *Client) PostNodeCommandShell(ctx context.Context, hostname Hostname, bo
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeContainer(ctx context.Context, hostname Hostname, params *GetNodeContainerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeContainerRequest(c.Server, hostname, params)
+func (c *Client) GetNodeContainerDocker(ctx context.Context, hostname Hostname, params *GetNodeContainerDockerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeContainerDockerRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1930,8 +1930,8 @@ func (c *Client) GetNodeContainer(ctx context.Context, hostname Hostname, params
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) PostNodeContainerDockerWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerRequestWithBody(c.Server, hostname, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1942,8 +1942,8 @@ func (c *Client) PostNodeContainerWithBody(ctx context.Context, hostname Hostnam
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainer(ctx context.Context, hostname Hostname, body PostNodeContainerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerRequest(c.Server, hostname, body)
+func (c *Client) PostNodeContainerDocker(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1954,8 +1954,8 @@ func (c *Client) PostNodeContainer(ctx context.Context, hostname Hostname, body 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerPullWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerPullRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) PostNodeContainerDockerPullWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerPullRequestWithBody(c.Server, hostname, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1966,8 +1966,8 @@ func (c *Client) PostNodeContainerPullWithBody(ctx context.Context, hostname Hos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerPull(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerPullRequest(c.Server, hostname, body)
+func (c *Client) PostNodeContainerDockerPull(ctx context.Context, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerPullRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1978,8 +1978,8 @@ func (c *Client) PostNodeContainerPull(ctx context.Context, hostname Hostname, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeContainerByIDRequest(c.Server, hostname, id, params)
+func (c *Client) DeleteNodeContainerDockerByID(ctx context.Context, hostname Hostname, id DockerId, params *DeleteNodeContainerDockerByIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeContainerDockerByIDRequest(c.Server, hostname, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1990,8 +1990,8 @@ func (c *Client) DeleteNodeContainerByID(ctx context.Context, hostname Hostname,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeContainerByID(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeContainerByIDRequest(c.Server, hostname, id)
+func (c *Client) GetNodeContainerDockerByID(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeContainerDockerByIDRequest(c.Server, hostname, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2002,8 +2002,8 @@ func (c *Client) GetNodeContainerByID(ctx context.Context, hostname Hostname, id
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerExecWithBody(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerExecRequestWithBody(c.Server, hostname, id, contentType, body)
+func (c *Client) PostNodeContainerDockerExecWithBody(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerExecRequestWithBody(c.Server, hostname, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2014,8 +2014,8 @@ func (c *Client) PostNodeContainerExecWithBody(ctx context.Context, hostname Hos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerExec(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerExecRequest(c.Server, hostname, id, body)
+func (c *Client) PostNodeContainerDockerExec(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerExecRequest(c.Server, hostname, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2026,8 +2026,8 @@ func (c *Client) PostNodeContainerExec(ctx context.Context, hostname Hostname, i
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerStart(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerStartRequest(c.Server, hostname, id)
+func (c *Client) PostNodeContainerDockerStart(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerStartRequest(c.Server, hostname, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2038,8 +2038,8 @@ func (c *Client) PostNodeContainerStart(ctx context.Context, hostname Hostname, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerStopWithBody(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerStopRequestWithBody(c.Server, hostname, id, contentType, body)
+func (c *Client) PostNodeContainerDockerStopWithBody(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerStopRequestWithBody(c.Server, hostname, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2050,8 +2050,8 @@ func (c *Client) PostNodeContainerStopWithBody(ctx context.Context, hostname Hos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeContainerStop(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeContainerStopRequest(c.Server, hostname, id, body)
+func (c *Client) PostNodeContainerDockerStop(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeContainerDockerStopRequest(c.Server, hostname, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3060,8 +3060,8 @@ func NewPostNodeCommandShellRequestWithBody(server string, hostname Hostname, co
 	return req, nil
 }
 
-// NewGetNodeContainerRequest generates requests for GetNodeContainer
-func NewGetNodeContainerRequest(server string, hostname Hostname, params *GetNodeContainerParams) (*http.Request, error) {
+// NewGetNodeContainerDockerRequest generates requests for GetNodeContainerDocker
+func NewGetNodeContainerDockerRequest(server string, hostname Hostname, params *GetNodeContainerDockerParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3076,7 +3076,7 @@ func NewGetNodeContainerRequest(server string, hostname Hostname, params *GetNod
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container", pathParam0)
+	operationPath := fmt.Sprintf("/node/%s/container/docker", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3132,19 +3132,19 @@ func NewGetNodeContainerRequest(server string, hostname Hostname, params *GetNod
 	return req, nil
 }
 
-// NewPostNodeContainerRequest calls the generic PostNodeContainer builder with application/json body
-func NewPostNodeContainerRequest(server string, hostname Hostname, body PostNodeContainerJSONRequestBody) (*http.Request, error) {
+// NewPostNodeContainerDockerRequest calls the generic PostNodeContainerDocker builder with application/json body
+func NewPostNodeContainerDockerRequest(server string, hostname Hostname, body PostNodeContainerDockerJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeContainerRequestWithBody(server, hostname, "application/json", bodyReader)
+	return NewPostNodeContainerDockerRequestWithBody(server, hostname, "application/json", bodyReader)
 }
 
-// NewPostNodeContainerRequestWithBody generates requests for PostNodeContainer with any type of body
-func NewPostNodeContainerRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeContainerDockerRequestWithBody generates requests for PostNodeContainerDocker with any type of body
+func NewPostNodeContainerDockerRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3159,7 +3159,7 @@ func NewPostNodeContainerRequestWithBody(server string, hostname Hostname, conte
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container", pathParam0)
+	operationPath := fmt.Sprintf("/node/%s/container/docker", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3179,19 +3179,19 @@ func NewPostNodeContainerRequestWithBody(server string, hostname Hostname, conte
 	return req, nil
 }
 
-// NewPostNodeContainerPullRequest calls the generic PostNodeContainerPull builder with application/json body
-func NewPostNodeContainerPullRequest(server string, hostname Hostname, body PostNodeContainerPullJSONRequestBody) (*http.Request, error) {
+// NewPostNodeContainerDockerPullRequest calls the generic PostNodeContainerDockerPull builder with application/json body
+func NewPostNodeContainerDockerPullRequest(server string, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeContainerPullRequestWithBody(server, hostname, "application/json", bodyReader)
+	return NewPostNodeContainerDockerPullRequestWithBody(server, hostname, "application/json", bodyReader)
 }
 
-// NewPostNodeContainerPullRequestWithBody generates requests for PostNodeContainerPull with any type of body
-func NewPostNodeContainerPullRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeContainerDockerPullRequestWithBody generates requests for PostNodeContainerDockerPull with any type of body
+func NewPostNodeContainerDockerPullRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3206,7 +3206,7 @@ func NewPostNodeContainerPullRequestWithBody(server string, hostname Hostname, c
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/pull", pathParam0)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/pull", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3226,8 +3226,8 @@ func NewPostNodeContainerPullRequestWithBody(server string, hostname Hostname, c
 	return req, nil
 }
 
-// NewDeleteNodeContainerByIDRequest generates requests for DeleteNodeContainerByID
-func NewDeleteNodeContainerByIDRequest(server string, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams) (*http.Request, error) {
+// NewDeleteNodeContainerDockerByIDRequest generates requests for DeleteNodeContainerDockerByID
+func NewDeleteNodeContainerDockerByIDRequest(server string, hostname Hostname, id DockerId, params *DeleteNodeContainerDockerByIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3249,7 +3249,7 @@ func NewDeleteNodeContainerByIDRequest(server string, hostname Hostname, id Cont
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3289,8 +3289,8 @@ func NewDeleteNodeContainerByIDRequest(server string, hostname Hostname, id Cont
 	return req, nil
 }
 
-// NewGetNodeContainerByIDRequest generates requests for GetNodeContainerByID
-func NewGetNodeContainerByIDRequest(server string, hostname Hostname, id ContainerId) (*http.Request, error) {
+// NewGetNodeContainerDockerByIDRequest generates requests for GetNodeContainerDockerByID
+func NewGetNodeContainerDockerByIDRequest(server string, hostname Hostname, id DockerId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3312,7 +3312,7 @@ func NewGetNodeContainerByIDRequest(server string, hostname Hostname, id Contain
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3330,19 +3330,19 @@ func NewGetNodeContainerByIDRequest(server string, hostname Hostname, id Contain
 	return req, nil
 }
 
-// NewPostNodeContainerExecRequest calls the generic PostNodeContainerExec builder with application/json body
-func NewPostNodeContainerExecRequest(server string, hostname Hostname, id ContainerId, body PostNodeContainerExecJSONRequestBody) (*http.Request, error) {
+// NewPostNodeContainerDockerExecRequest calls the generic PostNodeContainerDockerExec builder with application/json body
+func NewPostNodeContainerDockerExecRequest(server string, hostname Hostname, id DockerId, body PostNodeContainerDockerExecJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeContainerExecRequestWithBody(server, hostname, id, "application/json", bodyReader)
+	return NewPostNodeContainerDockerExecRequestWithBody(server, hostname, id, "application/json", bodyReader)
 }
 
-// NewPostNodeContainerExecRequestWithBody generates requests for PostNodeContainerExec with any type of body
-func NewPostNodeContainerExecRequestWithBody(server string, hostname Hostname, id ContainerId, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeContainerDockerExecRequestWithBody generates requests for PostNodeContainerDockerExec with any type of body
+func NewPostNodeContainerDockerExecRequestWithBody(server string, hostname Hostname, id DockerId, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3364,7 +3364,7 @@ func NewPostNodeContainerExecRequestWithBody(server string, hostname Hostname, i
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/%s/exec", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/exec", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3384,8 +3384,8 @@ func NewPostNodeContainerExecRequestWithBody(server string, hostname Hostname, i
 	return req, nil
 }
 
-// NewPostNodeContainerStartRequest generates requests for PostNodeContainerStart
-func NewPostNodeContainerStartRequest(server string, hostname Hostname, id ContainerId) (*http.Request, error) {
+// NewPostNodeContainerDockerStartRequest generates requests for PostNodeContainerDockerStart
+func NewPostNodeContainerDockerStartRequest(server string, hostname Hostname, id DockerId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3407,7 +3407,7 @@ func NewPostNodeContainerStartRequest(server string, hostname Hostname, id Conta
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/%s/start", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/start", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3425,19 +3425,19 @@ func NewPostNodeContainerStartRequest(server string, hostname Hostname, id Conta
 	return req, nil
 }
 
-// NewPostNodeContainerStopRequest calls the generic PostNodeContainerStop builder with application/json body
-func NewPostNodeContainerStopRequest(server string, hostname Hostname, id ContainerId, body PostNodeContainerStopJSONRequestBody) (*http.Request, error) {
+// NewPostNodeContainerDockerStopRequest calls the generic PostNodeContainerDockerStop builder with application/json body
+func NewPostNodeContainerDockerStopRequest(server string, hostname Hostname, id DockerId, body PostNodeContainerDockerStopJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeContainerStopRequestWithBody(server, hostname, id, "application/json", bodyReader)
+	return NewPostNodeContainerDockerStopRequestWithBody(server, hostname, id, "application/json", bodyReader)
 }
 
-// NewPostNodeContainerStopRequestWithBody generates requests for PostNodeContainerStop with any type of body
-func NewPostNodeContainerStopRequestWithBody(server string, hostname Hostname, id ContainerId, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeContainerDockerStopRequestWithBody generates requests for PostNodeContainerDockerStop with any type of body
+func NewPostNodeContainerDockerStopRequestWithBody(server string, hostname Hostname, id DockerId, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3459,7 +3459,7 @@ func NewPostNodeContainerStopRequestWithBody(server string, hostname Hostname, i
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/node/%s/container/%s/stop", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/node/%s/container/docker/%s/stop", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4051,37 +4051,37 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeCommandShellWithResponse(ctx context.Context, hostname Hostname, body PostNodeCommandShellJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeCommandShellResponse, error)
 
-	// GetNodeContainerWithResponse request
-	GetNodeContainerWithResponse(ctx context.Context, hostname Hostname, params *GetNodeContainerParams, reqEditors ...RequestEditorFn) (*GetNodeContainerResponse, error)
+	// GetNodeContainerDockerWithResponse request
+	GetNodeContainerDockerWithResponse(ctx context.Context, hostname Hostname, params *GetNodeContainerDockerParams, reqEditors ...RequestEditorFn) (*GetNodeContainerDockerResponse, error)
 
-	// PostNodeContainerWithBodyWithResponse request with any body
-	PostNodeContainerWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerResponse, error)
+	// PostNodeContainerDockerWithBodyWithResponse request with any body
+	PostNodeContainerDockerWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerResponse, error)
 
-	PostNodeContainerWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerResponse, error)
+	PostNodeContainerDockerWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerResponse, error)
 
-	// PostNodeContainerPullWithBodyWithResponse request with any body
-	PostNodeContainerPullWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerPullResponse, error)
+	// PostNodeContainerDockerPullWithBodyWithResponse request with any body
+	PostNodeContainerDockerPullWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerPullResponse, error)
 
-	PostNodeContainerPullWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerPullResponse, error)
+	PostNodeContainerDockerPullWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerPullResponse, error)
 
-	// DeleteNodeContainerByIDWithResponse request
-	DeleteNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIDResponse, error)
+	// DeleteNodeContainerDockerByIDWithResponse request
+	DeleteNodeContainerDockerByIDWithResponse(ctx context.Context, hostname Hostname, id DockerId, params *DeleteNodeContainerDockerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerDockerByIDResponse, error)
 
-	// GetNodeContainerByIDWithResponse request
-	GetNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIDResponse, error)
+	// GetNodeContainerDockerByIDWithResponse request
+	GetNodeContainerDockerByIDWithResponse(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*GetNodeContainerDockerByIDResponse, error)
 
-	// PostNodeContainerExecWithBodyWithResponse request with any body
-	PostNodeContainerExecWithBodyWithResponse(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerExecResponse, error)
+	// PostNodeContainerDockerExecWithBodyWithResponse request with any body
+	PostNodeContainerDockerExecWithBodyWithResponse(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerExecResponse, error)
 
-	PostNodeContainerExecWithResponse(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerExecResponse, error)
+	PostNodeContainerDockerExecWithResponse(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerExecResponse, error)
 
-	// PostNodeContainerStartWithResponse request
-	PostNodeContainerStartWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*PostNodeContainerStartResponse, error)
+	// PostNodeContainerDockerStartWithResponse request
+	PostNodeContainerDockerStartWithResponse(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStartResponse, error)
 
-	// PostNodeContainerStopWithBodyWithResponse request with any body
-	PostNodeContainerStopWithBodyWithResponse(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerStopResponse, error)
+	// PostNodeContainerDockerStopWithBodyWithResponse request with any body
+	PostNodeContainerDockerStopWithBodyWithResponse(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStopResponse, error)
 
-	PostNodeContainerStopWithResponse(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerStopResponse, error)
+	PostNodeContainerDockerStopWithResponse(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStopResponse, error)
 
 	// GetNodeDiskWithResponse request
 	GetNodeDiskWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeDiskResponse, error)
@@ -4675,10 +4675,10 @@ func (r PostNodeCommandShellResponse) StatusCode() int {
 	return 0
 }
 
-type GetNodeContainerResponse struct {
+type GetNodeContainerDockerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ContainerListCollectionResponse
+	JSON200      *DockerListCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4686,7 +4686,7 @@ type GetNodeContainerResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeContainerResponse) Status() string {
+func (r GetNodeContainerDockerResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4694,17 +4694,17 @@ func (r GetNodeContainerResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeContainerResponse) StatusCode() int {
+func (r GetNodeContainerDockerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostNodeContainerResponse struct {
+type PostNodeContainerDockerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerResultCollectionResponse
+	JSON202      *DockerResultCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4712,7 +4712,7 @@ type PostNodeContainerResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeContainerResponse) Status() string {
+func (r PostNodeContainerDockerResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4720,17 +4720,17 @@ func (r PostNodeContainerResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeContainerResponse) StatusCode() int {
+func (r PostNodeContainerDockerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostNodeContainerPullResponse struct {
+type PostNodeContainerDockerPullResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerPullCollectionResponse
+	JSON202      *DockerPullCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4738,7 +4738,7 @@ type PostNodeContainerPullResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeContainerPullResponse) Status() string {
+func (r PostNodeContainerDockerPullResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4746,17 +4746,17 @@ func (r PostNodeContainerPullResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeContainerPullResponse) StatusCode() int {
+func (r PostNodeContainerDockerPullResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type DeleteNodeContainerByIDResponse struct {
+type DeleteNodeContainerDockerByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerActionCollectionResponse
+	JSON202      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4765,7 +4765,7 @@ type DeleteNodeContainerByIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteNodeContainerByIDResponse) Status() string {
+func (r DeleteNodeContainerDockerByIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4773,17 +4773,17 @@ func (r DeleteNodeContainerByIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeContainerByIDResponse) StatusCode() int {
+func (r DeleteNodeContainerDockerByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetNodeContainerByIDResponse struct {
+type GetNodeContainerDockerByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ContainerDetailCollectionResponse
+	JSON200      *DockerDetailCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4792,7 +4792,7 @@ type GetNodeContainerByIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeContainerByIDResponse) Status() string {
+func (r GetNodeContainerDockerByIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4800,17 +4800,17 @@ func (r GetNodeContainerByIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeContainerByIDResponse) StatusCode() int {
+func (r GetNodeContainerDockerByIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostNodeContainerExecResponse struct {
+type PostNodeContainerDockerExecResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerExecCollectionResponse
+	JSON202      *DockerExecCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4819,7 +4819,7 @@ type PostNodeContainerExecResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeContainerExecResponse) Status() string {
+func (r PostNodeContainerDockerExecResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4827,17 +4827,17 @@ func (r PostNodeContainerExecResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeContainerExecResponse) StatusCode() int {
+func (r PostNodeContainerDockerExecResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostNodeContainerStartResponse struct {
+type PostNodeContainerDockerStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerActionCollectionResponse
+	JSON202      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4846,7 +4846,7 @@ type PostNodeContainerStartResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeContainerStartResponse) Status() string {
+func (r PostNodeContainerDockerStartResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4854,17 +4854,17 @@ func (r PostNodeContainerStartResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeContainerStartResponse) StatusCode() int {
+func (r PostNodeContainerDockerStartResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostNodeContainerStopResponse struct {
+type PostNodeContainerDockerStopResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *ContainerActionCollectionResponse
+	JSON202      *DockerActionCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -4873,7 +4873,7 @@ type PostNodeContainerStopResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeContainerStopResponse) Status() string {
+func (r PostNodeContainerDockerStopResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4881,7 +4881,7 @@ func (r PostNodeContainerStopResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeContainerStopResponse) StatusCode() int {
+func (r PostNodeContainerDockerStopResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5409,108 +5409,108 @@ func (c *ClientWithResponses) PostNodeCommandShellWithResponse(ctx context.Conte
 	return ParsePostNodeCommandShellResponse(rsp)
 }
 
-// GetNodeContainerWithResponse request returning *GetNodeContainerResponse
-func (c *ClientWithResponses) GetNodeContainerWithResponse(ctx context.Context, hostname Hostname, params *GetNodeContainerParams, reqEditors ...RequestEditorFn) (*GetNodeContainerResponse, error) {
-	rsp, err := c.GetNodeContainer(ctx, hostname, params, reqEditors...)
+// GetNodeContainerDockerWithResponse request returning *GetNodeContainerDockerResponse
+func (c *ClientWithResponses) GetNodeContainerDockerWithResponse(ctx context.Context, hostname Hostname, params *GetNodeContainerDockerParams, reqEditors ...RequestEditorFn) (*GetNodeContainerDockerResponse, error) {
+	rsp, err := c.GetNodeContainerDocker(ctx, hostname, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeContainerResponse(rsp)
+	return ParseGetNodeContainerDockerResponse(rsp)
 }
 
-// PostNodeContainerWithBodyWithResponse request with arbitrary body returning *PostNodeContainerResponse
-func (c *ClientWithResponses) PostNodeContainerWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerResponse, error) {
-	rsp, err := c.PostNodeContainerWithBody(ctx, hostname, contentType, body, reqEditors...)
+// PostNodeContainerDockerWithBodyWithResponse request with arbitrary body returning *PostNodeContainerDockerResponse
+func (c *ClientWithResponses) PostNodeContainerDockerWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerResponse, error) {
+	rsp, err := c.PostNodeContainerDockerWithBody(ctx, hostname, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerResponse(rsp)
+	return ParsePostNodeContainerDockerResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeContainerWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerResponse, error) {
-	rsp, err := c.PostNodeContainer(ctx, hostname, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeContainerDockerWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerResponse, error) {
+	rsp, err := c.PostNodeContainerDocker(ctx, hostname, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerResponse(rsp)
+	return ParsePostNodeContainerDockerResponse(rsp)
 }
 
-// PostNodeContainerPullWithBodyWithResponse request with arbitrary body returning *PostNodeContainerPullResponse
-func (c *ClientWithResponses) PostNodeContainerPullWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerPullResponse, error) {
-	rsp, err := c.PostNodeContainerPullWithBody(ctx, hostname, contentType, body, reqEditors...)
+// PostNodeContainerDockerPullWithBodyWithResponse request with arbitrary body returning *PostNodeContainerDockerPullResponse
+func (c *ClientWithResponses) PostNodeContainerDockerPullWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerPullResponse, error) {
+	rsp, err := c.PostNodeContainerDockerPullWithBody(ctx, hostname, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerPullResponse(rsp)
+	return ParsePostNodeContainerDockerPullResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeContainerPullWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerPullResponse, error) {
-	rsp, err := c.PostNodeContainerPull(ctx, hostname, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeContainerDockerPullWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerPullResponse, error) {
+	rsp, err := c.PostNodeContainerDockerPull(ctx, hostname, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerPullResponse(rsp)
+	return ParsePostNodeContainerDockerPullResponse(rsp)
 }
 
-// DeleteNodeContainerByIDWithResponse request returning *DeleteNodeContainerByIDResponse
-func (c *ClientWithResponses) DeleteNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, params *DeleteNodeContainerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerByIDResponse, error) {
-	rsp, err := c.DeleteNodeContainerByID(ctx, hostname, id, params, reqEditors...)
+// DeleteNodeContainerDockerByIDWithResponse request returning *DeleteNodeContainerDockerByIDResponse
+func (c *ClientWithResponses) DeleteNodeContainerDockerByIDWithResponse(ctx context.Context, hostname Hostname, id DockerId, params *DeleteNodeContainerDockerByIDParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerDockerByIDResponse, error) {
+	rsp, err := c.DeleteNodeContainerDockerByID(ctx, hostname, id, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeContainerByIDResponse(rsp)
+	return ParseDeleteNodeContainerDockerByIDResponse(rsp)
 }
 
-// GetNodeContainerByIDWithResponse request returning *GetNodeContainerByIDResponse
-func (c *ClientWithResponses) GetNodeContainerByIDWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*GetNodeContainerByIDResponse, error) {
-	rsp, err := c.GetNodeContainerByID(ctx, hostname, id, reqEditors...)
+// GetNodeContainerDockerByIDWithResponse request returning *GetNodeContainerDockerByIDResponse
+func (c *ClientWithResponses) GetNodeContainerDockerByIDWithResponse(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*GetNodeContainerDockerByIDResponse, error) {
+	rsp, err := c.GetNodeContainerDockerByID(ctx, hostname, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeContainerByIDResponse(rsp)
+	return ParseGetNodeContainerDockerByIDResponse(rsp)
 }
 
-// PostNodeContainerExecWithBodyWithResponse request with arbitrary body returning *PostNodeContainerExecResponse
-func (c *ClientWithResponses) PostNodeContainerExecWithBodyWithResponse(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerExecResponse, error) {
-	rsp, err := c.PostNodeContainerExecWithBody(ctx, hostname, id, contentType, body, reqEditors...)
+// PostNodeContainerDockerExecWithBodyWithResponse request with arbitrary body returning *PostNodeContainerDockerExecResponse
+func (c *ClientWithResponses) PostNodeContainerDockerExecWithBodyWithResponse(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerExecResponse, error) {
+	rsp, err := c.PostNodeContainerDockerExecWithBody(ctx, hostname, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerExecResponse(rsp)
+	return ParsePostNodeContainerDockerExecResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeContainerExecWithResponse(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerExecResponse, error) {
-	rsp, err := c.PostNodeContainerExec(ctx, hostname, id, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeContainerDockerExecWithResponse(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerExecJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerExecResponse, error) {
+	rsp, err := c.PostNodeContainerDockerExec(ctx, hostname, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerExecResponse(rsp)
+	return ParsePostNodeContainerDockerExecResponse(rsp)
 }
 
-// PostNodeContainerStartWithResponse request returning *PostNodeContainerStartResponse
-func (c *ClientWithResponses) PostNodeContainerStartWithResponse(ctx context.Context, hostname Hostname, id ContainerId, reqEditors ...RequestEditorFn) (*PostNodeContainerStartResponse, error) {
-	rsp, err := c.PostNodeContainerStart(ctx, hostname, id, reqEditors...)
+// PostNodeContainerDockerStartWithResponse request returning *PostNodeContainerDockerStartResponse
+func (c *ClientWithResponses) PostNodeContainerDockerStartWithResponse(ctx context.Context, hostname Hostname, id DockerId, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStartResponse, error) {
+	rsp, err := c.PostNodeContainerDockerStart(ctx, hostname, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerStartResponse(rsp)
+	return ParsePostNodeContainerDockerStartResponse(rsp)
 }
 
-// PostNodeContainerStopWithBodyWithResponse request with arbitrary body returning *PostNodeContainerStopResponse
-func (c *ClientWithResponses) PostNodeContainerStopWithBodyWithResponse(ctx context.Context, hostname Hostname, id ContainerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerStopResponse, error) {
-	rsp, err := c.PostNodeContainerStopWithBody(ctx, hostname, id, contentType, body, reqEditors...)
+// PostNodeContainerDockerStopWithBodyWithResponse request with arbitrary body returning *PostNodeContainerDockerStopResponse
+func (c *ClientWithResponses) PostNodeContainerDockerStopWithBodyWithResponse(ctx context.Context, hostname Hostname, id DockerId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStopResponse, error) {
+	rsp, err := c.PostNodeContainerDockerStopWithBody(ctx, hostname, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerStopResponse(rsp)
+	return ParsePostNodeContainerDockerStopResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeContainerStopWithResponse(ctx context.Context, hostname Hostname, id ContainerId, body PostNodeContainerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerStopResponse, error) {
-	rsp, err := c.PostNodeContainerStop(ctx, hostname, id, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeContainerDockerStopWithResponse(ctx context.Context, hostname Hostname, id DockerId, body PostNodeContainerDockerStopJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerStopResponse, error) {
+	rsp, err := c.PostNodeContainerDockerStop(ctx, hostname, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeContainerStopResponse(rsp)
+	return ParsePostNodeContainerDockerStopResponse(rsp)
 }
 
 // GetNodeDiskWithResponse request returning *GetNodeDiskResponse
@@ -6770,22 +6770,22 @@ func ParsePostNodeCommandShellResponse(rsp *http.Response) (*PostNodeCommandShel
 	return response, nil
 }
 
-// ParseGetNodeContainerResponse parses an HTTP response from a GetNodeContainerWithResponse call
-func ParseGetNodeContainerResponse(rsp *http.Response) (*GetNodeContainerResponse, error) {
+// ParseGetNodeContainerDockerResponse parses an HTTP response from a GetNodeContainerDockerWithResponse call
+func ParseGetNodeContainerDockerResponse(rsp *http.Response) (*GetNodeContainerDockerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeContainerResponse{
+	response := &GetNodeContainerDockerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ContainerListCollectionResponse
+		var dest DockerListCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6824,22 +6824,22 @@ func ParseGetNodeContainerResponse(rsp *http.Response) (*GetNodeContainerRespons
 	return response, nil
 }
 
-// ParsePostNodeContainerResponse parses an HTTP response from a PostNodeContainerWithResponse call
-func ParsePostNodeContainerResponse(rsp *http.Response) (*PostNodeContainerResponse, error) {
+// ParsePostNodeContainerDockerResponse parses an HTTP response from a PostNodeContainerDockerWithResponse call
+func ParsePostNodeContainerDockerResponse(rsp *http.Response) (*PostNodeContainerDockerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeContainerResponse{
+	response := &PostNodeContainerDockerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerResultCollectionResponse
+		var dest DockerResultCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6878,22 +6878,22 @@ func ParsePostNodeContainerResponse(rsp *http.Response) (*PostNodeContainerRespo
 	return response, nil
 }
 
-// ParsePostNodeContainerPullResponse parses an HTTP response from a PostNodeContainerPullWithResponse call
-func ParsePostNodeContainerPullResponse(rsp *http.Response) (*PostNodeContainerPullResponse, error) {
+// ParsePostNodeContainerDockerPullResponse parses an HTTP response from a PostNodeContainerDockerPullWithResponse call
+func ParsePostNodeContainerDockerPullResponse(rsp *http.Response) (*PostNodeContainerDockerPullResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeContainerPullResponse{
+	response := &PostNodeContainerDockerPullResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerPullCollectionResponse
+		var dest DockerPullCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6932,22 +6932,22 @@ func ParsePostNodeContainerPullResponse(rsp *http.Response) (*PostNodeContainerP
 	return response, nil
 }
 
-// ParseDeleteNodeContainerByIDResponse parses an HTTP response from a DeleteNodeContainerByIDWithResponse call
-func ParseDeleteNodeContainerByIDResponse(rsp *http.Response) (*DeleteNodeContainerByIDResponse, error) {
+// ParseDeleteNodeContainerDockerByIDResponse parses an HTTP response from a DeleteNodeContainerDockerByIDWithResponse call
+func ParseDeleteNodeContainerDockerByIDResponse(rsp *http.Response) (*DeleteNodeContainerDockerByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteNodeContainerByIDResponse{
+	response := &DeleteNodeContainerDockerByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerActionCollectionResponse
+		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6993,22 +6993,22 @@ func ParseDeleteNodeContainerByIDResponse(rsp *http.Response) (*DeleteNodeContai
 	return response, nil
 }
 
-// ParseGetNodeContainerByIDResponse parses an HTTP response from a GetNodeContainerByIDWithResponse call
-func ParseGetNodeContainerByIDResponse(rsp *http.Response) (*GetNodeContainerByIDResponse, error) {
+// ParseGetNodeContainerDockerByIDResponse parses an HTTP response from a GetNodeContainerDockerByIDWithResponse call
+func ParseGetNodeContainerDockerByIDResponse(rsp *http.Response) (*GetNodeContainerDockerByIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeContainerByIDResponse{
+	response := &GetNodeContainerDockerByIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ContainerDetailCollectionResponse
+		var dest DockerDetailCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7054,22 +7054,22 @@ func ParseGetNodeContainerByIDResponse(rsp *http.Response) (*GetNodeContainerByI
 	return response, nil
 }
 
-// ParsePostNodeContainerExecResponse parses an HTTP response from a PostNodeContainerExecWithResponse call
-func ParsePostNodeContainerExecResponse(rsp *http.Response) (*PostNodeContainerExecResponse, error) {
+// ParsePostNodeContainerDockerExecResponse parses an HTTP response from a PostNodeContainerDockerExecWithResponse call
+func ParsePostNodeContainerDockerExecResponse(rsp *http.Response) (*PostNodeContainerDockerExecResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeContainerExecResponse{
+	response := &PostNodeContainerDockerExecResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerExecCollectionResponse
+		var dest DockerExecCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7115,22 +7115,22 @@ func ParsePostNodeContainerExecResponse(rsp *http.Response) (*PostNodeContainerE
 	return response, nil
 }
 
-// ParsePostNodeContainerStartResponse parses an HTTP response from a PostNodeContainerStartWithResponse call
-func ParsePostNodeContainerStartResponse(rsp *http.Response) (*PostNodeContainerStartResponse, error) {
+// ParsePostNodeContainerDockerStartResponse parses an HTTP response from a PostNodeContainerDockerStartWithResponse call
+func ParsePostNodeContainerDockerStartResponse(rsp *http.Response) (*PostNodeContainerDockerStartResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeContainerStartResponse{
+	response := &PostNodeContainerDockerStartResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerActionCollectionResponse
+		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7176,22 +7176,22 @@ func ParsePostNodeContainerStartResponse(rsp *http.Response) (*PostNodeContainer
 	return response, nil
 }
 
-// ParsePostNodeContainerStopResponse parses an HTTP response from a PostNodeContainerStopWithResponse call
-func ParsePostNodeContainerStopResponse(rsp *http.Response) (*PostNodeContainerStopResponse, error) {
+// ParsePostNodeContainerDockerStopResponse parses an HTTP response from a PostNodeContainerDockerStopWithResponse call
+func ParsePostNodeContainerDockerStopResponse(rsp *http.Response) (*PostNodeContainerDockerStopResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeContainerStopResponse{
+	response := &PostNodeContainerDockerStopResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest ContainerActionCollectionResponse
+		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

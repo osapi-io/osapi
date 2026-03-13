@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -30,31 +29,40 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerExecCmd represents the clientContainerExec command.
-var clientContainerExecCmd = &cobra.Command{
-	Use:   "exec",
-	Short: "Execute a command in a container",
-	Long:  `Execute a command inside a running container on the target node.`,
+// clientContainerDockerCreateCmd represents the clientContainerDockerCreate command.
+var clientContainerDockerCreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Create a new container",
+	Long:  `Create a new container on the target node from the specified image.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		id, _ := cmd.Flags().GetString("id")
-		command, _ := cmd.Flags().GetStringSlice("command")
+		image, _ := cmd.Flags().GetString("image")
+		name, _ := cmd.Flags().GetString("name")
 		envFlags, _ := cmd.Flags().GetStringSlice("env")
-		workingDir, _ := cmd.Flags().GetString("working-dir")
+		portFlags, _ := cmd.Flags().GetStringSlice("port")
+		volumeFlags, _ := cmd.Flags().GetStringSlice("volume")
+		autoStart, _ := cmd.Flags().GetBool("auto-start")
 
-		body := gen.ContainerExecRequest{
-			Command: command,
+		body := gen.DockerCreateRequest{
+			Image:     image,
+			AutoStart: &autoStart,
 		}
 
+		if name != "" {
+			body.Name = &name
+		}
 		if len(envFlags) > 0 {
 			body.Env = &envFlags
 		}
-		if workingDir != "" {
-			body.WorkingDir = &workingDir
+		if len(portFlags) > 0 {
+			body.Ports = &portFlags
+		}
+		if len(volumeFlags) > 0 {
+			body.Volumes = &volumeFlags
 		}
 
-		resp, err := sdkClient.Container.Exec(ctx, host, id, body)
+		resp, err := sdkClient.Docker.Create(ctx, host, body)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -77,29 +85,33 @@ var clientContainerExecCmd = &cobra.Command{
 				cli.PrintKV("Error", r.Error)
 				continue
 			}
-			cli.PrintKV("Exit Code", strconv.Itoa(r.ExitCode))
-			if r.Stdout != "" {
-				cli.PrintKV("Stdout", r.Stdout)
-			}
-			if r.Stderr != "" {
-				cli.PrintKV("Stderr", r.Stderr)
-			}
+			cli.PrintKV(
+				"Container ID", r.ID,
+				"Name", r.Name,
+			)
+			cli.PrintKV(
+				"Image", r.Image,
+				"State", r.State,
+			)
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerExecCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerCreateCmd)
 
-	clientContainerExecCmd.PersistentFlags().
-		String("id", "", "Container ID to exec in (required)")
-	clientContainerExecCmd.PersistentFlags().
-		StringSlice("command", []string{}, "Command to execute (required, comma-separated)")
-	clientContainerExecCmd.PersistentFlags().
+	clientContainerDockerCreateCmd.PersistentFlags().
+		String("image", "", "Container image reference (required)")
+	clientContainerDockerCreateCmd.PersistentFlags().
+		String("name", "", "Optional name for the container")
+	clientContainerDockerCreateCmd.PersistentFlags().
 		StringSlice("env", []string{}, "Environment variable in KEY=VALUE format (repeatable)")
-	clientContainerExecCmd.PersistentFlags().
-		String("working-dir", "", "Working directory inside the container")
+	clientContainerDockerCreateCmd.PersistentFlags().
+		StringSlice("port", []string{}, "Port mapping in host:container format (repeatable)")
+	clientContainerDockerCreateCmd.PersistentFlags().
+		StringSlice("volume", []string{}, "Volume mount in host:container format (repeatable)")
+	clientContainerDockerCreateCmd.PersistentFlags().
+		Bool("auto-start", true, "Start the container immediately after creation")
 
-	_ = clientContainerExecCmd.MarkPersistentFlagRequired("id")
-	_ = clientContainerExecCmd.MarkPersistentFlagRequired("command")
+	_ = clientContainerDockerCreateCmd.MarkPersistentFlagRequired("image")
 }

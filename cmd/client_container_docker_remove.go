@@ -29,8 +29,8 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerRemoveCmd represents the clientContainerRemove command.
-var clientContainerRemoveCmd = &cobra.Command{
+// clientContainerDockerRemoveCmd represents the clientContainerDockerRemove command.
+var clientContainerDockerRemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove a container",
 	Long:  `Remove a container from the target node.`,
@@ -40,12 +40,12 @@ var clientContainerRemoveCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		force, _ := cmd.Flags().GetBool("force")
 
-		params := &gen.DeleteNodeContainerByIDParams{}
+		params := &gen.DeleteNodeContainerDockerByIDParams{}
 		if force {
 			params.Force = &force
 		}
 
-		resp, err := sdkClient.Container.Remove(ctx, host, id, params)
+		resp, err := sdkClient.Docker.Remove(ctx, host, id, params)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -74,12 +74,12 @@ var clientContainerRemoveCmd = &cobra.Command{
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerRemoveCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerRemoveCmd)
 
-	clientContainerRemoveCmd.PersistentFlags().
+	clientContainerDockerRemoveCmd.PersistentFlags().
 		String("id", "", "Container ID to remove (required)")
-	clientContainerRemoveCmd.PersistentFlags().
+	clientContainerDockerRemoveCmd.PersistentFlags().
 		Bool("force", false, "Force removal of a running container")
 
-	_ = clientContainerRemoveCmd.MarkPersistentFlagRequired("id")
+	_ = clientContainerDockerRemoveCmd.MarkPersistentFlagRequired("id")
 }

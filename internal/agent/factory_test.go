@@ -32,7 +32,7 @@ import (
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
@@ -102,7 +102,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 				}
 			},
 			setupDocker: func() {
-				factoryDockerNewFn = func() (*docker.Driver, error) {
+				factoryDockerNewFn = func() (*dockerProv.Client, error) {
 					return nil, fmt.Errorf("docker not installed")
 				}
 			},
@@ -116,8 +116,8 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 				}
 			},
 			setupDocker: func() {
-				factoryDockerNewFn = func() (*docker.Driver, error) {
-					return docker.NewWithClient(&testDockerClient{
+				factoryDockerNewFn = func() (*dockerProv.Client, error) {
+					return dockerProv.NewDriverWithClient(&testDockerClient{
 						pingErr: errors.New("connection refused"),
 					}), nil
 				}
@@ -132,8 +132,8 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 				}
 			},
 			setupDocker: func() {
-				factoryDockerNewFn = func() (*docker.Driver, error) {
-					return docker.NewWithClient(&testDockerClient{}), nil
+				factoryDockerNewFn = func() (*dockerProv.Client, error) {
+					return dockerProv.NewDriverWithClient(&testDockerClient{}), nil
 				}
 			},
 			wantContainer: true,

@@ -33,8 +33,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	apicontainer "github.com/retr0h/osapi/internal/api/container"
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	apicontainer "github.com/retr0h/osapi/internal/api/docker"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -74,23 +74,23 @@ func (s *ContainerRemovePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
+func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 	tests := []struct {
 		name         string
-		request      gen.DeleteNodeContainerByIDRequestObject
+		request      gen.DeleteNodeContainerDockerByIDRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.DeleteNodeContainerByIDResponseObject)
+		validateFunc func(resp gen.DeleteNodeContainerDockerByIDResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.DeleteNodeContainerByIDRequestObject{
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIDParams{},
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerRemove(
+					ModifyDockerRemove(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -102,8 +102,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerByID202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -117,14 +117,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 		},
 		{
 			name: "success with force",
-			request: gen.DeleteNodeContainerByIDRequestObject{
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIDParams{Force: boolPtr(true)},
+				Params:   gen.DeleteNodeContainerDockerByIDParams{Force: boolPtr(true)},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerRemove(
+					ModifyDockerRemove(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -136,22 +136,22 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerByID202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.DeleteNodeContainerByIDRequestObject{
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIDParams{},
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
-				r, ok := resp.(gen.DeleteNodeContainerByID400JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -159,14 +159,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 		},
 		{
 			name: "job client error",
-			request: gen.DeleteNodeContainerByIDRequestObject{
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Params:   gen.DeleteNodeContainerByIDParams{},
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerRemove(
+					ModifyDockerRemove(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -174,8 +174,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.DeleteNodeContainerByIDResponseObject) {
-				_, ok := resp.(gen.DeleteNodeContainerByID500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerByID500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -185,14 +185,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByID() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.DeleteNodeContainerByID(s.ctx, tt.request)
+			resp, err := s.handler.DeleteNodeContainerDockerByID(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIDValidationHTTP() {
+func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -202,11 +202,11 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIDValidationHT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/abc123",
+			path: "/node/server1/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyContainerRemove(gomock.Any(), "server1", "abc123", gomock.Any()).
+					ModifyDockerRemove(gomock.Any(), "server1", "abc123", gomock.Any()).
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -219,7 +219,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerByIDValidationHT
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/abc123",
+			path: "/node/nonexistent/container/docker/abc123",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},

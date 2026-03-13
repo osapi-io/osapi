@@ -26,8 +26,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
-	containerProv "github.com/retr0h/osapi/internal/provider/container"
-	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -39,7 +38,7 @@ import (
 )
 
 // factoryDockerNewFn is the function used to create a Docker driver (injectable for testing).
-var factoryDockerNewFn = docker.New
+var factoryDockerNewFn = dockerProv.NewDriver
 
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
@@ -65,7 +64,7 @@ func (f *ProviderFactory) CreateProviders() (
 	ping.Provider,
 	netinfo.Provider,
 	command.Provider,
-	containerProv.Provider,
+	dockerProv.Provider,
 ) {
 	plat := platform.Detect()
 
@@ -149,11 +148,11 @@ func (f *ProviderFactory) CreateProviders() (
 	commandProvider := command.New(f.logger, execManager)
 
 	// Create container provider (conditional on Docker availability)
-	var containerProvider containerProv.Provider
+	var containerProvider dockerProv.Provider
 	dockerDriver, err := factoryDockerNewFn()
 	if err == nil {
 		if pingErr := dockerDriver.Ping(context.Background()); pingErr == nil {
-			containerProvider = containerProv.New(dockerDriver)
+			containerProvider = dockerProv.New(dockerDriver)
 		} else {
 			f.logger.Info("Docker not available, container operations disabled",
 				slog.String("error", pingErr.Error()))

@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	apicontainer "github.com/retr0h/osapi/internal/api/container"
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	apicontainer "github.com/retr0h/osapi/internal/api/docker"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -75,23 +75,23 @@ func (s *ContainerStopPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
+func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeContainerStopRequestObject
+		request      gen.PostNodeContainerDockerStopRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeContainerStopResponseObject)
+		validateFunc func(resp gen.PostNodeContainerDockerStopResponseObject)
 	}{
 		{
 			name: "success without body",
-			request: gen.PostNodeContainerStopRequestObject{
+			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
 				Body:     nil,
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerStop(
+					ModifyDockerStop(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -103,8 +103,8 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerStopResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerStop202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -118,16 +118,16 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 		},
 		{
 			name: "success with timeout",
-			request: gen.PostNodeContainerStopRequestObject{
+			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerStopJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerStopJSONRequestBody{
 					Timeout: intPtr(30),
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerStop(
+					ModifyDockerStop(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -139,8 +139,8 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerStopResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerStop202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -148,16 +148,16 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 		},
 		{
 			name: "body validation error invalid timeout",
-			request: gen.PostNodeContainerStopRequestObject{
+			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerStopJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerStopJSONRequestBody{
 					Timeout: intPtr(999),
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerStopResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerStop400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "Timeout")
@@ -165,13 +165,13 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeContainerStopRequestObject{
+			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "",
 				Id:       "abc123",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerStopResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerStop400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -179,13 +179,13 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeContainerStopRequestObject{
+			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerStop(
+					ModifyDockerStop(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -193,8 +193,8 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeContainerStopResponseObject) {
-				_, ok := resp.(gen.PostNodeContainerStop500JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerStop500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -204,14 +204,14 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStop() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeContainerStop(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeContainerDockerStop(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStopValidationHTTP() {
+func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -222,12 +222,12 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStopValidationHTTP()
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/abc123/stop",
+			path: "/node/server1/container/docker/abc123/stop",
 			body: `{"timeout":10}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyContainerStop(gomock.Any(), "server1", "abc123", gomock.Any()).
+					ModifyDockerStop(gomock.Any(), "server1", "abc123", gomock.Any()).
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -240,7 +240,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStopValidationHTTP()
 		},
 		{
 			name: "when invalid timeout",
-			path: "/node/server1/container/abc123/stop",
+			path: "/node/server1/container/docker/abc123/stop",
 			body: `{"timeout":999}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -250,7 +250,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerStopValidationHTTP()
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/abc123/stop",
+			path: "/node/nonexistent/container/docker/abc123/stop",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)

@@ -1,4 +1,4 @@
-// Package docker implements the runtime.Driver interface using the Docker Engine API.
+// Package docker provides the Docker container management provider using the Docker Engine API.
 package docker
 
 import (
@@ -18,17 +18,15 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
 )
 
-// Driver implements runtime.Driver using the Docker Engine API.
-type Driver struct {
+// Client implements Driver using the Docker Engine API.
+type Client struct {
 	client dockerclient.APIClient
 }
 
 // New creates a new Docker driver using default client options.
-func New() (*Driver, error) {
+func NewDriver() (*Client, error) {
 	cli, err := dockerclient.NewClientWithOpts(
 		dockerclient.FromEnv,
 		dockerclient.WithAPIVersionNegotiation(),
@@ -37,18 +35,18 @@ func New() (*Driver, error) {
 		return nil, fmt.Errorf("create docker client: %w", err)
 	}
 
-	return &Driver{client: cli}, nil
+	return &Client{client: cli}, nil
 }
 
-// NewWithClient creates a Docker driver with an injected client (for testing).
-func NewWithClient(
+// NewDriverWithClient creates a Docker driver with an injected client (for testing).
+func NewDriverWithClient(
 	client dockerclient.APIClient,
-) *Driver {
-	return &Driver{client: client}
+) *Client {
+	return &Client{client: client}
 }
 
 // Ping verifies connectivity to the Docker daemon.
-func (d *Driver) Ping(
+func (d *Client) Ping(
 	ctx context.Context,
 ) error {
 	_, err := d.client.Ping(ctx)
@@ -60,10 +58,10 @@ func (d *Driver) Ping(
 }
 
 // Create creates a new container from the given parameters.
-func (d *Driver) Create(
+func (d *Client) Create(
 	ctx context.Context,
-	params runtime.CreateParams,
-) (*runtime.Container, error) {
+	params CreateParams,
+) (*Container, error) {
 	// Build Docker container configuration
 	config := &container.Config{
 		Image: params.Image,
@@ -137,7 +135,7 @@ func (d *Driver) Create(
 	}
 
 	// Return container summary
-	return &runtime.Container{
+	return &Container{
 		ID:      resp.ID,
 		Name:    params.Name,
 		Image:   params.Image,
@@ -147,7 +145,7 @@ func (d *Driver) Create(
 }
 
 // Start starts a stopped container.
-func (d *Driver) Start(
+func (d *Client) Start(
 	ctx context.Context,
 	id string,
 ) error {
@@ -159,7 +157,7 @@ func (d *Driver) Start(
 }
 
 // Stop stops a running container with an optional timeout.
-func (d *Driver) Stop(
+func (d *Client) Stop(
 	ctx context.Context,
 	id string,
 	timeout *time.Duration,
@@ -178,7 +176,7 @@ func (d *Driver) Stop(
 }
 
 // Remove removes a container.
-func (d *Driver) Remove(
+func (d *Client) Remove(
 	ctx context.Context,
 	id string,
 	force bool,
@@ -195,10 +193,10 @@ func (d *Driver) Remove(
 }
 
 // List returns a list of containers matching the given parameters.
-func (d *Driver) List(
+func (d *Client) List(
 	ctx context.Context,
-	params runtime.ListParams,
-) ([]runtime.Container, error) {
+	params ListParams,
+) ([]Container, error) {
 	opts := container.ListOptions{}
 
 	// Apply state filter
@@ -224,8 +222,8 @@ func (d *Driver) List(
 		return nil, fmt.Errorf("list containers: %w", err)
 	}
 
-	// Convert to runtime.Container
-	result := make([]runtime.Container, 0, len(containers))
+	// Convert to Container
+	result := make([]Container, 0, len(containers))
 	for _, c := range containers {
 		name := ""
 		if len(c.Names) > 0 {
@@ -233,7 +231,7 @@ func (d *Driver) List(
 			name = strings.TrimPrefix(c.Names[0], "/")
 		}
 
-		result = append(result, runtime.Container{
+		result = append(result, Container{
 			ID:      c.ID,
 			Name:    name,
 			Image:   c.Image,
@@ -246,10 +244,10 @@ func (d *Driver) List(
 }
 
 // Inspect returns detailed information about a container.
-func (d *Driver) Inspect(
+func (d *Client) Inspect(
 	ctx context.Context,
 	id string,
-) (*runtime.ContainerDetail, error) {
+) (*ContainerDetail, error) {
 	resp, err := d.client.ContainerInspect(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("inspect container: %w", err)
@@ -268,8 +266,8 @@ func (d *Driver) Inspect(
 		created = time.Now()
 	}
 
-	detail := &runtime.ContainerDetail{
-		Container: runtime.Container{
+	detail := &ContainerDetail{
+		Container: Container{
 			ID:      resp.ID,
 			Name:    name,
 			Image:   resp.Config.Image,
@@ -281,7 +279,7 @@ func (d *Driver) Inspect(
 	// Add network settings
 	if resp.NetworkSettings != nil {
 		for _, netConfig := range resp.NetworkSettings.Networks {
-			detail.NetworkSettings = &runtime.NetworkSettings{
+			detail.NetworkSettings = &NetworkSettings{
 				IPAddress: netConfig.IPAddress,
 				Gateway:   netConfig.Gateway,
 			}
@@ -291,12 +289,12 @@ func (d *Driver) Inspect(
 
 	// Add port mappings
 	if resp.HostConfig != nil && resp.HostConfig.PortBindings != nil {
-		ports := make([]runtime.PortMapping, 0)
+		ports := make([]PortMapping, 0)
 		for containerPort, bindings := range resp.HostConfig.PortBindings {
 			for _, binding := range bindings {
 				hostPort, _ := strconv.Atoi(binding.HostPort)
 				cPort, _ := strconv.Atoi(containerPort.Port())
-				ports = append(ports, runtime.PortMapping{
+				ports = append(ports, PortMapping{
 					Host:      hostPort,
 					Container: cPort,
 				})
@@ -307,9 +305,9 @@ func (d *Driver) Inspect(
 
 	// Add mounts
 	if len(resp.Mounts) > 0 {
-		mounts := make([]runtime.VolumeMapping, 0, len(resp.Mounts))
+		mounts := make([]VolumeMapping, 0, len(resp.Mounts))
 		for _, m := range resp.Mounts {
-			mounts = append(mounts, runtime.VolumeMapping{
+			mounts = append(mounts, VolumeMapping{
 				Host:      m.Source,
 				Container: m.Destination,
 			})
@@ -326,11 +324,11 @@ func (d *Driver) Inspect(
 }
 
 // Exec executes a command in a running container.
-func (d *Driver) Exec(
+func (d *Client) Exec(
 	ctx context.Context,
 	id string,
-	params runtime.ExecParams,
-) (*runtime.ExecResult, error) {
+	params ExecParams,
+) (*ExecResult, error) {
 	// Create exec configuration
 	execConfig := container.ExecOptions{
 		Cmd:          params.Command,
@@ -375,7 +373,7 @@ func (d *Driver) Exec(
 		return nil, fmt.Errorf("inspect exec: %w", err)
 	}
 
-	return &runtime.ExecResult{
+	return &ExecResult{
 		Stdout:   stdout.String(),
 		Stderr:   stderr.String(),
 		ExitCode: inspectResp.ExitCode,
@@ -383,10 +381,10 @@ func (d *Driver) Exec(
 }
 
 // Pull pulls a container image from a registry.
-func (d *Driver) Pull(
+func (d *Client) Pull(
 	ctx context.Context,
 	imageName string,
-) (*runtime.PullResult, error) {
+) (*PullResult, error) {
 	pullResp, err := d.client.ImagePull(ctx, imageName, image.PullOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("pull image: %w", err)
@@ -422,7 +420,7 @@ func (d *Driver) Pull(
 		}
 	}
 
-	result := &runtime.PullResult{
+	result := &PullResult{
 		ImageID: inspectResp.ID,
 		Tag:     tag,
 		Size:    inspectResp.Size,

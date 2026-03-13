@@ -29,28 +29,21 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerListCmd represents the clientContainerList command.
-var clientContainerListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List containers on target node",
-	Long:  `List containers on the target node, optionally filtered by state.`,
+// clientContainerDockerPullCmd represents the clientContainerDockerPull command.
+var clientContainerDockerPullCmd = &cobra.Command{
+	Use:   "pull",
+	Short: "Pull a container image",
+	Long:  `Pull a container image on the target node.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		stateFlag, _ := cmd.Flags().GetString("state")
-		limit, _ := cmd.Flags().GetInt("limit")
+		image, _ := cmd.Flags().GetString("image")
 
-		params := &gen.GetNodeContainerParams{}
-
-		if stateFlag != "" {
-			state := gen.GetNodeContainerParamsState(stateFlag)
-			params.State = &state
-		}
-		if limit > 0 {
-			params.Limit = &limit
+		body := gen.DockerPullRequest{
+			Image: image,
 		}
 
-		resp, err := sdkClient.Container.List(ctx, host, params)
+		resp, err := sdkClient.Docker.Pull(ctx, host, body)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -68,40 +61,22 @@ var clientContainerListCmd = &cobra.Command{
 		}
 
 		for _, r := range resp.Data.Results {
+			cli.PrintKV("Hostname", r.Hostname)
 			if r.Error != "" {
-				cli.PrintKV("Hostname", r.Hostname, "Error", r.Error)
+				cli.PrintKV("Error", r.Error)
 				continue
 			}
-
-			rows := make([][]string, 0, len(r.Containers))
-			for _, c := range r.Containers {
-				shortID := c.ID
-				if len(shortID) > 12 {
-					shortID = shortID[:12]
-				}
-				rows = append(rows, []string{
-					shortID,
-					c.Name,
-					c.Image,
-					c.State,
-					c.Created,
-				})
-			}
-
-			cli.PrintCompactTable([]cli.Section{{
-				Title:   r.Hostname,
-				Headers: []string{"ID", "NAME", "IMAGE", "STATE", "CREATED"},
-				Rows:    rows,
-			}})
+			cli.PrintKV("Image ID", r.ImageID, "Tag", r.Tag)
+			cli.PrintKV("Size", cli.FormatBytes(int(r.Size)))
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerListCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerPullCmd)
 
-	clientContainerListCmd.PersistentFlags().
-		String("state", "running", "Filter by state: running, stopped, all")
-	clientContainerListCmd.PersistentFlags().
-		Int("limit", 0, "Maximum number of containers to return")
+	clientContainerDockerPullCmd.PersistentFlags().
+		String("image", "", "Image reference to pull (required)")
+
+	_ = clientContainerDockerPullCmd.MarkPersistentFlagRequired("image")
 }

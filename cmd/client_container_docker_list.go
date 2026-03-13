@@ -29,23 +29,28 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerStopCmd represents the clientContainerStop command.
-var clientContainerStopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "Stop a running container",
-	Long:  `Stop a running container on the target node.`,
+// clientContainerDockerListCmd represents the clientContainerDockerList command.
+var clientContainerDockerListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List containers on target node",
+	Long:  `List containers on the target node, optionally filtered by state.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		id, _ := cmd.Flags().GetString("id")
-		timeout, _ := cmd.Flags().GetInt("timeout")
+		stateFlag, _ := cmd.Flags().GetString("state")
+		limit, _ := cmd.Flags().GetInt("limit")
 
-		body := gen.ContainerStopRequest{}
-		if cmd.Flags().Changed("timeout") {
-			body.Timeout = &timeout
+		params := &gen.GetNodeContainerDockerParams{}
+
+		if stateFlag != "" {
+			state := gen.GetNodeContainerDockerParamsState(stateFlag)
+			params.State = &state
+		}
+		if limit > 0 {
+			params.Limit = &limit
 		}
 
-		resp, err := sdkClient.Container.Stop(ctx, host, id, body)
+		resp, err := sdkClient.Docker.List(ctx, host, params)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -63,23 +68,40 @@ var clientContainerStopCmd = &cobra.Command{
 		}
 
 		for _, r := range resp.Data.Results {
-			cli.PrintKV("Hostname", r.Hostname)
 			if r.Error != "" {
-				cli.PrintKV("Error", r.Error)
+				cli.PrintKV("Hostname", r.Hostname, "Error", r.Error)
 				continue
 			}
-			cli.PrintKV("Message", r.Message)
+
+			rows := make([][]string, 0, len(r.Containers))
+			for _, c := range r.Containers {
+				shortID := c.ID
+				if len(shortID) > 12 {
+					shortID = shortID[:12]
+				}
+				rows = append(rows, []string{
+					shortID,
+					c.Name,
+					c.Image,
+					c.State,
+					c.Created,
+				})
+			}
+
+			cli.PrintCompactTable([]cli.Section{{
+				Title:   r.Hostname,
+				Headers: []string{"ID", "NAME", "IMAGE", "STATE", "CREATED"},
+				Rows:    rows,
+			}})
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerStopCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerListCmd)
 
-	clientContainerStopCmd.PersistentFlags().
-		String("id", "", "Container ID to stop (required)")
-	clientContainerStopCmd.PersistentFlags().
-		Int("timeout", 10, "Seconds to wait before killing the container")
-
-	_ = clientContainerStopCmd.MarkPersistentFlagRequired("id")
+	clientContainerDockerListCmd.PersistentFlags().
+		String("state", "running", "Filter by state: running, stopped, all")
+	clientContainerDockerListCmd.PersistentFlags().
+		Int("limit", 0, "Maximum number of containers to return")
 }

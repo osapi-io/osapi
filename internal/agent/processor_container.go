@@ -28,15 +28,15 @@ import (
 	"time"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 )
 
-// processContainerOperation handles container-related operations.
-func (a *Agent) processContainerOperation(
+// processDockerOperation handles docker-related operations.
+func (a *Agent) processDockerOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	if a.containerProvider == nil {
-		return nil, fmt.Errorf("container runtime not available")
+		return nil, fmt.Errorf("docker runtime not available")
 	}
 
 	ctx := context.Background()
@@ -46,48 +46,48 @@ func (a *Agent) processContainerOperation(
 
 	switch baseOperation {
 	case "create":
-		return a.processContainerCreate(ctx, jobRequest)
+		return a.processDockerCreate(ctx, jobRequest)
 	case "start":
-		return a.processContainerStart(ctx, jobRequest)
+		return a.processDockerStart(ctx, jobRequest)
 	case "stop":
-		return a.processContainerStop(ctx, jobRequest)
+		return a.processDockerStop(ctx, jobRequest)
 	case "remove":
-		return a.processContainerRemove(ctx, jobRequest)
+		return a.processDockerRemove(ctx, jobRequest)
 	case "list":
-		return a.processContainerList(ctx, jobRequest)
+		return a.processDockerList(ctx, jobRequest)
 	case "inspect":
-		return a.processContainerInspect(ctx, jobRequest)
+		return a.processDockerInspect(ctx, jobRequest)
 	case "exec":
-		return a.processContainerExec(ctx, jobRequest)
+		return a.processDockerExec(ctx, jobRequest)
 	case "pull":
-		return a.processContainerPull(ctx, jobRequest)
+		return a.processDockerPull(ctx, jobRequest)
 	default:
-		return nil, fmt.Errorf("unsupported container operation: %s", jobRequest.Operation)
+		return nil, fmt.Errorf("unsupported docker operation: %s", jobRequest.Operation)
 	}
 }
 
-// processContainerCreate handles container creation.
-func (a *Agent) processContainerCreate(
+// processDockerCreate handles docker container creation.
+func (a *Agent) processDockerCreate(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var data job.ContainerCreateData
+	var data job.DockerCreateData
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal create data: %w", err)
 	}
 
 	// Map ports and volumes from job types to runtime types
-	var ports []runtime.PortMapping
+	var ports []dockerProv.PortMapping
 	for _, p := range data.Ports {
-		ports = append(ports, runtime.PortMapping{Host: p.Host, Container: p.Container})
+		ports = append(ports, dockerProv.PortMapping{Host: p.Host, Container: p.Container})
 	}
 
-	var volumes []runtime.VolumeMapping
+	var volumes []dockerProv.VolumeMapping
 	for _, v := range data.Volumes {
-		volumes = append(volumes, runtime.VolumeMapping{Host: v.Host, Container: v.Container})
+		volumes = append(volumes, dockerProv.VolumeMapping{Host: v.Host, Container: v.Container})
 	}
 
-	result, err := a.containerProvider.Create(ctx, runtime.CreateParams{
+	result, err := a.containerProvider.Create(ctx, dockerProv.CreateParams{
 		Image:     data.Image,
 		Name:      data.Name,
 		Command:   data.Command,
@@ -103,8 +103,8 @@ func (a *Agent) processContainerCreate(
 	return json.Marshal(result)
 }
 
-// processContainerStart handles starting a container.
-func (a *Agent) processContainerStart(
+// processDockerStart handles starting a docker container.
+func (a *Agent) processDockerStart(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -125,8 +125,8 @@ func (a *Agent) processContainerStart(
 	return json.Marshal(result)
 }
 
-// processContainerStop handles stopping a container.
-func (a *Agent) processContainerStop(
+// processDockerStop handles stopping a docker container.
+func (a *Agent) processDockerStop(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -154,8 +154,8 @@ func (a *Agent) processContainerStop(
 	return json.Marshal(result)
 }
 
-// processContainerRemove handles removing a container.
-func (a *Agent) processContainerRemove(
+// processDockerRemove handles removing a docker container.
+func (a *Agent) processDockerRemove(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -177,17 +177,17 @@ func (a *Agent) processContainerRemove(
 	return json.Marshal(result)
 }
 
-// processContainerList handles listing containers.
-func (a *Agent) processContainerList(
+// processDockerList handles listing docker containers.
+func (a *Agent) processDockerList(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var data job.ContainerListData
+	var data job.DockerListData
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal list data: %w", err)
 	}
 
-	result, err := a.containerProvider.List(ctx, runtime.ListParams{
+	result, err := a.containerProvider.List(ctx, dockerProv.ListParams{
 		State: data.State,
 		Limit: data.Limit,
 	})
@@ -198,8 +198,8 @@ func (a *Agent) processContainerList(
 	return json.Marshal(result)
 }
 
-// processContainerInspect handles inspecting a container.
-func (a *Agent) processContainerInspect(
+// processDockerInspect handles inspecting a docker container.
+func (a *Agent) processDockerInspect(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -218,8 +218,8 @@ func (a *Agent) processContainerInspect(
 	return json.Marshal(result)
 }
 
-// processContainerExec handles executing a command in a container.
-func (a *Agent) processContainerExec(
+// processDockerExec handles executing a command in a docker container.
+func (a *Agent) processDockerExec(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
@@ -233,7 +233,7 @@ func (a *Agent) processContainerExec(
 		return nil, fmt.Errorf("unmarshal exec data: %w", err)
 	}
 
-	result, err := a.containerProvider.Exec(ctx, data.ID, runtime.ExecParams{
+	result, err := a.containerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
 		Command:    data.Command,
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
@@ -245,8 +245,8 @@ func (a *Agent) processContainerExec(
 	return json.Marshal(result)
 }
 
-// processContainerPull handles pulling a container image.
-func (a *Agent) processContainerPull(
+// processDockerPull handles pulling a docker image.
+func (a *Agent) processDockerPull(
 	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {

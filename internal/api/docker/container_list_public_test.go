@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	apicontainer "github.com/retr0h/osapi/internal/api/container"
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	apicontainer "github.com/retr0h/osapi/internal/api/docker"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -75,26 +75,26 @@ func (s *ContainerListPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
+func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 	stateAll := gen.All
 
 	tests := []struct {
 		name         string
-		request      gen.GetNodeContainerRequestObject
+		request      gen.GetNodeContainerDockerRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.GetNodeContainerResponseObject)
+		validateFunc func(resp gen.GetNodeContainerDockerResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params: gen.GetNodeContainerParams{
+				Params: gen.GetNodeContainerDockerParams{
 					State: &stateAll,
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryContainerList(
+					QueryDockerList(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
@@ -107,8 +107,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -121,13 +121,13 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "",
-				Params:   gen.GetNodeContainerParams{},
+				Params:   gen.GetNodeContainerDockerParams{},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer400JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -135,15 +135,15 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "validation error invalid limit",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params: gen.GetNodeContainerParams{
+				Params: gen.GetNodeContainerDockerParams{
 					Limit: intPtr(0),
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer400JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "Limit")
@@ -151,16 +151,16 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "success with limit param",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params: gen.GetNodeContainerParams{
+				Params: gen.GetNodeContainerDockerParams{
 					State: &stateAll,
 					Limit: intPtr(5),
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryContainerList(
+					QueryDockerList(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
@@ -173,8 +173,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -188,15 +188,15 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "success with nil response data",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params: gen.GetNodeContainerParams{
+				Params: gen.GetNodeContainerDockerParams{
 					State: &stateAll,
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryContainerList(
+					QueryDockerList(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
@@ -207,8 +207,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 						Data:     nil,
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -218,15 +218,15 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "success with empty created field",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params: gen.GetNodeContainerParams{
+				Params: gen.GetNodeContainerDockerParams{
 					State: &stateAll,
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryContainerList(
+					QueryDockerList(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
@@ -239,8 +239,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				r, ok := resp.(gen.GetNodeContainer200JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Require().NotNil(r.Results[0].Containers)
@@ -252,21 +252,21 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		},
 		{
 			name: "job client error",
-			request: gen.GetNodeContainerRequestObject{
+			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "server1",
-				Params:   gen.GetNodeContainerParams{},
+				Params:   gen.GetNodeContainerDockerParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryContainerList(
+					QueryDockerList(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeContainerResponseObject) {
-				_, ok := resp.(gen.GetNodeContainer500JSONResponse)
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				_, ok := resp.(gen.GetNodeContainerDocker500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -276,14 +276,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainer() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.GetNodeContainer(s.ctx, tt.request)
+			resp, err := s.handler.GetNodeContainerDocker(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerListPublicTestSuite) TestGetNodeContainerValidationHTTP() {
+func (s *ContainerListPublicTestSuite) TestGetNodeContainerDockerValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -293,11 +293,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container",
+			path: "/node/server1/container/docker",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryContainerList(gomock.Any(), "server1", gomock.Any()).
+					QueryDockerList(gomock.Any(), "server1", gomock.Any()).
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -310,7 +310,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container",
+			path: "/node/nonexistent/container/docker",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},

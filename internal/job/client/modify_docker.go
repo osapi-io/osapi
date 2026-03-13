@@ -28,17 +28,17 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// ModifyContainerCreate creates a container on a target.
-func (c *Client) ModifyContainerCreate(
+// ModifyDockerCreate creates a docker container on a target.
+func (c *Client) ModifyDockerCreate(
 	ctx context.Context,
 	target string,
-	data *job.ContainerCreateData,
+	data *job.DockerCreateData,
 ) (*job.Response, error) {
 	dataBytes, _ := json.Marshal(data)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerCreate,
+		Category:  "docker",
+		Operation: job.OperationDockerCreate,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -57,8 +57,8 @@ func (c *Client) ModifyContainerCreate(
 	return resp, nil
 }
 
-// ModifyContainerStart starts a container on a target.
-func (c *Client) ModifyContainerStart(
+// ModifyDockerStart starts a docker container on a target.
+func (c *Client) ModifyDockerStart(
 	ctx context.Context,
 	target string,
 	id string,
@@ -67,8 +67,8 @@ func (c *Client) ModifyContainerStart(
 	dataBytes, _ := json.Marshal(data)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerStart,
+		Category:  "docker",
+		Operation: job.OperationDockerStart,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -87,12 +87,12 @@ func (c *Client) ModifyContainerStart(
 	return resp, nil
 }
 
-// ModifyContainerStop stops a container on a target.
-func (c *Client) ModifyContainerStop(
+// ModifyDockerStop stops a docker container on a target.
+func (c *Client) ModifyDockerStop(
 	ctx context.Context,
 	target string,
 	id string,
-	data *job.ContainerStopData,
+	data *job.DockerStopData,
 ) (*job.Response, error) {
 	// Merge id into the data
 	stopData := struct {
@@ -105,8 +105,8 @@ func (c *Client) ModifyContainerStop(
 	dataBytes, _ := json.Marshal(stopData)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerStop,
+		Category:  "docker",
+		Operation: job.OperationDockerStop,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -125,12 +125,12 @@ func (c *Client) ModifyContainerStop(
 	return resp, nil
 }
 
-// ModifyContainerRemove removes a container on a target.
-func (c *Client) ModifyContainerRemove(
+// ModifyDockerRemove removes a docker container on a target.
+func (c *Client) ModifyDockerRemove(
 	ctx context.Context,
 	target string,
 	id string,
-	data *job.ContainerRemoveData,
+	data *job.DockerRemoveData,
 ) (*job.Response, error) {
 	// Merge id into the data
 	removeData := struct {
@@ -143,8 +143,8 @@ func (c *Client) ModifyContainerRemove(
 	dataBytes, _ := json.Marshal(removeData)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerRemove,
+		Category:  "docker",
+		Operation: job.OperationDockerRemove,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -163,17 +163,17 @@ func (c *Client) ModifyContainerRemove(
 	return resp, nil
 }
 
-// QueryContainerList lists containers on a target.
-func (c *Client) QueryContainerList(
+// QueryDockerList lists docker containers on a target.
+func (c *Client) QueryDockerList(
 	ctx context.Context,
 	target string,
-	data *job.ContainerListData,
+	data *job.DockerListData,
 ) (*job.Response, error) {
 	dataBytes, _ := json.Marshal(data)
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "container",
-		Operation: job.OperationContainerList,
+		Category:  "docker",
+		Operation: job.OperationDockerList,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -192,8 +192,8 @@ func (c *Client) QueryContainerList(
 	return resp, nil
 }
 
-// QueryContainerInspect inspects a container on a target.
-func (c *Client) QueryContainerInspect(
+// QueryDockerInspect inspects a docker container on a target.
+func (c *Client) QueryDockerInspect(
 	ctx context.Context,
 	target string,
 	id string,
@@ -202,8 +202,8 @@ func (c *Client) QueryContainerInspect(
 	dataBytes, _ := json.Marshal(data)
 	req := &job.Request{
 		Type:      job.TypeQuery,
-		Category:  "container",
-		Operation: job.OperationContainerInspect,
+		Category:  "docker",
+		Operation: job.OperationDockerInspect,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -222,12 +222,12 @@ func (c *Client) QueryContainerInspect(
 	return resp, nil
 }
 
-// ModifyContainerExec executes a command in a container on a target.
-func (c *Client) ModifyContainerExec(
+// ModifyDockerExec executes a command in a docker container on a target.
+func (c *Client) ModifyDockerExec(
 	ctx context.Context,
 	target string,
 	id string,
-	data *job.ContainerExecData,
+	data *job.DockerExecData,
 ) (*job.Response, error) {
 	// Merge id into the data
 	execData := struct {
@@ -244,8 +244,8 @@ func (c *Client) ModifyContainerExec(
 	dataBytes, _ := json.Marshal(execData)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerExec,
+		Category:  "docker",
+		Operation: job.OperationDockerExec,
 		Data:      json.RawMessage(dataBytes),
 	}
 
@@ -264,17 +264,17 @@ func (c *Client) ModifyContainerExec(
 	return resp, nil
 }
 
-// ModifyContainerPull pulls an image on a target.
-func (c *Client) ModifyContainerPull(
+// ModifyDockerPull pulls a docker image on a target.
+func (c *Client) ModifyDockerPull(
 	ctx context.Context,
 	target string,
-	data *job.ContainerPullData,
+	data *job.DockerPullData,
 ) (*job.Response, error) {
 	dataBytes, _ := json.Marshal(data)
 	req := &job.Request{
 		Type:      job.TypeModify,
-		Category:  "container",
-		Operation: job.OperationContainerPull,
+		Category:  "docker",
+		Operation: job.OperationDockerPull,
 		Data:      json.RawMessage(dataBytes),
 	}
 

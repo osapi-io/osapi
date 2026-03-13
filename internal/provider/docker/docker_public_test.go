@@ -21,8 +21,7 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
-	"github.com/retr0h/osapi/internal/provider/container/runtime/docker"
+	dockerprov "github.com/retr0h/osapi/internal/provider/docker"
 )
 
 // mockDockerClient embeds dockerclient.APIClient and overrides specific methods for testing.
@@ -255,16 +254,16 @@ func (s *DockerDriverPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 }
 
-func (s *DockerDriverPublicTestSuite) TestNew() {
+func (s *DockerDriverPublicTestSuite) TestNewDriver() {
 	tests := []struct {
 		name         string
 		setupEnv     func() (cleanup func())
-		validateFunc func(d runtime.Driver, err error)
+		validateFunc func(d dockerprov.Driver, err error)
 	}{
 		{
 			name: "returns non-nil driver",
 			validateFunc: func(
-				d runtime.Driver,
+				d dockerprov.Driver,
 				err error,
 			) {
 				s.NoError(err)
@@ -286,7 +285,7 @@ func (s *DockerDriverPublicTestSuite) TestNew() {
 				}
 			},
 			validateFunc: func(
-				d runtime.Driver,
+				d dockerprov.Driver,
 				err error,
 			) {
 				s.Error(err)
@@ -303,7 +302,7 @@ func (s *DockerDriverPublicTestSuite) TestNew() {
 				defer cleanup()
 			}
 
-			d, err := docker.New()
+			d, err := dockerprov.NewDriver()
 			tt.validateFunc(d, err)
 		})
 	}
@@ -350,7 +349,7 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			err := d.Ping(s.ctx)
 			tt.validateFunc(err)
 		})
@@ -361,8 +360,8 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
 		mockClient   *mockDockerClient
-		params       runtime.CreateParams
-		validateFunc func(c *runtime.Container, err error)
+		params       dockerprov.CreateParams
+		validateFunc func(c *dockerprov.Container, err error)
 	}{
 		{
 			name: "successful container creation",
@@ -378,12 +377,12 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{ID: "test-id"}, nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
 				Name:  "test-nginx",
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -412,13 +411,13 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image:     "nginx:latest",
 				Name:      "test-nginx-auto",
 				AutoStart: true,
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -442,13 +441,13 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{ID: "cmd-id"}, nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image:   "alpine:latest",
 				Name:    "test-cmd",
 				Command: []string{"echo", "hello"},
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -473,13 +472,13 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{ID: "env-id"}, nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "alpine:latest",
 				Name:  "test-env",
 				Env:   map[string]string{"FOO": "bar"},
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -507,15 +506,15 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{ID: "ports-id"}, nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
 				Name:  "test-ports",
-				Ports: []runtime.PortMapping{
+				Ports: []dockerprov.PortMapping{
 					{Host: 8080, Container: 80},
 				},
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -541,15 +540,15 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{ID: "vols-id"}, nil
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
 				Name:  "test-vols",
-				Volumes: []runtime.VolumeMapping{
+				Volumes: []dockerprov.VolumeMapping{
 					{Host: "/host/data", Container: "/container/data"},
 				},
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -571,12 +570,12 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return container.CreateResponse{}, fmt.Errorf("image not found")
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image: "nonexistent:latest",
 				Name:  "test-fail",
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.Error(err)
@@ -605,13 +604,13 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 					return fmt.Errorf("start failed")
 				},
 			},
-			params: runtime.CreateParams{
+			params: dockerprov.CreateParams{
 				Image:     "nginx:latest",
 				Name:      "test-autostart-fail",
 				AutoStart: true,
 			},
 			validateFunc: func(
-				c *runtime.Container,
+				c *dockerprov.Container,
 				err error,
 			) {
 				s.Error(err)
@@ -623,7 +622,7 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			c, err := d.Create(s.ctx, tt.params)
 			tt.validateFunc(c, err)
 		})
@@ -678,7 +677,7 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			err := d.Start(s.ctx, tt.containerID)
 			tt.validateFunc(err)
 		})
@@ -760,7 +759,7 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			err := d.Stop(s.ctx, tt.containerID, tt.timeout)
 			tt.validateFunc(err)
 		})
@@ -818,7 +817,7 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			err := d.Remove(s.ctx, tt.containerID, tt.force)
 			tt.validateFunc(err)
 		})
@@ -829,8 +828,8 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		mockClient   *mockDockerClient
-		params       runtime.ListParams
-		validateFunc func(containers []runtime.Container, err error)
+		params       dockerprov.ListParams
+		validateFunc func(containers []dockerprov.Container, err error)
 	}{
 		{
 			name: "successful list all containers",
@@ -852,9 +851,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					}, nil
 				},
 			},
-			params: runtime.ListParams{State: "all"},
+			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -874,9 +873,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					return []container.Summary{}, nil
 				},
 			},
-			params: runtime.ListParams{State: "running"},
+			params: dockerprov.ListParams{State: "running"},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -896,9 +895,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					return []container.Summary{}, nil
 				},
 			},
-			params: runtime.ListParams{State: "stopped"},
+			params: dockerprov.ListParams{State: "stopped"},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -917,9 +916,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					return []container.Summary{}, nil
 				},
 			},
-			params: runtime.ListParams{State: ""},
+			params: dockerprov.ListParams{State: ""},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -938,9 +937,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					return []container.Summary{}, nil
 				},
 			},
-			params: runtime.ListParams{State: "all", Limit: 5},
+			params: dockerprov.ListParams{State: "all", Limit: 5},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -965,9 +964,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					}, nil
 				},
 			},
-			params: runtime.ListParams{State: "all"},
+			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.NoError(err)
@@ -985,9 +984,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 					return nil, fmt.Errorf("daemon error")
 				},
 			},
-			params: runtime.ListParams{State: "all"},
+			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
-				containers []runtime.Container,
+				containers []dockerprov.Container,
 				err error,
 			) {
 				s.Error(err)
@@ -999,7 +998,7 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			containers, err := d.List(s.ctx, tt.params)
 			tt.validateFunc(containers, err)
 		})
@@ -1011,7 +1010,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		name         string
 		mockClient   *mockDockerClient
 		containerID  string
-		validateFunc func(detail *runtime.ContainerDetail, err error)
+		validateFunc func(detail *dockerprov.ContainerDetail, err error)
 	}{
 		{
 			name: "successful inspect",
@@ -1033,7 +1032,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "test-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1062,7 +1061,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "nil-state-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1090,7 +1089,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "bad-time-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1126,7 +1125,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "net-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1165,7 +1164,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "ports-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1201,7 +1200,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "mounts-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1236,7 +1235,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "health-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.NoError(err)
@@ -1256,7 +1255,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 			},
 			containerID: "missing-id",
 			validateFunc: func(
-				detail *runtime.ContainerDetail,
+				detail *dockerprov.ContainerDetail,
 				err error,
 			) {
 				s.Error(err)
@@ -1268,7 +1267,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			detail, err := d.Inspect(s.ctx, tt.containerID)
 			tt.validateFunc(detail, err)
 		})
@@ -1280,8 +1279,8 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		name         string
 		mockClient   *mockDockerClient
 		containerID  string
-		params       runtime.ExecParams
-		validateFunc func(result *runtime.ExecResult, err error)
+		params       dockerprov.ExecParams
+		validateFunc func(result *dockerprov.ExecResult, err error)
 	}{
 		{
 			name: "successful exec",
@@ -1312,11 +1311,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "test-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"echo", "hello"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1353,12 +1352,12 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "test-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"env"},
 				Env:     map[string]string{"MY_VAR": "value"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1392,12 +1391,12 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "test-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command:    []string{"pwd"},
 				WorkingDir: "/app",
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1416,11 +1415,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "stopped-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1447,11 +1446,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "test-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1478,11 +1477,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "container-1",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1515,11 +1514,11 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 				},
 			},
 			containerID: "test-id",
-			params: runtime.ExecParams{
+			params: dockerprov.ExecParams{
 				Command: []string{"ls"},
 			},
 			validateFunc: func(
-				result *runtime.ExecResult,
+				result *dockerprov.ExecResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1531,7 +1530,7 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			result, err := d.Exec(s.ctx, tt.containerID, tt.params)
 			tt.validateFunc(result, err)
 		})
@@ -1543,7 +1542,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		name         string
 		mockClient   *mockDockerClient
 		imageName    string
-		validateFunc func(result *runtime.PullResult, err error)
+		validateFunc func(result *dockerprov.PullResult, err error)
 	}{
 		{
 			name: "successful image pull",
@@ -1569,7 +1568,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1606,7 +1605,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "nginx:1.25",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1628,7 +1627,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "nonexistent:latest",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1650,7 +1649,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1682,7 +1681,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "custom-image",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.NoError(err)
@@ -1710,7 +1709,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
-				result *runtime.PullResult,
+				result *dockerprov.PullResult,
 				err error,
 			) {
 				s.Error(err)
@@ -1722,7 +1721,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := docker.NewWithClient(tt.mockClient)
+			d := dockerprov.NewDriverWithClient(tt.mockClient)
 			result, err := d.Pull(s.ctx, tt.imageName)
 			tt.validateFunc(result, err)
 		})

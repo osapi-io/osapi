@@ -35,8 +35,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	apicontainer "github.com/retr0h/osapi/internal/api/container"
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	apicontainer "github.com/retr0h/osapi/internal/api/docker"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -76,24 +76,24 @@ func (s *ContainerPullPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
+func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeContainerPullRequestObject
+		request      gen.PostNodeContainerDockerPullRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeContainerPullResponseObject)
+		validateFunc func(resp gen.PostNodeContainerDockerPullResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeContainerPullRequestObject{
+			request: gen.PostNodeContainerDockerPullRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerPullJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
 					Image: "nginx:latest",
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerPull(
+					ModifyDockerPull(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
@@ -107,8 +107,8 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerPull202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -124,15 +124,15 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeContainerPullRequestObject{
+			request: gen.PostNodeContainerDockerPullRequestObject{
 				Hostname: "",
-				Body: &gen.PostNodeContainerPullJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
 					Image: "nginx:latest",
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerPull400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerPull400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -140,38 +140,38 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
 		},
 		{
 			name: "body validation error empty image",
-			request: gen.PostNodeContainerPullRequestObject{
+			request: gen.PostNodeContainerDockerPullRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerPullJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
 					Image: "",
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerPull400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerPull400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 			},
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeContainerPullRequestObject{
+			request: gen.PostNodeContainerDockerPullRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerPullJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
 					Image: "nginx:latest",
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerPull(
+					ModifyDockerPull(
 						gomock.Any(),
 						"server1",
 						gomock.Any(),
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeContainerPullResponseObject) {
-				_, ok := resp.(gen.PostNodeContainerPull500JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerPull500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -181,14 +181,14 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPull() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeContainerPull(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeContainerDockerPull(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPullValidationHTTP() {
+func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -199,12 +199,12 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPullValidationHTTP()
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/pull",
+			path: "/node/server1/container/docker/pull",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyContainerPull(gomock.Any(), "server1", gomock.Any()).
+					ModifyDockerPull(gomock.Any(), "server1", gomock.Any()).
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -220,7 +220,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPullValidationHTTP()
 		},
 		{
 			name: "when missing image",
-			path: "/node/server1/container/pull",
+			path: "/node/server1/container/docker/pull",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -230,7 +230,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerPullValidationHTTP()
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/pull",
+			path: "/node/nonexistent/container/docker/pull",
 			body: `{"image":"nginx:latest"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)

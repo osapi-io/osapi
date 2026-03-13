@@ -22,23 +22,24 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientContainerStartCmd represents the clientContainerStart command.
-var clientContainerStartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start a stopped container",
-	Long:  `Start a stopped container on the target node.`,
+// clientContainerDockerInspectCmd represents the clientContainerDockerInspect command.
+var clientContainerDockerInspectCmd = &cobra.Command{
+	Use:   "inspect",
+	Short: "Inspect a container",
+	Long:  `Retrieve detailed information about a specific container on the target node.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		id, _ := cmd.Flags().GetString("id")
 
-		resp, err := sdkClient.Container.Start(ctx, host, id)
+		resp, err := sdkClient.Docker.Inspect(ctx, host, id)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -61,16 +62,45 @@ var clientContainerStartCmd = &cobra.Command{
 				cli.PrintKV("Error", r.Error)
 				continue
 			}
-			cli.PrintKV("Message", r.Message)
+			cli.PrintKV("ID", r.ID, "Name", r.Name)
+			cli.PrintKV("Image", r.Image, "State", r.State)
+			cli.PrintKV("Created", r.Created)
+			if r.Health != "" {
+				cli.PrintKV("Health", r.Health)
+			}
+			cli.PrintKV("Ports", cli.FormatList(r.Ports))
+			cli.PrintKV("Mounts", cli.FormatList(r.Mounts))
+
+			if len(r.NetworkSettings) > 0 {
+				ip := r.NetworkSettings["ip_address"]
+				gateway := r.NetworkSettings["gateway"]
+				if ip != "" {
+					cli.PrintKV("Network IP", ip)
+				}
+				if gateway != "" {
+					cli.PrintKV("Network Gateway", gateway)
+				}
+
+				// Display any other network settings
+				other := make([]string, 0)
+				for k, v := range r.NetworkSettings {
+					if k != "ip_address" && k != "gateway" && v != "" {
+						other = append(other, k+"="+v)
+					}
+				}
+				if len(other) > 0 {
+					cli.PrintKV("Network", strings.Join(other, ", "))
+				}
+			}
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerStartCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerInspectCmd)
 
-	clientContainerStartCmd.PersistentFlags().
-		String("id", "", "Container ID to start (required)")
+	clientContainerDockerInspectCmd.PersistentFlags().
+		String("id", "", "Container ID to inspect (required)")
 
-	_ = clientContainerStartCmd.MarkPersistentFlagRequired("id")
+	_ = clientContainerDockerInspectCmd.MarkPersistentFlagRequired("id")
 }

@@ -35,9 +35,8 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
-	containerProv "github.com/retr0h/osapi/internal/provider/container"
-	containerMocks "github.com/retr0h/osapi/internal/provider/container/mocks"
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
+	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerMocks "github.com/retr0h/osapi/internal/provider/docker/mocks"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -48,24 +47,24 @@ import (
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
-type ProcessorContainerTestSuite struct {
+type ProcessorDockerTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 }
 
-func (s *ProcessorContainerTestSuite) SetupTest() {
+func (s *ProcessorDockerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 }
 
-func (s *ProcessorContainerTestSuite) TearDownTest() {
+func (s *ProcessorDockerTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ProcessorContainerTestSuite) newAgentWithContainerMock(
-	containerMock containerProv.Provider,
+func (s *ProcessorDockerTestSuite) newAgentWithContainerMock(
+	containerMock dockerProv.Provider,
 ) *Agent {
 	return New(
 		afero.NewMemMapFs(),
@@ -88,11 +87,11 @@ func (s *ProcessorContainerTestSuite) newAgentWithContainerMock(
 	)
 }
 
-func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
+func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
-		setupMock   func(*containerMocks.MockProvider)
+		setupMock   func(*dockerMocks.MockProvider)
 		expectError bool
 		errorMsg    string
 		validate    func(json.RawMessage)
@@ -101,32 +100,32 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "nil provider returns error",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			setupMock:   nil,
 			expectError: true,
-			errorMsg:    "container runtime not available",
+			errorMsg:    "docker runtime not available",
 		},
 		{
 			name: "successful container create",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data: json.RawMessage(
 					`{"image":"nginx:latest","name":"web","auto_start":true}`,
 				),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
-					Create(gomock.Any(), runtime.CreateParams{
+					Create(gomock.Any(), dockerProv.CreateParams{
 						Image:     "nginx:latest",
 						Name:      "web",
 						AutoStart: true,
 					}).
-					Return(&runtime.Container{
+					Return(&dockerProv.Container{
 						ID:    "abc123",
 						Name:  "web",
 						Image: "nginx:latest",
@@ -134,7 +133,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r runtime.Container
+				var r dockerProv.Container
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("abc123", r.ID)
@@ -145,25 +144,25 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container create with ports and volumes",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data: json.RawMessage(
 					`{"image":"nginx:latest","name":"web","ports":[{"host":8080,"container":80}],"volumes":[{"host":"/data","container":"/var/data"}]}`,
 				),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
-					Create(gomock.Any(), runtime.CreateParams{
+					Create(gomock.Any(), dockerProv.CreateParams{
 						Image: "nginx:latest",
 						Name:  "web",
-						Ports: []runtime.PortMapping{
+						Ports: []dockerProv.PortMapping{
 							{Host: 8080, Container: 80},
 						},
-						Volumes: []runtime.VolumeMapping{
+						Volumes: []dockerProv.VolumeMapping{
 							{Host: "/data", Container: "/var/data"},
 						},
 					}).
-					Return(&runtime.Container{
+					Return(&dockerProv.Container{
 						ID:    "def456",
 						Name:  "web",
 						Image: "nginx:latest",
@@ -171,33 +170,33 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r runtime.Container
+				var r dockerProv.Container
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("def456", r.ID)
 			},
 		},
 		{
-			name: "unsupported container operation",
+			name: "unsupported docker operation",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "unknown.get",
 				Data:      json.RawMessage(`{}`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
-			errorMsg:    "unsupported container operation",
+			errorMsg:    "unsupported docker operation",
 		},
 		{
 			name: "create with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal create data",
 		},
@@ -205,11 +204,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on create",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("docker error"))
@@ -222,11 +221,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container start",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "start.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Start(gomock.Any(), "abc123").
 					Return(nil)
@@ -242,11 +241,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "start with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "start.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal start data",
 		},
@@ -254,11 +253,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on start",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "start.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Start(gomock.Any(), "abc123").
 					Return(errors.New("start failed"))
@@ -271,11 +270,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container stop with timeout",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123","timeout":10}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", gomock.Any()).
 					Return(nil)
@@ -291,11 +290,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container stop without timeout",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", (*time.Duration)(nil)).
 					Return(nil)
@@ -311,11 +310,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "stop with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "stop.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal stop data",
 		},
@@ -323,11 +322,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on stop",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "stop.execute",
 				Data:      json.RawMessage(`{"id":"abc123","timeout":10}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Stop(gomock.Any(), "abc123", gomock.Any()).
 					Return(errors.New("stop failed"))
@@ -340,11 +339,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container remove",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "remove.execute",
 				Data:      json.RawMessage(`{"id":"abc123","force":true}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Remove(gomock.Any(), "abc123", true).
 					Return(nil)
@@ -360,11 +359,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "remove with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "remove.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal remove data",
 		},
@@ -372,11 +371,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on remove",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "remove.execute",
 				Data:      json.RawMessage(`{"id":"abc123","force":false}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Remove(gomock.Any(), "abc123", false).
 					Return(errors.New("remove failed"))
@@ -389,22 +388,22 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container list",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "list.get",
 				Data:      json.RawMessage(`{"state":"running","limit":10}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
-					List(gomock.Any(), runtime.ListParams{
+					List(gomock.Any(), dockerProv.ListParams{
 						State: "running",
 						Limit: 10,
 					}).
-					Return([]runtime.Container{
+					Return([]dockerProv.Container{
 						{ID: "abc123"},
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r []runtime.Container
+				var r []dockerProv.Container
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Len(r, 1)
@@ -415,11 +414,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "list with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "list.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal list data",
 		},
@@ -427,11 +426,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on list",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "list.get",
 				Data:      json.RawMessage(`{"state":"all"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					List(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("list failed"))
@@ -444,19 +443,19 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container inspect",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "inspect.get",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Inspect(gomock.Any(), "abc123").
-					Return(&runtime.ContainerDetail{
-						Container: runtime.Container{ID: "abc123"},
+					Return(&dockerProv.ContainerDetail{
+						Container: dockerProv.Container{ID: "abc123"},
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r runtime.ContainerDetail
+				var r dockerProv.ContainerDetail
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("abc123", r.ID)
@@ -466,11 +465,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "inspect with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "inspect.get",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal inspect data",
 		},
@@ -478,11 +477,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on inspect",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "inspect.get",
 				Data:      json.RawMessage(`{"id":"abc123"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Inspect(gomock.Any(), "abc123").
 					Return(nil, errors.New("inspect failed"))
@@ -495,22 +494,22 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container exec",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "exec.execute",
 				Data:      json.RawMessage(`{"id":"abc123","command":["ls","-la"]}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
-					Exec(gomock.Any(), "abc123", runtime.ExecParams{
+					Exec(gomock.Any(), "abc123", dockerProv.ExecParams{
 						Command: []string{"ls", "-la"},
 					}).
-					Return(&runtime.ExecResult{
+					Return(&dockerProv.ExecResult{
 						Stdout:   "output",
 						ExitCode: 0,
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r runtime.ExecResult
+				var r dockerProv.ExecResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("output", r.Stdout)
@@ -521,11 +520,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "exec with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "exec.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal exec data",
 		},
@@ -533,11 +532,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on exec",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "exec.execute",
 				Data:      json.RawMessage(`{"id":"abc123","command":["ls"]}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Exec(gomock.Any(), "abc123", gomock.Any()).
 					Return(nil, errors.New("exec failed"))
@@ -550,19 +549,19 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "successful container pull",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "pull.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Pull(gomock.Any(), "nginx:latest").
-					Return(&runtime.PullResult{
+					Return(&dockerProv.PullResult{
 						ImageID: "sha256:abc",
 					}, nil)
 			},
 			validate: func(result json.RawMessage) {
-				var r runtime.PullResult
+				var r dockerProv.PullResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("sha256:abc", r.ImageID)
@@ -572,11 +571,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "pull with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "pull.execute",
 				Data:      json.RawMessage(`invalid json`),
 			},
-			setupMock:   func(_ *containerMocks.MockProvider) {},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
 			expectError: true,
 			errorMsg:    "unmarshal pull data",
 		},
@@ -584,11 +583,11 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 			name: "provider error on pull",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "pull.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
-			setupMock: func(m *containerMocks.MockProvider) {
+			setupMock: func(m *dockerMocks.MockProvider) {
 				m.EXPECT().
 					Pull(gomock.Any(), "nginx:latest").
 					Return(nil, errors.New("pull failed"))
@@ -602,7 +601,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 		s.Run(tt.name, func() {
 			var a *Agent
 			if tt.setupMock != nil {
-				containerMock := containerMocks.NewMockProvider(s.mockCtrl)
+				containerMock := dockerMocks.NewMockProvider(s.mockCtrl)
 				tt.setupMock(containerMock)
 				a = s.newAgentWithContainerMock(containerMock)
 			} else {
@@ -610,7 +609,7 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 				a = s.newAgentWithContainerMock(nil)
 			}
 
-			result, err := a.processContainerOperation(tt.jobRequest)
+			result, err := a.processDockerOperation(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -627,6 +626,6 @@ func (s *ProcessorContainerTestSuite) TestProcessContainerOperation() {
 	}
 }
 
-func TestProcessorContainerTestSuite(t *testing.T) {
-	suite.Run(t, new(ProcessorContainerTestSuite))
+func TestProcessorDockerTestSuite(t *testing.T) {
+	suite.Run(t, new(ProcessorDockerTestSuite))
 }

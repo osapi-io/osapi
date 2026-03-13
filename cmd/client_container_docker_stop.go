@@ -22,24 +22,30 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerInspectCmd represents the clientContainerInspect command.
-var clientContainerInspectCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Inspect a container",
-	Long:  `Retrieve detailed information about a specific container on the target node.`,
+// clientContainerDockerStopCmd represents the clientContainerDockerStop command.
+var clientContainerDockerStopCmd = &cobra.Command{
+	Use:   "stop",
+	Short: "Stop a running container",
+	Long:  `Stop a running container on the target node.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		id, _ := cmd.Flags().GetString("id")
+		timeout, _ := cmd.Flags().GetInt("timeout")
 
-		resp, err := sdkClient.Container.Inspect(ctx, host, id)
+		body := gen.DockerStopRequest{}
+		if cmd.Flags().Changed("timeout") {
+			body.Timeout = &timeout
+		}
+
+		resp, err := sdkClient.Docker.Stop(ctx, host, id, body)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -62,45 +68,18 @@ var clientContainerInspectCmd = &cobra.Command{
 				cli.PrintKV("Error", r.Error)
 				continue
 			}
-			cli.PrintKV("ID", r.ID, "Name", r.Name)
-			cli.PrintKV("Image", r.Image, "State", r.State)
-			cli.PrintKV("Created", r.Created)
-			if r.Health != "" {
-				cli.PrintKV("Health", r.Health)
-			}
-			cli.PrintKV("Ports", cli.FormatList(r.Ports))
-			cli.PrintKV("Mounts", cli.FormatList(r.Mounts))
-
-			if len(r.NetworkSettings) > 0 {
-				ip := r.NetworkSettings["ip_address"]
-				gateway := r.NetworkSettings["gateway"]
-				if ip != "" {
-					cli.PrintKV("Network IP", ip)
-				}
-				if gateway != "" {
-					cli.PrintKV("Network Gateway", gateway)
-				}
-
-				// Display any other network settings
-				other := make([]string, 0)
-				for k, v := range r.NetworkSettings {
-					if k != "ip_address" && k != "gateway" && v != "" {
-						other = append(other, k+"="+v)
-					}
-				}
-				if len(other) > 0 {
-					cli.PrintKV("Network", strings.Join(other, ", "))
-				}
-			}
+			cli.PrintKV("Message", r.Message)
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerInspectCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerStopCmd)
 
-	clientContainerInspectCmd.PersistentFlags().
-		String("id", "", "Container ID to inspect (required)")
+	clientContainerDockerStopCmd.PersistentFlags().
+		String("id", "", "Container ID to stop (required)")
+	clientContainerDockerStopCmd.PersistentFlags().
+		Int("timeout", 10, "Seconds to wait before killing the container")
 
-	_ = clientContainerInspectCmd.MarkPersistentFlagRequired("id")
+	_ = clientContainerDockerStopCmd.MarkPersistentFlagRequired("id")
 }

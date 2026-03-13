@@ -27,20 +27,20 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// ContainerService provides container management operations.
-type ContainerService struct {
+// DockerService provides Docker container management operations.
+type DockerService struct {
 	client *gen.ClientWithResponses
 }
 
 // Create creates a new container on the target host.
-func (s *ContainerService) Create(
+func (s *DockerService) Create(
 	ctx context.Context,
 	hostname string,
-	body gen.ContainerCreateRequest,
-) (*Response[Collection[ContainerResult]], error) {
-	resp, err := s.client.PostNodeContainerWithResponse(ctx, hostname, body)
+	body gen.DockerCreateRequest,
+) (*Response[Collection[DockerResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerWithResponse(ctx, hostname, body)
 	if err != nil {
-		return nil, fmt.Errorf("create container: %w", err)
+		return nil, fmt.Errorf("docker create: %w", err)
 	}
 
 	if err := checkError(
@@ -60,18 +60,18 @@ func (s *ContainerService) Create(
 		}}
 	}
 
-	return NewResponse(containerResultCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerResultCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // List lists containers on the target host, optionally filtered by state.
-func (s *ContainerService) List(
+func (s *DockerService) List(
 	ctx context.Context,
 	hostname string,
-	params *gen.GetNodeContainerParams,
-) (*Response[Collection[ContainerListResult]], error) {
-	resp, err := s.client.GetNodeContainerWithResponse(ctx, hostname, params)
+	params *gen.GetNodeContainerDockerParams,
+) (*Response[Collection[DockerListResult]], error) {
+	resp, err := s.client.GetNodeContainerDockerWithResponse(ctx, hostname, params)
 	if err != nil {
-		return nil, fmt.Errorf("list containers: %w", err)
+		return nil, fmt.Errorf("docker list: %w", err)
 	}
 
 	if err := checkError(
@@ -91,18 +91,18 @@ func (s *ContainerService) List(
 		}}
 	}
 
-	return NewResponse(containerListCollectionFromGen(resp.JSON200), resp.Body), nil
+	return NewResponse(dockerListCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
 // Inspect retrieves detailed information about a specific container.
-func (s *ContainerService) Inspect(
+func (s *DockerService) Inspect(
 	ctx context.Context,
 	hostname string,
 	id string,
-) (*Response[Collection[ContainerDetailResult]], error) {
-	resp, err := s.client.GetNodeContainerByIDWithResponse(ctx, hostname, id)
+) (*Response[Collection[DockerDetailResult]], error) {
+	resp, err := s.client.GetNodeContainerDockerByIDWithResponse(ctx, hostname, id)
 	if err != nil {
-		return nil, fmt.Errorf("inspect container: %w", err)
+		return nil, fmt.Errorf("docker inspect: %w", err)
 	}
 
 	if err := checkError(
@@ -123,18 +123,18 @@ func (s *ContainerService) Inspect(
 		}}
 	}
 
-	return NewResponse(containerDetailCollectionFromGen(resp.JSON200), resp.Body), nil
+	return NewResponse(dockerDetailCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
 // Start starts a stopped container on the target host.
-func (s *ContainerService) Start(
+func (s *DockerService) Start(
 	ctx context.Context,
 	hostname string,
 	id string,
-) (*Response[Collection[ContainerActionResult]], error) {
-	resp, err := s.client.PostNodeContainerStartWithResponse(ctx, hostname, id)
+) (*Response[Collection[DockerActionResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerStartWithResponse(ctx, hostname, id)
 	if err != nil {
-		return nil, fmt.Errorf("start container: %w", err)
+		return nil, fmt.Errorf("docker start: %w", err)
 	}
 
 	if err := checkError(
@@ -155,19 +155,19 @@ func (s *ContainerService) Start(
 		}}
 	}
 
-	return NewResponse(containerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // Stop stops a running container on the target host.
-func (s *ContainerService) Stop(
+func (s *DockerService) Stop(
 	ctx context.Context,
 	hostname string,
 	id string,
-	body gen.ContainerStopRequest,
-) (*Response[Collection[ContainerActionResult]], error) {
-	resp, err := s.client.PostNodeContainerStopWithResponse(ctx, hostname, id, body)
+	body gen.DockerStopRequest,
+) (*Response[Collection[DockerActionResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerStopWithResponse(ctx, hostname, id, body)
 	if err != nil {
-		return nil, fmt.Errorf("stop container: %w", err)
+		return nil, fmt.Errorf("docker stop: %w", err)
 	}
 
 	if err := checkError(
@@ -188,19 +188,19 @@ func (s *ContainerService) Stop(
 		}}
 	}
 
-	return NewResponse(containerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // Remove removes a container from the target host.
-func (s *ContainerService) Remove(
+func (s *DockerService) Remove(
 	ctx context.Context,
 	hostname string,
 	id string,
-	params *gen.DeleteNodeContainerByIDParams,
-) (*Response[Collection[ContainerActionResult]], error) {
-	resp, err := s.client.DeleteNodeContainerByIDWithResponse(ctx, hostname, id, params)
+	params *gen.DeleteNodeContainerDockerByIDParams,
+) (*Response[Collection[DockerActionResult]], error) {
+	resp, err := s.client.DeleteNodeContainerDockerByIDWithResponse(ctx, hostname, id, params)
 	if err != nil {
-		return nil, fmt.Errorf("remove container: %w", err)
+		return nil, fmt.Errorf("docker remove: %w", err)
 	}
 
 	if err := checkError(
@@ -221,19 +221,19 @@ func (s *ContainerService) Remove(
 		}}
 	}
 
-	return NewResponse(containerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // Exec executes a command inside a running container on the target host.
-func (s *ContainerService) Exec(
+func (s *DockerService) Exec(
 	ctx context.Context,
 	hostname string,
 	id string,
-	body gen.ContainerExecRequest,
-) (*Response[Collection[ContainerExecResult]], error) {
-	resp, err := s.client.PostNodeContainerExecWithResponse(ctx, hostname, id, body)
+	body gen.DockerExecRequest,
+) (*Response[Collection[DockerExecResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerExecWithResponse(ctx, hostname, id, body)
 	if err != nil {
-		return nil, fmt.Errorf("exec in container: %w", err)
+		return nil, fmt.Errorf("docker exec: %w", err)
 	}
 
 	if err := checkError(
@@ -254,18 +254,18 @@ func (s *ContainerService) Exec(
 		}}
 	}
 
-	return NewResponse(containerExecCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerExecCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // Pull pulls a container image on the target host.
-func (s *ContainerService) Pull(
+func (s *DockerService) Pull(
 	ctx context.Context,
 	hostname string,
-	body gen.ContainerPullRequest,
-) (*Response[Collection[ContainerPullResult]], error) {
-	resp, err := s.client.PostNodeContainerPullWithResponse(ctx, hostname, body)
+	body gen.DockerPullRequest,
+) (*Response[Collection[DockerPullResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerPullWithResponse(ctx, hostname, body)
 	if err != nil {
-		return nil, fmt.Errorf("pull image: %w", err)
+		return nil, fmt.Errorf("docker pull: %w", err)
 	}
 
 	if err := checkError(
@@ -285,5 +285,5 @@ func (s *ContainerService) Pull(
 		}}
 	}
 
-	return NewResponse(containerPullCollectionFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(dockerPullCollectionFromGen(resp.JSON202), resp.Body), nil
 }

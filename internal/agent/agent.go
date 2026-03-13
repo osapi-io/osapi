@@ -30,7 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
-	containerProv "github.com/retr0h/osapi/internal/provider/container"
+	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -57,7 +57,7 @@ func New(
 	netinfoProvider netinfo.Provider,
 	commandProvider command.Provider,
 	fileProvider fileProv.Provider,
-	containerProvider containerProv.Provider,
+	containerProvider dockerProv.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {

@@ -26,24 +26,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// clientContainerPullCmd represents the clientContainerPull command.
-var clientContainerPullCmd = &cobra.Command{
-	Use:   "pull",
-	Short: "Pull a container image",
-	Long:  `Pull a container image on the target node.`,
+// clientContainerDockerStartCmd represents the clientContainerDockerStart command.
+var clientContainerDockerStartCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start a stopped container",
+	Long:  `Start a stopped container on the target node.`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		image, _ := cmd.Flags().GetString("image")
+		id, _ := cmd.Flags().GetString("id")
 
-		body := gen.ContainerPullRequest{
-			Image: image,
-		}
-
-		resp, err := sdkClient.Container.Pull(ctx, host, body)
+		resp, err := sdkClient.Docker.Start(ctx, host, id)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -66,17 +61,16 @@ var clientContainerPullCmd = &cobra.Command{
 				cli.PrintKV("Error", r.Error)
 				continue
 			}
-			cli.PrintKV("Image ID", r.ImageID, "Tag", r.Tag)
-			cli.PrintKV("Size", cli.FormatBytes(int(r.Size)))
+			cli.PrintKV("Message", r.Message)
 		}
 	},
 }
 
 func init() {
-	clientContainerCmd.AddCommand(clientContainerPullCmd)
+	clientContainerDockerCmd.AddCommand(clientContainerDockerStartCmd)
 
-	clientContainerPullCmd.PersistentFlags().
-		String("image", "", "Image reference to pull (required)")
+	clientContainerDockerStartCmd.PersistentFlags().
+		String("id", "", "Container ID to start (required)")
 
-	_ = clientContainerPullCmd.MarkPersistentFlagRequired("image")
+	_ = clientContainerDockerStartCmd.MarkPersistentFlagRequired("id")
 }

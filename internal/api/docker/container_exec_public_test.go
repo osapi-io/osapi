@@ -35,8 +35,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/api"
-	apicontainer "github.com/retr0h/osapi/internal/api/container"
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	apicontainer "github.com/retr0h/osapi/internal/api/docker"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -76,25 +76,25 @@ func (s *ContainerExecPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
+func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeContainerExecRequestObject
+		request      gen.PostNodeContainerDockerExecRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeContainerExecResponseObject)
+		validateFunc func(resp gen.PostNodeContainerDockerExecResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command: []string{"ls", "-la"},
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerExec(
+					ModifyDockerExec(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -109,8 +109,8 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerExec202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -124,16 +124,16 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command: []string{"ls"},
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerExec400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -141,33 +141,33 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 		},
 		{
 			name: "body validation error empty command",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command: []string{},
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerExec400JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 			},
 		},
 		{
 			name: "success with working dir",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command:    []string{"ls", "-la"},
 					WorkingDir: strPtr("/app"),
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerExec(
+					ModifyDockerExec(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -182,8 +182,8 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerExec202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -197,16 +197,16 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 		},
 		{
 			name: "success with nil response data",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command: []string{"ls"},
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerExec(
+					ModifyDockerExec(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -219,8 +219,8 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 						Data:     nil,
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerExec202JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -236,16 +236,16 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeContainerExecRequestObject{
+			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",
 				Id:       "abc123",
-				Body: &gen.PostNodeContainerExecJSONRequestBody{
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
 					Command: []string{"ls"},
 				},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyContainerExec(
+					ModifyDockerExec(
 						gomock.Any(),
 						"server1",
 						"abc123",
@@ -253,8 +253,8 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 					).
 					Return(nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeContainerExecResponseObject) {
-				_, ok := resp.(gen.PostNodeContainerExec500JSONResponse)
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerExec500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -264,14 +264,14 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExec() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeContainerExec(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeContainerDockerExec(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExecValidationHTTP() {
+func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -282,12 +282,12 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExecValidationHTTP()
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/abc123/exec",
+			path: "/node/server1/container/docker/abc123/exec",
 			body: `{"command":["ls","-la"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyContainerExec(gomock.Any(), "server1", "abc123", gomock.Any()).
+					ModifyDockerExec(gomock.Any(), "server1", "abc123", gomock.Any()).
 					Return(&job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -301,7 +301,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExecValidationHTTP()
 		},
 		{
 			name: "when missing command",
-			path: "/node/server1/container/abc123/exec",
+			path: "/node/server1/container/docker/abc123/exec",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -311,7 +311,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerExecValidationHTTP()
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/abc123/exec",
+			path: "/node/nonexistent/container/docker/abc123/exec",
 			body: `{"command":["ls"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)

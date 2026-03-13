@@ -26,23 +26,23 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// DeleteNodeContainerByID removes a container from a target node.
-func (s *Container) DeleteNodeContainerByID(
+// DeleteNodeContainerDockerByID removes a container from a target node.
+func (s *Container) DeleteNodeContainerDockerByID(
 	ctx context.Context,
-	request gen.DeleteNodeContainerByIDRequestObject,
-) (gen.DeleteNodeContainerByIDResponseObject, error) {
+	request gen.DeleteNodeContainerDockerByIDRequestObject,
+) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeContainerByID400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
 	id := request.Id
 
-	data := &job.ContainerRemoveData{}
+	data := &job.DockerRemoveData{}
 	if request.Params.Force != nil {
 		data.Force = *request.Params.Force
 	}
@@ -53,19 +53,19 @@ func (s *Container) DeleteNodeContainerByID(
 		slog.Bool("force", data.Force),
 	)
 
-	resp, err := s.JobClient.ModifyContainerRemove(ctx, hostname, id, data)
+	resp, err := s.JobClient.ModifyDockerRemove(ctx, hostname, id, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerByID500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	msg := "container removed"
 
-	return gen.DeleteNodeContainerByID202JSONResponse{
+	return gen.DeleteNodeContainerDockerByID202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerActionResultItem{
+		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
 				Id:       &id,

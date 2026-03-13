@@ -34,22 +34,22 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-type ContainerPublicTestSuite struct {
+type DockerPublicTestSuite struct {
 	suite.Suite
 
 	ctx context.Context
 }
 
-func (suite *ContainerPublicTestSuite) SetupTest() {
+func (suite *DockerPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *ContainerPublicTestSuite) TestCreate() {
+func (suite *DockerPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerResult]], error)
 	}{
 		{
 			name: "when creating container returns result",
@@ -63,7 +63,7 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerResult]],
+				resp *client.Response[client.Collection[client.DockerResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -87,7 +87,7 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerResult]],
+				resp *client.Response[client.Collection[client.DockerResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -102,12 +102,12 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerResult]],
+				resp *client.Response[client.Collection[client.DockerResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "create container")
+				suite.Contains(err.Error(), "docker create")
 			},
 		},
 		{
@@ -116,7 +116,7 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerResult]],
+				resp *client.Response[client.Collection[client.DockerResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -153,10 +153,10 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Create(
+			resp, err := sut.Docker.Create(
 				suite.ctx,
 				"_any",
-				gen.ContainerCreateRequest{
+				gen.DockerCreateRequest{
 					Image: "nginx:latest",
 					Name:  strPtr("my-nginx"),
 				},
@@ -166,12 +166,12 @@ func (suite *ContainerPublicTestSuite) TestCreate() {
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestList() {
+func (suite *DockerPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerListResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerListResult]], error)
 	}{
 		{
 			name: "when listing containers returns results",
@@ -185,7 +185,7 @@ func (suite *ContainerPublicTestSuite) TestList() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerListResult]],
+				resp *client.Response[client.Collection[client.DockerListResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -206,7 +206,7 @@ func (suite *ContainerPublicTestSuite) TestList() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerListResult]],
+				resp *client.Response[client.Collection[client.DockerListResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -221,12 +221,12 @@ func (suite *ContainerPublicTestSuite) TestList() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerListResult]],
+				resp *client.Response[client.Collection[client.DockerListResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "list containers")
+				suite.Contains(err.Error(), "docker list")
 			},
 		},
 		{
@@ -235,7 +235,7 @@ func (suite *ContainerPublicTestSuite) TestList() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerListResult]],
+				resp *client.Response[client.Collection[client.DockerListResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -272,18 +272,18 @@ func (suite *ContainerPublicTestSuite) TestList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.List(suite.ctx, "_any", nil)
+			resp, err := sut.Docker.List(suite.ctx, "_any", nil)
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestInspect() {
+func (suite *DockerPublicTestSuite) TestInspect() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerDetailResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerDetailResult]], error)
 	}{
 		{
 			name: "when inspecting container returns result",
@@ -297,7 +297,7 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerDetailResult]],
+				resp *client.Response[client.Collection[client.DockerDetailResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -327,7 +327,7 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 				_, _ = w.Write([]byte(`{"error":"container not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerDetailResult]],
+				resp *client.Response[client.Collection[client.DockerDetailResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -346,7 +346,7 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerDetailResult]],
+				resp *client.Response[client.Collection[client.DockerDetailResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -361,12 +361,12 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerDetailResult]],
+				resp *client.Response[client.Collection[client.DockerDetailResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "inspect container")
+				suite.Contains(err.Error(), "docker inspect")
 			},
 		},
 		{
@@ -375,7 +375,7 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerDetailResult]],
+				resp *client.Response[client.Collection[client.DockerDetailResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -412,18 +412,18 @@ func (suite *ContainerPublicTestSuite) TestInspect() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Inspect(suite.ctx, "_any", "abc123")
+			resp, err := sut.Docker.Inspect(suite.ctx, "_any", "abc123")
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestStart() {
+func (suite *DockerPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerActionResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
 	}{
 		{
 			name: "when starting container returns result",
@@ -437,7 +437,7 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -458,7 +458,7 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 				_, _ = w.Write([]byte(`{"error":"container not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -477,7 +477,7 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -492,12 +492,12 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "start container")
+				suite.Contains(err.Error(), "docker start")
 			},
 		},
 		{
@@ -506,7 +506,7 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -543,18 +543,18 @@ func (suite *ContainerPublicTestSuite) TestStart() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Start(suite.ctx, "_any", "abc123")
+			resp, err := sut.Docker.Start(suite.ctx, "_any", "abc123")
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestStop() {
+func (suite *DockerPublicTestSuite) TestStop() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerActionResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
 	}{
 		{
 			name: "when stopping container returns result",
@@ -568,7 +568,7 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -589,7 +589,7 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 				_, _ = w.Write([]byte(`{"error":"container not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -608,7 +608,7 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -623,12 +623,12 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "stop container")
+				suite.Contains(err.Error(), "docker stop")
 			},
 		},
 		{
@@ -637,7 +637,7 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -674,23 +674,23 @@ func (suite *ContainerPublicTestSuite) TestStop() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Stop(
+			resp, err := sut.Docker.Stop(
 				suite.ctx,
 				"_any",
 				"abc123",
-				gen.ContainerStopRequest{},
+				gen.DockerStopRequest{},
 			)
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestRemove() {
+func (suite *DockerPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerActionResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
 	}{
 		{
 			name: "when removing container returns result",
@@ -704,7 +704,7 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -725,7 +725,7 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 				_, _ = w.Write([]byte(`{"error":"container not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -744,7 +744,7 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -759,12 +759,12 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "remove container")
+				suite.Contains(err.Error(), "docker remove")
 			},
 		},
 		{
@@ -773,7 +773,7 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerActionResult]],
+				resp *client.Response[client.Collection[client.DockerActionResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -810,18 +810,18 @@ func (suite *ContainerPublicTestSuite) TestRemove() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Remove(suite.ctx, "_any", "abc123", nil)
+			resp, err := sut.Docker.Remove(suite.ctx, "_any", "abc123", nil)
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestExec() {
+func (suite *DockerPublicTestSuite) TestExec() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerExecResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerExecResult]], error)
 	}{
 		{
 			name: "when executing command returns result",
@@ -835,7 +835,7 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerExecResult]],
+				resp *client.Response[client.Collection[client.DockerExecResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -857,7 +857,7 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 				_, _ = w.Write([]byte(`{"error":"container not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerExecResult]],
+				resp *client.Response[client.Collection[client.DockerExecResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -876,7 +876,7 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerExecResult]],
+				resp *client.Response[client.Collection[client.DockerExecResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -891,12 +891,12 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerExecResult]],
+				resp *client.Response[client.Collection[client.DockerExecResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "exec in container")
+				suite.Contains(err.Error(), "docker exec")
 			},
 		},
 		{
@@ -905,7 +905,7 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerExecResult]],
+				resp *client.Response[client.Collection[client.DockerExecResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -942,11 +942,11 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Exec(
+			resp, err := sut.Docker.Exec(
 				suite.ctx,
 				"_any",
 				"abc123",
-				gen.ContainerExecRequest{
+				gen.DockerExecRequest{
 					Command: []string{"echo", "hello"},
 				},
 			)
@@ -955,12 +955,12 @@ func (suite *ContainerPublicTestSuite) TestExec() {
 	}
 }
 
-func (suite *ContainerPublicTestSuite) TestPull() {
+func (suite *DockerPublicTestSuite) TestPull() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ContainerPullResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.DockerPullResult]], error)
 	}{
 		{
 			name: "when pulling image returns result",
@@ -974,7 +974,7 @@ func (suite *ContainerPublicTestSuite) TestPull() {
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerPullResult]],
+				resp *client.Response[client.Collection[client.DockerPullResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -996,7 +996,7 @@ func (suite *ContainerPublicTestSuite) TestPull() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerPullResult]],
+				resp *client.Response[client.Collection[client.DockerPullResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -1011,12 +1011,12 @@ func (suite *ContainerPublicTestSuite) TestPull() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerPullResult]],
+				resp *client.Response[client.Collection[client.DockerPullResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "pull image")
+				suite.Contains(err.Error(), "docker pull")
 			},
 		},
 		{
@@ -1025,7 +1025,7 @@ func (suite *ContainerPublicTestSuite) TestPull() {
 				w.WriteHeader(http.StatusAccepted)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.ContainerPullResult]],
+				resp *client.Response[client.Collection[client.DockerPullResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -1062,10 +1062,10 @@ func (suite *ContainerPublicTestSuite) TestPull() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Container.Pull(
+			resp, err := sut.Docker.Pull(
 				suite.ctx,
 				"_any",
-				gen.ContainerPullRequest{
+				gen.DockerPullRequest{
 					Image: "nginx:latest",
 				},
 			)
@@ -1080,6 +1080,6 @@ func strPtr(
 	return &s
 }
 
-func TestContainerPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(ContainerPublicTestSuite))
+func TestDockerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DockerPublicTestSuite))
 }

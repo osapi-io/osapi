@@ -29,11 +29,11 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-type ContainerTypesTestSuite struct {
+type DockerTypesTestSuite struct {
 	suite.Suite
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerResultCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -43,12 +43,12 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerResultCollectionResponse
-		validateFunc func(Collection[ContainerResult])
+		input        *gen.DockerResultCollectionResponse
+		validateFunc func(Collection[DockerResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.ContainerResultCollectionResponse {
+			input: func() *gen.DockerResultCollectionResponse {
 				id := "abc123"
 				name := "my-nginx"
 				image := "nginx:latest"
@@ -56,9 +56,9 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 				created := "2026-01-01T00:00:00Z"
 				changed := true
 
-				return &gen.ContainerResultCollectionResponse{
+				return &gen.DockerResultCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerResponse{
+					Results: []gen.DockerResponse{
 						{
 							Hostname: "web-01",
 							Id:       &id,
@@ -71,7 +71,7 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerResult]) {
+			validateFunc: func(c Collection[DockerResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -88,11 +88,11 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.ContainerResultCollectionResponse {
+			input: func() *gen.DockerResultCollectionResponse {
 				errMsg := "image not found"
 
-				return &gen.ContainerResultCollectionResponse{
-					Results: []gen.ContainerResponse{
+				return &gen.DockerResultCollectionResponse{
+					Results: []gen.DockerResponse{
 						{
 							Hostname: "web-01",
 							Error:    &errMsg,
@@ -100,7 +100,7 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerResult]) {
+			validateFunc: func(c Collection[DockerResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -119,13 +119,13 @@ func (suite *ContainerTypesTestSuite) TestContainerResultCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerResultCollectionFromGen(tc.input)
+			result := dockerResultCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerListCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -135,19 +135,19 @@ func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerListCollectionResponse
-		validateFunc func(Collection[ContainerListResult])
+		input        *gen.DockerListCollectionResponse
+		validateFunc func(Collection[DockerListResult])
 	}{
 		{
 			name: "when containers are populated",
-			input: func() *gen.ContainerListCollectionResponse {
+			input: func() *gen.DockerListCollectionResponse {
 				changed := false
 				id := "abc123"
 				name := "my-nginx"
 				image := "nginx:latest"
 				state := "running"
 				created := "2026-01-01T00:00:00Z"
-				containers := []gen.ContainerSummary{
+				containers := []gen.DockerSummary{
 					{
 						Id:      &id,
 						Name:    &name,
@@ -157,9 +157,9 @@ func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
 					},
 				}
 
-				return &gen.ContainerListCollectionResponse{
+				return &gen.DockerListCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerListItem{
+					Results: []gen.DockerListItem{
 						{
 							Hostname:   "web-01",
 							Changed:    &changed,
@@ -168,7 +168,7 @@ func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerListResult]) {
+			validateFunc: func(c Collection[DockerListResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -186,12 +186,12 @@ func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
 		},
 		{
 			name: "when containers is nil",
-			input: &gen.ContainerListCollectionResponse{
-				Results: []gen.ContainerListItem{
+			input: &gen.DockerListCollectionResponse{
+				Results: []gen.DockerListItem{
 					{Hostname: "web-01"},
 				},
 			},
-			validateFunc: func(c Collection[ContainerListResult]) {
+			validateFunc: func(c Collection[DockerListResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 				suite.Equal("web-01", c.Results[0].Hostname)
@@ -203,13 +203,13 @@ func (suite *ContainerTypesTestSuite) TestContainerListCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerListCollectionFromGen(tc.input)
+			result := dockerListCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerDetailCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -219,12 +219,12 @@ func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerDetailCollectionResponse
-		validateFunc func(Collection[ContainerDetailResult])
+		input        *gen.DockerDetailCollectionResponse
+		validateFunc func(Collection[DockerDetailResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.ContainerDetailCollectionResponse {
+			input: func() *gen.DockerDetailCollectionResponse {
 				id := "abc123"
 				name := "my-nginx"
 				image := "nginx:latest"
@@ -237,9 +237,9 @@ func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
 				env := []string{"FOO=bar", "BAZ=qux"}
 				networkSettings := map[string]string{"ip": "172.17.0.2"}
 
-				return &gen.ContainerDetailCollectionResponse{
+				return &gen.DockerDetailCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerDetailResponse{
+					Results: []gen.DockerDetailResponse{
 						{
 							Hostname:        "web-01",
 							Id:              &id,
@@ -257,7 +257,7 @@ func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerDetailResult]) {
+			validateFunc: func(c Collection[DockerDetailResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -279,12 +279,12 @@ func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
 		},
 		{
 			name: "when optional fields are nil",
-			input: &gen.ContainerDetailCollectionResponse{
-				Results: []gen.ContainerDetailResponse{
+			input: &gen.DockerDetailCollectionResponse{
+				Results: []gen.DockerDetailResponse{
 					{Hostname: "web-01"},
 				},
 			},
-			validateFunc: func(c Collection[ContainerDetailResult]) {
+			validateFunc: func(c Collection[DockerDetailResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -308,13 +308,13 @@ func (suite *ContainerTypesTestSuite) TestContainerDetailCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerDetailCollectionFromGen(tc.input)
+			result := dockerDetailCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerActionCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -324,19 +324,19 @@ func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerActionCollectionResponse
-		validateFunc func(Collection[ContainerActionResult])
+		input        *gen.DockerActionCollectionResponse
+		validateFunc func(Collection[DockerActionResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.ContainerActionCollectionResponse {
+			input: func() *gen.DockerActionCollectionResponse {
 				id := "abc123"
 				message := "container started"
 				changed := true
 
-				return &gen.ContainerActionCollectionResponse{
+				return &gen.DockerActionCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerActionResultItem{
+					Results: []gen.DockerActionResultItem{
 						{
 							Hostname: "web-01",
 							Id:       &id,
@@ -346,7 +346,7 @@ func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerActionResult]) {
+			validateFunc: func(c Collection[DockerActionResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -360,11 +360,11 @@ func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.ContainerActionCollectionResponse {
+			input: func() *gen.DockerActionCollectionResponse {
 				errMsg := "container not found"
 
-				return &gen.ContainerActionCollectionResponse{
-					Results: []gen.ContainerActionResultItem{
+				return &gen.DockerActionCollectionResponse{
+					Results: []gen.DockerActionResultItem{
 						{
 							Hostname: "web-01",
 							Error:    &errMsg,
@@ -372,7 +372,7 @@ func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerActionResult]) {
+			validateFunc: func(c Collection[DockerActionResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -388,13 +388,13 @@ func (suite *ContainerTypesTestSuite) TestContainerActionCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerActionCollectionFromGen(tc.input)
+			result := dockerActionCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerExecCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -404,20 +404,20 @@ func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerExecCollectionResponse
-		validateFunc func(Collection[ContainerExecResult])
+		input        *gen.DockerExecCollectionResponse
+		validateFunc func(Collection[DockerExecResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.ContainerExecCollectionResponse {
+			input: func() *gen.DockerExecCollectionResponse {
 				stdout := "hello world\n"
 				stderr := "warning: something\n"
 				exitCode := 0
 				changed := true
 
-				return &gen.ContainerExecCollectionResponse{
+				return &gen.DockerExecCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerExecResultItem{
+					Results: []gen.DockerExecResultItem{
 						{
 							Hostname: "web-01",
 							Stdout:   &stdout,
@@ -428,7 +428,7 @@ func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerExecResult]) {
+			validateFunc: func(c Collection[DockerExecResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -443,12 +443,12 @@ func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.ContainerExecCollectionResponse {
+			input: func() *gen.DockerExecCollectionResponse {
 				errMsg := "exec failed"
 				exitCode := 1
 
-				return &gen.ContainerExecCollectionResponse{
-					Results: []gen.ContainerExecResultItem{
+				return &gen.DockerExecCollectionResponse{
+					Results: []gen.DockerExecResultItem{
 						{
 							Hostname: "web-01",
 							Error:    &errMsg,
@@ -457,7 +457,7 @@ func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerExecResult]) {
+			validateFunc: func(c Collection[DockerExecResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -474,13 +474,13 @@ func (suite *ContainerTypesTestSuite) TestContainerExecCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerExecCollectionFromGen(tc.input)
+			result := dockerExecCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
+func (suite *DockerTypesTestSuite) TestDockerPullCollectionFromGen() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -490,20 +490,20 @@ func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.ContainerPullCollectionResponse
-		validateFunc func(Collection[ContainerPullResult])
+		input        *gen.DockerPullCollectionResponse
+		validateFunc func(Collection[DockerPullResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.ContainerPullCollectionResponse {
+			input: func() *gen.DockerPullCollectionResponse {
 				imageID := "sha256:abc123"
 				tag := "latest"
 				size := int64(52428800)
 				changed := true
 
-				return &gen.ContainerPullCollectionResponse{
+				return &gen.DockerPullCollectionResponse{
 					JobId: &testUUID,
-					Results: []gen.ContainerPullResultItem{
+					Results: []gen.DockerPullResultItem{
 						{
 							Hostname: "web-01",
 							ImageId:  &imageID,
@@ -514,7 +514,7 @@ func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerPullResult]) {
+			validateFunc: func(c Collection[DockerPullResult]) {
 				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -529,11 +529,11 @@ func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.ContainerPullCollectionResponse {
+			input: func() *gen.DockerPullCollectionResponse {
 				errMsg := "pull failed: image not found"
 
-				return &gen.ContainerPullCollectionResponse{
-					Results: []gen.ContainerPullResultItem{
+				return &gen.DockerPullCollectionResponse{
+					Results: []gen.DockerPullResultItem{
 						{
 							Hostname: "web-01",
 							Error:    &errMsg,
@@ -541,7 +541,7 @@ func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
 					},
 				}
 			}(),
-			validateFunc: func(c Collection[ContainerPullResult]) {
+			validateFunc: func(c Collection[DockerPullResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 
@@ -558,12 +558,12 @@ func (suite *ContainerTypesTestSuite) TestContainerPullCollectionFromGen() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := containerPullCollectionFromGen(tc.input)
+			result := dockerPullCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func TestContainerTypesTestSuite(t *testing.T) {
-	suite.Run(t, new(ContainerTypesTestSuite))
+func TestDockerTypesTestSuite(t *testing.T) {
+	suite.Run(t, new(DockerTypesTestSuite))
 }

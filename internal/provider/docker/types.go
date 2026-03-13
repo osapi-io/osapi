@@ -1,13 +1,60 @@
-// Package runtime defines the container runtime driver interface.
-package runtime
+// Package docker provides the Docker container management provider.
+package docker
 
 import (
 	"context"
 	"time"
 )
 
+// Provider defines the container management interface.
+// All methods accept context.Context for cancellation and timeout propagation,
+// which is important since the Docker daemon is a remote service.
+type Provider interface {
+	Create(
+		ctx context.Context,
+		params CreateParams,
+	) (*Container, error)
+
+	Start(
+		ctx context.Context,
+		id string,
+	) error
+
+	Stop(
+		ctx context.Context,
+		id string,
+		timeout *time.Duration,
+	) error
+
+	Remove(
+		ctx context.Context,
+		id string,
+		force bool,
+	) error
+
+	List(
+		ctx context.Context,
+		params ListParams,
+	) ([]Container, error)
+
+	Inspect(
+		ctx context.Context,
+		id string,
+	) (*ContainerDetail, error)
+
+	Exec(
+		ctx context.Context,
+		id string,
+		params ExecParams,
+	) (*ExecResult, error)
+
+	Pull(
+		ctx context.Context,
+		image string,
+	) (*PullResult, error)
+}
+
 // Driver defines container runtime operations.
-// Implementations: Docker (now), LXD/Podman (later).
 type Driver interface {
 	Ping(
 		ctx context.Context,

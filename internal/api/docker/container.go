@@ -24,7 +24,7 @@ package container
 import (
 	"log/slog"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 

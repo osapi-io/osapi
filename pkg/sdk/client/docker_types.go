@@ -24,8 +24,8 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// ContainerResult represents a container create result from a single agent.
-type ContainerResult struct {
+// DockerResult represents a docker container create result from a single agent.
+type DockerResult struct {
 	Hostname string
 	ID       string
 	Name     string
@@ -36,16 +36,16 @@ type ContainerResult struct {
 	Error    string
 }
 
-// ContainerListResult represents a container list result from a single agent.
-type ContainerListResult struct {
+// DockerListResult represents a docker container list result from a single agent.
+type DockerListResult struct {
 	Hostname   string
-	Containers []ContainerSummaryItem
+	Containers []DockerSummaryItem
 	Changed    bool
 	Error      string
 }
 
-// ContainerSummaryItem represents a brief container summary.
-type ContainerSummaryItem struct {
+// DockerSummaryItem represents a brief docker container summary.
+type DockerSummaryItem struct {
 	ID      string
 	Name    string
 	Image   string
@@ -53,8 +53,8 @@ type ContainerSummaryItem struct {
 	Created string
 }
 
-// ContainerDetailResult represents a container inspect result from a single agent.
-type ContainerDetailResult struct {
+// DockerDetailResult represents a docker container inspect result from a single agent.
+type DockerDetailResult struct {
 	Hostname        string
 	ID              string
 	Name            string
@@ -70,8 +70,8 @@ type ContainerDetailResult struct {
 	Error           string
 }
 
-// ContainerActionResult represents a container lifecycle action result from a single agent.
-type ContainerActionResult struct {
+// DockerActionResult represents a docker container lifecycle action result from a single agent.
+type DockerActionResult struct {
 	Hostname string
 	ID       string
 	Message  string
@@ -79,8 +79,8 @@ type ContainerActionResult struct {
 	Error    string
 }
 
-// ContainerExecResult represents a container exec result from a single agent.
-type ContainerExecResult struct {
+// DockerExecResult represents a docker container exec result from a single agent.
+type DockerExecResult struct {
 	Hostname string
 	Stdout   string
 	Stderr   string
@@ -89,8 +89,8 @@ type ContainerExecResult struct {
 	Error    string
 }
 
-// ContainerPullResult represents an image pull result from a single agent.
-type ContainerPullResult struct {
+// DockerPullResult represents a docker image pull result from a single agent.
+type DockerPullResult struct {
 	Hostname string
 	ImageID  string
 	Tag      string
@@ -99,14 +99,14 @@ type ContainerPullResult struct {
 	Error    string
 }
 
-// containerResultCollectionFromGen converts a gen.ContainerResultCollectionResponse
-// to a Collection[ContainerResult].
-func containerResultCollectionFromGen(
-	g *gen.ContainerResultCollectionResponse,
-) Collection[ContainerResult] {
-	results := make([]ContainerResult, 0, len(g.Results))
+// dockerResultCollectionFromGen converts a gen.DockerResultCollectionResponse
+// to a Collection[DockerResult].
+func dockerResultCollectionFromGen(
+	g *gen.DockerResultCollectionResponse,
+) Collection[DockerResult] {
+	results := make([]DockerResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, ContainerResult{
+		results = append(results, DockerResult{
 			Hostname: r.Hostname,
 			ID:       derefString(r.Id),
 			Name:     derefString(r.Name),
@@ -118,29 +118,29 @@ func containerResultCollectionFromGen(
 		})
 	}
 
-	return Collection[ContainerResult]{
+	return Collection[DockerResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// containerListCollectionFromGen converts a gen.ContainerListCollectionResponse
-// to a Collection[ContainerListResult].
-func containerListCollectionFromGen(
-	g *gen.ContainerListCollectionResponse,
-) Collection[ContainerListResult] {
-	results := make([]ContainerListResult, 0, len(g.Results))
+// dockerListCollectionFromGen converts a gen.DockerListCollectionResponse
+// to a Collection[DockerListResult].
+func dockerListCollectionFromGen(
+	g *gen.DockerListCollectionResponse,
+) Collection[DockerListResult] {
+	results := make([]DockerListResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		item := ContainerListResult{
+		item := DockerListResult{
 			Hostname: r.Hostname,
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		}
 
 		if r.Containers != nil {
-			containers := make([]ContainerSummaryItem, 0, len(*r.Containers))
+			containers := make([]DockerSummaryItem, 0, len(*r.Containers))
 			for _, c := range *r.Containers {
-				containers = append(containers, ContainerSummaryItem{
+				containers = append(containers, DockerSummaryItem{
 					ID:      derefString(c.Id),
 					Name:    derefString(c.Name),
 					Image:   derefString(c.Image),
@@ -155,20 +155,20 @@ func containerListCollectionFromGen(
 		results = append(results, item)
 	}
 
-	return Collection[ContainerListResult]{
+	return Collection[DockerListResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// containerDetailCollectionFromGen converts a gen.ContainerDetailCollectionResponse
-// to a Collection[ContainerDetailResult].
-func containerDetailCollectionFromGen(
-	g *gen.ContainerDetailCollectionResponse,
-) Collection[ContainerDetailResult] {
-	results := make([]ContainerDetailResult, 0, len(g.Results))
+// dockerDetailCollectionFromGen converts a gen.DockerDetailCollectionResponse
+// to a Collection[DockerDetailResult].
+func dockerDetailCollectionFromGen(
+	g *gen.DockerDetailCollectionResponse,
+) Collection[DockerDetailResult] {
+	results := make([]DockerDetailResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		item := ContainerDetailResult{
+		item := DockerDetailResult{
 			Hostname: r.Hostname,
 			ID:       derefString(r.Id),
 			Name:     derefString(r.Name),
@@ -199,20 +199,20 @@ func containerDetailCollectionFromGen(
 		results = append(results, item)
 	}
 
-	return Collection[ContainerDetailResult]{
+	return Collection[DockerDetailResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// containerActionCollectionFromGen converts a gen.ContainerActionCollectionResponse
-// to a Collection[ContainerActionResult].
-func containerActionCollectionFromGen(
-	g *gen.ContainerActionCollectionResponse,
-) Collection[ContainerActionResult] {
-	results := make([]ContainerActionResult, 0, len(g.Results))
+// dockerActionCollectionFromGen converts a gen.DockerActionCollectionResponse
+// to a Collection[DockerActionResult].
+func dockerActionCollectionFromGen(
+	g *gen.DockerActionCollectionResponse,
+) Collection[DockerActionResult] {
+	results := make([]DockerActionResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, ContainerActionResult{
+		results = append(results, DockerActionResult{
 			Hostname: r.Hostname,
 			ID:       derefString(r.Id),
 			Message:  derefString(r.Message),
@@ -221,20 +221,20 @@ func containerActionCollectionFromGen(
 		})
 	}
 
-	return Collection[ContainerActionResult]{
+	return Collection[DockerActionResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// containerExecCollectionFromGen converts a gen.ContainerExecCollectionResponse
-// to a Collection[ContainerExecResult].
-func containerExecCollectionFromGen(
-	g *gen.ContainerExecCollectionResponse,
-) Collection[ContainerExecResult] {
-	results := make([]ContainerExecResult, 0, len(g.Results))
+// dockerExecCollectionFromGen converts a gen.DockerExecCollectionResponse
+// to a Collection[DockerExecResult].
+func dockerExecCollectionFromGen(
+	g *gen.DockerExecCollectionResponse,
+) Collection[DockerExecResult] {
+	results := make([]DockerExecResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, ContainerExecResult{
+		results = append(results, DockerExecResult{
 			Hostname: r.Hostname,
 			Stdout:   derefString(r.Stdout),
 			Stderr:   derefString(r.Stderr),
@@ -244,20 +244,20 @@ func containerExecCollectionFromGen(
 		})
 	}
 
-	return Collection[ContainerExecResult]{
+	return Collection[DockerExecResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// containerPullCollectionFromGen converts a gen.ContainerPullCollectionResponse
-// to a Collection[ContainerPullResult].
-func containerPullCollectionFromGen(
-	g *gen.ContainerPullCollectionResponse,
-) Collection[ContainerPullResult] {
-	results := make([]ContainerPullResult, 0, len(g.Results))
+// dockerPullCollectionFromGen converts a gen.DockerPullCollectionResponse
+// to a Collection[DockerPullResult].
+func dockerPullCollectionFromGen(
+	g *gen.DockerPullCollectionResponse,
+) Collection[DockerPullResult] {
+	results := make([]DockerPullResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, ContainerPullResult{
+		results = append(results, DockerPullResult{
 			Hostname: r.Hostname,
 			ImageID:  derefString(r.ImageId),
 			Tag:      derefString(r.Tag),
@@ -267,7 +267,7 @@ func containerPullCollectionFromGen(
 		})
 	}
 
-	return Collection[ContainerPullResult]{
+	return Collection[DockerPullResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}

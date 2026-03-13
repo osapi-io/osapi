@@ -1,20 +1,18 @@
-package container
+package docker
 
 import (
 	"context"
 	"time"
-
-	"github.com/retr0h/osapi/internal/provider/container/runtime"
 )
 
-// Service implements Provider by delegating to a runtime.Driver.
+// Service implements Provider by delegating to a Driver.
 type Service struct {
-	driver runtime.Driver
+	driver Driver
 }
 
-// New creates a new container provider service.
+// New creates a new docker provider service.
 func New(
-	driver runtime.Driver,
+	driver Driver,
 ) *Service {
 	return &Service{driver: driver}
 }
@@ -24,8 +22,8 @@ func (
 	s *Service,
 ) Create(
 	ctx context.Context,
-	params runtime.CreateParams,
-) (*runtime.Container, error) {
+	params CreateParams,
+) (*Container, error) {
 	return s.driver.Create(ctx, params)
 }
 
@@ -66,8 +64,8 @@ func (
 	s *Service,
 ) List(
 	ctx context.Context,
-	params runtime.ListParams,
-) ([]runtime.Container, error) {
+	params ListParams,
+) ([]Container, error) {
 	return s.driver.List(ctx, params)
 }
 
@@ -77,7 +75,7 @@ func (
 ) Inspect(
 	ctx context.Context,
 	id string,
-) (*runtime.ContainerDetail, error) {
+) (*ContainerDetail, error) {
 	return s.driver.Inspect(ctx, id)
 }
 
@@ -87,8 +85,8 @@ func (
 ) Exec(
 	ctx context.Context,
 	id string,
-	params runtime.ExecParams,
-) (*runtime.ExecResult, error) {
+	params ExecParams,
+) (*ExecResult, error) {
 	return s.driver.Exec(ctx, id, params)
 }
 
@@ -98,6 +96,6 @@ func (
 ) Pull(
 	ctx context.Context,
 	image string,
-) (*runtime.PullResult, error) {
+) (*PullResult, error) {
 	return s.driver.Pull(ctx, image)
 }

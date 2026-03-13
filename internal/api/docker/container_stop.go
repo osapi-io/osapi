@@ -26,30 +26,30 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainerStop stops a container on a target node.
-func (s *Container) PostNodeContainerStop(
+// PostNodeContainerDockerStop stops a container on a target node.
+func (s *Container) PostNodeContainerDockerStop(
 	ctx context.Context,
-	request gen.PostNodeContainerStopRequestObject,
-) (gen.PostNodeContainerStopResponseObject, error) {
+	request gen.PostNodeContainerDockerStopRequestObject,
+) (gen.PostNodeContainerDockerStopResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerStop400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if request.Body != nil {
 		if errMsg, ok := validation.Struct(request.Body); !ok {
-			return gen.PostNodeContainerStop400JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 		}
 	}
 
 	hostname := request.Hostname
 	id := request.Id
 
-	data := &job.ContainerStopData{}
+	data := &job.DockerStopData{}
 	if request.Body != nil && request.Body.Timeout != nil {
 		data.Timeout = request.Body.Timeout
 	}
@@ -59,19 +59,19 @@ func (s *Container) PostNodeContainerStop(
 		slog.String("id", id),
 	)
 
-	resp, err := s.JobClient.ModifyContainerStop(ctx, hostname, id, data)
+	resp, err := s.JobClient.ModifyDockerStop(ctx, hostname, id, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	msg := "container stopped"
 
-	return gen.PostNodeContainerStop202JSONResponse{
+	return gen.PostNodeContainerDockerStop202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerActionResultItem{
+		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
 				Id:       &id,

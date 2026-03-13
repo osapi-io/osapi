@@ -27,25 +27,25 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainerPull pulls a container image on a target node.
-func (s *Container) PostNodeContainerPull(
+// PostNodeContainerDockerPull pulls a container image on a target node.
+func (s *Container) PostNodeContainerDockerPull(
 	ctx context.Context,
-	request gen.PostNodeContainerPullRequestObject,
-) (gen.PostNodeContainerPullResponseObject, error) {
+	request gen.PostNodeContainerDockerPullRequestObject,
+) (gen.PostNodeContainerDockerPullResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerPull400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerPull400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeContainerPull400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerPull400JSONResponse{Error: &errMsg}, nil
 	}
 
-	data := &job.ContainerPullData{
+	data := &job.DockerPullData{
 		Image: request.Body.Image,
 	}
 
@@ -56,10 +56,10 @@ func (s *Container) PostNodeContainerPull(
 		slog.String("image", data.Image),
 	)
 
-	resp, err := s.JobClient.ModifyContainerPull(ctx, hostname, data)
+	resp, err := s.JobClient.ModifyDockerPull(ctx, hostname, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerPull500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var pullResult struct {
@@ -74,9 +74,9 @@ func (s *Container) PostNodeContainerPull(
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 
-	return gen.PostNodeContainerPull202JSONResponse{
+	return gen.PostNodeContainerDockerPull202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerPullResultItem{
+		Results: []gen.DockerPullResultItem{
 			{
 				Hostname: resp.Hostname,
 				ImageId:  stringPtrOrNil(pullResult.ImageID),

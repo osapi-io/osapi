@@ -87,7 +87,7 @@ const (
 const (
 	SubjectCategoryNode      = "node"
 	SubjectCategoryNetwork   = "network"
-	SubjectCategoryContainer = "container"
+	SubjectCategoryDocker = "docker"
 )
 
 // Node operation types

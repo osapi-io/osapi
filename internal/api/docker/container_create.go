@@ -27,25 +27,25 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainer creates a container on a target node.
-func (s *Container) PostNodeContainer(
+// PostNodeContainerDocker creates a container on a target node.
+func (s *Container) PostNodeContainerDocker(
 	ctx context.Context,
-	request gen.PostNodeContainerRequestObject,
-) (gen.PostNodeContainerResponseObject, error) {
+	request gen.PostNodeContainerDockerRequestObject,
+) (gen.PostNodeContainerDockerResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainer400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeContainer400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
 	}
 
-	data := &job.ContainerCreateData{
+	data := &job.DockerCreateData{
 		Image:   request.Body.Image,
 		Command: ptrToSlice(request.Body.Command),
 		Env:     envSliceToMap(request.Body.Env),
@@ -68,10 +68,10 @@ func (s *Container) PostNodeContainer(
 		slog.String("target", hostname),
 	)
 
-	resp, err := s.JobClient.ModifyContainerCreate(ctx, hostname, data)
+	resp, err := s.JobClient.ModifyDockerCreate(ctx, hostname, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainer500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var containerResp struct {
@@ -85,9 +85,9 @@ func (s *Container) PostNodeContainer(
 	id := containerResp.ID
 	changed := resp.Changed
 
-	return gen.PostNodeContainer202JSONResponse{
+	return gen.PostNodeContainerDocker202JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerResponse{
+		Results: []gen.DockerResponse{
 			{
 				Hostname: resp.Hostname,
 				Id:       stringPtrOrNil(id),

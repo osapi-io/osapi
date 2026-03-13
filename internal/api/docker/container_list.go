@@ -27,25 +27,25 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/api/container/gen"
+	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// GetNodeContainer lists containers on a target node.
-func (s *Container) GetNodeContainer(
+// GetNodeContainerDocker lists containers on a target node.
+func (s *Container) GetNodeContainerDocker(
 	ctx context.Context,
-	request gen.GetNodeContainerRequestObject,
-) (gen.GetNodeContainerResponseObject, error) {
+	request gen.GetNodeContainerDockerRequestObject,
+) (gen.GetNodeContainerDockerResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeContainer400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Params); !ok {
-		return gen.GetNodeContainer400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
 	}
 
-	data := &job.ContainerListData{}
+	data := &job.DockerListData{}
 	if request.Params.State != nil {
 		data.State = string(*request.Params.State)
 	}
@@ -60,10 +60,10 @@ func (s *Container) GetNodeContainer(
 		slog.String("state", data.State),
 	)
 
-	resp, err := s.JobClient.QueryContainerList(ctx, hostname, data)
+	resp, err := s.JobClient.QueryDockerList(ctx, hostname, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeContainer500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var containers []struct {
@@ -77,14 +77,14 @@ func (s *Container) GetNodeContainer(
 		_ = json.Unmarshal(resp.Data, &containers)
 	}
 
-	var summaries []gen.ContainerSummary
+	var summaries []gen.DockerSummary
 	for _, c := range containers {
 		id := c.ID
 		name := c.Name
 		image := c.Image
 		state := c.State
 		created := c.Created
-		summaries = append(summaries, gen.ContainerSummary{
+		summaries = append(summaries, gen.DockerSummary{
 			Id:      &id,
 			Name:    &name,
 			Image:   &image,
@@ -96,9 +96,9 @@ func (s *Container) GetNodeContainer(
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 
-	return gen.GetNodeContainer200JSONResponse{
+	return gen.GetNodeContainerDocker200JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.ContainerListItem{
+		Results: []gen.DockerListItem{
 			{
 				Hostname:   resp.Hostname,
 				Containers: &summaries,

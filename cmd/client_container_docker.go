@@ -18,7 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package mocks provides mock implementations for testing.
-package mocks
+package cmd
 
-//go:generate go tool github.com/golang/mock/mockgen -source=../driver.go -destination=driver.gen.go -package=mocks
+import "github.com/spf13/cobra"
+
+// clientContainerDockerCmd represents the docker subcommand under container.
+var clientContainerDockerCmd = &cobra.Command{
+	Use:   "docker",
+	Short: "Docker container operations",
+	Long:  `Manage Docker containers on target nodes.`,
+}
+
+func init() {
+	clientContainerCmd.AddCommand(clientContainerDockerCmd)
+}
