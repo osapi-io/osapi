@@ -28,12 +28,12 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type ContainerSmokeSuite struct {
+type DockerSmokeSuite struct {
 	suite.Suite
 }
 
-func (s *ContainerSmokeSuite) TestContainerPull() {
-	skipWriteOp(s.T(), "CONTAINER_PULL")
+func (s *DockerSmokeSuite) TestDockerPull() {
+	skipWriteOp(s.T(), "DOCKER_PULL")
 
 	tests := []struct {
 		name         string
@@ -43,7 +43,7 @@ func (s *ContainerSmokeSuite) TestContainerPull() {
 		{
 			name: "pulls alpine image and returns image id",
 			args: []string{
-				"client", "container", "pull",
+				"client", "container", "docker", "pull",
 				"--image", "alpine:latest",
 				"--json",
 			},
@@ -79,12 +79,12 @@ func (s *ContainerSmokeSuite) TestContainerPull() {
 	}
 }
 
-func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
-	skipWriteOp(s.T(), "CONTAINER_LIFECYCLE")
+func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
+	skipWriteOp(s.T(), "DOCKER_LIFECYCLE")
 
 	// Pull the image first so create does not fail.
 	pullOut, _, pullCode := runCLI(
-		"client", "container", "pull",
+		"client", "container", "docker", "pull",
 		"--image", "alpine:latest",
 		"--json",
 	)
@@ -96,7 +96,7 @@ func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
 
 	// Create
 	createOut, _, createCode := runCLI(
-		"client", "container", "create",
+		"client", "container", "docker", "create",
 		"--image", "alpine:latest",
 		"--name", "integration-test-container",
 		"--auto-start=false",
@@ -119,7 +119,7 @@ func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
 
 	// List
 	listOut, _, listCode := runCLI(
-		"client", "container", "list",
+		"client", "container", "docker", "list",
 		"--state", "all",
 		"--json",
 	)
@@ -139,7 +139,7 @@ func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
 
 	// Inspect
 	inspectOut, _, inspectCode := runCLI(
-		"client", "container", "inspect",
+		"client", "container", "docker", "inspect",
 		"--id", "integration-test-container",
 		"--json",
 	)
@@ -161,7 +161,7 @@ func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
 
 	// Remove (force, in case the container is running)
 	removeOut, _, removeCode := runCLI(
-		"client", "container", "remove",
+		"client", "container", "docker", "remove",
 		"--id", "integration-test-container",
 		"--force",
 		"--json",
@@ -182,7 +182,7 @@ func (s *ContainerSmokeSuite) TestContainerCreateListInspectStopRemove() {
 	s.Contains(firstRemove, "changed")
 }
 
-func (s *ContainerSmokeSuite) TestContainerList() {
+func (s *DockerSmokeSuite) TestDockerList() {
 	tests := []struct {
 		name         string
 		args         []string
@@ -191,7 +191,7 @@ func (s *ContainerSmokeSuite) TestContainerList() {
 		{
 			name: "returns container list with results",
 			args: []string{
-				"client", "container", "list",
+				"client", "container", "docker", "list",
 				"--state", "all",
 				"--json",
 			},
@@ -217,8 +217,8 @@ func (s *ContainerSmokeSuite) TestContainerList() {
 	}
 }
 
-func TestContainerSmokeSuite(
+func TestDockerSmokeSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(ContainerSmokeSuite))
+	suite.Run(t, new(DockerSmokeSuite))
 }
