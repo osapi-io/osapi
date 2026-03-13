@@ -35,7 +35,7 @@ import (
 func (a *Agent) processDockerOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	if a.containerProvider == nil {
+	if a.dockerProvider == nil {
 		return nil, fmt.Errorf("docker runtime not available")
 	}
 
@@ -87,7 +87,7 @@ func (a *Agent) processDockerCreate(
 		volumes = append(volumes, dockerProv.VolumeMapping{Host: v.Host, Container: v.Container})
 	}
 
-	result, err := a.containerProvider.Create(ctx, dockerProv.CreateParams{
+	result, err := a.dockerProvider.Create(ctx, dockerProv.CreateParams{
 		Image:     data.Image,
 		Name:      data.Name,
 		Command:   data.Command,
@@ -115,8 +115,7 @@ func (a *Agent) processDockerStart(
 		return nil, fmt.Errorf("unmarshal start data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Start(ctx, data.ID)
-	if err != nil {
+	if err := a.dockerProvider.Start(ctx, data.ID); err != nil {
 		return nil, err
 	}
 
@@ -142,8 +141,7 @@ func (a *Agent) processDockerStop(
 		timeout = &d
 	}
 
-	result, err := a.dockerProvider.Stop(ctx, data.ID, timeout)
-	if err != nil {
+	if err := a.dockerProvider.Stop(ctx, data.ID, timeout); err != nil {
 		return nil, err
 	}
 
@@ -163,8 +161,7 @@ func (a *Agent) processDockerRemove(
 		return nil, fmt.Errorf("unmarshal remove data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Remove(ctx, data.ID, data.Force)
-	if err != nil {
+	if err := a.dockerProvider.Remove(ctx, data.ID, data.Force); err != nil {
 		return nil, err
 	}
 
@@ -181,7 +178,7 @@ func (a *Agent) processDockerList(
 		return nil, fmt.Errorf("unmarshal list data: %w", err)
 	}
 
-	result, err := a.containerProvider.List(ctx, dockerProv.ListParams{
+	result, err := a.dockerProvider.List(ctx, dockerProv.ListParams{
 		State: data.State,
 		Limit: data.Limit,
 	})
@@ -227,7 +224,7 @@ func (a *Agent) processDockerExec(
 		return nil, fmt.Errorf("unmarshal exec data: %w", err)
 	}
 
-	result, err := a.containerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
+	result, err := a.dockerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
 		Command:    data.Command,
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
