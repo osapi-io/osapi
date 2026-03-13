@@ -3,46 +3,46 @@
 ## Problem
 
 The current container domain uses a generic `container` name with an
-auto-detecting runtime driver. This is wrong — the user decides which runtime to
-use, not the agent. Docker, LXD, and Podman are fundamentally different systems
-with different concepts, options, and behaviors. A shared abstraction would be
-lowest-common-denominator or leak everywhere.
+auto-detecting runtime driver. This is wrong — the user decides which
+runtime to use, not the agent. Docker, LXD, and Podman are fundamentally
+different systems with different concepts, options, and behaviors. A shared
+abstraction would be lowest-common-denominator or leak everywhere.
 
 ## Decision
 
-Rename the `container` domain to `docker`. Each future runtime (LXD, Podman)
-becomes its own independent domain — no shared interface, no shared types, no
-abstraction tax.
+Rename the `container` domain to `docker`. Each future runtime (LXD,
+Podman) becomes its own independent domain — no shared interface, no
+shared types, no abstraction tax.
 
-The CLI groups runtimes under a `container` parent command for discoverability.
-API paths mirror this with `/container/docker/`.
+The CLI groups runtimes under a `container` parent command for
+discoverability. API paths mirror this with `/container/docker/`.
 
 ## Architecture
 
 ### Naming Convention
 
-| Layer        | Current                        | New                                 |
-| ------------ | ------------------------------ | ----------------------------------- |
-| API paths    | `/node/{hostname}/container`   | `/node/{hostname}/container/docker` |
-| Permissions  | `container:read/write/execute` | `docker:read/write/execute`         |
-| CLI          | `client container list`        | `client container docker list`      |
-| SDK          | `client.Container.Pull()`      | `client.Docker.Pull()`              |
-| Job category | `container`                    | `docker`                            |
-| Provider pkg | `internal/provider/container/` | `internal/provider/docker/`         |
-| API pkg      | `internal/api/container/`      | `internal/api/docker/`              |
+| Layer | Current | New |
+|-------|---------|-----|
+| API paths | `/node/{hostname}/container` | `/node/{hostname}/container/docker` |
+| Permissions | `container:read/write/execute` | `docker:read/write/execute` |
+| CLI | `client container list` | `client container docker list` |
+| SDK | `client.Container.Pull()` | `client.Docker.Pull()` |
+| Job category | `container` | `docker` |
+| Provider pkg | `internal/provider/container/` | `internal/provider/docker/` |
+| API pkg | `internal/api/container/` | `internal/api/docker/` |
 
 ### API Endpoints
 
-| Method   | Path                                           | Operation | Permission       |
-| -------- | ---------------------------------------------- | --------- | ---------------- |
-| `POST`   | `/node/{hostname}/container/docker`            | Create    | `docker:write`   |
-| `GET`    | `/node/{hostname}/container/docker`            | List      | `docker:read`    |
-| `GET`    | `/node/{hostname}/container/docker/{id}`       | Inspect   | `docker:read`    |
-| `POST`   | `/node/{hostname}/container/docker/{id}/start` | Start     | `docker:write`   |
-| `POST`   | `/node/{hostname}/container/docker/{id}/stop`  | Stop      | `docker:write`   |
-| `DELETE` | `/node/{hostname}/container/docker/{id}`       | Remove    | `docker:write`   |
-| `POST`   | `/node/{hostname}/container/docker/{id}/exec`  | Exec      | `docker:execute` |
-| `POST`   | `/node/{hostname}/container/docker/pull`       | Pull      | `docker:write`   |
+| Method | Path | Operation | Permission |
+|--------|------|-----------|------------|
+| `POST` | `/node/{hostname}/container/docker` | Create | `docker:write` |
+| `GET` | `/node/{hostname}/container/docker` | List | `docker:read` |
+| `GET` | `/node/{hostname}/container/docker/{id}` | Inspect | `docker:read` |
+| `POST` | `/node/{hostname}/container/docker/{id}/start` | Start | `docker:write` |
+| `POST` | `/node/{hostname}/container/docker/{id}/stop` | Stop | `docker:write` |
+| `DELETE` | `/node/{hostname}/container/docker/{id}` | Remove | `docker:write` |
+| `POST` | `/node/{hostname}/container/docker/{id}/exec` | Exec | `docker:execute` |
+| `POST` | `/node/{hostname}/container/docker/pull` | Pull | `docker:write` |
 
 ### CLI
 
@@ -57,17 +57,17 @@ osapi client container docker exec --target HOST --id ID --command CMD...
 osapi client container docker pull --target HOST --image IMAGE
 ```
 
-The `container` command is a parent with `<DocCardList />` for grouping. Each
-runtime is a subcommand. Future runtimes add `client container lxd`,
+The `container` command is a parent with `<DocCardList />` for grouping.
+Each runtime is a subcommand. Future runtimes add `client container lxd`,
 `client container podman`, etc.
 
 ### Role Updates
 
-| Role    | Permissions                                     |
-| ------- | ----------------------------------------------- |
+| Role | Permissions |
+|------|------------|
 | `admin` | `docker:read`, `docker:write`, `docker:execute` |
-| `write` | `docker:read`, `docker:write`                   |
-| `read`  | `docker:read`                                   |
+| `write` | `docker:read`, `docker:write` |
+| `read` | `docker:read` |
 
 ### Package Layout
 
@@ -123,13 +123,13 @@ internal/agent/
 ### No Shared Runtime Interface
 
 The `runtime.Driver` interface in
-`internal/provider/container/runtime/driver.go` is removed. The Docker provider
-defines its own types directly. When LXD is added, it gets its own provider
-package (`internal/provider/lxd/`) with its own types — LXD concepts (instances,
-profiles, projects) don't map to Docker concepts (images, containers, layers).
+`internal/provider/container/runtime/driver.go` is removed. The Docker
+provider defines its own types directly. When LXD is added, it gets its
+own provider package (`internal/provider/lxd/`) with its own types —
+LXD concepts (instances, profiles, projects) don't map to Docker
+concepts (images, containers, layers).
 
 Each runtime is fully independent:
-
 - Own API domain, paths, and OpenAPI schemas
 - Own CLI subcommands under `client container <runtime>`
 - Own SDK service (`client.Docker`, `client.Lxd`)
@@ -139,8 +139,9 @@ Each runtime is fully independent:
 
 ### Orchestrator DSL
 
-Convenience methods on `*Plan` in `pkg/sdk/orchestrator/` wrap `client.Docker.*`
-calls so users don't write boilerplate TaskFunc bodies:
+Convenience methods on `*Plan` in `pkg/sdk/orchestrator/` wrap
+`client.Docker.*` calls so users don't write boilerplate TaskFunc
+bodies:
 
 ```go
 plan.DockerPull("pull-image", target, "ubuntu:24.04")
@@ -152,25 +153,27 @@ plan.DockerStop("stop", target, "my-app", gen.DockerStopRequest{...})
 plan.DockerRemove("cleanup", target, "my-app", &gen.DeleteNodeDockerByIDParams{...})
 ```
 
-Each returns `*Task` for chaining (`DependsOn`, `OnlyIfChanged`, etc.). Future
-runtimes add `plan.LxdLaunch(...)`, `plan.LxdExec(...)` — no shared interface.
+Each returns `*Task` for chaining (`DependsOn`, `OnlyIfChanged`, etc.).
+Future runtimes add `plan.LxdLaunch(...)`, `plan.LxdExec(...)` — no
+shared interface.
 
 ### Documentation
 
-- `docs/docs/sidebar/features/container-management.md` — update to describe
-  Docker as the first runtime, explain the per-runtime model
+- `docs/docs/sidebar/features/container-management.md` — update to
+  describe Docker as the first runtime, explain the per-runtime model
 - CLI docs: restructure under `container/docker/`
-- SDK orchestrator docs: update container-targeting to use `plan.DockerPull`
-  etc.
+- SDK orchestrator docs: update container-targeting to use
+  `plan.DockerPull` etc.
 
 ## What This Changes
 
-This is a mechanical rename + restructure of the existing fully-built container
-domain. No behavior changes. The scope is:
+This is a mechanical rename + restructure of the existing fully-built
+container domain. No behavior changes. The scope is:
 
-1. Rename ~40+ files across all layers (API, CLI, SDK, agent, provider, job
-   types, tests, docs)
-2. Remove `internal/provider/container/runtime/driver.go` shared interface
+1. Rename ~40+ files across all layers (API, CLI, SDK, agent, provider,
+   job types, tests, docs)
+2. Remove `internal/provider/container/runtime/driver.go` shared
+   interface
 3. Flatten `internal/provider/container/runtime/docker/` →
    `internal/provider/docker/`
 4. Add `container` parent CLI command
@@ -179,12 +182,12 @@ domain. No behavior changes. The scope is:
 
 ## Key Design Decisions
 
-| Decision                     | Choice              | Rationale                                              |
-| ---------------------------- | ------------------- | ------------------------------------------------------ |
-| User chooses runtime         | Yes                 | Agent shouldn't guess; Docker/LXD/Podman are different |
-| Separate domains per runtime | Yes                 | No useful shared abstraction across runtimes           |
-| CLI nesting                  | `container docker`  | Groups runtimes for discoverability                    |
-| API path nesting             | `/container/docker` | Mirrors CLI structure                                  |
-| No shared interface          | Yes                 | LXD concepts don't map to Docker concepts              |
-| Flat provider packages       | Yes                 | No shared parent code to justify nesting               |
-| Orchestrator helpers         | Methods on Plan     | Eliminates TaskFunc boilerplate                        |
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| User chooses runtime | Yes | Agent shouldn't guess; Docker/LXD/Podman are different |
+| Separate domains per runtime | Yes | No useful shared abstraction across runtimes |
+| CLI nesting | `container docker` | Groups runtimes for discoverability |
+| API path nesting | `/container/docker` | Mirrors CLI structure |
+| No shared interface | Yes | LXD concepts don't map to Docker concepts |
+| Flat provider packages | Yes | No shared parent code to justify nesting |
+| Orchestrator helpers | Methods on Plan | Eliminates TaskFunc boilerplate |
