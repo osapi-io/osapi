@@ -2,7 +2,7 @@
 sidebar_position: 20
 ---
 
-# container.stop.execute
+# docker.stop.execute
 
 Stop a running container.
 
@@ -12,7 +12,7 @@ Stop a running container.
 task := plan.TaskFunc("stop-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         timeout := 30
-        _, err := c.Container.Stop(ctx, "_any", "my-nginx", gen.ContainerStopRequest{
+        _, err := c.Docker.Stop(ctx, "_any", "my-nginx", gen.DockerStopRequest{
             Timeout: &timeout,
         })
         if err != nil {
@@ -41,7 +41,7 @@ Accepts any valid target: `_any`, `_all`, a hostname, or a label selector
 
 ## Permissions
 
-Requires `container:write` permission.
+Requires `docker:write` permission.
 
 ## Example
 

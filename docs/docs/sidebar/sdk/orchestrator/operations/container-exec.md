@@ -2,7 +2,7 @@
 sidebar_position: 22
 ---
 
-# container.exec.execute
+# docker.exec.execute
 
 Execute a command inside a running container.
 
@@ -11,7 +11,7 @@ Execute a command inside a running container.
 ```go
 task := plan.TaskFunc("exec-in-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        resp, err := c.Container.Exec(ctx, "_any", "my-nginx", gen.ContainerExecRequest{
+        resp, err := c.Docker.Exec(ctx, "_any", "my-nginx", gen.DockerExecRequest{
             Command: []string{"nginx", "-t"},
         })
         if err != nil {
@@ -50,7 +50,7 @@ Accepts any valid target: `_any`, `_all`, a hostname, or a label selector
 
 ## Permissions
 
-Requires `container:execute` permission.
+Requires `docker:execute` permission.
 
 ## Example
 

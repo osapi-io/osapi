@@ -2,7 +2,7 @@
 sidebar_position: 17
 ---
 
-# container.list.get
+# docker.list.get
 
 List containers on the target host, optionally filtered by state.
 
@@ -11,8 +11,8 @@ List containers on the target host, optionally filtered by state.
 ```go
 task := plan.TaskFunc("list-containers",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        state := gen.GetNodeContainerParamsStateRunning
-        resp, err := c.Container.List(ctx, "_any", &gen.GetNodeContainerParams{
+        state := gen.GetNodeContainerDockerParamsStateRunning
+        resp, err := c.Docker.List(ctx, "_any", &gen.GetNodeContainerDockerParams{
             State: &state,
         })
         if err != nil {
@@ -41,7 +41,7 @@ Accepts any valid target: `_any`, `_all`, a hostname, or a label selector
 
 ## Permissions
 
-Requires `container:read` permission.
+Requires `docker:read` permission.
 
 ## Example
 

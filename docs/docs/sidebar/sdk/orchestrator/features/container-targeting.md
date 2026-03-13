@@ -9,7 +9,7 @@ stop, and remove -- as a DAG of `TaskFunc` steps using the standard SDK client.
 
 ## Setup
 
-Container operations use the same `client.Container` service as any other SDK
+Container operations use the same `client.Docker` service as any other SDK
 call. No special plan options are needed:
 
 ```go
@@ -24,7 +24,7 @@ operations at the same level run in parallel:
 ```go
 pull := plan.TaskFunc("pull-image",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
+        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
             Image: "ubuntu:24.04",
         })
         if err != nil {
@@ -37,7 +37,7 @@ pull := plan.TaskFunc("pull-image",
 create := plan.TaskFunc("create-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         autoStart := true
-        resp, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+        resp, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
             Image:     "ubuntu:24.04",
             Name:      ptr("my-app"),
             AutoStart: &autoStart,
@@ -64,8 +64,8 @@ the same create step run in parallel:
 ```go
 execHostname := plan.TaskFunc("exec-hostname",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        resp, err := c.Container.Exec(ctx, "_any", "my-app",
-            gen.ContainerExecRequest{Command: []string{"hostname"}})
+        resp, err := c.Docker.Exec(ctx, "_any", "my-app",
+            gen.DockerExecRequest{Command: []string{"hostname"}})
         if err != nil {
             return nil, err
         }
@@ -80,8 +80,8 @@ execHostname.DependsOn(create)
 
 execUname := plan.TaskFunc("exec-uname",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        resp, err := c.Container.Exec(ctx, "_any", "my-app",
-            gen.ContainerExecRequest{Command: []string{"uname", "-a"}})
+        resp, err := c.Docker.Exec(ctx, "_any", "my-app",
+            gen.DockerExecRequest{Command: []string{"uname", "-a"}})
         if err != nil {
             return nil, err
         }
@@ -104,8 +104,8 @@ is removed even when some tasks fail (with `OnError(Continue)`):
 cleanup := plan.TaskFunc("cleanup",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         force := true
-        _, err := c.Container.Remove(ctx, "_any", "my-app",
-            &gen.DeleteNodeContainerByIDParams{Force: &force})
+        _, err := c.Docker.Remove(ctx, "_any", "my-app",
+            &gen.DeleteNodeContainerDockerByIDParams{Force: &force})
         if err != nil {
             return nil, err
         }

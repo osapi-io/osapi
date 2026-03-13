@@ -2,7 +2,7 @@
 sidebar_position: 18
 ---
 
-# container.inspect.get
+# docker.inspect.get
 
 Retrieve detailed information about a specific container.
 
@@ -11,7 +11,7 @@ Retrieve detailed information about a specific container.
 ```go
 task := plan.TaskFunc("inspect-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        resp, err := c.Container.Inspect(ctx, "_any", "my-nginx")
+        resp, err := c.Docker.Inspect(ctx, "_any", "my-nginx")
         if err != nil {
             return nil, err
         }
@@ -41,7 +41,7 @@ Accepts any valid target: `_any`, `_all`, a hostname, or a label selector
 
 ## Permissions
 
-Requires `container:read` permission.
+Requires `docker:read` permission.
 
 ## Example
 

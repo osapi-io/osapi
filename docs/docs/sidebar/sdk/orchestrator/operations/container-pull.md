@@ -2,7 +2,7 @@
 sidebar_position: 23
 ---
 
-# container.pull.execute
+# docker.pull.execute
 
 Pull a container image to the host.
 
@@ -11,7 +11,7 @@ Pull a container image to the host.
 ```go
 task := plan.TaskFunc("pull-image",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        resp, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
+        resp, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
             Image: "nginx:alpine",
         })
         if err != nil {
@@ -45,7 +45,7 @@ background.
 
 ## Permissions
 
-Requires `container:write` permission.
+Requires `docker:write` permission.
 
 ## Example
 

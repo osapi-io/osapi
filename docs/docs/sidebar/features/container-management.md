@@ -92,23 +92,23 @@ authentication settings.
 
 ## Permissions
 
-| Endpoint                                     | Permission          |
-| -------------------------------------------- | ------------------- |
-| `POST /node/{hostname}/container` (create)   | `container:write`   |
-| `GET /node/{hostname}/container` (list)      | `container:read`    |
-| `GET /node/{hostname}/container/{id}`        | `container:read`    |
-| `POST /node/{hostname}/container/{id}/start` | `container:write`   |
-| `POST /node/{hostname}/container/{id}/stop`  | `container:write`   |
-| `DELETE /node/{hostname}/container/{id}`     | `container:write`   |
-| `POST /node/{hostname}/container/{id}/exec`  | `container:execute` |
-| `POST /node/{hostname}/container/pull`       | `container:write`   |
+| Endpoint                                            | Permission       |
+| --------------------------------------------------- | ---------------- |
+| `POST /node/{hostname}/container/docker` (create)   | `docker:write`   |
+| `GET /node/{hostname}/container/docker` (list)      | `docker:read`    |
+| `GET /node/{hostname}/container/docker/{id}`        | `docker:read`    |
+| `POST /node/{hostname}/container/docker/{id}/start` | `docker:write`   |
+| `POST /node/{hostname}/container/docker/{id}/stop`  | `docker:write`   |
+| `DELETE /node/{hostname}/container/docker/{id}`     | `docker:write`   |
+| `POST /node/{hostname}/container/docker/{id}/exec`  | `docker:execute` |
+| `POST /node/{hostname}/container/docker/pull`       | `docker:write`   |
 
-The `admin` role includes `container:read`, `container:write`, and
-`container:execute`. The `write` role includes `container:read` and
-`container:write`. The `read` role includes only `container:read`.
+The `admin` role includes `docker:read`, `docker:write`, and
+`docker:execute`. The `write` role includes `docker:read` and
+`docker:write`. The `read` role includes only `docker:read`.
 
 Container exec is a privileged operation similar to command execution. Only the
-`admin` role includes `container:execute` by default. Grant it to other roles or
+`admin` role includes `docker:execute` by default. Grant it to other roles or
 tokens explicitly when needed:
 
 ```yaml
@@ -118,9 +118,9 @@ api:
       roles:
         container-ops:
           permissions:
-            - container:read
-            - container:write
-            - container:execute
+            - docker:read
+            - docker:write
+            - docker:execute
             - health:read
 ```
 
@@ -128,7 +128,7 @@ Or grant it directly on a token:
 
 ```bash
 osapi token generate -r write -u user@example.com \
-  -p container:execute
+  -p docker:execute
 ```
 
 ## Orchestrator
@@ -142,7 +142,7 @@ plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue)
 
 pull := plan.TaskFunc("pull-image",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
+        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
             Image: "nginx:alpine",
         })
         if err != nil {
@@ -155,7 +155,7 @@ pull := plan.TaskFunc("pull-image",
 create := plan.TaskFunc("create-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         autoStart := true
-        _, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+        _, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
             Image:     "nginx:alpine",
             Name:      ptr("web-server"),
             AutoStart: &autoStart,
@@ -170,8 +170,8 @@ create.DependsOn(pull)
 
 exec := plan.TaskFunc("check-config",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Exec(ctx, "_any", "web-server",
-            gen.ContainerExecRequest{Command: []string{"nginx", "-t"}})
+        _, err := c.Docker.Exec(ctx, "_any", "web-server",
+            gen.DockerExecRequest{Command: []string{"nginx", "-t"}})
         if err != nil {
             return nil, err
         }

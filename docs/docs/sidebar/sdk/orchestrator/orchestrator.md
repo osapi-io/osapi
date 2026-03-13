@@ -56,14 +56,14 @@ to an OSAPI job type that agents execute.
 | [`node.memory.get`](operations/node-memory.md)               | Get memory stats       | Read-only  | Node      |
 | [`node.uptime.get`](operations/node-uptime.md)               | Get system uptime      | Read-only  | Node      |
 | [`node.load.get`](operations/node-load.md)                   | Get load averages      | Read-only  | Node      |
-| [`container.create.execute`](operations/container-create.md) | Create a container     | No         | Container |
-| [`container.list.get`](operations/container-list.md)         | List containers        | Read-only  | Container |
-| [`container.inspect.get`](operations/container-inspect.md)   | Inspect a container    | Read-only  | Container |
-| [`container.start.execute`](operations/container-start.md)   | Start a container      | No         | Container |
-| [`container.stop.execute`](operations/container-stop.md)     | Stop a container       | No         | Container |
-| [`container.remove.execute`](operations/container-remove.md) | Remove a container     | No         | Container |
-| [`container.exec.execute`](operations/container-exec.md)     | Exec in a container    | No         | Container |
-| [`container.pull.execute`](operations/container-pull.md)     | Pull a container image | No         | Container |
+| [`docker.create.execute`](operations/container-create.md)    | Create a container     | No         | Docker    |
+| [`docker.list.get`](operations/container-list.md)            | List containers        | Read-only  | Docker    |
+| [`docker.inspect.get`](operations/container-inspect.md)      | Inspect a container    | Read-only  | Docker    |
+| [`docker.start.execute`](operations/container-start.md)      | Start a container      | No         | Docker    |
+| [`docker.stop.execute`](operations/container-stop.md)        | Stop a container       | No         | Docker    |
+| [`docker.remove.execute`](operations/container-remove.md)    | Remove a container     | No         | Docker    |
+| [`docker.exec.execute`](operations/container-exec.md)        | Exec in a container    | No         | Docker    |
+| [`docker.pull.execute`](operations/container-pull.md)        | Pull a container image | No         | Docker    |
 
 ### Idempotency
 

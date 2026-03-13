@@ -3,7 +3,7 @@
 List containers on the target node:
 
 ```bash
-$ osapi client container list
+$ osapi client container docker list
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -17,21 +17,21 @@ $ osapi client container list
 Filter by state:
 
 ```bash
-$ osapi client container list --state running
-$ osapi client container list --state stopped
-$ osapi client container list --state all
+$ osapi client container docker list --state running
+$ osapi client container docker list --state stopped
+$ osapi client container docker list --state all
 ```
 
 Limit the number of results:
 
 ```bash
-$ osapi client container list --limit 5
+$ osapi client container docker list --limit 5
 ```
 
 Target a specific host:
 
 ```bash
-$ osapi client container list --target web-01
+$ osapi client container docker list --target web-01
 ```
 
 ## JSON Output
@@ -39,7 +39,7 @@ $ osapi client container list --target web-01
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container list --json
+$ osapi client container docker list --json
 ```
 
 ## Flags

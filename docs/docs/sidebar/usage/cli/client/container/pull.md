@@ -3,7 +3,7 @@
 Pull a container image on the target node:
 
 ```bash
-$ osapi client container pull --image nginx:latest
+$ osapi client container docker pull --image nginx:latest
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
 
@@ -16,26 +16,26 @@ $ osapi client container pull --image nginx:latest
 Pull a specific image version:
 
 ```bash
-$ osapi client container pull --image alpine:3.18
+$ osapi client container docker pull --image alpine:3.18
 ```
 
 Pull from a custom registry:
 
 ```bash
-$ osapi client container pull \
+$ osapi client container docker pull \
     --image registry.example.com/myapp:v1.2.3
 ```
 
 Target a specific host:
 
 ```bash
-$ osapi client container pull --image redis:7 --target web-01
+$ osapi client container docker pull --image redis:7 --target web-01
 ```
 
 Pull on all hosts:
 
 ```bash
-$ osapi client container pull --image nginx:latest --target _all
+$ osapi client container docker pull --image nginx:latest --target _all
 ```
 
 ## JSON Output
@@ -43,7 +43,7 @@ $ osapi client container pull --image nginx:latest --target _all
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container pull --image nginx:latest --json
+$ osapi client container docker pull --image nginx:latest --json
 ```
 
 ## Flags

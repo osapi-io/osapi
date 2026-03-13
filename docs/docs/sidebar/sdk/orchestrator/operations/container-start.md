@@ -2,7 +2,7 @@
 sidebar_position: 19
 ---
 
-# container.start.execute
+# docker.start.execute
 
 Start a stopped container.
 
@@ -11,7 +11,7 @@ Start a stopped container.
 ```go
 task := plan.TaskFunc("start-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Container.Start(ctx, "_any", "my-nginx")
+        _, err := c.Docker.Start(ctx, "_any", "my-nginx")
         if err != nil {
             return nil, err
         }
@@ -38,7 +38,7 @@ to check state first.
 
 ## Permissions
 
-Requires `container:write` permission.
+Requires `docker:write` permission.
 
 ## Example
 

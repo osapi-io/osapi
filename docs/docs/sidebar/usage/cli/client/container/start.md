@@ -3,7 +3,7 @@
 Start a stopped container on the target node:
 
 ```bash
-$ osapi client container start --id a1b2c3d4e5f6
+$ osapi client container docker start --id a1b2c3d4e5f6
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
 
@@ -14,13 +14,13 @@ $ osapi client container start --id a1b2c3d4e5f6
 Start a container by name:
 
 ```bash
-$ osapi client container start --id my-nginx
+$ osapi client container docker start --id my-nginx
 ```
 
 Target a specific host:
 
 ```bash
-$ osapi client container start --id my-nginx --target web-01
+$ osapi client container docker start --id my-nginx --target web-01
 ```
 
 ## JSON Output
@@ -28,7 +28,7 @@ $ osapi client container start --id my-nginx --target web-01
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container start --id a1b2c3d4e5f6 --json
+$ osapi client container docker start --id a1b2c3d4e5f6 --json
 ```
 
 ## Flags

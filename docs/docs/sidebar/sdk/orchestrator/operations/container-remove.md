@@ -2,7 +2,7 @@
 sidebar_position: 21
 ---
 
-# container.remove.execute
+# docker.remove.execute
 
 Remove a container from the host.
 
@@ -12,8 +12,8 @@ Remove a container from the host.
 task := plan.TaskFunc("remove-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         force := true
-        _, err := c.Container.Remove(ctx, "_any", "my-nginx",
-            &gen.DeleteNodeContainerByIDParams{Force: &force})
+        _, err := c.Docker.Remove(ctx, "_any", "my-nginx",
+            &gen.DeleteNodeContainerDockerByIDParams{Force: &force})
         if err != nil {
             return nil, err
         }
@@ -40,7 +40,7 @@ Accepts any valid target: `_any`, `_all`, a hostname, or a label selector
 
 ## Permissions
 
-Requires `container:write` permission.
+Requires `docker:write` permission.
 
 ## Example
 

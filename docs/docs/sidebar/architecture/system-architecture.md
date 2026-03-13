@@ -68,7 +68,7 @@ subpackages:
 | Package                   | Responsibility                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------- |
 | `internal/api/node/`      | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec) |
-| `internal/api/container/` | Container endpoints (create, list, inspect, start, stop, remove, exec, pull)     |
+| `internal/api/docker/`    | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
 | `internal/api/job/`       | Job queue endpoints (get, list, delete, retry, status)                           |
 | `internal/api/health/`    | Health check endpoints (liveness, readiness, status)                             |
 | `internal/api/common/`    | Shared middleware, error handling, collection responses                          |
@@ -109,7 +109,7 @@ provider is selected at runtime through a platform-aware factory pattern.
 | `network/ping`      | Ping execution and statistics                     |
 | `command/exec`      | Direct command execution                          |
 | `command/shell`     | Shell command execution                           |
-| `container/runtime` | Container lifecycle (create, start, stop, remove) |
+| `docker/runtime`    | Docker container lifecycle (create, start, stop, remove) |
 
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the

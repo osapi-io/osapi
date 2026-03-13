@@ -2,7 +2,7 @@
 sidebar_position: 16
 ---
 
-# container.create.execute
+# docker.create.execute
 
 Create a new container from a specified image.
 
@@ -12,7 +12,7 @@ Create a new container from a specified image.
 task := plan.TaskFunc("create-container",
     func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
         autoStart := true
-        resp, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+        resp, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
             Image:     "nginx:alpine",
             Name:      ptr("my-nginx"),
             AutoStart: &autoStart,
@@ -52,7 +52,7 @@ duplicate creation.
 
 ## Permissions
 
-Requires `container:write` permission.
+Requires `docker:write` permission.
 
 ## Example
 

@@ -143,9 +143,9 @@ of permissions:
 
 | Role    | Permissions                                                                                                                                                                                                                             |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `container:read`, `container:write`, `container:execute` |
-| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `container:read`, `container:write`                                                                      |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `container:read`                                                                                                                                     |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute` |
+| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`                                                                  |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`                                                                                                                               |
 
 ### Custom Roles
 
@@ -243,7 +243,7 @@ api:
       # Permissions: agent:read, agent:write, node:read, network:read,
       #              network:write, job:read, job:write, health:read,
       #              audit:read, command:execute, file:read, file:write,
-      #              container:read, container:write, container:execute
+      #              docker:read, docker:write, docker:execute
       # roles:
       #   ops:
       #     permissions:

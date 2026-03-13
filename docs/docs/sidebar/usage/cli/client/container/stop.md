@@ -3,7 +3,7 @@
 Stop a running container on the target node:
 
 ```bash
-$ osapi client container stop --id a1b2c3d4e5f6
+$ osapi client container docker stop --id a1b2c3d4e5f6
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
 
@@ -14,13 +14,13 @@ $ osapi client container stop --id a1b2c3d4e5f6
 Stop with a custom timeout (seconds to wait before killing):
 
 ```bash
-$ osapi client container stop --id my-nginx --timeout 30
+$ osapi client container docker stop --id my-nginx --timeout 30
 ```
 
 Target a specific host:
 
 ```bash
-$ osapi client container stop --id my-nginx --target web-01
+$ osapi client container docker stop --id my-nginx --target web-01
 ```
 
 ## JSON Output
@@ -28,7 +28,7 @@ $ osapi client container stop --id my-nginx --target web-01
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container stop --id a1b2c3d4e5f6 --json
+$ osapi client container docker stop --id a1b2c3d4e5f6 --json
 ```
 
 ## Flags
