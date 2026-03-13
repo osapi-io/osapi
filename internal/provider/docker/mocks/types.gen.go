@@ -126,11 +126,12 @@ func (mr *MockProviderMockRecorder) Pull(ctx, image interface{}) *gomock.Call {
 }
 
 // Remove mocks base method.
-func (m *MockProvider) Remove(ctx context.Context, id string, force bool) error {
+func (m *MockProvider) Remove(ctx context.Context, id string, force bool) (*docker.ActionResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Remove", ctx, id, force)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*docker.ActionResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Remove indicates an expected call of Remove.
@@ -140,11 +141,12 @@ func (mr *MockProviderMockRecorder) Remove(ctx, id, force interface{}) *gomock.C
 }
 
 // Start mocks base method.
-func (m *MockProvider) Start(ctx context.Context, id string) error {
+func (m *MockProvider) Start(ctx context.Context, id string) (*docker.ActionResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Start", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*docker.ActionResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Start indicates an expected call of Start.
@@ -154,11 +156,12 @@ func (mr *MockProviderMockRecorder) Start(ctx, id interface{}) *gomock.Call {
 }
 
 // Stop mocks base method.
-func (m *MockProvider) Stop(ctx context.Context, id string, timeout *time.Duration) error {
+func (m *MockProvider) Stop(ctx context.Context, id string, timeout *time.Duration) (*docker.ActionResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Stop", ctx, id, timeout)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*docker.ActionResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Stop indicates an expected call of Stop.

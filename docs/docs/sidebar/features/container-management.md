@@ -61,8 +61,8 @@ Container operations follow the same request flow as all OSAPI operations:
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label. See [CLI Reference](../usage/cli/client/container/container.mdx) for
 usage and examples, or the
-[API Reference](/gen/api/docker-management-api-docker-operations) for the REST
-endpoints.
+[API Reference](/gen/api/docker-management-api-docker-operations) for the
+REST endpoints.
 
 ### Runtime Drivers
 
@@ -189,7 +189,7 @@ for a complete working example.
 
 - [CLI Reference](../usage/cli/client/container/container.mdx) -- container
   management commands
-- [API Reference](/gen/api/container-management-api-container-operations) --
+- [API Reference](/gen/api/docker-management-api-docker-operations) --
   REST API documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
