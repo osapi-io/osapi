@@ -24,29 +24,29 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/api/docker"
-	containerGen "github.com/retr0h/osapi/internal/api/docker/gen"
+	docker "github.com/retr0h/osapi/internal/api/docker"
+	dockerGen "github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetContainerHandler returns container handler for registration.
-func (s *Server) GetContainerHandler(
+// GetDockerHandler returns Docker handler for registration.
+func (s *Server) GetDockerHandler(
 	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	containerHandler := container.New(s.logger, jobClient)
+	dockerHandler := docker.New(s.logger, jobClient)
 
-	strictHandler := containerGen.NewStrictHandler(
-		containerHandler,
-		[]containerGen.StrictMiddlewareFunc{
+	strictHandler := dockerGen.NewStrictHandler(
+		dockerHandler,
+		[]dockerGen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
 				return scopeMiddleware(
 					handler,
 					tokenManager,
 					s.appConfig.API.Server.Security.SigningKey,
-					containerGen.BearerAuthScopes,
+					dockerGen.BearerAuthScopes,
 					s.customRoles,
 				)
 			},
@@ -55,7 +55,7 @@ func (s *Server) GetContainerHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			containerGen.RegisterHandlers(e, strictHandler)
+			dockerGen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

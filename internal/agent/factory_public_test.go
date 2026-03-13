@@ -74,7 +74,7 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 			s.NotNil(pingProvider)
 			s.NotNil(netinfoProvider)
 			s.NotNil(commandProvider)
-			// containerProvider can be nil if Docker is not available
+			// dockerProvider can be nil if Docker is not available
 		})
 	}
 }

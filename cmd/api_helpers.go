@@ -63,8 +63,8 @@ type ServerManager interface {
 	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
-	// GetContainerHandler returns container handler for registration.
-	GetContainerHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetDockerHandler returns Docker handler for registration.
+	GetDockerHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetFileHandler returns file handler for registration.
 	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
@@ -482,7 +482,7 @@ func registerAPIHandlers(
 	handlers = append(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
-	handlers = append(handlers, sm.GetContainerHandler(jc)...)
+	handlers = append(handlers, sm.GetDockerHandler(jc)...)
 	handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)

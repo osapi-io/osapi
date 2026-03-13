@@ -71,8 +71,8 @@ type Agent struct {
 	// File provider
 	fileProvider fileProv.Provider
 
-	// Container provider
-	containerProvider dockerProv.Provider
+	// Docker provider
+	dockerProvider dockerProv.Provider
 
 	// Registry KV for heartbeat registration
 	registryKV jetstream.KeyValue

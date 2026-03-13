@@ -147,20 +147,20 @@ func (f *ProviderFactory) CreateProviders() (
 	// Create command provider (cross-platform, uses exec.Manager)
 	commandProvider := command.New(f.logger, execManager)
 
-	// Create container provider (conditional on Docker availability)
-	var containerProvider dockerProv.Provider
+	// Create Docker provider (conditional on Docker availability)
+	var dockerProvider dockerProv.Provider
 	dockerDriver, err := factoryDockerNewFn()
 	if err == nil {
 		if pingErr := dockerDriver.Ping(context.Background()); pingErr == nil {
-			containerProvider = dockerProv.New(dockerDriver)
+			dockerProvider = dockerProv.New(dockerDriver)
 		} else {
-			f.logger.Info("Docker not available, container operations disabled",
+			f.logger.Info("Docker not available, docker operations disabled",
 				slog.String("error", pingErr.Error()))
 		}
 	} else {
-		f.logger.Info("Docker client creation failed, container operations disabled",
+		f.logger.Info("Docker client creation failed, docker operations disabled",
 			slog.String("error", err.Error()))
 	}
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, containerProvider
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider
 }

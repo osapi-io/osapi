@@ -57,7 +57,7 @@ func New(
 	netinfoProvider netinfo.Provider,
 	commandProvider command.Provider,
 	fileProvider fileProv.Provider,
-	containerProvider dockerProv.Provider,
+	dockerProvider dockerProv.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
@@ -76,7 +76,7 @@ func New(
 		netinfoProvider:   netinfoProvider,
 		commandProvider:   commandProvider,
 		fileProvider:      fileProvider,
-		containerProvider: containerProvider,
+		dockerProvider: dockerProvider,
 		registryKV:        registryKV,
 		factsKV:           factsKV,
 	}
@@ -94,7 +94,7 @@ func New(
 		netinfoProvider,
 		commandProvider,
 		fileProvider,
-		containerProvider,
+		dockerProvider,
 	)
 
 	return a
