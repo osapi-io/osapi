@@ -25,21 +25,21 @@ type Permission = string
 
 // Permission constants using resource:verb format.
 const (
-	PermAgentRead      Permission = "agent:read"
-	PermAgentWrite     Permission = "agent:write"
-	PermNodeRead       Permission = "node:read"
-	PermNetworkRead    Permission = "network:read"
-	PermNetworkWrite   Permission = "network:write"
-	PermJobRead        Permission = "job:read"
-	PermJobWrite       Permission = "job:write"
-	PermHealthRead     Permission = "health:read"
-	PermAuditRead      Permission = "audit:read"
-	PermCommandExecute Permission = "command:execute"
-	PermFileRead       Permission = "file:read"
-	PermFileWrite      Permission = "file:write"
-	PermDockerRead     Permission = "docker:read"
-	PermDockerWrite    Permission = "docker:write"
-	PermDockerExecute  Permission = "docker:execute"
+	PermAgentRead        Permission = "agent:read"
+	PermAgentWrite       Permission = "agent:write"
+	PermNodeRead         Permission = "node:read"
+	PermNetworkRead      Permission = "network:read"
+	PermNetworkWrite     Permission = "network:write"
+	PermJobRead          Permission = "job:read"
+	PermJobWrite         Permission = "job:write"
+	PermHealthRead       Permission = "health:read"
+	PermAuditRead        Permission = "audit:read"
+	PermCommandExecute   Permission = "command:execute"
+	PermFileRead         Permission = "file:read"
+	PermFileWrite        Permission = "file:write"
+	PermDockerRead       Permission = "docker:read"
+	PermDockerWrite      Permission = "docker:write"
+	PermDockerExecute    Permission = "docker:execute"
 )
 
 // AllPermissions is the full set of known permissions.
