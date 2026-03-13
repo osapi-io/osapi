@@ -137,9 +137,14 @@ func main() {
 
 	// Remove the container.
 	force := true
-	remove, err := c.Docker.Remove(ctx, target, containerID, &gen.DeleteNodeContainerDockerByIDParams{
-		Force: &force,
-	})
+	remove, err := c.Docker.Remove(
+		ctx,
+		target,
+		containerID,
+		&gen.DeleteNodeContainerDockerByIDParams{
+			Force: &force,
+		},
+	)
 	if err != nil {
 		log.Fatalf("remove: %v", err)
 	}

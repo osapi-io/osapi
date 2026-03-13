@@ -96,6 +96,20 @@ func (mr *MockProviderMockRecorder) List(ctx, params interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockProvider)(nil).List), ctx, params)
 }
 
+// Ping mocks base method.
+func (m *MockProvider) Ping(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ping", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Ping indicates an expected call of Ping.
+func (mr *MockProviderMockRecorder) Ping(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockProvider)(nil).Ping), ctx)
+}
+
 // Pull mocks base method.
 func (m *MockProvider) Pull(ctx context.Context, image string) (*docker.PullResult, error) {
 	m.ctrl.T.Helper()
@@ -151,158 +165,4 @@ func (m *MockProvider) Stop(ctx context.Context, id string, timeout *time.Durati
 func (mr *MockProviderMockRecorder) Stop(ctx, id, timeout interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockProvider)(nil).Stop), ctx, id, timeout)
-}
-
-// MockDriver is a mock of Driver interface.
-type MockDriver struct {
-	ctrl     *gomock.Controller
-	recorder *MockDriverMockRecorder
-}
-
-// MockDriverMockRecorder is the mock recorder for MockDriver.
-type MockDriverMockRecorder struct {
-	mock *MockDriver
-}
-
-// NewMockDriver creates a new mock instance.
-func NewMockDriver(ctrl *gomock.Controller) *MockDriver {
-	mock := &MockDriver{ctrl: ctrl}
-	mock.recorder = &MockDriverMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDriver) EXPECT() *MockDriverMockRecorder {
-	return m.recorder
-}
-
-// Create mocks base method.
-func (m *MockDriver) Create(ctx context.Context, params docker.CreateParams) (*docker.Container, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, params)
-	ret0, _ := ret[0].(*docker.Container)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Create indicates an expected call of Create.
-func (mr *MockDriverMockRecorder) Create(ctx, params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockDriver)(nil).Create), ctx, params)
-}
-
-// Exec mocks base method.
-func (m *MockDriver) Exec(ctx context.Context, id string, params docker.ExecParams) (*docker.ExecResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exec", ctx, id, params)
-	ret0, _ := ret[0].(*docker.ExecResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Exec indicates an expected call of Exec.
-func (mr *MockDriverMockRecorder) Exec(ctx, id, params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockDriver)(nil).Exec), ctx, id, params)
-}
-
-// Inspect mocks base method.
-func (m *MockDriver) Inspect(ctx context.Context, id string) (*docker.ContainerDetail, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Inspect", ctx, id)
-	ret0, _ := ret[0].(*docker.ContainerDetail)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Inspect indicates an expected call of Inspect.
-func (mr *MockDriverMockRecorder) Inspect(ctx, id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockDriver)(nil).Inspect), ctx, id)
-}
-
-// List mocks base method.
-func (m *MockDriver) List(ctx context.Context, params docker.ListParams) ([]docker.Container, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, params)
-	ret0, _ := ret[0].([]docker.Container)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// List indicates an expected call of List.
-func (mr *MockDriverMockRecorder) List(ctx, params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockDriver)(nil).List), ctx, params)
-}
-
-// Ping mocks base method.
-func (m *MockDriver) Ping(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Ping", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Ping indicates an expected call of Ping.
-func (mr *MockDriverMockRecorder) Ping(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockDriver)(nil).Ping), ctx)
-}
-
-// Pull mocks base method.
-func (m *MockDriver) Pull(ctx context.Context, image string) (*docker.PullResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Pull", ctx, image)
-	ret0, _ := ret[0].(*docker.PullResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Pull indicates an expected call of Pull.
-func (mr *MockDriverMockRecorder) Pull(ctx, image interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockDriver)(nil).Pull), ctx, image)
-}
-
-// Remove mocks base method.
-func (m *MockDriver) Remove(ctx context.Context, id string, force bool) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Remove", ctx, id, force)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Remove indicates an expected call of Remove.
-func (mr *MockDriverMockRecorder) Remove(ctx, id, force interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockDriver)(nil).Remove), ctx, id, force)
-}
-
-// Start mocks base method.
-func (m *MockDriver) Start(ctx context.Context, id string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Start", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Start indicates an expected call of Start.
-func (mr *MockDriverMockRecorder) Start(ctx, id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockDriver)(nil).Start), ctx, id)
-}
-
-// Stop mocks base method.
-func (m *MockDriver) Stop(ctx context.Context, id string, timeout *time.Duration) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop", ctx, id, timeout)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Stop indicates an expected call of Stop.
-func (mr *MockDriverMockRecorder) Stop(ctx, id, timeout interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockDriver)(nil).Stop), ctx, id, timeout)
 }

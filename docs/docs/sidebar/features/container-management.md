@@ -103,9 +103,9 @@ authentication settings.
 | `POST /node/{hostname}/container/docker/{id}/exec`  | `docker:execute` |
 | `POST /node/{hostname}/container/docker/pull`       | `docker:write`   |
 
-The `admin` role includes `docker:read`, `docker:write`, and
-`docker:execute`. The `write` role includes `docker:read` and
-`docker:write`. The `read` role includes only `docker:read`.
+The `admin` role includes `docker:read`, `docker:write`, and `docker:execute`.
+The `write` role includes `docker:read` and `docker:write`. The `read` role
+includes only `docker:read`.
 
 Container exec is a privileged operation similar to command execution. Only the
 `admin` role includes `docker:execute` by default. Grant it to other roles or
@@ -133,9 +133,9 @@ osapi token generate -r write -u user@example.com \
 
 ## Orchestrator
 
-The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose container
-operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and cleanup
-steps chain together with dependencies and guards:
+The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose
+container operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and
+cleanup steps chain together with dependencies and guards:
 
 ```go
 plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
