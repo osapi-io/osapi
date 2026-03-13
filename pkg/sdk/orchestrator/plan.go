@@ -10,12 +10,9 @@ import (
 
 // Plan is a DAG of tasks with dependency edges.
 type Plan struct {
-	client           *osapiclient.Client
-	tasks            []*Task
-	config           PlanConfig
-	dockerExecFn     ExecFn
-	dockerBinaryURL  string
-	dockerSkipDeploy bool
+	client *osapiclient.Client
+	tasks  []*Task
+	config PlanConfig
 }
 
 // NewPlan creates a new plan bound to an OSAPI client.
@@ -32,11 +29,8 @@ func NewPlan(
 	}
 
 	return &Plan{
-		client:           client,
-		config:           cfg,
-		dockerExecFn:     cfg.DockerExecFn,
-		dockerBinaryURL:  cfg.DockerBinaryURL,
-		dockerSkipDeploy: cfg.DockerSkipDeploy,
+		client: client,
+		config: cfg,
 	}
 }
 

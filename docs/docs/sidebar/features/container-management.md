@@ -131,39 +131,59 @@ osapi token generate -r write -u user@example.com \
   -p container:execute
 ```
 
-## Orchestrator DSL
+## Orchestrator
 
-The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK supports container
-operations through the
-[Container Targeting](../sdk/orchestrator/features/container-targeting.md)
-feature. Use `Plan.Docker()` and `Plan.In()` to create containers and run
-existing providers inside them without rewriting any code:
+The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose container
+operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and cleanup
+steps chain together with dependencies and guards:
 
 ```go
-plan := orchestrator.NewPlan(client, orchestrator.WithDockerExecFn(execFn))
-web := plan.Docker("web-server", "nginx:alpine")
+plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
 
-create := plan.TaskFunc("create", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    return c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
-        Image: "nginx:alpine",
-        Name:  ptr("web-server"),
-    })
-})
+pull := plan.TaskFunc("pull-image",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        _, err := c.Container.Pull(ctx, "_any", gen.ContainerPullRequest{
+            Image: "nginx:alpine",
+        })
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
 
-plan.In(web).TaskFunc("check-config", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    // Runs inside the container via docker exec + provider run
-    return c.Container.Exec(ctx, "_any", "web-server", gen.ContainerExecRequest{
-        Command: []string{"nginx", "-t"},
-    })
-}).DependsOn(create)
+create := plan.TaskFunc("create-container",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        autoStart := true
+        _, err := c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
+            Image:     "nginx:alpine",
+            Name:      ptr("web-server"),
+            AutoStart: &autoStart,
+        })
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
+create.DependsOn(pull)
+
+exec := plan.TaskFunc("check-config",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        _, err := c.Container.Exec(ctx, "_any", "web-server",
+            gen.ContainerExecRequest{Command: []string{"nginx", "-t"}})
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
+exec.DependsOn(create)
 ```
 
-The transport changes from HTTP to `docker exec` + `provider run`, but the SDK
-interface is identical. See the
-[container targeting feature page](../sdk/orchestrator/features/container-targeting.md)
-for details and the
-[operations reference](../sdk/orchestrator/orchestrator.md#operations) for all
-container operations.
+See
+[`examples/sdk/orchestrator/features/container-targeting.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/features/container-targeting.go)
+for a complete working example.
 
 ## Related
 
@@ -171,8 +191,6 @@ container operations.
   management commands
 - [API Reference](/gen/api/container-management-api-container-operations) --
   REST API documentation
-- [Orchestrator Container Targeting](../sdk/orchestrator/features/container-targeting.md)
-  -- DSL for running providers inside containers
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
 - [Architecture](../architecture/architecture.md) -- system design overview
