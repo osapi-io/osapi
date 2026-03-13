@@ -86,45 +86,45 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Container",
+      label: "Node/Docker",
       link: {
         type: "doc",
-        id: "gen/api/container-management-api-container-operations",
+        id: "gen/api/docker-management-api-docker-operations",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/post-node-container",
+          id: "gen/api/post-node-container-docker",
           label: "Create a container",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "gen/api/get-node-container",
+          id: "gen/api/get-node-container-docker",
           label: "List containers",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "gen/api/get-node-container-by-id",
+          id: "gen/api/get-node-container-docker-by-id",
           label: "Inspect a container",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "gen/api/delete-node-container-by-id",
+          id: "gen/api/delete-node-container-docker-by-id",
           label: "Remove a container",
           className: "api-method delete",
         },
         {
           type: "doc",
-          id: "gen/api/post-node-container-start",
+          id: "gen/api/post-node-container-docker-start",
           label: "Start a container",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "gen/api/post-node-container-stop",
+          id: "gen/api/post-node-container-docker-stop",
           label: "Stop a container",
           className: "api-method post",
         },
@@ -132,15 +132,15 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Container/Exec",
+      label: "Node/Docker/Exec",
       link: {
         type: "doc",
-        id: "gen/api/container-management-api-container-exec",
+        id: "gen/api/docker-management-api-docker-exec",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/post-node-container-exec",
+          id: "gen/api/post-node-container-docker-exec",
           label: "Execute a command in a container",
           className: "api-method post",
         },
@@ -148,15 +148,15 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Container/Image",
+      label: "Node/Docker/Image",
       link: {
         type: "doc",
-        id: "gen/api/container-management-api-container-image",
+        id: "gen/api/docker-management-api-docker-image",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/post-node-container-pull",
+          id: "gen/api/post-node-container-docker-pull",
           label: "Pull a container image",
           className: "api-method post",
         },

@@ -37,8 +37,8 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
-// factoryDockerNewFn is the function used to create a Docker driver (injectable for testing).
-var factoryDockerNewFn = dockerProv.NewDriver
+// factoryDockerNewFn is the function used to create a Docker provider (injectable for testing).
+var factoryDockerNewFn = dockerProv.New
 
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
@@ -149,10 +149,10 @@ func (f *ProviderFactory) CreateProviders() (
 
 	// Create Docker provider (conditional on Docker availability)
 	var dockerProvider dockerProv.Provider
-	dockerDriver, err := factoryDockerNewFn()
+	dockerClient, err := factoryDockerNewFn()
 	if err == nil {
-		if pingErr := dockerDriver.Ping(context.Background()); pingErr == nil {
-			dockerProvider = dockerProv.New(dockerDriver)
+		if pingErr := dockerClient.Ping(context.Background()); pingErr == nil {
+			dockerProvider = dockerClient
 		} else {
 			f.logger.Info("Docker not available, docker operations disabled",
 				slog.String("error", pingErr.Error()))

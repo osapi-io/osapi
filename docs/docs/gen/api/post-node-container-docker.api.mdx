@@ -1,11 +1,11 @@
 ---
-id: post-node-container-pull
-title: "Pull a container image"
-description: "Pull a container image on the target node."
-sidebar_label: "Pull a container image"
+id: post-node-container-docker
+title: "Create a container"
+description: "Create a new container on the target node. Returns a job ID for tracking the asynchronous operation."
+sidebar_label: "Create a container"
 hide_title: true
 hide_table_of_contents: true
-api: eJztWNtu2zgQ/RWCTwkg31In2xWwD+kN8GIvQZqiD4lhjMWxxEQiVXKUxDX074uhZMW3bLuLLrAF+iZb5FzOOTPkaCUV+sTpkrQ1MpYXVZ4LEIk1BNqgE7qAFIU1gjIUBC5FEsYq7N8YGUmC1Mv4Wr5er5/9DgZSLNDQ7PxiMusMzYIhOY2kLdEBu5sodmg9/WEVdhY4AhlJj0nlNC1lfL2SrxAcuvOKMnbW2YwfnCaU03oayRIcFEjofNhhoEAZy8x6Co+R1JxeCZTJSDr8VGmHSsbkKox2MLhqsoQUDYm1hUg49OjuUQlnK9ImFfeQVyiOZmCWkZhBnh9HwjqRwxxz4THHhKwTR3e4jMPS4wazx56FUvcSqzBF08NHctBrgFzJe8i1AuLY10FGhTa/jKLwZtYwIOtI+iTDAngPLUte78lpk8pIFtr8hiZlsEY1Y8OW0NMrq5a8fifbDFuSyYqyyvP+AYAYcjTEu6Esc50EAge3nk2s9mOx81tMSEaydEw3aQzZNRo4EPJ2SJMQjsMFOjRJF5g4wn7aj8SNNKk2j3EOhJ5uJP+jbHKHrq/tINdzB245gLzUBuMX/dHLG9lCj49QlDl7bt82Jv41KbKu602wrmWnctIUHG3p+rIhgreFfb60xjfQnAxP9rlpgAi5Q5JgSaiYnW/Exq2dz7Q6RMfCugJIxrKqtNqjhxVza+di8kZUHlWgx9kEvReUaS9aufW3AD89HeLL8XDYw5Of573xSI178NPorDcen52dno7Hw+FwKBtQqpz8RlTgHCy5gAkLfyir7egugwFhFwJMK+wAYNd2+ntAdF3ii8rk1Ner2QU3xdAn+hx78PYMpPt2OCpUbYiTN9tw+QxOTs9iGM1Pkhdq3O8HBwTp19luCxpSQRmQeADfutv20sqfu4n+vJm+NoQpuk0paENn42dKlXcLbcR8SehDpEkGJsVNJObW5ghmz8LHDClDF6DsOBKFVXqhUQm/9ISF8ASEwTI6Z92XUXjLy0SB3nOAeoMqsQAdkNit3U4Gz5cvS2tCWOwX/lq3z+19bXM+ELQ1l23Zt11gPBweKHwTes66lEQJy9zCtyz+r4TxXGz8Xis+7G2UZZOkcm5XV+8CwtwYHJLTeI+BwKrRhkICnfuvcK6U5kfIRbtHwNxW9BTEQbeqCkeGQXqw7k6QLtBWTYVyfz8o8/0SapLkDVtOTodDZm3NcZDZHqOjfUY/GKgos05/RiV64vxiIu5wKToJ/SD2eyD2xT6x76yba6XQiJ6YGF8tFjrR3GZKdIX2Xlvjf7D7HbB7eqgRN8cIn5184w/H6o8m/P9ns45kgZRZnjBLG274YfSL5YCH18FqfdbXg26aHJTrydPdN2Pk9GkMfc+MNqRtDqNdEhlRKduhLNx2wiIZtQ/v1reoXz9ehXsHK+XyaSx7u86sm5F2JhS+XZqFDR7brM/DZeZp3uYzRUaSY28AHPWH/XCnZgQKCMps5+LDY/4uBasnnf/jDwMNLISPNChz0IbjqFzORhsmriWvlpGMN4b0zjwTxnRMo3At4+Wr1Rw8fnB5XfPfnyp0y4ake3Aa5gzK9Uoq7flZyXgBud8d7jdTOrpsD99j8R+P/AfRWI83hoebsFrGUkbyDpebXy7qaR3JDEGhC/k1r183WfSu2MjT9r1mVEfrHedhgPzbtdONqrn48/0Vy7f9ZlCEmpUOHvjrADw0odqAaqiK8N9K5mDSqhFwY5PFDtu1slMbIauDYKxWzYore4emrjtsiH8zMHX9FxHRfdc=
+api: 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
 sidebar_class_name: "post api-method"
 info_path: gen/api/agent-management-api
 custom_edit_url: null
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Pull a container image"}
+  children={"Create a container"}
 >
 </Heading>
 
 <MethodEndpoint
   method={"post"}
-  path={"/node/{hostname}/container/pull"}
+  path={"/node/{hostname}/container/docker"}
 >
   
 </MethodEndpoint>
 
 
 
-Pull a container image on the target node.
+Create a new container on the target node. Returns a job ID for tracking the asynchronous operation.
 
 
 <Heading
@@ -109,7 +109,7 @@ Pull a container image on the target node.
         >
           
           
-          The image to pull.
+          Container creation parameters.
           
           
         </div>
@@ -122,7 +122,61 @@ Pull a container image on the target node.
           required={true}
           schemaName={"string"}
           qualifierMessage={undefined}
-          schema={{"type":"string","description":"Image reference to pull (e.g., \"nginx:latest\", \"docker.io/library/alpine:3.18\").\n","example":"alpine:latest","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+          schema={{"type":"string","description":"Container image reference (e.g., \"nginx:latest\").","example":"nginx:latest","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"name"}
+          required={false}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Optional name for the container.","example":"my-nginx"}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"command"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Command to run in the container.","items":{"type":"string"},"example":["nginx","-g","daemon off;"]}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"env"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Environment variables in KEY=VALUE format.","items":{"type":"string"},"example":["PORT=8080","DEBUG=true"]}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"ports"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Port mappings in host_port:container_port format.\n","items":{"type":"string"},"example":["8080:80","8443:443"]}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"volumes"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Volume mounts in host_path:container_path format.\n","items":{"type":"string"},"example":["/data:/var/lib/data"]}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"auto_start"}
+          required={false}
+          schemaName={"boolean"}
+          qualifierMessage={undefined}
+          schema={{"type":"boolean","description":"Whether to start the container immediately after creation. Defaults to true.\n","default":true}}
         >
           
         </SchemaItem>
@@ -142,7 +196,7 @@ Pull a container image on the target node.
         <div>
           
           
-          Image pull accepted.
+          Container creation accepted.
           
           
         </div><div>
@@ -242,29 +296,47 @@ Pull a container image on the target node.
                               
                             </SchemaItem><SchemaItem
                               collapsible={false}
-                              name={"image_id"}
+                              name={"id"}
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The pulled image ID.","example":"sha256:a1b2c3d4..."}}
+                              schema={{"type":"string","description":"Container identifier.","example":"a1b2c3d4e5f6"}}
                             >
                               
                             </SchemaItem><SchemaItem
                               collapsible={false}
-                              name={"tag"}
+                              name={"name"}
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string","description":"The image tag that was pulled.","example":"latest"}}
+                              schema={{"type":"string","description":"Container name.","example":"my-nginx"}}
                             >
                               
                             </SchemaItem><SchemaItem
                               collapsible={false}
-                              name={"size"}
+                              name={"image"}
                               required={false}
-                              schemaName={"int64"}
+                              schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"integer","format":"int64","description":"Image size in bytes."}}
+                              schema={{"type":"string","description":"Image used by the container.","example":"nginx:latest"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"state"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Current container state.","example":"running"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"created"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Container creation timestamp.","example":"2024-01-15T10:30:00Z"}}
                             >
                               
                             </SchemaItem><SchemaItem
@@ -302,7 +374,7 @@ Pull a container image on the target node.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"image_id\": \"sha256:a1b2c3d4...\",\n      \"tag\": \"latest\",\n      \"size\": 0,\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"id\": \"a1b2c3d4e5f6\",\n      \"name\": \"my-nginx\",\n      \"image\": \"nginx:latest\",\n      \"state\": \"running\",\n      \"created\": \"2024-01-15T10:30:00Z\",\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
                     language={"json"}
                   >
                     
@@ -592,7 +664,7 @@ Pull a container image on the target node.
         <div>
           
           
-          Error pulling image.
+          Error creating container.
           
           
         </div><div>

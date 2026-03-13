@@ -1,12 +1,12 @@
 ---
-id: get-node-container
-title: "List containers"
-description: "List containers on the target node, optionally filtered by state."
-sidebar_label: "List containers"
+id: post-node-container-docker-exec
+title: "Execute a command in a container"
+description: "Execute a command inside a running container on the target node."
+sidebar_label: "Execute a command in a container"
 hide_title: true
 hide_table_of_contents: true
-api: eJztWG1v2zYQ/isEP7UAncip3W0C+iF9SeGhG4o2RYGlhkGLZ4uJSKrkKYtm6L8PR1myHTttUrTABvRT7Ph4fO557o7krbiCkHldonaWp/yNDsgyZ1FqCz4wZxnmwFD6JSCzToFgLhrLoqjZQhcIHhSb1yygRDj6ZLngKJeBpxf8Redo9oe0cgkGLM5O305m/Q4zV4KX5C/wqeD9t4niKX8N+KdT0HvhggfIKq+x5unFij8H6cGfVpjTZr3P1INUfNpMBS+llwYQfIgLrDTAU567gPGj4JqCLiXmXHAPnyvtQfEUfQXiFjPnLQVyCRZZ50EwDwH8NSjmXYXaLtm1LCpgj2bS1oLNZFE8Fsx5Vsg5FCxAARk6zx5dQZ1G08ctZTcDJ0s9yJyCJdgB3KCXg5bHFb+WhVYSCXsHUhhtnw1F/GXWysMbwUOWg5G0BuuS7AN6bZdccKPtG7BL4mrYNKInI8rWMfG5Al/vULGQRdjj4izKvp0nvf7sJSxkVWBg6NgnLoviE39YhM5oBFNiLZwFt3jmK2uJ2ICuLEExWRRfjlS1CHhKu3PBwVaGEmTtiLKodcVFtJhu01Foo/GBdPwhb7SpDLOVmYNnbrHNDDrmAStvv5WFVmgjb54Nk+Rg5NoiLGN59KGfJFFxgsXToeCmhcjTYZI0VBkeQulsgLjvSZLQnwOtYCeWIy5ilYFFMpdlWegsluvxZaA1q31sbn4JGRFaeipu1O2Ol24+0+qQegvnjSTxqkorvleFObBLN2eTl6wKoIjd0rsMQmCY68BIKQhISOFGmrIg3+NxAr+OkmQAJ7/NB6OhGg3kL8Ong9Ho6dPxeDRKkpZYD4EydwuV9F5SApAW4VBUu+j6TsVCZYz0NVtQ6Uci+z53tEdG348OJvPt8Dtr0oZ6c+xIR4R/o9SBEL4mbtvqdej83Tvo517DlqMu9P0wD+t9F4NagUW90OB3xZTD+Un2RI1gvHhKQd+PuI1fst/1aOqBXWp7Q960kct7uJuQWZuB8zqq0Me/6zs6TguJENr+HLvt1+FW3tM5s8Vq7K47vrt+Rsp7kAgP4jcu0SS6NhBQmnLX+0lyMhokw8FwfD5M0idJmiR/8aYRHDVGg97V+1bw+GOWS7vcATJ3rgBp95B8zAFz8JG8vjiYcYo0VyzUAcF0YTeCg/fOfz3AV2TGDIRACumtEmELqQtQRxHnpqNfbMpveiA4KpQJguHN7WVdt7hr1QtX0GGvnX237rXkoxF8dKjbTmxs/l0DY5uby3fsuvfk8JRtfe/aTFzLMJfIXJZRfqrdhDmL9K7PO6/hGqJ6VYjyKUCpi3CPzZXS7f2SrdcwOXcVbkAc3FZVQFtbwL+dv4pJ7aquLSq447S83VvbIGnBziZjOjQ3Mscc2xN1uC/qBysrzJ3X/4BiA3b6dsKuoGZ9Fv0U9v8g7JN9Yc+cn2ulwLIBm9hQLRY609RjSvBGhxDfMz/V/e+rOz7Ui9szhK5t9O74Ifffn5L+IEkbwQ1g7mh+QG9i0b7uU35Mw4vjVXfYN8fZzljBX7dDgulmxvCetGzl2p409PBzxJKvn2PxphONuFh/OOseMr9/PI93Dm0XLi5fgz+Nt5LNZITOBy44AWl5GB4lR/FhUrqARsYEWz9Tb81pblO42uTp9xrptDEj3OBxWUhtCVflC9qrZfiCky8ueLo1X9mQPBXxokV2q9VcBvjgi6ahf7evbJrPKB3kvLjrnb0d1DdNIA7GcAX11hQkjmR4yjmNBO4P5yETgC+g6IYPGxRT+uI1wXggQ4/erW8Zj9kPHl0dDKh7fdp6O54u0D5DmmkjeA5SgY/xtT+fZhmU20TstVoipq/z16/OaZSzW523qjF6PwhqtWotzt0V2KbpMSJ9J4BN8y9Es1Ve
-sidebar_class_name: "get api-method"
+api: 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
+sidebar_class_name: "post api-method"
 info_path: gen/api/agent-management-api
 custom_edit_url: null
 ---
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"List containers"}
+  children={"Execute a command in a container"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"get"}
-  path={"/node/{hostname}/container"}
+  method={"post"}
+  path={"/node/{hostname}/container/docker/{id}/exec"}
 >
   
 </MethodEndpoint>
 
 
 
-List containers on the target node, optionally filtered by state.
+Execute a command inside a running container on the target node.
 
 
 <Heading
@@ -72,52 +72,100 @@ List containers on the target node, optionally filtered by state.
         param={{"name":"hostname","in":"path","required":true,"description":"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"},"schema":{"type":"string","minLength":1}}}
       >
         
-      </ParamsItem>
-    </ul>
-  </div>
-</details><details
-  style={{"marginBottom":"1rem"}}
-  className={"openapi-markdown__details"}
-  data-collapsed={false}
-  open={true}
->
-  <summary
-    style={{}}
-  >
-    <h3
-      className={"openapi-markdown__details-summary-header-params"}
-    >
-      Query Parameters
-    </h3>
-  </summary><div>
-    <ul>
-      <ParamsItem
-        className={"paramsItem"}
-        param={{"name":"state","in":"query","required":false,"description":"Filter containers by state. Defaults to \"all\".\n","x-oapi-codegen-extra-tags":{"validate":"omitempty,oneof=running stopped all"},"schema":{"type":"string","default":"all","enum":["running","stopped","all"]}}}
-      >
-        
       </ParamsItem><ParamsItem
         className={"paramsItem"}
-        param={{"name":"limit","in":"query","required":false,"description":"Maximum number of containers to return.\n","x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=100"},"schema":{"type":"integer","default":20,"minimum":1,"maximum":100}}}
+        param={{"name":"id","in":"path","required":true,"description":"Container identifier (name or ID). Must start with an alphanumeric character and may contain letters, digits, underscores, dots, and hyphens.\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"},"schema":{"type":"string","minLength":1,"pattern":"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"}}}
       >
         
       </ParamsItem>
     </ul>
   </div>
-</details><div>
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
+>
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
+  >
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
+    >
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
+      >
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3><strong
+          className={"openapi-schema__required"}
+        >
+          required
+        </strong>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        <div
+          style={{"marginTop":"1rem","marginBottom":"1rem"}}
+        >
+          
+          
+          The command to execute inside the container.
+          
+          
+        </div>
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"command"}
+          required={true}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Command to execute inside the container.","items":{"type":"string"},"example":["ls","-la","/"],"x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"env"}
+          required={false}
+          schemaName={"string[]"}
+          qualifierMessage={undefined}
+          schema={{"type":"array","description":"Additional environment variables in KEY=VALUE format.","items":{"type":"string"}}}
+        >
+          
+        </SchemaItem><SchemaItem
+          collapsible={false}
+          name={"working_dir"}
+          required={false}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Working directory inside the container.","example":"/app"}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
   <div>
     <ApiTabs
       label={undefined}
       id={undefined}
     >
       <TabItem
-        label={"200"}
-        value={"200"}
+        label={"202"}
+        value={"202"}
       >
         <div>
           
           
-          List of containers.
+          Container exec accepted.
           
           
         </div><div>
@@ -216,100 +264,32 @@ List containers on the target node, optionally filtered by state.
                             >
                               
                             </SchemaItem><SchemaItem
-                              collapsible={true}
-                              className={"schemaItem"}
+                              collapsible={false}
+                              name={"stdout"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Standard output of the command."}}
                             >
-                              <details
-                                style={{}}
-                                className={"openapi-markdown__details"}
-                              >
-                                <summary
-                                  style={{}}
-                                >
-                                  <span
-                                    className={"openapi-schema__container"}
-                                  >
-                                    <strong
-                                      className={"openapi-schema__property"}
-                                    >
-                                      containers
-                                    </strong><span
-                                      className={"openapi-schema__name"}
-                                    >
-                                       object[]
-                                    </span>
-                                  </span>
-                                </summary><div
-                                  style={{"marginLeft":"1rem"}}
-                                >
-                                  <div
-                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
-                                  >
-                                    
-                                    
-                                    List of containers on this agent.
-                                    
-                                    
-                                  </div><li>
-                                    <div
-                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
-                                    >
-                                      Array [
-                                    </div>
-                                  </li><SchemaItem
-                                    collapsible={false}
-                                    name={"id"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string","description":"Container identifier.","example":"a1b2c3d4e5f6"}}
-                                  >
-                                    
-                                  </SchemaItem><SchemaItem
-                                    collapsible={false}
-                                    name={"name"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string","description":"Container name.","example":"my-nginx"}}
-                                  >
-                                    
-                                  </SchemaItem><SchemaItem
-                                    collapsible={false}
-                                    name={"image"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string","description":"Image used by the container.","example":"nginx:latest"}}
-                                  >
-                                    
-                                  </SchemaItem><SchemaItem
-                                    collapsible={false}
-                                    name={"state"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string","description":"Current container state.","example":"running"}}
-                                  >
-                                    
-                                  </SchemaItem><SchemaItem
-                                    collapsible={false}
-                                    name={"created"}
-                                    required={false}
-                                    schemaName={"string"}
-                                    qualifierMessage={undefined}
-                                    schema={{"type":"string","description":"Container creation timestamp.","example":"2024-01-15T10:30:00Z"}}
-                                  >
-                                    
-                                  </SchemaItem><li>
-                                    <div
-                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
-                                    >
-                                      ]
-                                    </div>
-                                  </li>
-                                </div>
-                              </details>
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"stderr"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"Standard error output of the command."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"exit_code"}
+                              required={false}
+                              schemaName={"integer"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"integer","description":"Exit code of the command."}}
+                            >
+                              
                             </SchemaItem><SchemaItem
                               collapsible={false}
                               name={"changed"}
@@ -345,7 +325,7 @@ List containers on the target node, optionally filtered by state.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"containers\": [\n        {\n          \"id\": \"a1b2c3d4e5f6\",\n          \"name\": \"my-nginx\",\n          \"image\": \"nginx:latest\",\n          \"state\": \"running\",\n          \"created\": \"2024-01-15T10:30:00Z\"\n        }\n      ],\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"string\",\n      \"stdout\": \"string\",\n      \"stderr\": \"string\",\n      \"exit_code\": 0,\n      \"changed\": true,\n      \"error\": \"string\"\n    }\n  ]\n}"}
                     language={"json"}
                   >
                     
@@ -362,7 +342,7 @@ List containers on the target node, optionally filtered by state.
         <div>
           
           
-          Invalid request parameters.
+          Invalid request payload.
           
           
         </div><div>
@@ -629,13 +609,104 @@ List containers on the target node, optionally filtered by state.
           </MimeTabs>
         </div>
       </TabItem><TabItem
+        label={"404"}
+        value={"404"}
+      >
+        <div>
+          
+          
+          Container not found.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
         label={"500"}
         value={"500"}
       >
         <div>
           
           
-          Error listing containers.
+          Error executing command in container.
           
           
         </div><div>

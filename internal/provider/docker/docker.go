@@ -25,8 +25,8 @@ type Client struct {
 	client dockerclient.APIClient
 }
 
-// New creates a new Docker driver using default client options.
-func NewDriver() (*Client, error) {
+// New creates a new Docker provider using default client options.
+func New() (*Client, error) {
 	cli, err := dockerclient.NewClientWithOpts(
 		dockerclient.FromEnv,
 		dockerclient.WithAPIVersionNegotiation(),
@@ -38,8 +38,8 @@ func NewDriver() (*Client, error) {
 	return &Client{client: cli}, nil
 }
 
-// NewDriverWithClient creates a Docker driver with an injected client (for testing).
-func NewDriverWithClient(
+// NewWithClient creates a Docker provider with an injected client (for testing).
+func NewWithClient(
 	client dockerclient.APIClient,
 ) *Client {
 	return &Client{client: client}

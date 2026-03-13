@@ -4,13 +4,13 @@ sidebar_position: 14
 
 # Container Targeting
 
-Orchestrate container lifecycle operations -- pull, create, exec, inspect,
-stop, and remove -- as a DAG of `TaskFunc` steps using the standard SDK client.
+Orchestrate container lifecycle operations -- pull, create, exec, inspect, stop,
+and remove -- as a DAG of `TaskFunc` steps using the standard SDK client.
 
 ## Setup
 
-Container operations use the same `client.Docker` service as any other SDK
-call. No special plan options are needed:
+Container operations use the same `client.Docker` service as any other SDK call.
+No special plan options are needed:
 
 ```go
 plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))

@@ -254,16 +254,16 @@ func (s *DockerDriverPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 }
 
-func (s *DockerDriverPublicTestSuite) TestNewDriver() {
+func (s *DockerDriverPublicTestSuite) TestNew() {
 	tests := []struct {
 		name         string
 		setupEnv     func() (cleanup func())
-		validateFunc func(d dockerprov.Driver, err error)
+		validateFunc func(d dockerprov.Provider, err error)
 	}{
 		{
 			name: "returns non-nil driver",
 			validateFunc: func(
-				d dockerprov.Driver,
+				d dockerprov.Provider,
 				err error,
 			) {
 				s.NoError(err)
@@ -285,7 +285,7 @@ func (s *DockerDriverPublicTestSuite) TestNewDriver() {
 				}
 			},
 			validateFunc: func(
-				d dockerprov.Driver,
+				d dockerprov.Provider,
 				err error,
 			) {
 				s.Error(err)
@@ -302,7 +302,7 @@ func (s *DockerDriverPublicTestSuite) TestNewDriver() {
 				defer cleanup()
 			}
 
-			d, err := dockerprov.NewDriver()
+			d, err := dockerprov.New()
 			tt.validateFunc(d, err)
 		})
 	}
@@ -349,7 +349,7 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			err := d.Ping(s.ctx)
 			tt.validateFunc(err)
 		})
@@ -622,7 +622,7 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			c, err := d.Create(s.ctx, tt.params)
 			tt.validateFunc(c, err)
 		})
@@ -677,7 +677,7 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			err := d.Start(s.ctx, tt.containerID)
 			tt.validateFunc(err)
 		})
@@ -759,7 +759,7 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			err := d.Stop(s.ctx, tt.containerID, tt.timeout)
 			tt.validateFunc(err)
 		})
@@ -817,7 +817,7 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			err := d.Remove(s.ctx, tt.containerID, tt.force)
 			tt.validateFunc(err)
 		})
@@ -998,7 +998,7 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			containers, err := d.List(s.ctx, tt.params)
 			tt.validateFunc(containers, err)
 		})
@@ -1267,7 +1267,7 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			detail, err := d.Inspect(s.ctx, tt.containerID)
 			tt.validateFunc(detail, err)
 		})
@@ -1530,7 +1530,7 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			result, err := d.Exec(s.ctx, tt.containerID, tt.params)
 			tt.validateFunc(result, err)
 		})
@@ -1721,7 +1721,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewDriverWithClient(tt.mockClient)
+			d := dockerprov.NewWithClient(tt.mockClient)
 			result, err := d.Pull(s.ctx, tt.imageName)
 			tt.validateFunc(result, err)
 		})

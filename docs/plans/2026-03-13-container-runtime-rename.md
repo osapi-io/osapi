@@ -8,12 +8,12 @@
 interface, and add orchestrator DSL helpers.
 
 **Architecture:** Mechanical rename across all layers (API, provider, agent,
-job, CLI, SDK, permissions, docs, tests) from `container` to `docker`. API
-paths change from `/node/{hostname}/container` to
-`/node/{hostname}/container/docker`. CLI changes from `client container list`
-to `client container docker list`. The shared `runtime.Driver` interface is
-removed — Docker provider owns its types directly. New orchestrator DSL
-methods (`plan.DockerPull`, etc.) wrap SDK client calls.
+job, CLI, SDK, permissions, docs, tests) from `container` to `docker`. API paths
+change from `/node/{hostname}/container` to `/node/{hostname}/container/docker`.
+CLI changes from `client container list` to `client container docker list`. The
+shared `runtime.Driver` interface is removed — Docker provider owns its types
+directly. New orchestrator DSL methods (`plan.DockerPull`, etc.) wrap SDK client
+calls.
 
 **Tech Stack:** Go, Echo, oapi-codegen, Cobra, testify/suite, Docker Go SDK
 
@@ -26,6 +26,7 @@ methods (`plan.DockerPull`, etc.) wrap SDK client calls.
 ### Task 1: Rename OpenAPI Spec
 
 **Files:**
+
 - Modify: `internal/api/container/gen/api.yaml`
 
 **Step 1:** Rename the directory:
@@ -35,22 +36,25 @@ git mv internal/api/container internal/api/docker
 ```
 
 **Step 2:** Edit `internal/api/docker/gen/api.yaml`:
+
 - Change all paths from `/node/{hostname}/container` to
   `/node/{hostname}/container/docker`
 - Change all security scopes from `container:read/write/execute` to
   `docker:read/write/execute`
 - Rename all schema names from `Container*` to `Docker*` (e.g.,
-  `ContainerCreateRequest` → `DockerCreateRequest`,
-  `ContainerResponse` → `DockerResponse`)
+  `ContainerCreateRequest` → `DockerCreateRequest`, `ContainerResponse` →
+  `DockerResponse`)
 - Rename all operation IDs from `*Container*` to `*Docker*`
 - Update tag names and descriptions from "Container" to "Docker"
 - Update the `ContainerId` parameter to `DockerId`
 
 **Step 3:** Update `internal/api/docker/gen/cfg.yaml`:
+
 - Change output filename from `container.gen.go` to `docker.gen.go`
 - Update package name if needed
 
 **Step 4:** Update `internal/api/docker/gen/generate.go`:
+
 - Update the `go:generate` directive path if needed
 
 **Step 5:** Regenerate:
@@ -83,21 +87,21 @@ git commit -m "refactor: rename container OpenAPI spec to docker"
 ### Task 2: Rename Permissions
 
 **Files:**
+
 - Modify: `internal/authtoken/permissions.go`
 
 **Step 1:** Rename the permission constants:
+
 - `PermContainerRead` → `PermDockerRead` with value `"docker:read"`
 - `PermContainerWrite` → `PermDockerWrite` with value `"docker:write"`
-- `PermContainerExecute` → `PermDockerExecute` with value
-  `"docker:execute"`
+- `PermContainerExecute` → `PermDockerExecute` with value `"docker:execute"`
 
 **Step 2:** Update the `AllPermissions` slice to use the new names.
 
-**Step 3:** Update the default role mappings (admin, write, read) to use the
-new permission constants.
+**Step 3:** Update the default role mappings (admin, write, read) to use the new
+permission constants.
 
-**Step 4:** Search for any other files referencing the old permission
-constants:
+**Step 4:** Search for any other files referencing the old permission constants:
 
 ```bash
 grep -rn 'PermContainer\|container:read\|container:write\|container:execute' \
@@ -132,6 +136,7 @@ git add -A && git commit -m "refactor: rename container permissions to docker"
 ### Task 3: Flatten and Rename Provider
 
 **Files:**
+
 - Rename: `internal/provider/container/` → `internal/provider/docker/`
 - Remove: `internal/provider/container/runtime/driver.go` (shared interface)
 
@@ -158,10 +163,10 @@ internal/provider/docker/
 ```
 
 Move `runtime/docker/docker.go` types and implementation into the parent
-package, or keep `runtime/docker/` as the actual Docker SDK driver. The
-provider in `provider.go` already wraps the driver, so the structure can
-stay — just update the package import paths from
-`internal/provider/container/...` to `internal/provider/docker/...`.
+package, or keep `runtime/docker/` as the actual Docker SDK driver. The provider
+in `provider.go` already wraps the driver, so the structure can stay — just
+update the package import paths from `internal/provider/container/...` to
+`internal/provider/docker/...`.
 
 **Step 3:** Delete the shared `runtime.Driver` interface:
 
@@ -169,16 +174,16 @@ stay — just update the package import paths from
 rm internal/provider/docker/runtime/driver.go
 ```
 
-**Step 4:** Update the Docker driver (`runtime/docker/docker.go`) to define
-its own interface or use concrete types instead of the removed
-`runtime.Driver`. The provider in `provider.go` should type-assert or use
-the concrete Docker driver type.
+**Step 4:** Update the Docker driver (`runtime/docker/docker.go`) to define its
+own interface or use concrete types instead of the removed `runtime.Driver`. The
+provider in `provider.go` should type-assert or use the concrete Docker driver
+type.
 
 **Step 5:** Update all import paths in the provider package from
 `internal/provider/container` to `internal/provider/docker`.
 
-**Step 6:** Update package declarations — `package container` →
-`package docker` in `provider.go`, `types.go`, etc.
+**Step 6:** Update package declarations — `package container` → `package docker`
+in `provider.go`, `types.go`, etc.
 
 **Step 7:** Rename the `Provider` interface methods and types if they use
 `Container` prefix (check `types.go`).
@@ -217,6 +222,7 @@ git add -A && git commit -m "refactor: rename container provider to docker"
 ### Task 4: Rename Job Types and Operations
 
 **Files:**
+
 - Modify: `internal/job/types.go`
 - Modify: `internal/job/client/modify_container.go` (rename to
   `modify_docker.go`)
@@ -225,6 +231,7 @@ git add -A && git commit -m "refactor: rename container provider to docker"
 
 **Step 1:** In `internal/job/types.go`, rename all container operation
 constants:
+
 - `OperationContainerCreate` → `OperationDockerCreate` with value
   `"docker.create.execute"`
 - `OperationContainerStart` → `OperationDockerStart` with value
@@ -243,6 +250,7 @@ constants:
   `"docker.pull.execute"`
 
 **Step 2:** Rename all data types:
+
 - `ContainerCreateData` → `DockerCreateData`
 - `ContainerStopData` → `DockerStopData`
 - `ContainerRemoveData` → `DockerRemoveData`
@@ -259,8 +267,8 @@ git mv internal/job/client/modify_container_public_test.go \
        internal/job/client/modify_docker_public_test.go
 ```
 
-**Step 4:** Update function names in the renamed files (e.g.,
-`ModifyContainer*` → `ModifyDocker*` or whatever the current pattern is).
+**Step 4:** Update function names in the renamed files (e.g., `ModifyContainer*`
+→ `ModifyDocker*` or whatever the current pattern is).
 
 **Step 5:** Search for all remaining references to old constant/type names:
 
@@ -296,6 +304,7 @@ git add -A && git commit -m "refactor: rename container job types to docker"
 ### Task 5: Rename Agent Processor and Wiring
 
 **Files:**
+
 - Rename: `internal/agent/processor_container.go` →
   `internal/agent/processor_docker.go`
 - Rename: `internal/agent/processor_container_test.go` →
@@ -317,36 +326,41 @@ git mv internal/agent/processor_container_test.go \
 ```
 
 **Step 2:** In `processor_docker.go`:
+
 - Rename `processContainerOperation` → `processDockerOperation`
-- Rename `processContainerCreate` → `processDockerCreate` (and all 8
-  process methods)
+- Rename `processContainerCreate` → `processDockerCreate` (and all 8 process
+  methods)
 - Change `a.containerProvider` → `a.dockerProvider`
-- Update import from `internal/provider/container` to
-  `internal/provider/docker`
+- Update import from `internal/provider/container` to `internal/provider/docker`
 
 **Step 3:** In `processor.go`:
+
 - Change `case "container":` → `case "docker":`
 - Change `a.processContainerOperation` → `a.processDockerOperation`
 
 **Step 4:** In `types.go`:
+
 - Change `containerProvider containerProv.Provider` →
   `dockerProvider dockerProv.Provider`
 - Update the import alias from `containerProv` to `dockerProv`
 
 **Step 5:** In `agent.go`:
+
 - Update parameter name from `containerProvider` to `dockerProvider`
 - Update field assignment
 
 **Step 6:** In `factory.go`:
+
 - Rename `containerProvider` variable to `dockerProvider`
-- Update import from `internal/provider/container` to
-  `internal/provider/docker`
+- Update import from `internal/provider/container` to `internal/provider/docker`
 - Update the return value
 
 **Step 7:** In `factory_test.go` and `factory_public_test.go`:
+
 - Update variable names and comments
 
 **Step 8:** In `processor_docker_test.go`:
+
 - Update all function names and references
 
 **Step 9:** Verify it compiles:
@@ -374,34 +388,37 @@ git add -A && git commit -m "refactor: rename container agent wiring to docker"
 ### Task 6: Rename API Handler Files and Wiring
 
 **Files:**
+
 - Modify: all files in `internal/api/docker/` (already moved in Task 1)
-- Rename: `internal/api/handler_container.go` →
-  `internal/api/handler_docker.go`
+- Rename: `internal/api/handler_container.go` → `internal/api/handler_docker.go`
 - Modify: `internal/api/handler.go`
 - Modify: `internal/api/types.go`
 - Modify: `internal/api/handler_public_test.go`
 - Modify: `cmd/api_helpers.go`
 
 **Step 1:** In `internal/api/docker/`:
-- Rename all files: `container_create.go` → `docker_create.go`, etc.
-  (8 handler files + 8 test files)
+
+- Rename all files: `container_create.go` → `docker_create.go`, etc. (8 handler
+  files + 8 test files)
 - Update package declaration from `package container` to `package docker`
 - Rename the `Container` struct to `Docker`
 - Update `New()` to return `*Docker`
-- Rename handler methods (e.g., `PostNodeContainer` →
-  `PostNodeContainerDocker`)
+- Rename handler methods (e.g., `PostNodeContainer` → `PostNodeContainerDocker`)
 - Update all gen import aliases from `containerGen` to `dockerGen`
 - Update compile-time interface check
 - Update references to old job operation constants
 - Update references to old data types
 
 **Step 2:** Rename and update `internal/api/docker/types.go`:
+
 - Rename the struct and any interfaces
 
 **Step 3:** Rename and update `internal/api/docker/convert.go`:
+
 - Update function names and types
 
 **Step 4:** Rename and update `internal/api/docker/validate.go`:
+
 - Update function names
 
 **Step 5:** Rename server wiring:
@@ -411,6 +428,7 @@ git mv internal/api/handler_container.go internal/api/handler_docker.go
 ```
 
 **Step 6:** In `handler_docker.go`:
+
 - Rename `GetContainerHandler` → `GetDockerHandler`
 - Update imports from `internal/api/container` to `internal/api/docker`
 - Update scope references from `container:*` to `docker:*`
@@ -419,11 +437,11 @@ git mv internal/api/handler_container.go internal/api/handler_docker.go
 
 **Step 8:** In `handler.go`, update the `RegisterHandlers` call.
 
-**Step 9:** In `handler_public_test.go`, rename
-`TestGetContainerHandler` → `TestGetDockerHandler`.
+**Step 9:** In `handler_public_test.go`, rename `TestGetContainerHandler` →
+`TestGetDockerHandler`.
 
-**Step 10:** In `cmd/api_helpers.go`, update
-`GetContainerHandler` → `GetDockerHandler`.
+**Step 10:** In `cmd/api_helpers.go`, update `GetContainerHandler` →
+`GetDockerHandler`.
 
 **Step 11:** Regenerate the combined spec and SDK client:
 
@@ -457,11 +475,11 @@ git add -A && git commit -m "refactor: rename container API handlers to docker"
 ### Task 7: Restructure CLI Commands
 
 **Files:**
-- Modify: `cmd/client_container.go` (becomes parent with just
-  `<DocCardList />` grouping)
+
+- Modify: `cmd/client_container.go` (becomes parent with just `<DocCardList />`
+  grouping)
 - Create: `cmd/client_container_docker.go` (new `docker` subcommand)
-- Rename: all `cmd/client_container_*.go` →
-  `cmd/client_container_docker_*.go`
+- Rename: all `cmd/client_container_*.go` → `cmd/client_container_docker_*.go`
 
 **Step 1:** Update `cmd/client_container.go` to be a thin parent command:
 
@@ -505,9 +523,9 @@ git mv cmd/client_container_pull.go cmd/client_container_docker_pull.go
 ```
 
 **Step 4:** In each renamed file:
-- Change parent command registration from
-  `clientContainerCmd.AddCommand(...)` to
-  `clientContainerDockerCmd.AddCommand(...)`
+
+- Change parent command registration from `clientContainerCmd.AddCommand(...)`
+  to `clientContainerDockerCmd.AddCommand(...)`
 - Rename cobra command variables from `clientContainer*Cmd` to
   `clientContainerDocker*Cmd`
 - Update SDK client calls from `c.Container.*` to `c.Docker.*`
@@ -541,9 +559,9 @@ git add -A && git commit -m "refactor: nest docker CLI under client container do
 ### Task 8: Rename SDK Client Service
 
 **Files:**
+
 - Rename: `pkg/sdk/client/container.go` → `pkg/sdk/client/docker.go`
-- Rename: `pkg/sdk/client/container_types.go` →
-  `pkg/sdk/client/docker_types.go`
+- Rename: `pkg/sdk/client/container_types.go` → `pkg/sdk/client/docker_types.go`
 - Rename: `pkg/sdk/client/container_public_test.go` →
   `pkg/sdk/client/docker_public_test.go`
 - Rename: `pkg/sdk/client/container_types_test.go` →
@@ -562,20 +580,22 @@ git mv pkg/sdk/client/container_types_test.go \
 ```
 
 **Step 2:** In `docker.go`:
+
 - Rename `ContainerService` → `DockerService`
 - Update all method bodies to use the regenerated `gen.Docker*` type names
 - Update error message prefixes
 
 **Step 3:** In `docker_types.go`:
-- Rename all types: `ContainerResult` → `DockerResult`,
-  `ContainerListResult` → `DockerListResult`, etc.
-- Rename all converter functions:
-  `containerResultCollectionFromGen` → `dockerResultCollectionFromGen`, etc.
+
+- Rename all types: `ContainerResult` → `DockerResult`, `ContainerListResult` →
+  `DockerListResult`, etc.
+- Rename all converter functions: `containerResultCollectionFromGen` →
+  `dockerResultCollectionFromGen`, etc.
 
 **Step 4:** In `osapi.go`:
+
 - Change field `Container *ContainerService` → `Docker *DockerService`
-- Update initialization:
-  `c.Container = &ContainerService{...}` →
+- Update initialization: `c.Container = &ContainerService{...}` →
   `c.Docker = &DockerService{...}`
 - Update comment
 
@@ -614,12 +634,13 @@ git add -A && git commit -m "refactor: rename container SDK client to docker"
 ### Task 9: Add Orchestrator Docker Methods
 
 **Files:**
+
 - Create: `pkg/sdk/orchestrator/docker.go`
 - Create: `pkg/sdk/orchestrator/docker_public_test.go`
 
 **Step 1:** Write the test file `docker_public_test.go` with a test suite
-covering each helper method. Use table-driven tests. Mock the client
-responses or test that the correct TaskFunc is created:
+covering each helper method. Use table-driven tests. Mock the client responses
+or test that the correct TaskFunc is created:
 
 ```go
 func (s *DockerPublicTestSuite) TestDockerPull() {
@@ -642,9 +663,8 @@ func (s *DockerPublicTestSuite) TestDockerPull() {
 }
 ```
 
-Test each method: `DockerPull`, `DockerCreate`, `DockerExec`,
-`DockerInspect`, `DockerStart`, `DockerStop`, `DockerRemove`,
-`DockerList`.
+Test each method: `DockerPull`, `DockerCreate`, `DockerExec`, `DockerInspect`,
+`DockerStart`, `DockerStop`, `DockerRemove`, `DockerList`.
 
 **Step 2:** Run tests to verify they fail:
 
@@ -685,14 +705,15 @@ func (p *Plan) DockerPull(
 ```
 
 Follow the same pattern for all 8 operations. Each method:
+
 - Takes the task name, target, and operation-specific params
 - Returns `*Task` for chaining
 - Wraps the SDK client call in a `TaskFunc`
-- Sets `Changed: true` for mutations, `Changed: false` for reads
-  (inspect, list)
+- Sets `Changed: true` for mutations, `Changed: false` for reads (inspect, list)
 - Populates `Data` with relevant result fields
 
 Methods to implement:
+
 - `DockerPull(name, target, image string) *Task`
 - `DockerCreate(name, target string, body gen.DockerCreateRequest) *Task`
 - `DockerStart(name, target, id string) *Task`
@@ -719,6 +740,7 @@ git add -A && git commit -m "feat: add orchestrator Docker DSL helpers"
 ### Task 10: Rewrite Container Targeting Example
 
 **Files:**
+
 - Modify: `examples/sdk/orchestrator/features/container-targeting.go`
 
 **Step 1:** Rewrite the example to use the new DSL helpers:
@@ -752,9 +774,8 @@ plan.DockerRemove("cleanup", target, containerName,
 ).DependsOn(create)
 ```
 
-**Step 2:** Update SDK client example too:
-`examples/sdk/client/container.go` — update to use `c.Docker.*` and
-`gen.Docker*` types.
+**Step 2:** Update SDK client example too: `examples/sdk/client/container.go` —
+update to use `c.Docker.*` and `gen.Docker*` types.
 
 **Step 3:** Verify examples compile:
 
@@ -775,6 +796,7 @@ git add -A && git commit -m "refactor: update examples to use docker DSL"
 ### Task 11: Rename Integration Tests
 
 **Files:**
+
 - Rename: `test/integration/container_test.go` →
   `test/integration/docker_test.go`
 
@@ -785,6 +807,7 @@ git mv test/integration/container_test.go test/integration/docker_test.go
 ```
 
 **Step 2:** Update the test to:
+
 - Use `c.Docker.*` instead of `c.Container.*`
 - Use `gen.Docker*` types instead of `gen.Container*`
 - Update CLI commands from `container list` to `container docker list`
@@ -809,20 +832,20 @@ git add -A && git commit -m "refactor: rename container integration tests to doc
 ### Task 12: Update Documentation
 
 **Files:**
-- Modify: `docs/docs/sidebar/features/container-management.md` — update
-  to describe Docker as first runtime, update all paths/permissions/CLI
-  examples
+
+- Modify: `docs/docs/sidebar/features/container-management.md` — update to
+  describe Docker as first runtime, update all paths/permissions/CLI examples
 - Rename: CLI docs from `docs/.../container/` to restructure under
   `docs/.../container/docker/`
 - Modify: SDK orchestrator docs to reference Docker methods
-- Modify: `docs/docs/sidebar/usage/configuration.md` — update permission
-  tables
+- Modify: `docs/docs/sidebar/usage/configuration.md` — update permission tables
 - Modify: `docs/docs/sidebar/architecture/system-architecture.md` — update
   endpoint tables
 - Modify: `docs/docusaurus.config.ts` — update navbar links
 - Modify: `CLAUDE.md` — update permission tables in role descriptions
 
 **Step 1:** Update `container-management.md`:
+
 - Update title, description
 - Update all path examples from `/container` to `/container/docker`
 - Update permissions table from `container:*` to `docker:*`
@@ -831,14 +854,15 @@ git add -A && git commit -m "refactor: rename container integration tests to doc
 - Update role descriptions
 
 **Step 2:** Restructure CLI docs:
+
 - Current: `docs/.../cli/client/container/container.mdx` (parent)
-- New: `docs/.../cli/client/container/container.mdx` stays as parent
-  grouping
+- New: `docs/.../cli/client/container/container.mdx` stays as parent grouping
 - Create: `docs/.../cli/client/container/docker/` directory
 - Move per-operation docs into the docker subdirectory
 - Update all command examples
 
 **Step 3:** Update SDK orchestrator operation docs:
+
 - Rename `container-create.md` → `docker-create.md`, etc.
 - Update code examples to use `plan.DockerCreate(...)` etc.
 
@@ -920,33 +944,33 @@ git add -A && git commit -m "chore: final verification cleanup"
 
 ## Files Modified
 
-| Repo | File | Change |
-|------|------|--------|
-| osapi | `internal/api/container/` → `internal/api/docker/` | Full directory rename + content update |
-| osapi | `internal/api/handler_container.go` → `handler_docker.go` | Rename + update |
-| osapi | `internal/api/handler.go` | Update registration |
-| osapi | `internal/api/types.go` | Rename handler field |
-| osapi | `internal/api/handler_public_test.go` | Rename test |
-| osapi | `internal/provider/container/` → `internal/provider/docker/` | Full directory rename |
-| osapi | `internal/provider/container/runtime/driver.go` | DELETE |
-| osapi | `internal/agent/processor_container.go` → `processor_docker.go` | Rename + update |
-| osapi | `internal/agent/types.go` | Rename field |
-| osapi | `internal/agent/agent.go` | Rename parameter |
-| osapi | `internal/agent/factory.go` | Rename variable |
-| osapi | `internal/agent/processor.go` | Update case |
-| osapi | `internal/job/types.go` | Rename 8 constants + 6 types |
-| osapi | `internal/job/client/modify_container.go` → `modify_docker.go` | Rename + update |
-| osapi | `internal/authtoken/permissions.go` | Rename 3 constants |
-| osapi | `cmd/client_container.go` | Simplify to parent |
-| osapi | `cmd/client_container_docker.go` | NEW parent for docker |
-| osapi | `cmd/client_container_*.go` → `client_container_docker_*.go` | Rename 8 files |
-| osapi | `cmd/api_helpers.go` | Update handler call |
-| osapi | `pkg/sdk/client/container.go` → `docker.go` | Rename + update |
-| osapi | `pkg/sdk/client/container_types.go` → `docker_types.go` | Rename + update |
-| osapi | `pkg/sdk/client/osapi.go` | Rename field |
-| osapi | `pkg/sdk/orchestrator/docker.go` | NEW — DSL helpers |
-| osapi | `pkg/sdk/orchestrator/docker_public_test.go` | NEW — tests |
-| osapi | `examples/sdk/orchestrator/features/container-targeting.go` | Rewrite with DSL |
-| osapi | `examples/sdk/client/container.go` | Update SDK calls |
-| osapi | `test/integration/container_test.go` → `docker_test.go` | Rename + update |
-| osapi | `docs/` (multiple) | Update paths, permissions, examples |
+| Repo  | File                                                            | Change                                 |
+| ----- | --------------------------------------------------------------- | -------------------------------------- |
+| osapi | `internal/api/container/` → `internal/api/docker/`              | Full directory rename + content update |
+| osapi | `internal/api/handler_container.go` → `handler_docker.go`       | Rename + update                        |
+| osapi | `internal/api/handler.go`                                       | Update registration                    |
+| osapi | `internal/api/types.go`                                         | Rename handler field                   |
+| osapi | `internal/api/handler_public_test.go`                           | Rename test                            |
+| osapi | `internal/provider/container/` → `internal/provider/docker/`    | Full directory rename                  |
+| osapi | `internal/provider/container/runtime/driver.go`                 | DELETE                                 |
+| osapi | `internal/agent/processor_container.go` → `processor_docker.go` | Rename + update                        |
+| osapi | `internal/agent/types.go`                                       | Rename field                           |
+| osapi | `internal/agent/agent.go`                                       | Rename parameter                       |
+| osapi | `internal/agent/factory.go`                                     | Rename variable                        |
+| osapi | `internal/agent/processor.go`                                   | Update case                            |
+| osapi | `internal/job/types.go`                                         | Rename 8 constants + 6 types           |
+| osapi | `internal/job/client/modify_container.go` → `modify_docker.go`  | Rename + update                        |
+| osapi | `internal/authtoken/permissions.go`                             | Rename 3 constants                     |
+| osapi | `cmd/client_container.go`                                       | Simplify to parent                     |
+| osapi | `cmd/client_container_docker.go`                                | NEW parent for docker                  |
+| osapi | `cmd/client_container_*.go` → `client_container_docker_*.go`    | Rename 8 files                         |
+| osapi | `cmd/api_helpers.go`                                            | Update handler call                    |
+| osapi | `pkg/sdk/client/container.go` → `docker.go`                     | Rename + update                        |
+| osapi | `pkg/sdk/client/container_types.go` → `docker_types.go`         | Rename + update                        |
+| osapi | `pkg/sdk/client/osapi.go`                                       | Rename field                           |
+| osapi | `pkg/sdk/orchestrator/docker.go`                                | NEW — DSL helpers                      |
+| osapi | `pkg/sdk/orchestrator/docker_public_test.go`                    | NEW — tests                            |
+| osapi | `examples/sdk/orchestrator/features/container-targeting.go`     | Rewrite with DSL                       |
+| osapi | `examples/sdk/client/container.go`                              | Update SDK calls                       |
+| osapi | `test/integration/container_test.go` → `docker_test.go`         | Rename + update                        |
+| osapi | `docs/` (multiple)                                              | Update paths, permissions, examples    |
