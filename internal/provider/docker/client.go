@@ -33,9 +33,9 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-// DockerAPIClient defines the subset of the Docker Engine API used by this
+// APIClient defines the subset of the Docker Engine API used by this
 // provider.
-type DockerAPIClient interface {
+type APIClient interface {
 	ContainerCreate(
 		ctx context.Context,
 		config *container.Config,

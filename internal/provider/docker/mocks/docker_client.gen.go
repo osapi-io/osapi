@@ -19,31 +19,31 @@ import (
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-// MockDockerAPIClient is a mock of DockerAPIClient interface.
-type MockDockerAPIClient struct {
+// MockAPIClient is a mock of APIClient interface.
+type MockAPIClient struct {
 	ctrl     *gomock.Controller
-	recorder *MockDockerAPIClientMockRecorder
+	recorder *MockAPIClientMockRecorder
 }
 
-// MockDockerAPIClientMockRecorder is the mock recorder for MockDockerAPIClient.
-type MockDockerAPIClientMockRecorder struct {
-	mock *MockDockerAPIClient
+// MockAPIClientMockRecorder is the mock recorder for MockAPIClient.
+type MockAPIClientMockRecorder struct {
+	mock *MockAPIClient
 }
 
-// NewMockDockerAPIClient creates a new mock instance.
-func NewMockDockerAPIClient(ctrl *gomock.Controller) *MockDockerAPIClient {
-	mock := &MockDockerAPIClient{ctrl: ctrl}
-	mock.recorder = &MockDockerAPIClientMockRecorder{mock}
+// NewMockAPIClient creates a new mock instance.
+func NewMockAPIClient(ctrl *gomock.Controller) *MockAPIClient {
+	mock := &MockAPIClient{ctrl: ctrl}
+	mock.recorder = &MockAPIClientMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDockerAPIClient) EXPECT() *MockDockerAPIClientMockRecorder {
+func (m *MockAPIClient) EXPECT() *MockAPIClientMockRecorder {
 	return m.recorder
 }
 
 // ContainerCreate mocks base method.
-func (m *MockDockerAPIClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *v1.Platform, containerName string) (container.CreateResponse, error) {
+func (m *MockAPIClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *v1.Platform, containerName string) (container.CreateResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerCreate", ctx, config, hostConfig, networkingConfig, platform, containerName)
 	ret0, _ := ret[0].(container.CreateResponse)
@@ -52,13 +52,13 @@ func (m *MockDockerAPIClient) ContainerCreate(ctx context.Context, config *conta
 }
 
 // ContainerCreate indicates an expected call of ContainerCreate.
-func (mr *MockDockerAPIClientMockRecorder) ContainerCreate(ctx, config, hostConfig, networkingConfig, platform, containerName interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerCreate(ctx, config, hostConfig, networkingConfig, platform, containerName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerCreate", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerCreate), ctx, config, hostConfig, networkingConfig, platform, containerName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerCreate", reflect.TypeOf((*MockAPIClient)(nil).ContainerCreate), ctx, config, hostConfig, networkingConfig, platform, containerName)
 }
 
 // ContainerExecAttach mocks base method.
-func (m *MockDockerAPIClient) ContainerExecAttach(ctx context.Context, execID string, options container.ExecStartOptions) (types.HijackedResponse, error) {
+func (m *MockAPIClient) ContainerExecAttach(ctx context.Context, execID string, options container.ExecStartOptions) (types.HijackedResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerExecAttach", ctx, execID, options)
 	ret0, _ := ret[0].(types.HijackedResponse)
@@ -67,13 +67,13 @@ func (m *MockDockerAPIClient) ContainerExecAttach(ctx context.Context, execID st
 }
 
 // ContainerExecAttach indicates an expected call of ContainerExecAttach.
-func (mr *MockDockerAPIClientMockRecorder) ContainerExecAttach(ctx, execID, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerExecAttach(ctx, execID, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecAttach", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerExecAttach), ctx, execID, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecAttach", reflect.TypeOf((*MockAPIClient)(nil).ContainerExecAttach), ctx, execID, options)
 }
 
 // ContainerExecCreate mocks base method.
-func (m *MockDockerAPIClient) ContainerExecCreate(ctx context.Context, container string, options container.ExecOptions) (common.IDResponse, error) {
+func (m *MockAPIClient) ContainerExecCreate(ctx context.Context, container string, options container.ExecOptions) (common.IDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerExecCreate", ctx, container, options)
 	ret0, _ := ret[0].(common.IDResponse)
@@ -82,13 +82,13 @@ func (m *MockDockerAPIClient) ContainerExecCreate(ctx context.Context, container
 }
 
 // ContainerExecCreate indicates an expected call of ContainerExecCreate.
-func (mr *MockDockerAPIClientMockRecorder) ContainerExecCreate(ctx, container, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerExecCreate(ctx, container, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecCreate", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerExecCreate), ctx, container, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecCreate", reflect.TypeOf((*MockAPIClient)(nil).ContainerExecCreate), ctx, container, options)
 }
 
 // ContainerExecInspect mocks base method.
-func (m *MockDockerAPIClient) ContainerExecInspect(ctx context.Context, execID string) (container.ExecInspect, error) {
+func (m *MockAPIClient) ContainerExecInspect(ctx context.Context, execID string) (container.ExecInspect, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerExecInspect", ctx, execID)
 	ret0, _ := ret[0].(container.ExecInspect)
@@ -97,13 +97,13 @@ func (m *MockDockerAPIClient) ContainerExecInspect(ctx context.Context, execID s
 }
 
 // ContainerExecInspect indicates an expected call of ContainerExecInspect.
-func (mr *MockDockerAPIClientMockRecorder) ContainerExecInspect(ctx, execID interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerExecInspect(ctx, execID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecInspect", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerExecInspect), ctx, execID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerExecInspect", reflect.TypeOf((*MockAPIClient)(nil).ContainerExecInspect), ctx, execID)
 }
 
 // ContainerInspect mocks base method.
-func (m *MockDockerAPIClient) ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error) {
+func (m *MockAPIClient) ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerInspect", ctx, containerID)
 	ret0, _ := ret[0].(container.InspectResponse)
@@ -112,13 +112,13 @@ func (m *MockDockerAPIClient) ContainerInspect(ctx context.Context, containerID 
 }
 
 // ContainerInspect indicates an expected call of ContainerInspect.
-func (mr *MockDockerAPIClientMockRecorder) ContainerInspect(ctx, containerID interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerInspect(ctx, containerID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerInspect", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerInspect), ctx, containerID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerInspect", reflect.TypeOf((*MockAPIClient)(nil).ContainerInspect), ctx, containerID)
 }
 
 // ContainerList mocks base method.
-func (m *MockDockerAPIClient) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
+func (m *MockAPIClient) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerList", ctx, options)
 	ret0, _ := ret[0].([]container.Summary)
@@ -127,13 +127,13 @@ func (m *MockDockerAPIClient) ContainerList(ctx context.Context, options contain
 }
 
 // ContainerList indicates an expected call of ContainerList.
-func (mr *MockDockerAPIClientMockRecorder) ContainerList(ctx, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerList(ctx, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerList", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerList), ctx, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerList", reflect.TypeOf((*MockAPIClient)(nil).ContainerList), ctx, options)
 }
 
 // ContainerRemove mocks base method.
-func (m *MockDockerAPIClient) ContainerRemove(ctx context.Context, containerID string, options container.RemoveOptions) error {
+func (m *MockAPIClient) ContainerRemove(ctx context.Context, containerID string, options container.RemoveOptions) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerRemove", ctx, containerID, options)
 	ret0, _ := ret[0].(error)
@@ -141,13 +141,13 @@ func (m *MockDockerAPIClient) ContainerRemove(ctx context.Context, containerID s
 }
 
 // ContainerRemove indicates an expected call of ContainerRemove.
-func (mr *MockDockerAPIClientMockRecorder) ContainerRemove(ctx, containerID, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerRemove(ctx, containerID, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerRemove", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerRemove), ctx, containerID, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerRemove", reflect.TypeOf((*MockAPIClient)(nil).ContainerRemove), ctx, containerID, options)
 }
 
 // ContainerStart mocks base method.
-func (m *MockDockerAPIClient) ContainerStart(ctx context.Context, containerID string, options container.StartOptions) error {
+func (m *MockAPIClient) ContainerStart(ctx context.Context, containerID string, options container.StartOptions) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerStart", ctx, containerID, options)
 	ret0, _ := ret[0].(error)
@@ -155,13 +155,13 @@ func (m *MockDockerAPIClient) ContainerStart(ctx context.Context, containerID st
 }
 
 // ContainerStart indicates an expected call of ContainerStart.
-func (mr *MockDockerAPIClientMockRecorder) ContainerStart(ctx, containerID, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerStart(ctx, containerID, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerStart", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerStart), ctx, containerID, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerStart", reflect.TypeOf((*MockAPIClient)(nil).ContainerStart), ctx, containerID, options)
 }
 
 // ContainerStop mocks base method.
-func (m *MockDockerAPIClient) ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error {
+func (m *MockAPIClient) ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ContainerStop", ctx, containerID, options)
 	ret0, _ := ret[0].(error)
@@ -169,13 +169,13 @@ func (m *MockDockerAPIClient) ContainerStop(ctx context.Context, containerID str
 }
 
 // ContainerStop indicates an expected call of ContainerStop.
-func (mr *MockDockerAPIClientMockRecorder) ContainerStop(ctx, containerID, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ContainerStop(ctx, containerID, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerStop", reflect.TypeOf((*MockDockerAPIClient)(nil).ContainerStop), ctx, containerID, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerStop", reflect.TypeOf((*MockAPIClient)(nil).ContainerStop), ctx, containerID, options)
 }
 
 // ImageInspect mocks base method.
-func (m *MockDockerAPIClient) ImageInspect(ctx context.Context, imageID string, options ...client.ImageInspectOption) (image.InspectResponse, error) {
+func (m *MockAPIClient) ImageInspect(ctx context.Context, imageID string, options ...client.ImageInspectOption) (image.InspectResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, imageID}
 	for _, a := range options {
@@ -188,14 +188,14 @@ func (m *MockDockerAPIClient) ImageInspect(ctx context.Context, imageID string, 
 }
 
 // ImageInspect indicates an expected call of ImageInspect.
-func (mr *MockDockerAPIClientMockRecorder) ImageInspect(ctx, imageID interface{}, options ...interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ImageInspect(ctx, imageID interface{}, options ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, imageID}, options...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageInspect", reflect.TypeOf((*MockDockerAPIClient)(nil).ImageInspect), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageInspect", reflect.TypeOf((*MockAPIClient)(nil).ImageInspect), varargs...)
 }
 
 // ImagePull mocks base method.
-func (m *MockDockerAPIClient) ImagePull(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error) {
+func (m *MockAPIClient) ImagePull(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ImagePull", ctx, ref, options)
 	ret0, _ := ret[0].(io.ReadCloser)
@@ -204,13 +204,13 @@ func (m *MockDockerAPIClient) ImagePull(ctx context.Context, ref string, options
 }
 
 // ImagePull indicates an expected call of ImagePull.
-func (mr *MockDockerAPIClientMockRecorder) ImagePull(ctx, ref, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ImagePull(ctx, ref, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImagePull", reflect.TypeOf((*MockDockerAPIClient)(nil).ImagePull), ctx, ref, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImagePull", reflect.TypeOf((*MockAPIClient)(nil).ImagePull), ctx, ref, options)
 }
 
 // ImageRemove mocks base method.
-func (m *MockDockerAPIClient) ImageRemove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error) {
+func (m *MockAPIClient) ImageRemove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ImageRemove", ctx, imageID, options)
 	ret0, _ := ret[0].([]image.DeleteResponse)
@@ -219,13 +219,13 @@ func (m *MockDockerAPIClient) ImageRemove(ctx context.Context, imageID string, o
 }
 
 // ImageRemove indicates an expected call of ImageRemove.
-func (mr *MockDockerAPIClientMockRecorder) ImageRemove(ctx, imageID, options interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) ImageRemove(ctx, imageID, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageRemove", reflect.TypeOf((*MockDockerAPIClient)(nil).ImageRemove), ctx, imageID, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageRemove", reflect.TypeOf((*MockAPIClient)(nil).ImageRemove), ctx, imageID, options)
 }
 
 // Ping mocks base method.
-func (m *MockDockerAPIClient) Ping(ctx context.Context) (types.Ping, error) {
+func (m *MockAPIClient) Ping(ctx context.Context) (types.Ping, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Ping", ctx)
 	ret0, _ := ret[0].(types.Ping)
@@ -234,7 +234,7 @@ func (m *MockDockerAPIClient) Ping(ctx context.Context) (types.Ping, error) {
 }
 
 // Ping indicates an expected call of Ping.
-func (mr *MockDockerAPIClientMockRecorder) Ping(ctx interface{}) *gomock.Call {
+func (mr *MockAPIClientMockRecorder) Ping(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockDockerAPIClient)(nil).Ping), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockAPIClient)(nil).Ping), ctx)
 }

@@ -108,7 +108,7 @@ func (suite *ExportPublicTestSuite) TestRun() {
 			validateFunc: func(
 				opened bool,
 				closed bool,
-				entries []client.AuditEntry,
+				_ []client.AuditEntry,
 				result *export.Result,
 				err error,
 			) {
