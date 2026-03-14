@@ -182,6 +182,8 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 		hostname      string
 		responseData  string
 		mockError     error
+		mockOpts      *publishAndWaitMockOpts
+		timeout       time.Duration
 		expectError   bool
 		errorContains string
 		validateFunc  func(result string, agent *job.AgentInfo)
@@ -245,22 +247,90 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostname() {
 				"data": {"hostname": ""}
 			}`,
 		},
+		{
+			name:     "publish notification error",
+			hostname: "server1",
+			mockOpts: &publishAndWaitMockOpts{
+				mockError: errors.New("stream unavailable"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to publish notification",
+		},
+		{
+			name:     "watch error",
+			hostname: "server1",
+			mockOpts: &publishAndWaitMockOpts{
+				mockError: errors.New("watch not supported"),
+				errorMode: errorOnWatch,
+			},
+			expectError:   true,
+			errorContains: "failed to create response watcher",
+		},
+		{
+			name:     "timeout waiting for response",
+			hostname: "server1",
+			timeout:  10 * time.Millisecond,
+			mockOpts: &publishAndWaitMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "timeout waiting for job response",
+		},
+		{
+			name:     "nil entry skipped before real entry",
+			hostname: "server1",
+			mockOpts: &publishAndWaitMockOpts{
+				responseData: `{
+					"status": "completed",
+					"data": {"hostname": "server1.example.com"}
+				}`,
+				sendNilFirst: true,
+			},
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, tt.hostname)
+			jobsClient := s.jobsClient
+			if tt.timeout > 0 {
+				opts := &client.Options{
+					Timeout:  tt.timeout,
+					KVBucket: s.mockKV,
+				}
+				var err error
+				jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+			}
 
-			setupPublishAndWaitMocks(
-				s.mockCtrl,
-				s.mockKV,
-				s.mockNATSClient,
-				subject,
-				tt.responseData,
-				tt.mockError,
-			)
+			hostname := tt.hostname
+			if hostname == "" {
+				hostname = "server1"
+			}
+			subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, hostname)
 
-			_, result, agent, err := s.jobsClient.QueryNodeHostname(s.ctx, tt.hostname)
+			if tt.mockOpts != nil {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					tt.mockOpts,
+				)
+			} else {
+				setupPublishAndWaitMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					tt.responseData,
+					tt.mockError,
+				)
+			}
+
+			_, result, agent, err := jobsClient.QueryNodeHostname(s.ctx, hostname)
 
 			if tt.expectError {
 				s.Error(err)
@@ -593,92 +663,6 @@ func (s *QueryPublicTestSuite) TestQueryNodeStatusAny() {
 			} else {
 				s.NoError(err)
 				s.NotNil(result)
-			}
-		})
-	}
-}
-
-func (s *QueryPublicTestSuite) TestPublishAndWaitErrorPaths() {
-	tests := []struct {
-		name          string
-		opts          *publishAndWaitMockOpts
-		timeout       time.Duration
-		expectError   bool
-		errorContains string
-	}{
-		{
-			name: "publish notification error",
-			opts: &publishAndWaitMockOpts{
-				mockError: errors.New("stream unavailable"),
-				errorMode: errorOnPublish,
-			},
-			expectError:   true,
-			errorContains: "failed to publish notification",
-		},
-		{
-			name: "watch error",
-			opts: &publishAndWaitMockOpts{
-				mockError: errors.New("watch not supported"),
-				errorMode: errorOnWatch,
-			},
-			expectError:   true,
-			errorContains: "failed to create response watcher",
-		},
-		{
-			name:    "timeout waiting for response",
-			timeout: 10 * time.Millisecond,
-			opts: &publishAndWaitMockOpts{
-				mockError: errors.New("unused"),
-				errorMode: errorOnTimeout,
-			},
-			expectError:   true,
-			errorContains: "timeout waiting for job response",
-		},
-		{
-			name: "nil entry skipped before real entry",
-			opts: &publishAndWaitMockOpts{
-				responseData: `{
-					"status": "completed",
-					"data": {"hostname": "server1.example.com"}
-				}`,
-				sendNilFirst: true,
-			},
-			expectError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			jobsClient := s.jobsClient
-			if tt.timeout > 0 {
-				opts := &client.Options{
-					Timeout:  tt.timeout,
-					KVBucket: s.mockKV,
-				}
-				var err error
-				jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
-				s.Require().NoError(err)
-			}
-
-			setupPublishAndWaitMocksWithOpts(
-				s.mockCtrl,
-				s.mockKV,
-				s.mockNATSClient,
-				"jobs.query.host.server1",
-				tt.opts,
-			)
-
-			_, result, agent, err := jobsClient.QueryNodeHostname(s.ctx, "server1")
-
-			if tt.expectError {
-				s.Error(err)
-				s.Empty(result)
-				s.Nil(agent)
-				if tt.errorContains != "" {
-					s.Contains(err.Error(), tt.errorContains)
-				}
-			} else {
-				s.NoError(err)
 			}
 		})
 	}
