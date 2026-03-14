@@ -13,18 +13,34 @@ every dependency completed with `Changed: false`, the task is skipped and the
 `OnSkip` hook fires with reason `"no dependencies changed"`.
 
 ```go
-deploy := plan.Task("deploy-config", &orchestrator.Op{
-    Operation: "file.deploy.execute",
-    Target:    "_any",
-    Params: map[string]any{
-        "object_name":  "app.conf",
-        "path":         "/etc/app/app.conf",
-        "content_type": "text/plain",
+deploy := plan.TaskFunc("deploy-config",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
+            Target:      "_any",
+            ObjectName:  "app.conf",
+            Path:        "/etc/app/app.conf",
+            ContentType: "text/plain",
+        })
+        if err != nil {
+            return nil, err
+        }
+
+        return &orchestrator.Result{
+            JobID:   resp.Data.JobID,
+            Changed: resp.Data.Changed,
+            Data:    orchestrator.StructToMap(resp.Data),
+        }, nil
     },
-})
+)
 
 restart := plan.TaskFunc("restart-service",
-    func(_ context.Context, _ *client.Client) (*orchestrator.Result, error) {
+    func(
+        _ context.Context,
+        _ *client.Client,
+    ) (*orchestrator.Result, error) {
         fmt.Println("Restarting service...")
         return &orchestrator.Result{Changed: true}, nil
     },

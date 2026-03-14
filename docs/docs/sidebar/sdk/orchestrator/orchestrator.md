@@ -16,20 +16,41 @@ import (
     "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-client := client.New("http://localhost:8080", "your-jwt-token")
-plan := orchestrator.NewPlan(client)
+c := client.New("http://localhost:8080", "your-jwt-token")
+plan := orchestrator.NewPlan(c)
 
 health := plan.TaskFunc("check-health",
-    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
         _, err := c.Health.Liveness(ctx)
         return &orchestrator.Result{Changed: false}, err
     },
 )
 
-hostname := plan.Task("get-hostname", &orchestrator.Op{
-    Operation: "node.hostname.get",
-    Target:    "_any",
-})
+hostname := plan.TaskFunc("get-hostname",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Hostname(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.HostnameResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 hostname.DependsOn(health)
 
 report, err := plan.Run(context.Background())
@@ -150,6 +171,48 @@ Per-host data for broadcast operations (targeting `_all` or label selectors):
 | `Changed`  | `bool`           | Whether this host reported changes |
 | `Error`    | `string`         | Error message; empty on success    |
 | `Data`     | `map[string]any` | Host-specific response data        |
+
+## Bridge Helpers
+
+Two helpers simplify converting SDK client responses into orchestrator
+`Result` values.
+
+### CollectionResult
+
+`CollectionResult` converts a collection response (any SDK call that
+returns per-host results) into an orchestrator `Result` with populated
+`HostResults`. Use it for most operations:
+
+```go
+return orchestrator.CollectionResult(
+    resp.Data,
+    func(r client.HostnameResult) orchestrator.HostResult {
+        return orchestrator.HostResult{
+            Hostname: r.Hostname,
+            Changed:  r.Changed,
+            Error:    r.Error,
+        }
+    },
+), nil
+```
+
+The first argument is the SDK response data (which must have a
+`Results` field). The second is a mapper function that converts each
+per-host result into an `orchestrator.HostResult`.
+
+### StructToMap
+
+`StructToMap` converts a Go struct into a `map[string]any` using JSON
+round-tripping. Use it for non-collection responses where you want to
+store the full response in `Result.Data`:
+
+```go
+return &orchestrator.Result{
+    JobID:   resp.Data.JobID,
+    Changed: resp.Data.Changed,
+    Data:    orchestrator.StructToMap(resp.Data),
+}, nil
+```
 
 ## TaskFuncWithResults
 

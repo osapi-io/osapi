@@ -10,13 +10,27 @@ file is in-sync, drifted, or missing compared to the expected state.
 ## Usage
 
 ```go
-task := plan.Task("check-config", &orchestrator.Op{
-    Operation: "file.status.get",
-    Target:    "web-01",
-    Params: map[string]any{
-        "path": "/etc/nginx/nginx.conf",
+task := plan.TaskFunc("check-config",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.FileStatus(
+            ctx,
+            "web-01",
+            "/etc/nginx/nginx.conf",
+        )
+        if err != nil {
+            return nil, err
+        }
+
+        return &orchestrator.Result{
+            JobID:   resp.Data.JobID,
+            Changed: resp.Data.Changed,
+            Data:    orchestrator.StructToMap(resp.Data),
+        }, nil
     },
-})
+)
 ```
 
 ## Parameters

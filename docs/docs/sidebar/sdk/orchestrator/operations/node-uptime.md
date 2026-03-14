@@ -9,10 +9,28 @@ Get system uptime information.
 ## Usage
 
 ```go
-task := plan.Task("get-uptime", &orchestrator.Op{
-    Operation: "node.uptime.get",
-    Target:    "_any",
-})
+task := plan.TaskFunc("get-uptime",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Uptime(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.UptimeResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 ```
 
 ## Parameters

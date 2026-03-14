@@ -21,10 +21,28 @@ every matching agent and per-host results are available via `HostResults`.
 ## Usage
 
 ```go
-getAll := plan.Task("get-hostname-all", &orchestrator.Op{
-    Operation: "node.hostname.get",
-    Target:    "_all",
-})
+getAll := plan.TaskFunc("get-hostname-all",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Hostname(ctx, "_all")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.HostnameResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 
 // Access per-host results via TaskFuncWithResults.
 printHosts := plan.TaskFuncWithResults("print-hosts",
@@ -35,7 +53,8 @@ printHosts := plan.TaskFuncWithResults("print-hosts",
     ) (*orchestrator.Result, error) {
         r := results.Get("get-hostname-all")
         for _, hr := range r.HostResults {
-            fmt.Printf("  %s changed=%v\n", hr.Hostname, hr.Changed)
+            fmt.Printf("  %s changed=%v\n",
+                hr.Hostname, hr.Changed)
         }
         return &orchestrator.Result{Changed: false}, nil
     },
