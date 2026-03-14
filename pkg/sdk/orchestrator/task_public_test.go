@@ -156,6 +156,36 @@ func (s *TaskPublicTestSuite) TestWhenWithReason() {
 	}
 }
 
+func (s *TaskPublicTestSuite) TestSetGuardReason() {
+	tests := []struct {
+		name       string
+		initial    string
+		updated    string
+		validateFn func(task *orchestrator.Task)
+	}{
+		{
+			name:    "updates reason from initial value",
+			initial: "initial reason",
+			updated: "dynamic reason",
+			validateFn: func(task *orchestrator.Task) {
+				s.Equal("dynamic reason", task.GuardReason())
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			task := orchestrator.NewTaskFunc("t", noop)
+			task.WhenWithReason(func(_ orchestrator.Results) bool {
+				return false
+			}, tt.initial)
+
+			task.SetGuardReason(tt.updated)
+			tt.validateFn(task)
+		})
+	}
+}
+
 func (s *TaskPublicTestSuite) TestOnErrorOverride() {
 	task := orchestrator.NewTaskFunc("t", noop)
 	task.OnError(orchestrator.Continue)

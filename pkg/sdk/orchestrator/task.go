@@ -130,6 +130,20 @@ func (t *Task) Guard() GuardFn {
 	return t.guard
 }
 
+// SetGuardReason updates the skip reason shown when the guard
+// returns false. Use inside a guard function to provide a dynamic
+// reason based on runtime conditions.
+func (t *Task) SetGuardReason(
+	reason string,
+) {
+	t.guardReason = reason
+}
+
+// GuardReason returns the current guard reason.
+func (t *Task) GuardReason() string {
+	return t.guardReason
+}
+
 // OnError sets a per-task error strategy override.
 func (t *Task) OnError(
 	strategy ErrorStrategy,
