@@ -67,17 +67,25 @@ func (p *Service) Deploy(
 		var state job.FileState
 		if unmarshalErr := json.Unmarshal(entry.Value(), &state); unmarshalErr == nil {
 			if state.SHA256 == sha {
+				if _, statErr := p.fs.Stat(req.Path); statErr == nil {
+					p.logger.Debug(
+						"file unchanged, skipping deploy",
+						slog.String("path", req.Path),
+						slog.String("sha256", sha),
+					)
+
+					return &DeployResult{
+						Changed: false,
+						SHA256:  sha,
+						Path:    req.Path,
+					}, nil
+				}
+
 				p.logger.Debug(
-					"file unchanged, skipping deploy",
+					"file missing from disk, redeploying",
 					slog.String("path", req.Path),
 					slog.String("sha256", sha),
 				)
-
-				return &DeployResult{
-					Changed: false,
-					SHA256:  sha,
-					Path:    req.Path,
-				}, nil
 			}
 		}
 	}

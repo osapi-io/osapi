@@ -151,9 +151,11 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				ctrl *gomock.Controller,
 				mockObj *stubObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				appFs *afero.Fs,
 			) {
 				mockObj.getBytesData = fileContent
+
+				_ = afero.WriteFile(*appFs, "/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				existingState := job.FileState{
 					SHA256: existingSHA,
@@ -177,6 +179,50 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				Changed: false,
 				SHA256:  existingSHA,
 				Path:    "/etc/nginx/nginx.conf",
+			},
+		},
+		{
+			name: "when file is deleted but state exists redeploys",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockObj *stubObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *afero.Fs,
+			) {
+				mockObj.getBytesData = fileContent
+
+				existingState := job.FileState{
+					SHA256: existingSHA,
+					Path:   "/etc/nginx/nginx.conf",
+				}
+				stateBytes, _ := json.Marshal(existingState)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+
+				mockKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				Mode:        "0644",
+				ContentType: "raw",
+			},
+			want: &file.DeployResult{
+				Changed: true,
+				SHA256:  existingSHA,
+				Path:    "/etc/nginx/nginx.conf",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+				suite.Require().NoError(err)
+				suite.Equal(fileContent, data)
 			},
 		},
 		{
