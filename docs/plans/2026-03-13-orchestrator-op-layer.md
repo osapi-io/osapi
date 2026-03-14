@@ -1,48 +1,189 @@
-# Orchestrator Op Layer Implementation Plan
+# Orchestrator SDK Helpers Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Implement the `Op` struct and `plan.Task()` method so all 23 documented operations work through a single declarative API, replacing the hardcoded Docker DSL methods.
+**Goal:** Add bridge helpers (`CollectionResult`, `StructToMap`) to the SDK orchestrator package so consumers like `osapi-orchestrator` don't need to reinvent them. Delete the misplaced `docker.go` DSL methods. Fix broken examples to use `TaskFunc` (the pattern `osapi-orchestrator` actually uses).
 
-**Architecture:** Add an `Op` type and operation dispatch registry to `pkg/sdk/orchestrator/`. Each operation string (e.g. `"docker.pull.execute"`) maps to a handler that calls the corresponding SDK client method, extracts results, and returns a `*Result`. The existing `TaskFunc`/`TaskFuncWithResults` remain for custom logic.
+**Architecture:** The SDK orchestrator package provides the DAG engine (plan, task, runner) plus bridge utilities. Domain-specific operation methods (NodeHostnameGet, DockerPull, etc.) belong in consumer packages like `osapi-orchestrator`, not in the SDK.
 
-**Tech Stack:** Go 1.25, testify/suite, httptest
+**Tech Stack:** Go 1.25, generics, testify/suite, httptest
 
 ---
 
-### Task 1: Add Op struct and Task.Operation() accessor
+### Task 1: Add CollectionResult and StructToMap helpers
 
 **Files:**
-- Create: `pkg/sdk/orchestrator/op.go`
-- Modify: `pkg/sdk/orchestrator/task.go:28-37`
+- Create: `pkg/sdk/orchestrator/bridge.go`
+- Test: `pkg/sdk/orchestrator/bridge_public_test.go`
 
-**Step 1: Create `op.go` with Op struct and structToMap helper**
+**Step 1: Write the failing test**
+
+Create `bridge_public_test.go`:
+
+```go
+package orchestrator_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
+)
+
+type BridgePublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *BridgePublicTestSuite) TestStructToMap() {
+	tests := []struct {
+		name         string
+		input        any
+		validateFunc func(map[string]any)
+	}{
+		{
+			name: "converts struct with json tags",
+			input: struct {
+				Name    string `json:"name"`
+				Changed bool   `json:"changed"`
+			}{Name: "test", Changed: true},
+			validateFunc: func(m map[string]any) {
+				s.Equal("test", m["name"])
+				s.Equal(true, m["changed"])
+			},
+		},
+		{
+			name:  "returns nil for nil input",
+			input: nil,
+			validateFunc: func(m map[string]any) {
+				s.Nil(m)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result := orchestrator.StructToMap(tt.input)
+			tt.validateFunc(result)
+		})
+	}
+}
+
+func (s *BridgePublicTestSuite) TestCollectionResult() {
+	tests := []struct {
+		name         string
+		jobID        string
+		results      []client.HostnameResult
+		toHostResult func(client.HostnameResult) orchestrator.HostResult
+		validateFunc func(*orchestrator.Result)
+	}{
+		{
+			name:  "single result extracts fields",
+			jobID: "job-123",
+			results: []client.HostnameResult{
+				{Hostname: "web-01", Changed: false},
+			},
+			toHostResult: func(
+				r client.HostnameResult,
+			) orchestrator.HostResult {
+				return orchestrator.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+				}
+			},
+			validateFunc: func(result *orchestrator.Result) {
+				s.Equal("job-123", result.JobID)
+				s.False(result.Changed)
+				s.Len(result.HostResults, 1)
+				s.Equal("web-01", result.HostResults[0].Hostname)
+				s.NotNil(result.HostResults[0].Data)
+			},
+		},
+		{
+			name:  "changed is true when any host changed",
+			jobID: "job-456",
+			results: []client.HostnameResult{
+				{Hostname: "web-01", Changed: false},
+				{Hostname: "web-02", Changed: true},
+			},
+			toHostResult: func(
+				r client.HostnameResult,
+			) orchestrator.HostResult {
+				return orchestrator.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+				}
+			},
+			validateFunc: func(result *orchestrator.Result) {
+				s.True(result.Changed)
+				s.Len(result.HostResults, 2)
+			},
+		},
+		{
+			name:    "empty results",
+			jobID:   "job-789",
+			results: []client.HostnameResult{},
+			toHostResult: func(
+				r client.HostnameResult,
+			) orchestrator.HostResult {
+				return orchestrator.HostResult{}
+			},
+			validateFunc: func(result *orchestrator.Result) {
+				s.Equal("job-789", result.JobID)
+				s.False(result.Changed)
+				s.Empty(result.HostResults)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			col := client.Collection[client.HostnameResult]{
+				JobID:   tt.jobID,
+				Results: tt.results,
+			}
+			result := orchestrator.CollectionResult(
+				col,
+				tt.toHostResult,
+			)
+			tt.validateFunc(result)
+		})
+	}
+}
+
+func TestBridgePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(BridgePublicTestSuite))
+}
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `go test ./pkg/sdk/orchestrator/... -run TestBridgePublicTestSuite -v`
+Expected: FAIL — `CollectionResult` and `StructToMap` not defined
+
+**Step 3: Write the implementation**
+
+Create `bridge.go`:
 
 ```go
 package orchestrator
 
 import (
 	"encoding/json"
+
+	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-// Op describes a declarative operation to execute on a target.
-type Op struct {
-	// Operation is the dotted operation name
-	// (e.g. "docker.pull.execute", "node.hostname.get").
-	Operation string
-
-	// Target is the agent routing target (hostname, "_any", "_all",
-	// or label selector like "key:value").
-	Target string
-
-	// Params holds operation-specific parameters.
-	Params map[string]any
-}
-
-// structToMap converts a struct to map[string]any using its JSON tags.
-func structToMap(
+// StructToMap converts a struct to map[string]any using its JSON
+// tags. Returns nil if v is nil or cannot be marshaled.
+func StructToMap(
 	v any,
 ) map[string]any {
+	if v == nil {
+		return nil
+	}
+
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil
@@ -55,898 +196,264 @@ func structToMap(
 
 	return m
 }
-```
 
-**Step 2: Add `op` field and `Operation()` accessor to `task.go`**
-
-Add `op *Op` field to Task struct (after `errorStrategy` at line 36).
-Add `Operation()` method.
-
-```go
-// In Task struct, add field:
-	op *Op
-
-// New method:
-// Operation returns the Op for declarative tasks, or nil for
-// TaskFunc tasks.
-func (t *Task) Operation() *Op {
-	return t.op
-}
-```
-
-**Step 3: Run tests**
-
-Run: `go test ./pkg/sdk/orchestrator/... -count=1`
-Expected: PASS (no behavior changes yet)
-
-**Step 4: Commit**
-
-```
-feat(orchestrator): add Op struct and Task.Operation accessor
-```
-
----
-
-### Task 2: Implement plan.Task() with node operation handlers
-
-**Files:**
-- Create: `pkg/sdk/orchestrator/registry.go`
-- Modify: `pkg/sdk/orchestrator/op.go` (add plan.Task method)
-
-**Step 1: Create `registry.go` with handler type and node handlers**
-
-```go
-package orchestrator
-
-import (
-	"context"
-	"fmt"
-
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
-)
-
-// opHandler executes an operation against the SDK client.
-type opHandler func(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error)
-
-// registry maps operation strings to handlers.
-var registry = map[string]opHandler{
-	// Node operations
-	"node.hostname.get": opNodeHostname,
-	"node.status.get":   opNodeStatus,
-	"node.disk.get":     opNodeDisk,
-	"node.memory.get":   opNodeMemory,
-	"node.uptime.get":   opNodeUptime,
-	"node.load.get":     opNodeLoad,
-}
-
-// collectionResult builds a Result from a Collection response,
-// extracting Results[0] for single-target operations.
-func collectionResult[T any](
-	jobID string,
-	results []T,
-	changed bool,
+// CollectionResult builds a Result from a Collection response.
+// It iterates all results, applies the toHostResult mapper to
+// build per-host details, and auto-populates HostResult.Data
+// via StructToMap when the mapper leaves it nil. Changed is true
+// if any host reported a change.
+func CollectionResult[T any](
+	col osapiclient.Collection[T],
+	toHostResult func(T) HostResult,
 ) *Result {
-	if len(results) == 0 {
-		return &Result{JobID: jobID, Changed: changed}
+	var changed bool
+
+	hostResults := make([]HostResult, 0, len(col.Results))
+
+	for _, r := range col.Results {
+		hr := toHostResult(r)
+		if hr.Data == nil {
+			hr.Data = StructToMap(r)
+		}
+		hostResults = append(hostResults, hr)
+
+		if hr.Changed {
+			changed = true
+		}
 	}
 
 	return &Result{
-		JobID:   jobID,
-		Changed: changed,
-		Data:    structToMap(results[0]),
+		JobID:       col.JobID,
+		Changed:     changed,
+		HostResults: hostResults,
 	}
-}
-
-func opNodeHostname(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Hostname(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNodeStatus(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Status(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNodeDisk(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Disk(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNodeMemory(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Memory(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNodeUptime(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Uptime(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNodeLoad(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	_ map[string]any,
-) (*Result, error) {
-	resp, err := c.Node.Load(ctx, target)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
 }
 ```
 
-**Step 2: Add `plan.Task()` method to `op.go`**
+Note: This takes `Collection[T]` directly (not `*Response[Collection[T]]`)
+so callers pass `resp.Data` — cleaner than requiring the full response
+wrapper. The caller can still access `resp.RawJSON()` separately if needed.
+
+Also confirm `Collection` is exported from the client package. Check:
 
 ```go
-// Task creates a declarative operation task, adds it to the plan,
-// and returns it. The operation is dispatched to the appropriate
-// SDK client method at execution time.
-func (p *Plan) Task(
-	name string,
-	op *Op,
-) *Task {
-	handler, ok := registry[op.Operation]
-	if !ok {
-		// Create a task that always fails with unknown operation.
-		return p.TaskFunc(name, func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*Result, error) {
-			return nil, fmt.Errorf("unknown operation: %s", op.Operation)
-		})
-	}
-
-	t := p.TaskFunc(name, func(
-		ctx context.Context,
-		c *osapiclient.Client,
-	) (*Result, error) {
-		return handler(ctx, c, op.Target, op.Params)
-	})
-	t.op = op
-
-	return t
+// In pkg/sdk/client/response.go — Collection should be exported
+type Collection[T any] struct {
+	Results []T
+	JobID   string
 }
 ```
 
-Add `"fmt"` and `osapiclient` imports to `op.go`.
+**Step 4: Run test to verify it passes**
 
-**Step 3: Build and run existing node operation examples**
+Run: `go test ./pkg/sdk/orchestrator/... -run TestBridgePublicTestSuite -v`
+Expected: PASS
 
-Run: `go build ./pkg/sdk/orchestrator/...`
-Run: `go build examples/sdk/orchestrator/operations/node-hostname.go`
-Run: `go build examples/sdk/orchestrator/operations/node-disk.go`
-Run: `go build examples/sdk/orchestrator/operations/node-memory.go`
-Run: `go build examples/sdk/orchestrator/operations/node-load.go`
-Run: `go build examples/sdk/orchestrator/operations/node-status.go`
-Run: `go build examples/sdk/orchestrator/operations/node-uptime.go`
-Expected: All compile successfully
-
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```
-feat(orchestrator): implement plan.Task with node operation handlers
+feat(orchestrator): add CollectionResult and StructToMap helpers
 ```
 
 ---
 
-### Task 3: Add command and network operation handlers
-
-**Files:**
-- Modify: `pkg/sdk/orchestrator/registry.go`
-
-**Step 1: Add command handlers to registry**
-
-Add to the registry map:
-
-```go
-	// Command operations
-	"command.exec.execute":  opCommandExec,
-	"command.shell.execute": opCommandShell,
-```
-
-Implement:
-
-```go
-func opCommandExec(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	req := osapiclient.ExecRequest{
-		Target: target,
-	}
-	if v, ok := params["command"].(string); ok {
-		req.Command = v
-	}
-	if v, ok := params["args"].([]string); ok {
-		req.Args = v
-	}
-	if v, ok := params["cwd"].(string); ok {
-		req.Cwd = v
-	}
-	if v, ok := params["timeout"].(int); ok {
-		req.Timeout = v
-	}
-
-	resp, err := c.Node.Exec(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-
-func opCommandShell(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	req := osapiclient.ShellRequest{
-		Target: target,
-	}
-	if v, ok := params["command"].(string); ok {
-		req.Command = v
-	}
-	if v, ok := params["cwd"].(string); ok {
-		req.Cwd = v
-	}
-	if v, ok := params["timeout"].(int); ok {
-		req.Timeout = v
-	}
-
-	resp, err := c.Node.Shell(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-```
-
-**Step 2: Add network handlers to registry**
-
-Add to the registry map:
-
-```go
-	// Network operations
-	"network.dns.get":    opNetworkDNSGet,
-	"network.dns.update": opNetworkDNSUpdate,
-	"network.ping.do":    opNetworkPing,
-```
-
-Implement:
-
-```go
-func opNetworkDNSGet(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	interfaceName, _ := params["interface_name"].(string)
-
-	resp, err := c.Node.GetDNS(ctx, target, interfaceName)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNetworkDNSUpdate(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	interfaceName, _ := params["interface_name"].(string)
-
-	var addresses []string
-	if v, ok := params["addresses"]; ok {
-		switch a := v.(type) {
-		case []string:
-			addresses = a
-		case []any:
-			for _, item := range a {
-				if s, ok := item.(string); ok {
-					addresses = append(addresses, s)
-				}
-			}
-		}
-	}
-
-	var searchDomains []string
-	if v, ok := params["search_domains"]; ok {
-		switch a := v.(type) {
-		case []string:
-			searchDomains = a
-		case []any:
-			for _, item := range a {
-				if s, ok := item.(string); ok {
-					searchDomains = append(searchDomains, s)
-				}
-			}
-		}
-	}
-
-	resp, err := c.Node.UpdateDNS(ctx, target, interfaceName, addresses, searchDomains)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opNetworkPing(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	address, _ := params["address"].(string)
-
-	resp, err := c.Node.Ping(ctx, target, address)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-```
-
-**Step 3: Build examples**
-
-Run: `go build examples/sdk/orchestrator/operations/command-exec.go`
-Run: `go build examples/sdk/orchestrator/operations/command-shell.go`
-Run: `go build examples/sdk/orchestrator/operations/network-dns-get.go`
-Run: `go build examples/sdk/orchestrator/operations/network-dns-update.go`
-Run: `go build examples/sdk/orchestrator/operations/network-ping.go`
-Expected: All compile successfully
-
-**Step 4: Commit**
-
-```
-feat(orchestrator): add command and network operation handlers
-```
-
----
-
-### Task 4: Add file and docker operation handlers
-
-**Files:**
-- Modify: `pkg/sdk/orchestrator/registry.go`
-
-**Step 1: Add file handlers to registry**
-
-Add to the registry map:
-
-```go
-	// File operations
-	"file.deploy.execute": opFileDeploy,
-	"file.status.get":     opFileStatus,
-```
-
-Note: `file.upload` is excluded — it requires `io.Reader` which
-doesn't fit the `Params map[string]any` pattern. The `file-upload.go`
-example correctly uses `TaskFunc` for this.
-
-Implement:
-
-```go
-func opFileDeploy(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	req := osapiclient.FileDeployOpts{
-		Target: target,
-	}
-	if v, ok := params["object_name"].(string); ok {
-		req.ObjectName = v
-	}
-	if v, ok := params["path"].(string); ok {
-		req.Path = v
-	}
-	if v, ok := params["content_type"].(string); ok {
-		req.ContentType = v
-	}
-	if v, ok := params["mode"].(string); ok {
-		req.Mode = v
-	}
-	if v, ok := params["owner"].(string); ok {
-		req.Owner = v
-	}
-	if v, ok := params["group"].(string); ok {
-		req.Group = v
-	}
-	if v, ok := params["vars"].(map[string]any); ok {
-		req.Vars = v
-	}
-
-	resp, err := c.Node.FileDeploy(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return &Result{
-		JobID:   r.JobID,
-		Changed: r.Changed,
-		Data:    structToMap(r),
-	}, nil
-}
-
-func opFileStatus(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	path, _ := params["path"].(string)
-
-	resp, err := c.Node.FileStatus(ctx, target, path)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return &Result{
-		JobID:   r.JobID,
-		Changed: r.Changed,
-		Data:    structToMap(r),
-	}, nil
-}
-```
-
-**Step 2: Add docker handlers to registry**
-
-Add to the registry map:
-
-```go
-	// Docker operations
-	"docker.create.execute":  opDockerCreate,
-	"docker.list.get":        opDockerList,
-	"docker.inspect.get":     opDockerInspect,
-	"docker.start.execute":   opDockerStart,
-	"docker.stop.execute":    opDockerStop,
-	"docker.remove.execute":  opDockerRemove,
-	"docker.exec.execute":    opDockerExec,
-	"docker.pull.execute":    opDockerPull,
-```
-
-Implement (each follows the same collection pattern):
-
-```go
-func opDockerCreate(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	body := gen.DockerCreateRequest{}
-	if v, ok := params["image"].(string); ok {
-		body.Image = v
-	}
-	if v, ok := params["name"].(string); ok {
-		body.Name = &v
-	}
-	if v, ok := params["auto_start"].(bool); ok {
-		body.AutoStart = &v
-	}
-	if v, ok := params["command"].([]string); ok {
-		body.Command = &v
-	}
-
-	resp, err := c.Docker.Create(ctx, target, body)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opDockerList(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	var p *gen.GetNodeContainerDockerParams
-	if len(params) > 0 {
-		p = &gen.GetNodeContainerDockerParams{}
-		if v, ok := params["state"].(string); ok {
-			p.State = (*gen.GetNodeContainerDockerParamsState)(&v)
-		}
-	}
-
-	resp, err := c.Docker.List(ctx, target, p)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opDockerInspect(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	id, _ := params["id"].(string)
-
-	resp, err := c.Docker.Inspect(ctx, target, id)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	return collectionResult(r.JobID, r.Results, false), nil
-}
-
-func opDockerStart(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	id, _ := params["id"].(string)
-
-	resp, err := c.Docker.Start(ctx, target, id)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-
-func opDockerStop(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	id, _ := params["id"].(string)
-	body := gen.DockerStopRequest{}
-	if v, ok := params["timeout"].(int); ok {
-		body.Timeout = &v
-	}
-
-	resp, err := c.Docker.Stop(ctx, target, id, body)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-
-func opDockerRemove(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	id, _ := params["id"].(string)
-
-	var p *gen.DeleteNodeContainerDockerByIDParams
-	if v, ok := params["force"].(bool); ok {
-		p = &gen.DeleteNodeContainerDockerByIDParams{Force: &v}
-	}
-
-	resp, err := c.Docker.Remove(ctx, target, id, p)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-
-func opDockerExec(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	id, _ := params["id"].(string)
-	body := gen.DockerExecRequest{}
-
-	if v, ok := params["command"].([]string); ok {
-		body.Command = v
-	}
-
-	resp, err := c.Docker.Exec(ctx, target, id, body)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-
-func opDockerPull(
-	ctx context.Context,
-	c *osapiclient.Client,
-	target string,
-	params map[string]any,
-) (*Result, error) {
-	image, _ := params["image"].(string)
-	body := gen.DockerPullRequest{Image: image}
-
-	resp, err := c.Docker.Pull(ctx, target, body)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resp.Data
-	if len(r.Results) > 0 {
-		return collectionResult(r.JobID, r.Results, r.Results[0].Changed), nil
-	}
-
-	return collectionResult(r.JobID, r.Results, true), nil
-}
-```
-
-**Step 3: Build examples**
-
-Run: `go build examples/sdk/orchestrator/operations/file-deploy.go`
-Run: `go build examples/sdk/orchestrator/operations/file-status.go`
-Expected: Compile successfully
-
-**Step 4: Commit**
-
-```
-feat(orchestrator): add file and docker operation handlers
-```
-
----
-
-### Task 5: Delete docker.go and update tests
+### Task 2: Delete docker.go and its tests
 
 **Files:**
 - Delete: `pkg/sdk/orchestrator/docker.go`
 - Delete: `pkg/sdk/orchestrator/docker_public_test.go`
-- Create: `pkg/sdk/orchestrator/op_public_test.go`
 
-**Step 1: Delete `docker.go` and `docker_public_test.go`**
+**Step 1: Delete the files**
 
 ```bash
 rm pkg/sdk/orchestrator/docker.go
 rm pkg/sdk/orchestrator/docker_public_test.go
 ```
 
-**Step 2: Create `op_public_test.go` with tests for plan.Task()**
+**Step 2: Run tests to verify nothing else depends on them**
 
-Test structure:
-- `OpPublicTestSuite` with testify/suite
-- One method per operation category testing success, error, and
-  unknown operation
-- Use `httptest.Server` to mock API responses (same pattern as
-  the deleted docker tests)
-- Test `task.Operation()` returns the `*Op`
-- Test `structToMap()` helper
-- Test unknown operation returns error
+Run: `go build ./...`
+Expected: Compilation failure in examples that reference `DockerPull` etc.
 
-Cover at minimum:
-- `TestTask` — creates task, verifies name, Operation() accessor
-- `TestTaskUnknownOperation` — unknown op string fails at runtime
-- `TestNodeHostname` — success with httptest mock
-- `TestCommandExec` — success with params extraction
-- `TestDockerPull` — success (replaces deleted docker test)
-- `TestDockerCreate` — success with complex params
-- `TestStructToMap` — helper function
+Note which files fail — these will be fixed in Task 3.
 
-Use valid UUIDs for `job_id` in all mock JSON responses.
+Run: `go test ./pkg/sdk/orchestrator/... -count=1`
+Expected: PASS (docker tests are gone, engine tests still pass)
 
-**Step 3: Run tests**
-
-Run: `go test ./pkg/sdk/orchestrator/... -count=1 -v`
-Expected: PASS
-
-**Step 4: Run coverage**
-
-Run: `go test ./pkg/sdk/orchestrator/... -coverprofile=/tmp/op-cov.out && go tool cover -func=/tmp/op-cov.out | grep -E 'op\.go|registry\.go'`
-Expected: High coverage on op.go and registry.go
-
-**Step 5: Commit**
+**Step 3: Commit**
 
 ```
-refactor(orchestrator): replace docker DSL with Op-based dispatch
+refactor(orchestrator): remove docker DSL methods
+
+Domain-specific operation methods belong in consumer packages
+like osapi-orchestrator, not in the SDK engine. The SDK provides
+CollectionResult and StructToMap as bridge helpers instead.
 ```
 
 ---
 
-### Task 6: Update container-targeting example and add docker operation examples
+### Task 3: Fix container-targeting example to use TaskFunc
 
 **Files:**
 - Modify: `examples/sdk/orchestrator/features/container-targeting.go`
-- Create: `examples/sdk/orchestrator/operations/docker-pull.go`
-- Create: `examples/sdk/orchestrator/operations/docker-create.go`
-- Create: `examples/sdk/orchestrator/operations/docker-list.go`
-- Create: `examples/sdk/orchestrator/operations/docker-inspect.go`
-- Create: `examples/sdk/orchestrator/operations/docker-start.go`
-- Create: `examples/sdk/orchestrator/operations/docker-stop.go`
-- Create: `examples/sdk/orchestrator/operations/docker-remove.go`
-- Create: `examples/sdk/orchestrator/operations/docker-exec.go`
 
-**Step 1: Rewrite `container-targeting.go` to use `plan.Task(&Op{...})`**
+**Step 1: Rewrite to use `plan.TaskFunc()` pattern**
 
-Replace all `plan.DockerPull()`, `plan.DockerCreate()`, etc. with
-`plan.Task(name, &orchestrator.Op{...})`. Keep the same DAG structure
-(pre-cleanup, pull, create, exec x3, inspect, deliberately-fails,
-cleanup).
+Replace `plan.DockerPull()`, `plan.DockerCreate()`, etc. with
+`plan.TaskFunc()` calls that use the SDK client directly — the same
+pattern `osapi-orchestrator` uses. Import `gen` for request types.
 
-Pre-cleanup remains a `TaskFunc` since it swallows errors.
-
-**Step 2: Create docker operation examples**
-
-Follow the exact same pattern as existing operation examples
-(node-hostname.go, command-exec.go, etc.):
-- Same boilerplate (env vars, hooks, plan setup)
-- Single `plan.Task()` call with `&orchestrator.Op{}`
-- Print report
-
-Example `docker-pull.go`:
+Each operation becomes:
 
 ```go
-plan.Task("pull-image", &orchestrator.Op{
-    Operation: "docker.pull.execute",
-    Target:    "_any",
-    Params: map[string]any{
-        "image": "alpine:latest",
-    },
+pull := plan.TaskFunc("pull-image", func(
+    ctx context.Context,
+    c *client.Client,
+) (*orchestrator.Result, error) {
+    resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
+        Image: containerImage,
+    })
+    if err != nil {
+        return nil, err
+    }
+
+    return orchestrator.CollectionResult(resp.Data,
+        func(r client.DockerPullResult) orchestrator.HostResult {
+            return orchestrator.HostResult{
+                Hostname: r.Hostname,
+                Changed:  r.Changed,
+                Error:    r.Error,
+            }
+        },
+    ), nil
 })
 ```
 
-**Step 3: Build every example individually**
+Keep the same DAG structure (pre-cleanup, pull, create, exec x3,
+inspect, deliberately-fails, cleanup).
 
-Run each file through `go build` to verify compilation:
+**Step 2: Build and verify**
+
+Run: `go build examples/sdk/orchestrator/features/container-targeting.go`
+Expected: Compiles successfully
+
+**Step 3: Commit**
+
+```
+refactor: update container-targeting to use TaskFunc with bridge helpers
+```
+
+---
+
+### Task 4: Fix broken operation examples
+
+**Files:**
+- Modify: all 14 files in `examples/sdk/orchestrator/operations/` that use `plan.Task(&Op{...})`
+- Modify: all feature examples in `examples/sdk/orchestrator/features/` that use `plan.Task(&Op{...})`
+
+**Step 1: Rewrite operation examples to use `plan.TaskFunc()`**
+
+Each operation example currently does:
+
+```go
+plan.Task("get-hostname", &orchestrator.Op{
+    Operation: "node.hostname.get",
+    Target:    "_any",
+})
+```
+
+Replace with:
+
+```go
+plan.TaskFunc("get-hostname", func(
+    ctx context.Context,
+    c *client.Client,
+) (*orchestrator.Result, error) {
+    resp, err := c.Node.Hostname(ctx, "_any")
+    if err != nil {
+        return nil, err
+    }
+
+    return orchestrator.CollectionResult(resp.Data,
+        func(r client.HostnameResult) orchestrator.HostResult {
+            return orchestrator.HostResult{
+                Hostname: r.Hostname,
+                Changed:  r.Changed,
+                Error:    r.Error,
+            }
+        },
+    ), nil
+})
+```
+
+Do the same for all 14 operation examples and all feature examples
+that reference `orchestrator.Op`.
+
+**Step 2: Add 8 docker operation examples**
+
+Create one file per docker operation in
+`examples/sdk/orchestrator/operations/`:
+- `docker-pull.go`
+- `docker-create.go`
+- `docker-list.go`
+- `docker-inspect.go`
+- `docker-start.go`
+- `docker-stop.go`
+- `docker-remove.go`
+- `docker-exec.go`
+
+Follow the same pattern as the node/command/file examples.
+
+**Step 3: Build every example individually**
 
 ```bash
 for f in examples/sdk/orchestrator/operations/*.go; do
-    go build "$f" && echo "OK: $f" || echo "FAIL: $f"
+    go build "$f" 2>&1 || echo "FAIL: $f"
 done
 for f in examples/sdk/orchestrator/features/*.go; do
-    go build "$f" && echo "OK: $f" || echo "FAIL: $f"
+    go build "$f" 2>&1 || echo "FAIL: $f"
 done
 ```
 
-Expected: ALL files compile successfully. Zero failures.
+Expected: ALL files compile. Zero failures.
 
 **Step 4: Commit**
 
 ```
-refactor(orchestrator): update examples to use Op-based API
+fix: rewrite orchestrator examples to use TaskFunc
 ```
 
 ---
 
-### Task 7: Update orchestrator operation docs
+### Task 5: Update orchestrator docs
 
 **Files:**
 - Modify: `docs/docs/sidebar/sdk/orchestrator/orchestrator.md`
 - Modify: `docs/docs/sidebar/sdk/orchestrator/operations/docker-*.md` (8 files)
+- Modify: all operation doc pages that show `plan.Task(&Op{...})` pattern
 
-**Step 1: Update docker operation docs**
+**Step 1: Update operation docs**
 
-Each docker operation doc currently shows the old `c.Docker.*` SDK
-pattern. Update to show the `plan.Task(&Op{...})` pattern matching
-the new examples.
+Each operation doc currently shows the `plan.Task(&Op{...})` pattern.
+Update to show the `plan.TaskFunc()` pattern with `CollectionResult`.
 
-**Step 2: Remove `file.upload` from operations table**
+Also update the orchestrator overview to document `CollectionResult`
+and `StructToMap` as SDK-provided bridge helpers.
 
-`file.upload` doesn't fit the `Op` pattern (requires `io.Reader`).
-Remove it from the operations table in `orchestrator.md` and update
-the `file-upload.md` doc to clarify it uses `TaskFunc`.
-
-**Step 3: Build docs**
+**Step 2: Build docs**
 
 Run: `cd docs && bun run build`
-Expected: Build succeeds with no broken links
+Expected: Build succeeds, no broken links
 
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```
-docs: update orchestrator docs for Op-based API
+docs: update orchestrator docs for TaskFunc pattern
 ```
 
 ---
 
-### Task 8: Final verification
+### Task 6: Final verification
 
 **Step 1: Full test suite**
 
@@ -955,14 +462,21 @@ Expected: All packages pass
 
 **Step 2: Lint and format**
 
-Run: `find . -type f -name '*.go' -not -name '*.gen.go' -not -name '*.pb.go' -not -path './.worktrees/*' -not -path './.claude/*' | xargs go tool github.com/segmentio/golines --base-formatter="go tool mvdan.cc/gofumpt" -w`
-Run: `go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --config .golangci.yml`
+Run formatter and linter:
+```bash
+find . -type f -name '*.go' -not -name '*.gen.go' -not -name '*.pb.go' \
+  -not -path './.worktrees/*' -not -path './.claude/*' \
+  | xargs go tool github.com/segmentio/golines \
+    --base-formatter="go tool mvdan.cc/gofumpt" -w
+go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run \
+  --config .golangci.yml
+```
 Expected: 0 issues
 
-**Step 3: Coverage check**
+**Step 3: Coverage**
 
-Run: `go test ./pkg/sdk/orchestrator/... -coverprofile=/tmp/orch.out && go tool cover -func=/tmp/orch.out | grep -E 'op\.go|registry\.go'`
-Expected: 100% on op.go, high coverage on registry.go
+Run: `go test ./pkg/sdk/orchestrator/... -coverprofile=/tmp/orch.out && go tool cover -func=/tmp/orch.out | grep bridge`
+Expected: 100% on bridge.go
 
 **Step 4: Verify all examples compile**
 
@@ -975,7 +489,7 @@ for f in examples/sdk/orchestrator/features/*.go; do
 done
 ```
 
-Expected: Zero compilation failures
+Expected: Zero failures
 
 **Step 5: Build docs**
 
