@@ -27,10 +27,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit/export"
+	exportmocks "github.com/retr0h/osapi/internal/audit/export/mocks"
 )
 
 type ExportPublicTestSuite struct {
@@ -63,25 +65,58 @@ func (suite *ExportPublicTestSuite) newEntry(
 
 func (suite *ExportPublicTestSuite) TestRun() {
 	tests := []struct {
-		name         string
-		fetcher      export.Fetcher
-		exporter     *mockExporter
+		name          string
+		fetcher       export.Fetcher
+		setupExporter func(
+			ctrl *gomock.Controller,
+			opened *bool,
+			closed *bool,
+			entries *[]client.AuditEntry,
+		) *exportmocks.MockExporter
 		batchSize    int
-		validateFunc func(exp *mockExporter, result *export.Result, err error)
+		validateFunc func(
+			opened bool,
+			closed bool,
+			entries []client.AuditEntry,
+			result *export.Result,
+			err error,
+		)
 	}{
 		{
 			name: "when no entries returns zero counts",
 			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
-			exporter:  &mockExporter{},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				opened *bool,
+				closed *bool,
+				_ *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).DoAndReturn(func(_ context.Context) error {
+					*opened = true
+					return nil
+				})
+				m.EXPECT().Close(gomock.Any()).DoAndReturn(func(_ context.Context) error {
+					*closed = true
+					return nil
+				})
+				return m
+			},
 			batchSize: 100,
-			validateFunc: func(exp *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				opened bool,
+				closed bool,
+				_ []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.NoError(err)
 				suite.Equal(0, result.TotalEntries)
 				suite.Equal(0, result.ExportedEntries)
-				suite.True(exp.opened)
-				suite.True(exp.closed)
+				suite.True(opened)
+				suite.True(closed)
 			},
 		},
 		{
@@ -92,15 +127,37 @@ func (suite *ExportPublicTestSuite) TestRun() {
 					suite.newEntry("bob@example.com"),
 				}, 2, nil
 			},
-			exporter:  &mockExporter{},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				entries *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(nil)
+				m.EXPECT().Write(gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, entry client.AuditEntry) error {
+						*entries = append(*entries, entry)
+						return nil
+					},
+				).Times(2)
+				m.EXPECT().Close(gomock.Any()).Return(nil)
+				return m
+			},
 			batchSize: 100,
-			validateFunc: func(exp *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				entries []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.NoError(err)
 				suite.Equal(2, result.TotalEntries)
 				suite.Equal(2, result.ExportedEntries)
-				suite.Len(exp.entries, 2)
-				suite.Equal("alice@example.com", exp.entries[0].User)
-				suite.Equal("bob@example.com", exp.entries[1].User)
+				suite.Len(entries, 2)
+				suite.Equal("alice@example.com", entries[0].User)
+				suite.Equal("bob@example.com", entries[1].User)
 			},
 		},
 		{
@@ -109,13 +166,35 @@ func (suite *ExportPublicTestSuite) TestRun() {
 				{suite.newEntry("alice@example.com"), suite.newEntry("bob@example.com")},
 				{suite.newEntry("charlie@example.com")},
 			}, 3),
-			exporter:  &mockExporter{},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				entries *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(nil)
+				m.EXPECT().Write(gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, entry client.AuditEntry) error {
+						*entries = append(*entries, entry)
+						return nil
+					},
+				).Times(3)
+				m.EXPECT().Close(gomock.Any()).Return(nil)
+				return m
+			},
 			batchSize: 2,
-			validateFunc: func(exp *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				entries []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.NoError(err)
 				suite.Equal(3, result.TotalEntries)
 				suite.Equal(3, result.ExportedEntries)
-				suite.Len(exp.entries, 3)
+				suite.Len(entries, 3)
 			},
 		},
 		{
@@ -126,9 +205,26 @@ func (suite *ExportPublicTestSuite) TestRun() {
 				}
 				return []client.AuditEntry{suite.newEntry("alice@example.com")}, 3, nil
 			},
-			exporter:  &mockExporter{},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				_ *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(nil)
+				m.EXPECT().Write(gomock.Any(), gomock.Any()).Return(nil)
+				m.EXPECT().Close(gomock.Any()).Return(nil)
+				return m
+			},
 			batchSize: 1,
-			validateFunc: func(_ *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				_ []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "fetching entries at offset 1")
 				suite.Contains(err.Error(), "connection lost")
@@ -141,9 +237,26 @@ func (suite *ExportPublicTestSuite) TestRun() {
 			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return []client.AuditEntry{suite.newEntry("alice@example.com")}, 1, nil
 			},
-			exporter:  &mockExporter{writeErr: fmt.Errorf("disk full")},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				_ *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(nil)
+				m.EXPECT().Write(gomock.Any(), gomock.Any()).Return(fmt.Errorf("disk full"))
+				m.EXPECT().Close(gomock.Any()).Return(nil)
+				return m
+			},
 			batchSize: 100,
-			validateFunc: func(_ *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				_ []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "writing entry")
 				suite.Equal(0, result.ExportedEntries)
@@ -154,9 +267,24 @@ func (suite *ExportPublicTestSuite) TestRun() {
 			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
-			exporter:  &mockExporter{openErr: fmt.Errorf("permission denied")},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				_ *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(fmt.Errorf("permission denied"))
+				return m
+			},
 			batchSize: 100,
-			validateFunc: func(_ *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				_ []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.Error(err)
 				suite.Contains(err.Error(), "opening exporter")
 				suite.Nil(result)
@@ -167,9 +295,25 @@ func (suite *ExportPublicTestSuite) TestRun() {
 			fetcher: func(_ context.Context, _, _ int) ([]client.AuditEntry, int, error) {
 				return nil, 0, nil
 			},
-			exporter:  &mockExporter{closeErr: fmt.Errorf("close failed")},
+			setupExporter: func(
+				ctrl *gomock.Controller,
+				_ *bool,
+				_ *bool,
+				_ *[]client.AuditEntry,
+			) *exportmocks.MockExporter {
+				m := exportmocks.NewMockExporter(ctrl)
+				m.EXPECT().Open(gomock.Any()).Return(nil)
+				m.EXPECT().Close(gomock.Any()).Return(fmt.Errorf("close failed"))
+				return m
+			},
 			batchSize: 100,
-			validateFunc: func(_ *mockExporter, result *export.Result, err error) {
+			validateFunc: func(
+				_ bool,
+				_ bool,
+				_ []client.AuditEntry,
+				result *export.Result,
+				err error,
+			) {
 				suite.NoError(err)
 				suite.Equal(0, result.TotalEntries)
 				suite.Equal(0, result.ExportedEntries)
@@ -179,15 +323,20 @@ func (suite *ExportPublicTestSuite) TestRun() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			var opened, closed bool
+			var entries []client.AuditEntry
+			mockExp := tc.setupExporter(ctrl, &opened, &closed, &entries)
+
 			result, err := export.Run(
 				suite.ctx,
 				suite.logger,
 				tc.fetcher,
-				tc.exporter,
+				mockExp,
 				tc.batchSize,
 				nil,
 			)
-			tc.validateFunc(tc.exporter, result, err)
+			tc.validateFunc(opened, closed, entries, result, err)
 		})
 	}
 }
@@ -218,6 +367,12 @@ func (suite *ExportPublicTestSuite) TestRunProgress() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			m := exportmocks.NewMockExporter(ctrl)
+			m.EXPECT().Open(gomock.Any()).Return(nil)
+			m.EXPECT().Write(gomock.Any(), gomock.Any()).Return(nil).Times(3)
+			m.EXPECT().Close(gomock.Any()).Return(nil)
+
 			var calls []progressCall
 			onProgress := func(exported int, total int) {
 				calls = append(calls, progressCall{exported: exported, total: total})
@@ -227,7 +382,7 @@ func (suite *ExportPublicTestSuite) TestRunProgress() {
 				suite.ctx,
 				suite.logger,
 				tc.fetcher,
-				&mockExporter{},
+				m,
 				tc.batchSize,
 				onProgress,
 			)
@@ -239,44 +394,6 @@ func (suite *ExportPublicTestSuite) TestRunProgress() {
 
 func TestExportPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ExportPublicTestSuite))
-}
-
-// mockExporter implements export.Exporter for testing.
-type mockExporter struct {
-	opened   bool
-	closed   bool
-	entries  []client.AuditEntry
-	openErr  error
-	writeErr error
-	closeErr error
-}
-
-func (m *mockExporter) Open(
-	_ context.Context,
-) error {
-	if m.openErr != nil {
-		return m.openErr
-	}
-	m.opened = true
-	return nil
-}
-
-func (m *mockExporter) Write(
-	_ context.Context,
-	entry client.AuditEntry,
-) error {
-	if m.writeErr != nil {
-		return m.writeErr
-	}
-	m.entries = append(m.entries, entry)
-	return nil
-}
-
-func (m *mockExporter) Close(
-	_ context.Context,
-) error {
-	m.closed = true
-	return m.closeErr
 }
 
 type progressCall struct {

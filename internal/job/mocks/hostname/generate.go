@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,8 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package mocks provides mock implementations for testing.
-package mocks
+// Package hostname provides mock implementations for HostnameProvider testing.
+package hostname
 
-//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
-//go:generate go tool github.com/golang/mock/mockgen -source=../client.go -destination=docker_client.gen.go -package=mocks
+//go:generate go tool github.com/golang/mock/mockgen -destination=hostname_provider.gen.go -package=hostname github.com/retr0h/osapi/internal/job HostnameProvider

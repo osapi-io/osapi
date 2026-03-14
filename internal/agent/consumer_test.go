@@ -28,11 +28,11 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
+	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
@@ -588,11 +588,10 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			// Create mock JetStream message
-			mockMsg := &mockJetStreamMsg{
-				subject: tt.msgSubject,
-				data:    tt.msgData,
-			}
+			mockMsg := agentmocks.NewMockMsg(s.mockCtrl)
+			mockMsg.EXPECT().Subject().Return(tt.msgSubject).AnyTimes()
+			mockMsg.EXPECT().Data().Return(tt.msgData).AnyTimes()
+			mockMsg.EXPECT().Headers().Return(nil).AnyTimes()
 
 			err := s.agent.handleJobMessageJS(mockMsg)
 
@@ -605,25 +604,6 @@ func (s *ConsumerTestSuite) TestHandleJobMessageJS() {
 		})
 	}
 }
-
-// mockJetStreamMsg implements jetstream.Msg interface for testing
-type mockJetStreamMsg struct {
-	subject string
-	data    []byte
-}
-
-func (m *mockJetStreamMsg) Subject() string                           { return m.subject }
-func (m *mockJetStreamMsg) Data() []byte                              { return m.data }
-func (m *mockJetStreamMsg) Headers() nats.Header                      { return nil }
-func (m *mockJetStreamMsg) Reply() string                             { return "" }
-func (m *mockJetStreamMsg) Metadata() (*jetstream.MsgMetadata, error) { return nil, nil }
-func (m *mockJetStreamMsg) Ack() error                                { return nil }
-func (m *mockJetStreamMsg) DoubleAck(_ context.Context) error         { return nil }
-func (m *mockJetStreamMsg) Nak() error                                { return nil }
-func (m *mockJetStreamMsg) NakWithDelay(time.Duration) error          { return nil }
-func (m *mockJetStreamMsg) Term() error                               { return nil }
-func (m *mockJetStreamMsg) TermWithReason(string) error               { return nil }
-func (m *mockJetStreamMsg) InProgress() error                         { return nil }
 
 func TestConsumerTestSuite(t *testing.T) {
 	suite.Run(t, new(ConsumerTestSuite))

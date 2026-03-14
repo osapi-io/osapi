@@ -24,19 +24,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
 )
-
-// mockHostnameProvider for testing
-type mockHostnameProvider struct {
-	hostname string
-	err      error
-}
-
-func (m *mockHostnameProvider) Hostname() (string, error) {
-	return m.hostname, m.err
-}
 
 type HostnameTestSuite struct {
 	suite.Suite
@@ -84,10 +75,6 @@ func (s *HostnameTestSuite) TestHostnameProviderInterface() {
 		{
 			name:     "gopsutilHostnameProvider implements interface",
 			provider: gopsutilHostnameProvider{},
-		},
-		{
-			name:     "mockHostnameProvider implements interface",
-			provider: &mockHostnameProvider{},
 		},
 	}
 
@@ -137,13 +124,14 @@ func (s *HostnameTestSuite) TestGetAgentHostnameProviderError() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			mockProvider := NewMockHostnameProvider(ctrl)
+			mockProvider.EXPECT().Hostname().Return("", errors.New("provider error"))
+
 			original := defaultHostnameProvider
 			defer func() { defaultHostnameProvider = original }()
 
-			defaultHostnameProvider = &mockHostnameProvider{
-				hostname: "",
-				err:      errors.New("provider error"),
-			}
+			defaultHostnameProvider = mockProvider
 
 			hostname, err := GetAgentHostname("")
 

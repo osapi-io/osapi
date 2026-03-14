@@ -22,7 +22,7 @@ import (
 
 // Client implements Driver using the Docker Engine API.
 type Client struct {
-	client dockerclient.APIClient
+	client APIClient
 }
 
 // New creates a new Docker provider using default client options.
@@ -40,7 +40,7 @@ func New() (*Client, error) {
 
 // NewWithClient creates a Docker provider with an injected client (for testing).
 func NewWithClient(
-	client dockerclient.APIClient,
+	client APIClient,
 ) *Client {
 	return &Client{client: client}
 }
