@@ -40,30 +40,30 @@ report, err := plan.Run(context.Background())
 Operations are the building blocks of orchestration plans. Each operation maps
 to an OSAPI job type that agents execute.
 
-| Operation                                                 | Description            | Idempotent | Category |
-| --------------------------------------------------------- | ---------------------- | ---------- | -------- |
-| [`command.exec.execute`](operations/command-exec.md)      | Execute a command      | No         | Command  |
-| [`command.shell.execute`](operations/command-shell.md)    | Execute a shell string | No         | Command  |
-| [`file.deploy.execute`](operations/file-deploy.md)        | Deploy file to agent   | Yes        | File     |
-| [`file.status.get`](operations/file-status.md)            | Check file status      | Read-only  | File     |
-| [`file.upload`](operations/file-upload.md)                | Upload to Object Store | Yes        | File     |
-| [`network.dns.get`](operations/network-dns-get.md)        | Get DNS configuration  | Read-only  | Network  |
-| [`network.dns.update`](operations/network-dns-update.md)  | Update DNS servers     | Yes        | Network  |
-| [`network.ping.do`](operations/network-ping.md)           | Ping a host            | Read-only  | Network  |
-| [`node.hostname.get`](operations/node-hostname.md)        | Get system hostname    | Read-only  | Node     |
-| [`node.status.get`](operations/node-status.md)            | Get node status        | Read-only  | Node     |
-| [`node.disk.get`](operations/node-disk.md)                | Get disk usage         | Read-only  | Node     |
-| [`node.memory.get`](operations/node-memory.md)            | Get memory stats       | Read-only  | Node     |
-| [`node.uptime.get`](operations/node-uptime.md)            | Get system uptime      | Read-only  | Node     |
-| [`node.load.get`](operations/node-load.md)                | Get load averages      | Read-only  | Node     |
-| [`docker.create.execute`](operations/docker-create.md) | Create a container     | No         | Docker   |
-| [`docker.list.get`](operations/docker-list.md)         | List containers        | Read-only  | Docker   |
-| [`docker.inspect.get`](operations/docker-inspect.md)   | Inspect a container    | Read-only  | Docker   |
-| [`docker.start.execute`](operations/docker-start.md)   | Start a container      | No         | Docker   |
-| [`docker.stop.execute`](operations/docker-stop.md)     | Stop a container       | No         | Docker   |
-| [`docker.remove.execute`](operations/docker-remove.md) | Remove a container     | No         | Docker   |
-| [`docker.exec.execute`](operations/docker-exec.md)     | Exec in a container    | No         | Docker   |
-| [`docker.pull.execute`](operations/docker-pull.md)     | Pull a container image | No         | Docker   |
+| Operation                                                | Description            | Idempotent | Category |
+| -------------------------------------------------------- | ---------------------- | ---------- | -------- |
+| [`command.exec.execute`](operations/command-exec.md)     | Execute a command      | No         | Command  |
+| [`command.shell.execute`](operations/command-shell.md)   | Execute a shell string | No         | Command  |
+| [`file.deploy.execute`](operations/file-deploy.md)       | Deploy file to agent   | Yes        | File     |
+| [`file.status.get`](operations/file-status.md)           | Check file status      | Read-only  | File     |
+| [`file.upload`](operations/file-upload.md)               | Upload to Object Store | Yes        | File     |
+| [`network.dns.get`](operations/network-dns-get.md)       | Get DNS configuration  | Read-only  | Network  |
+| [`network.dns.update`](operations/network-dns-update.md) | Update DNS servers     | Yes        | Network  |
+| [`network.ping.do`](operations/network-ping.md)          | Ping a host            | Read-only  | Network  |
+| [`node.hostname.get`](operations/node-hostname.md)       | Get system hostname    | Read-only  | Node     |
+| [`node.status.get`](operations/node-status.md)           | Get node status        | Read-only  | Node     |
+| [`node.disk.get`](operations/node-disk.md)               | Get disk usage         | Read-only  | Node     |
+| [`node.memory.get`](operations/node-memory.md)           | Get memory stats       | Read-only  | Node     |
+| [`node.uptime.get`](operations/node-uptime.md)           | Get system uptime      | Read-only  | Node     |
+| [`node.load.get`](operations/node-load.md)               | Get load averages      | Read-only  | Node     |
+| [`docker.create.execute`](operations/docker-create.md)   | Create a container     | No         | Docker   |
+| [`docker.list.get`](operations/docker-list.md)           | List containers        | Read-only  | Docker   |
+| [`docker.inspect.get`](operations/docker-inspect.md)     | Inspect a container    | Read-only  | Docker   |
+| [`docker.start.execute`](operations/docker-start.md)     | Start a container      | No         | Docker   |
+| [`docker.stop.execute`](operations/docker-stop.md)       | Stop a container       | No         | Docker   |
+| [`docker.remove.execute`](operations/docker-remove.md)   | Remove a container     | No         | Docker   |
+| [`docker.exec.execute`](operations/docker-exec.md)       | Exec in a container    | No         | Docker   |
+| [`docker.pull.execute`](operations/docker-pull.md)       | Pull a container image | No         | Docker   |
 
 ### Idempotency
 
