@@ -174,14 +174,14 @@ Per-host data for broadcast operations (targeting `_all` or label selectors):
 
 ## Bridge Helpers
 
-Two helpers simplify converting SDK client responses into orchestrator
-`Result` values.
+Two helpers simplify converting SDK client responses into orchestrator `Result`
+values.
 
 ### CollectionResult
 
-`CollectionResult` converts a collection response (any SDK call that
-returns per-host results) into an orchestrator `Result` with populated
-`HostResults`. Use it for most operations:
+`CollectionResult` converts a collection response (any SDK call that returns
+per-host results) into an orchestrator `Result` with populated `HostResults`.
+Use it for most operations:
 
 ```go
 return orchestrator.CollectionResult(
@@ -196,15 +196,15 @@ return orchestrator.CollectionResult(
 ), nil
 ```
 
-The first argument is the SDK response data (which must have a
-`Results` field). The second is a mapper function that converts each
-per-host result into an `orchestrator.HostResult`.
+The first argument is the SDK response data (which must have a `Results` field).
+The second is a mapper function that converts each per-host result into an
+`orchestrator.HostResult`.
 
 ### StructToMap
 
 `StructToMap` converts a Go struct into a `map[string]any` using JSON
-round-tripping. Use it for non-collection responses where you want to
-store the full response in `Result.Data`:
+round-tripping. Use it for non-collection responses where you want to store the
+full response in `Result.Data`:
 
 ```go
 return &orchestrator.Result{
