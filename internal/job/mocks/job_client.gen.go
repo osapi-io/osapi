@@ -318,6 +318,21 @@ func (mr *MockJobClientMockRecorder) ModifyDockerExec(arg0, arg1, arg2, arg3 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerExec", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerExec), arg0, arg1, arg2, arg3)
 }
 
+// ModifyDockerImageRemove mocks base method.
+func (m *MockJobClient) ModifyDockerImageRemove(arg0 context.Context, arg1 string, arg2 *job.DockerImageRemoveData) (*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerImageRemove", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*job.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifyDockerImageRemove indicates an expected call of ModifyDockerImageRemove.
+func (mr *MockJobClientMockRecorder) ModifyDockerImageRemove(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerImageRemove", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerImageRemove), arg0, arg1, arg2)
+}
+
 // ModifyDockerPull mocks base method.
 func (m *MockJobClient) ModifyDockerPull(arg0 context.Context, arg1 string, arg2 *job.DockerPullData) (*job.Response, error) {
 	m.ctrl.T.Helper()

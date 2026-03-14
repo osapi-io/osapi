@@ -264,6 +264,35 @@ func (c *Client) ModifyDockerExec(
 	return resp, nil
 }
 
+// ModifyDockerImageRemove removes a docker image on a target.
+func (c *Client) ModifyDockerImageRemove(
+	ctx context.Context,
+	target string,
+	data *job.DockerImageRemoveData,
+) (*job.Response, error) {
+	dataBytes, _ := json.Marshal(data)
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "docker",
+		Operation: job.OperationDockerImageRemove,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == "failed" {
+		return nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	resp.JobID = jobID
+
+	return resp, nil
+}
+
 // ModifyDockerPull pulls a docker image on a target.
 func (c *Client) ModifyDockerPull(
 	ctx context.Context,

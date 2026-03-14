@@ -24,7 +24,7 @@
 //
 // Expected output statuses:
 //
-//	changed   — pull, create, exec, cleanup
+//	changed   — pull, create, exec, cleanup, cleanup-image
 //	unchanged — inspect (read-only)
 //	failed    — deliberately-fails (returns an error)
 //
@@ -283,8 +283,9 @@ func main() {
 
 	// ── Cleanup ──────────────────────────────────────────────────
 	// Depends on all tasks that use the container so it runs last.
+	// Removes the container first, then the image.
 
-	plan.TaskFunc("cleanup",
+	cleanup := plan.TaskFunc("cleanup",
 		func(
 			ctx context.Context,
 			c *client.Client,
@@ -306,7 +307,32 @@ func main() {
 				},
 			)
 		},
-	).DependsOn(execHostname, execUname, execOS, inspect)
+	)
+	cleanup.DependsOn(execHostname, execUname, execOS, inspect)
+
+	plan.TaskFunc("cleanup-image",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.ImageRemove(ctx, target, containerImage,
+				&client.DockerImageRemoveParams{Force: false},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r client.DockerActionResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	).DependsOn(cleanup)
 
 	// ── Run ──────────────────────────────────────────────────────
 

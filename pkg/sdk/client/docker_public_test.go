@@ -1242,6 +1242,151 @@ func (suite *DockerPublicTestSuite) TestPull() {
 	}
 }
 
+func (suite *DockerPublicTestSuite) TestImageRemove() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		params       *client.DockerImageRemoveParams
+		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
+	}{
+		{
+			name: "when removing image returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerActionResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("web-01", resp.Data.Results[0].Hostname)
+				suite.Equal("nginx:latest", resp.Data.Results[0].ID)
+				suite.Equal("image removed", resp.Data.Results[0].Message)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name: "when removing image with force returns result",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				suite.Equal("true", r.URL.Query().Get("force"))
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
+					),
+				)
+			},
+			params: &client.DockerImageRemoveParams{
+				Force: true,
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerActionResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("nginx:latest", resp.Data.Results[0].ID)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerActionResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerActionResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "docker image remove")
+			},
+		},
+		{
+			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusAccepted)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.DockerActionResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Docker.ImageRemove(
+				suite.ctx,
+				"_any",
+				"nginx:latest",
+				tc.params,
+			)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func TestDockerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(DockerPublicTestSuite))
 }

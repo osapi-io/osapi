@@ -61,6 +61,8 @@ func (a *Agent) processDockerOperation(
 		return a.processDockerExec(ctx, jobRequest)
 	case "pull":
 		return a.processDockerPull(ctx, jobRequest)
+	case "image-remove":
+		return a.processDockerImageRemove(ctx, jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported docker operation: %s", jobRequest.Operation)
 	}
@@ -252,6 +254,24 @@ func (a *Agent) processDockerPull(
 	}
 
 	result, err := a.dockerProvider.Pull(ctx, data.Image)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(result)
+}
+
+// processDockerImageRemove handles removing a docker image.
+func (a *Agent) processDockerImageRemove(
+	ctx context.Context,
+	jobRequest job.Request,
+) (json.RawMessage, error) {
+	var data job.DockerImageRemoveData
+	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal image-remove data: %w", err)
+	}
+
+	result, err := a.dockerProvider.ImageRemove(ctx, data.Image, data.Force)
 	if err != nil {
 		return nil, err
 	}

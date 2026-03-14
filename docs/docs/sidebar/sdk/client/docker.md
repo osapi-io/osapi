@@ -19,6 +19,7 @@ remove, exec, and pull operations.
 | `Remove(ctx, hostname, id, p)`  | Remove a container               |
 | `Exec(ctx, hostname, id, opts)` | Execute a command in a container |
 | `Pull(ctx, hostname, opts)`     | Pull a container image           |
+| `ImageRemove(ctx, hostname, image, p)` | Remove a container image  |
 
 ## Request Types
 
@@ -33,6 +34,7 @@ import `gen`.
 | `DockerRemoveParams` | Force                                                |
 | `DockerPullOpts`     | Image                                                |
 | `DockerExecOpts`     | Command                                              |
+| `DockerImageRemoveParams` | Force                                           |
 
 ## Usage
 
@@ -70,10 +72,15 @@ resp, err := c.Docker.Stop(ctx, "_any", "web", client.DockerStopOpts{
     Timeout: 30,
 })
 
-// Force remove
+// Force remove container
 resp, err := c.Docker.Remove(ctx, "_any", "web", &client.DockerRemoveParams{
     Force: true,
 })
+
+// Remove an image
+resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
+    &client.DockerImageRemoveParams{Force: true},
+)
 ```
 
 ## Permissions
@@ -88,3 +95,4 @@ resp, err := c.Docker.Remove(ctx, "_any", "web", &client.DockerRemoveParams{
 | Remove    | `docker:write`   |
 | Exec      | `docker:execute` |
 | Pull      | `docker:write`   |
+| ImageRemove | `docker:write` |
