@@ -42,8 +42,8 @@ func (f *File) PostFile(
 	request gen.PostFileRequestObject,
 ) (gen.PostFileResponseObject, error) {
 	// Defense-in-depth: the OpenAPI validator handles param validation before
-	// the handler runs, but we validate here too so the plumbing is in place
-	// if a future param adds stricter tags.
+	// Defense in depth: current params cannot fail validation, but
+	// guards against future parameter additions.
 	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.PostFile400JSONResponse{Error: &errMsg}, nil
 	}
