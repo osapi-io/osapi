@@ -1,0 +1,62 @@
+package orchestrator
+
+import (
+	"encoding/json"
+
+	client "github.com/retr0h/osapi/pkg/sdk/client"
+)
+
+// StructToMap converts a struct to map[string]any using its JSON tags.
+// Returns nil if v is nil or cannot be marshaled.
+func StructToMap(
+	v any,
+) map[string]any {
+	if v == nil {
+		return nil
+	}
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil
+	}
+
+	return m
+}
+
+// CollectionResult builds a Result from a Collection response.
+// It iterates all results, applies the toHostResult mapper to build
+// per-host details, and auto-populates HostResult.Data via StructToMap
+// when the mapper leaves it nil. Changed is true if any host reported
+// a change.
+func CollectionResult[T any](
+	col client.Collection[T],
+	toHostResult func(T) HostResult,
+) *Result {
+	hostResults := make([]HostResult, 0, len(col.Results))
+	changed := false
+
+	for _, r := range col.Results {
+		hr := toHostResult(r)
+
+		if hr.Data == nil {
+			hr.Data = StructToMap(r)
+		}
+
+		if hr.Changed {
+			changed = true
+		}
+
+		hostResults = append(hostResults, hr)
+	}
+
+	return &Result{
+		JobID:       col.JobID,
+		Changed:     changed,
+		HostResults: hostResults,
+	}
+}
