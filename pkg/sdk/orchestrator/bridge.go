@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"fmt"
 
 	client "github.com/retr0h/osapi/pkg/sdk/client"
 )
@@ -44,7 +45,7 @@ func CollectionResult[T any](
 	col client.Collection[T],
 	rawJSON []byte,
 	toHostResult func(T) HostResult,
-) *Result {
+) (*Result, error) {
 	hostResults := make([]HostResult, 0, len(col.Results))
 	changed := false
 
@@ -64,7 +65,9 @@ func CollectionResult[T any](
 
 	var data map[string]any
 	if len(rawJSON) > 0 {
-		_ = jsonUnmarshalFn(rawJSON, &data)
+		if err := jsonUnmarshalFn(rawJSON, &data); err != nil {
+			return nil, fmt.Errorf("unmarshal response data: %w", err)
+		}
 	}
 
 	return &Result{
@@ -72,5 +75,5 @@ func CollectionResult[T any](
 		Changed:     changed,
 		Data:        data,
 		HostResults: hostResults,
-	}
+	}, nil
 }

@@ -108,6 +108,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		col        client.Collection[client.HostnameResult]
 		rawJSON    []byte
 		toHost     func(client.HostnameResult) orchestrator.HostResult
+		expectErr  bool
 		validateFn func(result *orchestrator.Result)
 	}{
 		{
@@ -237,28 +238,35 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 		},
 		{
-			name: "invalid rawJSON leaves Result.Data nil",
+			name: "invalid rawJSON returns error",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
 					{Hostname: "web-01"},
 				},
 				JobID: "job-bad",
 			},
-			rawJSON: []byte(`not valid json`),
-			toHost:  mapper,
-			validateFn: func(result *orchestrator.Result) {
-				s.Nil(result.Data)
-			},
+			rawJSON:   []byte(`not valid json`),
+			toHost:    mapper,
+			expectErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result := orchestrator.CollectionResult(
+			result, err := orchestrator.CollectionResult(
 				tt.col,
 				tt.rawJSON,
 				tt.toHost,
 			)
+
+			if tt.expectErr {
+				s.Error(err)
+				s.Nil(result)
+
+				return
+			}
+
+			s.NoError(err)
 			s.Require().NotNil(result)
 			tt.validateFn(result)
 		})
