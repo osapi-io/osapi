@@ -28,81 +28,81 @@ import (
 
 // Agent represents a registered OSAPI agent.
 type Agent struct {
-	Hostname         string
-	Status           string
-	State            string
-	Labels           map[string]string
-	Architecture     string
-	CPUCount         int
-	Fqdn             string
-	KernelVersion    string
-	PackageMgr       string
-	ServiceMgr       string
-	LoadAverage      *LoadAverage
-	Memory           *Memory
-	OSInfo           *OSInfo
-	PrimaryInterface string
-	Interfaces       []NetworkInterface
-	Routes           []Route
-	Conditions       []Condition
-	Timeline         []TimelineEvent
-	Uptime           string
-	StartedAt        time.Time
-	RegisteredAt     time.Time
-	Facts            map[string]any
+	Hostname         string             `json:"hostname"`
+	Status           string             `json:"status"`
+	State            string             `json:"state,omitempty"`
+	Labels           map[string]string  `json:"labels,omitempty"`
+	Architecture     string             `json:"architecture,omitempty"`
+	CPUCount         int                `json:"cpu_count"`
+	Fqdn             string             `json:"fqdn,omitempty"`
+	KernelVersion    string             `json:"kernel_version,omitempty"`
+	PackageMgr       string             `json:"package_mgr,omitempty"`
+	ServiceMgr       string             `json:"service_mgr,omitempty"`
+	LoadAverage      *LoadAverage       `json:"load_average,omitempty"`
+	Memory           *Memory            `json:"memory,omitempty"`
+	OSInfo           *OSInfo            `json:"os_info,omitempty"`
+	PrimaryInterface string             `json:"primary_interface,omitempty"`
+	Interfaces       []NetworkInterface `json:"interfaces,omitempty"`
+	Routes           []Route            `json:"routes,omitempty"`
+	Conditions       []Condition        `json:"conditions,omitempty"`
+	Timeline         []TimelineEvent    `json:"timeline,omitempty"`
+	Uptime           string             `json:"uptime,omitempty"`
+	StartedAt        time.Time          `json:"started_at"`
+	RegisteredAt     time.Time          `json:"registered_at"`
+	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
 // Condition represents a node condition evaluated agent-side.
 type Condition struct {
-	Type               string
-	Status             bool
-	Reason             string
-	LastTransitionTime time.Time
+	Type               string    `json:"type"`
+	Status             bool      `json:"status"`
+	Reason             string    `json:"reason,omitempty"`
+	LastTransitionTime time.Time `json:"last_transition_time"`
 }
 
 // AgentList is a collection of agents.
 type AgentList struct {
-	Agents []Agent
-	Total  int
+	Agents []Agent `json:"agents"`
+	Total  int     `json:"total"`
 }
 
 // NetworkInterface represents a network interface on an agent.
 type NetworkInterface struct {
-	Name   string
-	Family string
-	IPv4   string
-	IPv6   string
-	MAC    string
+	Name   string `json:"name"`
+	Family string `json:"family,omitempty"`
+	IPv4   string `json:"ipv4,omitempty"`
+	IPv6   string `json:"ipv6,omitempty"`
+	MAC    string `json:"mac,omitempty"`
 }
 
 // Route represents a network routing table entry.
 type Route struct {
-	Destination string
-	Gateway     string
-	Interface   string
-	Mask        string
-	Flags       string
-	Metric      int
+	Destination string `json:"destination"`
+	Gateway     string `json:"gateway"`
+	Interface   string `json:"interface"`
+	Mask        string `json:"mask,omitempty"`
+	Flags       string `json:"flags,omitempty"`
+	Metric      int    `json:"metric"`
 }
 
 // LoadAverage represents system load averages.
 type LoadAverage struct {
-	OneMin     float32
-	FiveMin    float32
-	FifteenMin float32
+	OneMin     float32 `json:"one_min"`
+	FiveMin    float32 `json:"five_min"`
+	FifteenMin float32 `json:"fifteen_min"`
 }
 
 // Memory represents memory usage information.
 type Memory struct {
-	Total int
-	Used  int
-	Free  int
+	Total int `json:"total"`
+	Used  int `json:"used"`
+	Free  int `json:"free"`
 }
 
 // OSInfo represents operating system information.
 type OSInfo struct {
-	Distribution string
-	Version      string
+	Distribution string `json:"distribution"`
+	Version      string `json:"version"`
 }
 
 // agentFromGen converts a gen.AgentInfo to an Agent.

@@ -24,79 +24,133 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
+// DockerCreateOpts contains options for creating a container.
+type DockerCreateOpts struct {
+	// Image is the container image reference (required).
+	Image string
+	// Name is an optional container name.
+	Name string
+	// Command overrides the image's default command.
+	Command []string
+	// Env is environment variables in KEY=VALUE format.
+	Env []string
+	// Ports is port mappings in host_port:container_port format.
+	Ports []string
+	// Volumes is volume mounts in host_path:container_path format.
+	Volumes []string
+	// AutoStart starts the container after creation (default true).
+	AutoStart *bool
+}
+
+// DockerStopOpts contains options for stopping a container.
+type DockerStopOpts struct {
+	// Timeout is seconds to wait before killing. Zero uses default.
+	Timeout int
+}
+
+// DockerListParams contains parameters for listing containers.
+type DockerListParams struct {
+	// State filters by state: "running", "stopped", "all".
+	State string
+	// Limit caps the number of results.
+	Limit int
+}
+
+// DockerRemoveParams contains parameters for removing a container.
+type DockerRemoveParams struct {
+	// Force forces removal of a running container.
+	Force bool
+}
+
+// DockerPullOpts contains options for pulling an image.
+type DockerPullOpts struct {
+	// Image is the image reference to pull (required).
+	Image string
+}
+
+// DockerExecOpts contains options for executing a command in a container.
+type DockerExecOpts struct {
+	// Command is the command and arguments to execute (required).
+	Command []string
+	// Env is additional environment variables in KEY=VALUE format.
+	Env []string
+	// WorkingDir is the working directory inside the container.
+	WorkingDir string
+}
+
 // DockerResult represents a docker container create result from a single agent.
 type DockerResult struct {
-	Hostname string
-	ID       string
-	Name     string
-	Image    string
-	State    string
-	Created  string
-	Changed  bool
-	Error    string
+	Hostname string `json:"hostname"`
+	ID       string `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Image    string `json:"image,omitempty"`
+	State    string `json:"state,omitempty"`
+	Created  string `json:"created,omitempty"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // DockerListResult represents a docker container list result from a single agent.
 type DockerListResult struct {
-	Hostname   string
-	Containers []DockerSummaryItem
-	Changed    bool
-	Error      string
+	Hostname   string              `json:"hostname"`
+	Containers []DockerSummaryItem `json:"containers,omitempty"`
+	Changed    bool                `json:"changed"`
+	Error      string              `json:"error,omitempty"`
 }
 
 // DockerSummaryItem represents a brief docker container summary.
 type DockerSummaryItem struct {
-	ID      string
-	Name    string
-	Image   string
-	State   string
-	Created string
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Image   string `json:"image"`
+	State   string `json:"state"`
+	Created string `json:"created"`
 }
 
 // DockerDetailResult represents a docker container inspect result from a single agent.
 type DockerDetailResult struct {
-	Hostname        string
-	ID              string
-	Name            string
-	Image           string
-	State           string
-	Created         string
-	Ports           []string
-	Mounts          []string
-	Env             []string
-	NetworkSettings map[string]string
-	Health          string
-	Changed         bool
-	Error           string
+	Hostname        string            `json:"hostname"`
+	ID              string            `json:"id,omitempty"`
+	Name            string            `json:"name,omitempty"`
+	Image           string            `json:"image,omitempty"`
+	State           string            `json:"state,omitempty"`
+	Created         string            `json:"created,omitempty"`
+	Ports           []string          `json:"ports,omitempty"`
+	Mounts          []string          `json:"mounts,omitempty"`
+	Env             []string          `json:"env,omitempty"`
+	NetworkSettings map[string]string `json:"network_settings,omitempty"`
+	Health          string            `json:"health,omitempty"`
+	Changed         bool              `json:"changed"`
+	Error           string            `json:"error,omitempty"`
 }
 
 // DockerActionResult represents a docker container lifecycle action result from a single agent.
 type DockerActionResult struct {
-	Hostname string
-	ID       string
-	Message  string
-	Changed  bool
-	Error    string
+	Hostname string `json:"hostname"`
+	ID       string `json:"id,omitempty"`
+	Message  string `json:"message,omitempty"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // DockerExecResult represents a docker container exec result from a single agent.
 type DockerExecResult struct {
-	Hostname string
-	Stdout   string
-	Stderr   string
-	ExitCode int
-	Changed  bool
-	Error    string
+	Hostname string `json:"hostname"`
+	Stdout   string `json:"stdout,omitempty"`
+	Stderr   string `json:"stderr,omitempty"`
+	ExitCode int    `json:"exit_code"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // DockerPullResult represents a docker image pull result from a single agent.
 type DockerPullResult struct {
-	Hostname string
-	ImageID  string
-	Tag      string
-	Size     int64
-	Changed  bool
-	Error    string
+	Hostname string `json:"hostname"`
+	ImageID  string `json:"image_id,omitempty"`
+	Tag      string `json:"tag,omitempty"`
+	Size     int64  `json:"size"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // dockerResultCollectionFromGen converts a gen.DockerResultCollectionResponse

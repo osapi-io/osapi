@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerCreateCmd represents the clientContainerDockerCreate command.
@@ -44,25 +44,16 @@ var clientContainerDockerCreateCmd = &cobra.Command{
 		volumeFlags, _ := cmd.Flags().GetStringSlice("volume")
 		autoStart, _ := cmd.Flags().GetBool("auto-start")
 
-		body := gen.DockerCreateRequest{
+		opts := client.DockerCreateOpts{
 			Image:     image,
+			Name:      name,
 			AutoStart: &autoStart,
+			Env:       envFlags,
+			Ports:     portFlags,
+			Volumes:   volumeFlags,
 		}
 
-		if name != "" {
-			body.Name = &name
-		}
-		if len(envFlags) > 0 {
-			body.Env = &envFlags
-		}
-		if len(portFlags) > 0 {
-			body.Ports = &portFlags
-		}
-		if len(volumeFlags) > 0 {
-			body.Volumes = &volumeFlags
-		}
-
-		resp, err := sdkClient.Docker.Create(ctx, host, body)
+		resp, err := sdkClient.Docker.Create(ctx, host, opts)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -76,7 +67,6 @@ var clientContainerDockerCreateCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
 		for _, r := range resp.Data.Results {

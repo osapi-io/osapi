@@ -43,7 +43,6 @@ import (
 	"time"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
@@ -51,8 +50,6 @@ const (
 	containerName  = "example-orchestrator-container"
 	containerImage = "ubuntu:24.04"
 )
-
-func ptr(s string) *string { return &s }
 
 func main() {
 	url := os.Getenv("OSAPI_URL")
@@ -97,14 +94,13 @@ func main() {
 	// ── Pre-cleanup: remove leftover container from previous run ─
 	// Swallow errors — the container may not exist.
 
-	force := true
 	preCleanup := plan.TaskFunc("pre-cleanup",
 		func(
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			_, _ = c.Docker.Remove(ctx, target, containerName,
-				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+				&client.DockerRemoveParams{Force: true},
 			)
 
 			return &orchestrator.Result{Changed: false}, nil
@@ -118,14 +114,14 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
+			resp, err := c.Docker.Pull(ctx, target, client.DockerPullOpts{
 				Image: containerImage,
 			})
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerPullResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -146,17 +142,17 @@ func main() {
 			ctx context.Context,
 			c *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
+			resp, err := c.Docker.Create(ctx, target, client.DockerCreateOpts{
 				Image:     containerImage,
-				Name:      ptr(containerName),
+				Name:      containerName,
 				AutoStart: &autoStart,
-				Command:   &[]string{"sleep", "600"},
+				Command:   []string{"sleep", "600"},
 			})
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -177,13 +173,13 @@ func main() {
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := c.Docker.Exec(ctx, target, containerName,
-				gen.DockerExecRequest{Command: []string{"hostname"}},
+				client.DockerExecOpts{Command: []string{"hostname"}},
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerExecResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -202,13 +198,13 @@ func main() {
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := c.Docker.Exec(ctx, target, containerName,
-				gen.DockerExecRequest{Command: []string{"uname", "-a"}},
+				client.DockerExecOpts{Command: []string{"uname", "-a"}},
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerExecResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -227,7 +223,7 @@ func main() {
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := c.Docker.Exec(ctx, target, containerName,
-				gen.DockerExecRequest{
+				client.DockerExecOpts{
 					Command: []string{"sh", "-c", "head -2 /etc/os-release"},
 				},
 			)
@@ -235,7 +231,7 @@ func main() {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerExecResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -260,7 +256,7 @@ func main() {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerDetailResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
@@ -294,13 +290,13 @@ func main() {
 			c *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := c.Docker.Remove(ctx, target, containerName,
-				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+				&client.DockerRemoveParams{Force: true},
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerActionResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,

@@ -36,8 +36,30 @@ type DockerService struct {
 func (s *DockerService) Create(
 	ctx context.Context,
 	hostname string,
-	body gen.DockerCreateRequest,
+	opts DockerCreateOpts,
 ) (*Response[Collection[DockerResult]], error) {
+	body := gen.DockerCreateRequest{
+		Image: opts.Image,
+	}
+	if opts.Name != "" {
+		body.Name = &opts.Name
+	}
+	if len(opts.Command) > 0 {
+		body.Command = &opts.Command
+	}
+	if len(opts.Env) > 0 {
+		body.Env = &opts.Env
+	}
+	if len(opts.Ports) > 0 {
+		body.Ports = &opts.Ports
+	}
+	if len(opts.Volumes) > 0 {
+		body.Volumes = &opts.Volumes
+	}
+	if opts.AutoStart != nil {
+		body.AutoStart = opts.AutoStart
+	}
+
 	resp, err := s.client.PostNodeContainerDockerWithResponse(ctx, hostname, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker create: %w", err)
@@ -67,9 +89,21 @@ func (s *DockerService) Create(
 func (s *DockerService) List(
 	ctx context.Context,
 	hostname string,
-	params *gen.GetNodeContainerDockerParams,
+	params *DockerListParams,
 ) (*Response[Collection[DockerListResult]], error) {
-	resp, err := s.client.GetNodeContainerDockerWithResponse(ctx, hostname, params)
+	var genParams *gen.GetNodeContainerDockerParams
+	if params != nil {
+		genParams = &gen.GetNodeContainerDockerParams{}
+		if params.State != "" {
+			state := gen.GetNodeContainerDockerParamsState(params.State)
+			genParams.State = &state
+		}
+		if params.Limit > 0 {
+			genParams.Limit = &params.Limit
+		}
+	}
+
+	resp, err := s.client.GetNodeContainerDockerWithResponse(ctx, hostname, genParams)
 	if err != nil {
 		return nil, fmt.Errorf("docker list: %w", err)
 	}
@@ -163,8 +197,13 @@ func (s *DockerService) Stop(
 	ctx context.Context,
 	hostname string,
 	id string,
-	body gen.DockerStopRequest,
+	opts DockerStopOpts,
 ) (*Response[Collection[DockerActionResult]], error) {
+	body := gen.DockerStopRequest{}
+	if opts.Timeout > 0 {
+		body.Timeout = &opts.Timeout
+	}
+
 	resp, err := s.client.PostNodeContainerDockerStopWithResponse(ctx, hostname, id, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker stop: %w", err)
@@ -196,9 +235,16 @@ func (s *DockerService) Remove(
 	ctx context.Context,
 	hostname string,
 	id string,
-	params *gen.DeleteNodeContainerDockerByIDParams,
+	params *DockerRemoveParams,
 ) (*Response[Collection[DockerActionResult]], error) {
-	resp, err := s.client.DeleteNodeContainerDockerByIDWithResponse(ctx, hostname, id, params)
+	var genParams *gen.DeleteNodeContainerDockerByIDParams
+	if params != nil {
+		genParams = &gen.DeleteNodeContainerDockerByIDParams{
+			Force: &params.Force,
+		}
+	}
+
+	resp, err := s.client.DeleteNodeContainerDockerByIDWithResponse(ctx, hostname, id, genParams)
 	if err != nil {
 		return nil, fmt.Errorf("docker remove: %w", err)
 	}
@@ -229,8 +275,18 @@ func (s *DockerService) Exec(
 	ctx context.Context,
 	hostname string,
 	id string,
-	body gen.DockerExecRequest,
+	opts DockerExecOpts,
 ) (*Response[Collection[DockerExecResult]], error) {
+	body := gen.DockerExecRequest{
+		Command: opts.Command,
+	}
+	if len(opts.Env) > 0 {
+		body.Env = &opts.Env
+	}
+	if opts.WorkingDir != "" {
+		body.WorkingDir = &opts.WorkingDir
+	}
+
 	resp, err := s.client.PostNodeContainerDockerExecWithResponse(ctx, hostname, id, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker exec: %w", err)
@@ -261,8 +317,12 @@ func (s *DockerService) Exec(
 func (s *DockerService) Pull(
 	ctx context.Context,
 	hostname string,
-	body gen.DockerPullRequest,
+	opts DockerPullOpts,
 ) (*Response[Collection[DockerPullResult]], error) {
+	body := gen.DockerPullRequest{
+		Image: opts.Image,
+	}
+
 	resp, err := s.client.PostNodeContainerDockerPullWithResponse(ctx, hostname, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker pull: %w", err)

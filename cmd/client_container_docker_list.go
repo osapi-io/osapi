@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerListCmd represents the clientContainerDockerList command.
@@ -40,14 +40,9 @@ var clientContainerDockerListCmd = &cobra.Command{
 		stateFlag, _ := cmd.Flags().GetString("state")
 		limit, _ := cmd.Flags().GetInt("limit")
 
-		params := &gen.GetNodeContainerDockerParams{}
-
-		if stateFlag != "" {
-			state := gen.GetNodeContainerDockerParamsState(stateFlag)
-			params.State = &state
-		}
-		if limit > 0 {
-			params.Limit = &limit
+		params := &client.DockerListParams{
+			State: stateFlag,
+			Limit: limit,
 		}
 
 		resp, err := sdkClient.Docker.List(ctx, host, params)
@@ -64,7 +59,6 @@ var clientContainerDockerListCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
 		for _, r := range resp.Data.Results {

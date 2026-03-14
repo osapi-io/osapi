@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner)
+- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
@@ -173,7 +173,10 @@ Create `internal/api/{domain}/`:
 
 The SDK client library lives in `pkg/sdk/client/`. Its generated HTTP client
 uses the same combined OpenAPI spec as the server
-(`internal/api/gen/api.yaml`).
+(`internal/api/gen/api.yaml`). Follow the rules in
+@docs/docs/sidebar/sdk/guidelines.md — especially: never expose `gen`
+types in public method signatures, add JSON tags to all result types,
+and wrap errors with context.
 
 **When modifying existing API specs:**
 

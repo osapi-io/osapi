@@ -24,101 +24,101 @@ import "github.com/retr0h/osapi/pkg/sdk/client/gen"
 
 // HealthStatus represents a liveness check response.
 type HealthStatus struct {
-	Status string
+	Status string `json:"status"`
 }
 
 // ReadyStatus represents a readiness check response.
 type ReadyStatus struct {
-	Status             string
-	Error              string
-	ServiceUnavailable bool
+	Status             string `json:"status"`
+	Error              string `json:"error,omitempty"`
+	ServiceUnavailable bool   `json:"service_unavailable"`
 }
 
 // SystemStatus represents detailed system status.
 type SystemStatus struct {
-	Status             string
-	Version            string
-	Uptime             string
-	ServiceUnavailable bool
-	Components         map[string]ComponentHealth
-	NATS               *NATSInfo
-	Agents             *AgentStats
-	Jobs               *JobStats
-	Consumers          *ConsumerStats
-	Streams            []StreamInfo
-	KVBuckets          []KVBucketInfo
-	ObjectStores       []ObjectStoreInfo
+	Status             string                     `json:"status"`
+	Version            string                     `json:"version"`
+	Uptime             string                     `json:"uptime"`
+	ServiceUnavailable bool                       `json:"service_unavailable"`
+	Components         map[string]ComponentHealth `json:"components,omitempty"`
+	NATS               *NATSInfo                  `json:"nats,omitempty"`
+	Agents             *AgentStats                `json:"agents,omitempty"`
+	Jobs               *JobStats                  `json:"jobs,omitempty"`
+	Consumers          *ConsumerStats             `json:"consumers,omitempty"`
+	Streams            []StreamInfo               `json:"streams,omitempty"`
+	KVBuckets          []KVBucketInfo             `json:"kv_buckets,omitempty"`
+	ObjectStores       []ObjectStoreInfo          `json:"object_stores,omitempty"`
 }
 
 // ComponentHealth represents a component's health.
 type ComponentHealth struct {
-	Status string
-	Error  string
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
 }
 
 // NATSInfo represents NATS connection info.
 type NATSInfo struct {
-	URL     string
-	Version string
+	URL     string `json:"url"`
+	Version string `json:"version"`
 }
 
 // AgentStats represents agent statistics from the health endpoint.
 type AgentStats struct {
-	Total  int
-	Ready  int
-	Agents []AgentSummary
+	Total  int            `json:"total"`
+	Ready  int            `json:"ready"`
+	Agents []AgentSummary `json:"agents,omitempty"`
 }
 
 // AgentSummary represents a summary of an agent from the health endpoint.
 type AgentSummary struct {
-	Hostname   string
-	Labels     string
-	Registered string
+	Hostname   string `json:"hostname"`
+	Labels     string `json:"labels,omitempty"`
+	Registered string `json:"registered"`
 }
 
 // JobStats represents job queue statistics from the health endpoint.
 type JobStats struct {
-	Total       int
-	Completed   int
-	Failed      int
-	Processing  int
-	Unprocessed int
-	Dlq         int
+	Total       int `json:"total"`
+	Completed   int `json:"completed"`
+	Failed      int `json:"failed"`
+	Processing  int `json:"processing"`
+	Unprocessed int `json:"unprocessed"`
+	Dlq         int `json:"dlq"`
 }
 
 // ConsumerStats represents JetStream consumer statistics.
 type ConsumerStats struct {
-	Total     int
-	Consumers []ConsumerDetail
+	Total     int              `json:"total"`
+	Consumers []ConsumerDetail `json:"consumers,omitempty"`
 }
 
 // ConsumerDetail represents a single consumer's details.
 type ConsumerDetail struct {
-	Name        string
-	Pending     int
-	AckPending  int
-	Redelivered int
+	Name        string `json:"name"`
+	Pending     int    `json:"pending"`
+	AckPending  int    `json:"ack_pending"`
+	Redelivered int    `json:"redelivered"`
 }
 
 // StreamInfo represents a JetStream stream's info.
 type StreamInfo struct {
-	Name      string
-	Messages  int
-	Bytes     int
-	Consumers int
+	Name      string `json:"name"`
+	Messages  int    `json:"messages"`
+	Bytes     int    `json:"bytes"`
+	Consumers int    `json:"consumers"`
 }
 
 // KVBucketInfo represents a KV bucket's info.
 type KVBucketInfo struct {
-	Name  string
-	Keys  int
-	Bytes int
+	Name  string `json:"name"`
+	Keys  int    `json:"keys"`
+	Bytes int    `json:"bytes"`
 }
 
 // ObjectStoreInfo represents an Object Store bucket's info.
 type ObjectStoreInfo struct {
-	Name string
-	Size int
+	Name string `json:"name"`
+	Size int    `json:"size"`
 }
 
 // healthStatusFromGen converts a gen.HealthResponse to a HealthStatus.

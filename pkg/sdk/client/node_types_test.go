@@ -990,6 +990,63 @@ func (suite *NodeTypesTestSuite) TestJobIDFromGen() {
 	}
 }
 
+func (suite *NodeTypesTestSuite) TestCollectionFirst() {
+	tests := []struct {
+		name         string
+		col          Collection[HostnameResult]
+		validateFunc func(HostnameResult, bool)
+	}{
+		{
+			name: "returns first result and true",
+			col: Collection[HostnameResult]{
+				Results: []HostnameResult{
+					{Hostname: "web-01"},
+					{Hostname: "web-02"},
+				},
+				JobID: "job-1",
+			},
+			validateFunc: func(
+				r HostnameResult,
+				ok bool,
+			) {
+				suite.True(ok)
+				suite.Equal("web-01", r.Hostname)
+			},
+		},
+		{
+			name: "returns zero value and false when empty",
+			col: Collection[HostnameResult]{
+				Results: []HostnameResult{},
+			},
+			validateFunc: func(
+				r HostnameResult,
+				ok bool,
+			) {
+				suite.False(ok)
+				suite.Equal("", r.Hostname)
+			},
+		},
+		{
+			name: "returns zero value and false when nil",
+			col:  Collection[HostnameResult]{},
+			validateFunc: func(
+				r HostnameResult,
+				ok bool,
+			) {
+				suite.False(ok)
+				suite.Equal("", r.Hostname)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			r, ok := tt.col.First()
+			tt.validateFunc(r, ok)
+		})
+	}
+}
+
 func TestNodeTypesTestSuite(t *testing.T) {
 	suite.Run(t, new(NodeTypesTestSuite))
 }

@@ -32,7 +32,6 @@ import (
 	"os"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
@@ -64,14 +63,14 @@ func main() {
 			ctx context.Context,
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := cc.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
+			resp, err := cc.Docker.Create(ctx, "_any", client.DockerCreateOpts{
 				Image: "nginx:latest",
 			})
 			if err != nil {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.DockerResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,

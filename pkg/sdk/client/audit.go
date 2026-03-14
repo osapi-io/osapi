@@ -77,7 +77,7 @@ func (s *AuditService) Get(
 ) (*Response[AuditEntry], error) {
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid audit ID: %w", err)
 	}
 
 	resp, err := s.client.GetAuditLogByIDWithResponse(ctx, parsedID)

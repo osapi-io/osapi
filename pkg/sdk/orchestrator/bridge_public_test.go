@@ -66,15 +66,15 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 			},
 		},
 		{
-			name: "converts struct without json tags using field names",
+			name: "converts SDK type with json tags",
 			input: client.HostnameResult{
 				Hostname: "web-01",
 				Changed:  true,
 			},
 			validateFn: func(m map[string]any) {
 				s.Require().NotNil(m)
-				s.Equal("web-01", m["Hostname"])
-				s.Equal(true, m["Changed"])
+				s.Equal("web-01", m["hostname"])
+				s.Equal(true, m["changed"])
 			},
 		},
 		{
@@ -106,6 +106,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 	tests := []struct {
 		name       string
 		col        client.Collection[client.HostnameResult]
+		rawJSON    []byte
 		toHost     func(client.HostnameResult) orchestrator.HostResult
 		validateFn func(result *orchestrator.Result)
 	}{
@@ -127,7 +128,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				s.Equal("web-01", hr.Hostname)
 				s.False(hr.Changed)
 				s.Require().NotNil(hr.Data, "Data should be auto-populated via StructToMap")
-				s.Equal("web-01", hr.Data["Hostname"])
+				s.Equal("web-01", hr.Data["hostname"])
 			},
 		},
 		{
@@ -174,14 +175,13 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
 					Error:    r.Error,
-					// Data intentionally left nil
 				}
 			},
 			validateFn: func(result *orchestrator.Result) {
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
-				s.Equal("db-01", hr.Data["Hostname"])
-				s.Equal("timeout", hr.Data["Error"])
+				s.Equal("db-01", hr.Data["hostname"])
+				s.Equal("timeout", hr.Data["error"])
 			},
 		},
 		{
@@ -203,16 +203,62 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("value", hr.Data["custom"])
-				// Should NOT contain auto-populated fields
-				_, hasHostname := hr.Data["Hostname"]
+				_, hasHostname := hr.Data["hostname"]
 				s.False(hasHostname, "mapper-set Data should not be overwritten")
+			},
+		},
+		{
+			name: "rawJSON populates Result.Data",
+			col: client.Collection[client.HostnameResult]{
+				Results: []client.HostnameResult{
+					{Hostname: "web-01"},
+				},
+				JobID: "job-raw",
+			},
+			rawJSON: []byte(`{"job_id":"job-raw","results":[{"hostname":"web-01"}]}`),
+			toHost:  mapper,
+			validateFn: func(result *orchestrator.Result) {
+				s.Require().NotNil(result.Data)
+				s.Equal("job-raw", result.Data["job_id"])
+			},
+		},
+		{
+			name: "nil rawJSON leaves Result.Data nil",
+			col: client.Collection[client.HostnameResult]{
+				Results: []client.HostnameResult{
+					{Hostname: "web-01"},
+				},
+				JobID: "job-nil",
+			},
+			rawJSON: nil,
+			toHost:  mapper,
+			validateFn: func(result *orchestrator.Result) {
+				s.Nil(result.Data)
+			},
+		},
+		{
+			name: "invalid rawJSON leaves Result.Data nil",
+			col: client.Collection[client.HostnameResult]{
+				Results: []client.HostnameResult{
+					{Hostname: "web-01"},
+				},
+				JobID: "job-bad",
+			},
+			rawJSON: []byte(`not valid json`),
+			toHost:  mapper,
+			validateFn: func(result *orchestrator.Result) {
+				s.Nil(result.Data)
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result := orchestrator.CollectionResult(tt.col, tt.toHost)
+			result := orchestrator.CollectionResult(
+				tt.col,
+				tt.rawJSON,
+				tt.toHost,
+			)
 			s.Require().NotNil(result)
 			tt.validateFn(result)
 		})

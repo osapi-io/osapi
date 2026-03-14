@@ -36,8 +36,13 @@ func StructToMap(
 // per-host details, and auto-populates HostResult.Data via StructToMap
 // when the mapper leaves it nil. Changed is true if any host reported
 // a change.
+//
+// When rawJSON is non-nil, it is unmarshaled into Result.Data to
+// provide the full response for downstream consumers (e.g., guards
+// or Results.Decode). Pass resp.RawJSON() for this, or nil to skip.
 func CollectionResult[T any](
 	col client.Collection[T],
+	rawJSON []byte,
 	toHostResult func(T) HostResult,
 ) *Result {
 	hostResults := make([]HostResult, 0, len(col.Results))
@@ -57,9 +62,15 @@ func CollectionResult[T any](
 		hostResults = append(hostResults, hr)
 	}
 
+	var data map[string]any
+	if len(rawJSON) > 0 {
+		_ = jsonUnmarshalFn(rawJSON, &data)
+	}
+
 	return &Result{
 		JobID:       col.JobID,
 		Changed:     changed,
+		Data:        data,
 		HostResults: hostResults,
 	}
 }

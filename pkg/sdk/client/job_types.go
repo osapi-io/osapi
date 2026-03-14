@@ -26,49 +26,49 @@ import (
 
 // JobCreated represents a newly created job response.
 type JobCreated struct {
-	JobID     string
-	Status    string
-	Revision  int64
-	Timestamp string
+	JobID     string `json:"job_id"`
+	Status    string `json:"status"`
+	Revision  int64  `json:"revision"`
+	Timestamp string `json:"timestamp,omitempty"`
 }
 
 // JobDetail represents a job's full details.
 type JobDetail struct {
-	ID          string
-	Status      string
-	Hostname    string
-	Created     string
-	UpdatedAt   string
-	Error       string
-	Changed     *bool
-	Operation   map[string]any
-	Result      any
-	AgentStates map[string]AgentState
-	Responses   map[string]AgentJobResponse
-	Timeline    []TimelineEvent
+	ID          string                      `json:"id,omitempty"`
+	Status      string                      `json:"status,omitempty"`
+	Hostname    string                      `json:"hostname,omitempty"`
+	Created     string                      `json:"created,omitempty"`
+	UpdatedAt   string                      `json:"updated_at,omitempty"`
+	Error       string                      `json:"error,omitempty"`
+	Changed     *bool                       `json:"changed,omitempty"`
+	Operation   map[string]any              `json:"operation,omitempty"`
+	Result      any                         `json:"result,omitempty"`
+	AgentStates map[string]AgentState       `json:"agent_states,omitempty"`
+	Responses   map[string]AgentJobResponse `json:"responses,omitempty"`
+	Timeline    []TimelineEvent             `json:"timeline,omitempty"`
 }
 
 // AgentState represents an agent's processing state for a broadcast job.
 type AgentState struct {
-	Status   string
-	Duration string
-	Error    string
+	Status   string `json:"status,omitempty"`
+	Duration string `json:"duration,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 // AgentJobResponse represents an agent's response data for a broadcast job.
 type AgentJobResponse struct {
-	Hostname string
-	Status   string
-	Error    string
-	Changed  *bool
-	Data     any
+	Hostname string `json:"hostname,omitempty"`
+	Status   string `json:"status,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Changed  *bool  `json:"changed,omitempty"`
+	Data     any    `json:"data,omitempty"`
 }
 
 // JobList is a paginated list of jobs.
 type JobList struct {
-	Items        []JobDetail
-	TotalItems   int
-	StatusCounts map[string]int
+	Items        []JobDetail    `json:"items,omitempty"`
+	TotalItems   int            `json:"total_items"`
+	StatusCounts map[string]int `json:"status_counts,omitempty"`
 }
 
 // jobCreatedFromGen converts a gen.CreateJobResponse to a JobCreated.

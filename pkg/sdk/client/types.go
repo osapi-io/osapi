@@ -23,9 +23,9 @@ package client
 // TimelineEvent represents a lifecycle event. Used by both job
 // timelines and agent state transition history.
 type TimelineEvent struct {
-	Timestamp string
-	Event     string
-	Hostname  string
-	Message   string
-	Error     string
+	Timestamp string `json:"timestamp"`
+	Event     string `json:"event"`
+	Hostname  string `json:"hostname,omitempty"`
+	Message   string `json:"message,omitempty"`
+	Error     string `json:"error,omitempty"`
 }

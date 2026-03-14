@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerStopCmd represents the clientContainerDockerStop command.
@@ -40,12 +40,12 @@ var clientContainerDockerStopCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		timeout, _ := cmd.Flags().GetInt("timeout")
 
-		body := gen.DockerStopRequest{}
+		opts := client.DockerStopOpts{}
 		if cmd.Flags().Changed("timeout") {
-			body.Timeout = &timeout
+			opts.Timeout = timeout
 		}
 
-		resp, err := sdkClient.Docker.Stop(ctx, host, id, body)
+		resp, err := sdkClient.Docker.Stop(ctx, host, id, opts)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
@@ -59,7 +59,6 @@ var clientContainerDockerStopCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
 		for _, r := range resp.Data.Results {
