@@ -237,49 +237,49 @@ type JobClient interface {
 		path string,
 	) (string, *file.StatusResult, string, error)
 
-	// Container operations
-	ModifyContainerCreate(
+	// Docker operations
+	ModifyDockerCreate(
 		ctx context.Context,
 		target string,
-		data *job.ContainerCreateData,
+		data *job.DockerCreateData,
 	) (*job.Response, error)
-	ModifyContainerStart(
+	ModifyDockerStart(
 		ctx context.Context,
 		target string,
 		id string,
 	) (*job.Response, error)
-	ModifyContainerStop(
+	ModifyDockerStop(
 		ctx context.Context,
 		target string,
 		id string,
-		data *job.ContainerStopData,
+		data *job.DockerStopData,
 	) (*job.Response, error)
-	ModifyContainerRemove(
+	ModifyDockerRemove(
 		ctx context.Context,
 		target string,
 		id string,
-		data *job.ContainerRemoveData,
+		data *job.DockerRemoveData,
 	) (*job.Response, error)
-	QueryContainerList(
+	QueryDockerList(
 		ctx context.Context,
 		target string,
-		data *job.ContainerListData,
+		data *job.DockerListData,
 	) (*job.Response, error)
-	QueryContainerInspect(
-		ctx context.Context,
-		target string,
-		id string,
-	) (*job.Response, error)
-	ModifyContainerExec(
+	QueryDockerInspect(
 		ctx context.Context,
 		target string,
 		id string,
-		data *job.ContainerExecData,
 	) (*job.Response, error)
-	ModifyContainerPull(
+	ModifyDockerExec(
 		ctx context.Context,
 		target string,
-		data *job.ContainerPullData,
+		id string,
+		data *job.DockerExecData,
+	) (*job.Response, error)
+	ModifyDockerPull(
+		ctx context.Context,
+		target string,
+		data *job.DockerPullData,
 	) (*job.Response, error)
 
 	// Agent discovery

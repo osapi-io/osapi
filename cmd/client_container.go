@@ -22,11 +22,11 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-// clientContainerCmd represents the clientContainer command.
+// clientContainerCmd represents the container parent command.
 var clientContainerCmd = &cobra.Command{
 	Use:   "container",
-	Short: "Container management operations",
-	Long:  `Manage containers on target nodes.`,
+	Short: "Container runtime management",
+	Long:  `Manage containers using runtime-specific subcommands.`,
 }
 
 func init() {

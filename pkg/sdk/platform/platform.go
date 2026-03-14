@@ -19,8 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package platform provides cross-platform detection for OSAPI providers.
-// Both the CLI (provider run) and the agent use this package to select
-// the correct provider variant (ubuntu, darwin, or generic linux).
+// The agent uses this package to select the correct provider variant
+// (ubuntu, darwin, or generic linux).
 package platform
 
 import (

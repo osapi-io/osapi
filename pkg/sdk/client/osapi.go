@@ -66,9 +66,9 @@ type Client struct {
 	// File provides file management operations (upload, list, get, delete).
 	File *FileService
 
-	// Container provides container management operations (create, list,
+	// Docker provides Docker container management operations (create, list,
 	// inspect, start, stop, remove, exec, pull).
-	Container *ContainerService
+	Docker *DockerService
 
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
@@ -139,7 +139,7 @@ func New(
 		baseURL: baseURL,
 	}
 	c.File = &FileService{client: httpClient}
-	c.Container = &ContainerService{client: httpClient}
+	c.Docker = &DockerService{client: httpClient}
 
 	return c
 }

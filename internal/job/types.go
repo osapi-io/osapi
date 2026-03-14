@@ -132,16 +132,16 @@ const (
 	OperationFileStatusGet     = "file.status.get"
 )
 
-// Container operation types
+// Docker operation types
 const (
-	OperationContainerCreate  = "container.create.execute"
-	OperationContainerStart   = "container.start.execute"
-	OperationContainerStop    = "container.stop.execute"
-	OperationContainerRemove  = "container.remove.execute"
-	OperationContainerList    = "container.list.get"
-	OperationContainerInspect = "container.inspect.get"
-	OperationContainerExec    = "container.exec.execute"
-	OperationContainerPull    = "container.pull.execute"
+	OperationDockerCreate  = "docker.create.execute"
+	OperationDockerStart   = "docker.start.execute"
+	OperationDockerStop    = "docker.stop.execute"
+	OperationDockerRemove  = "docker.remove.execute"
+	OperationDockerList    = "docker.list.get"
+	OperationDockerInspect = "docker.inspect.get"
+	OperationDockerExec    = "docker.exec.execute"
+	OperationDockerPull    = "docker.pull.execute"
 )
 
 // Operation represents an operation in the new hierarchical format
@@ -260,8 +260,8 @@ type CommandShellData struct {
 	Timeout int `json:"timeout,omitempty"`
 }
 
-// ContainerCreateData represents data for container creation.
-type ContainerCreateData struct {
+// DockerCreateData represents data for docker container creation.
+type DockerCreateData struct {
 	Image     string            `json:"image"`
 	Name      string            `json:"name,omitempty"`
 	Command   []string          `json:"command,omitempty"`
@@ -286,31 +286,31 @@ type VolumeMapping struct {
 	Container string `json:"container"`
 }
 
-// ContainerStopData represents data for stopping a container.
-type ContainerStopData struct {
+// DockerStopData represents data for stopping a docker container.
+type DockerStopData struct {
 	Timeout *int `json:"timeout,omitempty"`
 }
 
-// ContainerRemoveData represents data for removing a container.
-type ContainerRemoveData struct {
+// DockerRemoveData represents data for removing a docker container.
+type DockerRemoveData struct {
 	Force bool `json:"force,omitempty"`
 }
 
-// ContainerListData represents data for listing containers.
-type ContainerListData struct {
+// DockerListData represents data for listing docker containers.
+type DockerListData struct {
 	State string `json:"state,omitempty"`
 	Limit int    `json:"limit,omitempty"`
 }
 
-// ContainerExecData represents data for executing a command in a container.
-type ContainerExecData struct {
+// DockerExecData represents data for executing a command in a docker container.
+type DockerExecData struct {
 	Command    []string          `json:"command"`
 	Env        map[string]string `json:"env,omitempty"`
 	WorkingDir string            `json:"working_dir,omitempty"`
 }
 
-// ContainerPullData represents data for pulling an image.
-type ContainerPullData struct {
+// DockerPullData represents data for pulling a docker image.
+type DockerPullData struct {
 	Image string `json:"image"`
 }
 

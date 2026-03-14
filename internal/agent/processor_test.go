@@ -377,15 +377,15 @@ func (s *ProcessorTestSuite) TestProcessJobOperation() {
 			},
 		},
 		{
-			name: "container category routes to container processor",
+			name: "docker category routes to docker processor",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
-				Category:  "container",
+				Category:  "docker",
 				Operation: "create.execute",
 				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
 			},
 			expectError: true,
-			errorMsg:    "container runtime not available",
+			errorMsg:    "docker runtime not available",
 		},
 		{
 			name: "unsupported job category",

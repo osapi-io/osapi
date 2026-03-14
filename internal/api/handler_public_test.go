@@ -379,13 +379,13 @@ func (s *HandlerPublicTestSuite) TestGetFileHandler() {
 	}
 }
 
-func (s *HandlerPublicTestSuite) TestGetContainerHandler() {
+func (s *HandlerPublicTestSuite) TestGetDockerHandler() {
 	tests := []struct {
 		name     string
 		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name: "returns container handler functions",
+			name: "returns docker handler functions",
 			validate: func(handlers []func(e *echo.Echo)) {
 				s.NotEmpty(handlers)
 			},
@@ -399,7 +399,7 @@ func (s *HandlerPublicTestSuite) TestGetContainerHandler() {
 				}
 				s.NotEmpty(e.Routes())
 
-				req := httptest.NewRequest(http.MethodGet, "/node/hostname/container", nil)
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname/container/docker", nil)
 				rec := httptest.NewRecorder()
 				e.ServeHTTP(rec, req)
 			},
@@ -408,7 +408,7 @@ func (s *HandlerPublicTestSuite) TestGetContainerHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.GetContainerHandler(s.mockJobClient)
+			handlers := s.server.GetDockerHandler(s.mockJobClient)
 
 			tt.validate(handlers)
 		})

@@ -50,7 +50,7 @@ func main() {
 	target := "_any"
 
 	// Pull an image.
-	pull, err := c.Container.Pull(ctx, target, gen.ContainerPullRequest{
+	pull, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
 		Image: "nginx:alpine",
 	})
 	if err != nil {
@@ -65,7 +65,7 @@ func main() {
 	// Create a container.
 	name := "osapi-example"
 	autoStart := true
-	create, err := c.Container.Create(ctx, target, gen.ContainerCreateRequest{
+	create, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
 		Image:     "nginx:alpine",
 		Name:      &name,
 		AutoStart: &autoStart,
@@ -83,7 +83,7 @@ func main() {
 
 	// List running containers.
 	state := gen.Running
-	list, err := c.Container.List(ctx, target, &gen.GetNodeContainerParams{
+	list, err := c.Docker.List(ctx, target, &gen.GetNodeContainerDockerParams{
 		State: &state,
 	})
 	if err != nil {
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	// Inspect the container.
-	inspect, err := c.Container.Inspect(ctx, target, containerID)
+	inspect, err := c.Docker.Inspect(ctx, target, containerID)
 	if err != nil {
 		log.Fatalf("inspect: %v", err)
 	}
@@ -109,7 +109,7 @@ func main() {
 	}
 
 	// Exec a command inside the container.
-	exec, err := c.Container.Exec(ctx, target, containerID, gen.ContainerExecRequest{
+	exec, err := c.Docker.Exec(ctx, target, containerID, gen.DockerExecRequest{
 		Command: []string{"cat", "/etc/hostname"},
 	})
 	if err != nil {
@@ -123,7 +123,7 @@ func main() {
 
 	// Stop the container.
 	timeout := 5
-	stop, err := c.Container.Stop(ctx, target, containerID, gen.ContainerStopRequest{
+	stop, err := c.Docker.Stop(ctx, target, containerID, gen.DockerStopRequest{
 		Timeout: &timeout,
 	})
 	if err != nil {
@@ -137,9 +137,14 @@ func main() {
 
 	// Remove the container.
 	force := true
-	remove, err := c.Container.Remove(ctx, target, containerID, &gen.DeleteNodeContainerByIdParams{
-		Force: &force,
-	})
+	remove, err := c.Docker.Remove(
+		ctx,
+		target,
+		containerID,
+		&gen.DeleteNodeContainerDockerByIDParams{
+			Force: &force,
+		},
+	)
 	if err != nil {
 		log.Fatalf("remove: %v", err)
 	}

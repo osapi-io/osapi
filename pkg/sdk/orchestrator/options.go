@@ -95,11 +95,8 @@ type Hooks struct {
 
 // PlanConfig holds plan-level configuration.
 type PlanConfig struct {
-	OnErrorStrategy  ErrorStrategy
-	Hooks            *Hooks
-	DockerExecFn     ExecFn
-	DockerBinaryURL  string
-	DockerSkipDeploy bool
+	OnErrorStrategy ErrorStrategy
+	Hooks           *Hooks
 }
 
 // PlanOption is a functional option for NewPlan.
@@ -120,35 +117,5 @@ func WithHooks(
 ) PlanOption {
 	return func(cfg *PlanConfig) {
 		cfg.Hooks = &hooks
-	}
-}
-
-// WithDockerExecFn sets the exec function used by Plan.Docker() to
-// execute commands inside Docker containers.
-func WithDockerExecFn(
-	fn ExecFn,
-) PlanOption {
-	return func(cfg *PlanConfig) {
-		cfg.DockerExecFn = fn
-	}
-}
-
-// WithOSAPIBinaryURL overrides the default GitHub release URL for the
-// osapi binary that gets deployed into Docker containers. Use this for
-// custom builds, mirrors, or pre-release binaries.
-func WithOSAPIBinaryURL(
-	url string,
-) PlanOption {
-	return func(cfg *PlanConfig) {
-		cfg.DockerBinaryURL = url
-	}
-}
-
-// WithOSAPIBinarySkip disables automatic binary deployment into Docker
-// containers. Use this when the osapi binary is already baked into the
-// container image.
-func WithOSAPIBinarySkip() PlanOption {
-	return func(cfg *PlanConfig) {
-		cfg.DockerSkipDeploy = true
 	}
 }

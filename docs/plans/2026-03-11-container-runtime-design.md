@@ -1,29 +1,21 @@
-# Container Runtime and Provider Execution Context
+# Container Runtime Management
 
 ## Problem
 
-OSAPI providers execute operations directly on the host OS. As we build new
-providers (user management, cron, etc.), there is no way to develop, test, or
-run them against an isolated environment. Additionally, there is no way to
-manage containers on a host or compose workflows that span both the host and
-containers running on it.
+OSAPI manages Linux system configuration but has no way to manage containers
+running on a host. As containerized workloads become standard, operators need to
+create, start, stop, inspect, and execute commands in containers through the
+same API and CLI they use for everything else.
 
 We need:
 
 1. Container lifecycle management (Docker first, LXD/Podman later) as a new API
    domain
-2. A mechanism to run existing providers inside a container without rewriting
-   them
-3. An orchestrator DSL layer to compose host and container operations in a
-   single plan
 
 ## Decision
 
 Add a `container` API domain with a pluggable runtime driver interface. Docker
-is the first implementation using the Go SDK. Introduce a `provider run` CLI
-subcommand that executes a single provider operation as a standalone process
-with JSON I/O. The orchestrator DSL uses `docker exec` + `provider run` to
-transparently run providers inside containers.
+is the first implementation using the Go SDK.
 
 ## Architecture
 
@@ -193,106 +185,6 @@ The `Server` struct does not store handler references as fields. Handlers are
 constructed via `GetXxxHandler()` methods and returned as closures, consistent
 with all existing domains.
 
-### Provider Run Subcommand
-
-A new `osapi provider run` CLI subcommand executes a single provider operation
-as a standalone process with JSON I/O. This is the bridge that allows providers
-to run inside containers.
-
-```
-osapi provider run <provider> <operation> --data '<json>'
-```
-
-This subcommand is hidden from `--help` output. It is a machine interface
-consumed by the orchestrator's Docker exec layer, not a user-facing command.
-
-**Behavior:**
-
-1. Parse provider name, operation, and JSON data from flags
-2. Look up the provider in a runtime registry
-3. Deserialize JSON into the typed parameter struct
-4. Instantiate the provider using the local platform factory
-5. Call the operation method
-6. Serialize result to JSON on stdout
-7. Exit 0 on success, non-zero on failure (error message as JSON on stderr)
-
-**Provider registry:**
-
-```go
-type Registration struct {
-    Name       string
-    Operations map[string]OperationSpec
-}
-
-type OperationSpec struct {
-    NewParams func() any
-    Run       func(ctx context.Context, params any) (any, error)
-}
-```
-
-Each provider registers its operations and parameter types. The `provider run`
-command looks up the provider and operation, creates the param type, unmarshals
-JSON into it, calls `Run`, and marshals the result.
-
-The SDK already has typed methods and parameter structs. The `provider run`
-subcommand only needs JSON-in/JSON-out because the SDK handles type safety on
-the caller side.
-
-### Orchestrator DSL
-
-The orchestrator DSL adds container targeting through `Docker()` and `In()`
-methods on the `Plan` instance:
-
-```go
-p := orchestrator.NewPlan(client)
-web := p.Docker("web-server", "ubuntu:24.04")
-
-create := p.TaskFunc("create container", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    return c.Container.Create(ctx, target, container.CreateParams{
-        Image: "ubuntu:24.04",
-        Name:  "web-server",
-    })
-})
-
-p.In(web).TaskFunc("add user", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    // c here is container-scoped — calls route through docker exec
-    return c.User.Create(ctx, user.CreateParams{
-        Username: "deploy",
-        Shell:    "/bin/bash",
-    })
-}).DependsOn(create)
-```
-
-**How `In(target)` works:**
-
-1. `p.Docker(name, image)` returns a `RuntimeTarget` handle that knows it is a
-   Docker container with that name and image
-2. At container creation, the orchestrator volume-mounts the host's `osapi`
-   binary into the container
-3. `p.In(target)` returns a scoped plan context where SDK client method calls
-   are intercepted
-4. Instead of HTTP requests to the API server, the scoped client serializes
-   params to JSON and executes
-   `docker exec <container> /osapi provider run <provider> <operation> --data '<json>'`
-   through the Docker driver's `Exec` method
-5. JSON stdout is deserialized back into the typed result struct
-
-The developer works with the same typed SDK methods. The transport changes from
-HTTP to Docker exec + provider run, but the interface is identical.
-
-**`RuntimeTarget` interface** (for future LXD/Podman support):
-
-```go
-type RuntimeTarget interface {
-    Name() string
-    Runtime() string  // "docker", "lxd", "podman"
-    ExecProvider(ctx context.Context, provider, operation string, data []byte) ([]byte, error)
-}
-```
-
-`p.Docker()` and (future) `p.LXD()` return different implementations of the same
-interface. `p.In()` accepts any `RuntimeTarget`.
-
 ### Configuration
 
 No new configuration sections are needed in `osapi.yaml`. The Docker driver
@@ -338,7 +230,6 @@ internal/api/
 └── handler_public_test.go     # +TestGetContainerHandler
 
 cmd/
-├── provider_run.go            # provider run subcommand (hidden)
 ├── client_container.go        # parent command
 ├── client_container_create.go # CLI per endpoint
 ├── client_container_list.go
@@ -349,12 +240,7 @@ cmd/
 ├── client_container_exec.go
 └── client_container_pull.go
 
-pkg/sdk/
-├── client/container.go        # SDK service wrapper
-└── orchestrator/
-    ├── runtime_target.go      # RuntimeTarget interface
-    ├── docker_target.go       # Docker implementation
-    └── plan_in.go             # In() scoped context
+pkg/sdk/client/container.go    # SDK service wrapper
 ```
 
 ### Documentation
@@ -388,10 +274,21 @@ just go::vet         # lint passes
 | API nesting                   | Under `/node/{hostname}`        | Containers run on a node, consistent with existing API conventions        |
 | Separate `execute` permission | `container:execute`             | Running commands in containers is a distinct privilege from lifecycle ops |
 | Graceful absence              | Nil provider, descriptive error | Agents without Docker still work for all other providers                  |
-| Provider run subcommand       | JSON-in/JSON-out, hidden        | Machine interface consumed by SDK; type safety lives in SDK               |
-| Provider registry             | Runtime registration            | No code generation needed; new providers just register themselves         |
-| Volume-mount binary           | Mount host osapi into container | Any base image works; no custom OSAPI container image required            |
-| DSL via `In(target)`          | Scoped client, same SDK types   | Developers use identical API; only transport changes                      |
 | `{id}` parameter              | String with pattern, not UUID   | Docker IDs are hex strings/names, not UUIDs                               |
 | Remove force flag             | Query parameter, no body        | Consistent with existing DELETE endpoints                                 |
 | Pull behavior                 | Async via job system            | Large pulls can take minutes; blocking HTTP is unreliable                 |
+
+## What Was Removed
+
+The original design included two additional layers that have been dropped:
+
+- **`provider run` CLI subcommand** — A hidden command to run OSAPI providers
+  inside containers via `docker exec`. Removed because we are not running OSAPI
+  inside containers.
+- **Orchestrator DSL `In(target)` / `Docker()`** — Scoped plan context that
+  intercepted SDK client calls and routed them through `docker exec` +
+  `provider run`. Removed because it depended on `provider run`.
+
+Container operations are managed through the standard API/CLI/SDK path, the same
+as every other OSAPI domain. The orchestrator can compose container operations
+with host operations using `TaskFunc` — no special DSL extensions needed.

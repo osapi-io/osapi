@@ -61,8 +61,8 @@ Container operations follow the same request flow as all OSAPI operations:
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label. See [CLI Reference](../usage/cli/client/container/container.mdx) for
 usage and examples, or the
-[API Reference](/gen/api/container-management-api-container-operations) for the
-REST endpoints.
+[API Reference](/gen/api/docker-management-api-docker-operations) for the REST
+endpoints.
 
 ### Runtime Drivers
 
@@ -92,23 +92,23 @@ authentication settings.
 
 ## Permissions
 
-| Endpoint                                     | Permission          |
-| -------------------------------------------- | ------------------- |
-| `POST /node/{hostname}/container` (create)   | `container:write`   |
-| `GET /node/{hostname}/container` (list)      | `container:read`    |
-| `GET /node/{hostname}/container/{id}`        | `container:read`    |
-| `POST /node/{hostname}/container/{id}/start` | `container:write`   |
-| `POST /node/{hostname}/container/{id}/stop`  | `container:write`   |
-| `DELETE /node/{hostname}/container/{id}`     | `container:write`   |
-| `POST /node/{hostname}/container/{id}/exec`  | `container:execute` |
-| `POST /node/{hostname}/container/pull`       | `container:write`   |
+| Endpoint                                            | Permission       |
+| --------------------------------------------------- | ---------------- |
+| `POST /node/{hostname}/container/docker` (create)   | `docker:write`   |
+| `GET /node/{hostname}/container/docker` (list)      | `docker:read`    |
+| `GET /node/{hostname}/container/docker/{id}`        | `docker:read`    |
+| `POST /node/{hostname}/container/docker/{id}/start` | `docker:write`   |
+| `POST /node/{hostname}/container/docker/{id}/stop`  | `docker:write`   |
+| `DELETE /node/{hostname}/container/docker/{id}`     | `docker:write`   |
+| `POST /node/{hostname}/container/docker/{id}/exec`  | `docker:execute` |
+| `POST /node/{hostname}/container/docker/pull`       | `docker:write`   |
 
-The `admin` role includes `container:read`, `container:write`, and
-`container:execute`. The `write` role includes `container:read` and
-`container:write`. The `read` role includes only `container:read`.
+The `admin` role includes `docker:read`, `docker:write`, and `docker:execute`.
+The `write` role includes `docker:read` and `docker:write`. The `read` role
+includes only `docker:read`.
 
 Container exec is a privileged operation similar to command execution. Only the
-`admin` role includes `container:execute` by default. Grant it to other roles or
+`admin` role includes `docker:execute` by default. Grant it to other roles or
 tokens explicitly when needed:
 
 ```yaml
@@ -116,11 +116,11 @@ api:
   server:
     security:
       roles:
-        container-ops:
+        docker-ops:
           permissions:
-            - container:read
-            - container:write
-            - container:execute
+            - docker:read
+            - docker:write
+            - docker:execute
             - health:read
 ```
 
@@ -128,51 +128,69 @@ Or grant it directly on a token:
 
 ```bash
 osapi token generate -r write -u user@example.com \
-  -p container:execute
+  -p docker:execute
 ```
 
-## Orchestrator DSL
+## Orchestrator
 
-The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK supports container
-operations through the
-[Container Targeting](../sdk/orchestrator/features/container-targeting.md)
-feature. Use `Plan.Docker()` and `Plan.In()` to create containers and run
-existing providers inside them without rewriting any code:
+The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose
+container operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and
+cleanup steps chain together with dependencies and guards:
 
 ```go
-plan := orchestrator.NewPlan(client, orchestrator.WithDockerExecFn(execFn))
-web := plan.Docker("web-server", "nginx:alpine")
+plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
 
-create := plan.TaskFunc("create", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    return c.Container.Create(ctx, "_any", gen.ContainerCreateRequest{
-        Image: "nginx:alpine",
-        Name:  ptr("web-server"),
-    })
-})
+pull := plan.TaskFunc("pull-image",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
+            Image: "nginx:alpine",
+        })
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
 
-plan.In(web).TaskFunc("check-config", func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-    // Runs inside the container via docker exec + provider run
-    return c.Container.Exec(ctx, "_any", "web-server", gen.ContainerExecRequest{
-        Command: []string{"nginx", "-t"},
-    })
-}).DependsOn(create)
+create := plan.TaskFunc("create-container",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        autoStart := true
+        _, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
+            Image:     "nginx:alpine",
+            Name:      ptr("web-server"),
+            AutoStart: &autoStart,
+        })
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
+create.DependsOn(pull)
+
+exec := plan.TaskFunc("check-config",
+    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+        _, err := c.Docker.Exec(ctx, "_any", "web-server",
+            gen.DockerExecRequest{Command: []string{"nginx", "-t"}})
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: true}, nil
+    },
+)
+exec.DependsOn(create)
 ```
 
-The transport changes from HTTP to `docker exec` + `provider run`, but the SDK
-interface is identical. See the
-[container targeting feature page](../sdk/orchestrator/features/container-targeting.md)
-for details and the
-[operations reference](../sdk/orchestrator/orchestrator.md#operations) for all
-container operations.
+See
+[`examples/sdk/orchestrator/features/container-targeting.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/features/container-targeting.go)
+for a complete working example.
 
 ## Related
 
 - [CLI Reference](../usage/cli/client/container/container.mdx) -- container
   management commands
-- [API Reference](/gen/api/container-management-api-container-operations) --
-  REST API documentation
-- [Orchestrator Container Targeting](../sdk/orchestrator/features/container-targeting.md)
-  -- DSL for running providers inside containers
+- [API Reference](/gen/api/docker-management-api-docker-operations) -- REST API
+  documentation
 - [Job System](job-system.md) -- how async job processing works
 - [Authentication & RBAC](authentication.md) -- permissions and roles
 - [Architecture](../architecture/architecture.md) -- system design overview
