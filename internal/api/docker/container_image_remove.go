@@ -44,6 +44,8 @@ func (s *Container) DeleteNodeContainerDockerImage(
 		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
 
+	// Defense in depth: Force *bool with omitempty cannot currently
+	// fail validation, but guards against future parameter additions.
 	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
