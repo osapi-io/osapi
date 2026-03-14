@@ -13,214 +13,19 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/common"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/golang/mock/gomock"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
 
 	dockerprov "github.com/retr0h/osapi/internal/provider/docker"
+	dockermocks "github.com/retr0h/osapi/internal/provider/docker/mocks"
 )
-
-// mockDockerClient embeds dockerclient.APIClient and overrides specific methods for testing.
-type mockDockerClient struct {
-	dockerclient.APIClient
-	pingFunc            func(ctx context.Context) (types.Ping, error)
-	containerCreateFunc func(
-		ctx context.Context,
-		config *container.Config,
-		hostConfig *container.HostConfig,
-		networkConfig *network.NetworkingConfig,
-		platform *ocispec.Platform,
-		containerName string,
-	) (container.CreateResponse, error)
-	containerStartFunc      func(ctx context.Context, containerID string, options container.StartOptions) error
-	containerStopFunc       func(ctx context.Context, containerID string, options container.StopOptions) error
-	containerRemoveFunc     func(ctx context.Context, containerID string, options container.RemoveOptions) error
-	containerListFunc       func(ctx context.Context, options container.ListOptions) ([]container.Summary, error)
-	containerInspectFunc    func(ctx context.Context, containerID string) (container.InspectResponse, error)
-	containerExecCreateFunc func(
-		ctx context.Context,
-		containerID string,
-		config container.ExecOptions,
-	) (container.ExecCreateResponse, error)
-	containerExecAttachFunc func(
-		ctx context.Context,
-		execID string,
-		config container.ExecStartOptions,
-	) (types.HijackedResponse, error)
-	containerExecInspectFunc func(ctx context.Context, execID string) (container.ExecInspect, error)
-	imagePullFunc            func(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error)
-	imageInspectFunc         func(ctx context.Context, imageID string, options ...dockerclient.ImageInspectOption) (image.InspectResponse, error)
-	imageRemoveFunc          func(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error)
-}
-
-func (m *mockDockerClient) Ping(
-	ctx context.Context,
-) (types.Ping, error) {
-	if m.pingFunc != nil {
-		return m.pingFunc(ctx)
-	}
-
-	return types.Ping{}, nil
-}
-
-func (m *mockDockerClient) ContainerCreate(
-	ctx context.Context,
-	config *container.Config,
-	hostConfig *container.HostConfig,
-	networkConfig *network.NetworkingConfig,
-	platform *ocispec.Platform,
-	containerName string,
-) (container.CreateResponse, error) {
-	if m.containerCreateFunc != nil {
-		return m.containerCreateFunc(
-			ctx,
-			config,
-			hostConfig,
-			networkConfig,
-			platform,
-			containerName,
-		)
-	}
-
-	return container.CreateResponse{ID: "test-container-id"}, nil
-}
-
-func (m *mockDockerClient) ContainerStart(
-	ctx context.Context,
-	containerID string,
-	options container.StartOptions,
-) error {
-	if m.containerStartFunc != nil {
-		return m.containerStartFunc(ctx, containerID, options)
-	}
-
-	return nil
-}
-
-func (m *mockDockerClient) ContainerStop(
-	ctx context.Context,
-	containerID string,
-	options container.StopOptions,
-) error {
-	if m.containerStopFunc != nil {
-		return m.containerStopFunc(ctx, containerID, options)
-	}
-
-	return nil
-}
-
-func (m *mockDockerClient) ContainerRemove(
-	ctx context.Context,
-	containerID string,
-	options container.RemoveOptions,
-) error {
-	if m.containerRemoveFunc != nil {
-		return m.containerRemoveFunc(ctx, containerID, options)
-	}
-
-	return nil
-}
-
-func (m *mockDockerClient) ContainerList(
-	ctx context.Context,
-	options container.ListOptions,
-) ([]container.Summary, error) {
-	if m.containerListFunc != nil {
-		return m.containerListFunc(ctx, options)
-	}
-
-	return []container.Summary{}, nil
-}
-
-func (m *mockDockerClient) ContainerInspect(
-	ctx context.Context,
-	containerID string,
-) (container.InspectResponse, error) {
-	if m.containerInspectFunc != nil {
-		return m.containerInspectFunc(ctx, containerID)
-	}
-
-	return container.InspectResponse{}, nil
-}
-
-func (m *mockDockerClient) ContainerExecCreate(
-	ctx context.Context,
-	containerID string,
-	config container.ExecOptions,
-) (container.ExecCreateResponse, error) {
-	if m.containerExecCreateFunc != nil {
-		return m.containerExecCreateFunc(ctx, containerID, config)
-	}
-
-	return container.ExecCreateResponse{ID: "test-exec-id"}, nil
-}
-
-func (m *mockDockerClient) ContainerExecAttach(
-	ctx context.Context,
-	execID string,
-	config container.ExecStartOptions,
-) (types.HijackedResponse, error) {
-	if m.containerExecAttachFunc != nil {
-		return m.containerExecAttachFunc(ctx, execID, config)
-	}
-
-	return types.HijackedResponse{}, nil
-}
-
-func (m *mockDockerClient) ContainerExecInspect(
-	ctx context.Context,
-	execID string,
-) (container.ExecInspect, error) {
-	if m.containerExecInspectFunc != nil {
-		return m.containerExecInspectFunc(ctx, execID)
-	}
-
-	return container.ExecInspect{}, nil
-}
-
-func (m *mockDockerClient) ImagePull(
-	ctx context.Context,
-	ref string,
-	options image.PullOptions,
-) (io.ReadCloser, error) {
-	if m.imagePullFunc != nil {
-		return m.imagePullFunc(ctx, ref, options)
-	}
-
-	return io.NopCloser(strings.NewReader("{}")), nil
-}
-
-func (m *mockDockerClient) ImageInspect(
-	ctx context.Context,
-	imageID string,
-	options ...dockerclient.ImageInspectOption,
-) (image.InspectResponse, error) {
-	if m.imageInspectFunc != nil {
-		return m.imageInspectFunc(ctx, imageID, options...)
-	}
-
-	return image.InspectResponse{
-		ID:       "sha256:test",
-		RepoTags: []string{"nginx:latest"},
-		Size:     1024,
-	}, nil
-}
-
-func (m *mockDockerClient) ImageRemove(
-	ctx context.Context,
-	imageID string,
-	options image.RemoveOptions,
-) ([]image.DeleteResponse, error) {
-	if m.imageRemoveFunc != nil {
-		return m.imageRemoveFunc(ctx, imageID, options)
-	}
-
-	return nil, nil
-}
 
 // newHijackedResponse creates a HijackedResponse with the given content
 // suitable for testing. It uses a pipe-based net.Conn so Close() does not panic.
@@ -324,17 +129,19 @@ func (s *DockerDriverPublicTestSuite) TestNew() {
 func (s *DockerDriverPublicTestSuite) TestPing() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		validateFunc func(err error)
 	}{
 		{
 			name: "successful ping",
-			mockClient: &mockDockerClient{
-				pingFunc: func(
-					_ context.Context,
-				) (types.Ping, error) {
-					return types.Ping{APIVersion: "1.45"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					Ping(gomock.Any()).
+					Return(types.Ping{APIVersion: "1.45"}, nil)
+				return m
 			},
 			validateFunc: func(
 				err error,
@@ -344,12 +151,14 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 		},
 		{
 			name: "returns error when ping fails",
-			mockClient: &mockDockerClient{
-				pingFunc: func(
-					_ context.Context,
-				) (types.Ping, error) {
-					return types.Ping{}, fmt.Errorf("connection refused")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					Ping(gomock.Any()).
+					Return(types.Ping{}, fmt.Errorf("connection refused"))
+				return m
 			},
 			validateFunc: func(
 				err error,
@@ -362,7 +171,9 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			err := d.Ping(s.ctx)
 			tt.validateFunc(err)
 		})
@@ -372,23 +183,27 @@ func (s *DockerDriverPublicTestSuite) TestPing() {
 func (s *DockerDriverPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		params       dockerprov.CreateParams
 		validateFunc func(c *dockerprov.Container, err error)
 	}{
 		{
 			name: "successful container creation",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					_ *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					return container.CreateResponse{ID: "test-id"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					Return(container.CreateResponse{ID: "test-id"}, nil)
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
@@ -405,24 +220,24 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "successful container creation with auto-start",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					_ *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					return container.CreateResponse{ID: "test-id-auto"}, nil
-				},
-				containerStartFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.StartOptions,
-				) error {
-					return nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					Return(container.CreateResponse{ID: "test-id-auto"}, nil)
+				m.EXPECT().
+					ContainerStart(gomock.Any(), "test-id-auto", gomock.Any()).
+					Return(nil)
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image:     "nginx:latest",
@@ -440,19 +255,31 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "with command set",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					config *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					s.Equal([]string(config.Cmd), []string{"echo", "hello"})
-
-					return container.CreateResponse{ID: "cmd-id"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.AssignableToTypeOf(&container.Config{}),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						config *container.Config,
+						_ *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Equal([]string{"echo", "hello"}, []string(config.Cmd))
+						return container.CreateResponse{ID: "cmd-id"}, nil
+					})
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image:   "alpine:latest",
@@ -470,20 +297,32 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "with env map",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					config *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					s.Len(config.Env, 1)
-					s.Contains(config.Env[0], "FOO=bar")
-
-					return container.CreateResponse{ID: "env-id"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						config *container.Config,
+						_ *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Len(config.Env, 1)
+						s.Contains(config.Env[0], "FOO=bar")
+						return container.CreateResponse{ID: "env-id"}, nil
+					})
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image: "alpine:latest",
@@ -501,23 +340,35 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "with ports",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					config *container.Config,
-					hostConfig *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					s.NotNil(config.ExposedPorts)
-					s.NotNil(hostConfig.PortBindings)
-					containerPort := nat.Port("80/tcp")
-					s.Contains(hostConfig.PortBindings, containerPort)
-					s.Equal("8080", hostConfig.PortBindings[containerPort][0].HostPort)
-
-					return container.CreateResponse{ID: "ports-id"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						config *container.Config,
+						hostConfig *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.NotNil(config.ExposedPorts)
+						s.NotNil(hostConfig.PortBindings)
+						containerPort := nat.Port("80/tcp")
+						s.Contains(hostConfig.PortBindings, containerPort)
+						s.Equal("8080", hostConfig.PortBindings[containerPort][0].HostPort)
+						return container.CreateResponse{ID: "ports-id"}, nil
+					})
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
@@ -537,21 +388,33 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "with volumes",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					_ *container.Config,
-					hostConfig *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					s.Len(hostConfig.Mounts, 1)
-					s.Equal("/host/data", hostConfig.Mounts[0].Source)
-					s.Equal("/container/data", hostConfig.Mounts[0].Target)
-
-					return container.CreateResponse{ID: "vols-id"}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					DoAndReturn(func(
+						_ context.Context,
+						_ *container.Config,
+						hostConfig *container.HostConfig,
+						_ *network.NetworkingConfig,
+						_ *ocispec.Platform,
+						_ string,
+					) (container.CreateResponse, error) {
+						s.Len(hostConfig.Mounts, 1)
+						s.Equal("/host/data", hostConfig.Mounts[0].Source)
+						s.Equal("/container/data", hostConfig.Mounts[0].Target)
+						return container.CreateResponse{ID: "vols-id"}, nil
+					})
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image: "nginx:latest",
@@ -571,17 +434,21 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "returns error when container create fails",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					_ *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					return container.CreateResponse{}, fmt.Errorf("image not found")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					Return(container.CreateResponse{}, fmt.Errorf("image not found"))
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image: "nonexistent:latest",
@@ -598,24 +465,24 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "returns error when auto-start fails",
-			mockClient: &mockDockerClient{
-				containerCreateFunc: func(
-					_ context.Context,
-					_ *container.Config,
-					_ *container.HostConfig,
-					_ *network.NetworkingConfig,
-					_ *ocispec.Platform,
-					_ string,
-				) (container.CreateResponse, error) {
-					return container.CreateResponse{ID: "autostart-fail-id"}, nil
-				},
-				containerStartFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.StartOptions,
-				) error {
-					return fmt.Errorf("start failed")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerCreate(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).
+					Return(container.CreateResponse{ID: "autostart-fail-id"}, nil)
+				m.EXPECT().
+					ContainerStart(gomock.Any(), "autostart-fail-id", gomock.Any()).
+					Return(fmt.Errorf("start failed"))
+				return m
 			},
 			params: dockerprov.CreateParams{
 				Image:     "nginx:latest",
@@ -635,7 +502,9 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			c, err := d.Create(s.ctx, tt.params)
 			tt.validateFunc(c, err)
 		})
@@ -645,20 +514,20 @@ func (s *DockerDriverPublicTestSuite) TestCreate() {
 func (s *DockerDriverPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		containerID  string
 		validateFunc func(err error)
 	}{
 		{
 			name: "successful start",
-			mockClient: &mockDockerClient{
-				containerStartFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.StartOptions,
-				) error {
-					return nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStart(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				return m
 			},
 			containerID: "test-id",
 			validateFunc: func(
@@ -669,14 +538,14 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 		},
 		{
 			name: "returns error when start fails",
-			mockClient: &mockDockerClient{
-				containerStartFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.StartOptions,
-				) error {
-					return fmt.Errorf("container not found")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStart(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(fmt.Errorf("container not found"))
+				return m
 			},
 			containerID: "missing-id",
 			validateFunc: func(
@@ -690,7 +559,9 @@ func (s *DockerDriverPublicTestSuite) TestStart() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			_, err := d.Start(s.ctx, tt.containerID)
 			tt.validateFunc(err)
 		})
@@ -701,23 +572,28 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 	timeout := 10 * time.Second
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		containerID  string
 		timeout      *time.Duration
 		validateFunc func(err error)
 	}{
 		{
 			name: "successful stop with timeout",
-			mockClient: &mockDockerClient{
-				containerStopFunc: func(
-					_ context.Context,
-					_ string,
-					options container.StopOptions,
-				) error {
-					s.NotNil(options.Timeout)
-
-					return nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStop(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						options container.StopOptions,
+					) error {
+						s.NotNil(options.Timeout)
+						return nil
+					})
+				return m
 			},
 			containerID: "test-id",
 			timeout:     &timeout,
@@ -729,16 +605,21 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 		},
 		{
 			name: "successful stop with nil timeout",
-			mockClient: &mockDockerClient{
-				containerStopFunc: func(
-					_ context.Context,
-					_ string,
-					options container.StopOptions,
-				) error {
-					s.Nil(options.Timeout)
-
-					return nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStop(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						options container.StopOptions,
+					) error {
+						s.Nil(options.Timeout)
+						return nil
+					})
+				return m
 			},
 			containerID: "test-id",
 			timeout:     nil,
@@ -750,14 +631,14 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 		},
 		{
 			name: "returns error when stop fails",
-			mockClient: &mockDockerClient{
-				containerStopFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.StopOptions,
-				) error {
-					return fmt.Errorf("container not running")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerStop(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(fmt.Errorf("container not running"))
+				return m
 			},
 			containerID: "stopped-id",
 			timeout:     nil,
@@ -772,7 +653,9 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			_, err := d.Stop(s.ctx, tt.containerID, tt.timeout)
 			tt.validateFunc(err)
 		})
@@ -782,21 +665,21 @@ func (s *DockerDriverPublicTestSuite) TestStop() {
 func (s *DockerDriverPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		containerID  string
 		force        bool
 		validateFunc func(err error)
 	}{
 		{
 			name: "successful remove with force",
-			mockClient: &mockDockerClient{
-				containerRemoveFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.RemoveOptions,
-				) error {
-					return nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerRemove(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				return m
 			},
 			containerID: "test-id",
 			force:       true,
@@ -808,14 +691,14 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 		},
 		{
 			name: "returns error when remove fails",
-			mockClient: &mockDockerClient{
-				containerRemoveFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.RemoveOptions,
-				) error {
-					return fmt.Errorf("container is running")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerRemove(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(fmt.Errorf("container is running"))
+				return m
 			},
 			containerID: "running-id",
 			force:       false,
@@ -830,7 +713,9 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			_, err := d.Remove(s.ctx, tt.containerID, tt.force)
 			tt.validateFunc(err)
 		})
@@ -840,29 +725,34 @@ func (s *DockerDriverPublicTestSuite) TestRemove() {
 func (s *DockerDriverPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		params       dockerprov.ListParams
 		validateFunc func(containers []dockerprov.Container, err error)
 	}{
 		{
 			name: "successful list all containers",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					options container.ListOptions,
-				) ([]container.Summary, error) {
-					s.True(options.All)
-
-					return []container.Summary{
-						{
-							ID:      "test-id-1",
-							Names:   []string{"/test-container-1"},
-							Image:   "nginx:latest",
-							State:   "running",
-							Created: time.Now().Unix(),
-						},
-					}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						options container.ListOptions,
+					) ([]container.Summary, error) {
+						s.True(options.All)
+						return []container.Summary{
+							{
+								ID:      "test-id-1",
+								Names:   []string{"/test-container-1"},
+								Image:   "nginx:latest",
+								State:   "running",
+								Created: time.Now().Unix(),
+							},
+						}, nil
+					})
+				return m
 			},
 			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
@@ -876,15 +766,20 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "state running sets all to false",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					options container.ListOptions,
-				) ([]container.Summary, error) {
-					s.False(options.All)
-
-					return []container.Summary{}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						options container.ListOptions,
+					) ([]container.Summary, error) {
+						s.False(options.All)
+						return []container.Summary{}, nil
+					})
+				return m
 			},
 			params: dockerprov.ListParams{State: "running"},
 			validateFunc: func(
@@ -897,16 +792,21 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "state stopped sets filter",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					options container.ListOptions,
-				) ([]container.Summary, error) {
-					s.True(options.All)
-					s.NotNil(options.Filters)
-
-					return []container.Summary{}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						options container.ListOptions,
+					) ([]container.Summary, error) {
+						s.True(options.All)
+						s.NotNil(options.Filters)
+						return []container.Summary{}, nil
+					})
+				return m
 			},
 			params: dockerprov.ListParams{State: "stopped"},
 			validateFunc: func(
@@ -919,15 +819,20 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "default empty state",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					options container.ListOptions,
-				) ([]container.Summary, error) {
-					s.False(options.All)
-
-					return []container.Summary{}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						options container.ListOptions,
+					) ([]container.Summary, error) {
+						s.False(options.All)
+						return []container.Summary{}, nil
+					})
+				return m
 			},
 			params: dockerprov.ListParams{State: ""},
 			validateFunc: func(
@@ -940,15 +845,20 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "with limit",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					options container.ListOptions,
-				) ([]container.Summary, error) {
-					s.Equal(5, options.Limit)
-
-					return []container.Summary{}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						options container.ListOptions,
+					) ([]container.Summary, error) {
+						s.Equal(5, options.Limit)
+						return []container.Summary{}, nil
+					})
+				return m
 			},
 			params: dockerprov.ListParams{State: "all", Limit: 5},
 			validateFunc: func(
@@ -961,12 +871,13 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "container with empty names slice",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					_ container.ListOptions,
-				) ([]container.Summary, error) {
-					return []container.Summary{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					Return([]container.Summary{
 						{
 							ID:      "no-name-id",
 							Names:   []string{},
@@ -974,8 +885,8 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 							State:   "running",
 							Created: time.Now().Unix(),
 						},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
@@ -989,13 +900,14 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 		},
 		{
 			name: "returns error when list fails",
-			mockClient: &mockDockerClient{
-				containerListFunc: func(
-					_ context.Context,
-					_ container.ListOptions,
-				) ([]container.Summary, error) {
-					return nil, fmt.Errorf("daemon error")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerList(gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("daemon error"))
+				return m
 			},
 			params: dockerprov.ListParams{State: "all"},
 			validateFunc: func(
@@ -1011,7 +923,9 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			containers, err := d.List(s.ctx, tt.params)
 			tt.validateFunc(containers, err)
 		})
@@ -1021,18 +935,19 @@ func (s *DockerDriverPublicTestSuite) TestList() {
 func (s *DockerDriverPublicTestSuite) TestInspect() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		containerID  string
 		validateFunc func(detail *dockerprov.ContainerDetail, err error)
 	}{
 		{
 			name: "successful inspect",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "test-id",
 							Name:    "/test-container",
@@ -1040,8 +955,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "test-id",
 			validateFunc: func(
@@ -1056,12 +971,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "nil state returns unknown",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "nil-state-id",
 							Name:    "/nil-state",
@@ -1069,8 +985,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "nil-state-id",
 			validateFunc: func(
@@ -1084,12 +1000,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "invalid created timestamp falls back to now",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "bad-time-id",
 							Name:    "/bad-time",
@@ -1097,8 +1014,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 							Created: "not-a-valid-timestamp",
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "bad-time-id",
 			validateFunc: func(
@@ -1112,12 +1029,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "with network settings",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "net-id",
 							Name:    "/net-container",
@@ -1133,8 +1051,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 								},
 							},
 						},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "net-id",
 			validateFunc: func(
@@ -1150,12 +1068,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "with port bindings",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:   "ports-id",
 							Name: "/ports-container",
@@ -1172,8 +1091,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 							},
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "ports-id",
 			validateFunc: func(
@@ -1189,12 +1108,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "with mounts",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:      "mounts-id",
 							Name:    "/mounts-container",
@@ -1208,8 +1128,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 								Destination: "/container/path",
 							},
 						},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "mounts-id",
 			validateFunc: func(
@@ -1225,12 +1145,13 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "with health status",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{
 						ContainerJSONBase: &container.ContainerJSONBase{
 							ID:   "health-id",
 							Name: "/health-container",
@@ -1243,8 +1164,8 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 							Created: time.Now().Format(time.RFC3339Nano),
 						},
 						Config: &container.Config{Image: "nginx:latest"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			containerID: "health-id",
 			validateFunc: func(
@@ -1258,13 +1179,14 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 		},
 		{
 			name: "returns error when inspect fails",
-			mockClient: &mockDockerClient{
-				containerInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.InspectResponse, error) {
-					return container.InspectResponse{}, fmt.Errorf("no such container")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerInspect(gomock.Any(), gomock.Any()).
+					Return(container.InspectResponse{}, fmt.Errorf("no such container"))
+				return m
 			},
 			containerID: "missing-id",
 			validateFunc: func(
@@ -1280,7 +1202,9 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			detail, err := d.Inspect(s.ctx, tt.containerID)
 			tt.validateFunc(detail, err)
 		})
@@ -1290,38 +1214,36 @@ func (s *DockerDriverPublicTestSuite) TestInspect() {
 func (s *DockerDriverPublicTestSuite) TestExec() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		containerID  string
 		params       dockerprov.ExecParams
 		validateFunc func(result *dockerprov.ExecResult, err error)
 	}{
 		{
 			name: "successful exec",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					config container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					s.Equal([]string{"echo", "hello"}, config.Cmd)
-					s.True(config.AttachStdout)
-					s.True(config.AttachStderr)
-
-					return container.ExecCreateResponse{ID: "exec-id"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return newHijackedResponse("hello\n"), nil
-				},
-				containerExecInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.ExecInspect, error) {
-					return container.ExecInspect{ExitCode: 0}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						config container.ExecOptions,
+					) (common.IDResponse, error) {
+						s.Equal([]string{"echo", "hello"}, config.Cmd)
+						s.True(config.AttachStdout)
+						s.True(config.AttachStderr)
+						return common.IDResponse{ID: "exec-id"}, nil
+					})
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-id", gomock.Any()).
+					Return(newHijackedResponse("hello\n"), nil)
+				m.EXPECT().
+					ContainerExecInspect(gomock.Any(), "exec-id").
+					Return(container.ExecInspect{ExitCode: 0}, nil)
+				return m
 			},
 			containerID: "test-id",
 			params: dockerprov.ExecParams{
@@ -1339,30 +1261,28 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "with env set",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					config container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					s.Len(config.Env, 1)
-					s.Contains(config.Env[0], "MY_VAR=value")
-
-					return container.ExecCreateResponse{ID: "exec-env-id"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return newHijackedResponse(""), nil
-				},
-				containerExecInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.ExecInspect, error) {
-					return container.ExecInspect{ExitCode: 0}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						config container.ExecOptions,
+					) (common.IDResponse, error) {
+						s.Len(config.Env, 1)
+						s.Contains(config.Env[0], "MY_VAR=value")
+						return common.IDResponse{ID: "exec-env-id"}, nil
+					})
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-env-id", gomock.Any()).
+					Return(newHijackedResponse(""), nil)
+				m.EXPECT().
+					ContainerExecInspect(gomock.Any(), "exec-env-id").
+					Return(container.ExecInspect{ExitCode: 0}, nil)
+				return m
 			},
 			containerID: "test-id",
 			params: dockerprov.ExecParams{
@@ -1379,29 +1299,27 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "with working dir set",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					config container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					s.Equal("/app", config.WorkingDir)
-
-					return container.ExecCreateResponse{ID: "exec-wd-id"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return newHijackedResponse(""), nil
-				},
-				containerExecInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.ExecInspect, error) {
-					return container.ExecInspect{ExitCode: 0}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						config container.ExecOptions,
+					) (common.IDResponse, error) {
+						s.Equal("/app", config.WorkingDir)
+						return common.IDResponse{ID: "exec-wd-id"}, nil
+					})
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-wd-id", gomock.Any()).
+					Return(newHijackedResponse(""), nil)
+				m.EXPECT().
+					ContainerExecInspect(gomock.Any(), "exec-wd-id").
+					Return(container.ExecInspect{ExitCode: 0}, nil)
+				return m
 			},
 			containerID: "test-id",
 			params: dockerprov.ExecParams{
@@ -1418,14 +1336,14 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "returns error when exec create fails",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					return container.ExecCreateResponse{}, fmt.Errorf("container not running")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(common.IDResponse{}, fmt.Errorf("container not running"))
+				return m
 			},
 			containerID: "stopped-id",
 			params: dockerprov.ExecParams{
@@ -1442,21 +1360,17 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "returns error when exec attach fails",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					return container.ExecCreateResponse{ID: "exec-attach-fail"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return types.HijackedResponse{}, fmt.Errorf("attach failed")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(common.IDResponse{ID: "exec-attach-fail"}, nil)
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-attach-fail", gomock.Any()).
+					Return(types.HijackedResponse{}, fmt.Errorf("attach failed"))
+				return m
 			},
 			containerID: "test-id",
 			params: dockerprov.ExecParams{
@@ -1473,21 +1387,17 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "returns error when io.Copy read fails",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					return container.ExecCreateResponse{ID: "exec-read-fail"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return newErrorHijackedResponse(), nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(common.IDResponse{ID: "exec-read-fail"}, nil)
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-read-fail", gomock.Any()).
+					Return(newErrorHijackedResponse(), nil)
+				return m
 			},
 			containerID: "container-1",
 			params: dockerprov.ExecParams{
@@ -1504,27 +1414,20 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 		},
 		{
 			name: "returns error when exec inspect fails",
-			mockClient: &mockDockerClient{
-				containerExecCreateFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecOptions,
-				) (container.ExecCreateResponse, error) {
-					return container.ExecCreateResponse{ID: "exec-inspect-fail"}, nil
-				},
-				containerExecAttachFunc: func(
-					_ context.Context,
-					_ string,
-					_ container.ExecStartOptions,
-				) (types.HijackedResponse, error) {
-					return newHijackedResponse(""), nil
-				},
-				containerExecInspectFunc: func(
-					_ context.Context,
-					_ string,
-				) (container.ExecInspect, error) {
-					return container.ExecInspect{}, fmt.Errorf("inspect failed")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ContainerExecCreate(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(common.IDResponse{ID: "exec-inspect-fail"}, nil)
+				m.EXPECT().
+					ContainerExecAttach(gomock.Any(), "exec-inspect-fail", gomock.Any()).
+					Return(newHijackedResponse(""), nil)
+				m.EXPECT().
+					ContainerExecInspect(gomock.Any(), "exec-inspect-fail").
+					Return(container.ExecInspect{}, fmt.Errorf("inspect failed"))
+				return m
 			},
 			containerID: "test-id",
 			params: dockerprov.ExecParams{
@@ -1543,7 +1446,9 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			result, err := d.Exec(s.ctx, tt.containerID, tt.params)
 			tt.validateFunc(result, err)
 		})
@@ -1553,42 +1458,40 @@ func (s *DockerDriverPublicTestSuite) TestExec() {
 func (s *DockerDriverPublicTestSuite) TestPull() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		imageName    string
 		validateFunc func(result *dockerprov.PullResult, err error)
 	}{
 		{
 			name: "new image pull reports changed true",
-			mockClient: func() *mockDockerClient {
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
 				var calls int
-
-				return &mockDockerClient{
-					imagePullFunc: func(
-						_ context.Context,
-						_ string,
-						_ image.PullOptions,
-					) (io.ReadCloser, error) {
-						return io.NopCloser(strings.NewReader("{}")), nil
-					},
-					imageInspectFunc: func(
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
 						_ context.Context,
 						_ string,
 						_ ...dockerclient.ImageInspectOption,
 					) (image.InspectResponse, error) {
 						calls++
 						if calls == 1 {
-							// Before pull: image not found.
 							return image.InspectResponse{}, fmt.Errorf("not found")
 						}
-						// After pull: image present.
 						return image.InspectResponse{
 							ID:       "sha256:test123",
 							RepoTags: []string{"nginx:latest"},
 							Size:     2048,
 						}, nil
-					},
-				}
-			}(),
+					}).
+					Times(2)
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader("{}")), nil)
+				return m
+			},
 			imageName: "nginx:latest",
 			validateFunc: func(
 				result *dockerprov.PullResult,
@@ -1604,26 +1507,22 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "existing image pull reports changed false",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					return io.NopCloser(strings.NewReader("{}")), nil
-				},
-				imageInspectFunc: func(
-					_ context.Context,
-					_ string,
-					_ ...dockerclient.ImageInspectOption,
-				) (image.InspectResponse, error) {
-					// Same ID before and after — no change.
-					return image.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{
 						ID:       "sha256:test123",
 						RepoTags: []string{"nginx:latest"},
 						Size:     2048,
-					}, nil
-				},
+					}, nil).
+					Times(2)
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader("{}")), nil)
+				return m
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
@@ -1638,28 +1537,26 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "successful pull with status digest in last event",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					events := `{"status":"Pulling from library/nginx"}
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				events := `{"status":"Pulling from library/nginx"}
 {"status":"Status","id":"sha256:digest-from-event"}`
-
-					return io.NopCloser(strings.NewReader(events)), nil
-				},
-				imageInspectFunc: func(
-					_ context.Context,
-					_ string,
-					_ ...dockerclient.ImageInspectOption,
-				) (image.InspectResponse, error) {
-					return image.InspectResponse{
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("not found"))
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader(events)), nil)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{
 						ID:       "sha256:inspect-id",
 						RepoTags: []string{"nginx:1.25"},
 						Size:     4096,
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			imageName: "nginx:1.25",
 			validateFunc: func(
@@ -1674,14 +1571,17 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "returns error when pull fails",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					return nil, fmt.Errorf("registry unavailable")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("not found"))
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("registry unavailable"))
+				return m
 			},
 			imageName: "nonexistent:latest",
 			validateFunc: func(
@@ -1695,15 +1595,17 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "returns error on decode failure",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					// Valid JSON followed by malformed JSON
-					return io.NopCloser(strings.NewReader("{}\n{invalid json")), nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("not found"))
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader("{}\n{invalid json")), nil)
+				return m
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
@@ -1717,25 +1619,24 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "image with no repo tags defaults to latest",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					return io.NopCloser(strings.NewReader("{}")), nil
-				},
-				imageInspectFunc: func(
-					_ context.Context,
-					_ string,
-					_ ...dockerclient.ImageInspectOption,
-				) (image.InspectResponse, error) {
-					return image.InspectResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("not found"))
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader("{}")), nil)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{
 						ID:       "sha256:no-tags",
 						RepoTags: []string{},
 						Size:     512,
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			imageName: "custom-image",
 			validateFunc: func(
@@ -1749,21 +1650,20 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		},
 		{
 			name: "returns error when image inspect fails",
-			mockClient: &mockDockerClient{
-				imagePullFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.PullOptions,
-				) (io.ReadCloser, error) {
-					return io.NopCloser(strings.NewReader("{}")), nil
-				},
-				imageInspectFunc: func(
-					_ context.Context,
-					_ string,
-					_ ...dockerclient.ImageInspectOption,
-				) (image.InspectResponse, error) {
-					return image.InspectResponse{}, fmt.Errorf("image not found")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("not found"))
+				m.EXPECT().
+					ImagePull(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(io.NopCloser(strings.NewReader("{}")), nil)
+				m.EXPECT().
+					ImageInspect(gomock.Any(), gomock.Any()).
+					Return(image.InspectResponse{}, fmt.Errorf("image not found"))
+				return m
 			},
 			imageName: "nginx:latest",
 			validateFunc: func(
@@ -1779,7 +1679,9 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			result, err := d.Pull(s.ctx, tt.imageName)
 			tt.validateFunc(result, err)
 		})
@@ -1789,23 +1691,23 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 	tests := []struct {
 		name         string
-		mockClient   *mockDockerClient
+		setupMock    func(ctrl *gomock.Controller) *dockermocks.MockDockerAPIClient
 		imageName    string
 		force        bool
 		validateFunc func(result *dockerprov.ActionResult, err error)
 	}{
 		{
 			name: "successful image remove",
-			mockClient: &mockDockerClient{
-				imageRemoveFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.RemoveOptions,
-				) ([]image.DeleteResponse, error) {
-					return []image.DeleteResponse{
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageRemove(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return([]image.DeleteResponse{
 						{Deleted: "sha256:abc123"},
-					}, nil
-				},
+					}, nil)
+				return m
 			},
 			imageName: "nginx:latest",
 			force:     false,
@@ -1821,18 +1723,23 @@ func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 		},
 		{
 			name: "successful image remove with force",
-			mockClient: &mockDockerClient{
-				imageRemoveFunc: func(
-					_ context.Context,
-					_ string,
-					options image.RemoveOptions,
-				) ([]image.DeleteResponse, error) {
-					s.True(options.Force)
-
-					return []image.DeleteResponse{
-						{Deleted: "sha256:abc123"},
-					}, nil
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageRemove(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						options image.RemoveOptions,
+					) ([]image.DeleteResponse, error) {
+						s.True(options.Force)
+						return []image.DeleteResponse{
+							{Deleted: "sha256:abc123"},
+						}, nil
+					})
+				return m
 			},
 			imageName: "nginx:latest",
 			force:     true,
@@ -1846,14 +1753,14 @@ func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 		},
 		{
 			name: "returns error when remove fails",
-			mockClient: &mockDockerClient{
-				imageRemoveFunc: func(
-					_ context.Context,
-					_ string,
-					_ image.RemoveOptions,
-				) ([]image.DeleteResponse, error) {
-					return nil, errors.New("image in use")
-				},
+			setupMock: func(
+				ctrl *gomock.Controller,
+			) *dockermocks.MockDockerAPIClient {
+				m := dockermocks.NewMockDockerAPIClient(ctrl)
+				m.EXPECT().
+					ImageRemove(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("image in use"))
+				return m
 			},
 			imageName: "nginx:latest",
 			force:     false,
@@ -1870,7 +1777,9 @@ func (s *DockerDriverPublicTestSuite) TestImageRemove() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			d := dockerprov.NewWithClient(tt.mockClient)
+			ctrl := gomock.NewController(s.T())
+			mockClient := tt.setupMock(ctrl)
+			d := dockerprov.NewWithClient(mockClient)
 			result, err := d.ImageRemove(s.ctx, tt.imageName, tt.force)
 			tt.validateFunc(result, err)
 		})

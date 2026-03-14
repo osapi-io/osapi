@@ -32,6 +32,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
+	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
@@ -47,6 +48,21 @@ import (
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
+
+// newTestMsg creates a jetstream.Msg mock that returns the given subject,
+// data, and nil headers. All three methods are expected any number of times,
+// mirroring how the handler accesses message fields.
+func newTestMsg(
+	ctrl *gomock.Controller,
+	subject string,
+	data []byte,
+) jetstream.Msg {
+	m := agentmocks.NewMockMsg(ctrl)
+	m.EXPECT().Subject().Return(subject).AnyTimes()
+	m.EXPECT().Data().Return(data).AnyTimes()
+	m.EXPECT().Headers().Return(nil).AnyTimes()
+	return m
+}
 
 type HandlerTestSuite struct {
 	suite.Suite
@@ -210,16 +226,15 @@ func (s *HandlerTestSuite) TestWriteStatusEvent() {
 func (s *HandlerTestSuite) TestHandleJobMessage() {
 	tests := []struct {
 		name        string
-		msg         jetstream.Msg
+		setupMsg    func(ctrl *gomock.Controller) jetstream.Msg
 		setupMocks  func()
 		expectError bool
 		errorMsg    string
 	}{
 		{
 			name: "when successful job processing",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("test-job-123"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-123"))
 			},
 			setupMocks: func() {
 				// Mock job data retrieval
@@ -255,9 +270,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when job processing fails",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("test-job-456"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-456"))
 			},
 			setupMocks: func() {
 				// Mock job data retrieval
@@ -294,9 +308,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when invalid subject format",
-			msg: &mockJetStreamMsg{
-				subject: "invalid",
-				data:    []byte("test-job-789"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "invalid", []byte("test-job-789"))
 			},
 			setupMocks: func() {
 				// No mocks needed as it should fail early
@@ -306,9 +319,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when job not found",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("nonexistent-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("nonexistent-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -320,9 +332,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when invalid job data format",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("invalid-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -334,9 +345,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when missing job ID",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("missing-id-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-id-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -353,9 +363,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when missing operation",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("missing-op-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-op-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -369,9 +378,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when missing operation type",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("missing-type-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-type-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -388,9 +396,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when invalid operation type format",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("invalid-type-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-type-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -408,9 +415,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when acknowledged write error logged",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("ack-err-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("ack-err-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -443,9 +449,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when started write error logged",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("start-err-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("start-err-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -478,9 +483,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when completed write error logged",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("comp-err-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("comp-err-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -513,9 +517,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when failed write error logged",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("fail-err-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fail-err-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -549,9 +552,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when fact reference resolved in job data",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("fact-resolve-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-resolve-job"))
 			},
 			setupMocks: func() {
 				s.agent.cachedFacts = &job.FactsRegistration{
@@ -588,9 +590,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when fact reference with nil cached facts writes error to KV",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("fact-nil-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-nil-job"))
 			},
 			setupMocks: func() {
 				s.agent.cachedFacts = nil
@@ -626,9 +627,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when unresolvable fact reference writes error to KV",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("fact-fail-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-fail-job"))
 			},
 			setupMocks: func() {
 				s.agent.cachedFacts = &job.FactsRegistration{}
@@ -664,9 +664,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		},
 		{
 			name: "when response storage failure",
-			msg: &mockJetStreamMsg{
-				subject: "jobs.query.test-agent",
-				data:    []byte("storage-fail-job"),
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("storage-fail-job"))
 			},
 			setupMocks: func() {
 				// Mock successful job processing
@@ -703,7 +702,8 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			err := s.agent.handleJobMessage(tt.msg)
+			msg := tt.setupMsg(s.mockCtrl)
+			err := s.agent.handleJobMessage(msg)
 
 			if tt.expectError {
 				s.Error(err)
@@ -772,11 +772,7 @@ func (s *HandlerTestSuite) TestHandleJobMessageModifyJobs() {
 		s.Run(tt.name, func() {
 			tt.setupMocks()
 
-			msg := &mockJetStreamMsg{
-				subject: tt.subject,
-				data:    []byte("modify-job-123"),
-			}
-
+			msg := newTestMsg(s.mockCtrl, tt.subject, []byte("modify-job-123"))
 			err := s.agent.handleJobMessage(msg)
 
 			if tt.expectError {

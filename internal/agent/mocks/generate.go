@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,5 +21,4 @@
 // Package mocks provides mock implementations for testing.
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
-//go:generate go tool github.com/golang/mock/mockgen -source=../client.go -destination=docker_client.gen.go -package=mocks
+//go:generate go tool github.com/golang/mock/mockgen -destination=jetstream_msg.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Msg

@@ -24,31 +24,25 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
+	hostnamemocks "github.com/retr0h/osapi/internal/job/mocks/hostname"
 )
-
-// mockHostnameProvider for testing
-type mockHostnameProvider struct {
-	hostname string
-	err      error
-}
-
-func (m *mockHostnameProvider) Hostname() (string, error) {
-	return m.hostname, m.err
-}
 
 type HostnamePublicTestSuite struct {
 	suite.Suite
+
+	mockCtrl *gomock.Controller
 }
 
 func (s *HostnamePublicTestSuite) SetupTest() {
-	// Setup for each test
+	s.mockCtrl = gomock.NewController(s.T())
 }
 
 func (s *HostnamePublicTestSuite) TearDownTest() {
-	// Cleanup after each test
+	s.mockCtrl.Finish()
 }
 
 func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
@@ -137,30 +131,39 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 	tests := []struct {
 		name               string
 		configuredHostname string
-		provider           job.HostnameProvider
+		setupProvider      func() job.HostnameProvider
 		expectedHostname   string
 		expectError        bool
 	}{
 		{
 			name:               "configured hostname bypasses provider",
 			configuredHostname: "configured-agent",
-			provider:           &mockHostnameProvider{hostname: "system-host", err: nil},
-			expectedHostname:   "configured-agent",
-			expectError:        false,
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				// Provider is not called when hostname is pre-configured.
+				return m
+			},
+			expectedHostname: "configured-agent",
+			expectError:      false,
 		},
 		{
 			name:               "empty config uses provider successfully",
 			configuredHostname: "",
-			provider:           &mockHostnameProvider{hostname: "system-host", err: nil},
-			expectedHostname:   "system-host",
-			expectError:        false,
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("system-host", nil)
+				return m
+			},
+			expectedHostname: "system-host",
+			expectError:      false,
 		},
 		{
 			name:               "empty config with provider error returns unknown",
 			configuredHostname: "",
-			provider: &mockHostnameProvider{
-				hostname: "",
-				err:      errors.New("provider error"),
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("", errors.New("provider error"))
+				return m
 			},
 			expectedHostname: "unknown",
 			expectError:      false,
@@ -168,15 +171,19 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 		{
 			name:               "empty config with empty hostname returns unknown",
 			configuredHostname: "",
-			provider:           &mockHostnameProvider{hostname: "", err: nil},
-			expectedHostname:   "unknown",
-			expectError:        false,
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("", nil)
+				return m
+			},
+			expectedHostname: "unknown",
+			expectError:      false,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			hostname, err := job.GetAgentHostnameWithProvider(tt.configuredHostname, tt.provider)
+			hostname, err := job.GetAgentHostnameWithProvider(tt.configuredHostname, tt.setupProvider())
 
 			if tt.expectError {
 				s.Error(err)
@@ -191,24 +198,36 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 func (s *HostnamePublicTestSuite) TestGetLocalHostnameWithProvider() {
 	tests := []struct {
 		name             string
-		provider         job.HostnameProvider
+		setupProvider    func() job.HostnameProvider
 		expectedHostname string
 		expectError      bool
 	}{
 		{
-			name:             "successful hostname retrieval",
-			provider:         &mockHostnameProvider{hostname: "test-host", err: nil},
+			name: "successful hostname retrieval",
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("test-host", nil)
+				return m
+			},
 			expectedHostname: "test-host",
 			expectError:      false,
 		},
 		{
-			name:        "provider error",
-			provider:    &mockHostnameProvider{hostname: "", err: errors.New("hostname error")},
+			name: "provider error",
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("", errors.New("hostname error"))
+				return m
+			},
 			expectError: true,
 		},
 		{
-			name:             "empty hostname from provider",
-			provider:         &mockHostnameProvider{hostname: "", err: nil},
+			name: "empty hostname from provider",
+			setupProvider: func() job.HostnameProvider {
+				m := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				m.EXPECT().Hostname().Return("", nil)
+				return m
+			},
 			expectedHostname: "",
 			expectError:      false,
 		},
@@ -216,7 +235,7 @@ func (s *HostnamePublicTestSuite) TestGetLocalHostnameWithProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			hostname, err := job.GetLocalHostnameWithProvider(tt.provider)
+			hostname, err := job.GetLocalHostnameWithProvider(tt.setupProvider())
 
 			if tt.expectError {
 				s.Error(err)

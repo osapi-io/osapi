@@ -24,10 +24,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/cli"
+	climocks "github.com/retr0h/osapi/internal/cli/mocks"
 )
 
 type LifecyclePublicTestSuite struct {
@@ -38,41 +40,31 @@ func TestLifecyclePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(LifecyclePublicTestSuite))
 }
 
-type mockServer struct {
-	stopped bool
-}
-
-func (m *mockServer) Start() {}
-
-func (m *mockServer) Stop(_ context.Context) {
-	m.stopped = true
-}
-
 func (suite *LifecyclePublicTestSuite) TestRunServer() {
 	tests := []struct {
 		name         string
 		cleanupCount int
-		wantStopped  bool
 		wantCleanups int
 	}{
 		{
 			name:         "when context cancelled stops server",
 			cleanupCount: 0,
-			wantStopped:  true,
 			wantCleanups: 0,
 		},
 		{
 			name:         "when cleanup functions provided runs all",
 			cleanupCount: 3,
-			wantStopped:  true,
 			wantCleanups: 3,
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			mockServer := climocks.NewMockLifecycle(ctrl)
+			mockServer.EXPECT().Stop(gomock.Any()).Times(1)
+
 			ctx, cancel := context.WithCancel(context.Background())
-			server := &mockServer{}
 
 			cleanupRan := 0
 			cleanupFns := make([]func(), tc.cleanupCount)
@@ -81,9 +73,8 @@ func (suite *LifecyclePublicTestSuite) TestRunServer() {
 			}
 
 			cancel()
-			cli.RunServer(ctx, server, cleanupFns...)
+			cli.RunServer(ctx, mockServer, cleanupFns...)
 
-			assert.Equal(suite.T(), tc.wantStopped, server.stopped)
 			assert.Equal(suite.T(), tc.wantCleanups, cleanupRan)
 		})
 	}
