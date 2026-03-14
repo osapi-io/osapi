@@ -94,9 +94,27 @@ func main() {
 		orchestrator.OnError(orchestrator.Continue),
 	)
 
+	// ── Pre-cleanup: remove leftover container from previous run ─
+	// Swallow errors — the container may not exist.
+
+	force := true
+	preCleanup := plan.TaskFunc("pre-cleanup",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			_, _ = c.Docker.Remove(ctx, target, containerName,
+				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+			)
+
+			return &orchestrator.Result{Changed: false}, nil
+		},
+	)
+
 	// ── Pull image ───────────────────────────────────────────────
 
 	pull := plan.DockerPull("pull-image", target, containerImage)
+	pull.DependsOn(preCleanup)
 
 	// ── Create container ─────────────────────────────────────────
 
@@ -150,7 +168,6 @@ func main() {
 	// ── Cleanup ──────────────────────────────────────────────────
 	// Depends on all tasks that use the container so it runs last.
 
-	force := true
 	plan.DockerRemove("cleanup", target, containerName,
 		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
 	).DependsOn(execHostname, execUname, execOS, inspect)
