@@ -116,7 +116,7 @@ api:
   server:
     security:
       roles:
-        container-ops:
+        docker-ops:
           permissions:
             - docker:read
             - docker:write

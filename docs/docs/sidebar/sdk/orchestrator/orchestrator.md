@@ -56,14 +56,14 @@ to an OSAPI job type that agents execute.
 | [`node.memory.get`](operations/node-memory.md)            | Get memory stats       | Read-only  | Node     |
 | [`node.uptime.get`](operations/node-uptime.md)            | Get system uptime      | Read-only  | Node     |
 | [`node.load.get`](operations/node-load.md)                | Get load averages      | Read-only  | Node     |
-| [`docker.create.execute`](operations/container-create.md) | Create a container     | No         | Docker   |
-| [`docker.list.get`](operations/container-list.md)         | List containers        | Read-only  | Docker   |
-| [`docker.inspect.get`](operations/container-inspect.md)   | Inspect a container    | Read-only  | Docker   |
-| [`docker.start.execute`](operations/container-start.md)   | Start a container      | No         | Docker   |
-| [`docker.stop.execute`](operations/container-stop.md)     | Stop a container       | No         | Docker   |
-| [`docker.remove.execute`](operations/container-remove.md) | Remove a container     | No         | Docker   |
-| [`docker.exec.execute`](operations/container-exec.md)     | Exec in a container    | No         | Docker   |
-| [`docker.pull.execute`](operations/container-pull.md)     | Pull a container image | No         | Docker   |
+| [`docker.create.execute`](operations/docker-create.md) | Create a container     | No         | Docker   |
+| [`docker.list.get`](operations/docker-list.md)         | List containers        | Read-only  | Docker   |
+| [`docker.inspect.get`](operations/docker-inspect.md)   | Inspect a container    | Read-only  | Docker   |
+| [`docker.start.execute`](operations/docker-start.md)   | Start a container      | No         | Docker   |
+| [`docker.stop.execute`](operations/docker-stop.md)     | Stop a container       | No         | Docker   |
+| [`docker.remove.execute`](operations/docker-remove.md) | Remove a container     | No         | Docker   |
+| [`docker.exec.execute`](operations/docker-exec.md)     | Exec in a container    | No         | Docker   |
+| [`docker.pull.execute`](operations/docker-pull.md)     | Pull a container image | No         | Docker   |
 
 ### Idempotency
 
