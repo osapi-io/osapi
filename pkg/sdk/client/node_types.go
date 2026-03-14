@@ -32,6 +32,18 @@ type Collection[T any] struct {
 	JobID   string `json:"job_id"`
 }
 
+// First returns the first result and true, or the zero value and
+// false if the collection is empty.
+func (c Collection[T]) First() (T, bool) {
+	if len(c.Results) == 0 {
+		var zero T
+
+		return zero, false
+	}
+
+	return c.Results[0], true
+}
+
 // Disk represents disk usage information.
 type Disk struct {
 	Name  string `json:"name"`
