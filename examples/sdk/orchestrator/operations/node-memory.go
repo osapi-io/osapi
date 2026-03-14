@@ -68,7 +68,7 @@ func main() {
 				return nil, err
 			}
 
-			return orchestrator.CollectionResult(resp.Data,
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r client.MemoryResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
