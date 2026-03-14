@@ -391,11 +391,18 @@ func (d *Client) Exec(
 	}, nil
 }
 
-// Pull pulls a container image from a registry.
+// Pull pulls a container image from a registry. Compares the image
+// digest before and after the pull to determine if anything changed.
 func (d *Client) Pull(
 	ctx context.Context,
 	imageName string,
 ) (*PullResult, error) {
+	// Capture the image ID before pulling (empty if not present).
+	var beforeID string
+	if before, err := d.client.ImageInspect(ctx, imageName); err == nil {
+		beforeID = before.ID
+	}
+
 	pullResp, err := d.client.ImagePull(ctx, imageName, image.PullOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("pull image: %w", err)
@@ -431,11 +438,15 @@ func (d *Client) Pull(
 		}
 	}
 
+	// Changed is true only if the image was not present before or
+	// the image ID differs (new layer was downloaded).
+	changed := beforeID == "" || beforeID != inspectResp.ID
+
 	result := &PullResult{
 		ImageID: inspectResp.ID,
 		Tag:     tag,
 		Size:    inspectResp.Size,
-		Changed: true,
+		Changed: changed,
 	}
 
 	// Extract digest from last event if available
