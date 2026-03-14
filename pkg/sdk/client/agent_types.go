@@ -28,28 +28,28 @@ import (
 
 // Agent represents a registered OSAPI agent.
 type Agent struct {
-	Hostname         string            `json:"hostname"`
-	Status           string            `json:"status"`
-	State            string            `json:"state,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
-	Architecture     string            `json:"architecture,omitempty"`
-	CPUCount         int               `json:"cpu_count"`
-	Fqdn             string            `json:"fqdn,omitempty"`
-	KernelVersion    string            `json:"kernel_version,omitempty"`
-	PackageMgr       string            `json:"package_mgr,omitempty"`
-	ServiceMgr       string            `json:"service_mgr,omitempty"`
-	LoadAverage      *LoadAverage      `json:"load_average,omitempty"`
-	Memory           *Memory           `json:"memory,omitempty"`
-	OSInfo           *OSInfo           `json:"os_info,omitempty"`
-	PrimaryInterface string            `json:"primary_interface,omitempty"`
+	Hostname         string             `json:"hostname"`
+	Status           string             `json:"status"`
+	State            string             `json:"state,omitempty"`
+	Labels           map[string]string  `json:"labels,omitempty"`
+	Architecture     string             `json:"architecture,omitempty"`
+	CPUCount         int                `json:"cpu_count"`
+	Fqdn             string             `json:"fqdn,omitempty"`
+	KernelVersion    string             `json:"kernel_version,omitempty"`
+	PackageMgr       string             `json:"package_mgr,omitempty"`
+	ServiceMgr       string             `json:"service_mgr,omitempty"`
+	LoadAverage      *LoadAverage       `json:"load_average,omitempty"`
+	Memory           *Memory            `json:"memory,omitempty"`
+	OSInfo           *OSInfo            `json:"os_info,omitempty"`
+	PrimaryInterface string             `json:"primary_interface,omitempty"`
 	Interfaces       []NetworkInterface `json:"interfaces,omitempty"`
-	Routes           []Route           `json:"routes,omitempty"`
-	Conditions       []Condition       `json:"conditions,omitempty"`
-	Timeline         []TimelineEvent   `json:"timeline,omitempty"`
-	Uptime           string            `json:"uptime,omitempty"`
-	StartedAt        time.Time         `json:"started_at"`
-	RegisteredAt     time.Time         `json:"registered_at"`
-	Facts            map[string]any    `json:"facts,omitempty"`
+	Routes           []Route            `json:"routes,omitempty"`
+	Conditions       []Condition        `json:"conditions,omitempty"`
+	Timeline         []TimelineEvent    `json:"timeline,omitempty"`
+	Uptime           string             `json:"uptime,omitempty"`
+	StartedAt        time.Time          `json:"started_at"`
+	RegisteredAt     time.Time          `json:"registered_at"`
+	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
 // Condition represents a node condition evaluated agent-side.

@@ -34,18 +34,18 @@ type JobCreated struct {
 
 // JobDetail represents a job's full details.
 type JobDetail struct {
-	ID          string                       `json:"id,omitempty"`
-	Status      string                       `json:"status,omitempty"`
-	Hostname    string                       `json:"hostname,omitempty"`
-	Created     string                       `json:"created,omitempty"`
-	UpdatedAt   string                       `json:"updated_at,omitempty"`
-	Error       string                       `json:"error,omitempty"`
-	Changed     *bool                        `json:"changed,omitempty"`
-	Operation   map[string]any               `json:"operation,omitempty"`
-	Result      any                          `json:"result,omitempty"`
-	AgentStates map[string]AgentState        `json:"agent_states,omitempty"`
-	Responses   map[string]AgentJobResponse  `json:"responses,omitempty"`
-	Timeline    []TimelineEvent              `json:"timeline,omitempty"`
+	ID          string                      `json:"id,omitempty"`
+	Status      string                      `json:"status,omitempty"`
+	Hostname    string                      `json:"hostname,omitempty"`
+	Created     string                      `json:"created,omitempty"`
+	UpdatedAt   string                      `json:"updated_at,omitempty"`
+	Error       string                      `json:"error,omitempty"`
+	Changed     *bool                       `json:"changed,omitempty"`
+	Operation   map[string]any              `json:"operation,omitempty"`
+	Result      any                         `json:"result,omitempty"`
+	AgentStates map[string]AgentState       `json:"agent_states,omitempty"`
+	Responses   map[string]AgentJobResponse `json:"responses,omitempty"`
+	Timeline    []TimelineEvent             `json:"timeline,omitempty"`
 }
 
 // AgentState represents an agent's processing state for a broadcast job.

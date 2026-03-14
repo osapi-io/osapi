@@ -990,7 +990,7 @@ func (suite *NodeTypesTestSuite) TestJobIDFromGen() {
 	}
 }
 
-func (s *NodeTypesTestSuite) TestCollectionFirst() {
+func (suite *NodeTypesTestSuite) TestCollectionFirst() {
 	tests := []struct {
 		name         string
 		col          Collection[HostnameResult]
@@ -1009,8 +1009,8 @@ func (s *NodeTypesTestSuite) TestCollectionFirst() {
 				r HostnameResult,
 				ok bool,
 			) {
-				s.True(ok)
-				s.Equal("web-01", r.Hostname)
+				suite.True(ok)
+				suite.Equal("web-01", r.Hostname)
 			},
 		},
 		{
@@ -1022,8 +1022,8 @@ func (s *NodeTypesTestSuite) TestCollectionFirst() {
 				r HostnameResult,
 				ok bool,
 			) {
-				s.False(ok)
-				s.Equal("", r.Hostname)
+				suite.False(ok)
+				suite.Equal("", r.Hostname)
 			},
 		},
 		{
@@ -1033,14 +1033,14 @@ func (s *NodeTypesTestSuite) TestCollectionFirst() {
 				r HostnameResult,
 				ok bool,
 			) {
-				s.False(ok)
-				s.Equal("", r.Hostname)
+				suite.False(ok)
+				suite.Equal("", r.Hostname)
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			r, ok := tt.col.First()
 			tt.validateFunc(r, ok)
 		})
