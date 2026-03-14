@@ -1545,7 +1545,52 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		validateFunc func(result *dockerprov.PullResult, err error)
 	}{
 		{
-			name: "successful image pull",
+			name: "new image pull reports changed true",
+			mockClient: func() *mockDockerClient {
+				var calls int
+
+				return &mockDockerClient{
+					imagePullFunc: func(
+						_ context.Context,
+						_ string,
+						_ image.PullOptions,
+					) (io.ReadCloser, error) {
+						return io.NopCloser(strings.NewReader("{}")), nil
+					},
+					imageInspectFunc: func(
+						_ context.Context,
+						_ string,
+						_ ...dockerclient.ImageInspectOption,
+					) (image.InspectResponse, error) {
+						calls++
+						if calls == 1 {
+							// Before pull: image not found.
+							return image.InspectResponse{}, fmt.Errorf("not found")
+						}
+						// After pull: image present.
+						return image.InspectResponse{
+							ID:       "sha256:test123",
+							RepoTags: []string{"nginx:latest"},
+							Size:     2048,
+						}, nil
+					},
+				}
+			}(),
+			imageName: "nginx:latest",
+			validateFunc: func(
+				result *dockerprov.PullResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+				s.Equal("sha256:test123", result.ImageID)
+				s.Equal("latest", result.Tag)
+				s.Equal(int64(2048), result.Size)
+				s.True(result.Changed)
+			},
+		},
+		{
+			name: "existing image pull reports changed false",
 			mockClient: &mockDockerClient{
 				imagePullFunc: func(
 					_ context.Context,
@@ -1559,6 +1604,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 					_ string,
 					_ ...dockerclient.ImageInspectOption,
 				) (image.InspectResponse, error) {
+					// Same ID before and after — no change.
 					return image.InspectResponse{
 						ID:       "sha256:test123",
 						RepoTags: []string{"nginx:latest"},
@@ -1574,8 +1620,7 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 				s.NoError(err)
 				s.NotNil(result)
 				s.Equal("sha256:test123", result.ImageID)
-				s.Equal("latest", result.Tag)
-				s.Equal(int64(2048), result.Size)
+				s.False(result.Changed)
 			},
 		},
 		{
