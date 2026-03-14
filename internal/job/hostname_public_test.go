@@ -183,7 +183,10 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostnameWithProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			hostname, err := job.GetAgentHostnameWithProvider(tt.configuredHostname, tt.setupProvider())
+			hostname, err := job.GetAgentHostnameWithProvider(
+				tt.configuredHostname,
+				tt.setupProvider(),
+			)
 
 			if tt.expectError {
 				s.Error(err)

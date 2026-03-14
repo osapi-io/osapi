@@ -65,8 +65,8 @@ func (suite *ExportPublicTestSuite) newEntry(
 
 func (suite *ExportPublicTestSuite) TestRun() {
 	tests := []struct {
-		name         string
-		fetcher      export.Fetcher
+		name          string
+		fetcher       export.Fetcher
 		setupExporter func(
 			ctrl *gomock.Controller,
 			opened *bool,
