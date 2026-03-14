@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerRemoveCmd represents the clientContainerDockerRemove command.
@@ -40,9 +40,9 @@ var clientContainerDockerRemoveCmd = &cobra.Command{
 		id, _ := cmd.Flags().GetString("id")
 		force, _ := cmd.Flags().GetBool("force")
 
-		params := &gen.DeleteNodeContainerDockerByIDParams{}
+		var params *client.DockerRemoveParams
 		if force {
-			params.Force = &force
+			params = &client.DockerRemoveParams{Force: true}
 		}
 
 		resp, err := sdkClient.Docker.Remove(ctx, host, id, params)

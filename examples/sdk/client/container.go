@@ -31,7 +31,6 @@ import (
 	"os"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
 func main() {
@@ -50,7 +49,7 @@ func main() {
 	target := "_any"
 
 	// Pull an image.
-	pull, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
+	pull, err := c.Docker.Pull(ctx, target, client.DockerPullOpts{
 		Image: "nginx:alpine",
 	})
 	if err != nil {
@@ -63,11 +62,10 @@ func main() {
 	}
 
 	// Create a container.
-	name := "osapi-example"
 	autoStart := true
-	create, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
+	create, err := c.Docker.Create(ctx, target, client.DockerCreateOpts{
 		Image:     "nginx:alpine",
-		Name:      &name,
+		Name:      "osapi-example",
 		AutoStart: &autoStart,
 	})
 	if err != nil {
@@ -82,9 +80,8 @@ func main() {
 	}
 
 	// List running containers.
-	state := gen.Running
-	list, err := c.Docker.List(ctx, target, &gen.GetNodeContainerDockerParams{
-		State: &state,
+	list, err := c.Docker.List(ctx, target, &client.DockerListParams{
+		State: "running",
 	})
 	if err != nil {
 		log.Fatalf("list: %v", err)
@@ -109,7 +106,7 @@ func main() {
 	}
 
 	// Exec a command inside the container.
-	exec, err := c.Docker.Exec(ctx, target, containerID, gen.DockerExecRequest{
+	exec, err := c.Docker.Exec(ctx, target, containerID, client.DockerExecOpts{
 		Command: []string{"cat", "/etc/hostname"},
 	})
 	if err != nil {
@@ -122,9 +119,8 @@ func main() {
 	}
 
 	// Stop the container.
-	timeout := 5
-	stop, err := c.Docker.Stop(ctx, target, containerID, gen.DockerStopRequest{
-		Timeout: &timeout,
+	stop, err := c.Docker.Stop(ctx, target, containerID, client.DockerStopOpts{
+		Timeout: 5,
 	})
 	if err != nil {
 		log.Fatalf("stop: %v", err)
@@ -136,14 +132,11 @@ func main() {
 	}
 
 	// Remove the container.
-	force := true
 	remove, err := c.Docker.Remove(
 		ctx,
 		target,
 		containerID,
-		&gen.DeleteNodeContainerDockerByIDParams{
-			Force: &force,
-		},
+		&client.DockerRemoveParams{Force: true},
 	)
 	if err != nil {
 		log.Fatalf("remove: %v", err)

@@ -32,7 +32,6 @@ import (
 	"os"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
@@ -64,7 +63,7 @@ func main() {
 			ctx context.Context,
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := cc.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
+			resp, err := cc.Docker.Pull(ctx, "_any", client.DockerPullOpts{
 				Image: "alpine:latest",
 			})
 			if err != nil {

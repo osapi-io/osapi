@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerPullCmd represents the clientContainerDockerPull command.
@@ -39,11 +39,11 @@ var clientContainerDockerPullCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		image, _ := cmd.Flags().GetString("image")
 
-		body := gen.DockerPullRequest{
+		opts := client.DockerPullOpts{
 			Image: image,
 		}
 
-		resp, err := sdkClient.Docker.Pull(ctx, host, body)
+		resp, err := sdkClient.Docker.Pull(ctx, host, opts)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

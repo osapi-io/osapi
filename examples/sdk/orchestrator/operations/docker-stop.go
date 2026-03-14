@@ -32,7 +32,6 @@ import (
 	"os"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
@@ -65,7 +64,7 @@ func main() {
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := cc.Docker.Stop(
-				ctx, "_any", "container-name", gen.DockerStopRequest{},
+				ctx, "_any", "container-name", client.DockerStopOpts{},
 			)
 			if err != nil {
 				return nil, err

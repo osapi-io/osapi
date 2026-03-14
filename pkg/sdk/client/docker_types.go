@@ -24,6 +24,60 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
+// DockerCreateOpts contains options for creating a container.
+type DockerCreateOpts struct {
+	// Image is the container image reference (required).
+	Image string
+	// Name is an optional container name.
+	Name string
+	// Command overrides the image's default command.
+	Command []string
+	// Env is environment variables in KEY=VALUE format.
+	Env []string
+	// Ports is port mappings in host_port:container_port format.
+	Ports []string
+	// Volumes is volume mounts in host_path:container_path format.
+	Volumes []string
+	// AutoStart starts the container after creation (default true).
+	AutoStart *bool
+}
+
+// DockerStopOpts contains options for stopping a container.
+type DockerStopOpts struct {
+	// Timeout is seconds to wait before killing. Zero uses default.
+	Timeout int
+}
+
+// DockerListParams contains parameters for listing containers.
+type DockerListParams struct {
+	// State filters by state: "running", "stopped", "all".
+	State string
+	// Limit caps the number of results.
+	Limit int
+}
+
+// DockerRemoveParams contains parameters for removing a container.
+type DockerRemoveParams struct {
+	// Force forces removal of a running container.
+	Force bool
+}
+
+// DockerPullOpts contains options for pulling an image.
+type DockerPullOpts struct {
+	// Image is the image reference to pull (required).
+	Image string
+}
+
+// DockerExecOpts contains options for executing a command in a container.
+type DockerExecOpts struct {
+	// Command is the command and arguments to execute (required).
+	Command []string
+	// Env is additional environment variables in KEY=VALUE format.
+	Env []string
+	// WorkingDir is the working directory inside the container.
+	WorkingDir string
+}
+
 // DockerResult represents a docker container create result from a single agent.
 type DockerResult struct {
 	Hostname string `json:"hostname"`

@@ -31,7 +31,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
 type DockerPublicTestSuite struct {
@@ -156,9 +155,9 @@ func (suite *DockerPublicTestSuite) TestCreate() {
 			resp, err := sut.Docker.Create(
 				suite.ctx,
 				"_any",
-				gen.DockerCreateRequest{
+				client.DockerCreateOpts{
 					Image: "nginx:latest",
-					Name:  strPtr("my-nginx"),
+					Name:  "my-nginx",
 				},
 			)
 			tc.validateFunc(resp, err)
@@ -678,7 +677,7 @@ func (suite *DockerPublicTestSuite) TestStop() {
 				suite.ctx,
 				"_any",
 				"abc123",
-				gen.DockerStopRequest{},
+				client.DockerStopOpts{},
 			)
 			tc.validateFunc(resp, err)
 		})
@@ -946,7 +945,7 @@ func (suite *DockerPublicTestSuite) TestExec() {
 				suite.ctx,
 				"_any",
 				"abc123",
-				gen.DockerExecRequest{
+				client.DockerExecOpts{
 					Command: []string{"echo", "hello"},
 				},
 			)
@@ -1065,19 +1064,13 @@ func (suite *DockerPublicTestSuite) TestPull() {
 			resp, err := sut.Docker.Pull(
 				suite.ctx,
 				"_any",
-				gen.DockerPullRequest{
+				client.DockerPullOpts{
 					Image: "nginx:latest",
 				},
 			)
 			tc.validateFunc(resp, err)
 		})
 	}
-}
-
-func strPtr(
-	s string,
-) *string {
-	return &s
 }
 
 func TestDockerPublicTestSuite(t *testing.T) {

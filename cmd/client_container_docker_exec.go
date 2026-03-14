@@ -27,7 +27,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // clientContainerDockerExecCmd represents the clientContainerDockerExec command.
@@ -43,18 +43,13 @@ var clientContainerDockerExecCmd = &cobra.Command{
 		envFlags, _ := cmd.Flags().GetStringSlice("env")
 		workingDir, _ := cmd.Flags().GetString("working-dir")
 
-		body := gen.DockerExecRequest{
-			Command: command,
+		opts := client.DockerExecOpts{
+			Command:    command,
+			Env:        envFlags,
+			WorkingDir: workingDir,
 		}
 
-		if len(envFlags) > 0 {
-			body.Env = &envFlags
-		}
-		if workingDir != "" {
-			body.WorkingDir = &workingDir
-		}
-
-		resp, err := sdkClient.Docker.Exec(ctx, host, id, body)
+		resp, err := sdkClient.Docker.Exec(ctx, host, id, opts)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
