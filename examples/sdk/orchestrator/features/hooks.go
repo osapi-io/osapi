@@ -141,7 +141,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	hostname.DependsOn(health)
@@ -165,7 +165,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	disk.DependsOn(health)

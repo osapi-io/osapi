@@ -83,7 +83,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 

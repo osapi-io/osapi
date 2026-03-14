@@ -113,7 +113,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	hostnameTask.DependsOn(health)
@@ -137,7 +137,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	diskTask.DependsOn(health)
@@ -161,7 +161,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	memoryTask.DependsOn(health)

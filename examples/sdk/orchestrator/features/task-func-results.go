@@ -96,7 +96,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	getHostname.DependsOn(health)

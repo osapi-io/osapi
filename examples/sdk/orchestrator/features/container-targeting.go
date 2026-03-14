@@ -129,7 +129,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	pull.DependsOn(preCleanup)
@@ -160,7 +160,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	create.DependsOn(pull)
@@ -187,7 +187,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	execHostname.DependsOn(create)
@@ -212,7 +212,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	execUname.DependsOn(create)
@@ -239,7 +239,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	execOS.DependsOn(create)
@@ -264,7 +264,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 	inspect.DependsOn(create)
@@ -304,7 +304,7 @@ func main() {
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	).DependsOn(execHostname, execUname, execOS, inspect)
 
