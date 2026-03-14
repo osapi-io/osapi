@@ -113,42 +113,47 @@ func main() {
 
 	// ── Exec: run commands inside the container ──────────────────
 
-	plan.DockerExec("exec-hostname", target, containerName,
+	execHostname := plan.DockerExec("exec-hostname", target, containerName,
 		gen.DockerExecRequest{Command: []string{"hostname"}},
-	).DependsOn(create)
+	)
+	execHostname.DependsOn(create)
 
-	plan.DockerExec("exec-uname", target, containerName,
+	execUname := plan.DockerExec("exec-uname", target, containerName,
 		gen.DockerExecRequest{Command: []string{"uname", "-a"}},
-	).DependsOn(create)
+	)
+	execUname.DependsOn(create)
 
-	plan.DockerExec("exec-os-release", target, containerName,
+	execOS := plan.DockerExec("exec-os-release", target, containerName,
 		gen.DockerExecRequest{
 			Command: []string{"sh", "-c", "head -2 /etc/os-release"},
 		},
-	).DependsOn(create)
+	)
+	execOS.DependsOn(create)
 
 	// ── Inspect: read-only, reports unchanged ────────────────────
 
-	plan.DockerInspect("inspect-container", target, containerName).
-		DependsOn(create)
+	inspect := plan.DockerInspect("inspect-container", target, containerName)
+	inspect.DependsOn(create)
 
 	// ── Deliberately failing task: shows StatusFailed ─────────────
 
-	plan.TaskFunc("deliberately-fails",
+	deliberatelyFails := plan.TaskFunc("deliberately-fails",
 		func(
 			_ context.Context,
 			_ *client.Client,
 		) (*orchestrator.Result, error) {
 			return nil, fmt.Errorf("this task always fails to demonstrate error reporting")
 		},
-	).DependsOn(create)
+	)
+	deliberatelyFails.DependsOn(create)
 
 	// ── Cleanup ──────────────────────────────────────────────────
+	// Depends on all tasks that use the container so it runs last.
 
 	force := true
 	plan.DockerRemove("cleanup", target, containerName,
 		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
-	).DependsOn(create)
+	).DependsOn(execHostname, execUname, execOS, inspect, deliberatelyFails)
 
 	// ── Run ──────────────────────────────────────────────────────
 
