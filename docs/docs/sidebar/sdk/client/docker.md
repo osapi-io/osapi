@@ -9,30 +9,30 @@ remove, exec, and pull operations.
 
 ## Methods
 
-| Method                          | Description                     |
-| ------------------------------- | ------------------------------- |
-| `Create(ctx, hostname, opts)`   | Create a new container          |
-| `List(ctx, hostname, params)`   | List containers                 |
-| `Inspect(ctx, hostname, id)`    | Get detailed container info     |
-| `Start(ctx, hostname, id)`      | Start a stopped container       |
-| `Stop(ctx, hostname, id, opts)` | Stop a running container        |
-| `Remove(ctx, hostname, id, p)`  | Remove a container              |
-| `Exec(ctx, hostname, id, opts)` | Execute a command in a container|
-| `Pull(ctx, hostname, opts)`     | Pull a container image          |
+| Method                          | Description                      |
+| ------------------------------- | -------------------------------- |
+| `Create(ctx, hostname, opts)`   | Create a new container           |
+| `List(ctx, hostname, params)`   | List containers                  |
+| `Inspect(ctx, hostname, id)`    | Get detailed container info      |
+| `Start(ctx, hostname, id)`      | Start a stopped container        |
+| `Stop(ctx, hostname, id, opts)` | Stop a running container         |
+| `Remove(ctx, hostname, id, p)`  | Remove a container               |
+| `Exec(ctx, hostname, id, opts)` | Execute a command in a container |
+| `Pull(ctx, hostname, opts)`     | Pull a container image           |
 
 ## Request Types
 
 The Docker service uses SDK-defined request types. Consumers never need to
 import `gen`.
 
-| Type                | Fields                                              |
-| ------------------- | --------------------------------------------------- |
-| `DockerCreateOpts`  | Image, Name, Command, Env, Ports, Volumes, AutoStart|
-| `DockerStopOpts`    | Timeout                                             |
-| `DockerListParams`  | State, Limit                                        |
-| `DockerRemoveParams`| Force                                               |
-| `DockerPullOpts`    | Image                                               |
-| `DockerExecOpts`    | Command                                             |
+| Type                 | Fields                                               |
+| -------------------- | ---------------------------------------------------- |
+| `DockerCreateOpts`   | Image, Name, Command, Env, Ports, Volumes, AutoStart |
+| `DockerStopOpts`     | Timeout                                              |
+| `DockerListParams`   | State, Limit                                         |
+| `DockerRemoveParams` | Force                                                |
+| `DockerPullOpts`     | Image                                                |
+| `DockerExecOpts`     | Command                                              |
 
 ## Usage
 

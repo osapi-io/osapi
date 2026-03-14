@@ -4,8 +4,8 @@ sidebar_position: 1
 
 # SDK Development Guidelines
 
-Rules for developing the OSAPI Go SDK (`pkg/sdk/`). These apply to the
-client library, orchestrator engine, and any new SDK packages.
+Rules for developing the OSAPI Go SDK (`pkg/sdk/`). These apply to the client
+library, orchestrator engine, and any new SDK packages.
 
 ## Package Structure
 
@@ -31,12 +31,12 @@ pkg/sdk/
 
 ## Never Expose Generated Types
 
-The `gen/` package contains auto-generated OpenAPI client code. **No
-generated type should appear in any public SDK method signature.** The
-SDK exists specifically to hide `gen/` behind clean, stable types.
+The `gen/` package contains auto-generated OpenAPI client code. **No generated
+type should appear in any public SDK method signature.** The SDK exists
+specifically to hide `gen/` behind clean, stable types.
 
-For every `gen.*` request or response type used internally, define an
-SDK-level equivalent:
+For every `gen.*` request or response type used internally, define an SDK-level
+equivalent:
 
 ```go
 // BAD — leaks gen type into public API
@@ -54,9 +54,8 @@ func (s *DockerService) Create(
 ) (*Response[Collection[DockerResult]], error)
 ```
 
-Inside the method, build the `gen.*` request from the SDK type. Map
-zero values to nil pointers where the gen type uses `*string`,
-`*bool`, etc.
+Inside the method, build the `gen.*` request from the SDK type. Map zero values
+to nil pointers where the gen type uses `*string`, `*bool`, etc.
 
 ## Result Types
 
@@ -77,18 +76,18 @@ type HostnameResult struct {
 
 Tags are required because:
 
-- `StructToMap` (the bridge helper) uses JSON round-tripping to convert
-  structs to `map[string]any`. Without tags, Go uses PascalCase field
-  names which don't match the API's snake_case keys.
-- Consumers may serialize SDK types to JSON for logging, storage, or
-  forwarding. Consistent keys matter.
+- `StructToMap` (the bridge helper) uses JSON round-tripping to convert structs
+  to `map[string]any`. Without tags, Go uses PascalCase field names which don't
+  match the API's snake_case keys.
+- Consumers may serialize SDK types to JSON for logging, storage, or forwarding.
+  Consistent keys matter.
 
 ### omitempty Rules
 
-- **Use `omitempty`** on: pointer fields, optional slices/maps, error
-  strings, optional string fields
-- **Do not use `omitempty`** on: `Changed bool` (must always be
-  present), required fields like `Hostname`
+- **Use `omitempty`** on: pointer fields, optional slices/maps, error strings,
+  optional string fields
+- **Do not use `omitempty`** on: `Changed bool` (must always be present),
+  required fields like `Hostname`
 
 ### Collection Pattern
 
@@ -101,14 +100,14 @@ type Collection[T any] struct {
 }
 ```
 
-Use `Collection.First()` for safe access to single-result responses
-instead of indexing `Results[0]` directly.
+Use `Collection.First()` for safe access to single-result responses instead of
+indexing `Results[0]` directly.
 
 ### Changed Field
 
-Every mutation result type must include `Changed bool`. The provider
-sets it, the agent extracts it via `extractChanged()`, the API passes
-it through, and the SDK exposes it. The full chain must be consistent.
+Every mutation result type must include `Changed bool`. The provider sets it,
+the agent extracts it via `extractChanged()`, the API passes it through, and the
+SDK exposes it. The full chain must be consistent.
 
 ## Response Pattern
 
@@ -129,8 +128,8 @@ type Response[T any] struct {
 
 ### checkError
 
-All service methods use `checkError()` to convert HTTP status codes
-into typed errors:
+All service methods use `checkError()` to convert HTTP status codes into typed
+errors:
 
 ```go
 if err := checkError(
@@ -172,14 +171,14 @@ if resp.JSON200 == nil {
 
 ## Orchestrator Bridge Helpers
 
-The orchestrator package provides two bridge helpers for converting SDK
-client responses into orchestrator `Result` values. These exist so
-consumers like `osapi-orchestrator` don't need to reimplement them.
+The orchestrator package provides two bridge helpers for converting SDK client
+responses into orchestrator `Result` values. These exist so consumers like
+`osapi-orchestrator` don't need to reimplement them.
 
 ### CollectionResult
 
-Converts a `Collection[T]` response into an orchestrator `Result` with
-per-host details:
+Converts a `Collection[T]` response into an orchestrator `Result` with per-host
+details:
 
 ```go
 return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
@@ -194,14 +193,13 @@ return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
 ```
 
 - First arg: the `Collection[T]` from `resp.Data`
-- Second arg: `resp.RawJSON()` to populate `Result.Data` (or `nil` to
-  skip)
+- Second arg: `resp.RawJSON()` to populate `Result.Data` (or `nil` to skip)
 - Third arg: mapper function converting each result to `HostResult`
 
 ### StructToMap
 
-Converts any struct with JSON tags to `map[string]any`. Use for
-non-collection responses:
+Converts any struct with JSON tags to `map[string]any`. Use for non-collection
+responses:
 
 ```go
 return &orchestrator.Result{
@@ -215,17 +213,15 @@ return &orchestrator.Result{
 
 When adding a new domain service to the SDK client:
 
-1. **Create `{domain}.go`** — service struct + methods, each calling
-   gen client and converting to SDK types
-2. **Create `{domain}_types.go`** — SDK result types with JSON tags,
-   SDK request types (wrapping gen types), and gen→SDK conversion
-   functions
-3. **Create `{domain}_public_test.go`** — tests using `httptest.Server`
-   mocks, 100% coverage
-4. **Wire in `osapi.go`** — add service field to `Client`, initialize
-   in `New()`
-5. **Never import `gen` in examples or consumer code** — if a consumer
-   needs to import `gen`, the SDK wrapper is incomplete
+1. **Create `{domain}.go`** — service struct + methods, each calling gen client
+   and converting to SDK types
+2. **Create `{domain}_types.go`** — SDK result types with JSON tags, SDK request
+   types (wrapping gen types), and gen→SDK conversion functions
+3. **Create `{domain}_public_test.go`** — tests using `httptest.Server` mocks,
+   100% coverage
+4. **Wire in `osapi.go`** — add service field to `Client`, initialize in `New()`
+5. **Never import `gen` in examples or consumer code** — if a consumer needs to
+   import `gen`, the SDK wrapper is incomplete
 
 ## Testing
 
