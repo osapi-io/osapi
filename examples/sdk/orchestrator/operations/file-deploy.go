@@ -57,16 +57,30 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("deploy-config", &orchestrator.Op{
-		Operation: "file.deploy.execute",
-		Target:    "_all",
-		Params: map[string]any{
-			"object_name":  "app.conf",
-			"path":         "/etc/app/config.yaml",
-			"content_type": "static",
-			"mode":         "0644",
+	plan.TaskFunc(
+		"deploy-config",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.FileDeploy(ctx, client.FileDeployOpts{
+				ObjectName:  "app.conf",
+				Path:        "/etc/app/config.yaml",
+				ContentType: "static",
+				Mode:        "0644",
+				Target:      "_all",
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return &orchestrator.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    orchestrator.StructToMap(resp.Data),
+			}, nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

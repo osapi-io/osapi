@@ -9,13 +9,28 @@ Get DNS server configuration for a network interface.
 ## Usage
 
 ```go
-task := plan.Task("get-dns", &orchestrator.Op{
-    Operation: "network.dns.get",
-    Target:    "_any",
-    Params: map[string]any{
-        "interface": "eth0",
+task := plan.TaskFunc("get-dns",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.GetDNS(ctx, "_any", "eth0")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.DNSConfig) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
     },
-})
+)
 ```
 
 ## Parameters

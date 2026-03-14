@@ -10,36 +10,62 @@ raw content and Go-template rendering with agent facts and custom variables.
 ## Usage
 
 ```go
-task := plan.Task("deploy-config", &orchestrator.Op{
-    Operation: "file.deploy.execute",
-    Target:    "_all",
-    Params: map[string]any{
-        "object_name":  "nginx.conf",
-        "path":         "/etc/nginx/nginx.conf",
-        "content_type": "raw",
-        "mode":         "0644",
-        "owner":        "root",
-        "group":        "root",
+task := plan.TaskFunc("deploy-config",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
+            Target:      "_all",
+            ObjectName:  "nginx.conf",
+            Path:        "/etc/nginx/nginx.conf",
+            ContentType: "raw",
+            Mode:        "0644",
+            Owner:       "root",
+            Group:       "root",
+        })
+        if err != nil {
+            return nil, err
+        }
+
+        return &orchestrator.Result{
+            JobID:   resp.Data.JobID,
+            Changed: resp.Data.Changed,
+            Data:    orchestrator.StructToMap(resp.Data),
+        }, nil
     },
-})
+)
 ```
 
 ### Template Deployment
 
 ```go
-task := plan.Task("deploy-template", &orchestrator.Op{
-    Operation: "file.deploy.execute",
-    Target:    "web-01",
-    Params: map[string]any{
-        "object_name":  "app.conf.tmpl",
-        "path":         "/etc/app/config.yaml",
-        "content_type": "template",
-        "vars": map[string]any{
-            "port":  8080,
-            "debug": false,
-        },
+task := plan.TaskFunc("deploy-template",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
+            Target:      "web-01",
+            ObjectName:  "app.conf.tmpl",
+            Path:        "/etc/app/config.yaml",
+            ContentType: "template",
+            Vars: map[string]any{
+                "port":  8080,
+                "debug": false,
+            },
+        })
+        if err != nil {
+            return nil, err
+        }
+
+        return &orchestrator.Result{
+            JobID:   resp.Data.JobID,
+            Changed: resp.Data.Changed,
+            Data:    orchestrator.StructToMap(resp.Data),
+        }, nil
     },
-})
+)
 ```
 
 ## Parameters

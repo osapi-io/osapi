@@ -9,10 +9,28 @@ Get load averages (1-minute, 5-minute, and 15-minute).
 ## Usage
 
 ```go
-task := plan.Task("get-load", &orchestrator.Op{
-    Operation: "node.load.get",
-    Target:    "_any",
-})
+task := plan.TaskFunc("get-load",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Load(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.LoadResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 ```
 
 ## Parameters

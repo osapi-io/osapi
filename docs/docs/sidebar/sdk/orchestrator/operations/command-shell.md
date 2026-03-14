@@ -10,13 +10,31 @@ Execute a shell command string on the target node. The command is passed to
 ## Usage
 
 ```go
-task := plan.Task("check-disk-space", &orchestrator.Op{
-    Operation: "command.shell.execute",
-    Target:    "_any",
-    Params: map[string]any{
-        "command": "df -h / | tail -1 | awk '{print $5}'",
+task := plan.TaskFunc("check-disk-space",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Shell(ctx, client.ShellRequest{
+            Target:  "_any",
+            Command: "df -h / | tail -1 | awk '{print $5}'",
+        })
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.CommandResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
     },
-})
+)
 ```
 
 ## Parameters

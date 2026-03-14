@@ -9,13 +9,28 @@ Ping a host and return latency and packet loss statistics.
 ## Usage
 
 ```go
-task := plan.Task("ping-gateway", &orchestrator.Op{
-    Operation: "network.ping.do",
-    Target:    "_any",
-    Params: map[string]any{
-        "address": "192.168.1.1",
+task := plan.TaskFunc("ping-gateway",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Ping(ctx, "_any", "192.168.1.1")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.PingResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
     },
-})
+)
 ```
 
 ## Parameters

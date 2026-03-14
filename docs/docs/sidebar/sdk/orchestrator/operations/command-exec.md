@@ -9,14 +9,32 @@ Execute a command directly on the target node.
 ## Usage
 
 ```go
-task := plan.Task("install-nginx", &orchestrator.Op{
-    Operation: "command.exec.execute",
-    Target:    "_all",
-    Params: map[string]any{
-        "command": "apt",
-        "args":    []string{"install", "-y", "nginx"},
+task := plan.TaskFunc("install-nginx",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Exec(ctx, client.ExecRequest{
+            Target:  "_all",
+            Command: "apt",
+            Args:    []string{"install", "-y", "nginx"},
+        })
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.CommandResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
     },
-})
+)
 ```
 
 ## Parameters

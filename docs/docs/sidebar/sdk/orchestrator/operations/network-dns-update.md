@@ -9,14 +9,34 @@ Update DNS servers for a network interface.
 ## Usage
 
 ```go
-task := plan.Task("update-dns", &orchestrator.Op{
-    Operation: "network.dns.update",
-    Target:    "_all",
-    Params: map[string]any{
-        "interface": "eth0",
-        "servers":   []string{"8.8.8.8", "8.8.4.4"},
+task := plan.TaskFunc("update-dns",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.UpdateDNS(
+            ctx,
+            "_all",
+            "eth0",
+            []string{"8.8.8.8", "8.8.4.4"},
+            nil,
+        )
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.DNSUpdateResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
     },
-})
+)
 ```
 
 ## Parameters

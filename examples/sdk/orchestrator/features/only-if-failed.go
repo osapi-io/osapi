@@ -51,7 +51,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
@@ -68,7 +68,7 @@ func main() {
 	}
 
 	plan := orchestrator.NewPlan(
-		client,
+		apiClient,
 		orchestrator.WithHooks(hooks),
 		orchestrator.OnError(orchestrator.Continue),
 	)

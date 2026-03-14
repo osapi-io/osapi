@@ -15,10 +15,28 @@ showing levels, parallelism, dependencies, and guards.
 plan := orchestrator.NewPlan(client)
 
 health := plan.TaskFunc("check-health", healthFn)
-hostname := plan.Task("get-hostname", &orchestrator.Op{
-    Operation: "node.hostname.get",
-    Target:    "_any",
-})
+hostname := plan.TaskFunc("get-hostname",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Hostname(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.HostnameResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 hostname.DependsOn(health)
 
 fmt.Println(plan.Explain())
@@ -33,12 +51,11 @@ Level 0:
   check-health [fn]
 
 Level 1:
-  get-hostname [op] <- check-health
+  get-hostname [fn] <- check-health
 ```
 
-Tasks are annotated with their type (`fn` for functional tasks, `op` for
-declarative operations), dependency edges (`<-`), and any active guards
-(`only-if-changed`, `when`).
+Tasks are annotated with their type (`fn` for functional tasks), dependency
+edges (`<-`), and any active guards (`only-if-changed`, `when`).
 
 ## Levels
 

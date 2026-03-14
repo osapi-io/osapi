@@ -10,10 +10,28 @@ usage, memory statistics, and load averages.
 ## Usage
 
 ```go
-task := plan.Task("get-status", &orchestrator.Op{
-    Operation: "node.status.get",
-    Target:    "web-01",
-})
+task := plan.TaskFunc("get-status",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Status(ctx, "web-01")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.NodeStatus) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 ```
 
 ## Parameters

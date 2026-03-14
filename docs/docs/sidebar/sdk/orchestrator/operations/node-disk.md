@@ -9,10 +9,28 @@ Get disk usage statistics for all mounted filesystems.
 ## Usage
 
 ```go
-task := plan.Task("get-disk", &orchestrator.Op{
-    Operation: "node.disk.get",
-    Target:    "_any",
-})
+task := plan.TaskFunc("get-disk",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Disk(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.DiskResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 ```
 
 ## Parameters

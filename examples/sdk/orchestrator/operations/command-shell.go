@@ -57,13 +57,31 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("shell-echo", &orchestrator.Op{
-		Operation: "command.shell.execute",
-		Target:    "_any",
-		Params: map[string]any{
-			"command": "echo hello from $(hostname)",
+	plan.TaskFunc(
+		"shell-echo",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.Shell(ctx, client.ShellRequest{
+				Command: "echo hello from $(hostname)",
+				Target:  "_any",
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.CommandResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

@@ -18,21 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates When() guard predicates for conditional
-// task execution. The summary task only runs if the hostname step
-// succeeded.
+// Package main demonstrates the docker.list operation, which lists
+// containers on the target node.
 //
-// DAG:
-//
-//	check-health
-//	    └── get-hostname
-//	            └── print-summary (when: hostname changed)
-//
-// Run with: OSAPI_TOKEN="<jwt>" go run guards.go
+// Run with: OSAPI_TOKEN="<jwt>" go run docker-list.go
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -52,47 +46,30 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	apiClient := client.New(url, token)
+	c := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
-			fmt.Printf("  [%s] %s\n", result.Status, result.Name)
-		},
-		OnSkip: func(task *orchestrator.Task, reason string) {
-			fmt.Printf("  [skip] %s  reason=%q\n", task.Name(), reason)
+			fmt.Printf("[%s] %s  changed=%v\n",
+				result.Status, result.Name, result.Changed)
 		},
 	}
 
-	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	health := plan.TaskFunc(
-		"check-health",
+	plan.TaskFunc(
+		"list-containers",
 		func(
 			ctx context.Context,
-			c *client.Client,
+			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			_, err := c.Health.Liveness(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("health: %w", err)
-			}
-
-			return &orchestrator.Result{Changed: false}, nil
-		},
-	)
-
-	getHostname := plan.TaskFunc(
-		"get-hostname",
-		func(
-			ctx context.Context,
-			c *client.Client,
-		) (*orchestrator.Result, error) {
-			resp, err := c.Node.Hostname(ctx, "_any")
+			resp, err := cc.Docker.List(ctx, "_any", nil)
 			if err != nil {
 				return nil, err
 			}
 
 			return orchestrator.CollectionResult(resp.Data,
-				func(r client.HostnameResult) orchestrator.HostResult {
+				func(r client.DockerListResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
 						Changed:  r.Changed,
@@ -102,28 +79,17 @@ func main() {
 			), nil
 		},
 	)
-	getHostname.DependsOn(health)
-
-	summary := plan.TaskFunc(
-		"print-summary",
-		func(_ context.Context, _ *client.Client) (*orchestrator.Result, error) {
-			fmt.Println("\n  Hostname was retrieved successfully!")
-
-			return &orchestrator.Result{Changed: false}, nil
-		},
-	)
-	summary.DependsOn(getHostname)
-
-	// Guard: only run if get-hostname reported StatusChanged.
-	summary.When(func(results orchestrator.Results) bool {
-		r := results.Get("get-hostname")
-
-		return r != nil && r.Status == orchestrator.StatusChanged
-	})
 
 	report, err := plan.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	for _, r := range report.Tasks {
+		if len(r.Data) > 0 {
+			b, _ := json.MarshalIndent(r.Data, "", "  ")
+			fmt.Printf("data: %s\n", b)
+		}
 	}
 
 	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)

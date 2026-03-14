@@ -10,21 +10,36 @@ be referenced in subsequent `file.deploy.execute` operations.
 ## Usage
 
 ```go
-task := plan.Task("upload-config", &orchestrator.Op{
-    Operation: "file.upload",
-    Params: map[string]any{
-        "name":    "nginx.conf",
-        "content": configBytes,
+task := plan.TaskFunc("upload-config",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.File.Upload(
+            ctx,
+            "nginx.conf",
+            "application/octet-stream",
+            bytes.NewReader(configBytes),
+        )
+        if err != nil {
+            return nil, err
+        }
+
+        return &orchestrator.Result{
+            Changed: true,
+            Data:    orchestrator.StructToMap(resp.Data),
+        }, nil
     },
-})
+)
 ```
 
 ## Parameters
 
-| Param     | Type   | Required | Description                     |
-| --------- | ------ | -------- | ------------------------------- |
-| `name`    | string | Yes      | Object name in the Object Store |
-| `content` | []byte | Yes      | File content to upload          |
+| Param          | Type      | Required | Description                     |
+| -------------- | --------- | -------- | ------------------------------- |
+| `name`         | string    | Yes      | Object name in the Object Store |
+| `content_type` | string    | Yes      | MIME type of the content        |
+| `content`      | io.Reader | Yes      | File content to upload          |
 
 ## Target
 

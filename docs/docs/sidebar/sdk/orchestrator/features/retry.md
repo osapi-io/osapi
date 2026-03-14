@@ -14,10 +14,28 @@ immediate or use exponential backoff to avoid overwhelming a recovering service.
 Retry up to 3 times with no delay between attempts:
 
 ```go
-getLoad := plan.Task("get-load", &orchestrator.Op{
-    Operation: "node.load.get",
-    Target:    "_any",
-})
+getLoad := plan.TaskFunc("get-load",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.Load(ctx, "_any")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.LoadResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
 getLoad.OnError(orchestrator.Retry(3))
 ```
 
@@ -40,7 +58,10 @@ Set as the default strategy for all tasks in the plan:
 ```go
 plan := orchestrator.NewPlan(client,
     orchestrator.OnError(orchestrator.Retry(3,
-        orchestrator.WithRetryBackoff(500*time.Millisecond, 10*time.Second),
+        orchestrator.WithRetryBackoff(
+            500*time.Millisecond,
+            10*time.Second,
+        ),
     )),
 )
 ```
@@ -51,7 +72,11 @@ Use the `OnRetry` hook to observe retry attempts:
 
 ```go
 hooks := orchestrator.Hooks{
-    OnRetry: func(task *orchestrator.Task, attempt int, err error) {
+    OnRetry: func(
+        task *orchestrator.Task,
+        attempt int,
+        err error,
+    ) {
         fmt.Printf("[retry] %s  attempt=%d error=%q\n",
             task.Name(), attempt, err)
     },

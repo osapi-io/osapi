@@ -53,7 +53,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		BeforePlan: func(summary orchestrator.PlanSummary) {
@@ -90,12 +90,7 @@ func main() {
 				level+1, changed, len(results))
 		},
 		BeforeTask: func(task *orchestrator.Task) {
-			if op := task.Operation(); op != nil {
-				fmt.Printf("  [start] %s  op=%s\n",
-					task.Name(), op.Operation)
-			} else {
-				fmt.Printf("  [start] %s  (func)\n", task.Name())
-			}
+			fmt.Printf("  [start] %s\n", task.Name())
 		},
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
 			fmt.Printf("  [%s] %s  changed=%v duration=%s\n",
@@ -110,11 +105,14 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
 	health := plan.TaskFunc(
 		"check-health",
-		func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
 			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health: %w", err)
@@ -124,16 +122,52 @@ func main() {
 		},
 	)
 
-	hostname := plan.Task("get-hostname", &orchestrator.Op{
-		Operation: "node.hostname.get",
-		Target:    "_any",
-	})
+	hostname := plan.TaskFunc(
+		"get-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Hostname(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.HostnameResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	hostname.DependsOn(health)
 
-	disk := plan.Task("get-disk", &orchestrator.Op{
-		Operation: "node.disk.get",
-		Target:    "_any",
-	})
+	disk := plan.TaskFunc(
+		"get-disk",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Disk(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DiskResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	disk.DependsOn(health)
 
 	_, err := plan.Run(context.Background())

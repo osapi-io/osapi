@@ -57,13 +57,31 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("exec-uptime", &orchestrator.Op{
-		Operation: "command.exec.execute",
-		Target:    "_any",
-		Params: map[string]any{
-			"command": "uptime",
+	plan.TaskFunc(
+		"exec-uptime",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.Exec(ctx, client.ExecRequest{
+				Command: "uptime",
+				Target:  "_any",
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.CommandResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

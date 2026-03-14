@@ -50,7 +50,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
@@ -62,12 +62,30 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
-	getHostname := plan.Task("get-hostname", &orchestrator.Op{
-		Operation: "node.hostname.get",
-		Target:    "_any",
-	})
+	getHostname := plan.TaskFunc(
+		"get-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Hostname(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.HostnameResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 
 	logChange := plan.TaskFunc(
 		"log-change",
