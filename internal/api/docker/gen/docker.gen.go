@@ -300,6 +300,11 @@ type GetNodeContainerDockerParams struct {
 // GetNodeContainerDockerParamsState defines parameters for GetNodeContainerDocker.
 type GetNodeContainerDockerParamsState string
 
+// DeleteNodeContainerDockerImageParams defines parameters for DeleteNodeContainerDockerImage.
+type DeleteNodeContainerDockerImageParams struct {
+	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
+}
+
 // DeleteNodeContainerDockerByIDParams defines parameters for DeleteNodeContainerDockerByID.
 type DeleteNodeContainerDockerByIDParams struct {
 	// Force Force removal of a running container.
@@ -326,6 +331,9 @@ type ServerInterface interface {
 	// Create a container
 	// (POST /node/{hostname}/container/docker)
 	PostNodeContainerDocker(ctx echo.Context, hostname Hostname) error
+	// Remove a container image
+	// (DELETE /node/{hostname}/container/docker/image/{image})
+	DeleteNodeContainerDockerImage(ctx echo.Context, hostname Hostname, image string, params DeleteNodeContainerDockerImageParams) error
 	// Pull a container image
 	// (POST /node/{hostname}/container/docker/pull)
 	PostNodeContainerDockerPull(ctx echo.Context, hostname Hostname) error
@@ -400,6 +408,41 @@ func (w *ServerInterfaceWrapper) PostNodeContainerDocker(ctx echo.Context) error
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostNodeContainerDocker(ctx, hostname)
+	return err
+}
+
+// DeleteNodeContainerDockerImage converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNodeContainerDockerImage(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "image" -------------
+	var image string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "image", ctx.Param("image"), &image, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter image: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"docker:write"})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteNodeContainerDockerImageParams
+	// ------------- Optional query parameter "force" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "force", ctx.QueryParams(), &params.Force)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter force: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteNodeContainerDockerImage(ctx, hostname, image, params)
 	return err
 }
 
@@ -590,6 +633,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/node/:hostname/container/docker", wrapper.GetNodeContainerDocker)
 	router.POST(baseURL+"/node/:hostname/container/docker", wrapper.PostNodeContainerDocker)
+	router.DELETE(baseURL+"/node/:hostname/container/docker/image/:image", wrapper.DeleteNodeContainerDockerImage)
 	router.POST(baseURL+"/node/:hostname/container/docker/pull", wrapper.PostNodeContainerDockerPull)
 	router.DELETE(baseURL+"/node/:hostname/container/docker/:id", wrapper.DeleteNodeContainerDockerByID)
 	router.GET(baseURL+"/node/:hostname/container/docker/:id", wrapper.GetNodeContainerDockerByID)
@@ -701,6 +745,61 @@ func (response PostNodeContainerDocker403JSONResponse) VisitPostNodeContainerDoc
 type PostNodeContainerDocker500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeContainerDocker500JSONResponse) VisitPostNodeContainerDockerResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeContainerDockerImageRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Image    string   `json:"image"`
+	Params   DeleteNodeContainerDockerImageParams
+}
+
+type DeleteNodeContainerDockerImageResponseObject interface {
+	VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error
+}
+
+type DeleteNodeContainerDockerImage202JSONResponse DockerActionCollectionResponse
+
+func (response DeleteNodeContainerDockerImage202JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeContainerDockerImage400JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeContainerDockerImage400JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeContainerDockerImage401JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeContainerDockerImage401JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeContainerDockerImage403JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeContainerDockerImage403JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNodeContainerDockerImage500JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeContainerDockerImage500JSONResponse) VisitDeleteNodeContainerDockerImageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1087,6 +1186,9 @@ type StrictServerInterface interface {
 	// Create a container
 	// (POST /node/{hostname}/container/docker)
 	PostNodeContainerDocker(ctx context.Context, request PostNodeContainerDockerRequestObject) (PostNodeContainerDockerResponseObject, error)
+	// Remove a container image
+	// (DELETE /node/{hostname}/container/docker/image/{image})
+	DeleteNodeContainerDockerImage(ctx context.Context, request DeleteNodeContainerDockerImageRequestObject) (DeleteNodeContainerDockerImageResponseObject, error)
 	// Pull a container image
 	// (POST /node/{hostname}/container/docker/pull)
 	PostNodeContainerDockerPull(ctx context.Context, request PostNodeContainerDockerPullRequestObject) (PostNodeContainerDockerPullResponseObject, error)
@@ -1170,6 +1272,33 @@ func (sh *strictHandler) PostNodeContainerDocker(ctx echo.Context, hostname Host
 		return err
 	} else if validResponse, ok := response.(PostNodeContainerDockerResponseObject); ok {
 		return validResponse.VisitPostNodeContainerDockerResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteNodeContainerDockerImage operation middleware
+func (sh *strictHandler) DeleteNodeContainerDockerImage(ctx echo.Context, hostname Hostname, image string, params DeleteNodeContainerDockerImageParams) error {
+	var request DeleteNodeContainerDockerImageRequestObject
+
+	request.Hostname = hostname
+	request.Image = image
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteNodeContainerDockerImage(ctx.Request().Context(), request.(DeleteNodeContainerDockerImageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteNodeContainerDockerImage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteNodeContainerDockerImageResponseObject); ok {
+		return validResponse.VisitDeleteNodeContainerDockerImageResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

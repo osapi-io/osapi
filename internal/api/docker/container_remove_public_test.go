@@ -22,6 +22,7 @@ package container_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -35,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/api"
 	apicontainer "github.com/retr0h/osapi/internal/api/docker"
 	"github.com/retr0h/osapi/internal/api/docker/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -158,6 +160,20 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "server1",
+				Id:       "",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",
@@ -242,6 +258,111 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValida
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacContainerRemoveTestSigningKey = "test-signing-key-for-rbac-container-remove"
+
+func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacContainerRemoveTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"docker:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid admin token returns 202",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacContainerRemoveTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyDockerRemove(gomock.Any(), "server1", "abc123", gomock.Any()).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"job_id"`, `"results"`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacContainerRemoveTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetDockerHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/node/server1/container/docker/abc123",
+				nil,
+			)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
 
 			s.Equal(tc.wantCode, rec.Code)
 			for _, str := range tc.wantContains {

@@ -54,6 +54,7 @@ type mockDockerClient struct {
 	containerExecInspectFunc func(ctx context.Context, execID string) (container.ExecInspect, error)
 	imagePullFunc            func(ctx context.Context, ref string, options image.PullOptions) (io.ReadCloser, error)
 	imageInspectFunc         func(ctx context.Context, imageID string, options ...dockerclient.ImageInspectOption) (image.InspectResponse, error)
+	imageRemoveFunc          func(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error)
 }
 
 func (m *mockDockerClient) Ping(
@@ -207,6 +208,18 @@ func (m *mockDockerClient) ImageInspect(
 		RepoTags: []string{"nginx:latest"},
 		Size:     1024,
 	}, nil
+}
+
+func (m *mockDockerClient) ImageRemove(
+	ctx context.Context,
+	imageID string,
+	options image.RemoveOptions,
+) ([]image.DeleteResponse, error) {
+	if m.imageRemoveFunc != nil {
+		return m.imageRemoveFunc(ctx, imageID, options)
+	}
+
+	return nil, nil
 }
 
 // newHijackedResponse creates a HijackedResponse with the given content
@@ -1768,6 +1781,97 @@ func (s *DockerDriverPublicTestSuite) TestPull() {
 		s.Run(tt.name, func() {
 			d := dockerprov.NewWithClient(tt.mockClient)
 			result, err := d.Pull(s.ctx, tt.imageName)
+			tt.validateFunc(result, err)
+		})
+	}
+}
+
+func (s *DockerDriverPublicTestSuite) TestImageRemove() {
+	tests := []struct {
+		name         string
+		mockClient   *mockDockerClient
+		imageName    string
+		force        bool
+		validateFunc func(result *dockerprov.ActionResult, err error)
+	}{
+		{
+			name: "successful image remove",
+			mockClient: &mockDockerClient{
+				imageRemoveFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.RemoveOptions,
+				) ([]image.DeleteResponse, error) {
+					return []image.DeleteResponse{
+						{Deleted: "sha256:abc123"},
+					}, nil
+				},
+			},
+			imageName: "nginx:latest",
+			force:     false,
+			validateFunc: func(
+				result *dockerprov.ActionResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+				s.True(result.Changed)
+				s.Contains(result.Message, "Image removed")
+			},
+		},
+		{
+			name: "successful image remove with force",
+			mockClient: &mockDockerClient{
+				imageRemoveFunc: func(
+					_ context.Context,
+					_ string,
+					options image.RemoveOptions,
+				) ([]image.DeleteResponse, error) {
+					s.True(options.Force)
+
+					return []image.DeleteResponse{
+						{Deleted: "sha256:abc123"},
+					}, nil
+				},
+			},
+			imageName: "nginx:latest",
+			force:     true,
+			validateFunc: func(
+				result *dockerprov.ActionResult,
+				err error,
+			) {
+				s.NoError(err)
+				s.NotNil(result)
+			},
+		},
+		{
+			name: "returns error when remove fails",
+			mockClient: &mockDockerClient{
+				imageRemoveFunc: func(
+					_ context.Context,
+					_ string,
+					_ image.RemoveOptions,
+				) ([]image.DeleteResponse, error) {
+					return nil, errors.New("image in use")
+				},
+			},
+			imageName: "nginx:latest",
+			force:     false,
+			validateFunc: func(
+				result *dockerprov.ActionResult,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(result)
+				s.Contains(err.Error(), "remove image")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			d := dockerprov.NewWithClient(tt.mockClient)
+			result, err := d.ImageRemove(s.ctx, tt.imageName, tt.force)
 			tt.validateFunc(result, err)
 		})
 	}

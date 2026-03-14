@@ -313,6 +313,50 @@ func (s *DockerService) Exec(
 	return NewResponse(dockerExecCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
+// ImageRemove removes a container image from the target host.
+func (s *DockerService) ImageRemove(
+	ctx context.Context,
+	hostname string,
+	imageName string,
+	params *DockerImageRemoveParams,
+) (*Response[Collection[DockerActionResult]], error) {
+	var genParams *gen.DeleteNodeContainerDockerImageParams
+	if params != nil {
+		genParams = &gen.DeleteNodeContainerDockerImageParams{
+			Force: &params.Force,
+		}
+	}
+
+	resp, err := s.client.DeleteNodeContainerDockerImageWithResponse(
+		ctx,
+		hostname,
+		imageName,
+		genParams,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("docker image remove: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON202 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(dockerActionCollectionFromGen(resp.JSON202), resp.Body), nil
+}
+
 // Pull pulls a container image on the target host.
 func (s *DockerService) Pull(
 	ctx context.Context,

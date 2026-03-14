@@ -41,6 +41,10 @@ func (s *Container) PostNodeContainerDockerExec(
 		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}
 
+	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
+		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
+	}
+
 	if errMsg, ok := validation.Struct(request.Body); !ok {
 		return gen.PostNodeContainerDockerExec400JSONResponse{Error: &errMsg}, nil
 	}

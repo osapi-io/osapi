@@ -1363,6 +1363,11 @@ type GetNodeContainerDockerParams struct {
 // GetNodeContainerDockerParamsState defines parameters for GetNodeContainerDocker.
 type GetNodeContainerDockerParamsState string
 
+// DeleteNodeContainerDockerImageParams defines parameters for DeleteNodeContainerDockerImage.
+type DeleteNodeContainerDockerImageParams struct {
+	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
+}
+
 // DeleteNodeContainerDockerByIDParams defines parameters for DeleteNodeContainerDockerByID.
 type DeleteNodeContainerDockerByIDParams struct {
 	// Force Force removal of a running container.
@@ -1560,6 +1565,9 @@ type ClientInterface interface {
 	PostNodeContainerDockerWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNodeContainerDocker(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeContainerDockerImage request
+	DeleteNodeContainerDockerImage(ctx context.Context, hostname Hostname, image string, params *DeleteNodeContainerDockerImageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeContainerDockerPullWithBody request with any body
 	PostNodeContainerDockerPullWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1944,6 +1952,18 @@ func (c *Client) PostNodeContainerDockerWithBody(ctx context.Context, hostname H
 
 func (c *Client) PostNodeContainerDocker(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeContainerDockerRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeContainerDockerImage(ctx context.Context, hostname Hostname, image string, params *DeleteNodeContainerDockerImageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeContainerDockerImageRequest(c.Server, hostname, image, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3179,6 +3199,69 @@ func NewPostNodeContainerDockerRequestWithBody(server string, hostname Hostname,
 	return req, nil
 }
 
+// NewDeleteNodeContainerDockerImageRequest generates requests for DeleteNodeContainerDockerImage
+func NewDeleteNodeContainerDockerImageRequest(server string, hostname Hostname, image string, params *DeleteNodeContainerDockerImageParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "image", runtime.ParamLocationPath, image)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/container/docker/image/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Force != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "force", runtime.ParamLocationQuery, *params.Force); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPostNodeContainerDockerPullRequest calls the generic PostNodeContainerDockerPull builder with application/json body
 func NewPostNodeContainerDockerPullRequest(server string, hostname Hostname, body PostNodeContainerDockerPullJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -4059,6 +4142,9 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeContainerDockerWithResponse(ctx context.Context, hostname Hostname, body PostNodeContainerDockerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerResponse, error)
 
+	// DeleteNodeContainerDockerImageWithResponse request
+	DeleteNodeContainerDockerImageWithResponse(ctx context.Context, hostname Hostname, image string, params *DeleteNodeContainerDockerImageParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerDockerImageResponse, error)
+
 	// PostNodeContainerDockerPullWithBodyWithResponse request with any body
 	PostNodeContainerDockerPullWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeContainerDockerPullResponse, error)
 
@@ -4721,6 +4807,32 @@ func (r PostNodeContainerDockerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostNodeContainerDockerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeContainerDockerImageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *DockerActionCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeContainerDockerImageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeContainerDockerImageResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5433,6 +5545,15 @@ func (c *ClientWithResponses) PostNodeContainerDockerWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParsePostNodeContainerDockerResponse(rsp)
+}
+
+// DeleteNodeContainerDockerImageWithResponse request returning *DeleteNodeContainerDockerImageResponse
+func (c *ClientWithResponses) DeleteNodeContainerDockerImageWithResponse(ctx context.Context, hostname Hostname, image string, params *DeleteNodeContainerDockerImageParams, reqEditors ...RequestEditorFn) (*DeleteNodeContainerDockerImageResponse, error) {
+	rsp, err := c.DeleteNodeContainerDockerImage(ctx, hostname, image, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeContainerDockerImageResponse(rsp)
 }
 
 // PostNodeContainerDockerPullWithBodyWithResponse request with arbitrary body returning *PostNodeContainerDockerPullResponse
@@ -6840,6 +6961,60 @@ func ParsePostNodeContainerDockerResponse(rsp *http.Response) (*PostNodeContaine
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
 		var dest DockerResultCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeContainerDockerImageResponse parses an HTTP response from a DeleteNodeContainerDockerImageWithResponse call
+func ParseDeleteNodeContainerDockerImageResponse(rsp *http.Response) (*DeleteNodeContainerDockerImageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeContainerDockerImageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DockerActionCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

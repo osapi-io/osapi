@@ -134,14 +134,15 @@ const (
 
 // Docker operation types
 const (
-	OperationDockerCreate  = "docker.create.execute"
-	OperationDockerStart   = "docker.start.execute"
-	OperationDockerStop    = "docker.stop.execute"
-	OperationDockerRemove  = "docker.remove.execute"
-	OperationDockerList    = "docker.list.get"
-	OperationDockerInspect = "docker.inspect.get"
-	OperationDockerExec    = "docker.exec.execute"
-	OperationDockerPull    = "docker.pull.execute"
+	OperationDockerCreate      = "docker.create.execute"
+	OperationDockerStart       = "docker.start.execute"
+	OperationDockerStop        = "docker.stop.execute"
+	OperationDockerRemove      = "docker.remove.execute"
+	OperationDockerList        = "docker.list.get"
+	OperationDockerInspect     = "docker.inspect.get"
+	OperationDockerExec        = "docker.exec.execute"
+	OperationDockerPull        = "docker.pull.execute"
+	OperationDockerImageRemove = "docker.image-remove.execute"
 )
 
 // Operation represents an operation in the new hierarchical format
@@ -312,6 +313,12 @@ type DockerExecData struct {
 // DockerPullData represents data for pulling a docker image.
 type DockerPullData struct {
 	Image string `json:"image"`
+}
+
+// DockerImageRemoveData represents data for removing a docker image.
+type DockerImageRemoveData struct {
+	Image string `json:"image"`
+	Force bool   `json:"force,omitempty"`
 }
 
 // NodeShutdownData represents data for node shutdown/reboot operations

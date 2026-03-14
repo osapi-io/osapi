@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/api/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // DeleteNodeContainerDockerByID removes a container from a target node.
@@ -36,6 +37,16 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	request gen.DeleteNodeContainerDockerByIDRequestObject,
 ) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+	}
+
+	// Defense in depth: Force *bool with omitempty cannot currently
+	// fail validation, but guards against future parameter additions.
+	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 

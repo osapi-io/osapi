@@ -449,6 +449,75 @@ paths:
 
   # ── Docker image ───────────────────────────────────────────
 
+  /node/{hostname}/container/docker/image/{image}:
+    delete:
+      summary: Remove a container image
+      description: >
+        Remove a container image from the target node. The image
+        parameter accepts an image name or ID.
+      tags:
+        - docker_image
+      operationId: DeleteNodeContainerDockerImage
+      security:
+        - BearerAuth:
+            - docker:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: image
+          in: path
+          required: true
+          description: >
+            Image name or ID to remove (e.g., "nginx:latest" or
+            "sha256:abc123").
+          # NOTE: x-oapi-codegen-extra-tags on path params do not
+          # generate validate tags in strict-server mode.
+          # Validation is handled manually in the handler.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+          schema:
+            type: string
+            minLength: 1
+        - name: force
+          in: query
+          required: false
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+          schema:
+            type: boolean
+            default: false
+            description: Force removal even if the image is in use.
+      responses:
+        '202':
+          description: Image removal accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DockerActionCollectionResponse'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error removing image.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
   /node/{hostname}/container/docker/pull:
     post:
       summary: Pull a container image

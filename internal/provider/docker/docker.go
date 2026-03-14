@@ -391,6 +391,27 @@ func (d *Client) Exec(
 	}, nil
 }
 
+// ImageRemove removes a container image from the local Docker daemon.
+func (d *Client) ImageRemove(
+	ctx context.Context,
+	imageName string,
+	force bool,
+) (*ActionResult, error) {
+	opts := image.RemoveOptions{
+		Force: force,
+	}
+
+	_, err := d.client.ImageRemove(ctx, imageName, opts)
+	if err != nil {
+		return nil, fmt.Errorf("remove image: %w", err)
+	}
+
+	return &ActionResult{
+		Message: "Image removed successfully",
+		Changed: true,
+	}, nil
+}
+
 // Pull pulls a container image from a registry. Compares the image
 // digest before and after the pull to determine if anything changed.
 func (d *Client) Pull(

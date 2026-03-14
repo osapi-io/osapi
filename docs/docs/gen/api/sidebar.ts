@@ -156,6 +156,12 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
+          id: "gen/api/delete-node-container-docker-image",
+          label: "Remove a container image",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
           id: "gen/api/post-node-container-docker-pull",
           label: "Pull a container image",
           className: "api-method post",

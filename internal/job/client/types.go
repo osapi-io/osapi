@@ -281,6 +281,11 @@ type JobClient interface {
 		target string,
 		data *job.DockerPullData,
 	) (*job.Response, error)
+	ModifyDockerImageRemove(
+		ctx context.Context,
+		target string,
+		data *job.DockerImageRemoveData,
+	) (*job.Response, error)
 
 	// Agent discovery
 	ListAgents(

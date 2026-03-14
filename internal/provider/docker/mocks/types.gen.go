@@ -66,6 +66,21 @@ func (mr *MockProviderMockRecorder) Exec(ctx, id, params interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockProvider)(nil).Exec), ctx, id, params)
 }
 
+// ImageRemove mocks base method.
+func (m *MockProvider) ImageRemove(ctx context.Context, image string, force bool) (*docker.ActionResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImageRemove", ctx, image, force)
+	ret0, _ := ret[0].(*docker.ActionResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImageRemove indicates an expected call of ImageRemove.
+func (mr *MockProviderMockRecorder) ImageRemove(ctx, image, force interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageRemove", reflect.TypeOf((*MockProvider)(nil).ImageRemove), ctx, image, force)
+}
+
 // Inspect mocks base method.
 func (m *MockProvider) Inspect(ctx context.Context, id string) (*docker.ContainerDetail, error) {
 	m.ctrl.T.Helper()

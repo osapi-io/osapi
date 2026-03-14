@@ -56,6 +56,12 @@ type Provider interface {
 		ctx context.Context,
 		image string,
 	) (*PullResult, error)
+
+	ImageRemove(
+		ctx context.Context,
+		image string,
+		force bool,
+	) (*ActionResult, error)
 }
 
 // CreateParams contains parameters for container creation.
