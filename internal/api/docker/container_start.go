@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/api/docker/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeContainerDockerStart starts a container on a target node.
@@ -35,6 +36,10 @@ func (s *Container) PostNodeContainerDockerStart(
 	request gen.PostNodeContainerDockerStartRequestObject,
 ) (gen.PostNodeContainerDockerStartResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
 		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 

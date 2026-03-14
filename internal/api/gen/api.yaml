@@ -863,8 +863,11 @@ paths:
           description: >
             Image name or ID to remove (e.g., "nginx:latest" or
             "sha256:abc123").
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
           schema:
             type: string
+            minLength: 1
         - name: force
           in: query
           required: false

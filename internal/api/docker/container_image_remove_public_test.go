@@ -22,6 +22,7 @@ package container_test
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -35,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/api"
 	apicontainer "github.com/retr0h/osapi/internal/api/docker"
 	"github.com/retr0h/osapi/internal/api/docker/gen"
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -162,6 +164,41 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 		},
 		{
+			name: "validation error empty image",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
+				Hostname: "server1",
+				Image:    "",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
+			name: "server error",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
+				Hostname: "server1",
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerImageRemove(
+						gomock.Any(),
+						"server1",
+						gomock.Any(),
+					).
+					Return(nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "server1",
@@ -195,7 +232,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 	}
 }
 
-func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImageRBACHTTP() {
+func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImageValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -218,7 +255,15 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"job_id"`, `"results"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"image removed"`},
+		},
+		{
+			name: "when empty image returns 400",
+			path: "/node/server1/container/docker/image/",
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode: http.StatusNotFound,
 		},
 		{
 			name: "when target agent not found",
@@ -249,6 +294,111 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacContainerImageRemoveTestSigningKey = "test-signing-key-for-rbac-container-image-remove"
+
+func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImageRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacContainerImageRemoveTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"docker:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid admin token returns 202",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacContainerImageRemoveTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyDockerImageRemove(gomock.Any(), "server1", gomock.Any()).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"job_id"`, `"results"`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				API: config.API{
+					Server: config.Server{
+						Security: config.ServerSecurity{
+							SigningKey: rbacContainerImageRemoveTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetDockerHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodDelete,
+				"/node/server1/container/docker/image/nginx:latest",
+				nil,
+			)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
 
 			s.Equal(tc.wantCode, rec.Code)
 			for _, str := range tc.wantContains {

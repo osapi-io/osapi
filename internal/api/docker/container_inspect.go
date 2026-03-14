@@ -28,6 +28,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/api/docker/gen"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // GetNodeContainerDockerByID inspects a container on a target node.
@@ -36,6 +37,10 @@ func (s *Container) GetNodeContainerDockerByID(
 	request gen.GetNodeContainerDockerByIDRequestObject,
 ) (gen.GetNodeContainerDockerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
 		return gen.GetNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
