@@ -113,44 +113,164 @@ func main() {
 
 	// ── Pull image ───────────────────────────────────────────────
 
-	pull := plan.DockerPull("pull-image", target, containerImage)
+	pull := plan.TaskFunc("pull-image",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Pull(ctx, target, gen.DockerPullRequest{
+				Image: containerImage,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerPullResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	pull.DependsOn(preCleanup)
 
 	// ── Create container ─────────────────────────────────────────
 
 	autoStart := true
-	create := plan.DockerCreate("create-container", target,
-		gen.DockerCreateRequest{
-			Image:     containerImage,
-			Name:      ptr(containerName),
-			AutoStart: &autoStart,
-			Command:   &[]string{"sleep", "600"},
+	create := plan.TaskFunc("create-container",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Create(ctx, target, gen.DockerCreateRequest{
+				Image:     containerImage,
+				Name:      ptr(containerName),
+				AutoStart: &autoStart,
+				Command:   &[]string{"sleep", "600"},
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 	create.DependsOn(pull)
 
 	// ── Exec: run commands inside the container ──────────────────
 
-	execHostname := plan.DockerExec("exec-hostname", target, containerName,
-		gen.DockerExecRequest{Command: []string{"hostname"}},
+	execHostname := plan.TaskFunc("exec-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Exec(ctx, target, containerName,
+				gen.DockerExecRequest{Command: []string{"hostname"}},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerExecResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
 	)
 	execHostname.DependsOn(create)
 
-	execUname := plan.DockerExec("exec-uname", target, containerName,
-		gen.DockerExecRequest{Command: []string{"uname", "-a"}},
+	execUname := plan.TaskFunc("exec-uname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Exec(ctx, target, containerName,
+				gen.DockerExecRequest{Command: []string{"uname", "-a"}},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerExecResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
 	)
 	execUname.DependsOn(create)
 
-	execOS := plan.DockerExec("exec-os-release", target, containerName,
-		gen.DockerExecRequest{
-			Command: []string{"sh", "-c", "head -2 /etc/os-release"},
+	execOS := plan.TaskFunc("exec-os-release",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Exec(ctx, target, containerName,
+				gen.DockerExecRequest{
+					Command: []string{"sh", "-c", "head -2 /etc/os-release"},
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerExecResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 	execOS.DependsOn(create)
 
 	// ── Inspect: read-only, reports unchanged ────────────────────
 
-	inspect := plan.DockerInspect("inspect-container", target, containerName)
+	inspect := plan.TaskFunc("inspect-container",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Inspect(ctx, target, containerName)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerDetailResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	inspect.DependsOn(create)
 
 	// ── Deliberately failing task: shows StatusFailed ─────────────
@@ -168,8 +288,28 @@ func main() {
 	// ── Cleanup ──────────────────────────────────────────────────
 	// Depends on all tasks that use the container so it runs last.
 
-	plan.DockerRemove("cleanup", target, containerName,
-		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+	plan.TaskFunc("cleanup",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Docker.Remove(ctx, target, containerName,
+				&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DockerActionResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
 	).DependsOn(execHostname, execUname, execOS, inspect)
 
 	// ── Run ──────────────────────────────────────────────────────
