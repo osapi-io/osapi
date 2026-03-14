@@ -28,22 +28,22 @@ import (
 
 // AuditEntry represents a single audit log entry.
 type AuditEntry struct {
-	ID           string
-	Timestamp    time.Time
-	User         string
-	Roles        []string
-	Method       string
-	Path         string
-	ResponseCode int
-	DurationMs   int64
-	SourceIP     string
-	OperationID  string
+	ID           string    `json:"id"`
+	Timestamp    time.Time `json:"timestamp"`
+	User         string    `json:"user"`
+	Roles        []string  `json:"roles,omitempty"`
+	Method       string    `json:"method"`
+	Path         string    `json:"path"`
+	ResponseCode int       `json:"response_code"`
+	DurationMs   int64     `json:"duration_ms"`
+	SourceIP     string    `json:"source_ip"`
+	OperationID  string    `json:"operation_id,omitempty"`
 }
 
 // AuditList is a paginated list of audit entries.
 type AuditList struct {
-	Items      []AuditEntry
-	TotalItems int
+	Items      []AuditEntry `json:"items"`
+	TotalItems int          `json:"total_items"`
 }
 
 // auditEntryFromGen converts a gen.AuditEntry to an AuditEntry.

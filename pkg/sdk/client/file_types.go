@@ -24,64 +24,64 @@ import "github.com/retr0h/osapi/pkg/sdk/client/gen"
 
 // FileUpload represents a successfully uploaded file.
 type FileUpload struct {
-	Name        string
-	SHA256      string
-	Size        int
-	Changed     bool
-	ContentType string
+	Name        string `json:"name"`
+	SHA256      string `json:"sha256"`
+	Size        int    `json:"size"`
+	Changed     bool   `json:"changed"`
+	ContentType string `json:"content_type"`
 }
 
 // FileItem represents file metadata in a list.
 type FileItem struct {
-	Name        string
-	SHA256      string
-	Size        int
-	ContentType string
+	Name        string `json:"name"`
+	SHA256      string `json:"sha256"`
+	Size        int    `json:"size"`
+	ContentType string `json:"content_type"`
 }
 
 // FileList is a collection of files with total count.
 type FileList struct {
-	Files []FileItem
-	Total int
+	Files []FileItem `json:"files"`
+	Total int        `json:"total"`
 }
 
 // FileMetadata represents metadata for a single file.
 type FileMetadata struct {
-	Name        string
-	SHA256      string
-	Size        int
-	ContentType string
+	Name        string `json:"name"`
+	SHA256      string `json:"sha256"`
+	Size        int    `json:"size"`
+	ContentType string `json:"content_type"`
 }
 
 // FileDelete represents the result of a file deletion.
 type FileDelete struct {
-	Name    string
-	Deleted bool
+	Name    string `json:"name"`
+	Deleted bool   `json:"deleted"`
 }
 
 // FileChanged represents the result of a change detection check.
 type FileChanged struct {
-	Name    string
-	Changed bool
-	SHA256  string
+	Name    string `json:"name"`
+	Changed bool   `json:"changed"`
+	SHA256  string `json:"sha256"`
 }
 
 // FileDeployResult represents the result of a file deploy operation.
 type FileDeployResult struct {
-	JobID    string
-	Hostname string
-	Changed  bool
+	JobID    string `json:"job_id"`
+	Hostname string `json:"hostname"`
+	Changed  bool   `json:"changed"`
 }
 
 // FileStatusResult represents the result of a file status check.
 type FileStatusResult struct {
-	JobID    string
-	Hostname string
-	Path     string
-	Status   string
-	SHA256   string
-	Changed  bool
-	Error    string
+	JobID    string `json:"job_id"`
+	Hostname string `json:"hostname"`
+	Path     string `json:"path"`
+	Status   string `json:"status"`
+	SHA256   string `json:"sha256,omitempty"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // fileUploadFromGen converts a gen.FileUploadResponse to a FileUpload.

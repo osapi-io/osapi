@@ -28,117 +28,117 @@ import (
 
 // Collection is a generic wrapper for collection responses from node queries.
 type Collection[T any] struct {
-	Results []T
-	JobID   string
+	Results []T    `json:"results"`
+	JobID   string `json:"job_id"`
 }
 
 // Disk represents disk usage information.
 type Disk struct {
-	Name  string
-	Total int
-	Used  int
-	Free  int
+	Name  string `json:"name"`
+	Total int    `json:"total"`
+	Used  int    `json:"used"`
+	Free  int    `json:"free"`
 }
 
 // HostnameResult represents a hostname query result from a single agent.
 type HostnameResult struct {
-	Hostname string
-	Error    string
-	Changed  bool
-	Labels   map[string]string
+	Hostname string            `json:"hostname"`
+	Error    string            `json:"error,omitempty"`
+	Changed  bool              `json:"changed"`
+	Labels   map[string]string `json:"labels,omitempty"`
 }
 
 // NodeStatus represents full node status from a single agent.
 type NodeStatus struct {
-	Hostname    string
-	Uptime      string
-	Error       string
-	Changed     bool
-	Disks       []Disk
-	LoadAverage *LoadAverage
-	Memory      *Memory
-	OSInfo      *OSInfo
+	Hostname    string       `json:"hostname"`
+	Uptime      string       `json:"uptime,omitempty"`
+	Error       string       `json:"error,omitempty"`
+	Changed     bool         `json:"changed"`
+	Disks       []Disk       `json:"disks,omitempty"`
+	LoadAverage *LoadAverage `json:"load_average,omitempty"`
+	Memory      *Memory      `json:"memory,omitempty"`
+	OSInfo      *OSInfo      `json:"os_info,omitempty"`
 }
 
 // DiskResult represents disk query result from a single agent.
 type DiskResult struct {
-	Hostname string
-	Error    string
-	Changed  bool
-	Disks    []Disk
+	Hostname string `json:"hostname"`
+	Error    string `json:"error,omitempty"`
+	Changed  bool   `json:"changed"`
+	Disks    []Disk `json:"disks,omitempty"`
 }
 
 // MemoryResult represents memory query result from a single agent.
 type MemoryResult struct {
-	Hostname string
-	Error    string
-	Changed  bool
-	Memory   *Memory
+	Hostname string  `json:"hostname"`
+	Error    string  `json:"error,omitempty"`
+	Changed  bool    `json:"changed"`
+	Memory   *Memory `json:"memory,omitempty"`
 }
 
 // LoadResult represents load average query result from a single agent.
 type LoadResult struct {
-	Hostname    string
-	Error       string
-	Changed     bool
-	LoadAverage *LoadAverage
+	Hostname    string       `json:"hostname"`
+	Error       string       `json:"error,omitempty"`
+	Changed     bool         `json:"changed"`
+	LoadAverage *LoadAverage `json:"load_average,omitempty"`
 }
 
 // OSInfoResult represents OS info query result from a single agent.
 type OSInfoResult struct {
-	Hostname string
-	Error    string
-	Changed  bool
-	OSInfo   *OSInfo
+	Hostname string  `json:"hostname"`
+	Error    string  `json:"error,omitempty"`
+	Changed  bool    `json:"changed"`
+	OSInfo   *OSInfo `json:"os_info,omitempty"`
 }
 
 // UptimeResult represents uptime query result from a single agent.
 type UptimeResult struct {
-	Hostname string
-	Uptime   string
-	Error    string
-	Changed  bool
+	Hostname string `json:"hostname"`
+	Uptime   string `json:"uptime,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Changed  bool   `json:"changed"`
 }
 
 // DNSConfig represents DNS configuration from a single agent.
 type DNSConfig struct {
-	Hostname      string
-	Error         string
-	Changed       bool
-	Servers       []string
-	SearchDomains []string
+	Hostname      string   `json:"hostname"`
+	Error         string   `json:"error,omitempty"`
+	Changed       bool     `json:"changed"`
+	Servers       []string `json:"servers,omitempty"`
+	SearchDomains []string `json:"search_domains,omitempty"`
 }
 
 // DNSUpdateResult represents DNS update result from a single agent.
 type DNSUpdateResult struct {
-	Hostname string
-	Status   string
-	Error    string
-	Changed  bool
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Changed  bool   `json:"changed"`
 }
 
 // PingResult represents ping result from a single agent.
 type PingResult struct {
-	Hostname        string
-	Error           string
-	Changed         bool
-	PacketsSent     int
-	PacketsReceived int
-	PacketLoss      float64
-	MinRtt          string
-	AvgRtt          string
-	MaxRtt          string
+	Hostname        string  `json:"hostname"`
+	Error           string  `json:"error,omitempty"`
+	Changed         bool    `json:"changed"`
+	PacketsSent     int     `json:"packets_sent"`
+	PacketsReceived int     `json:"packets_received"`
+	PacketLoss      float64 `json:"packet_loss"`
+	MinRtt          string  `json:"min_rtt,omitempty"`
+	AvgRtt          string  `json:"avg_rtt,omitempty"`
+	MaxRtt          string  `json:"max_rtt,omitempty"`
 }
 
 // CommandResult represents command execution result from a single agent.
 type CommandResult struct {
-	Hostname   string
-	Stdout     string
-	Stderr     string
-	Error      string
-	ExitCode   int
-	Changed    bool
-	DurationMs int64
+	Hostname   string `json:"hostname"`
+	Stdout     string `json:"stdout,omitempty"`
+	Stderr     string `json:"stderr,omitempty"`
+	Error      string `json:"error,omitempty"`
+	ExitCode   int    `json:"exit_code"`
+	Changed    bool   `json:"changed"`
+	DurationMs int64  `json:"duration_ms"`
 }
 
 // loadAverageFromGen converts a gen.LoadAverageResponse to a LoadAverage.
