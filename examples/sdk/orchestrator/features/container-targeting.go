@@ -153,7 +153,7 @@ func main() {
 	force := true
 	plan.DockerRemove("cleanup", target, containerName,
 		&gen.DeleteNodeContainerDockerByIDParams{Force: &force},
-	).DependsOn(execHostname, execUname, execOS, inspect, deliberatelyFails)
+	).DependsOn(execHostname, execUname, execOS, inspect)
 
 	// ── Run ──────────────────────────────────────────────────────
 
