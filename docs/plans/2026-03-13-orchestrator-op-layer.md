@@ -1,170 +1,47 @@
-# Orchestrator SDK Helpers Implementation Plan
+# Orchestrator SDK Bridge Helpers Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add bridge helpers (`CollectionResult`, `StructToMap`) to the SDK orchestrator package so consumers like `osapi-orchestrator` don't need to reinvent them. Delete the misplaced `docker.go` DSL methods. Fix broken examples to use `TaskFunc` (the pattern `osapi-orchestrator` actually uses).
+**Goal:** Add bridge helpers to the SDK orchestrator package, achieve 100% coverage, fix all examples so they compile and are complete, update docs, then remove the misplaced docker DSL.
 
-**Architecture:** The SDK orchestrator package provides the DAG engine (plan, task, runner) plus bridge utilities. Domain-specific operation methods (NodeHostnameGet, DockerPull, etc.) belong in consumer packages like `osapi-orchestrator`, not in the SDK.
+**Architecture:** The SDK orchestrator package provides the DAG engine (plan, task, runner) plus bridge utilities (`CollectionResult`, `StructToMap`). Domain-specific operation methods belong in consumer packages like `osapi-orchestrator`, not in the SDK. Examples demonstrate the `TaskFunc` pattern.
 
 **Tech Stack:** Go 1.25, generics, testify/suite, httptest
 
 ---
 
-### Task 1: Add CollectionResult and StructToMap helpers
+### Task 1: Add CollectionResult and StructToMap bridge helpers
 
 **Files:**
 - Create: `pkg/sdk/orchestrator/bridge.go`
 - Test: `pkg/sdk/orchestrator/bridge_public_test.go`
 
-**Step 1: Write the failing test**
+**Step 1: Write tests for `StructToMap` and `CollectionResult`**
 
-Create `bridge_public_test.go`:
+Create `bridge_public_test.go` with `BridgePublicTestSuite`:
 
-```go
-package orchestrator_test
+Test `StructToMap`:
+- Converts struct with json tags to map
+- Returns nil for nil input
+- Handles nested structs
+- Omits zero-value fields with `omitempty`
 
-import (
-	"testing"
+Test `CollectionResult`:
+- Single result extracts JobID, Changed, HostResults with Data
+- Multiple results — Changed is true when any host changed
+- Empty results — returns result with empty HostResults
+- HostResult.Data auto-populated via StructToMap when mapper leaves it nil
+- HostResult.Data preserved when mapper sets it explicitly
 
-	"github.com/stretchr/testify/suite"
+Use `client.HostnameResult`, `client.CommandResult` etc. as test
+inputs since those are the real SDK types consumers will pass.
 
-	"github.com/retr0h/osapi/pkg/sdk/client"
-	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
-)
-
-type BridgePublicTestSuite struct {
-	suite.Suite
-}
-
-func (s *BridgePublicTestSuite) TestStructToMap() {
-	tests := []struct {
-		name         string
-		input        any
-		validateFunc func(map[string]any)
-	}{
-		{
-			name: "converts struct with json tags",
-			input: struct {
-				Name    string `json:"name"`
-				Changed bool   `json:"changed"`
-			}{Name: "test", Changed: true},
-			validateFunc: func(m map[string]any) {
-				s.Equal("test", m["name"])
-				s.Equal(true, m["changed"])
-			},
-		},
-		{
-			name:  "returns nil for nil input",
-			input: nil,
-			validateFunc: func(m map[string]any) {
-				s.Nil(m)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			result := orchestrator.StructToMap(tt.input)
-			tt.validateFunc(result)
-		})
-	}
-}
-
-func (s *BridgePublicTestSuite) TestCollectionResult() {
-	tests := []struct {
-		name         string
-		jobID        string
-		results      []client.HostnameResult
-		toHostResult func(client.HostnameResult) orchestrator.HostResult
-		validateFunc func(*orchestrator.Result)
-	}{
-		{
-			name:  "single result extracts fields",
-			jobID: "job-123",
-			results: []client.HostnameResult{
-				{Hostname: "web-01", Changed: false},
-			},
-			toHostResult: func(
-				r client.HostnameResult,
-			) orchestrator.HostResult {
-				return orchestrator.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-				}
-			},
-			validateFunc: func(result *orchestrator.Result) {
-				s.Equal("job-123", result.JobID)
-				s.False(result.Changed)
-				s.Len(result.HostResults, 1)
-				s.Equal("web-01", result.HostResults[0].Hostname)
-				s.NotNil(result.HostResults[0].Data)
-			},
-		},
-		{
-			name:  "changed is true when any host changed",
-			jobID: "job-456",
-			results: []client.HostnameResult{
-				{Hostname: "web-01", Changed: false},
-				{Hostname: "web-02", Changed: true},
-			},
-			toHostResult: func(
-				r client.HostnameResult,
-			) orchestrator.HostResult {
-				return orchestrator.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-				}
-			},
-			validateFunc: func(result *orchestrator.Result) {
-				s.True(result.Changed)
-				s.Len(result.HostResults, 2)
-			},
-		},
-		{
-			name:    "empty results",
-			jobID:   "job-789",
-			results: []client.HostnameResult{},
-			toHostResult: func(
-				r client.HostnameResult,
-			) orchestrator.HostResult {
-				return orchestrator.HostResult{}
-			},
-			validateFunc: func(result *orchestrator.Result) {
-				s.Equal("job-789", result.JobID)
-				s.False(result.Changed)
-				s.Empty(result.HostResults)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			col := client.Collection[client.HostnameResult]{
-				JobID:   tt.jobID,
-				Results: tt.results,
-			}
-			result := orchestrator.CollectionResult(
-				col,
-				tt.toHostResult,
-			)
-			tt.validateFunc(result)
-		})
-	}
-}
-
-func TestBridgePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(BridgePublicTestSuite))
-}
-```
-
-**Step 2: Run test to verify it fails**
+**Step 2: Run tests to verify they fail**
 
 Run: `go test ./pkg/sdk/orchestrator/... -run TestBridgePublicTestSuite -v`
 Expected: FAIL — `CollectionResult` and `StructToMap` not defined
 
-**Step 3: Write the implementation**
-
-Create `bridge.go`:
+**Step 3: Implement `bridge.go`**
 
 ```go
 package orchestrator
@@ -177,25 +54,7 @@ import (
 
 // StructToMap converts a struct to map[string]any using its JSON
 // tags. Returns nil if v is nil or cannot be marshaled.
-func StructToMap(
-	v any,
-) map[string]any {
-	if v == nil {
-		return nil
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil
-	}
-
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil
-	}
-
-	return m
-}
+func StructToMap(v any) map[string]any
 
 // CollectionResult builds a Result from a Collection response.
 // It iterates all results, applies the toHostResult mapper to
@@ -203,53 +62,25 @@ func StructToMap(
 // via StructToMap when the mapper leaves it nil. Changed is true
 // if any host reported a change.
 func CollectionResult[T any](
-	col osapiclient.Collection[T],
-	toHostResult func(T) HostResult,
-) *Result {
-	var changed bool
-
-	hostResults := make([]HostResult, 0, len(col.Results))
-
-	for _, r := range col.Results {
-		hr := toHostResult(r)
-		if hr.Data == nil {
-			hr.Data = StructToMap(r)
-		}
-		hostResults = append(hostResults, hr)
-
-		if hr.Changed {
-			changed = true
-		}
-	}
-
-	return &Result{
-		JobID:       col.JobID,
-		Changed:     changed,
-		HostResults: hostResults,
-	}
-}
+    col osapiclient.Collection[T],
+    toHostResult func(T) HostResult,
+) *Result
 ```
 
-Note: This takes `Collection[T]` directly (not `*Response[Collection[T]]`)
-so callers pass `resp.Data` — cleaner than requiring the full response
-wrapper. The caller can still access `resp.RawJSON()` separately if needed.
+Mirrors `osapi-orchestrator`'s `buildResult` and `toMap` — but exported
+and in the SDK where it belongs.
 
-Also confirm `Collection` is exported from the client package. Check:
-
-```go
-// In pkg/sdk/client/response.go — Collection should be exported
-type Collection[T any] struct {
-	Results []T
-	JobID   string
-}
-```
-
-**Step 4: Run test to verify it passes**
+**Step 4: Run tests to verify they pass**
 
 Run: `go test ./pkg/sdk/orchestrator/... -run TestBridgePublicTestSuite -v`
 Expected: PASS
 
-**Step 5: Commit**
+**Step 5: Check coverage**
+
+Run: `go test ./pkg/sdk/orchestrator/... -coverprofile=/tmp/bridge.out && go tool cover -func=/tmp/bridge.out | grep bridge`
+Expected: 100% on bridge.go
+
+**Step 6: Commit**
 
 ```
 feat(orchestrator): add CollectionResult and StructToMap helpers
@@ -257,7 +88,7 @@ feat(orchestrator): add CollectionResult and StructToMap helpers
 
 ---
 
-### Task 2: Delete docker.go and its tests
+### Task 2: Delete docker.go DSL and its tests
 
 **Files:**
 - Delete: `pkg/sdk/orchestrator/docker.go`
@@ -270,17 +101,18 @@ rm pkg/sdk/orchestrator/docker.go
 rm pkg/sdk/orchestrator/docker_public_test.go
 ```
 
-**Step 2: Run tests to verify nothing else depends on them**
-
-Run: `go build ./...`
-Expected: Compilation failure in examples that reference `DockerPull` etc.
-
-Note which files fail — these will be fixed in Task 3.
+**Step 2: Run SDK tests**
 
 Run: `go test ./pkg/sdk/orchestrator/... -count=1`
-Expected: PASS (docker tests are gone, engine tests still pass)
+Expected: PASS (engine + bridge tests pass, docker tests gone)
 
-**Step 3: Commit**
+**Step 3: Check what breaks**
+
+Run: `go build ./... 2>&1`
+Expected: Compilation failures in `container-targeting.go` (references
+`plan.DockerPull` etc.). Note the failures — fixed in Task 3.
+
+**Step 4: Commit**
 
 ```
 refactor(orchestrator): remove docker DSL methods
@@ -292,18 +124,23 @@ CollectionResult and StructToMap as bridge helpers instead.
 
 ---
 
-### Task 3: Fix container-targeting example to use TaskFunc
+### Task 3: Fix container-targeting example
 
 **Files:**
 - Modify: `examples/sdk/orchestrator/features/container-targeting.go`
 
-**Step 1: Rewrite to use `plan.TaskFunc()` pattern**
+**Step 1: Rewrite to use `TaskFunc` with `CollectionResult`**
 
-Replace `plan.DockerPull()`, `plan.DockerCreate()`, etc. with
-`plan.TaskFunc()` calls that use the SDK client directly — the same
-pattern `osapi-orchestrator` uses. Import `gen` for request types.
+Replace all `plan.DockerPull()`, `plan.DockerCreate()`, etc. with
+`plan.TaskFunc()` calls that use the SDK client directly and
+`orchestrator.CollectionResult()` to build results.
 
-Each operation becomes:
+Keep the same DAG structure: pre-cleanup → pull → create →
+exec x3 + inspect + deliberately-fails → cleanup.
+
+Pre-cleanup remains a `TaskFunc` that swallows errors.
+
+Each docker operation becomes:
 
 ```go
 pull := plan.TaskFunc("pull-image", func(
@@ -329,10 +166,7 @@ pull := plan.TaskFunc("pull-image", func(
 })
 ```
 
-Keep the same DAG structure (pre-cleanup, pull, create, exec x3,
-inspect, deliberately-fails, cleanup).
-
-**Step 2: Build and verify**
+**Step 2: Build**
 
 Run: `go build examples/sdk/orchestrator/features/container-targeting.go`
 Expected: Compiles successfully
@@ -345,15 +179,25 @@ refactor: update container-targeting to use TaskFunc with bridge helpers
 
 ---
 
-### Task 4: Fix broken operation examples
+### Task 4: Fix all broken operation examples and add docker examples
 
 **Files:**
-- Modify: all 14 files in `examples/sdk/orchestrator/operations/` that use `plan.Task(&Op{...})`
-- Modify: all feature examples in `examples/sdk/orchestrator/features/` that use `plan.Task(&Op{...})`
+- Modify: 13 files in `examples/sdk/orchestrator/operations/` that use
+  `plan.Task(&Op{...})` (all except `file-upload.go` which already uses
+  `TaskFunc`)
+- Modify: feature examples that use `plan.Task(&Op{...})`:
+  `basic.go`, `broadcast.go`, `error-strategy.go`,
+  `file-deploy-workflow.go`, `guards.go`, `hooks.go`,
+  `only-if-changed.go`, `parallel.go`, `result-decode.go`,
+  `task-func-results.go`, `task-func.go`
+- Create: 8 docker operation examples:
+  `docker-pull.go`, `docker-create.go`, `docker-list.go`,
+  `docker-inspect.go`, `docker-start.go`, `docker-stop.go`,
+  `docker-remove.go`, `docker-exec.go`
 
-**Step 1: Rewrite operation examples to use `plan.TaskFunc()`**
+**Step 1: Rewrite operation examples to use `TaskFunc`**
 
-Each operation example currently does:
+Each currently does:
 
 ```go
 plan.Task("get-hostname", &orchestrator.Op{
@@ -386,23 +230,16 @@ plan.TaskFunc("get-hostname", func(
 })
 ```
 
-Do the same for all 14 operation examples and all feature examples
-that reference `orchestrator.Op`.
+Apply this pattern to all 13 operation files and all feature files.
 
-**Step 2: Add 8 docker operation examples**
+For operations with params (command exec, DNS update, file deploy,
+etc.), unpack from the example's local variables into the SDK request
+types directly — no `Params map[string]any` needed.
 
-Create one file per docker operation in
-`examples/sdk/orchestrator/operations/`:
-- `docker-pull.go`
-- `docker-create.go`
-- `docker-list.go`
-- `docker-inspect.go`
-- `docker-start.go`
-- `docker-stop.go`
-- `docker-remove.go`
-- `docker-exec.go`
+**Step 2: Create 8 docker operation examples**
 
-Follow the same pattern as the node/command/file examples.
+Follow the exact same pattern as node/command examples. One file per
+docker operation in `examples/sdk/orchestrator/operations/`.
 
 **Step 3: Build every example individually**
 
@@ -415,12 +252,13 @@ for f in examples/sdk/orchestrator/features/*.go; do
 done
 ```
 
-Expected: ALL files compile. Zero failures.
+Expected: ALL files compile. Zero failures. This is a hard gate —
+do not proceed until every example compiles.
 
 **Step 4: Commit**
 
 ```
-fix: rewrite orchestrator examples to use TaskFunc
+fix: rewrite all orchestrator examples to use TaskFunc
 ```
 
 ---
@@ -429,23 +267,33 @@ fix: rewrite orchestrator examples to use TaskFunc
 
 **Files:**
 - Modify: `docs/docs/sidebar/sdk/orchestrator/orchestrator.md`
-- Modify: `docs/docs/sidebar/sdk/orchestrator/operations/docker-*.md` (8 files)
-- Modify: all operation doc pages that show `plan.Task(&Op{...})` pattern
+- Modify: all operation doc pages in
+  `docs/docs/sidebar/sdk/orchestrator/operations/`
+- Modify: `docs/docs/sidebar/sdk/orchestrator/features/container-targeting.md`
 
-**Step 1: Update operation docs**
+**Step 1: Update orchestrator overview**
 
-Each operation doc currently shows the `plan.Task(&Op{...})` pattern.
-Update to show the `plan.TaskFunc()` pattern with `CollectionResult`.
+Add documentation for `CollectionResult` and `StructToMap` as
+SDK-provided bridge helpers. Update the usage examples to show
+`TaskFunc` pattern instead of `plan.Task(&Op{...})`.
 
-Also update the orchestrator overview to document `CollectionResult`
-and `StructToMap` as SDK-provided bridge helpers.
+**Step 2: Update operation doc pages**
 
-**Step 2: Build docs**
+Each page currently shows the `plan.Task(&Op{...})` pattern. Update
+to show `plan.TaskFunc()` with `CollectionResult`. Match the code
+in the corresponding example file exactly.
+
+**Step 3: Update container-targeting feature doc**
+
+Update code examples to match the rewritten
+`container-targeting.go`.
+
+**Step 4: Build docs**
 
 Run: `cd docs && bun run build`
 Expected: Build succeeds, no broken links
 
-**Step 3: Commit**
+**Step 5: Commit**
 
 ```
 docs: update orchestrator docs for TaskFunc pattern
@@ -460,9 +308,13 @@ docs: update orchestrator docs for TaskFunc pattern
 Run: `go test ./... -count=1`
 Expected: All packages pass
 
-**Step 2: Lint and format**
+**Step 2: SDK coverage check**
 
-Run formatter and linter:
+Run: `go test ./pkg/sdk/... -coverprofile=/tmp/sdk.out && go tool cover -func=/tmp/sdk.out | grep -v gen | grep -v '100.0%'`
+Expected: All SDK packages at 100% (excluding gen)
+
+**Step 3: Lint and format**
+
 ```bash
 find . -type f -name '*.go' -not -name '*.gen.go' -not -name '*.pb.go' \
   -not -path './.worktrees/*' -not -path './.claude/*' \
@@ -472,11 +324,6 @@ go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run \
   --config .golangci.yml
 ```
 Expected: 0 issues
-
-**Step 3: Coverage**
-
-Run: `go test ./pkg/sdk/orchestrator/... -coverprofile=/tmp/orch.out && go tool cover -func=/tmp/orch.out | grep bridge`
-Expected: 100% on bridge.go
 
 **Step 4: Verify all examples compile**
 
@@ -488,7 +335,6 @@ for f in examples/sdk/orchestrator/features/*.go; do
     go build "$f" 2>&1 || echo "FAIL: $f"
 done
 ```
-
 Expected: Zero failures
 
 **Step 5: Build docs**
@@ -496,7 +342,7 @@ Expected: Zero failures
 Run: `cd docs && bun run build`
 Expected: No broken links
 
-**Step 6: Commit any fixes**
+**Step 6: Commit any remaining fixes**
 
 ```
 chore: final verification cleanup
