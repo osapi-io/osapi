@@ -57,14 +57,31 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("update-dns", &orchestrator.Op{
-		Operation: "network.dns.update",
-		Target:    "_any",
-		Params: map[string]any{
-			"interface_name": "eth0",
-			"addresses":      []string{"8.8.8.8", "8.8.4.4"},
+	plan.TaskFunc(
+		"update-dns",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.UpdateDNS(
+				ctx, "_any", "eth0",
+				[]string{"8.8.8.8", "8.8.4.4"}, nil,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DNSUpdateResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

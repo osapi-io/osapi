@@ -57,13 +57,24 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("check-file", &orchestrator.Op{
-		Operation: "file.status.get",
-		Target:    "_any",
-		Params: map[string]any{
-			"path": "/etc/app/config.yaml",
+	plan.TaskFunc(
+		"check-file",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.FileStatus(ctx, "_any", "/etc/app/config.yaml")
+			if err != nil {
+				return nil, err
+			}
+
+			return &orchestrator.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    orchestrator.StructToMap(resp.Data),
+			}, nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

@@ -57,10 +57,28 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("get-status", &orchestrator.Op{
-		Operation: "node.status.get",
-		Target:    "_any",
-	})
+	plan.TaskFunc(
+		"get-status",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.Status(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.NodeStatus) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

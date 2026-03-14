@@ -57,14 +57,28 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("ping-host", &orchestrator.Op{
-		Operation: "network.ping.do",
-		Target:    "_any",
-		Params: map[string]any{
-			"address": "8.8.8.8",
-			"count":   3,
+	plan.TaskFunc(
+		"ping-host",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.Ping(ctx, "_any", "8.8.8.8")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.PingResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

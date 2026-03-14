@@ -57,13 +57,28 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("get-dns", &orchestrator.Op{
-		Operation: "network.dns.get",
-		Target:    "_any",
-		Params: map[string]any{
-			"interface_name": "eth0",
+	plan.TaskFunc(
+		"get-dns",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.GetDNS(ctx, "_any", "eth0")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DNSConfig) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
-	})
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

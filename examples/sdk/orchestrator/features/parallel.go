@@ -53,7 +53,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		BeforeLevel: func(level int, tasks []*orchestrator.Task, parallel bool) {
@@ -75,11 +75,14 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
 	health := plan.TaskFunc(
 		"check-health",
-		func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
 			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health: %w", err)
@@ -91,17 +94,77 @@ func main() {
 
 	// Three tasks at the same level — all depend on health,
 	// so the engine runs them in parallel.
-	for _, op := range []struct{ name, operation string }{
-		{"get-hostname", "node.hostname.get"},
-		{"get-disk", "node.disk.get"},
-		{"get-memory", "node.memory.get"},
-	} {
-		t := plan.Task(op.name, &orchestrator.Op{
-			Operation: op.operation,
-			Target:    "_any",
-		})
-		t.DependsOn(health)
-	}
+	hostnameTask := plan.TaskFunc(
+		"get-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Hostname(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.HostnameResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
+	hostnameTask.DependsOn(health)
+
+	diskTask := plan.TaskFunc(
+		"get-disk",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Disk(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.DiskResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
+	diskTask.DependsOn(health)
+
+	memoryTask := plan.TaskFunc(
+		"get-memory",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Memory(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.MemoryResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
+	memoryTask.DependsOn(health)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

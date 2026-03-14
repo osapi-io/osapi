@@ -57,10 +57,28 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
-	plan.Task("get-memory", &orchestrator.Op{
-		Operation: "node.memory.get",
-		Target:    "_any",
-	})
+	plan.TaskFunc(
+		"get-memory",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Node.Memory(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.MemoryResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 
 	report, err := plan.Run(context.Background())
 	if err != nil {

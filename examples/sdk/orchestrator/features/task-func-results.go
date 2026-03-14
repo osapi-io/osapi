@@ -20,7 +20,7 @@
 
 // Package main demonstrates TaskFuncWithResults for reading data from
 // previously completed tasks. The summary step reads hostname data
-// set by a prior Op task.
+// set by a prior TaskFunc.
 //
 // DAG:
 //
@@ -52,7 +52,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
@@ -60,11 +60,14 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
 	health := plan.TaskFunc(
 		"check-health",
-		func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
 			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health: %w", err)
@@ -74,10 +77,28 @@ func main() {
 		},
 	)
 
-	getHostname := plan.Task("get-hostname", &orchestrator.Op{
-		Operation: "node.hostname.get",
-		Target:    "_any",
-	})
+	getHostname := plan.TaskFunc(
+		"get-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Hostname(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.HostnameResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	getHostname.DependsOn(health)
 
 	// TaskFuncWithResults: access completed task data via Results.Get().

@@ -53,7 +53,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		BeforeTask: func(task *orchestrator.Task) {
@@ -65,12 +65,15 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
 	// Step 1: Upload the template file to Object Store.
 	upload := plan.TaskFunc(
 		"upload-template",
-		func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
 			tmpl := []byte(`# Generated for {{ .Hostname }}
 listen_address = {{ .Vars.listen_address }}
 workers = {{ .Facts.cpu_count }}
@@ -94,29 +97,54 @@ workers = {{ .Facts.cpu_count }}
 	)
 
 	// Step 2: Deploy the template to all agents.
-	deploy := plan.Task("deploy-config", &orchestrator.Op{
-		Operation: "file.deploy.execute",
-		Target:    "_all",
-		Params: map[string]any{
-			"object_name":  "app.conf.tmpl",
-			"path":         "/tmp/app.conf",
-			"content_type": "template",
-			"mode":         "0644",
-			"vars": map[string]any{
-				"listen_address": "0.0.0.0:8080",
-			},
+	deploy := plan.TaskFunc(
+		"deploy-config",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
+				ObjectName:  "app.conf.tmpl",
+				Path:        "/tmp/app.conf",
+				ContentType: "template",
+				Mode:        "0644",
+				Target:      "_all",
+				Vars: map[string]any{
+					"listen_address": "0.0.0.0:8080",
+				},
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return &orchestrator.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    orchestrator.StructToMap(resp.Data),
+			}, nil
 		},
-	})
+	)
 	deploy.DependsOn(upload)
 
 	// Step 3: Verify the deployed file is in-sync.
-	verify := plan.Task("verify-status", &orchestrator.Op{
-		Operation: "file.status.get",
-		Target:    "_all",
-		Params: map[string]any{
-			"path": "/tmp/app.conf",
+	verify := plan.TaskFunc(
+		"verify-status",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.FileStatus(ctx, "_all", "/tmp/app.conf")
+			if err != nil {
+				return nil, err
+			}
+
+			return &orchestrator.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    orchestrator.StructToMap(resp.Data),
+			}, nil
 		},
-	})
+	)
 	verify.DependsOn(deploy)
 
 	report, err := plan.Run(context.Background())

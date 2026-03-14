@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package main demonstrates the simplest orchestrator plan: a health
-// check followed by a hostname query using Op tasks with DependsOn.
+// check followed by a hostname query using TaskFunc with DependsOn.
 //
 // DAG:
 //
@@ -50,7 +50,7 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	apiClient := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
 		BeforeTask: func(task *orchestrator.Task) {
@@ -62,11 +62,14 @@ func main() {
 		},
 	}
 
-	plan := orchestrator.NewPlan(client, orchestrator.WithHooks(hooks))
+	plan := orchestrator.NewPlan(apiClient, orchestrator.WithHooks(hooks))
 
 	health := plan.TaskFunc(
 		"check-health",
-		func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
 			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health: %w", err)
@@ -76,10 +79,28 @@ func main() {
 		},
 	)
 
-	hostname := plan.Task("get-hostname", &orchestrator.Op{
-		Operation: "node.hostname.get",
-		Target:    "_any",
-	})
+	hostname := plan.TaskFunc(
+		"get-hostname",
+		func(
+			ctx context.Context,
+			c *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := c.Node.Hostname(ctx, "_any")
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data,
+				func(r client.HostnameResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
+		},
+	)
 	hostname.DependsOn(health)
 
 	report, err := plan.Run(context.Background())
