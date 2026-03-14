@@ -6,6 +6,9 @@ import (
 	client "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
+// jsonUnmarshalFn is the JSON unmarshal function (injectable for testing).
+var jsonUnmarshalFn = json.Unmarshal
+
 // StructToMap converts a struct to map[string]any using its JSON tags.
 // Returns nil if v is nil or cannot be marshaled.
 func StructToMap(
@@ -21,7 +24,7 @@ func StructToMap(
 	}
 
 	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
+	if err := jsonUnmarshalFn(b, &m); err != nil {
 		return nil
 	}
 
