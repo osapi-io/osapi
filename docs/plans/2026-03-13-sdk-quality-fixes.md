@@ -10,8 +10,8 @@ osapi-orchestrator to use SDK types directly.
 
 **Architecture:** Fix the SDK client types first (JSON tags, Docker wrappers,
 Collection.First), then fix the bridge helper (CollectionResult), then update
-osapi-orchestrator to consume the improvements (delete duplicated types, use
-SDK helpers).
+osapi-orchestrator to consume the improvements (delete duplicated types, use SDK
+helpers).
 
 **Tech Stack:** Go 1.25, generics, testify/suite
 
@@ -22,6 +22,7 @@ SDK helpers).
 ### Task 1: Add JSON tags to all SDK client result types
 
 **Files:**
+
 - Modify: `pkg/sdk/client/node_types.go`
 - Modify: `pkg/sdk/client/docker_types.go`
 - Modify: `pkg/sdk/client/file_types.go`
@@ -34,9 +35,9 @@ SDK helpers).
 
 Add `json:"..."` tags to all exported struct fields in these types:
 `Collection`, `Disk`, `HostnameResult`, `NodeStatus`, `DiskResult`,
-`MemoryResult`, `LoadResult`, `OSInfoResult`, `UptimeResult`,
-`DNSConfig`, `DNSUpdateResult`, `PingResult`, `CommandResult`,
-`LoadAverage`, `Memory`, `OSInfo`.
+`MemoryResult`, `LoadResult`, `OSInfoResult`, `UptimeResult`, `DNSConfig`,
+`DNSUpdateResult`, `PingResult`, `CommandResult`, `LoadAverage`, `Memory`,
+`OSInfo`.
 
 Use snake_case keys matching the API response format. For example:
 
@@ -58,20 +59,19 @@ Apply to all types — every exported field gets a `json` tag.
 
 - [ ] **Step 2: Add JSON tags to docker_types.go**
 
-Same pattern for: `DockerResult`, `DockerListResult`,
-`DockerSummaryItem`, `DockerDetailResult`, `DockerActionResult`,
-`DockerExecResult`, `DockerPullResult`.
+Same pattern for: `DockerResult`, `DockerListResult`, `DockerSummaryItem`,
+`DockerDetailResult`, `DockerActionResult`, `DockerExecResult`,
+`DockerPullResult`.
 
 - [ ] **Step 3: Add JSON tags to remaining types files**
 
-Add tags to all result/model types in `file_types.go`,
-`audit_types.go`, `health_types.go`, `job_types.go`,
-`agent_types.go`.
+Add tags to all result/model types in `file_types.go`, `audit_types.go`,
+`health_types.go`, `job_types.go`, `agent_types.go`.
 
 - [ ] **Step 4: Run tests**
 
-Run: `go test ./pkg/sdk/client/... -count=1`
-Expected: PASS — JSON tags don't break existing behavior.
+Run: `go test ./pkg/sdk/client/... -count=1` Expected: PASS — JSON tags don't
+break existing behavior.
 
 - [ ] **Step 5: Commit**
 
@@ -84,6 +84,7 @@ feat(sdk): add JSON tags to all client result types
 ### Task 2: Add Collection[T].First() method
 
 **Files:**
+
 - Modify: `pkg/sdk/client/node_types.go`
 - Test: `pkg/sdk/client/node_types_test.go` (or appropriate test file)
 
@@ -135,8 +136,8 @@ func (s *SuiteType) TestCollectionFirst() {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./pkg/sdk/client/... -run TestCollectionFirst -v`
-Expected: FAIL — `First` not defined
+Run: `go test ./pkg/sdk/client/... -run TestCollectionFirst -v` Expected: FAIL —
+`First` not defined
 
 - [ ] **Step 3: Implement First()**
 
@@ -157,8 +158,7 @@ func (c Collection[T]) First() (T, bool) {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test ./pkg/sdk/client/... -run TestCollectionFirst -v`
-Expected: PASS
+Run: `go test ./pkg/sdk/client/... -run TestCollectionFirst -v` Expected: PASS
 
 - [ ] **Step 5: Commit**
 
@@ -171,6 +171,7 @@ feat(sdk): add Collection[T].First() method
 ### Task 3: Wrap Docker gen types with SDK-defined request types
 
 **Files:**
+
 - Modify: `pkg/sdk/client/docker_types.go`
 - Modify: `pkg/sdk/client/docker.go`
 - Modify: `pkg/sdk/client/docker_public_test.go`
@@ -223,30 +224,30 @@ type DockerRemoveParams struct {
 
 Change method signatures in `docker.go`:
 
-`Create`: Change `body gen.DockerCreateRequest` to
-`opts DockerCreateOpts`. Inside, build `gen.DockerCreateRequest`
-from the opts fields, converting zero values to nil pointers.
+`Create`: Change `body gen.DockerCreateRequest` to `opts DockerCreateOpts`.
+Inside, build `gen.DockerCreateRequest` from the opts fields, converting zero
+values to nil pointers.
 
-`Stop`: Change `body gen.DockerStopRequest` to `opts DockerStopOpts`.
-Build `gen.DockerStopRequest` from opts.
+`Stop`: Change `body gen.DockerStopRequest` to `opts DockerStopOpts`. Build
+`gen.DockerStopRequest` from opts.
 
 `List`: Change `params *gen.GetNodeContainerDockerParams` to
 `params *DockerListParams`. Build gen params from SDK params.
 
-`Remove`: Change `params *gen.DeleteNodeContainerDockerByIDParams`
-to `params *DockerRemoveParams`. Build gen params from SDK params.
+`Remove`: Change `params *gen.DeleteNodeContainerDockerByIDParams` to
+`params *DockerRemoveParams`. Build gen params from SDK params.
 
 - [ ] **Step 3: Update tests**
 
-Update `docker_public_test.go` to use the new SDK types instead
-of gen types. Also update any examples that reference the old
-signatures.
+Update `docker_public_test.go` to use the new SDK types instead of gen types.
+Also update any examples that reference the old signatures.
 
 - [ ] **Step 4: Update all callers**
 
 Search for `gen.DockerCreateRequest`, `gen.DockerStopRequest`,
-`gen.GetNodeContainerDockerParams`,
-`gen.DeleteNodeContainerDockerByIDParams` in:
+`gen.GetNodeContainerDockerParams`, `gen.DeleteNodeContainerDockerByIDParams`
+in:
+
 - `examples/sdk/client/container.go`
 - `examples/sdk/orchestrator/features/container-targeting.go`
 - `examples/sdk/orchestrator/operations/docker-*.go`
@@ -255,10 +256,10 @@ Replace with the new SDK types.
 
 - [ ] **Step 5: Build and test**
 
-Run: `go build ./...`
-Run: `go test ./pkg/sdk/client/... -count=1`
-Run: Build each docker example: `go build examples/sdk/orchestrator/operations/docker-pull.go` etc.
-Expected: All compile, all tests pass
+Run: `go build ./...` Run: `go test ./pkg/sdk/client/... -count=1` Run: Build
+each docker example:
+`go build examples/sdk/orchestrator/operations/docker-pull.go` etc. Expected:
+All compile, all tests pass
 
 - [ ] **Step 6: Commit**
 
@@ -271,6 +272,7 @@ refactor(sdk): wrap Docker gen types with SDK-defined request types
 ### Task 4: Fix CollectionResult to populate Result.Data
 
 **Files:**
+
 - Modify: `pkg/sdk/orchestrator/bridge.go`
 - Modify: `pkg/sdk/orchestrator/bridge_public_test.go`
 - Modify: `pkg/sdk/orchestrator/bridge_test.go`
@@ -287,13 +289,13 @@ func CollectionResult[T any](
 ) *Result
 ```
 
-When `rawJSON` is non-nil, unmarshal into `Result.Data`. Use
-`jsonUnmarshalFn` (already injectable for testing).
+When `rawJSON` is non-nil, unmarshal into `Result.Data`. Use `jsonUnmarshalFn`
+(already injectable for testing).
 
 - [ ] **Step 2: Update tests**
 
-Update all test cases in `bridge_public_test.go` to pass `nil`
-for `rawJSON` (existing behavior preserved). Add new test cases:
+Update all test cases in `bridge_public_test.go` to pass `nil` for `rawJSON`
+(existing behavior preserved). Add new test cases:
 
 - rawJSON populated: pass valid JSON, verify Result.Data is set
 - rawJSON nil: verify Result.Data is nil (existing behavior)
@@ -301,13 +303,12 @@ for `rawJSON` (existing behavior preserved). Add new test cases:
 
 - [ ] **Step 3: Update all callers**
 
-Update all example files that call `CollectionResult` to pass
-`resp.RawJSON()` as the second argument.
+Update all example files that call `CollectionResult` to pass `resp.RawJSON()`
+as the second argument.
 
 - [ ] **Step 4: Run tests**
 
-Run: `go test ./pkg/sdk/orchestrator/... -count=1`
-Run: Build all examples
+Run: `go test ./pkg/sdk/orchestrator/... -count=1` Run: Build all examples
 Expected: PASS, all compile
 
 - [ ] **Step 5: Commit**
@@ -321,6 +322,7 @@ feat(orchestrator): populate Result.Data from raw JSON in CollectionResult
 ### Task 5: Fix AuditService.Get UUID error wrapping
 
 **Files:**
+
 - Modify: `pkg/sdk/client/audit.go:78-81`
 
 - [ ] **Step 1: Fix the error wrapping**
@@ -345,13 +347,12 @@ if err != nil {
 
 - [ ] **Step 2: Update test if one exists**
 
-Check if there's a test for invalid audit ID. If so, update the
-expected error message.
+Check if there's a test for invalid audit ID. If so, update the expected error
+message.
 
 - [ ] **Step 3: Run tests**
 
-Run: `go test ./pkg/sdk/client/... -count=1`
-Expected: PASS
+Run: `go test ./pkg/sdk/client/... -count=1` Expected: PASS
 
 - [ ] **Step 4: Commit**
 
@@ -365,8 +366,7 @@ fix(sdk): wrap audit UUID parse error with context
 
 - [ ] **Step 1: Full test suite**
 
-Run: `go test ./... -count=1`
-Expected: All pass
+Run: `go test ./... -count=1` Expected: All pass
 
 - [ ] **Step 2: Lint and format**
 
@@ -383,7 +383,8 @@ Expected: 0 issues
 
 - [ ] **Step 3: Coverage**
 
-Run: `go test ./pkg/sdk/... -coverprofile=/tmp/sdk.out && go tool cover -func=/tmp/sdk.out | grep -v gen | grep -v '100.0%'`
+Run:
+`go test ./pkg/sdk/... -coverprofile=/tmp/sdk.out && go tool cover -func=/tmp/sdk.out | grep -v gen | grep -v '100.0%'`
 Expected: All SDK packages at 100% (excluding gen)
 
 - [ ] **Step 4: Build all examples**
@@ -409,40 +410,42 @@ chore: SDK quality fixes verification
 
 ## Chunk 2: osapi-orchestrator fixes
 
-These changes are in the separate repo at
-`~/git/osapi-io/osapi-orchestrator/`.
+These changes are in the separate repo at `~/git/osapi-io/osapi-orchestrator/`.
 
 ### Task 7: Update osapi-orchestrator to use SDK types directly
 
 **Files:**
+
 - Delete: `pkg/orchestrator/result_types.go`
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/result.go`
 - Modify: any test files that reference deleted types
 
-**Prerequisites:** Tasks 1-6 must be complete and the updated osapi
-SDK must be available (update `go.mod` to point at the new version
-or use a `replace` directive).
+**Prerequisites:** Tasks 1-6 must be complete and the updated osapi SDK must be
+available (update `go.mod` to point at the new version or use a `replace`
+directive).
 
 - [ ] **Step 1: Update go.mod to use latest SDK**
 
-Either `go get github.com/retr0h/osapi@latest` or add a `replace`
-directive pointing to the local checkout.
+Either `go get github.com/retr0h/osapi@latest` or add a `replace` directive
+pointing to the local checkout.
 
 - [ ] **Step 2: Delete result_types.go**
 
-Remove the file entirely. All types it defines have equivalents in
-the SDK `client` package.
+Remove the file entirely. All types it defines have equivalents in the SDK
+`client` package.
 
 - [ ] **Step 3: Update ops.go imports and types**
 
 Replace all local type references with SDK `client.*` types:
+
 - `HostnameResult` → `client.HostnameResult`
 - `CommandResult` → `client.CommandResult`
 - `FileDeployOpts` → `client.FileDeployOpts`
 - etc.
 
 Replace `buildResult` calls with `orchestrator.CollectionResult`:
+
 ```go
 return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
     func(r client.HostnameResult) orchestrator.HostResult {
@@ -459,8 +462,8 @@ Delete `buildResult`, `toMap`, `mustRawToMap` helper functions.
 
 - [ ] **Step 4: Fix mustRawToMap callers that aren't Collection**
 
-For non-collection operations (FileDeploy, FileStatus, FileUpload,
-FileChanged, AgentList, AgentGet), replace:
+For non-collection operations (FileDeploy, FileStatus, FileUpload, FileChanged,
+AgentList, AgentGet), replace:
 
 ```go
 Data: mustRawToMap(resp.RawJSON()),
@@ -480,19 +483,18 @@ Delete duplicated `Summary()` — delegate to `sdk.Report.Summary()`.
 
 - [ ] **Step 6: Fix HealthCheck target parameter**
 
-Remove the unused `target string` parameter from `HealthCheck()`.
-Update all callers.
+Remove the unused `target string` parameter from `HealthCheck()`. Update all
+callers.
 
 - [ ] **Step 7: Update tests**
 
-Fix all test files that reference deleted types or changed
-signatures. Run full test suite.
+Fix all test files that reference deleted types or changed signatures. Run full
+test suite.
 
 - [ ] **Step 8: Build and test**
 
-Run: `go test ./... -count=1`
-Run: `go build ./...`
-Expected: All pass, all compile
+Run: `go test ./... -count=1` Run: `go build ./...` Expected: All pass, all
+compile
 
 - [ ] **Step 9: Commit**
 
