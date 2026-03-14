@@ -63,7 +63,6 @@ var clientContainerDockerExecCmd = &cobra.Command{
 		if resp.Data.JobID != "" {
 			fmt.Println()
 			cli.PrintKV("Job ID", resp.Data.JobID)
-			fmt.Println()
 		}
 
 		for _, r := range resp.Data.Results {
