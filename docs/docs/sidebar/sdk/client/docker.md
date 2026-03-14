@@ -9,32 +9,32 @@ remove, exec, and pull operations.
 
 ## Methods
 
-| Method                          | Description                      |
-| ------------------------------- | -------------------------------- |
-| `Create(ctx, hostname, opts)`   | Create a new container           |
-| `List(ctx, hostname, params)`   | List containers                  |
-| `Inspect(ctx, hostname, id)`    | Get detailed container info      |
-| `Start(ctx, hostname, id)`      | Start a stopped container        |
-| `Stop(ctx, hostname, id, opts)` | Stop a running container         |
-| `Remove(ctx, hostname, id, p)`  | Remove a container               |
-| `Exec(ctx, hostname, id, opts)` | Execute a command in a container |
-| `Pull(ctx, hostname, opts)`     | Pull a container image           |
-| `ImageRemove(ctx, hostname, image, p)` | Remove a container image  |
+| Method                                 | Description                      |
+| -------------------------------------- | -------------------------------- |
+| `Create(ctx, hostname, opts)`          | Create a new container           |
+| `List(ctx, hostname, params)`          | List containers                  |
+| `Inspect(ctx, hostname, id)`           | Get detailed container info      |
+| `Start(ctx, hostname, id)`             | Start a stopped container        |
+| `Stop(ctx, hostname, id, opts)`        | Stop a running container         |
+| `Remove(ctx, hostname, id, p)`         | Remove a container               |
+| `Exec(ctx, hostname, id, opts)`        | Execute a command in a container |
+| `Pull(ctx, hostname, opts)`            | Pull a container image           |
+| `ImageRemove(ctx, hostname, image, p)` | Remove a container image         |
 
 ## Request Types
 
 The Docker service uses SDK-defined request types. Consumers never need to
 import `gen`.
 
-| Type                 | Fields                                               |
-| -------------------- | ---------------------------------------------------- |
-| `DockerCreateOpts`   | Image, Name, Command, Env, Ports, Volumes, AutoStart |
-| `DockerStopOpts`     | Timeout                                              |
-| `DockerListParams`   | State, Limit                                         |
-| `DockerRemoveParams` | Force                                                |
-| `DockerPullOpts`     | Image                                                |
-| `DockerExecOpts`     | Command                                              |
-| `DockerImageRemoveParams` | Force                                           |
+| Type                      | Fields                                               |
+| ------------------------- | ---------------------------------------------------- |
+| `DockerCreateOpts`        | Image, Name, Command, Env, Ports, Volumes, AutoStart |
+| `DockerStopOpts`          | Timeout                                              |
+| `DockerListParams`        | State, Limit                                         |
+| `DockerRemoveParams`      | Force                                                |
+| `DockerPullOpts`          | Image                                                |
+| `DockerExecOpts`          | Command                                              |
+| `DockerImageRemoveParams` | Force                                                |
 
 ## Usage
 
@@ -85,14 +85,14 @@ resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
 
 ## Permissions
 
-| Operation | Permission       |
-| --------- | ---------------- |
-| Create    | `docker:write`   |
-| List      | `docker:read`    |
-| Inspect   | `docker:read`    |
-| Start     | `docker:write`   |
-| Stop      | `docker:write`   |
-| Remove    | `docker:write`   |
-| Exec      | `docker:execute` |
-| Pull      | `docker:write`   |
-| ImageRemove | `docker:write` |
+| Operation   | Permission       |
+| ----------- | ---------------- |
+| Create      | `docker:write`   |
+| List        | `docker:read`    |
+| Inspect     | `docker:read`    |
+| Start       | `docker:write`   |
+| Stop        | `docker:write`   |
+| Remove      | `docker:write`   |
+| Exec        | `docker:execute` |
+| Pull        | `docker:write`   |
+| ImageRemove | `docker:write`   |
