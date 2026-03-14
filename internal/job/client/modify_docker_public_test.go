@@ -700,6 +700,85 @@ func (s *ModifyDockerPublicTestSuite) TestModifyDockerPull() {
 	}
 }
 
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerImageRemove() {
+	tests := []struct {
+		name          string
+		target        string
+		data          *job.DockerImageRemoveData
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:   "success",
+			target: "server1",
+			data: &job.DockerImageRemoveData{
+				Image: "nginx:latest",
+				Force: false,
+			},
+			responseData: `{
+				"status": "completed",
+				"data": {"message":"Image removed successfully","changed":true}
+			}`,
+			expectError: false,
+		},
+		{
+			name:   "job failed",
+			target: "server1",
+			data: &job.DockerImageRemoveData{
+				Image: "nginx:latest",
+			},
+			responseData: `{
+				"status": "failed",
+				"error": "image not found"
+			}`,
+			expectError:   true,
+			errorContains: "job failed: image not found",
+		},
+		{
+			name:   "publish error",
+			target: "server1",
+			data: &job.DockerImageRemoveData{
+				Image: "nginx:latest",
+			},
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			resp, err := s.jobsClient.ModifyDockerImageRemove(
+				s.ctx,
+				tt.target,
+				tt.data,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotNil(resp)
+				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
 func TestModifyDockerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ModifyDockerPublicTestSuite))
 }

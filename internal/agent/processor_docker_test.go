@@ -619,6 +619,59 @@ func (s *ProcessorDockerTestSuite) TestProcessDockerOperation() {
 			expectError: true,
 			errorMsg:    "pull failed",
 		},
+		// --- image-remove operation ---
+		{
+			name: "successful image remove",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "docker",
+				Operation: "image-remove.execute",
+				Data:      json.RawMessage(`{"image":"nginx:latest","force":false}`),
+			},
+			setupMock: func(m *dockerMocks.MockProvider) {
+				m.EXPECT().
+					ImageRemove(gomock.Any(), "nginx:latest", false).
+					Return(&dockerProv.ActionResult{
+						Message: "Image removed successfully",
+						Changed: true,
+					}, nil)
+			},
+			validate: func(result json.RawMessage) {
+				var r map[string]interface{}
+				err := json.Unmarshal(result, &r)
+				s.NoError(err)
+				s.Contains(r, "message")
+				s.Equal(true, r["changed"])
+			},
+		},
+		{
+			name: "image-remove with invalid JSON data",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "docker",
+				Operation: "image-remove.execute",
+				Data:      json.RawMessage(`invalid json`),
+			},
+			setupMock:   func(_ *dockerMocks.MockProvider) {},
+			expectError: true,
+			errorMsg:    "unmarshal image-remove data",
+		},
+		{
+			name: "provider error on image-remove",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "docker",
+				Operation: "image-remove.execute",
+				Data:      json.RawMessage(`{"image":"nginx:latest","force":false}`),
+			},
+			setupMock: func(m *dockerMocks.MockProvider) {
+				m.EXPECT().
+					ImageRemove(gomock.Any(), "nginx:latest", false).
+					Return(nil, errors.New("image-remove failed"))
+			},
+			expectError: true,
+			errorMsg:    "image-remove failed",
+		},
 	}
 
 	for _, tt := range tests {

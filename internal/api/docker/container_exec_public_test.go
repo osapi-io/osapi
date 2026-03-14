@@ -142,6 +142,22 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "server1",
+				Id:       "",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls"},
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "body validation error empty command",
 			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",

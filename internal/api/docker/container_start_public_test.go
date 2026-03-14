@@ -130,6 +130,19 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "server1",
+				Id:       "",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStart400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNodeContainerDockerStartRequestObject{
 				Hostname: "server1",

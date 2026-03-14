@@ -160,6 +160,20 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "server1",
+				Id:       "",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.DeleteNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",

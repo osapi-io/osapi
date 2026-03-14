@@ -138,6 +138,19 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByID() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.GetNodeContainerDockerByIDRequestObject{
+				Hostname: "server1",
+				Id:       "",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDockerByID400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.GetNodeContainerDockerByIDRequestObject{
 				Hostname: "server1",

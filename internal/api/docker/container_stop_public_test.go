@@ -180,6 +180,19 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 		},
 		{
+			name: "validation error empty id",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "server1",
+				Id:       "",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "server1",
