@@ -61,8 +61,6 @@ func displayStatusHealth(
 	fmt.Println()
 
 	if len(data.Registry) > 0 {
-		fmt.Println("=== Components ===")
-		fmt.Println()
 		rows := make([][]string, 0, len(data.Registry))
 		for _, e := range data.Registry {
 			conditions := "-"

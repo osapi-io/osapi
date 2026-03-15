@@ -1,6 +1,4 @@
-//go:build integration
-
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package integration_test
+package process
 
 import (
 	"testing"
@@ -28,40 +26,38 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type MetricsSmokeSuite struct {
+type ProcessTestSuite struct {
 	suite.Suite
 }
 
-func (s *MetricsSmokeSuite) TestMetricsGet() {
+func (suite *ProcessTestSuite) TestGetMetricsInvalidPID() {
 	tests := []struct {
 		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
+		pid          int32
+		validateFunc func(got *Metrics, err error)
 	}{
 		{
-			name: "returns prometheus metrics text",
-			args: []string{"client", "metrics"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-				s.Contains(stdout, "# HELP")
-				s.Contains(stdout, "# TYPE")
+			name: "returns error for invalid pid",
+			pid:  -99999,
+			validateFunc: func(got *Metrics, err error) {
+				suite.Nil(got)
+				suite.Error(err)
+				suite.Contains(err.Error(), "get process")
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			p := &provider{pid: tc.pid}
+
+			got, err := p.GetMetrics()
+
+			tc.validateFunc(got, err)
 		})
 	}
 }
 
-func TestMetricsSmokeSuite(
-	t *testing.T,
-) {
-	suite.Run(t, new(MetricsSmokeSuite))
+func TestProcessTestSuite(t *testing.T) {
+	suite.Run(t, new(ProcessTestSuite))
 }
