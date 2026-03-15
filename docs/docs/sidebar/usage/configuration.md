@@ -590,10 +590,10 @@ agent:
 
 ### `notifications`
 
-| Key        | Type   | Description                                                              |
-| ---------- | ------ | ------------------------------------------------------------------------ |
-| `enabled`  | bool   | Enable the condition watcher and notifier (default: `false`)             |
-| `notifier` | string | Notification backend: `"log"` writes condition events to the server log  |
+| Key        | Type   | Description                                                             |
+| ---------- | ------ | ----------------------------------------------------------------------- |
+| `enabled`  | bool   | Enable the condition watcher and notifier (default: `false`)            |
+| `notifier` | string | Notification backend: `"log"` writes condition events to the server log |
 
 ### `agent`
 

@@ -19,15 +19,15 @@ resp, err := client.Node.Hostname(ctx, "_any")
 
 ## Services
 
-| Service               | Description                        |
-| --------------------- | ---------------------------------- |
-| [Agent](agent.md)     | Agent discovery and details        |
-| [Audit](audit.md)     | Audit log operations               |
-| [Docker](docker.md)   | Container runtime operations       |
-| [File](file.md)       | File management (Object Store)     |
-| [Health](health.md)   | Health check operations            |
-| [Job](job.md)         | Async job queue operations         |
-| [Node](node.md)       | Node management, network, commands |
+| Service             | Description                        |
+| ------------------- | ---------------------------------- |
+| [Agent](agent.md)   | Agent discovery and details        |
+| [Audit](audit.md)   | Audit log operations               |
+| [Docker](docker.md) | Container runtime operations       |
+| [File](file.md)     | File management (Object Store)     |
+| [Health](health.md) | Health check operations            |
+| [Job](job.md)       | Async job queue operations         |
+| [Node](node.md)     | Node management, network, commands |
 
 ## Client Options
 

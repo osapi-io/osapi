@@ -13,13 +13,13 @@ that can either hit the REST API directly or manage the job queue.
 
 The system is organized into six layers, top to bottom:
 
-| Layer                      | Package                                 | Role                                                                                    |
-| -------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
-| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                        |
-| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                    |
-| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                                         |
-| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                  |
-| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                  |
+| Layer                      | Package                                 | Role                                                                                     |
+| -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
+| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                     |
+| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                                          |
+| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
+| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
 | **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
 | **Notifications**          | `internal/notify/`                      | Watches registry KV for condition transitions; dispatches events via pluggable notifiers |
 

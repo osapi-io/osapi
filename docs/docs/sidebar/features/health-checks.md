@@ -44,11 +44,11 @@ regular interval. Each heartbeat writes a JSON record keyed by component type
 and hostname (e.g., `agents.web-01`, `api.api-server`, `nats.nats-server`). The
 records include process metrics collected at heartbeat time:
 
-| Metric       | Description                              |
-| ------------ | ---------------------------------------- |
-| CPU percent  | Process CPU utilisation at sample time   |
-| RSS bytes    | Resident set size (physical memory used) |
-| Goroutines   | Number of active goroutines              |
+| Metric      | Description                              |
+| ----------- | ---------------------------------------- |
+| CPU percent | Process CPU utilisation at sample time   |
+| RSS bytes   | Resident set size (physical memory used) |
+| Goroutines  | Number of active goroutines              |
 
 The `/health/status` response includes a `components` table that aggregates
 these heartbeat records. A component whose registry key has expired (TTL elapsed

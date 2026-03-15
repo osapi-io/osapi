@@ -2,29 +2,29 @@
 
 ## Problem
 
-Only agents heartbeat. The API server and NATS server have no presence
-in the registry — if they're degraded, the only signal is a failed HTTP
-call or a NATS timeout. There's no single view showing all component
-health, process resource usage, or condition state. Conditions exist on
-agents but nothing reacts to them.
+Only agents heartbeat. The API server and NATS server have no presence in the
+registry — if they're degraded, the only signal is a failed HTTP call or a NATS
+timeout. There's no single view showing all component health, process resource
+usage, or condition state. Conditions exist on agents but nothing reacts to
+them.
 
 ## Goals
 
-1. All three component types (agent, API server, NATS server) heartbeat
-   with process metrics and conditions.
-2. Health status (`/health/status`) shows a unified component table with
-   TYPE, HOSTNAME, STATUS, CONDITIONS, AGE, CPU, MEM.
-3. Condition transitions trigger a pluggable notification interface
-   (logging stub for now, extensible to Slack/email/webhook later).
-4. Remove the `osapi client metrics` CLI command (Prometheus endpoint
-   stays for scraping).
+1. All three component types (agent, API server, NATS server) heartbeat with
+   process metrics and conditions.
+2. Health status (`/health/status`) shows a unified component table with TYPE,
+   HOSTNAME, STATUS, CONDITIONS, AGE, CPU, MEM.
+3. Condition transitions trigger a pluggable notification interface (logging
+   stub for now, extensible to Slack/email/webhook later).
+4. Remove the `osapi client metrics` CLI command (Prometheus endpoint stays for
+   scraping).
 
 ## Component Heartbeat
 
 ### What gets written
 
-Every component writes a heartbeat to the registry KV bucket on a
-configurable interval. The payload includes:
+Every component writes a heartbeat to the registry KV bucket on a configurable
+interval. The payload includes:
 
 ```go
 type ComponentRegistration struct {
@@ -53,9 +53,9 @@ type ProcessMetrics struct {
 }
 ```
 
-Agent heartbeat already collects host-level data (OS, load, memory,
-disk). That stays. The new `ProcessMetrics` is added alongside it —
-CPU/memory for the osapi process itself, not the host.
+Agent heartbeat already collects host-level data (OS, load, memory, disk). That
+stays. The new `ProcessMetrics` is added alongside it — CPU/memory for the osapi
+process itself, not the host.
 
 ### KV key structure
 
@@ -68,30 +68,27 @@ api.api-server-01      → ComponentRegistration
 nats.nats-server-01    → ComponentRegistration
 ```
 
-The existing key format is `agents.{hostname}`. Changing to
-`agent.{hostname}` (no trailing s) is a breaking change. Options:
+The existing key format is `agents.{hostname}`. Changing to `agent.{hostname}`
+(no trailing s) is a breaking change. Options:
 
-**Option A**: Keep `agents.` prefix for backward compatibility. Use
-`api.` and `nats.` for new component types. `ListAgents` filters by
-`agents.` prefix.
+**Option A**: Keep `agents.` prefix for backward compatibility. Use `api.` and
+`nats.` for new component types. `ListAgents` filters by `agents.` prefix.
 
-**Option B**: Migrate to `agent.` prefix. One-time breaking change.
-Cleaner going forward.
+**Option B**: Migrate to `agent.` prefix. One-time breaking change. Cleaner
+going forward.
 
-**Recommendation**: Option A. No migration needed. The prefix
-inconsistency (`agents.` vs `agent`) is cosmetic and not worth a
-breaking change.
+**Recommendation**: Option A. No migration needed. The prefix inconsistency
+(`agents.` vs `agent`) is cosmetic and not worth a breaking change.
 
 ### TTL
 
-Same TTL as agent registry (configurable, default 30s). If a
-component's heartbeat expires, it disappears from health status —
-the same liveness mechanism agents use.
+Same TTL as agent registry (configurable, default 30s). If a component's
+heartbeat expires, it disappears from health status — the same liveness
+mechanism agents use.
 
 ### Collection
 
-Process metrics are collected using Go's `runtime` package and
-`os.Process()`:
+Process metrics are collected using Go's `runtime` package and `os.Process()`:
 
 - `runtime.NumGoroutine()` — goroutine count
 - `process.MemoryInfo().RSS` — resident set size (via gopsutil or
@@ -102,35 +99,35 @@ These are cheap calls — safe to run every heartbeat interval.
 
 ### Where heartbeat runs
 
-- **Agent**: already has `startHeartbeat()`. Add `ProcessMetrics` to
-  the existing `AgentRegistration`.
-- **API server**: add `startHeartbeat()` to the API server lifecycle.
-  Writes a `ComponentRegistration` with type `"api"`.
-- **NATS server**: add `startHeartbeat()` to the NATS server lifecycle.
-  Writes a `ComponentRegistration` with type `"nats"`. If the NATS
-  server is external (not embedded), this heartbeat doesn't run — and
-  that's fine, the component just won't appear in the table.
+- **Agent**: already has `startHeartbeat()`. Add `ProcessMetrics` to the
+  existing `AgentRegistration`.
+- **API server**: add `startHeartbeat()` to the API server lifecycle. Writes a
+  `ComponentRegistration` with type `"api"`.
+- **NATS server**: add `startHeartbeat()` to the NATS server lifecycle. Writes a
+  `ComponentRegistration` with type `"nats"`. If the NATS server is external
+  (not embedded), this heartbeat doesn't run — and that's fine, the component
+  just won't appear in the table.
 
 ### Conditions
 
-Agent conditions already exist: `MemoryPressure`, `HighLoad`,
-`DiskPressure`. These are host-level.
+Agent conditions already exist: `MemoryPressure`, `HighLoad`, `DiskPressure`.
+These are host-level.
 
 Add process-level conditions for all components:
 
 - `ProcessMemoryPressure` — process RSS exceeds threshold
 - `ProcessHighCPU` — process CPU exceeds threshold
 
-Thresholds are configurable in `osapi.yaml` under each component's
-config section. Conditions are evaluated on the component side and
-written to the heartbeat — same pattern as agent host conditions.
+Thresholds are configurable in `osapi.yaml` under each component's config
+section. Conditions are evaluated on the component side and written to the
+heartbeat — same pattern as agent host conditions.
 
 ## Health Status Enrichment
 
 ### Component table
 
-`GET /health/status` reads all keys from the registry KV bucket,
-groups by type prefix, and returns a component list:
+`GET /health/status` reads all keys from the registry KV bucket, groups by type
+prefix, and returns a component list:
 
 ```json
 {
@@ -176,9 +173,9 @@ groups by type prefix, and returns a component list:
 }
 ```
 
-The `registry` array replaces the current `agents` field which only
-shows agent count/ready. The existing infrastructure sections (jobs,
-NATS, streams, KV buckets, object stores, consumers) stay as-is.
+The `registry` array replaces the current `agents` field which only shows agent
+count/ready. The existing infrastructure sections (jobs, NATS, streams, KV
+buckets, object stores, consumers) stay as-is.
 
 ### CLI output
 
@@ -211,16 +208,15 @@ agent   web-02                      Ready   -             3h 2m  0.8%   82MB
   agent-registry:  2 keys, 4.2 KB
 ```
 
-Components table at the top — answers "is everything healthy?" at a
-glance.
+Components table at the top — answers "is everything healthy?" at a glance.
 
 ## Condition Notifications
 
 ### Architecture
 
-The API server watches the registry KV bucket for condition
-transitions. When a condition appears or disappears, it dispatches
-a notification through a pluggable interface.
+The API server watches the registry KV bucket for condition transitions. When a
+condition appears or disappears, it dispatches a notification through a
+pluggable interface.
 
 ```go
 // Notifier sends notifications when component conditions change.
@@ -240,20 +236,22 @@ type ConditionEvent struct {
 
 ### Watcher
 
-The API server starts a KV watcher on the registry bucket. On each
-update, it compares the previous condition set to the current one and
-emits `ConditionEvent`s for transitions.
+The API server starts a KV watcher on the registry bucket. On each update, it
+compares the previous condition set to the current one and emits
+`ConditionEvent`s for transitions.
 
-The watcher runs as a background goroutine in the API server lifecycle.
-It's designed to be extractable into a separate process later — the
-only dependency is NATS KV access and a `Notifier` implementation.
+The watcher runs as a background goroutine in the API server lifecycle. It's
+designed to be extractable into a separate process later — the only dependency
+is NATS KV access and a `Notifier` implementation.
 
 ### Implementations
 
 **Phase 1 (this design):**
+
 - `LogNotifier` — logs condition events at INFO level. Default.
 
 **Future phases:**
+
 - `SlackNotifier` — posts to a Slack webhook
 - `EmailNotifier` — sends email via SMTP
 - `WebhookNotifier` — POSTs to a configurable URL
@@ -273,23 +271,23 @@ notifications:
   #   url: https://example.com/alerts
 ```
 
-Top-level `notifications` key in `osapi.yaml`. The `notifier` field
-selects the implementation. For now only `log` is available.
+Top-level `notifications` key in `osapi.yaml`. The `notifier` field selects the
+implementation. For now only `log` is available.
 
 ## Remove `osapi client metrics` CLI
 
-Delete `cmd/client_metrics.go`. The `/metrics` HTTP endpoint stays
-(Prometheus scrapes it directly). The CLI command that fetches and
-prints raw Prometheus text is not useful for humans.
+Delete `cmd/client_metrics.go`. The `/metrics` HTTP endpoint stays (Prometheus
+scrapes it directly). The CLI command that fetches and prints raw Prometheus
+text is not useful for humans.
 
 Also delete:
+
 - `pkg/sdk/client/metrics.go` — SDK MetricsService
 - `docs/docs/sidebar/sdk/client/metrics.md` — SDK metrics docs
 - CLI docs for the metrics command
 
-The `MetricsService` in the SDK is the only service that bypasses
-the auth transport (`http.DefaultClient`). Removing it eliminates
-that inconsistency.
+The `MetricsService` in the SDK is the only service that bypasses the auth
+transport (`http.DefaultClient`). Removing it eliminates that inconsistency.
 
 ## What Does NOT Change
 

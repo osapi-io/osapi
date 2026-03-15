@@ -153,3 +153,9 @@ agent:
     memory_pressure_threshold: 90
     high_load_multiplier: 2.0
     disk_pressure_threshold: 90
+
+notifications:
+  # Enable the condition watcher and notifier (default: false).
+  enabled: true
+  # Notifier backend: "log" (default).
+  notifier: 'log'

@@ -63,6 +63,8 @@ func NewWatcher(
 func (w *Watcher) Start(
 	ctx context.Context,
 ) error {
+	w.logger.Info("condition watcher started", slog.String("component", "notifications"))
+
 	watcher, err := w.kv.WatchAll(ctx)
 	if err != nil {
 		return err

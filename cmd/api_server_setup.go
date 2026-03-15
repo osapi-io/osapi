@@ -125,7 +125,14 @@ func setupAPIServer(
 	auditStore, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	kvBuckets := configuredKVBuckets(namespace)
 	objBuckets := configuredObjectBuckets(namespace)
-	metricsProvider := newMetricsProvider(b.nc, streamName, kvBuckets, objBuckets, b.jobClient, b.registryKV)
+	metricsProvider := newMetricsProvider(
+		b.nc,
+		streamName,
+		kvBuckets,
+		objBuckets,
+		b.jobClient,
+		b.registryKV,
+	)
 
 	sm := api.New(appConfig, log, serverOpts...)
 	registerAPIHandlers(
