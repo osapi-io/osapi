@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -40,6 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -126,6 +128,8 @@ func setupAPIServer(
 		sm, b.jobClient, checker, metricsProvider,
 		metricsHandler, metricsPath, auditStore, b.objStore,
 	)
+
+	startAPIHeartbeat(ctx, log, b.registryKV)
 
 	return sm, b
 }
@@ -492,4 +496,34 @@ func registerAPIHandlers(
 	}
 
 	sm.RegisterHandlers(handlers)
+}
+
+// startAPIHeartbeat resolves the local hostname, creates a ComponentHeartbeat
+// for the API server, and starts it in a background goroutine. The heartbeat
+// deregisters when ctx is cancelled.
+func startAPIHeartbeat(
+	ctx context.Context,
+	log *slog.Logger,
+	registryKV jetstream.KeyValue,
+) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Warn(
+			"failed to resolve hostname for API heartbeat, using 'unknown'",
+			slog.String("error", err.Error()),
+		)
+		hostname = "unknown"
+	}
+
+	hb := api.NewComponentHeartbeat(
+		log,
+		registryKV,
+		hostname,
+		"0.1.0",
+		"api",
+		process.New(),
+		10*time.Second,
+	)
+
+	go hb.Start(ctx)
 }
