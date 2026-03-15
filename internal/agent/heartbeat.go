@@ -130,6 +130,16 @@ func (a *Agent) writeRegistration(
 		diskStats = stats
 	}
 
+	if a.processProvider != nil {
+		if pm, err := a.processProvider.GetMetrics(); err == nil {
+			reg.Process = &job.ProcessMetrics{
+				CPUPercent: pm.CPUPercent,
+				RSSBytes:   pm.RSSBytes,
+				Goroutines: pm.Goroutines,
+			}
+		}
+	}
+
 	conditions := []job.Condition{
 		evaluateMemoryPressure(
 			memStats,

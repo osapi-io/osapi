@@ -42,6 +42,15 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		log := logger.With("component", "nats")
 		s := setupNATSServer(ctx, log)
 
+		startNATSHeartbeat(
+			ctx,
+			log,
+			appConfig.NATS.Server.Host,
+			appConfig.NATS.Server.Port,
+			appConfig.NATS.Server.Namespace,
+			appConfig.NATS.Server.Auth,
+		)
+
 		var ns cli.Lifecycle = &natsLifecycle{server: s}
 		cli.RunServer(ctx, ns)
 	},
