@@ -127,23 +127,8 @@ func displayStatusHealth(
 		cli.PrintKV(name, val)
 	}
 
-	if data.Agents != nil {
-		cli.PrintKV("Agents", fmt.Sprintf(
-			"%d total, %d ready",
-			data.Agents.Total, data.Agents.Ready,
-		))
-		if len(data.Agents.Agents) > 0 {
-			rows := make([][]string, 0, len(data.Agents.Agents))
-			for _, a := range data.Agents.Agents {
-				rows = append(rows, []string{a.Hostname, a.Labels, a.Registered})
-			}
-			cli.PrintCompactTable([]cli.Section{{
-				Headers: []string{"HOSTNAME", "LABELS", "REGISTERED"},
-				Rows:    rows,
-			}})
-			fmt.Println()
-		}
-	}
+	// Agent details are shown in the component table above.
+	// Use "osapi client agent list" for labels and detailed info.
 
 	if data.Consumers != nil {
 		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))
