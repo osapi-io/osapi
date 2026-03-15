@@ -305,6 +305,14 @@ type AgentConditions struct {
 	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"`
 }
 
+// ProcessConditions holds threshold configuration for process-level conditions.
+type ProcessConditions struct {
+	// MemoryPressureBytes is the RSS threshold in bytes (0 = disabled).
+	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes"`
+	// HighCPUPercent is the CPU usage threshold as a percentage (0 = disabled).
+	HighCPUPercent float64 `mapstructure:"high_cpu_percent"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -323,4 +331,6 @@ type AgentConfig struct {
 	Labels map[string]string `mapstructure:"labels"`
 	// Conditions holds threshold settings for node condition evaluation.
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
+	// ProcessConditions holds threshold settings for process-level condition evaluation.
+	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
 }

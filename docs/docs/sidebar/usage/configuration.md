@@ -77,9 +77,11 @@ uppercased:
 | `agent.nats.auth.type`                       | `OSAPI_AGENT_NATS_AUTH_TYPE`                       |
 | `agent.hostname`                             | `OSAPI_AGENT_HOSTNAME`                             |
 | `agent.facts.interval`                       | `OSAPI_AGENT_FACTS_INTERVAL`                       |
-| `agent.conditions.memory_pressure_threshold` | `OSAPI_AGENT_CONDITIONS_MEMORY_PRESSURE_THRESHOLD` |
-| `agent.conditions.high_load_multiplier`      | `OSAPI_AGENT_CONDITIONS_HIGH_LOAD_MULTIPLIER`      |
-| `agent.conditions.disk_pressure_threshold`   | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`   |
+| `agent.conditions.memory_pressure_threshold`          | `OSAPI_AGENT_CONDITIONS_MEMORY_PRESSURE_THRESHOLD`          |
+| `agent.conditions.high_load_multiplier`               | `OSAPI_AGENT_CONDITIONS_HIGH_LOAD_MULTIPLIER`               |
+| `agent.conditions.disk_pressure_threshold`            | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`            |
+| `agent.process_conditions.memory_pressure_bytes`      | `OSAPI_AGENT_PROCESS_CONDITIONS_MEMORY_PRESSURE_BYTES`      |
+| `agent.process_conditions.high_cpu_percent`           | `OSAPI_AGENT_PROCESS_CONDITIONS_HIGH_CPU_PERCENT`           |
 
 Environment variables take precedence over file values.
 
@@ -443,6 +445,12 @@ agent:
     high_load_multiplier: 2.0
     # Disk pressure threshold (percent used).
     disk_pressure_threshold: 90
+  # Process-level condition thresholds.
+  process_conditions:
+    # Process RSS threshold in bytes (0 = disabled).
+    memory_pressure_bytes: 0
+    # Process CPU threshold as percentage (0 = disabled).
+    high_cpu_percent: 0
   # Queue group for load-balanced (_any) subscriptions.
   queue_group: 'job-agents'
   # Agent hostname for direct routing. Defaults to the
@@ -616,7 +624,9 @@ agent:
 | `hostname`                             | string            | Agent hostname (defaults to OS hostname)       |
 | `max_jobs`                             | int               | Max concurrent jobs                            |
 | `facts.interval`                       | string            | How often the agent collects facts             |
-| `conditions.memory_pressure_threshold` | int               | Memory pressure threshold percent (default 90) |
-| `conditions.high_load_multiplier`      | float             | Load multiplier over CPU count (default 2.0)   |
-| `conditions.disk_pressure_threshold`   | int               | Disk pressure threshold percent (default 90)   |
-| `labels`                               | map[string]string | Key-value pairs for label-based routing        |
+| `conditions.memory_pressure_threshold`         | int               | Memory pressure threshold percent (default 90)                      |
+| `conditions.high_load_multiplier`              | float             | Load multiplier over CPU count (default 2.0)                        |
+| `conditions.disk_pressure_threshold`           | int               | Disk pressure threshold percent (default 90)                        |
+| `process_conditions.memory_pressure_bytes`     | int64             | Process RSS threshold in bytes (0 = disabled)                       |
+| `process_conditions.high_cpu_percent`          | float             | Process CPU usage threshold as a percentage (0 = disabled)          |
+| `labels`                                       | map[string]string | Key-value pairs for label-based routing                             |

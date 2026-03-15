@@ -59,6 +59,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		"api",
 		s.mockProcess,
 		10*time.Second,
+		process.ProcessConditionThresholds{},
 	)
 }
 
@@ -110,6 +111,60 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 						s.InDelta(2.5, reg.Process.CPUPercent, 0.001)
 						s.Equal(int64(1024*1024*100), reg.Process.RSSBytes)
 						s.Equal(20, reg.Process.Goroutines)
+						return uint64(1), nil
+					})
+			},
+		},
+		{
+			name: "evaluates process conditions when thresholds are set",
+			setupMock: func() {
+				// Override thresholds on the heartbeat for this row.
+				s.heartbeat.thresholds = process.ProcessConditionThresholds{
+					MemoryPressureBytes: 1, // 1 byte threshold — RSS will exceed it
+					HighCPUPercent:      0, // disabled
+				}
+				s.T().Cleanup(func() {
+					s.heartbeat.thresholds = process.ProcessConditionThresholds{}
+				})
+
+				s.mockProcess.EXPECT().
+					GetMetrics().
+					Return(&process.Metrics{
+						CPUPercent: 0,
+						RSSBytes:   1024 * 1024 * 100,
+						Goroutines: 10,
+					}, nil)
+
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+						var reg job.ComponentRegistration
+						s.Require().NoError(json.Unmarshal(data, &reg))
+						s.Require().Len(reg.Conditions, 1)
+						s.Equal("ProcessMemoryPressure", reg.Conditions[0].Type)
+						s.True(reg.Conditions[0].Status)
+						return uint64(1), nil
+					})
+			},
+		},
+		{
+			name: "emits no conditions when thresholds are zero",
+			setupMock: func() {
+				s.mockProcess.EXPECT().
+					GetMetrics().
+					Return(&process.Metrics{
+						CPUPercent: 99.9,
+						RSSBytes:   1024 * 1024 * 1024,
+						Goroutines: 100,
+					}, nil)
+
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+						var reg job.ComponentRegistration
+						s.Require().NoError(json.Unmarshal(data, &reg))
+						// Zero thresholds mean EvaluateProcessConditions returns nil.
+						s.Empty(reg.Conditions)
 						return uint64(1), nil
 					})
 			},
@@ -267,6 +322,7 @@ func (s *HeartbeatTestSuite) TestStart() {
 				"api",
 				mockProcess,
 				10*time.Millisecond,
+				process.ProcessConditionThresholds{},
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -320,6 +376,7 @@ func (s *HeartbeatTestSuite) TestRegistryKey() {
 				tt.componentType,
 				s.mockProcess,
 				10*time.Second,
+				process.ProcessConditionThresholds{},
 			)
 			s.Equal(tt.expected, hb.registryKey())
 		})

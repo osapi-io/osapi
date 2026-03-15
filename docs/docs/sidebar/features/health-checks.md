@@ -71,19 +71,34 @@ The component registry enables an optional condition notification system. When
 condition transitions on any component and dispatches events via the configured
 notifier backend.
 
-Supported conditions include threshold-based states (e.g., `MemoryPressure`,
-`HighLoad`, `DiskPressure` on agents) as well as infrastructure events such as
-`ComponentUnreachable` when a heartbeat expires. Conditions fire when a
-threshold is crossed and resolve automatically when it drops back below the
-threshold.
+### Conditions Reference
 
-The default notifier (`log`) writes condition events to the structured log at
-INFO level:
+| Condition | Components | Description |
+| --- | --- | --- |
+| `MemoryPressure` | agent | Host memory usage exceeds threshold (default 90%) |
+| `HighLoad` | agent | Load average exceeds CPU count × multiplier (default 2.0) |
+| `DiskPressure` | agent | Any disk usage exceeds threshold (default 90%) |
+| `ProcessMemoryPressure` | agent, api, nats | Process RSS exceeds threshold |
+| `ProcessHighCPU` | agent, api, nats | Process CPU usage exceeds threshold |
+| `ComponentUnreachable` | agent, api, nats | Heartbeat expired (TTL timeout) |
+
+Host-level conditions (`MemoryPressure`, `HighLoad`, `DiskPressure`) are
+evaluated on agents only. Process-level conditions (`ProcessMemoryPressure`,
+`ProcessHighCPU`) are evaluated on all components. `ComponentUnreachable` is
+emitted by the notification watcher when a heartbeat TTL expires — it does not
+appear on the component's registration (the component is already gone).
+
+Conditions fire when a threshold is crossed and resolve automatically when it
+drops back below the threshold. Thresholds are configurable per component in
+`osapi.yaml`.
+
+The default notifier (`log`) writes condition events to the structured log.
+Fired conditions log at WARN level, resolved conditions at INFO:
 
 ```
-condition fired   component=agent hostname=web-01 condition=MemoryPressure
-condition resolved component=agent hostname=web-01 condition=MemoryPressure
-condition fired   component=agent hostname=web-02 condition=ComponentUnreachable
+WRN condition fired   component=agent hostname=web-01 condition=MemoryPressure active=true
+INF condition resolved component=agent hostname=web-01 condition=MemoryPressure active=false
+WRN condition fired   component=agent hostname=web-02 condition=ComponentUnreachable active=true reason="heartbeat expired"
 ```
 
 See [Configuration](../usage/configuration.md) for how to enable notifications

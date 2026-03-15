@@ -153,6 +153,11 @@ agent:
     memory_pressure_threshold: 90
     high_load_multiplier: 2.0
     disk_pressure_threshold: 90
+  process_conditions:
+    # Process RSS threshold in bytes (0 = disabled).
+    memory_pressure_bytes: 0
+    # Process CPU threshold as percentage (0 = disabled).
+    high_cpu_percent: 0
 
 notifications:
   # Enable the condition watcher and notifier (default: false).

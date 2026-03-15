@@ -46,6 +46,8 @@ type ComponentHeartbeat struct {
 	processProvider process.Provider
 	interval        time.Duration
 	startedAt       time.Time
+	thresholds      process.ProcessConditionThresholds
+	prevConditions  []job.Condition
 }
 
 // NewComponentHeartbeat creates a heartbeat writer for a non-agent component.
@@ -57,6 +59,7 @@ func NewComponentHeartbeat(
 	componentType string,
 	processProvider process.Provider,
 	interval time.Duration,
+	thresholds process.ProcessConditionThresholds,
 ) *ComponentHeartbeat {
 	return &ComponentHeartbeat{
 		logger:          logger,
@@ -67,6 +70,7 @@ func NewComponentHeartbeat(
 		processProvider: processProvider,
 		interval:        interval,
 		startedAt:       time.Now(),
+		thresholds:      thresholds,
 	}
 }
 
@@ -129,6 +133,10 @@ func (h *ComponentHeartbeat) writeRegistration(
 			RSSBytes:   pm.RSSBytes,
 			Goroutines: pm.Goroutines,
 		}
+
+		conditions := process.EvaluateProcessConditions(pm, h.thresholds, h.prevConditions)
+		h.prevConditions = conditions
+		reg.Conditions = conditions
 	}
 
 	data, err := heartbeatMarshalFn(reg)

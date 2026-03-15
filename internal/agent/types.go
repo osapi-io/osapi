@@ -90,6 +90,9 @@ type Agent struct {
 	// prevConditions tracks condition state between heartbeats.
 	prevConditions []job.Condition
 
+	// prevProcessConditions tracks process condition state between heartbeats.
+	prevProcessConditions []job.Condition
+
 	// cpuCount cached from facts for HighLoad evaluation.
 	cpuCount int
 
