@@ -5,6 +5,7 @@
 mod? go '.just/remote/go.mod.just'
 mod? docs '.just/remote/docs.mod.just'
 mod? just '.just/remote/just.mod.just'
+mod? docker '.just/remote/docker.mod.just'
 
 # --- Fetch ---
 
@@ -17,6 +18,8 @@ fetch:
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docs.just -o .just/remote/docs.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.mod.just -o .just/remote/just.mod.just
     curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/just.just -o .just/remote/just.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.mod.just -o .just/remote/docker.mod.just
+    curl -sSfL https://raw.githubusercontent.com/osapi-io/osapi-justfiles/refs/heads/main/docker.just -o .just/remote/docker.just
 
 # --- Top-level orchestration ---
 

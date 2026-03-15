@@ -23,6 +23,16 @@ go install github.com/retr0h/osapi@latest
 
 Or download a prebuilt binary from the [releases][] page.
 
+### Docker
+
+A distroless image is published to GitHub Container Registry on every commit to
+main:
+
+```bash
+docker pull ghcr.io/osapi-io/osapi:latest
+docker run ghcr.io/osapi-io/osapi:latest --help
+```
+
 ## Quickstart
 
 Install OSAPI and start all three components in a single process:
