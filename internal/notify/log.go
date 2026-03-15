@@ -43,13 +43,21 @@ func (n *LogNotifier) Notify(
 	_ context.Context,
 	event ConditionEvent,
 ) error {
-	action := "fired"
-	if !event.Active {
-		action = "resolved"
+	if event.Active {
+		n.logger.Warn(
+			"condition fired",
+			slog.String("component", event.ComponentType),
+			slog.String("hostname", event.Hostname),
+			slog.String("condition", event.Condition),
+			slog.Bool("active", event.Active),
+			slog.String("reason", event.Reason),
+		)
+
+		return nil
 	}
 
 	n.logger.Info(
-		"condition "+action,
+		"condition resolved",
 		slog.String("component", event.ComponentType),
 		slog.String("hostname", event.Hostname),
 		slog.String("condition", event.Condition),
