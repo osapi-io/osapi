@@ -32,6 +32,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider/process"
 )
 
+// heartbeatMarshalFn is the JSON marshal function (injectable for testing).
+var heartbeatMarshalFn = json.Marshal
+
 // ComponentHeartbeat writes ComponentRegistration to the registry KV
 // on a configurable interval.
 type ComponentHeartbeat struct {
@@ -128,7 +131,7 @@ func (h *ComponentHeartbeat) writeRegistration(
 		}
 	}
 
-	data, err := json.Marshal(reg)
+	data, err := heartbeatMarshalFn(reg)
 	if err != nil {
 		h.logger.Warn(
 			"failed to marshal component registration",

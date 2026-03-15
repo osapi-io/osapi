@@ -143,6 +143,23 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 					Return(uint64(0), errors.New("put failed"))
 			},
 		},
+		{
+			name: "when marshal fails logs warning",
+			setupMock: func() {
+				original := heartbeatMarshalFn
+				heartbeatMarshalFn = func(_ any) ([]byte, error) {
+					return nil, errors.New("marshal failed")
+				}
+				s.T().Cleanup(func() {
+					heartbeatMarshalFn = original
+				})
+
+				s.mockProcess.EXPECT().
+					GetMetrics().
+					Return(nil, errors.New("no metrics"))
+				// Put should not be called when marshal fails.
+			},
+		},
 	}
 
 	for _, tt := range tests {
