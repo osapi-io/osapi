@@ -42,6 +42,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/process"
 )
 
 // Agent implements job processing with clean lifecycle management.
@@ -74,6 +75,9 @@ type Agent struct {
 	// Docker provider
 	dockerProvider dockerProv.Provider
 
+	// Process provider for self-metrics in heartbeat
+	processProvider process.Provider
+
 	// Registry KV for heartbeat registration
 	registryKV jetstream.KeyValue
 
@@ -85,6 +89,9 @@ type Agent struct {
 
 	// prevConditions tracks condition state between heartbeats.
 	prevConditions []job.Condition
+
+	// prevProcessConditions tracks process condition state between heartbeats.
+	prevProcessConditions []job.Condition
 
 	// cpuCount cached from facts for HighLoad evaluation.
 	cpuCount int

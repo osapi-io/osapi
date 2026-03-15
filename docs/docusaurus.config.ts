@@ -137,6 +137,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Notifications',
+              docId: 'sidebar/features/notifications'
+            },
+            {
+              type: 'doc',
               label: 'Distributed Tracing',
               docId: 'sidebar/features/distributed-tracing'
             },
@@ -193,11 +198,6 @@ const config: Config = {
               type: 'doc',
               label: 'Job',
               docId: 'sidebar/sdk/client/job'
-            },
-            {
-              type: 'doc',
-              label: 'Metrics',
-              docId: 'sidebar/sdk/client/metrics'
             },
             {
               type: 'doc',

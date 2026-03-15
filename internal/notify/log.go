@@ -18,44 +18,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package notify
 
 import (
-	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/job"
+	"context"
+	"log/slog"
 )
 
-// natsServerStartCmd represents the natsServerStart command.
-var natsServerStartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start the embedded NATS server",
-	Long: `Start the embedded NATS server with JetStream enabled.
-Configures streams, consumers, and KV buckets needed by the job system.
-`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-
-		job.Init(appConfig.NATS.Server.Namespace)
-
-		log := logger.With("component", "nats")
-		s := setupNATSServer(ctx, log)
-
-		startNATSHeartbeat(
-			ctx,
-			log,
-			appConfig.NATS.Server.Host,
-			appConfig.NATS.Server.Port,
-			appConfig.NATS.Server.Namespace,
-			appConfig.NATS.Server.Auth,
-		)
-
-		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns)
-	},
+// LogNotifier logs condition events at INFO level.
+type LogNotifier struct {
+	logger *slog.Logger
 }
 
-func init() {
-	natsServerCmd.AddCommand(natsServerStartCmd)
+// NewLogNotifier creates a new LogNotifier that logs condition events using
+// the provided logger.
+func NewLogNotifier(
+	logger *slog.Logger,
+) *LogNotifier {
+	return &LogNotifier{logger: logger}
+}
+
+// Notify logs the condition event at INFO level and returns nil.
+func (n *LogNotifier) Notify(
+	_ context.Context,
+	event ConditionEvent,
+) error {
+	if event.Active {
+		n.logger.Warn(
+			"condition fired",
+			slog.String("component", event.ComponentType),
+			slog.String("hostname", event.Hostname),
+			slog.String("condition", event.Condition),
+			slog.Bool("active", event.Active),
+			slog.String("reason", event.Reason),
+		)
+
+		return nil
+	}
+
+	n.logger.Info(
+		"condition resolved",
+		slog.String("component", event.ComponentType),
+		slog.String("hostname", event.Hostname),
+		slog.String("condition", event.Condition),
+		slog.Bool("active", event.Active),
+		slog.String("reason", event.Reason),
+	)
+
+	return nil
 }

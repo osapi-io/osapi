@@ -22,9 +22,13 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -40,6 +44,8 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/notify"
+	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -119,13 +125,23 @@ func setupAPIServer(
 	auditStore, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	kvBuckets := configuredKVBuckets(namespace)
 	objBuckets := configuredObjectBuckets(namespace)
-	metricsProvider := newMetricsProvider(b.nc, streamName, kvBuckets, objBuckets, b.jobClient)
+	metricsProvider := newMetricsProvider(
+		b.nc,
+		streamName,
+		kvBuckets,
+		objBuckets,
+		b.jobClient,
+		b.registryKV,
+	)
 
 	sm := api.New(appConfig, log, serverOpts...)
 	registerAPIHandlers(
 		sm, b.jobClient, checker, metricsProvider,
 		metricsHandler, metricsPath, auditStore, b.objStore,
 	)
+
+	startAPIHeartbeat(ctx, log, b.registryKV)
+	startConditionWatcher(ctx, log, b.registryKV)
 
 	return sm, b
 }
@@ -282,6 +298,7 @@ func newMetricsProvider(
 	kvBuckets []string,
 	objBuckets []string,
 	jc jobclient.JobClient,
+	registryKV jetstream.KeyValue,
 ) *health.ClosureMetricsProvider {
 	return &health.ClosureMetricsProvider{
 		NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -439,6 +456,91 @@ func newMetricsProvider(
 				Agents: details,
 			}, nil
 		},
+		ComponentRegistryFn: func(fnCtx context.Context) ([]health.ComponentEntry, error) {
+			if registryKV == nil {
+				return nil, fmt.Errorf("registry KV not configured")
+			}
+
+			keys, err := registryKV.Keys(fnCtx)
+			if err != nil {
+				if strings.Contains(err.Error(), "no keys found") {
+					return []health.ComponentEntry{}, nil
+				}
+				return nil, fmt.Errorf("list registry keys: %w", err)
+			}
+
+			entries := make([]health.ComponentEntry, 0, len(keys))
+			for _, key := range keys {
+				parts := strings.SplitN(key, ".", 2)
+				if len(parts) != 2 {
+					continue
+				}
+				prefix := parts[0]
+
+				kvEntry, err := registryKV.Get(fnCtx, key)
+				if err != nil {
+					continue
+				}
+
+				var entry health.ComponentEntry
+
+				switch prefix {
+				case "agents":
+					var reg job.AgentRegistration
+					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
+						continue
+					}
+					entry = health.ComponentEntry{
+						Type:     "agent",
+						Hostname: reg.Hostname,
+						Status:   "Ready",
+						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+					}
+					for _, c := range reg.Conditions {
+						if c.Status {
+							entry.Conditions = append(entry.Conditions, c.Type)
+						}
+					}
+					if reg.Process != nil {
+						entry.CPUPercent = reg.Process.CPUPercent
+						entry.MemBytes = reg.Process.RSSBytes
+					}
+				case "api", "nats":
+					var reg job.ComponentRegistration
+					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
+						continue
+					}
+					entry = health.ComponentEntry{
+						Type:     reg.Type,
+						Hostname: reg.Hostname,
+						Status:   "Ready",
+						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+					}
+					for _, c := range reg.Conditions {
+						if c.Status {
+							entry.Conditions = append(entry.Conditions, c.Type)
+						}
+					}
+					if reg.Process != nil {
+						entry.CPUPercent = reg.Process.CPUPercent
+						entry.MemBytes = reg.Process.RSSBytes
+					}
+				default:
+					continue
+				}
+
+				entries = append(entries, entry)
+			}
+
+			sort.Slice(entries, func(i, j int) bool {
+				if entries[i].Type != entries[j].Type {
+					return entries[i].Type < entries[j].Type
+				}
+				return entries[i].Hostname < entries[j].Hostname
+			})
+
+			return entries, nil
+		},
 	}
 }
 
@@ -492,4 +594,81 @@ func registerAPIHandlers(
 	}
 
 	sm.RegisterHandlers(handlers)
+}
+
+// startConditionWatcher creates a LogNotifier and a Watcher, then starts the
+// watcher in a background goroutine when notifications are enabled. The watcher
+// monitors the registry KV bucket for condition transitions.
+func startConditionWatcher(
+	ctx context.Context,
+	log *slog.Logger,
+	registryKV jetstream.KeyValue,
+) {
+	if !appConfig.Notifications.Enabled {
+		return
+	}
+
+	if registryKV == nil {
+		return
+	}
+
+	var renotifyInterval time.Duration
+	if appConfig.Notifications.RenotifyInterval != "" {
+		d, err := time.ParseDuration(appConfig.Notifications.RenotifyInterval)
+		if err != nil {
+			log.Warn(
+				"invalid renotify_interval, using default (0 = disabled)",
+				slog.String("value", appConfig.Notifications.RenotifyInterval),
+				slog.String("error", err.Error()),
+			)
+		} else {
+			renotifyInterval = d
+		}
+	}
+
+	notifier := notify.NewLogNotifier(log)
+	watcher := notify.NewWatcher(registryKV, notifier, log, renotifyInterval)
+
+	go func() {
+		if err := watcher.Start(ctx); err != nil {
+			log.Warn(
+				"condition watcher stopped with error",
+				slog.String("error", err.Error()),
+			)
+		}
+	}()
+}
+
+// startAPIHeartbeat resolves the local hostname, creates a ComponentHeartbeat
+// for the API server, and starts it in a background goroutine. The heartbeat
+// deregisters when ctx is cancelled.
+func startAPIHeartbeat(
+	ctx context.Context,
+	log *slog.Logger,
+	registryKV jetstream.KeyValue,
+) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Warn(
+			"failed to resolve hostname for API heartbeat, using 'unknown'",
+			slog.String("error", err.Error()),
+		)
+		hostname = "unknown"
+	}
+
+	hb := api.NewComponentHeartbeat(
+		log,
+		registryKV,
+		hostname,
+		"0.1.0",
+		"api",
+		process.New(),
+		10*time.Second,
+		process.ConditionThresholds{
+			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
+			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
+		},
+	)
+
+	go hb.Start(ctx)
 }

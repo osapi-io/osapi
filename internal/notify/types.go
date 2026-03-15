@@ -18,35 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package notify provides a pluggable condition notification system that
+// watches the registry KV bucket for component condition transitions and
+// dispatches events via configurable notifiers.
+package notify
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/cli"
+	"context"
+	"time"
 )
 
-// clientMetricsCmd represents the clientMetrics command.
-var clientMetricsCmd = &cobra.Command{
-	Use:   "metrics",
-	Short: "Fetch Prometheus metrics",
-	Long: `Fetch Prometheus metrics from the API server.
-
-Returns the raw Prometheus exposition text.
-`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-		body, err := sdkClient.Metrics.Get(ctx)
-		if err != nil {
-			cli.LogFatal(logger, "failed to get metrics endpoint", err)
-		}
-
-		fmt.Print(body)
-	},
+// ConditionEvent represents a condition state transition on a component.
+type ConditionEvent struct {
+	// ComponentType is "agent", "api", or "nats".
+	ComponentType string
+	// Hostname identifies the component.
+	Hostname string
+	// Condition is the condition type (e.g., "MemoryPressure").
+	Condition string
+	// Active is true when the condition fires, false when resolved.
+	Active bool
+	// Reason describes why the condition triggered or resolved.
+	Reason string
+	// Timestamp is when the transition occurred.
+	Timestamp time.Time
 }
 
-func init() {
-	clientCmd.AddCommand(clientMetricsCmd)
+// Notifier sends notifications when component conditions change.
+type Notifier interface {
+	Notify(ctx context.Context, event ConditionEvent) error
 }

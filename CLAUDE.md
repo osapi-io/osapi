@@ -36,7 +36,8 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `process/` (process metrics)
+- **`internal/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`

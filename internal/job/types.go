@@ -399,6 +399,35 @@ type Condition struct {
 	LastTransitionTime time.Time `json:"last_transition_time"`
 }
 
+// ProcessMetrics holds process-level resource usage.
+type ProcessMetrics struct {
+	// CPUPercent is the process CPU usage as a percentage.
+	CPUPercent float64 `json:"cpu_percent"`
+	// RSSBytes is the resident set size in bytes.
+	RSSBytes int64 `json:"rss_bytes"`
+	// Goroutines is the number of active goroutines.
+	Goroutines int `json:"goroutines"`
+}
+
+// ComponentRegistration represents a non-agent component's heartbeat
+// entry in the KV registry. Used by API server and NATS server.
+type ComponentRegistration struct {
+	// Type is the component type: "api" or "nats".
+	Type string `json:"type"`
+	// Hostname is the hostname of the component.
+	Hostname string `json:"hostname"`
+	// StartedAt is the timestamp when the component process started.
+	StartedAt time.Time `json:"started_at"`
+	// RegisteredAt is the timestamp of the last heartbeat.
+	RegisteredAt time.Time `json:"registered_at"`
+	// Process holds process-level resource usage.
+	Process *ProcessMetrics `json:"process,omitempty"`
+	// Conditions contains evaluated process conditions.
+	Conditions []Condition `json:"conditions,omitempty"`
+	// Version is the component binary version.
+	Version string `json:"version,omitempty"`
+}
+
 // AgentRegistration represents an agent's registration entry in the KV registry.
 type AgentRegistration struct {
 	// Hostname is the hostname of the agent.
@@ -419,6 +448,8 @@ type AgentRegistration struct {
 	MemoryStats *mem.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// Process holds process-level resource usage.
+	Process *ProcessMetrics `json:"process,omitempty"`
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
 	// State is the agent's scheduling state (Ready, Draining, Cordoned).

@@ -22,6 +22,7 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 📋  | [Audit Logging](audit-logging.md)              | Structured API audit trail with 30-day retention                                              |
 | 🔐  | [Authentication & RBAC](authentication.md)     | JWT with fine-grained `resource:verb` permissions                                             |
 | 📦  | [Container Management](container-management.md) | Docker lifecycle, exec, and pull through pluggable runtime drivers                             |
+| 🔔  | [Notifications](notifications.md)              | Pluggable condition alerts with re-notification                                               |
 | 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry with trace context propagation                                                  |
 
 <!-- prettier-ignore-end -->

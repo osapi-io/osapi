@@ -13,14 +13,15 @@ that can either hit the REST API directly or manage the job queue.
 
 The system is organized into six layers, top to bottom:
 
-| Layer                      | Package                                 | Role                                                                     |
-| -------------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
-| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                         |
-| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                     |
-| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                          |
-| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                   |
-| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-facts`      |
-| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle |
+| Layer                      | Package                                 | Role                                                                                     |
+| -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
+| **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                     |
+| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                                          |
+| **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
+| **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
+| **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
+| **Notifications**          | `internal/notify/`                      | Watches registry KV for condition transitions; dispatches events via pluggable notifiers |
 
 ```mermaid
 graph TD
@@ -110,6 +111,7 @@ provider is selected at runtime through a platform-aware factory pattern.
 | `command/exec`   | Direct command execution                                 |
 | `command/shell`  | Shell command execution                                  |
 | `docker/runtime` | Docker container lifecycle (create, start, stop, remove) |
+| `process`        | Current process CPU, RSS, and goroutine metrics          |
 
 Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
 generic Linux DNS provider). Adding a new operation means implementing the
@@ -117,9 +119,16 @@ provider interface and registering it in the agent's processor dispatch.
 
 ### Agent Lifecycle (`internal/agent/`)
 
-Agents evaluate **node conditions** on each heartbeat tick (10s) and support
-**graceful drain** for maintenance. Conditions are threshold-based booleans
-(MemoryPressure, HighLoad, DiskPressure) computed from heartbeat metrics.
+All three runtime components — the API server, NATS server, and each agent —
+heartbeat into a shared registry KV bucket (`agent-registry`) at regular
+intervals. Each heartbeat record includes process metrics (CPU percent, RSS
+bytes, goroutine count) collected by `internal/provider/process`. This gives
+operators a unified view of component health via `/health/status`.
+
+Agents additionally evaluate **node conditions** on each heartbeat tick (10s)
+and support **graceful drain** for maintenance. Conditions are threshold-based
+booleans (MemoryPressure, HighLoad, DiskPressure) computed from heartbeat
+metrics.
 
 The drain mechanism uses NATS consumer subscribe/unsubscribe. When an operator
 drains an agent, the API writes a `drain.{hostname}` key to the state KV bucket

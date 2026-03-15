@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,49 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client
+package process
 
-import (
-	"context"
-	"fmt"
-	"io"
-	"net/http"
-	"strings"
-
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
-)
-
-// MetricsService provides Prometheus metrics access.
-type MetricsService struct {
-	client  *gen.ClientWithResponses
-	baseURL string
+// Metrics holds process-level resource usage.
+type Metrics struct {
+	CPUPercent float64 `json:"cpu_percent"`
+	RSSBytes   int64   `json:"rss_bytes"`
+	Goroutines int     `json:"goroutines"`
 }
 
-// Get fetches the raw Prometheus metrics text from the /metrics endpoint.
-func (s *MetricsService) Get(
-	ctx context.Context,
-) (string, error) {
-	url := strings.TrimRight(s.baseURL, "/") + "/metrics"
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return "", fmt.Errorf("creating metrics request: %w", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("fetching metrics: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("metrics endpoint returned status %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("reading metrics response: %w", err)
-	}
-
-	return string(body), nil
+// Provider collects process metrics.
+type Provider interface {
+	// GetMetrics retrieves resource usage for the current process.
+	GetMetrics() (*Metrics, error)
 }

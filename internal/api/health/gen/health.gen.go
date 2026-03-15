@@ -42,6 +42,30 @@ type AgentStats struct {
 	Total int `json:"total"`
 }
 
+// ComponentEntry defines model for ComponentEntry.
+type ComponentEntry struct {
+	// Age Time since component started.
+	Age *string `json:"age,omitempty"`
+
+	// Conditions Active conditions.
+	Conditions *[]string `json:"conditions,omitempty"`
+
+	// CpuPercent Process CPU usage percentage.
+	CpuPercent *float32 `json:"cpu_percent,omitempty"`
+
+	// Hostname Component hostname.
+	Hostname *string `json:"hostname,omitempty"`
+
+	// MemBytes Process RSS memory in bytes.
+	MemBytes *int64 `json:"mem_bytes,omitempty"`
+
+	// Status Component status.
+	Status *string `json:"status,omitempty"`
+
+	// Type Component type (agent, api, nats).
+	Type *string `json:"type,omitempty"`
+}
+
 // ComponentHealth defines model for ComponentHealth.
 type ComponentHealth struct {
 	// Error Error message when component is unhealthy.
@@ -159,6 +183,9 @@ type StatusResponse struct {
 
 	// ObjectStores Object Store statistics.
 	ObjectStores *[]ObjectStoreInfo `json:"object_stores,omitempty"`
+
+	// Registry All registered components with health details.
+	Registry *[]ComponentEntry `json:"registry,omitempty"`
 
 	// Status Overall health status.
 	Status string `json:"status"`

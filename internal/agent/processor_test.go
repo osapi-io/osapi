@@ -45,6 +45,7 @@ import (
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
+	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
 )
 
 type ProcessorTestSuite struct {
@@ -123,6 +124,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 		commandMock,
 		fMock,
 		nil,
+		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,
 	)
@@ -721,6 +723,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -747,6 +750,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -779,6 +783,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -803,6 +808,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -835,6 +841,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -859,6 +866,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					pingMocks.NewPlainMockProvider(s.mockCtrl),
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,
@@ -925,6 +933,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -957,6 +966,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -983,6 +993,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					pingMock,
 					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandMocks.NewPlainMockProvider(s.mockCtrl),
+					nil,
 					nil,
 					nil,
 					nil,

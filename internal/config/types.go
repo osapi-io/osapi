@@ -23,12 +23,26 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API       API         `mapstructure:"api"             mask:"struct"`
-	Agent     AgentConfig `mapstructure:"agent,omitempty"`
-	NATS      NATS        `mapstructure:"nats"`
-	Telemetry Telemetry   `mapstructure:"telemetry"`
+	API           API                 `mapstructure:"api"                     mask:"struct"`
+	Agent         AgentConfig         `mapstructure:"agent,omitempty"`
+	NATS          NATS                `mapstructure:"nats"`
+	Telemetry     Telemetry           `mapstructure:"telemetry"`
+	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
+}
+
+// NotificationsConfig holds settings for the pluggable condition notification
+// system. When Enabled is true, a Watcher monitors the registry KV bucket and
+// dispatches ConditionEvents via the configured Notifier.
+type NotificationsConfig struct {
+	// Enabled activates the condition watcher and notifier.
+	Enabled bool `mapstructure:"enabled"`
+	// Notifier selects the notification backend: "log" (default).
+	Notifier string `mapstructure:"notifier"`
+	// RenotifyInterval is how often to re-fire active conditions.
+	// Uses Go duration format (e.g., "1m", "5m", "1h"). Zero disables.
+	RenotifyInterval string `mapstructure:"renotify_interval"`
 }
 
 // Telemetry configuration settings.
@@ -294,6 +308,14 @@ type AgentConditions struct {
 	DiskPressureThreshold   int     `mapstructure:"disk_pressure_threshold"`
 }
 
+// ProcessConditions holds threshold configuration for process-level conditions.
+type ProcessConditions struct {
+	// MemoryPressureBytes is the RSS threshold in bytes (0 = disabled).
+	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes"`
+	// HighCPUPercent is the CPU usage threshold as a percentage (0 = disabled).
+	HighCPUPercent float64 `mapstructure:"high_cpu_percent"`
+}
+
 // AgentConfig configuration settings.
 type AgentConfig struct {
 	// NATS connection settings for the agent.
@@ -312,4 +334,6 @@ type AgentConfig struct {
 	Labels map[string]string `mapstructure:"labels"`
 	// Conditions holds threshold settings for node condition evaluation.
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
+	// ProcessConditions holds threshold settings for process-level condition evaluation.
+	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
 }

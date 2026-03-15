@@ -294,6 +294,40 @@ components:
         - hostname
         - registered
 
+    ComponentEntry:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Component type (agent, api, nats).
+          example: "agent"
+        hostname:
+          type: string
+          description: Component hostname.
+          example: "web-01"
+        status:
+          type: string
+          description: Component status.
+          example: "Ready"
+        conditions:
+          type: array
+          items:
+            type: string
+          description: Active conditions.
+        age:
+          type: string
+          description: Time since component started.
+          example: "7h 6m"
+        cpu_percent:
+          type: number
+          description: Process CPU usage percentage.
+          example: 2.1
+        mem_bytes:
+          type: integer
+          format: int64
+          description: Process RSS memory in bytes.
+          example: 134217728
+
 
     ConsumerStats:
       type: object
@@ -379,6 +413,11 @@ components:
           $ref: '#/components/schemas/AgentStats'
         consumers:
           $ref: '#/components/schemas/ConsumerStats'
+        registry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentEntry'
+          description: All registered components with health details.
       required:
         - status
         - components

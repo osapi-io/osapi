@@ -41,6 +41,7 @@ import (
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
+	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
 )
 
 type AgentPublicTestSuite struct {
@@ -109,6 +110,7 @@ func (s *AgentPublicTestSuite) TestNew() {
 				commandMocks.NewDefaultMockProvider(s.mockCtrl),
 				nil,
 				nil,
+				processMocks.NewDefaultMockProvider(s.mockCtrl),
 				nil,
 				nil,
 			)
@@ -153,6 +155,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
 					nil,
 					nil,
 				)
@@ -204,6 +207,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					commandMocks.NewDefaultMockProvider(s.mockCtrl),
 					nil,
 					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
 					nil,
 					nil,
 				)

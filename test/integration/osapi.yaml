@@ -111,3 +111,7 @@ agent:
   queue_group: job-agents
   hostname: ""
   max_jobs: 10
+
+notifications:
+  enabled: false
+  notifier: 'log'

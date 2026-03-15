@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/spf13/cobra"
@@ -58,6 +59,33 @@ func displayStatusHealth(
 	data *client.SystemStatus,
 ) {
 	fmt.Println()
+
+	if len(data.Registry) > 0 {
+		rows := make([][]string, 0, len(data.Registry))
+		for _, e := range data.Registry {
+			conditions := "-"
+			if len(e.Conditions) > 0 {
+				conditions = strings.Join(e.Conditions, ", ")
+			}
+			cpu := fmt.Sprintf("%.1f%%", e.CPUPercent)
+			mem := cli.FormatBytes(int(e.MemBytes))
+			rows = append(rows, []string{
+				e.Type,
+				e.Hostname,
+				e.Status,
+				conditions,
+				e.Age,
+				cpu,
+				mem,
+			})
+		}
+		cli.PrintCompactTable([]cli.Section{{
+			Headers: []string{"TYPE", "HOSTNAME", "STATUS", "CONDITIONS", "AGE", "CPU", "MEM"},
+			Rows:    rows,
+		}})
+		fmt.Println()
+	}
+
 	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
 
 	// NATS connection info (merged with component health)
@@ -97,23 +125,8 @@ func displayStatusHealth(
 		cli.PrintKV(name, val)
 	}
 
-	if data.Agents != nil {
-		cli.PrintKV("Agents", fmt.Sprintf(
-			"%d total, %d ready",
-			data.Agents.Total, data.Agents.Ready,
-		))
-		if len(data.Agents.Agents) > 0 {
-			rows := make([][]string, 0, len(data.Agents.Agents))
-			for _, a := range data.Agents.Agents {
-				rows = append(rows, []string{a.Hostname, a.Labels, a.Registered})
-			}
-			cli.PrintCompactTable([]cli.Section{{
-				Headers: []string{"HOSTNAME", "LABELS", "REGISTERED"},
-				Rows:    rows,
-			}})
-			fmt.Println()
-		}
-	}
+	// Agent details are shown in the component table above.
+	// Use "osapi client agent list" for labels and detailed info.
 
 	if data.Consumers != nil {
 		cli.PrintKV("Consumers", fmt.Sprintf("%d total", data.Consumers.Total))

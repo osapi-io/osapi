@@ -193,6 +193,43 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 							Size: 5242880,
 						},
 					},
+					Registry: func() *[]gen.ComponentEntry {
+						agentType := "agent"
+						agentHostname := "web-01"
+						agentStatus := "Ready"
+						agentAge := "5m"
+						var agentCPU float32 = 12.5
+						var agentMem int64 = 104857600
+						agentConditions := []string{"MemoryPressure"}
+
+						apiType := "api"
+						apiHostname := "api-server-01"
+						apiStatus := "Ready"
+						apiAge := "1h"
+						var apiCPU float32 = 2.1
+						var apiMem int64 = 52428800
+
+						entries := []gen.ComponentEntry{
+							{
+								Type:       &agentType,
+								Hostname:   &agentHostname,
+								Status:     &agentStatus,
+								Age:        &agentAge,
+								CpuPercent: &agentCPU,
+								MemBytes:   &agentMem,
+								Conditions: &agentConditions,
+							},
+							{
+								Type:       &apiType,
+								Hostname:   &apiHostname,
+								Status:     &apiStatus,
+								Age:        &apiAge,
+								CpuPercent: &apiCPU,
+								MemBytes:   &apiMem,
+							},
+						}
+						return &entries
+					}(),
 				}
 			}(),
 			serviceUnavailable: false,
@@ -256,6 +293,22 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 				suite.Require().Len(s.ObjectStores, 1)
 				suite.Equal("file-objects", s.ObjectStores[0].Name)
 				suite.Equal(5242880, s.ObjectStores[0].Size)
+
+				suite.Require().Len(s.Registry, 2)
+				suite.Equal("agent", s.Registry[0].Type)
+				suite.Equal("web-01", s.Registry[0].Hostname)
+				suite.Equal("Ready", s.Registry[0].Status)
+				suite.Equal("5m", s.Registry[0].Age)
+				suite.InDelta(12.5, s.Registry[0].CPUPercent, 0.001)
+				suite.Equal(int64(104857600), s.Registry[0].MemBytes)
+				suite.Equal([]string{"MemoryPressure"}, s.Registry[0].Conditions)
+				suite.Equal("api", s.Registry[1].Type)
+				suite.Equal("api-server-01", s.Registry[1].Hostname)
+				suite.Equal("Ready", s.Registry[1].Status)
+				suite.Equal("1h", s.Registry[1].Age)
+				suite.InDelta(2.1, s.Registry[1].CPUPercent, 0.001)
+				suite.Equal(int64(52428800), s.Registry[1].MemBytes)
+				suite.Nil(s.Registry[1].Conditions)
 			},
 		},
 		{
@@ -280,6 +333,32 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 				suite.Nil(s.Streams)
 				suite.Nil(s.KVBuckets)
 				suite.Nil(s.ObjectStores)
+				suite.Nil(s.Registry)
+			},
+		},
+		{
+			name: "when registry entry has all nil optional fields",
+			input: &gen.StatusResponse{
+				Status:     "ok",
+				Version:    "1.0.0",
+				Uptime:     "1h",
+				Components: map[string]gen.ComponentHealth{},
+				Registry: &[]gen.ComponentEntry{
+					{
+						// all optional pointer fields left nil
+					},
+				},
+			},
+			serviceUnavailable: false,
+			validateFunc: func(s SystemStatus) {
+				suite.Require().Len(s.Registry, 1)
+				suite.Empty(s.Registry[0].Type)
+				suite.Empty(s.Registry[0].Hostname)
+				suite.Empty(s.Registry[0].Status)
+				suite.Empty(s.Registry[0].Age)
+				suite.Equal(float64(0), s.Registry[0].CPUPercent)
+				suite.Equal(int64(0), s.Registry[0].MemBytes)
+				suite.Nil(s.Registry[0].Conditions)
 			},
 		},
 		{

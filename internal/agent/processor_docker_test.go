@@ -84,6 +84,7 @@ func (s *ProcessorDockerTestSuite) newAgentWithContainerMock(
 		containerMock,
 		nil,
 		nil,
+		nil,
 	)
 }
 

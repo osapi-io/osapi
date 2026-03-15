@@ -277,6 +277,162 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 		},
 		{
+			name: "registry populated from component entries",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			metrics: &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return &health.NATSMetrics{URL: "nats://localhost:4222", Version: "2.10.0"}, nil
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return []health.StreamMetrics{}, nil
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return []health.KVMetrics{}, nil
+				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{}, nil
+				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{}, nil
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return &health.JobMetrics{}, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{}, nil
+				},
+				ComponentRegistryFn: func(_ context.Context) ([]health.ComponentEntry, error) {
+					return []health.ComponentEntry{
+						{
+							Type:       "api",
+							Hostname:   "api-server-01",
+							Status:     "Ready",
+							Conditions: nil,
+							Age:        "7h 6m",
+							CPUPercent: 2.1,
+							MemBytes:   134217728,
+						},
+						{
+							Type:       "agent",
+							Hostname:   "web-01",
+							Status:     "Ready",
+							Conditions: []string{"DiskPressure"},
+							Age:        "3h 0m",
+							CPUPercent: 1.2,
+							MemBytes:   100663296,
+						},
+					}, nil
+				},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+
+				s.Require().NotNil(r.Registry)
+				s.Len(*r.Registry, 2)
+
+				first := (*r.Registry)[0]
+				s.Require().NotNil(first.Type)
+				s.Equal("api", *first.Type)
+				s.Require().NotNil(first.Hostname)
+				s.Equal("api-server-01", *first.Hostname)
+				s.Require().NotNil(first.Status)
+				s.Equal("Ready", *first.Status)
+				s.Require().NotNil(first.Age)
+				s.Equal("7h 6m", *first.Age)
+				s.Require().NotNil(first.CpuPercent)
+				s.InDelta(2.1, float64(*first.CpuPercent), 0.01)
+				s.Require().NotNil(first.MemBytes)
+				s.Equal(int64(134217728), *first.MemBytes)
+				s.Nil(first.Conditions)
+
+				second := (*r.Registry)[1]
+				s.Require().NotNil(second.Type)
+				s.Equal("agent", *second.Type)
+				s.Require().NotNil(second.Conditions)
+				s.Equal([]string{"DiskPressure"}, *second.Conditions)
+			},
+		},
+		{
+			name: "registry failure degrades gracefully",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			metrics: &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return &health.NATSMetrics{URL: "nats://localhost:4222", Version: "2.10.0"}, nil
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return []health.StreamMetrics{}, nil
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return []health.KVMetrics{}, nil
+				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{}, nil
+				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{}, nil
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return &health.JobMetrics{}, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{}, nil
+				},
+				ComponentRegistryFn: func(_ context.Context) ([]health.ComponentEntry, error) {
+					return nil, fmt.Errorf("registry unavailable")
+				},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+				s.Equal("ok", r.Status)
+				s.Nil(r.Registry)
+			},
+		},
+		{
+			name: "nil ComponentRegistryFn omits registry",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			metrics: &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return &health.NATSMetrics{URL: "nats://localhost:4222", Version: "2.10.0"}, nil
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return []health.StreamMetrics{}, nil
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return []health.KVMetrics{}, nil
+				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{}, nil
+				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{}, nil
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return &health.JobMetrics{}, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{}, nil
+				},
+				// ComponentRegistryFn intentionally nil
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+				s.Equal("ok", r.Status)
+				s.Nil(r.Registry)
+			},
+		},
+		{
 			name: "partial metric failures degrade gracefully",
 			checker: &health.NATSChecker{
 				NATSCheck: func() error { return nil },
@@ -449,6 +605,18 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 						},
 					}, nil
 				},
+				ComponentRegistryFn: func(
+					_ context.Context,
+				) ([]health.ComponentEntry, error) {
+					return []health.ComponentEntry{
+						{
+							Type:     "api",
+							Hostname: "api-server-01",
+							Status:   "Ready",
+							Age:      "7h 6m",
+						},
+					}, nil
+				},
 			},
 			wantCode: http.StatusOK,
 			wantContains: []string{
@@ -466,6 +634,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				`"group=web.prod"`,
 				`"query_any_web_01"`,
 				`"file-objects"`,
+				`"registry"`,
+				`"api-server-01"`,
 			},
 		},
 		{
@@ -603,6 +773,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 					_ context.Context,
 				) (*health.AgentMetrics, error) {
 					return &health.AgentMetrics{}, nil
+				},
+				ComponentRegistryFn: func(
+					_ context.Context,
+				) ([]health.ComponentEntry, error) {
+					return []health.ComponentEntry{}, nil
 				},
 			}
 

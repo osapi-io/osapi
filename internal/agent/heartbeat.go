@@ -30,6 +30,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/process"
 )
 
 // heartbeatInterval is the interval between heartbeat refreshes.
@@ -149,6 +150,28 @@ func (a *Agent) writeRegistration(
 		),
 	}
 	a.prevConditions = conditions
+
+	if a.processProvider != nil {
+		if pm, err := a.processProvider.GetMetrics(); err == nil {
+			reg.Process = &job.ProcessMetrics{
+				CPUPercent: pm.CPUPercent,
+				RSSBytes:   pm.RSSBytes,
+				Goroutines: pm.Goroutines,
+			}
+
+			processConditions := process.EvaluateProcessConditions(
+				pm,
+				process.ConditionThresholds{
+					MemoryPressureBytes: a.appConfig.Agent.ProcessConditions.MemoryPressureBytes,
+					HighCPUPercent:      a.appConfig.Agent.ProcessConditions.HighCPUPercent,
+				},
+				a.prevProcessConditions,
+			)
+			a.prevProcessConditions = processConditions
+			conditions = append(conditions, processConditions...)
+		}
+	}
+
 	reg.Conditions = conditions
 
 	data, err := marshalJSON(reg)

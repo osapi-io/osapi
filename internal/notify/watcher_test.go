@@ -1,0 +1,718 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package notify
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go/jetstream"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+)
+
+// recordingNotifier is a hand-rolled test double for Notifier that records
+// all Notify calls for assertion in tests.
+type recordingNotifier struct {
+	events []ConditionEvent
+}
+
+func (r *recordingNotifier) Notify(
+	_ context.Context,
+	event ConditionEvent,
+) error {
+	r.events = append(r.events, event)
+	return nil
+}
+
+type WatcherTestSuite struct {
+	suite.Suite
+
+	notifier *recordingNotifier
+	watcher  *Watcher
+}
+
+func (s *WatcherTestSuite) SetupTest() {
+	s.notifier = &recordingNotifier{}
+	s.watcher = NewWatcher(nil, s.notifier, slog.Default(), 0)
+}
+
+func (s *WatcherTestSuite) TearDownTest() {}
+
+func (s *WatcherTestSuite) TestDetectTransitions() {
+	tests := []struct {
+		name          string
+		key           string
+		componentType string
+		hostname      string
+		conditions    []job.Condition
+		setupPrev     func()
+		validateFunc  func(events []ConditionEvent)
+	}{
+		{
+			name:          "detects new condition",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					Reason:             "memory above threshold",
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("agent", events[0].ComponentType)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.True(events[0].Active)
+			},
+		},
+		{
+			name:          "detects resolved condition",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions:    []job.Condition{},
+			setupPrev: func() {
+				// Seed previous state with an active condition.
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("agent", events[0].ComponentType)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.False(events[0].Active)
+			},
+		},
+		{
+			name:          "no notification when no change",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					Reason:             "memory above threshold",
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now(),
+					},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Empty(events)
+			},
+		},
+		{
+			name:          "re-notifies after renotify interval",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {
+				s.watcher.renotifyInterval = 1 * time.Millisecond
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now().Add(-1 * time.Second),
+					},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.True(events[0].Active)
+				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+			},
+		},
+		{
+			name:          "does not re-notify before interval elapses",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {
+				s.watcher.renotifyInterval = 1 * time.Hour
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now(),
+					},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Empty(events)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Reset watcher and notifier state between sub-tests.
+			s.notifier.events = nil
+			s.watcher.prev = make(map[string]map[string]*conditionState)
+
+			tt.setupPrev()
+
+			s.watcher.detectTransitions(
+				tt.key,
+				tt.componentType,
+				tt.hostname,
+				tt.conditions,
+			)
+
+			tt.validateFunc(s.notifier.events)
+		})
+	}
+}
+
+func (s *WatcherTestSuite) TestParseRegistryKey() {
+	tests := []struct {
+		name              string
+		key               string
+		wantComponentType string
+		wantHostname      string
+		wantOK            bool
+	}{
+		{
+			name:              "agents prefix returns agent type",
+			key:               "agents.web-01",
+			wantComponentType: "agent",
+			wantHostname:      "web-01",
+			wantOK:            true,
+		},
+		{
+			name:              "api prefix returns api type",
+			key:               "api.api-server-01",
+			wantComponentType: "api",
+			wantHostname:      "api-server-01",
+			wantOK:            true,
+		},
+		{
+			name:              "nats prefix returns nats type",
+			key:               "nats.nats-01",
+			wantComponentType: "nats",
+			wantHostname:      "nats-01",
+			wantOK:            true,
+		},
+		{
+			name:              "unknown prefix returns false",
+			key:               "unknown.host-01",
+			wantComponentType: "",
+			wantHostname:      "",
+			wantOK:            false,
+		},
+		{
+			name:              "key without dot returns false",
+			key:               "invalid",
+			wantComponentType: "",
+			wantHostname:      "",
+			wantOK:            false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			componentType, hostname, ok := parseRegistryKey(tt.key)
+
+			s.Equal(tt.wantComponentType, componentType)
+			s.Equal(tt.wantHostname, hostname)
+			s.Equal(tt.wantOK, ok)
+		})
+	}
+}
+
+func (s *WatcherTestSuite) TestExtractConditions() {
+	tests := []struct {
+		name          string
+		key           string
+		componentType string
+		value         func() []byte
+		wantOK        bool
+		validateFunc  func(conditions []job.Condition)
+	}{
+		{
+			name:          "extracts conditions from agent registration",
+			key:           "agents.web-01",
+			componentType: "agent",
+			value: func() []byte {
+				reg := job.AgentRegistration{
+					Hostname: "web-01",
+					Conditions: []job.Condition{
+						{
+							Type:   job.ConditionMemoryPressure,
+							Status: true,
+						},
+					},
+				}
+				b, _ := json.Marshal(reg)
+				return b
+			},
+			wantOK: true,
+			validateFunc: func(conditions []job.Condition) {
+				s.Require().Len(conditions, 1)
+				s.Equal(job.ConditionMemoryPressure, conditions[0].Type)
+				s.True(conditions[0].Status)
+			},
+		},
+		{
+			name:          "extracts conditions from api component registration",
+			key:           "api.api-server-01",
+			componentType: "api",
+			value: func() []byte {
+				reg := job.ComponentRegistration{
+					Type:     "api",
+					Hostname: "api-server-01",
+					Conditions: []job.Condition{
+						{
+							Type:   job.ConditionHighLoad,
+							Status: true,
+						},
+					},
+				}
+				b, _ := json.Marshal(reg)
+				return b
+			},
+			wantOK: true,
+			validateFunc: func(conditions []job.Condition) {
+				s.Require().Len(conditions, 1)
+				s.Equal(job.ConditionHighLoad, conditions[0].Type)
+			},
+		},
+		{
+			name:          "extracts conditions from nats component registration",
+			key:           "nats.nats-01",
+			componentType: "nats",
+			value: func() []byte {
+				reg := job.ComponentRegistration{
+					Type:       "nats",
+					Hostname:   "nats-01",
+					Conditions: []job.Condition{},
+				}
+				b, _ := json.Marshal(reg)
+				return b
+			},
+			wantOK: true,
+			validateFunc: func(conditions []job.Condition) {
+				s.Empty(conditions)
+			},
+		},
+		{
+			name:          "returns false for invalid agent json",
+			key:           "agents.web-01",
+			componentType: "agent",
+			value: func() []byte {
+				return []byte("not-valid-json")
+			},
+			wantOK: false,
+			validateFunc: func(conditions []job.Condition) {
+				s.Nil(conditions)
+			},
+		},
+		{
+			name:          "returns false for invalid component json",
+			key:           "api.api-01",
+			componentType: "api",
+			value: func() []byte {
+				return []byte("not-valid-json")
+			},
+			wantOK: false,
+			validateFunc: func(conditions []job.Condition) {
+				s.Nil(conditions)
+			},
+		},
+		{
+			name:          "returns false for unknown component type",
+			key:           "other.host-01",
+			componentType: "other",
+			value: func() []byte {
+				return []byte("{}")
+			},
+			wantOK: false,
+			validateFunc: func(conditions []job.Condition) {
+				s.Nil(conditions)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			conditions, ok := s.watcher.extractConditions(tt.key, tt.componentType, tt.value())
+
+			s.Equal(tt.wantOK, ok)
+			tt.validateFunc(conditions)
+		})
+	}
+}
+
+func (s *WatcherTestSuite) TestHandleEntry() {
+	tests := []struct {
+		name         string
+		setupEntry   func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry
+		validateFunc func(events []ConditionEvent)
+	}{
+		{
+			name: "ignores entry with unrecognized key",
+			setupEntry: func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("unknown.host")
+				return entry
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Empty(events)
+			},
+		},
+		{
+			name: "handles delete operation and emits ComponentUnreachable",
+			setupEntry: func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("agents.web-01")
+				entry.EXPECT().Operation().Return(jetstream.KeyValueDelete)
+				return entry
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("agent", events[0].ComponentType)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.True(events[0].Active)
+				s.Equal("heartbeat expired", events[0].Reason)
+			},
+		},
+		{
+			name: "handles purge operation and emits ComponentUnreachable",
+			setupEntry: func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+				// Operation() is called twice: first checks KeyValueDelete (false),
+				// then checks KeyValuePurge (true).
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("nats.nats-01")
+				entry.EXPECT().Operation().Return(jetstream.KeyValuePurge).Times(2)
+				return entry
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("nats", events[0].ComponentType)
+				s.Equal("nats-01", events[0].Hostname)
+				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.True(events[0].Active)
+			},
+		},
+		{
+			name: "handles put operation with valid agent registration",
+			setupEntry: func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+				reg := job.AgentRegistration{
+					Hostname: "web-01",
+					Conditions: []job.Condition{
+						{Type: job.ConditionMemoryPressure, Status: true},
+					},
+				}
+				b, _ := json.Marshal(reg)
+
+				// Operation() is called twice: first checks KeyValueDelete (false),
+				// then checks KeyValuePurge (false), so Put proceeds to Value().
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("agents.web-01")
+				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
+				entry.EXPECT().Value().Return(b)
+				return entry
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("agent", events[0].ComponentType)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.True(events[0].Active)
+			},
+		},
+		{
+			name: "ignores put operation with invalid json",
+			setupEntry: func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+				// Operation() is called twice: checks KeyValueDelete and KeyValuePurge.
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("agents.web-01")
+				entry.EXPECT().Operation().Return(jetstream.KeyValuePut).Times(2)
+				entry.EXPECT().Value().Return([]byte("invalid"))
+				return entry
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Empty(events)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			s.notifier.events = nil
+			s.watcher.prev = make(map[string]map[string]*conditionState)
+
+			entry := tt.setupEntry(ctrl)
+			s.watcher.handleEntry(context.Background(), entry)
+
+			tt.validateFunc(s.notifier.events)
+		})
+	}
+}
+
+func (s *WatcherTestSuite) TestHandleDelete() {
+	tests := []struct {
+		name          string
+		key           string
+		componentType string
+		hostname      string
+		setupPrev     func()
+		validateFunc  func(events []ConditionEvent)
+	}{
+		{
+			name:          "emits ComponentUnreachable event",
+			key:           "agents.web-01",
+			componentType: "agent",
+			hostname:      "web-01",
+			setupPrev:     func() {},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("agent", events[0].ComponentType)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.True(events[0].Active)
+				s.Equal("heartbeat expired", events[0].Reason)
+			},
+		},
+		{
+			name:          "removes key from prev state",
+			key:           "agents.web-01",
+			componentType: "agent",
+			hostname:      "web-01",
+			setupPrev: func() {
+				s.watcher.prev["agents.web-01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.Nil(s.watcher.prev["agents.web-01"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.notifier.events = nil
+			s.watcher.prev = make(map[string]map[string]*conditionState)
+
+			tt.setupPrev()
+
+			s.watcher.handleDelete(context.Background(), tt.key, tt.componentType, tt.hostname)
+
+			tt.validateFunc(s.notifier.events)
+		})
+	}
+}
+
+func (s *WatcherTestSuite) TestStart() {
+	tests := []struct {
+		name         string
+		setup        func(ctrl *gomock.Controller, ctx context.Context) *jobmocks.MockKeyValue
+		validateFunc func(err error)
+	}{
+		{
+			name: "returns error when WatchAll fails",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(nil, errors.New("watch failed"))
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "watch failed")
+			},
+		},
+		{
+			name: "returns nil when context is cancelled",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				ch := make(chan jetstream.KeyValueEntry, 1)
+
+				w := jobmocks.NewMockKeyWatcher(ctrl)
+				w.EXPECT().Updates().Return(ch).AnyTimes()
+				w.EXPECT().Stop().Return(nil)
+
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "returns nil when updates channel is closed",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				ch := make(chan jetstream.KeyValueEntry)
+				close(ch)
+
+				w := jobmocks.NewMockKeyWatcher(ctrl)
+				w.EXPECT().Updates().Return(ch).AnyTimes()
+				w.EXPECT().Stop().Return(nil)
+
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "skips nil entry (initial values sentinel) and exits on closed channel",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				ch := make(chan jetstream.KeyValueEntry, 2)
+				ch <- nil // sentinel nil entry
+				close(ch)
+
+				w := jobmocks.NewMockKeyWatcher(ctrl)
+				w.EXPECT().Updates().Return(ch).AnyTimes()
+				w.EXPECT().Stop().Return(nil)
+
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "logs warning when Stop returns error",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				ch := make(chan jetstream.KeyValueEntry, 1)
+
+				w := jobmocks.NewMockKeyWatcher(ctrl)
+				w.EXPECT().Updates().Return(ch).AnyTimes()
+				w.EXPECT().Stop().Return(errors.New("stop failed"))
+
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name: "processes real entry from updates channel then exits on close",
+			setup: func(ctrl *gomock.Controller, _ context.Context) *jobmocks.MockKeyValue {
+				// Build an entry with an unrecognized key so handleEntry returns
+				// quickly without needing further mock expectations.
+				entry := jobmocks.NewMockKeyValueEntry(ctrl)
+				entry.EXPECT().Key().Return("unknown.host")
+
+				ch := make(chan jetstream.KeyValueEntry, 2)
+				ch <- entry
+				close(ch)
+
+				w := jobmocks.NewMockKeyWatcher(ctrl)
+				w.EXPECT().Updates().Return(ch).AnyTimes()
+				w.EXPECT().Stop().Return(nil)
+
+				kv := jobmocks.NewMockKeyValue(ctrl)
+				kv.EXPECT().WatchAll(gomock.Any()).Return(w, nil)
+				return kv
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			s.notifier.events = nil
+			s.watcher.prev = make(map[string]map[string]*conditionState)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			kv := tt.setup(ctrl, ctx)
+			s.watcher.kv = kv
+
+			// Cancel context immediately for cases that need context cancellation.
+			// For cases with closed channels, the channel close drives exit.
+			switch tt.name {
+			case "returns nil when context is cancelled",
+				"logs warning when Stop returns error":
+				cancel()
+			}
+
+			doneCh := make(chan error, 1)
+			go func() {
+				doneCh <- s.watcher.Start(ctx)
+			}()
+
+			select {
+			case err := <-doneCh:
+				tt.validateFunc(err)
+			case <-time.After(2 * time.Second):
+				s.Fail("Start did not return within timeout")
+			}
+		})
+	}
+}
+
+func TestWatcherTestSuite(t *testing.T) {
+	suite.Run(t, new(WatcherTestSuite))
+}

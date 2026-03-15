@@ -39,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/process"
 )
 
 // New creates a new agent instance.
@@ -58,6 +59,7 @@ func New(
 	commandProvider command.Provider,
 	fileProvider fileProv.Provider,
 	dockerProvider dockerProv.Provider,
+	processProvider process.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
@@ -77,6 +79,7 @@ func New(
 		commandProvider: commandProvider,
 		fileProvider:    fileProvider,
 		dockerProvider:  dockerProvider,
+		processProvider: processProvider,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
 	}

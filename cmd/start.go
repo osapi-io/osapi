@@ -87,11 +87,15 @@ start in order (NATS → API → agent) and shut down gracefully on SIGINT/SIGTE
 
 		job.Init(appConfig.NATS.Server.Namespace)
 
-		natsServer := setupNATSServer(ctx, logger.With("component", "nats"))
+		natsLog := logger.With("component", "nats")
+		natsServer := setupNATSServer(ctx, natsLog)
 		sm, apiBundle := setupAPIServer(
 			ctx, logger.With("component", "api"),
 			appConfig.API.NATS, metricsHandler, metricsPath,
 		)
+
+		startNATSHeartbeatFromKV(ctx, natsLog, apiBundle.registryKV)
+
 		agentServer, agentBundle := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
 		)

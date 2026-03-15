@@ -29,6 +29,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
+	"github.com/retr0h/osapi/internal/provider/process"
 )
 
 // setupAgent connects to NATS, creates providers, and builds the agent
@@ -68,6 +69,7 @@ func setupAgent(
 		commandProvider,
 		fileProvider,
 		dockerProvider,
+		process.New(),
 		b.registryKV,
 		b.factsKV,
 	)

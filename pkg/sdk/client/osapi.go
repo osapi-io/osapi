@@ -60,9 +60,6 @@ type Client struct {
 	// Audit provides audit log operations (list, get, export).
 	Audit *AuditService
 
-	// Metrics provides Prometheus metrics access.
-	Metrics *MetricsService
-
 	// File provides file management operations (upload, list, get, delete).
 	File *FileService
 
@@ -134,10 +131,6 @@ func New(
 	c.Job = &JobService{client: httpClient}
 	c.Health = &HealthService{client: httpClient}
 	c.Audit = &AuditService{client: httpClient}
-	c.Metrics = &MetricsService{
-		client:  httpClient,
-		baseURL: baseURL,
-	}
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
 

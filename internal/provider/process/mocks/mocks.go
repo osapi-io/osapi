@@ -1,6 +1,4 @@
-//go:build integration
-
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,48 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package integration_test
+package mocks
 
 import (
-	"testing"
+	"github.com/golang/mock/gomock"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/retr0h/osapi/internal/provider/process"
 )
 
-type MetricsSmokeSuite struct {
-	suite.Suite
+// NewPlainMockProvider creates a Mock without defaults.
+func NewPlainMockProvider(
+	ctrl *gomock.Controller,
+) *MockProvider {
+	return NewMockProvider(ctrl)
 }
 
-func (s *MetricsSmokeSuite) TestMetricsGet() {
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns prometheus metrics text",
-			args: []string{"client", "metrics"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-				s.Contains(stdout, "# HELP")
-				s.Contains(stdout, "# TYPE")
-			},
-		},
-	}
+// NewDefaultMockProvider creates a Mock with defaults.
+func NewDefaultMockProvider(
+	ctrl *gomock.Controller,
+) *MockProvider {
+	mock := NewMockProvider(ctrl)
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
+	mock.EXPECT().
+		GetMetrics().
+		Return(&process.Metrics{
+			CPUPercent: 1.5,
+			RSSBytes:   1024 * 1024 * 50,
+			Goroutines: 10,
+		}, nil).
+		AnyTimes()
 
-func TestMetricsSmokeSuite(
-	t *testing.T,
-) {
-	suite.Run(t, new(MetricsSmokeSuite))
+	return mock
 }

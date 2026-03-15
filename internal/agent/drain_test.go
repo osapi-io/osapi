@@ -40,6 +40,7 @@ import (
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
+	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
 )
 
 type DrainTestSuite struct {
@@ -80,6 +81,7 @@ func (s *DrainTestSuite) SetupTest() {
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,
+		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		s.mockKV,
 		nil,
 	)

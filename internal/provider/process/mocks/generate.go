@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,44 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package mocks provides mock implementations for testing.
+package mocks
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/job"
-)
-
-// natsServerStartCmd represents the natsServerStart command.
-var natsServerStartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start the embedded NATS server",
-	Long: `Start the embedded NATS server with JetStream enabled.
-Configures streams, consumers, and KV buckets needed by the job system.
-`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-
-		job.Init(appConfig.NATS.Server.Namespace)
-
-		log := logger.With("component", "nats")
-		s := setupNATSServer(ctx, log)
-
-		startNATSHeartbeat(
-			ctx,
-			log,
-			appConfig.NATS.Server.Host,
-			appConfig.NATS.Server.Port,
-			appConfig.NATS.Server.Namespace,
-			appConfig.NATS.Server.Auth,
-		)
-
-		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns)
-	},
-}
-
-func init() {
-	natsServerCmd.AddCommand(natsServerStartCmd)
-}
+//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks

@@ -47,6 +47,7 @@ import (
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
+	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
 )
 
 // newTestMsg creates a jetstream.Msg mock that returns the given subject,
@@ -135,6 +136,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		commandMock,
 		fMock,
 		nil,
+		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,
 	)
