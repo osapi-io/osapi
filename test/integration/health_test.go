@@ -40,7 +40,7 @@ func (s *HealthSmokeSuite) TestHealthLiveness() {
 	}{
 		{
 			name: "returns liveness status",
-			args: []string{"client", "health", "--json"},
+			args: []string{"client", "health", "liveness", "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,

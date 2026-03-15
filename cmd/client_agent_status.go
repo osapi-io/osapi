@@ -21,15 +21,37 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+
+	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientHealthCmd represents the health parent command.
-var clientHealthCmd = &cobra.Command{
-	Use:   "health",
-	Short: "Health check commands",
+// clientAgentStatusCmd shows health status for agents.
+var clientAgentStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Agent component health",
+	Long:  `Show health status for all registered agents.`,
+	Run: func(cmd *cobra.Command, _ []string) {
+		ctx := cmd.Context()
+
+		resp, err := sdkClient.Health.Status(ctx)
+		if err != nil {
+			cli.HandleError(err, logger)
+			return
+		}
+
+		if jsonOutput {
+			fmt.Println(string(resp.RawJSON()))
+			return
+		}
+
+		fmt.Println()
+		displayComponentTable(resp.Data.Registry, "agent")
+	},
 }
 
 func init() {
-	clientCmd.AddCommand(clientHealthCmd)
+	clientAgentCmd.AddCommand(clientAgentStatusCmd)
 }

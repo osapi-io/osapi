@@ -24,12 +24,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// clientHealthCmd represents the health parent command.
-var clientHealthCmd = &cobra.Command{
-	Use:   "health",
-	Short: "Health check commands",
+// clientAPICmd represents the api parent command.
+var clientAPICmd = &cobra.Command{
+	Use:   "api",
+	Short: "API server commands",
 }
 
 func init() {
-	clientCmd.AddCommand(clientHealthCmd)
+	clientCmd.AddCommand(clientAPICmd)
 }
