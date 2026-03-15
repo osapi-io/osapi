@@ -73,14 +73,14 @@ notifier backend.
 
 ### Conditions Reference
 
-| Condition | Components | Description |
-| --- | --- | --- |
-| `MemoryPressure` | agent | Host memory usage exceeds threshold (default 90%) |
-| `HighLoad` | agent | Load average exceeds CPU count × multiplier (default 2.0) |
-| `DiskPressure` | agent | Any disk usage exceeds threshold (default 90%) |
-| `ProcessMemoryPressure` | agent, api, nats | Process RSS exceeds threshold |
-| `ProcessHighCPU` | agent, api, nats | Process CPU usage exceeds threshold |
-| `ComponentUnreachable` | agent, api, nats | Heartbeat expired (TTL timeout) |
+| Condition               | Components       | Description                                               |
+| ----------------------- | ---------------- | --------------------------------------------------------- |
+| `MemoryPressure`        | agent            | Host memory usage exceeds threshold (default 90%)         |
+| `HighLoad`              | agent            | Load average exceeds CPU count × multiplier (default 2.0) |
+| `DiskPressure`          | agent            | Any disk usage exceeds threshold (default 90%)            |
+| `ProcessMemoryPressure` | agent, api, nats | Process RSS exceeds threshold                             |
+| `ProcessHighCPU`        | agent, api, nats | Process CPU usage exceeds threshold                       |
+| `ComponentUnreachable`  | agent, api, nats | Heartbeat expired (TTL timeout)                           |
 
 Host-level conditions (`MemoryPressure`, `HighLoad`, `DiskPressure`) are
 evaluated on agents only. Process-level conditions (`ProcessMemoryPressure`,

@@ -43,10 +43,13 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 		validateFunc func(got []job.Condition)
 	}{
 		{
-			name:       "returns nil when metrics is nil",
-			metrics:    nil,
-			thresholds: process.ProcessConditionThresholds{MemoryPressureBytes: 100, HighCPUPercent: 50},
-			prev:       nil,
+			name:    "returns nil when metrics is nil",
+			metrics: nil,
+			thresholds: process.ProcessConditionThresholds{
+				MemoryPressureBytes: 100,
+				HighCPUPercent:      50,
+			},
+			prev: nil,
 			validateFunc: func(got []job.Condition) {
 				s.Nil(got)
 			},

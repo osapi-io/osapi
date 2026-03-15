@@ -29,6 +29,20 @@ import (
 	gopsutil "github.com/shirou/gopsutil/v4/process"
 )
 
+// Injectable functions for testing.
+var (
+	newProcessFn  = gopsutil.NewProcess
+	cpuPercentFn  = func(proc *gopsutil.Process) (float64, error) { return proc.CPUPercent() }
+	memoryInfoFn  = func(proc *gopsutil.Process) (uint64, error) {
+		info, err := proc.MemoryInfo()
+		if err != nil {
+			return 0, err
+		}
+
+		return info.RSS, nil
+	}
+)
+
 type provider struct {
 	pid int32
 }
@@ -41,24 +55,24 @@ func New() Provider {
 // GetMetrics retrieves CPU percent, RSS memory, and goroutine count for
 // the current process.
 func (p *provider) GetMetrics() (*Metrics, error) {
-	proc, err := gopsutil.NewProcess(p.pid)
+	proc, err := newProcessFn(p.pid)
 	if err != nil {
 		return nil, fmt.Errorf("get process: %w", err)
 	}
 
-	cpuPercent, err := proc.CPUPercent()
+	cpuPercent, err := cpuPercentFn(proc)
 	if err != nil {
 		return nil, fmt.Errorf("get cpu percent: %w", err)
 	}
 
-	memInfo, err := proc.MemoryInfo()
+	rss, err := memoryInfoFn(proc)
 	if err != nil {
 		return nil, fmt.Errorf("get memory info: %w", err)
 	}
 
 	return &Metrics{
 		CPUPercent: cpuPercent,
-		RSSBytes:   int64(memInfo.RSS),
+		RSSBytes:   int64(rss),
 		Goroutines: runtime.NumGoroutine(),
 	}, nil
 }
