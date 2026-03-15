@@ -54,35 +54,59 @@ Requires authentication.
 	},
 }
 
+// displayComponentTable renders the component registry table,
+// optionally filtered by component type. Pass "" for all types.
+func displayComponentTable(
+	registry []client.RegistryEntry,
+	filterType string,
+) {
+	var filtered []client.RegistryEntry
+	for _, e := range registry {
+		if filterType == "" || e.Type == filterType {
+			filtered = append(filtered, e)
+		}
+	}
+
+	if len(filtered) == 0 {
+		fmt.Println("\n  No components found.")
+
+		return
+	}
+
+	rows := make([][]string, 0, len(filtered))
+	for _, e := range filtered {
+		conditions := "-"
+		if len(e.Conditions) > 0 {
+			conditions = strings.Join(e.Conditions, ", ")
+		}
+
+		cpu := fmt.Sprintf("%.1f%%", e.CPUPercent)
+		mem := cli.FormatBytes(int(e.MemBytes))
+		rows = append(rows, []string{
+			e.Type,
+			e.Hostname,
+			e.Status,
+			conditions,
+			e.Age,
+			cpu,
+			mem,
+		})
+	}
+
+	cli.PrintCompactTable([]cli.Section{{
+		Headers: []string{"TYPE", "HOSTNAME", "STATUS", "CONDITIONS", "AGE", "CPU", "MEM"},
+		Rows:    rows,
+	}})
+}
+
 // displayStatusHealth renders health status output with system metrics.
 func displayStatusHealth(
 	data *client.SystemStatus,
 ) {
 	fmt.Println()
 
+	displayComponentTable(data.Registry, "")
 	if len(data.Registry) > 0 {
-		rows := make([][]string, 0, len(data.Registry))
-		for _, e := range data.Registry {
-			conditions := "-"
-			if len(e.Conditions) > 0 {
-				conditions = strings.Join(e.Conditions, ", ")
-			}
-			cpu := fmt.Sprintf("%.1f%%", e.CPUPercent)
-			mem := cli.FormatBytes(int(e.MemBytes))
-			rows = append(rows, []string{
-				e.Type,
-				e.Hostname,
-				e.Status,
-				conditions,
-				e.Age,
-				cpu,
-				mem,
-			})
-		}
-		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"TYPE", "HOSTNAME", "STATUS", "CONDITIONS", "AGE", "CPU", "MEM"},
-			Rows:    rows,
-		}})
 		fmt.Println()
 	}
 
