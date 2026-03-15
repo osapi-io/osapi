@@ -108,6 +108,15 @@ single table — never split into separate `TestFoo`, `TestFooError`,
 Avoid generic file names like `helpers.go` or `utils.go`. Name files after what
 they contain.
 
+## Before committing
+
+Run `just ready` before committing to ensure generated code, package docs,
+formatting, and lint are all up to date:
+
+```bash
+just ready   # generate, go::docs, docs::fmt, go::fmt, go::vet
+```
+
 ## Branching
 
 All changes should be developed on feature branches. Create a branch from `main`
