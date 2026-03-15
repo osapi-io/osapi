@@ -161,7 +161,7 @@ func (a *Agent) writeRegistration(
 
 			processConditions := process.EvaluateProcessConditions(
 				pm,
-				process.ProcessConditionThresholds{
+				process.ConditionThresholds{
 					MemoryPressureBytes: a.appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 					HighCPUPercent:      a.appConfig.Agent.ProcessConditions.HighCPUPercent,
 				},

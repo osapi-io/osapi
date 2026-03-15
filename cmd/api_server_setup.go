@@ -650,7 +650,7 @@ func startAPIHeartbeat(
 		"api",
 		process.New(),
 		10*time.Second,
-		process.ProcessConditionThresholds{
+		process.ConditionThresholds{
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},

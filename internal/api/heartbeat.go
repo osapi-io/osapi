@@ -46,7 +46,7 @@ type ComponentHeartbeat struct {
 	processProvider process.Provider
 	interval        time.Duration
 	startedAt       time.Time
-	thresholds      process.ProcessConditionThresholds
+	thresholds      process.ConditionThresholds
 	prevConditions  []job.Condition
 }
 
@@ -59,7 +59,7 @@ func NewComponentHeartbeat(
 	componentType string,
 	processProvider process.Provider,
 	interval time.Duration,
-	thresholds process.ProcessConditionThresholds,
+	thresholds process.ConditionThresholds,
 ) *ComponentHeartbeat {
 	return &ComponentHeartbeat{
 		logger:          logger,

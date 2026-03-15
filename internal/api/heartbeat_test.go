@@ -59,7 +59,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		"api",
 		s.mockProcess,
 		10*time.Second,
-		process.ProcessConditionThresholds{},
+		process.ConditionThresholds{},
 	)
 }
 
@@ -119,12 +119,12 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 			name: "evaluates process conditions when thresholds are set",
 			setupMock: func() {
 				// Override thresholds on the heartbeat for this row.
-				s.heartbeat.thresholds = process.ProcessConditionThresholds{
+				s.heartbeat.thresholds = process.ConditionThresholds{
 					MemoryPressureBytes: 1, // 1 byte threshold — RSS will exceed it
 					HighCPUPercent:      0, // disabled
 				}
 				s.T().Cleanup(func() {
-					s.heartbeat.thresholds = process.ProcessConditionThresholds{}
+					s.heartbeat.thresholds = process.ConditionThresholds{}
 				})
 
 				s.mockProcess.EXPECT().
@@ -322,7 +322,7 @@ func (s *HeartbeatTestSuite) TestStart() {
 				"api",
 				mockProcess,
 				10*time.Millisecond,
-				process.ProcessConditionThresholds{},
+				process.ConditionThresholds{},
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -376,7 +376,7 @@ func (s *HeartbeatTestSuite) TestRegistryKey() {
 				tt.componentType,
 				s.mockProcess,
 				10*time.Second,
-				process.ProcessConditionThresholds{},
+				process.ConditionThresholds{},
 			)
 			s.Equal(tt.expected, hb.registryKey())
 		})

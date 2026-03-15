@@ -38,14 +38,14 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 	tests := []struct {
 		name         string
 		metrics      *process.Metrics
-		thresholds   process.ProcessConditionThresholds
+		thresholds   process.ConditionThresholds
 		prev         []job.Condition
 		validateFunc func(got []job.Condition)
 	}{
 		{
 			name:    "returns nil when metrics is nil",
 			metrics: nil,
-			thresholds: process.ProcessConditionThresholds{
+			thresholds: process.ConditionThresholds{
 				MemoryPressureBytes: 100,
 				HighCPUPercent:      50,
 			},
@@ -60,7 +60,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   1024 * 1024 * 512,
 				CPUPercent: 95.0,
 			},
-			thresholds: process.ProcessConditionThresholds{},
+			thresholds: process.ConditionThresholds{},
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Empty(got)
@@ -72,7 +72,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   50,
 				CPUPercent: 0,
 			},
-			thresholds: process.ProcessConditionThresholds{MemoryPressureBytes: 100},
+			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
@@ -87,7 +87,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   200,
 				CPUPercent: 0,
 			},
-			thresholds: process.ProcessConditionThresholds{MemoryPressureBytes: 100},
+			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
@@ -102,7 +102,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   0,
 				CPUPercent: 30.0,
 			},
-			thresholds: process.ProcessConditionThresholds{HighCPUPercent: 80.0},
+			thresholds: process.ConditionThresholds{HighCPUPercent: 80.0},
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
@@ -117,7 +117,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   0,
 				CPUPercent: 90.0,
 			},
-			thresholds: process.ProcessConditionThresholds{HighCPUPercent: 80.0},
+			thresholds: process.ConditionThresholds{HighCPUPercent: 80.0},
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
@@ -132,7 +132,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   500,
 				CPUPercent: 90.0,
 			},
-			thresholds: process.ProcessConditionThresholds{
+			thresholds: process.ConditionThresholds{
 				MemoryPressureBytes: 100,
 				HighCPUPercent:      80.0,
 			},
@@ -151,7 +151,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   200,
 				CPUPercent: 0,
 			},
-			thresholds: process.ProcessConditionThresholds{MemoryPressureBytes: 100},
+			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev: []job.Condition{
 				{
 					Type:               "ProcessMemoryPressure",
@@ -175,7 +175,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 				RSSBytes:   50,
 				CPUPercent: 0,
 			},
-			thresholds: process.ProcessConditionThresholds{MemoryPressureBytes: 100},
+			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev: []job.Condition{
 				{
 					Type:               "ProcessMemoryPressure",

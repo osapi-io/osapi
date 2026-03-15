@@ -91,7 +91,7 @@ func startNATSHeartbeat(
 		"nats",
 		process.New(),
 		10*time.Second,
-		process.ProcessConditionThresholds{
+		process.ConditionThresholds{
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
@@ -128,7 +128,7 @@ func startNATSHeartbeatFromKV(
 		"nats",
 		process.New(),
 		10*time.Second,
-		process.ProcessConditionThresholds{
+		process.ConditionThresholds{
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},

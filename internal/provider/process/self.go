@@ -31,9 +31,9 @@ import (
 
 // Injectable functions for testing.
 var (
-	newProcessFn  = gopsutil.NewProcess
-	cpuPercentFn  = func(proc *gopsutil.Process) (float64, error) { return proc.CPUPercent() }
-	memoryInfoFn  = func(proc *gopsutil.Process) (uint64, error) {
+	newProcessFn = gopsutil.NewProcess
+	cpuPercentFn = func(proc *gopsutil.Process) (float64, error) { return proc.CPUPercent() }
+	memoryInfoFn = func(proc *gopsutil.Process) (uint64, error) {
 		info, err := proc.MemoryInfo()
 		if err != nil {
 			return 0, err

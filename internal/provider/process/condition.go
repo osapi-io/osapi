@@ -7,8 +7,8 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// ProcessConditionThresholds holds thresholds for process-level conditions.
-type ProcessConditionThresholds struct {
+// ConditionThresholds holds thresholds for process-level conditions.
+type ConditionThresholds struct {
 	// MemoryPressureBytes is the RSS threshold in bytes.
 	MemoryPressureBytes int64
 	// HighCPUPercent is the CPU usage threshold as a percentage.
@@ -20,7 +20,7 @@ type ProcessConditionThresholds struct {
 // using the previous condition state.
 func EvaluateProcessConditions(
 	metrics *Metrics,
-	thresholds ProcessConditionThresholds,
+	thresholds ConditionThresholds,
 	prev []job.Condition,
 ) []job.Condition {
 	if metrics == nil {
