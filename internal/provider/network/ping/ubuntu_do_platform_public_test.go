@@ -31,17 +31,17 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-type UbuntuDoIntegrationTestSuite struct {
+type UbuntuDoPlatformPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuDoIntegrationTestSuite) SetupTest() {}
+func (suite *UbuntuDoPlatformPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuDoIntegrationTestSuite) SetupSubTest() {}
+func (suite *UbuntuDoPlatformPublicTestSuite) SetupSubTest() {}
 
-func (suite *UbuntuDoIntegrationTestSuite) TearDownTest() {}
+func (suite *UbuntuDoPlatformPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuDoIntegrationTestSuite) TestDo() {
+func (suite *UbuntuDoPlatformPublicTestSuite) TestDo() {
 	tests := []struct {
 		name        string
 		address     string
@@ -84,6 +84,6 @@ func (suite *UbuntuDoIntegrationTestSuite) TestDo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuDoIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuDoIntegrationTestSuite))
+func TestUbuntuDoPlatformPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(UbuntuDoPlatformPublicTestSuite))
 }

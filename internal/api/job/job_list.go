@@ -36,6 +36,8 @@ func (j *Job) GetJob(
 	ctx context.Context,
 	request gen.GetJobRequestObject,
 ) (gen.GetJobResponseObject, error) {
+	// Defense in depth: current params cannot fail validation, but
+	// guards against future parameter additions.
 	if errMsg, ok := validation.Struct(request.Params); !ok {
 		return gen.GetJob400JSONResponse{Error: &errMsg}, nil
 	}
