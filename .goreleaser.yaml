@@ -12,6 +12,9 @@ builds:
       - linux
       - darwin
       - windows
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - -s -w -X {{ .ModulePath }}/cmd.date={{ .CommitDate }}
       - -X {{ .ModulePath }}/cmd.commit={{ .Commit }}
