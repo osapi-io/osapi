@@ -196,11 +196,6 @@ const config: Config = {
             },
             {
               type: 'doc',
-              label: 'Metrics',
-              docId: 'sidebar/sdk/client/metrics'
-            },
-            {
-              type: 'doc',
               label: 'Node',
               docId: 'sidebar/sdk/client/node'
             },

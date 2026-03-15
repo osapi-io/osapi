@@ -27,7 +27,6 @@ resp, err := client.Node.Hostname(ctx, "_any")
 | [File](file.md)       | File management (Object Store)     |
 | [Health](health.md)   | Health check operations            |
 | [Job](job.md)         | Async job queue operations         |
-| [Metrics](metrics.md) | Prometheus metrics access          |
 | [Node](node.md)       | Node management, network, commands |
 
 ## Client Options

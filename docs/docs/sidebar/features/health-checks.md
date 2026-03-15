@@ -6,7 +6,10 @@ sidebar_position: 5
 
 OSAPI exposes health endpoints for load balancers, monitoring systems, and
 operational tooling. These endpoints report whether the API server is alive,
-ready to serve traffic, and the status of its dependencies.
+ready to serve traffic, and the status of its dependencies. All three runtime
+components (API server, agent, NATS server) participate in a shared component
+registry so operators can see the health of the entire deployment from a single
+endpoint.
 
 ## Endpoints
 
@@ -33,6 +36,58 @@ instance.
 Returns per-component health with system metrics (uptime, goroutine count,
 memory usage). Requires authentication with the `health:read` permission. Use
 this for dashboards and monitoring.
+
+## Component Registry
+
+All three runtime components heartbeat into a shared registry KV bucket on a
+regular interval. Each heartbeat writes a JSON record keyed by component type
+and hostname (e.g., `agents.web-01`, `api.api-server`, `nats.nats-server`). The
+records include process metrics collected at heartbeat time:
+
+| Metric       | Description                              |
+| ------------ | ---------------------------------------- |
+| CPU percent  | Process CPU utilisation at sample time   |
+| RSS bytes    | Resident set size (physical memory used) |
+| Goroutines   | Number of active goroutines              |
+
+The `/health/status` response includes a `components` table that aggregates
+these heartbeat records. A component whose registry key has expired (TTL elapsed
+without a fresh heartbeat) is reported as unreachable.
+
+Example `components` output:
+
+```
+COMPONENT    HOSTNAME      STATUS    CPU    RSS       GOROUTINES
+api          api-server    ready     0.4%   42.3 MiB  87
+agent        web-01        ready     0.1%   18.1 MiB  23
+agent        web-02        ready     0.2%   17.8 MiB  22
+nats         nats-server   ready     0.3%   31.6 MiB  41
+```
+
+## Condition Notifications
+
+The component registry enables an optional condition notification system. When
+`notifications.enabled` is true, a watcher monitors the registry KV bucket for
+condition transitions on any component and dispatches events via the configured
+notifier backend.
+
+Supported conditions include threshold-based states (e.g., `MemoryPressure`,
+`HighLoad`, `DiskPressure` on agents) as well as infrastructure events such as
+`ComponentUnreachable` when a heartbeat expires. Conditions fire when a
+threshold is crossed and resolve automatically when it drops back below the
+threshold.
+
+The default notifier (`log`) writes condition events to the structured log at
+INFO level:
+
+```
+condition fired   component=agent hostname=web-01 condition=MemoryPressure
+condition resolved component=agent hostname=web-01 condition=MemoryPressure
+condition fired   component=agent hostname=web-02 condition=ComponentUnreachable
+```
+
+See [Configuration](../usage/configuration.md) for how to enable notifications
+and select a notifier.
 
 ## Configuration
 

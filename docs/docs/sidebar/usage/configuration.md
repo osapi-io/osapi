@@ -68,6 +68,8 @@ uppercased:
 | `telemetry.tracing.enabled`                  | `OSAPI_TELEMETRY_TRACING_ENABLED`                  |
 | `telemetry.tracing.exporter`                 | `OSAPI_TELEMETRY_TRACING_EXPORTER`                 |
 | `telemetry.tracing.otlp_endpoint`            | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`            |
+| `notifications.enabled`                      | `OSAPI_NOTIFICATIONS_ENABLED`                      |
+| `notifications.notifier`                     | `OSAPI_NOTIFICATIONS_NOTIFIER`                     |
 | `agent.nats.host`                            | `OSAPI_AGENT_NATS_HOST`                            |
 | `agent.nats.port`                            | `OSAPI_AGENT_NATS_PORT`                            |
 | `agent.nats.client_name`                     | `OSAPI_AGENT_NATS_CLIENT_NAME`                     |
@@ -392,6 +394,12 @@ telemetry:
     # gRPC endpoint for OTLP exporter (e.g., Jaeger, Tempo).
     # otlp_endpoint: localhost:4317
 
+notifications:
+  # Enable the condition watcher and notifier (default: false).
+  enabled: false
+  # Notifier backend: "log" (default).
+  notifier: 'log'
+
 agent:
   nats:
     # NATS server hostname for the agent.
@@ -579,6 +587,13 @@ agent:
 | `enabled`       | bool   | Enable distributed tracing (default: `false`)                          |
 | `exporter`      | string | `"stdout"`, `"otlp"`, or unset (log correlation only, no span export)  |
 | `otlp_endpoint` | string | gRPC endpoint for OTLP exporter (required when `exporter` is `"otlp"`) |
+
+### `notifications`
+
+| Key        | Type   | Description                                                              |
+| ---------- | ------ | ------------------------------------------------------------------------ |
+| `enabled`  | bool   | Enable the condition watcher and notifier (default: `false`)             |
+| `notifier` | string | Notification backend: `"log"` writes condition events to the server log  |
 
 ### `agent`
 
