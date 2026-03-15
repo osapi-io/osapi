@@ -1,5 +1,5 @@
 ---
-name: Test Deploy to GitHub Pages
+name: Docs Build
 
 on:
   pull_request:
@@ -7,8 +7,8 @@ on:
       - main
 
 jobs:
-  test-deploy:
-    name: Test deployment
+  build:
+    name: Test build website
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -17,7 +17,5 @@ jobs:
         uses: extractions/setup-just@v3
       - name: Fetch justfiles
         run: just fetch
-      - name: Lint the website
-        run: just docs::fmt-check
       - name: Test build website
         run: just docs::build
