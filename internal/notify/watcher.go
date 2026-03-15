@@ -33,28 +33,39 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
+// conditionState tracks the state of a single condition.
+type conditionState struct {
+	active       bool
+	lastNotified time.Time
+}
+
 // Watcher monitors the registry KV bucket for condition transitions and
-// emits ConditionEvents via the configured Notifier.
+// emits ConditionEvents via the configured Notifier. Active conditions
+// are re-notified after the configured renotify interval.
 type Watcher struct {
-	kv       jetstream.KeyValue
-	notifier Notifier
-	logger   *slog.Logger
-	prev     map[string]map[string]bool // key → condition → active
-	mu       sync.Mutex
+	kv               jetstream.KeyValue
+	notifier         Notifier
+	logger           *slog.Logger
+	prev             map[string]map[string]*conditionState // key → condition → state
+	renotifyInterval time.Duration
+	mu               sync.Mutex
 }
 
 // NewWatcher creates a new Watcher that monitors registry KV entries and
-// notifies on condition transitions.
+// notifies on condition transitions. Active conditions are re-notified
+// after renotifyInterval elapses (0 disables re-notification).
 func NewWatcher(
 	kv jetstream.KeyValue,
 	notifier Notifier,
 	logger *slog.Logger,
+	renotifyInterval time.Duration,
 ) *Watcher {
 	return &Watcher{
-		kv:       kv,
-		notifier: notifier,
-		logger:   logger,
-		prev:     make(map[string]map[string]bool),
+		kv:               kv,
+		notifier:         notifier,
+		logger:           logger,
+		prev:             make(map[string]map[string]*conditionState),
+		renotifyInterval: renotifyInterval,
 	}
 }
 
@@ -191,6 +202,8 @@ func (w *Watcher) detectTransitions(
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
+	now := time.Now()
+
 	current := make(map[string]bool)
 	for _, c := range conditions {
 		if c.Status {
@@ -200,36 +213,56 @@ func (w *Watcher) detectTransitions(
 
 	prev := w.prev[key]
 	if prev == nil {
-		prev = make(map[string]bool)
+		prev = make(map[string]*conditionState)
 	}
 
-	// New conditions (not in prev).
+	// New or re-notifiable conditions.
 	for condType := range current {
-		if !prev[condType] {
+		state := prev[condType]
+
+		if state == nil {
+			// New condition — fire.
 			_ = w.notifier.Notify(context.Background(), ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
 				Active:        true,
-				Timestamp:     time.Now(),
+				Timestamp:     now,
 			})
+			prev[condType] = &conditionState{
+				active:       true,
+				lastNotified: now,
+			}
+		} else if state.active && w.renotifyInterval > 0 &&
+			now.Sub(state.lastNotified) >= w.renotifyInterval {
+			// Still active and renotify interval elapsed — re-fire.
+			_ = w.notifier.Notify(context.Background(), ConditionEvent{
+				ComponentType: componentType,
+				Hostname:      hostname,
+				Condition:     condType,
+				Active:        true,
+				Timestamp:     now,
+			})
+			state.lastNotified = now
 		}
 	}
 
 	// Resolved conditions (in prev, not in current).
-	for condType := range prev {
-		if !current[condType] {
+	for condType, state := range prev {
+		if !current[condType] && state.active {
 			_ = w.notifier.Notify(context.Background(), ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
 				Active:        false,
-				Timestamp:     time.Now(),
+				Timestamp:     now,
 			})
+
+			delete(prev, condType)
 		}
 	}
 
-	w.prev[key] = current
+	w.prev[key] = prev
 }
 
 // parseRegistryKey splits a registry key like "agents.web-01" into its

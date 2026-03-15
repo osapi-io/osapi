@@ -164,3 +164,6 @@ notifications:
   enabled: true
   # Notifier backend: "log" (default).
   notifier: 'log'
+  # How often to re-fire active conditions (Go duration: 1m, 5m, 1h).
+  # Zero disables re-notification.
+  renotify_interval: '5m'

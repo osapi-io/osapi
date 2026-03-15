@@ -612,8 +612,22 @@ func startConditionWatcher(
 		return
 	}
 
+	var renotifyInterval time.Duration
+	if appConfig.Notifications.RenotifyInterval != "" {
+		d, err := time.ParseDuration(appConfig.Notifications.RenotifyInterval)
+		if err != nil {
+			log.Warn(
+				"invalid renotify_interval, using default (0 = disabled)",
+				slog.String("value", appConfig.Notifications.RenotifyInterval),
+				slog.String("error", err.Error()),
+			)
+		} else {
+			renotifyInterval = d
+		}
+	}
+
 	notifier := notify.NewLogNotifier(log)
-	watcher := notify.NewWatcher(registryKV, notifier, log)
+	watcher := notify.NewWatcher(registryKV, notifier, log, renotifyInterval)
 
 	go func() {
 		if err := watcher.Start(ctx); err != nil {

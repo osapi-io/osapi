@@ -40,6 +40,9 @@ type NotificationsConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 	// Notifier selects the notification backend: "log" (default).
 	Notifier string `mapstructure:"notifier"`
+	// RenotifyInterval is how often to re-fire active conditions.
+	// Uses Go duration format (e.g., "1m", "5m", "1h"). Zero disables.
+	RenotifyInterval string `mapstructure:"renotify_interval"`
 }
 
 // Telemetry configuration settings.

@@ -59,7 +59,7 @@ type WatcherTestSuite struct {
 
 func (s *WatcherTestSuite) SetupTest() {
 	s.notifier = &recordingNotifier{}
-	s.watcher = NewWatcher(nil, s.notifier, slog.Default())
+	s.watcher = NewWatcher(nil, s.notifier, slog.Default(), 0)
 }
 
 func (s *WatcherTestSuite) TearDownTest() {}
@@ -104,8 +104,8 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 			conditions:    []job.Condition{},
 			setupPrev: func() {
 				// Seed previous state with an active condition.
-				s.watcher.prev["agents.web_01"] = map[string]bool{
-					job.ConditionMemoryPressure: true,
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: &conditionState{active: true, lastNotified: time.Now()},
 				}
 			},
 			validateFunc: func(events []ConditionEvent) {
@@ -130,9 +130,63 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 				},
 			},
 			setupPrev: func() {
-				// Seed previous state identical to incoming conditions.
-				s.watcher.prev["agents.web_01"] = map[string]bool{
-					job.ConditionMemoryPressure: true,
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now(),
+					},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Empty(events)
+			},
+		},
+		{
+			name:          "re-notifies after renotify interval",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {
+				s.watcher.renotifyInterval = 1 * time.Millisecond
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now().Add(-1 * time.Second),
+					},
+				}
+			},
+			validateFunc: func(events []ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.True(events[0].Active)
+				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+			},
+		},
+		{
+			name:          "does not re-notify before interval elapses",
+			key:           "agents.web_01",
+			componentType: "agent",
+			hostname:      "web-01",
+			conditions: []job.Condition{
+				{
+					Type:               job.ConditionMemoryPressure,
+					Status:             true,
+					LastTransitionTime: time.Now(),
+				},
+			},
+			setupPrev: func() {
+				s.watcher.renotifyInterval = 1 * time.Hour
+				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: {
+						active:       true,
+						lastNotified: time.Now(),
+					},
 				}
 			},
 			validateFunc: func(events []ConditionEvent) {
@@ -145,7 +199,7 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 		s.Run(tt.name, func() {
 			// Reset watcher and notifier state between sub-tests.
 			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]bool)
+			s.watcher.prev = make(map[string]map[string]*conditionState)
 
 			tt.setupPrev()
 
@@ -441,7 +495,7 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 			defer ctrl.Finish()
 
 			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]bool)
+			s.watcher.prev = make(map[string]map[string]*conditionState)
 
 			entry := tt.setupEntry(ctrl)
 			s.watcher.handleEntry(context.Background(), entry)
@@ -481,8 +535,8 @@ func (s *WatcherTestSuite) TestHandleDelete() {
 			componentType: "agent",
 			hostname:      "web-01",
 			setupPrev: func() {
-				s.watcher.prev["agents.web-01"] = map[string]bool{
-					job.ConditionMemoryPressure: true,
+				s.watcher.prev["agents.web-01"] = map[string]*conditionState{
+					job.ConditionMemoryPressure: &conditionState{active: true, lastNotified: time.Now()},
 				}
 			},
 			validateFunc: func(events []ConditionEvent) {
@@ -496,7 +550,7 @@ func (s *WatcherTestSuite) TestHandleDelete() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]bool)
+			s.watcher.prev = make(map[string]map[string]*conditionState)
 
 			tt.setupPrev()
 
@@ -628,7 +682,7 @@ func (s *WatcherTestSuite) TestStart() {
 			defer ctrl.Finish()
 
 			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]bool)
+			s.watcher.prev = make(map[string]map[string]*conditionState)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()

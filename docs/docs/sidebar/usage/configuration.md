@@ -70,6 +70,7 @@ uppercased:
 | `telemetry.tracing.otlp_endpoint`                | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`                |
 | `notifications.enabled`                          | `OSAPI_NOTIFICATIONS_ENABLED`                          |
 | `notifications.notifier`                         | `OSAPI_NOTIFICATIONS_NOTIFIER`                         |
+| `notifications.renotify_interval`                | `OSAPI_NOTIFICATIONS_RENOTIFY_INTERVAL`                |
 | `agent.nats.host`                                | `OSAPI_AGENT_NATS_HOST`                                |
 | `agent.nats.port`                                | `OSAPI_AGENT_NATS_PORT`                                |
 | `agent.nats.client_name`                         | `OSAPI_AGENT_NATS_CLIENT_NAME`                         |
@@ -401,6 +402,9 @@ notifications:
   enabled: false
   # Notifier backend: "log" (default).
   notifier: 'log'
+  # How often to re-fire active conditions (Go duration).
+  # Zero disables re-notification.
+  renotify_interval: '5m'
 
 agent:
   nats:
@@ -598,10 +602,11 @@ agent:
 
 ### `notifications`
 
-| Key        | Type   | Description                                                             |
-| ---------- | ------ | ----------------------------------------------------------------------- |
-| `enabled`  | bool   | Enable the condition watcher and notifier (default: `false`)            |
-| `notifier` | string | Notification backend: `"log"` writes condition events to the server log |
+| Key                  | Type   | Description                                                             |
+| -------------------- | ------ | ----------------------------------------------------------------------- |
+| `enabled`            | bool   | Enable the condition watcher and notifier (default: `false`)            |
+| `notifier`           | string | Notification backend: `"log"` writes condition events to the server log |
+| `renotify_interval`  | string | Re-fire interval for active conditions (Go duration, default: `"0"`)    |
 
 ### `agent`
 
