@@ -44,6 +44,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
+	"github.com/retr0h/osapi/internal/notify"
 	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -133,6 +134,7 @@ func setupAPIServer(
 	)
 
 	startAPIHeartbeat(ctx, log, b.registryKV)
+	startConditionWatcher(ctx, log, b.registryKV)
 
 	return sm, b
 }
@@ -585,6 +587,35 @@ func registerAPIHandlers(
 	}
 
 	sm.RegisterHandlers(handlers)
+}
+
+// startConditionWatcher creates a LogNotifier and a Watcher, then starts the
+// watcher in a background goroutine when notifications are enabled. The watcher
+// monitors the registry KV bucket for condition transitions.
+func startConditionWatcher(
+	ctx context.Context,
+	log *slog.Logger,
+	registryKV jetstream.KeyValue,
+) {
+	if !appConfig.Notifications.Enabled {
+		return
+	}
+
+	if registryKV == nil {
+		return
+	}
+
+	notifier := notify.NewLogNotifier(log)
+	watcher := notify.NewWatcher(registryKV, notifier, log)
+
+	go func() {
+		if err := watcher.Start(ctx); err != nil {
+			log.Warn(
+				"condition watcher stopped with error",
+				slog.String("error", err.Error()),
+			)
+		}
+	}()
 }
 
 // startAPIHeartbeat resolves the local hostname, creates a ComponentHeartbeat

@@ -23,12 +23,23 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API       API         `mapstructure:"api"             mask:"struct"`
-	Agent     AgentConfig `mapstructure:"agent,omitempty"`
-	NATS      NATS        `mapstructure:"nats"`
-	Telemetry Telemetry   `mapstructure:"telemetry"`
+	API           API                 `mapstructure:"api"             mask:"struct"`
+	Agent         AgentConfig         `mapstructure:"agent,omitempty"`
+	NATS          NATS                `mapstructure:"nats"`
+	Telemetry     Telemetry           `mapstructure:"telemetry"`
+	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
+}
+
+// NotificationsConfig holds settings for the pluggable condition notification
+// system. When Enabled is true, a Watcher monitors the registry KV bucket and
+// dispatches ConditionEvents via the configured Notifier.
+type NotificationsConfig struct {
+	// Enabled activates the condition watcher and notifier.
+	Enabled bool `mapstructure:"enabled"`
+	// Notifier selects the notification backend: "log" (default).
+	Notifier string `mapstructure:"notifier"`
 }
 
 // Telemetry configuration settings.
