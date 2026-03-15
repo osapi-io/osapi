@@ -22,10 +22,13 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -121,7 +124,7 @@ func setupAPIServer(
 	auditStore, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	kvBuckets := configuredKVBuckets(namespace)
 	objBuckets := configuredObjectBuckets(namespace)
-	metricsProvider := newMetricsProvider(b.nc, streamName, kvBuckets, objBuckets, b.jobClient)
+	metricsProvider := newMetricsProvider(b.nc, streamName, kvBuckets, objBuckets, b.jobClient, b.registryKV)
 
 	sm := api.New(appConfig, log, serverOpts...)
 	registerAPIHandlers(
@@ -286,6 +289,7 @@ func newMetricsProvider(
 	kvBuckets []string,
 	objBuckets []string,
 	jc jobclient.JobClient,
+	registryKV jetstream.KeyValue,
 ) *health.ClosureMetricsProvider {
 	return &health.ClosureMetricsProvider{
 		NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -442,6 +446,91 @@ func newMetricsProvider(
 				Ready:  len(agents), // presence in KV = Ready
 				Agents: details,
 			}, nil
+		},
+		ComponentRegistryFn: func(fnCtx context.Context) ([]health.ComponentEntry, error) {
+			if registryKV == nil {
+				return nil, fmt.Errorf("registry KV not configured")
+			}
+
+			keys, err := registryKV.Keys(fnCtx)
+			if err != nil {
+				if strings.Contains(err.Error(), "no keys found") {
+					return []health.ComponentEntry{}, nil
+				}
+				return nil, fmt.Errorf("list registry keys: %w", err)
+			}
+
+			entries := make([]health.ComponentEntry, 0, len(keys))
+			for _, key := range keys {
+				parts := strings.SplitN(key, ".", 2)
+				if len(parts) != 2 {
+					continue
+				}
+				prefix := parts[0]
+
+				kvEntry, err := registryKV.Get(fnCtx, key)
+				if err != nil {
+					continue
+				}
+
+				var entry health.ComponentEntry
+
+				switch prefix {
+				case "agents":
+					var reg job.AgentRegistration
+					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
+						continue
+					}
+					entry = health.ComponentEntry{
+						Type:     "agent",
+						Hostname: reg.Hostname,
+						Status:   "Ready",
+						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+					}
+					for _, c := range reg.Conditions {
+						if c.Status {
+							entry.Conditions = append(entry.Conditions, c.Type)
+						}
+					}
+					if reg.Process != nil {
+						entry.CPUPercent = reg.Process.CPUPercent
+						entry.MemBytes = reg.Process.RSSBytes
+					}
+				case "api", "nats":
+					var reg job.ComponentRegistration
+					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
+						continue
+					}
+					entry = health.ComponentEntry{
+						Type:     reg.Type,
+						Hostname: reg.Hostname,
+						Status:   "Ready",
+						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+					}
+					for _, c := range reg.Conditions {
+						if c.Status {
+							entry.Conditions = append(entry.Conditions, c.Type)
+						}
+					}
+					if reg.Process != nil {
+						entry.CPUPercent = reg.Process.CPUPercent
+						entry.MemBytes = reg.Process.RSSBytes
+					}
+				default:
+					continue
+				}
+
+				entries = append(entries, entry)
+			}
+
+			sort.Slice(entries, func(i, j int) bool {
+				if entries[i].Type != entries[j].Type {
+					return entries[i].Type < entries[j].Type
+				}
+				return entries[i].Hostname < entries[j].Hostname
+			})
+
+			return entries, nil
 		},
 	}
 }

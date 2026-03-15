@@ -99,15 +99,16 @@ func (h *Health) populateMetrics(
 	resp *gen.StatusResponse,
 ) {
 	var (
-		mu            sync.Mutex
-		wg            sync.WaitGroup
-		natsInfo      *NATSMetrics
-		streams       []StreamMetrics
-		kvBuckets     []KVMetrics
-		objectStores  []ObjectStoreMetrics
-		jobStats      *JobMetrics
-		agentStats    *AgentMetrics
-		consumerStats *ConsumerMetrics
+		mu               sync.Mutex
+		wg               sync.WaitGroup
+		natsInfo         *NATSMetrics
+		streams          []StreamMetrics
+		kvBuckets        []KVMetrics
+		objectStores     []ObjectStoreMetrics
+		jobStats         *JobMetrics
+		agentStats       *AgentMetrics
+		consumerStats    *ConsumerMetrics
+		componentEntries []ComponentEntry
 	)
 
 	collect := func(
@@ -196,6 +197,17 @@ func (h *Health) populateMetrics(
 		}
 		mu.Lock()
 		consumerStats = c
+		mu.Unlock()
+	})
+
+	collect("registry", func() {
+		entries, err := h.Metrics.GetComponentRegistry(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get component registry for status", "error", err)
+			return
+		}
+		mu.Lock()
+		componentEntries = entries
 		mu.Unlock()
 	})
 
@@ -295,5 +307,28 @@ func (h *Health) populateMetrics(
 			stats.Consumers = &details
 		}
 		resp.Consumers = &stats
+	}
+
+	if componentEntries != nil {
+		entries := make([]gen.ComponentEntry, 0, len(componentEntries))
+		for _, e := range componentEntries {
+			entry := gen.ComponentEntry{}
+			entry.Type = &e.Type
+			entry.Hostname = &e.Hostname
+			entry.Status = &e.Status
+			age := e.Age
+			entry.Age = &age
+			cpu := float32(e.CPUPercent)
+			entry.CpuPercent = &cpu
+			mem := e.MemBytes
+			entry.MemBytes = &mem
+			if len(e.Conditions) > 0 {
+				conds := make([]string, len(e.Conditions))
+				copy(conds, e.Conditions)
+				entry.Conditions = &conds
+			}
+			entries = append(entries, entry)
+		}
+		resp.Registry = &entries
 	}
 }

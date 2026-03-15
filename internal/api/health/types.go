@@ -40,6 +40,7 @@ type MetricsProvider interface {
 	GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
 	GetJobStats(ctx context.Context) (*JobMetrics, error)
 	GetAgentStats(ctx context.Context) (*AgentMetrics, error)
+	GetComponentRegistry(ctx context.Context) ([]ComponentEntry, error)
 }
 
 // NATSMetrics holds NATS connection information.
@@ -107,15 +108,27 @@ type AgentDetail struct {
 	Registered string
 }
 
+// ComponentEntry holds unified component registration details for the registry.
+type ComponentEntry struct {
+	Type       string
+	Hostname   string
+	Status     string
+	Conditions []string
+	Age        string
+	CPUPercent float64
+	MemBytes   int64
+}
+
 // ClosureMetricsProvider implements MetricsProvider using function closures.
 type ClosureMetricsProvider struct {
-	NATSInfoFn        func(ctx context.Context) (*NATSMetrics, error)
-	StreamInfoFn      func(ctx context.Context) ([]StreamMetrics, error)
-	KVInfoFn          func(ctx context.Context) ([]KVMetrics, error)
-	ObjectStoreInfoFn func(ctx context.Context) ([]ObjectStoreMetrics, error)
-	ConsumerStatsFn   func(ctx context.Context) (*ConsumerMetrics, error)
-	JobStatsFn        func(ctx context.Context) (*JobMetrics, error)
-	AgentStatsFn      func(ctx context.Context) (*AgentMetrics, error)
+	NATSInfoFn          func(ctx context.Context) (*NATSMetrics, error)
+	StreamInfoFn        func(ctx context.Context) ([]StreamMetrics, error)
+	KVInfoFn            func(ctx context.Context) ([]KVMetrics, error)
+	ObjectStoreInfoFn   func(ctx context.Context) ([]ObjectStoreMetrics, error)
+	ConsumerStatsFn     func(ctx context.Context) (*ConsumerMetrics, error)
+	JobStatsFn          func(ctx context.Context) (*JobMetrics, error)
+	AgentStatsFn        func(ctx context.Context) (*AgentMetrics, error)
+	ComponentRegistryFn func(ctx context.Context) ([]ComponentEntry, error)
 }
 
 // GetNATSInfo delegates to the NATSInfoFn closure.
@@ -165,6 +178,17 @@ func (p *ClosureMetricsProvider) GetAgentStats(
 	ctx context.Context,
 ) (*AgentMetrics, error) {
 	return p.AgentStatsFn(ctx)
+}
+
+// GetComponentRegistry delegates to the ComponentRegistryFn closure.
+// Returns nil, nil when the closure is not configured.
+func (p *ClosureMetricsProvider) GetComponentRegistry(
+	ctx context.Context,
+) ([]ComponentEntry, error) {
+	if p.ComponentRegistryFn == nil {
+		return nil, nil
+	}
+	return p.ComponentRegistryFn(ctx)
 }
 
 // Health implementation of the Health APIs operations.

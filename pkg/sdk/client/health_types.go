@@ -48,6 +48,18 @@ type SystemStatus struct {
 	Streams            []StreamInfo               `json:"streams,omitempty"`
 	KVBuckets          []KVBucketInfo             `json:"kv_buckets,omitempty"`
 	ObjectStores       []ObjectStoreInfo          `json:"object_stores,omitempty"`
+	Registry           []RegistryEntry            `json:"registry,omitempty"`
+}
+
+// RegistryEntry represents a unified component registration in the health registry.
+type RegistryEntry struct {
+	Type       string   `json:"type"`
+	Hostname   string   `json:"hostname"`
+	Status     string   `json:"status"`
+	Conditions []string `json:"conditions,omitempty"`
+	Age        string   `json:"age"`
+	CPUPercent float64  `json:"cpu_percent"`
+	MemBytes   int64    `json:"mem_bytes"`
 }
 
 // ComponentHealth represents a component's health.
@@ -280,6 +292,36 @@ func systemStatusFromGen(
 		}
 
 		s.ObjectStores = stores
+	}
+
+	if g.Registry != nil {
+		entries := make([]RegistryEntry, 0, len(*g.Registry))
+		for _, e := range *g.Registry {
+			entry := RegistryEntry{}
+			if e.Type != nil {
+				entry.Type = *e.Type
+			}
+			if e.Hostname != nil {
+				entry.Hostname = *e.Hostname
+			}
+			if e.Status != nil {
+				entry.Status = *e.Status
+			}
+			if e.Age != nil {
+				entry.Age = *e.Age
+			}
+			if e.CpuPercent != nil {
+				entry.CPUPercent = float64(*e.CpuPercent)
+			}
+			if e.MemBytes != nil {
+				entry.MemBytes = *e.MemBytes
+			}
+			if e.Conditions != nil {
+				entry.Conditions = *e.Conditions
+			}
+			entries = append(entries, entry)
+		}
+		s.Registry = entries
 	}
 
 	return s
