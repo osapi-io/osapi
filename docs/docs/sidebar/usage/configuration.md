@@ -602,11 +602,11 @@ agent:
 
 ### `notifications`
 
-| Key                  | Type   | Description                                                             |
-| -------------------- | ------ | ----------------------------------------------------------------------- |
-| `enabled`            | bool   | Enable the condition watcher and notifier (default: `false`)            |
-| `notifier`           | string | Notification backend: `"log"` writes condition events to the server log |
-| `renotify_interval`  | string | Re-fire interval for active conditions (Go duration, default: `"0"`)    |
+| Key                 | Type   | Description                                                             |
+| ------------------- | ------ | ----------------------------------------------------------------------- |
+| `enabled`           | bool   | Enable the condition watcher and notifier (default: `false`)            |
+| `notifier`          | string | Notification backend: `"log"` writes condition events to the server log |
+| `renotify_interval` | string | Re-fire interval for active conditions (Go duration, default: `"0"`)    |
 
 ### `agent`
 

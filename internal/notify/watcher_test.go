@@ -105,7 +105,7 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 			setupPrev: func() {
 				// Seed previous state with an active condition.
 				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: &conditionState{active: true, lastNotified: time.Now()},
+					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
 				}
 			},
 			validateFunc: func(events []ConditionEvent) {
@@ -536,7 +536,7 @@ func (s *WatcherTestSuite) TestHandleDelete() {
 			hostname:      "web-01",
 			setupPrev: func() {
 				s.watcher.prev["agents.web-01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: &conditionState{active: true, lastNotified: time.Now()},
+					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
 				}
 			},
 			validateFunc: func(events []ConditionEvent) {

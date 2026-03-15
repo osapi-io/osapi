@@ -137,6 +137,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Notifications',
+              docId: 'sidebar/features/notifications'
+            },
+            {
+              type: 'doc',
               label: 'Distributed Tracing',
               docId: 'sidebar/features/distributed-tracing'
             },
