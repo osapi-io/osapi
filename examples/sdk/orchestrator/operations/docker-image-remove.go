@@ -18,10 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the network.dns.update operation, which
-// updates DNS servers for a network interface.
+// Package main demonstrates the docker.image.remove operation, which
+// removes a container image from the target node.
 //
-// Run with: OSAPI_TOKEN="<jwt>" OSAPI_INTERFACE=eth0 go run network-dns-update.go
+// Run with: OSAPI_TOKEN="<jwt>" go run docker-image-remove.go
 package main
 
 import (
@@ -46,11 +46,6 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	iface := os.Getenv("OSAPI_INTERFACE")
-	if iface == "" {
-		log.Fatal("OSAPI_INTERFACE is required (e.g. eth0, en0)")
-	}
-
 	c := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
@@ -63,21 +58,21 @@ func main() {
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
 	plan.TaskFunc(
-		"update-dns",
+		"remove-image",
 		func(
 			ctx context.Context,
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := cc.Node.UpdateDNS(
-				ctx, "_any", iface,
-				[]string{"8.8.8.8", "8.8.4.4"}, nil,
+			resp, err := cc.Docker.ImageRemove(
+				ctx, "_any", "nginx:latest",
+				&client.DockerImageRemoveParams{Force: true},
 			)
 			if err != nil {
 				return nil, err
 			}
 
 			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r client.DNSUpdateResult) orchestrator.HostResult {
+				func(r client.DockerActionResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
 						Changed:  r.Changed,
