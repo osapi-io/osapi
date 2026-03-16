@@ -146,4 +146,20 @@ func main() {
 		fmt.Printf("Remove (%s): id=%s message=%s\n",
 			r.Hostname, r.ID, r.Message)
 	}
+
+	// Remove the image.
+	imgRemove, err := c.Docker.ImageRemove(
+		ctx,
+		target,
+		"nginx:alpine",
+		&client.DockerImageRemoveParams{Force: true},
+	)
+	if err != nil {
+		log.Fatalf("image remove: %v", err)
+	}
+
+	for _, r := range imgRemove.Data.Results {
+		fmt.Printf("ImageRemove (%s): id=%s message=%s\n",
+			r.Hostname, r.ID, r.Message)
+	}
 }
