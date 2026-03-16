@@ -25,9 +25,9 @@ Or download a prebuilt binary from the [releases][] page.
 
 ### Docker
 
-A multi-arch distroless image is published to
-[GitHub Container Registry][ghcr] on every commit to main. Images are signed
-with [cosign][] (keyless, via GitHub OIDC) and include an [SBOM][] attestation.
+A multi-arch distroless image is published to [GitHub Container Registry][ghcr]
+on every commit to main. Images are signed with [cosign][] (keyless, via GitHub
+OIDC) and include an [SBOM][] attestation.
 
 ```bash
 docker pull ghcr.io/osapi-io/osapi:latest
