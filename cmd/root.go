@@ -45,6 +45,9 @@ var (
 	appFs      = afero.NewOsFs()
 	logger     = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	jsonOutput bool
+
+	// skipConfigCmds lists subcommands that don't need a config file.
+	skipConfigCmds = map[string]bool{"version": true}
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -96,6 +99,11 @@ func init() {
 }
 
 func initConfig() {
+	// Commands that don't need a config file.
+	if len(os.Args) > 1 && skipConfigCmds[os.Args[1]] {
+		return
+	}
+
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	viper.SetConfigType("yaml")
