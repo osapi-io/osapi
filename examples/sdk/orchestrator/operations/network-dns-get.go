@@ -21,7 +21,7 @@
 // Package main demonstrates the network.dns.get operation, which
 // retrieves DNS configuration for a network interface.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run network-dns-get.go
+// Run with: OSAPI_TOKEN="<jwt>" OSAPI_INTERFACE=eth0 go run network-dns-get.go
 package main
 
 import (
@@ -46,6 +46,11 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
+	iface := os.Getenv("OSAPI_INTERFACE")
+	if iface == "" {
+		log.Fatal("OSAPI_INTERFACE is required (e.g. eth0, en0)")
+	}
+
 	c := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
@@ -63,7 +68,7 @@ func main() {
 			ctx context.Context,
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := cc.Node.GetDNS(ctx, "_any", "eth0")
+			resp, err := cc.Node.GetDNS(ctx, "_any", iface)
 			if err != nil {
 				return nil, err
 			}

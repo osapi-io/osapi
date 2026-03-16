@@ -21,7 +21,7 @@
 // Package main demonstrates the network.dns.update operation, which
 // updates DNS servers for a network interface.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run network-dns-update.go
+// Run with: OSAPI_TOKEN="<jwt>" OSAPI_INTERFACE=eth0 go run network-dns-update.go
 package main
 
 import (
@@ -46,6 +46,11 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
+	iface := os.Getenv("OSAPI_INTERFACE")
+	if iface == "" {
+		log.Fatal("OSAPI_INTERFACE is required (e.g. eth0, en0)")
+	}
+
 	c := client.New(url, token)
 
 	hooks := orchestrator.Hooks{
@@ -64,7 +69,7 @@ func main() {
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
 			resp, err := cc.Node.UpdateDNS(
-				ctx, "_any", "eth0",
+				ctx, "_any", iface,
 				[]string{"8.8.8.8", "8.8.4.4"}, nil,
 			)
 			if err != nil {

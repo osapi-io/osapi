@@ -18,8 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the JobService: creating a job, polling
-// for its result, listing jobs, and checking queue statistics.
+// Package main demonstrates the JobService: listing jobs, retrieving
+// a specific job's details, and viewing timeline events.
+//
+// Jobs are created implicitly by domain operations (e.g. Node.Hostname,
+// Docker.Create). This example shows how to inspect them after the fact.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run job.go
 package main
@@ -29,7 +32,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
@@ -45,40 +47,57 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 
-	// Create a job.
-	created, err := client.Job.Create(ctx, map[string]any{
-		"type": "node.hostname.get",
-	}, "_any")
+	// Trigger a job via a domain operation so we have something to inspect.
+	hn, err := c.Node.Hostname(ctx, "_any")
 	if err != nil {
-		log.Fatalf("create job: %v", err)
+		log.Fatalf("hostname: %v", err)
 	}
 
-	fmt.Printf("Created job: %s  status=%s\n",
-		created.Data.JobID, created.Data.Status)
+	jobID := hn.Data.JobID
+	fmt.Printf("Created job via Node.Hostname: %s\n", jobID)
 
-	// Poll until the job completes.
-	time.Sleep(2 * time.Second)
-
-	job, err := client.Job.Get(ctx, created.Data.JobID)
+	// Get the job's full details.
+	job, err := c.Job.Get(ctx, jobID)
 	if err != nil {
 		log.Fatalf("get job: %v", err)
 	}
 
-	fmt.Printf("Job %s: status=%s\n", job.Data.ID, job.Data.Status)
+	fmt.Printf("\nJob %s:\n", job.Data.ID)
+	fmt.Printf("  Status:    %s\n", job.Data.Status)
+	fmt.Printf("  Hostname:  %s\n", job.Data.Hostname)
+	fmt.Printf("  Operation: %v\n", job.Data.Operation)
+	fmt.Printf("  Created:   %s\n", job.Data.Created)
 
-	// List recent jobs.
-	list, err := client.Job.List(ctx, client.ListParams{Limit: 5})
+	if job.Data.Error != "" {
+		fmt.Printf("  Error:     %s\n", job.Data.Error)
+	}
+
+	// Timeline events show the job's lifecycle.
+	if len(job.Data.Timeline) > 0 {
+		fmt.Printf("\n  Timeline:\n")
+		for _, e := range job.Data.Timeline {
+			fmt.Printf("    %s  %-12s  host=%s\n",
+				e.Timestamp, e.Event, e.Hostname)
+		}
+	}
+
+	// List recent jobs with status counts.
+	list, err := c.Job.List(ctx, client.ListParams{Limit: 10})
 	if err != nil {
 		log.Fatalf("list jobs: %v", err)
 	}
 
 	fmt.Printf("\nRecent jobs: %d total\n", list.Data.TotalItems)
 
+	if len(list.Data.StatusCounts) > 0 {
+		fmt.Printf("  Status counts: %v\n", list.Data.StatusCounts)
+	}
+
 	for _, j := range list.Data.Items {
-		fmt.Printf("  %s  status=%s  op=%v\n",
+		fmt.Printf("  %s  status=%-10s  op=%v\n",
 			j.ID, j.Status, j.Operation)
 	}
 }

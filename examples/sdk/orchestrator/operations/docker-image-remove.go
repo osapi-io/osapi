@@ -18,19 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the MetricsService: fetching raw
-// Prometheus metrics text from the /metrics endpoint.
+// Package main demonstrates the docker.image.remove operation, which
+// removes a container image from the target node.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run metrics.go
+// Run with: OSAPI_TOKEN="<jwt>" go run docker-image-remove.go
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
+	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
 func main() {
@@ -44,13 +46,54 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
-	ctx := context.Background()
+	c := client.New(url, token)
 
-	text, err := client.Metrics.Get(ctx)
-	if err != nil {
-		log.Fatalf("metrics: %v", err)
+	hooks := orchestrator.Hooks{
+		AfterTask: func(_ *orchestrator.Task, result orchestrator.TaskResult) {
+			fmt.Printf("[%s] %s  changed=%v\n",
+				result.Status, result.Name, result.Changed)
+		},
 	}
 
-	fmt.Println(text)
+	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
+
+	plan.TaskFunc(
+		"remove-image",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Docker.ImageRemove(
+				ctx, "_any", "nginx:latest",
+				&client.DockerImageRemoveParams{Force: true},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r client.DockerActionResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	report, err := plan.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, r := range report.Tasks {
+		if len(r.Data) > 0 {
+			b, _ := json.MarshalIndent(r.Data, "", "  ")
+			fmt.Printf("data: %s\n", b)
+		}
+	}
+
+	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
 }

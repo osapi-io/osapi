@@ -46,12 +46,12 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 
 	// Upload a raw file to the Object Store.
 	content := []byte("listen_address = 0.0.0.0:8080\nworkers = 4\n")
-	upload, err := client.File.Upload(
+	upload, err := c.File.Upload(
 		ctx,
 		"app.conf",
 		"raw",
@@ -65,7 +65,7 @@ func main() {
 		upload.Data.Name, upload.Data.SHA256, upload.Data.Size, upload.Data.Changed)
 
 	// Check if the file has changed without uploading.
-	chk, err := client.File.Changed(ctx, "app.conf", bytes.NewReader(content))
+	chk, err := c.File.Changed(ctx, "app.conf", bytes.NewReader(content))
 	if err != nil {
 		log.Fatalf("changed: %v", err)
 	}
@@ -73,7 +73,7 @@ func main() {
 	fmt.Printf("Changed: name=%s changed=%v\n", chk.Data.Name, chk.Data.Changed)
 
 	// Force upload bypasses both SDK-side and server-side checks.
-	force, err := client.File.Upload(
+	force, err := c.File.Upload(
 		ctx,
 		"app.conf",
 		"raw",
@@ -88,7 +88,7 @@ func main() {
 		force.Data.Name, force.Data.Changed)
 
 	// List all stored files.
-	list, err := client.File.List(ctx)
+	list, err := c.File.List(ctx)
 	if err != nil {
 		log.Fatalf("list: %v", err)
 	}
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// Get metadata for a specific file.
-	meta, err := client.File.Get(ctx, "app.conf")
+	meta, err := c.File.Get(ctx, "app.conf")
 	if err != nil {
 		log.Fatalf("get: %v", err)
 	}
@@ -108,7 +108,7 @@ func main() {
 		meta.Data.Name, meta.Data.SHA256, meta.Data.Size)
 
 	// Deploy the file to an agent.
-	deploy, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
+	deploy, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
 		ObjectName:  "app.conf",
 		Path:        "/tmp/app.conf",
 		ContentType: "raw",
@@ -123,7 +123,7 @@ func main() {
 		deploy.Data.JobID, deploy.Data.Hostname, deploy.Data.Changed)
 
 	// Check file status on the agent.
-	status, err := client.Node.FileStatus(ctx, "_any", "/tmp/app.conf")
+	status, err := c.Node.FileStatus(ctx, "_any", "/tmp/app.conf")
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}
@@ -132,7 +132,7 @@ func main() {
 		status.Data.Path, status.Data.Status)
 
 	// Clean up — delete the file from the Object Store.
-	del, err := client.File.Delete(ctx, "app.conf")
+	del, err := c.File.Delete(ctx, "app.conf")
 	if err != nil {
 		log.Fatalf("delete: %v", err)
 	}
