@@ -35,7 +35,7 @@ task := plan.TaskFunc("remove-image",
 | Param   | Type   | Required | Description                               |
 | ------- | ------ | -------- | ----------------------------------------- |
 | `image` | string | Yes      | Image name or ID (e.g., "nginx:latest")   |
-| `force` | bool   | No       | Force removal even if the image is in use  |
+| `force` | bool   | No       | Force removal even if the image is in use |
 
 ## Target
 
