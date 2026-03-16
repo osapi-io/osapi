@@ -4,7 +4,7 @@
 [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/osapi-io/osapi/go.yml?style=for-the-badge)](https://github.com/osapi-io/osapi/actions/workflows/go.yml)
 [![docker](https://img.shields.io/badge/ghcr.io-osapi-blue?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/osapi-io/osapi/pkgs/container/osapi)
-[![cosign](https://img.shields.io/badge/signed-cosign-blueviolet?style=for-the-badge&logo=sigstore&logoColor=white)](https://github.com/sigstore/cosign)
+[![cosign](https://img.shields.io/badge/signed-cosign-blueviolet?style=for-the-badge&logo=sigstore&logoColor=white)](https://osapi-io.github.io/osapi/#docker)
 [![sbom](https://img.shields.io/badge/SBOM-attached-green?style=for-the-badge)](https://osapi-io.github.io/osapi/#docker)
 [![powered by](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=for-the-badge)](https://github.com/goreleaser)
 [![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge)](https://conventionalcommits.org)
