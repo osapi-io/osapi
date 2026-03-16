@@ -25,12 +25,27 @@ Or download a prebuilt binary from the [releases][] page.
 
 ### Docker
 
-A distroless image is published to GitHub Container Registry on every commit to
-main:
+A multi-arch distroless image is published to
+[GitHub Container Registry][ghcr] on every commit to main. Images are signed
+with [cosign][] (keyless, via GitHub OIDC) and include an [SBOM][] attestation.
 
 ```bash
 docker pull ghcr.io/osapi-io/osapi:latest
 docker run ghcr.io/osapi-io/osapi:latest --help
+```
+
+Verify the image signature:
+
+```bash
+cosign verify ghcr.io/osapi-io/osapi:latest \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp github.com/osapi-io/osapi
+```
+
+Download the SBOM:
+
+```bash
+cosign download sbom ghcr.io/osapi-io/osapi:latest
 ```
 
 ## Quickstart
@@ -96,4 +111,7 @@ osapi client health
 [Cockpit]: https://cockpit-project.org/
 [webmin]: https://webmin.com/
 [releases]: https://github.com/retr0h/osapi/releases
+[ghcr]: https://github.com/osapi-io/osapi/pkgs/container/osapi
+[cosign]: https://github.com/sigstore/cosign
+[SBOM]: https://en.wikipedia.org/wiki/Software_supply_chain
 <!-- prettier-ignore-end -->
