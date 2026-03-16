@@ -44,12 +44,12 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 	target := "_any"
 
 	// Direct exec — runs a binary with arguments.
-	exec, err := client.Node.Exec(ctx, client.ExecRequest{
+	exec, err := c.Node.Exec(ctx, client.ExecRequest{
 		Target:  target,
 		Command: "uptime",
 	})
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	// Shell — interpreted by /bin/sh, supports pipes and redirection.
-	shell, err := client.Node.Shell(ctx, client.ShellRequest{
+	shell, err := c.Node.Shell(ctx, client.ShellRequest{
 		Target:  target,
 		Command: "uname -a",
 	})

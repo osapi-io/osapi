@@ -46,15 +46,15 @@ func main() {
 
 	iface := os.Getenv("OSAPI_INTERFACE")
 	if iface == "" {
-		iface = "eth0"
+		log.Fatal("OSAPI_INTERFACE is required (e.g. eth0, en0)")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 	target := "_any"
 
 	// Get DNS configuration for an interface.
-	dns, err := client.Node.GetDNS(ctx, target, iface)
+	dns, err := c.Node.GetDNS(ctx, target, iface)
 	if err != nil {
 		log.Fatalf("get dns: %v", err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// Ping a host.
-	ping, err := client.Node.Ping(ctx, target, "8.8.8.8")
+	ping, err := c.Node.Ping(ctx, target, "8.8.8.8")
 	if err != nil {
 		log.Fatalf("ping: %v", err)
 	}

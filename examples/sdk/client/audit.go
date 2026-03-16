@@ -44,11 +44,11 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 
 	// List recent audit entries.
-	list, err := client.Audit.List(ctx, 10, 0)
+	list, err := c.Audit.List(ctx, 10, 0)
 	if err != nil {
 		log.Fatalf("list audit: %v", err)
 	}
@@ -67,7 +67,7 @@ func main() {
 	// Get a specific audit entry.
 	id := list.Data.Items[0].ID
 
-	entry, err := client.Audit.Get(ctx, id)
+	entry, err := c.Audit.Get(ctx, id)
 	if err != nil {
 		log.Fatalf("get audit %s: %v", id, err)
 	}
@@ -77,4 +77,17 @@ func main() {
 	fmt.Printf("  Path:      %s\n", entry.Data.Path)
 	fmt.Printf("  User:      %s\n", entry.Data.User)
 	fmt.Printf("  Duration:  %dms\n", entry.Data.DurationMs)
+
+	// Export all audit entries.
+	export, err := c.Audit.Export(ctx)
+	if err != nil {
+		log.Fatalf("export audit: %v", err)
+	}
+
+	fmt.Printf("\nExported: %d entries\n", export.Data.TotalItems)
+
+	for _, e := range export.Data.Items {
+		fmt.Printf("  %s  %s %s  code=%d\n",
+			e.ID, e.Method, e.Path, e.ResponseCode)
+	}
 }

@@ -45,11 +45,11 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 
 	// List all active agents.
-	list, err := client.Agent.List(ctx)
+	list, err := c.Agent.List(ctx)
 	if err != nil {
 		log.Fatalf("list agents: %v", err)
 	}
@@ -68,7 +68,7 @@ func main() {
 	// Get rich facts for the first agent.
 	hostname := list.Data.Agents[0].Hostname
 
-	resp, err := client.Agent.Get(ctx, hostname)
+	resp, err := c.Agent.Get(ctx, hostname)
 	if err != nil {
 		log.Fatalf("get agent %s: %v", hostname, err)
 	}

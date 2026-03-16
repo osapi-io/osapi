@@ -44,12 +44,12 @@ func main() {
 		log.Fatal("OSAPI_TOKEN is required")
 	}
 
-	client := client.New(url, token)
+	c := client.New(url, token)
 	ctx := context.Background()
 	target := "_any"
 
 	// Status (aggregated node info).
-	status, err := client.Node.Status(ctx, target)
+	status, err := c.Node.Status(ctx, target)
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}
@@ -69,7 +69,7 @@ func main() {
 	}
 
 	// Hostname
-	hn, err := client.Node.Hostname(ctx, target)
+	hn, err := c.Node.Hostname(ctx, target)
 	if err != nil {
 		log.Fatalf("hostname: %v", err)
 	}
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	// Disk usage
-	disk, err := client.Node.Disk(ctx, target)
+	disk, err := c.Node.Disk(ctx, target)
 	if err != nil {
 		log.Fatalf("disk: %v", err)
 	}
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	// Memory
-	mem, err := client.Node.Memory(ctx, target)
+	mem, err := c.Node.Memory(ctx, target)
 	if err != nil {
 		log.Fatalf("memory: %v", err)
 	}
@@ -104,7 +104,7 @@ func main() {
 	}
 
 	// Load averages
-	load, err := client.Node.Load(ctx, target)
+	load, err := c.Node.Load(ctx, target)
 	if err != nil {
 		log.Fatalf("load: %v", err)
 	}
@@ -118,7 +118,7 @@ func main() {
 	}
 
 	// OS info
-	osInfo, err := client.Node.OS(ctx, target)
+	osInfo, err := c.Node.OS(ctx, target)
 	if err != nil {
 		log.Fatalf("os: %v", err)
 	}
@@ -131,7 +131,7 @@ func main() {
 	}
 
 	// Uptime
-	up, err := client.Node.Uptime(ctx, target)
+	up, err := c.Node.Uptime(ctx, target)
 	if err != nil {
 		log.Fatalf("uptime: %v", err)
 	}
