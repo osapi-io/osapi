@@ -42,10 +42,11 @@ cosign verify ghcr.io/osapi-io/osapi:latest \
   --certificate-identity-regexp github.com/osapi-io/osapi
 ```
 
-Download the SBOM:
+Verify build provenance and SBOM attestations via the GitHub CLI:
 
 ```bash
-cosign download sbom ghcr.io/osapi-io/osapi:latest
+gh attestation verify oci://ghcr.io/osapi-io/osapi:latest \
+  --owner osapi-io
 ```
 
 ## Quickstart
