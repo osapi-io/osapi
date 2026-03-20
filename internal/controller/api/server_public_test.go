@@ -32,9 +32,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/controller/api"
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/api"
 )
 
 type ServerPublicTestSuite struct {

@@ -34,11 +34,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	apiagent "github.com/retr0h/osapi/internal/controller/api/agent"
 	"github.com/retr0h/osapi/internal/controller/api/agent/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/host"

@@ -29,9 +29,9 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/provider/process"
 )

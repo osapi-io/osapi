@@ -24,9 +24,9 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/controller/api/agent"
 	agentGen "github.com/retr0h/osapi/internal/controller/api/agent/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 

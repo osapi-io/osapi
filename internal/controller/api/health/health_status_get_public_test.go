@@ -32,11 +32,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/controller/api/health"
 	"github.com/retr0h/osapi/internal/controller/api/health/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
 )
 
 type stubChecker struct{}

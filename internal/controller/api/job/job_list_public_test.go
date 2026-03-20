@@ -34,11 +34,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	apijob "github.com/retr0h/osapi/internal/controller/api/job"
 	"github.com/retr0h/osapi/internal/controller/api/job/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
 	jobtypes "github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"

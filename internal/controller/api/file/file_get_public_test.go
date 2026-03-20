@@ -36,12 +36,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	apifile "github.com/retr0h/osapi/internal/controller/api/file"
 	"github.com/retr0h/osapi/internal/controller/api/file/gen"
 	"github.com/retr0h/osapi/internal/controller/api/file/mocks"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
 )
 
 type FileGetPublicTestSuite struct {

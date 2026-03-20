@@ -35,17 +35,17 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
+	"github.com/retr0h/osapi/internal/audit"
+	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/controller/api/file"
 	"github.com/retr0h/osapi/internal/controller/api/health"
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
-	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -662,7 +662,7 @@ func startControllerHeartbeat(
 		registryKV,
 		hostname,
 		"0.1.0",
-			"controller",
+		"controller",
 		process.New(),
 		10*time.Second,
 		process.ConditionThresholds{

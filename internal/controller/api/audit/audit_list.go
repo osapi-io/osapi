@@ -26,8 +26,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
 	auditstore "github.com/retr0h/osapi/internal/audit"
+	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
 	"github.com/retr0h/osapi/internal/validation"
 )
 

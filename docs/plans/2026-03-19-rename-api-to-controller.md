@@ -1,8 +1,8 @@
 # Rename API Server to Controller Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development
-> (if subagents available) or superpowers:executing-plans to implement this plan.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> (if subagents available) or superpowers:executing-plans to implement this
+> plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rename the "API server" to "controller" across config, CLI, code
 structure, and docs to reflect its role as the control plane process.
@@ -22,6 +22,7 @@ Update all config from `api.*` to `controller.*`.
 ### Task 1: Update config types
 
 **Files:**
+
 - Modify: `internal/config/types.go`
 
 - [ ] **Step 1: Replace API struct with Controller**
@@ -58,8 +59,8 @@ Remove the old `API` and `Server` structs. Keep `Client`, `ClientSecurity`,
 
 - [ ] **Step 2: Verify it compiles (it won't — many references to fix)**
 
-Run: `go build ./internal/config/...`
-Expected: PASS (the config package itself should compile)
+Run: `go build ./internal/config/...` Expected: PASS (the config package itself
+should compile)
 
 - [ ] **Step 3: Commit**
 
@@ -72,6 +73,7 @@ refactor(config): rename API struct to Controller
 ### Task 2: Update config YAML files
 
 **Files:**
+
 - Modify: `osapi.yaml`
 - Modify: `test/integration/osapi.yaml`
 
@@ -122,7 +124,7 @@ controller:
     host: localhost
     port: 4222
     client_name: osapi-api-integration
-    namespace: ""
+    namespace: ''
     auth:
       type: none
 ```
@@ -140,9 +142,11 @@ refactor(config): rename api to controller in YAML files
 ### Task 3: Move internal/api/ to internal/controller/api/
 
 **Files:**
+
 - Move: `internal/api/` → `internal/controller/api/`
 - Move: `internal/api/heartbeat.go` → `internal/controller/heartbeat.go`
-- Move: `internal/api/heartbeat_test.go` → `internal/controller/heartbeat_test.go`
+- Move: `internal/api/heartbeat_test.go` →
+  `internal/controller/heartbeat_test.go`
 
 - [ ] **Step 1: Create directory and move files**
 
@@ -156,6 +160,7 @@ git mv internal/controller/api/heartbeat_test.go internal/controller/heartbeat_t
 - [ ] **Step 2: Update package declaration in heartbeat files**
 
 Change `package api` to `package controller` in:
+
 - `internal/controller/heartbeat.go`
 - `internal/controller/heartbeat_test.go`
 
@@ -165,10 +170,14 @@ needed.
 - [ ] **Step 3: Update all import paths project-wide**
 
 Find and replace all occurrences:
-- `"github.com/retr0h/osapi/internal/api"` → `"github.com/retr0h/osapi/internal/controller/api"`
-- `"github.com/retr0h/osapi/internal/api/` → `"github.com/retr0h/osapi/internal/controller/api/`
+
+- `"github.com/retr0h/osapi/internal/api"` →
+  `"github.com/retr0h/osapi/internal/controller/api"`
+- `"github.com/retr0h/osapi/internal/api/` →
+  `"github.com/retr0h/osapi/internal/controller/api/`
 
 Files that import `internal/api`:
+
 - `cmd/api_server_setup.go` (will become `cmd/controller_setup.go` in Task 5)
 - `cmd/nats_heartbeat.go`
 - `cmd/start.go`
@@ -191,6 +200,7 @@ refactor: move internal/api to internal/controller/api
 ### Task 4: Move internal/notify/ to internal/controller/notify/
 
 **Files:**
+
 - Move: `internal/notify/` → `internal/controller/notify/`
 
 - [ ] **Step 1: Move directory**
@@ -202,9 +212,12 @@ git mv internal/notify internal/controller/notify
 - [ ] **Step 2: Update all import paths**
 
 Find and replace:
-- `"github.com/retr0h/osapi/internal/notify"` → `"github.com/retr0h/osapi/internal/controller/notify"`
+
+- `"github.com/retr0h/osapi/internal/notify"` →
+  `"github.com/retr0h/osapi/internal/controller/notify"`
 
 Files that import `internal/notify`:
+
 - `cmd/api_server_setup.go` (will become `cmd/controller_setup.go`)
 
 - [ ] **Step 3: Verify compilation**
@@ -224,6 +237,7 @@ refactor: move internal/notify to internal/controller/notify
 ### Task 5: Create controller.go
 
 **Files:**
+
 - Create: `internal/controller/controller.go`
 
 - [ ] **Step 1: Create the Controller struct**
@@ -241,8 +255,8 @@ type Controller struct {
 ```
 
 For now this is a thin wrapper. The existing setup logic in
-`cmd/api_server_setup.go` already manages the lifecycle. The controller
-struct provides a home for future sub-component ownership.
+`cmd/api_server_setup.go` already manages the lifecycle. The controller struct
+provides a home for future sub-component ownership.
 
 - [ ] **Step 2: Commit**
 
@@ -255,6 +269,7 @@ feat: add internal/controller/controller.go
 ### Task 6: Rename CMD files
 
 **Files:**
+
 - Remove: `cmd/api_server.go`
 - Remove: `cmd/api_server_start.go`
 - Remove: `cmd/api_server_setup.go`
@@ -273,6 +288,7 @@ git mv cmd/api_server_setup.go cmd/controller_setup.go
 - [ ] **Step 2: Update cmd/controller.go**
 
 Rename `apiServerCmd` to `controllerCmd`. Change:
+
 - `Use: "server"` → `Use: "start"`
 - Parent command: registered under `rootCmd` not `apiCmd`
 - Remove the `apiCmd` parent entirely
@@ -280,9 +296,9 @@ Rename `apiServerCmd` to `controllerCmd`. Change:
 - Update log messages from "api server" to "controller"
 
 The command becomes `osapi controller start` (two levels: controller → start).
-Actually per the spec it's just `osapi controller start` where `controller`
-is the parent and `start` is the subcommand. Keep the parent for future
-subcommands (e.g., `controller status`).
+Actually per the spec it's just `osapi controller start` where `controller` is
+the parent and `start` is the subcommand. Keep the parent for future subcommands
+(e.g., `controller status`).
 
 - [ ] **Step 3: Update cmd/controller_start.go**
 
@@ -306,6 +322,7 @@ subcommands (e.g., `controller status`).
   - `appConfig.API.Server.Security.Roles` →
     `appConfig.Controller.API.Security.Roles`
 - Update import paths:
+
   - `internal/api` → `internal/controller/api`
   - `internal/notify` → `internal/controller/notify`
 
@@ -324,6 +341,7 @@ refactor: rename api server cmd to controller
 ### Task 7: Update cmd/start.go
 
 **Files:**
+
 - Modify: `cmd/start.go`
 
 - [ ] **Step 1: Update references**
@@ -349,6 +367,7 @@ refactor: update start.go for controller rename
 ### Task 8: Update client and token commands
 
 **Files:**
+
 - Modify: `cmd/client.go`
 - Modify: `cmd/token_generate.go`
 - Modify: `cmd/token_validate.go`
@@ -390,6 +409,7 @@ refactor: update client and token commands for controller config
 ### Task 9: Update integration tests
 
 **Files:**
+
 - Modify: `test/integration/integration_test.go`
 - Modify: `test/integration/osapi.yaml` (already done in Task 2)
 
@@ -445,6 +465,7 @@ refactor: update integration tests for controller config
 ### Task 10: Update CLAUDE.md
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 
 - [ ] **Step 1: Update architecture section**
@@ -467,6 +488,7 @@ docs: update CLAUDE.md for controller rename
 ### Task 11: Update Docusaurus docs
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Modify: `docs/docs/sidebar/architecture/architecture.md`
 - Modify: `docs/docs/sidebar/architecture/system-architecture.md`
@@ -478,6 +500,7 @@ docs: update CLAUDE.md for controller rename
 - [ ] **Step 1: Update configuration.md**
 
 Replace all `api.*` config keys with `controller.*` in:
+
 - YAML examples
 - Environment variable table
 - Section reference tables
@@ -568,30 +591,30 @@ just docs::build
 
 ## Files Modified Summary
 
-| File | Change |
-|---|---|
-| `internal/config/types.go` | `API` → `Controller`, `Server` → `APIServer` |
-| `osapi.yaml` | `api:` → `controller:` |
-| `test/integration/osapi.yaml` | `api:` → `controller:` |
-| `internal/api/` → `internal/controller/api/` | Directory move |
-| `internal/notify/` → `internal/controller/notify/` | Directory move |
-| `internal/controller/heartbeat.go` | Moved from `internal/api/`, package rename |
-| `internal/controller/heartbeat_test.go` | Moved from `internal/api/`, package rename |
-| `internal/controller/controller.go` | New file |
-| `cmd/api_server.go` → `cmd/controller.go` | Rename + update |
-| `cmd/api_server_start.go` → `cmd/controller_start.go` | Rename + update |
-| `cmd/api_server_setup.go` → `cmd/controller_setup.go` | Rename + update |
-| `cmd/start.go` | Config path updates |
-| `cmd/client.go` | Config path + viper binding updates |
-| `cmd/token_generate.go` | Config path updates |
-| `cmd/token_validate.go` | Config path updates |
-| `cmd/nats_heartbeat.go` | Import path update |
-| `test/integration/integration_test.go` | Env var updates |
-| `CLAUDE.md` | Architecture references |
-| `docs/docs/sidebar/usage/configuration.md` | Full config reference |
-| `docs/docs/sidebar/architecture/architecture.md` | Process descriptions |
-| `docs/docs/sidebar/architecture/system-architecture.md` | Package layout |
-| `docs/docs/sidebar/development/development.md` | Quick reference |
-| `docs/docs/sidebar/features/health-checks.md` | References |
-| `docs/docs/sidebar/features/notifications.md` | References |
-| `docs/docs/sidebar/intro.md` | Startup commands |
+| File                                                    | Change                                       |
+| ------------------------------------------------------- | -------------------------------------------- |
+| `internal/config/types.go`                              | `API` → `Controller`, `Server` → `APIServer` |
+| `osapi.yaml`                                            | `api:` → `controller:`                       |
+| `test/integration/osapi.yaml`                           | `api:` → `controller:`                       |
+| `internal/api/` → `internal/controller/api/`            | Directory move                               |
+| `internal/notify/` → `internal/controller/notify/`      | Directory move                               |
+| `internal/controller/heartbeat.go`                      | Moved from `internal/api/`, package rename   |
+| `internal/controller/heartbeat_test.go`                 | Moved from `internal/api/`, package rename   |
+| `internal/controller/controller.go`                     | New file                                     |
+| `cmd/api_server.go` → `cmd/controller.go`               | Rename + update                              |
+| `cmd/api_server_start.go` → `cmd/controller_start.go`   | Rename + update                              |
+| `cmd/api_server_setup.go` → `cmd/controller_setup.go`   | Rename + update                              |
+| `cmd/start.go`                                          | Config path updates                          |
+| `cmd/client.go`                                         | Config path + viper binding updates          |
+| `cmd/token_generate.go`                                 | Config path updates                          |
+| `cmd/token_validate.go`                                 | Config path updates                          |
+| `cmd/nats_heartbeat.go`                                 | Import path update                           |
+| `test/integration/integration_test.go`                  | Env var updates                              |
+| `CLAUDE.md`                                             | Architecture references                      |
+| `docs/docs/sidebar/usage/configuration.md`              | Full config reference                        |
+| `docs/docs/sidebar/architecture/architecture.md`        | Process descriptions                         |
+| `docs/docs/sidebar/architecture/system-architecture.md` | Package layout                               |
+| `docs/docs/sidebar/development/development.md`          | Quick reference                              |
+| `docs/docs/sidebar/features/health-checks.md`           | References                                   |
+| `docs/docs/sidebar/features/notifications.md`           | References                                   |
+| `docs/docs/sidebar/intro.md`                            | Startup commands                             |

@@ -24,8 +24,8 @@ import (
 	"context"
 	"log/slog"
 
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
 	auditstore "github.com/retr0h/osapi/internal/audit"
+	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
 )
 
 // fakeStore is a simple in-memory audit store for handler tests.

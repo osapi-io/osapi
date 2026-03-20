@@ -30,9 +30,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/controller/api/metrics"
-	"github.com/retr0h/osapi/internal/config"
 )
 
 type MetricsGetPublicTestSuite struct {

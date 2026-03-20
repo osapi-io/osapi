@@ -28,8 +28,8 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/controller/api/common/gen"
 	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/controller/api/common/gen"
 )
 
 // Context key constants for injecting user identity into handlers.

@@ -26,14 +26,14 @@ uppercased:
 | Config Key                                       | Environment Variable                                   |
 | ------------------------------------------------ | ------------------------------------------------------ |
 | `debug`                                          | `OSAPI_DEBUG`                                          |
-| `controller.api.port`                                | `OSAPI_CONTROLLER_API_PORT`                                |
-| `controller.api.nats.host`                           | `OSAPI_CONTROLLER_API_NATS_HOST`                           |
-| `controller.api.nats.port`                           | `OSAPI_CONTROLLER_API_NATS_PORT`                           |
-| `controller.api.nats.client_name`                    | `OSAPI_CONTROLLER_API_NATS_CLIENT_NAME`                    |
-| `controller.api.nats.namespace`                      | `OSAPI_CONTROLLER_API_NATS_NAMESPACE`                      |
-| `controller.api.nats.auth.type`                      | `OSAPI_CONTROLLER_API_NATS_AUTH_TYPE`                      |
-| `controller.api.security.signing_key`                | `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY`                |
-| `controller.client.security.bearer_token`               | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`               |
+| `controller.api.port`                            | `OSAPI_CONTROLLER_API_PORT`                            |
+| `controller.api.nats.host`                       | `OSAPI_CONTROLLER_API_NATS_HOST`                       |
+| `controller.api.nats.port`                       | `OSAPI_CONTROLLER_API_NATS_PORT`                       |
+| `controller.api.nats.client_name`                | `OSAPI_CONTROLLER_API_NATS_CLIENT_NAME`                |
+| `controller.api.nats.namespace`                  | `OSAPI_CONTROLLER_API_NATS_NAMESPACE`                  |
+| `controller.api.nats.auth.type`                  | `OSAPI_CONTROLLER_API_NATS_AUTH_TYPE`                  |
+| `controller.api.security.signing_key`            | `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY`            |
+| `controller.client.security.bearer_token`        | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`        |
 | `nats.server.host`                               | `OSAPI_NATS_SERVER_HOST`                               |
 | `nats.server.port`                               | `OSAPI_NATS_SERVER_PORT`                               |
 | `nats.server.namespace`                          | `OSAPI_NATS_SERVER_NAMESPACE`                          |
@@ -91,9 +91,9 @@ Environment variables take precedence over file values.
 Two fields carry a `required` validation tag and must be set before the server
 or client will start:
 
-| Key                                | Purpose                       |
-| ---------------------------------- | ----------------------------- |
-| `controller.api.security.signing_key`  | HS256 key for signing JWTs    |
+| Key                                       | Purpose                       |
+| ----------------------------------------- | ----------------------------- |
+| `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
 | `controller.client.security.bearer_token` | JWT sent with client requests |
 
 Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
@@ -154,9 +154,9 @@ of permissions:
 
 ### Custom Roles
 
-You can define custom roles in the `controller.api.security.roles` section. Custom
-roles override the default permission mapping for the same name, or define
-entirely new role names:
+You can define custom roles in the `controller.api.security.roles` section.
+Custom roles override the default permission mapping for the same name, or
+define entirely new role names:
 
 ```yaml
 controller:
@@ -198,8 +198,8 @@ NATS cluster without collisions.
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
 Set the same namespace value in `nats.server.namespace`,
-`controller.api.nats.namespace`, and `agent.nats.namespace` so all components agree
-on naming. An empty string disables prefixing.
+`controller.api.nats.namespace`, and `agent.nats.namespace` so all components
+agree on naming. An empty string disables prefixing.
 
 ## Full Reference
 

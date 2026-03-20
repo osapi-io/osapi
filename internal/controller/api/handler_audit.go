@@ -24,10 +24,10 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	audithandler "github.com/retr0h/osapi/internal/controller/api/audit"
-	auditGen "github.com/retr0h/osapi/internal/controller/api/audit/gen"
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/authtoken"
+	audithandler "github.com/retr0h/osapi/internal/controller/api/audit"
+	auditGen "github.com/retr0h/osapi/internal/controller/api/audit/gen"
 )
 
 // GetAuditHandler returns audit handler for registration.

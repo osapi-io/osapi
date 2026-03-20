@@ -38,7 +38,11 @@ var controllerStartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		shutdownTracer, err := telemetry.InitTracer(ctx, "osapi-controller", appConfig.Telemetry.Tracing)
+		shutdownTracer, err := telemetry.InitTracer(
+			ctx,
+			"osapi-controller",
+			appConfig.Telemetry.Tracing,
+		)
 		if err != nil {
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}

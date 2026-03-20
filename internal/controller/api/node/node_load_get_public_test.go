@@ -33,11 +33,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/config"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/validation"

@@ -17,7 +17,7 @@ The system is organized into six layers, top to bottom:
 | -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
 | **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                     |
-| **REST API**               | `internal/controller/api/`                         | Echo server with JWT middleware                                                          |
+| **REST API**               | `internal/controller/api/`              | Echo server with JWT middleware                                                          |
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
 | **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
@@ -66,14 +66,14 @@ The controller is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                | Responsibility                                                                      |
-| ---------------------- | ----------------------------------------------------------------------------------- |
+| Package                           | Responsibility                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
 | `internal/controller/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
 | `internal/controller/api/docker/` | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
 | `internal/controller/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                              |
 | `internal/controller/api/health/` | Health check endpoints (liveness, readiness, status)                                |
 | `internal/controller/api/common/` | Shared middleware, error handling, collection responses                             |
-| (metrics)              | Prometheus endpoint (`/metrics`) via OpenTelemetry                                  |
+| (metrics)                         | Prometheus endpoint (`/metrics`) via OpenTelemetry                                  |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection

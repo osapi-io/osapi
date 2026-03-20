@@ -32,11 +32,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
+	auditstore "github.com/retr0h/osapi/internal/audit"
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	fileMocks "github.com/retr0h/osapi/internal/controller/api/file/mocks"
 	"github.com/retr0h/osapi/internal/controller/api/health"
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
 

@@ -34,12 +34,12 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/controller/api"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
-	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/api"
+	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
+	"github.com/retr0h/osapi/internal/controller/api/audit/gen"
 )
 
 type AuditGetPublicTestSuite struct {

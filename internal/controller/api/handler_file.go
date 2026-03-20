@@ -24,9 +24,9 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/controller/api/file"
 	fileGen "github.com/retr0h/osapi/internal/controller/api/file/gen"
-	"github.com/retr0h/osapi/internal/authtoken"
 )
 
 // GetFileHandler returns file handler for registration.

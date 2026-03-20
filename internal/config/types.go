@@ -230,7 +230,7 @@ type NATSConnection struct {
 // Controller holds the control plane configuration.
 type Controller struct {
 	Client Client         `mapstructure:"client"`
-	API    APIServer      `mapstructure:"api"          mask:"struct"`
+	API    APIServer      `mapstructure:"api"    mask:"struct"`
 	NATS   NATSConnection `mapstructure:"nats"`
 }
 
