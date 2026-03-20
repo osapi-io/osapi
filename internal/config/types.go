@@ -23,7 +23,7 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	API           API                 `mapstructure:"api"                     mask:"struct"`
+	Controller    Controller          `mapstructure:"controller"              mask:"struct"`
 	Agent         AgentConfig         `mapstructure:"agent,omitempty"`
 	NATS          NATS                `mapstructure:"nats"`
 	Telemetry     Telemetry           `mapstructure:"telemetry"`
@@ -227,10 +227,19 @@ type NATSConnection struct {
 	Auth NATSAuth `mapstructure:"auth,omitempty"`
 }
 
-// API configuration settings.
-type API struct {
-	Client
-	Server `mask:"struct"`
+// Controller holds the control plane configuration.
+type Controller struct {
+	Client Client         `mapstructure:"client"`
+	API    APIServer      `mapstructure:"api"          mask:"struct"`
+	NATS   NATSConnection `mapstructure:"nats"`
+}
+
+// APIServer holds the HTTP server config (port + security).
+type APIServer struct {
+	// Port the server will bind to.
+	Port int `mapstructure:"port"`
+	// Security contains security-related configuration for the server, such as CORS and tokens.
+	Security ServerSecurity `mapstructure:"security" mask:"struct"`
 }
 
 // Client configuration settings.
@@ -239,16 +248,6 @@ type Client struct {
 	URL string `mapstructure:"url"`
 	// Security contains security-related configuration for the client, such as access tokens.
 	Security ClientSecurity `mapstructure:"security" mask:"struct"`
-}
-
-// Server configuration settings.
-type Server struct {
-	// Port the server will bind to.
-	Port int `mapstructure:"port"`
-	// NATS connection settings for the API server.
-	NATS NATSConnection `mapstructure:"nats"`
-	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security" mask:"struct"`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
