@@ -506,7 +506,7 @@ func newMetricsProvider(
 						entry.CPUPercent = reg.Process.CPUPercent
 						entry.MemBytes = reg.Process.RSSBytes
 					}
-				case "api", "nats":
+				case "controller", "nats":
 					var reg job.ComponentRegistration
 					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
 						continue
@@ -662,7 +662,7 @@ func startControllerHeartbeat(
 		registryKV,
 		hostname,
 		"0.1.0",
-		"api",
+			"controller",
 		process.New(),
 		10*time.Second,
 		process.ConditionThresholds{

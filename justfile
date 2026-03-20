@@ -35,7 +35,7 @@ test: linux-tune
 
 # Generate code
 generate:
-    redocly join --prefix-tags-with-info-prop title -o internal/api/gen/api.yaml internal/api/*/gen/api.yaml
+    redocly join --prefix-tags-with-info-prop title -o internal/controller/api/gen/api.yaml internal/controller/api/*/gen/api.yaml
     just go::generate
     just docs::generate
 

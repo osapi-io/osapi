@@ -28,10 +28,16 @@ section in `osapi.yaml`.
 
 ### Controller
 
-An HTTP server that exposes a REST API. It handles authentication (JWT),
-validates requests, and translates them into jobs that get published to NATS.
-The controller never executes system commands directly — it creates a job and
-returns a job ID. Clients poll for results.
+The control plane process. It runs several sub-components:
+
+- **REST API** — an HTTP server that handles authentication (JWT), validates
+  requests, and translates them into jobs published to NATS. The controller
+  never executes system commands directly — it creates a job and returns a
+  job ID. Clients poll for results.
+- **Component heartbeat** — registers the controller in the agent registry so
+  `health status` can report its state.
+- **Condition watcher** — monitors the registry KV for condition transitions
+  and dispatches notifications.
 
 Start it with `osapi controller start`.
 
