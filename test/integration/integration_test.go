@@ -155,17 +155,17 @@ func serverEnv() []string {
 	return append(os.Environ(),
 		fmt.Sprintf("OSAPI_NATS_SERVER_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_NATS_SERVER_STORE_DIR=%s", storeDir),
-		fmt.Sprintf("OSAPI_API_SERVER_PORT=%d", apiPort),
-		fmt.Sprintf("OSAPI_API_SERVER_NATS_PORT=%d", natsPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_API_PORT=%d", apiPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_AGENT_NATS_PORT=%d", natsPort),
-		fmt.Sprintf("OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
+		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
 	)
 }
 
 func clientEnv() []string {
 	return append(os.Environ(),
-		fmt.Sprintf("OSAPI_API_CLIENT_URL=http://127.0.0.1:%d", apiPort),
-		fmt.Sprintf("OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
+		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=http://127.0.0.1:%d", apiPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
 	)
 }
 
