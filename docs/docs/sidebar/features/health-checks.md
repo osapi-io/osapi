@@ -5,9 +5,9 @@ sidebar_position: 5
 # Health Checks
 
 OSAPI exposes health endpoints for load balancers, monitoring systems, and
-operational tooling. These endpoints report whether the API server is alive,
+operational tooling. These endpoints report whether the controller is alive,
 ready to serve traffic, and the status of its dependencies. All three runtime
-components (API server, agent, NATS server) participate in a shared component
+components (controller, agent, NATS server) participate in a shared component
 registry so operators can see the health of the entire deployment from a single
 endpoint.
 
@@ -26,7 +26,7 @@ orchestrators (e.g., Kubernetes liveness probes) to detect hung processes.
 
 ### Readiness (`/health/ready`)
 
-Checks connectivity to NATS and KV stores. Returns `200 OK` when the API server
+Checks connectivity to NATS and KV stores. Returns `200 OK` when the controller
 can process requests, or `503 Service Unavailable` when dependencies are down.
 Use this for load balancer health checks to avoid routing traffic to an unready
 instance.

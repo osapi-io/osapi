@@ -32,8 +32,8 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 
 ## Architecture (Quick Reference)
 
-- **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `api server`, `nats server`)
-- **`internal/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/api/gen/api.yaml`
+- **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `controller.api`, `nats server`)
+- **`internal/controller/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `process/` (process metrics)
@@ -50,7 +50,7 @@ domain as a reference. Read the existing files before creating new ones.
 
 ### Step 1: OpenAPI Spec + Code Generation
 
-Create `internal/api/{domain}/gen/` with three hand-written files:
+Create `internal/controller/api/{domain}/gen/` with three hand-written files:
 
 - `api.yaml` — OpenAPI spec with paths, schemas, and `BearerAuth` security
 - `cfg.yaml` — oapi-codegen config (`strict-server: true`, import-mapping
@@ -133,7 +133,7 @@ input must be validated, and the spec must declare how:
 
 ### Step 2: Handler Implementation
 
-Create `internal/api/{domain}/`:
+Create `internal/controller/api/{domain}/`:
 
 - `types.go` — domain struct, dependency interfaces (e.g., `Checker`)
 - `{domain}.go` — `New()` factory, compile-time interface check:
@@ -150,10 +150,10 @@ Create `internal/api/{domain}/`:
     wrong permissions (403), valid token (200). Uses `api.New()` +
     `server.GetXxxHandler()` + `server.RegisterHandlers()` to wire
     through `scopeMiddleware`.
-  See existing examples in `internal/api/job/` and
-  `internal/api/audit/`.
+  See existing examples in `internal/controller/api/job/` and
+  `internal/controller/api/audit/`.
 
-### Step 3: Server Wiring (4 files in `internal/api/`)
+### Step 3: Server Wiring (4 files in `internal/controller/api/`)
 
 - `handler_{domain}.go` — `Get{Domain}Handler()` method that wraps the
   handler with `NewStrictHandler` + `scopeMiddleware`. Define
@@ -167,21 +167,21 @@ Create `internal/api/{domain}/`:
 
 ### Step 4: Startup Wiring
 
-- `cmd/api_server_start.go` — initialize the handler with real
+- `cmd/controller_start.go` — initialize the handler with real
   dependencies and pass `api.With{Domain}Handler(h)` to `api.New()`
 
 ### Step 5: Update SDK
 
 The SDK client library lives in `pkg/sdk/client/`. Its generated HTTP client
 uses the same combined OpenAPI spec as the server
-(`internal/api/gen/api.yaml`). Follow the rules in
+(`internal/controller/api/gen/api.yaml`). Follow the rules in
 @docs/docs/sidebar/sdk/guidelines.md — especially: never expose `gen`
 types in public method signatures, add JSON tags to all result types,
 and wrap errors with context.
 
 **When modifying existing API specs:**
 
-1. Make changes to `internal/api/{domain}/gen/api.yaml` in this repo
+1. Make changes to `internal/controller/api/{domain}/gen/api.yaml` in this repo
 2. Run `just generate` to regenerate server code (this also regenerates the
    combined spec via `redocly join`)
 3. Run `go generate ./pkg/sdk/client/gen/...` to regenerate the SDK client

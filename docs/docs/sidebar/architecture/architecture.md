@@ -9,7 +9,7 @@ OSAPI turns Linux servers into managed appliances. You install a single binary,
 point it at a config file, and get a REST API and CLI for querying and changing
 system configuration — hostname, DNS, disk usage, memory, load averages, and
 more. State-changing operations run asynchronously through a job queue so the
-API server itself never needs root privileges.
+controller itself never needs root privileges.
 
 ## The Three Processes
 
@@ -19,21 +19,21 @@ spread across many.
 ### NATS Server
 
 A lightweight message broker that stores job state and routes messages between
-the API server and agents. OSAPI embeds a NATS server with JetStream enabled, so
+the controller and agents. OSAPI embeds a NATS server with JetStream enabled, so
 you don't need to install anything extra — just run `osapi nats server start`.
 
 For production deployments with multiple hosts, you can point everything at an
 external NATS cluster instead of the embedded one. Just change the `nats.server`
 section in `osapi.yaml`.
 
-### API Server
+### Controller
 
 An HTTP server that exposes a REST API. It handles authentication (JWT),
 validates requests, and translates them into jobs that get published to NATS.
-The API server never executes system commands directly — it creates a job and
+The controller never executes system commands directly — it creates a job and
 returns a job ID. Clients poll for results.
 
-Start it with `osapi api server start`.
+Start it with `osapi controller start`.
 
 ### Agent
 
@@ -54,7 +54,7 @@ The simplest setup. All three processes run on the same machine:
 graph TD
     subgraph host["Linux Host"]
         CLI["CLI"]
-        API["API Server"]
+        API["Controller"]
         Agent["Agent"]
         NATS["NATS (embedded)"]
 
@@ -73,7 +73,7 @@ approach for single-host deployments:
 osapi start
 ```
 
-The CLI on the same host talks to the API server over localhost. This is useful
+The CLI on the same host talks to the controller over localhost. This is useful
 for managing a single appliance or for development.
 
 ### Multi-Host
@@ -85,7 +85,7 @@ the job routing system delivers work to the right place.
 ```mermaid
 graph TD
     CLI["CLI"]
-    API["API Server"]
+    API["Controller"]
     NATS["NATS (shared)"]
     W1["Agent (web-01)"]
     W2["Agent (web-02)"]
@@ -113,7 +113,7 @@ When you run a command like `osapi client node hostname`:
 ```mermaid
 sequenceDiagram
     participant CLI
-    participant API as API Server
+    participant API as Controller
     participant NATS
     participant Agent
 
@@ -128,7 +128,7 @@ sequenceDiagram
     API-->>CLI: 200 (result + job_id)
 ```
 
-The API server never touches the operating system directly. It's a thin
+The controller never touches the operating system directly. It's a thin
 coordination layer between clients and agents.
 
 ## Further Reading

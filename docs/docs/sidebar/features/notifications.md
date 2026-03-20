@@ -6,8 +6,8 @@ condition transitions and dispatches events through a pluggable backend.
 
 ## How It Works
 
-Every component (agent, API server, NATS server) evaluates conditions on each
-heartbeat and writes them to the registry KV bucket. A watcher on the API server
+Every component (agent, controller, NATS server) evaluates conditions on each
+heartbeat and writes them to the registry KV bucket. A watcher on the controller
 detects transitions:
 
 - **Fired**: a condition becomes active (e.g., `DiskPressure` crosses threshold)
@@ -91,7 +91,7 @@ See [Configuration](../usage/configuration.md) for the full reference.
 
 ## Architecture
 
-The watcher runs as a background goroutine in the API server. It monitors the
+The watcher runs as a background goroutine in the controller. It monitors the
 registry KV bucket using NATS KV Watch. On each update it compares the previous
 condition set to the current one and emits `ConditionEvent`s for transitions.
 

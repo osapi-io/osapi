@@ -63,7 +63,7 @@ Or start each component separately:
 
 ```bash
 osapi nats server start &
-osapi api server start &
+osapi controller start &
 osapi agent start &
 ```
 

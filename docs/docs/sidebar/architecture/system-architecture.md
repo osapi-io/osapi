@@ -17,7 +17,7 @@ The system is organized into six layers, top to bottom:
 | -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **CLI**                    | `cmd/`                                  | Cobra command tree (thin wiring)                                                         |
 | **SDK Client**             | `pkg/sdk/osapi`                         | OpenAPI-generated client used by CLI                                                     |
-| **REST API**               | `internal/api/`                         | Echo server with JWT middleware                                                          |
+| **REST API**               | `internal/controller/api/`                         | Echo server with JWT middleware                                                          |
 | **Job Client**             | `internal/job/client/`                  | Business logic for job CRUD and status                                                   |
 | **NATS JetStream**         | (external)                              | KV `job-queue`, Stream `JOBS`, KV `job-responses`, KV `agent-registry`                   |
 | **Agent / Provider Layer** | `internal/agent/`, `internal/provider/` | Consumes jobs, executes providers, evaluates conditions, drain lifecycle, heartbeat      |
@@ -26,7 +26,7 @@ The system is organized into six layers, top to bottom:
 ```mermaid
 graph TD
     CLI["CLI (cmd/)"] --> SDK["SDK Client (pkg/sdk/osapi)"]
-    SDK --> API["REST API (internal/api/)"]
+    SDK --> API["REST API (internal/controller/api/)"]
     API --> JobClient["Job Client (internal/job/client/)"]
     JobClient --> NATS["NATS JetStream"]
     NATS --> Agent["Agent (internal/agent/)"]
@@ -42,7 +42,7 @@ execute the matching provider, and write results back to KV.
 
 The `osapi` binary exposes four top-level command groups:
 
-- **`osapi api server start`** — starts the REST API server (Echo + JWT
+- **`osapi controller start`** — starts the REST controller (Echo + JWT
   middleware)
 - **`osapi agent start`** — starts an agent that subscribes to NATS subjects and
   processes operations
@@ -60,19 +60,19 @@ The CLI is a [Cobra][] command tree. Each file maps to a single command (e.g.,
 wiring: it parses flags, reads config via Viper, and delegates to the
 appropriate internal package.
 
-### REST API (`internal/api/`)
+### REST API (`internal/controller/api/`)
 
-The API server is built on [Echo][] with handlers generated from an OpenAPI spec
+The controller is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
 | Package                | Responsibility                                                                      |
 | ---------------------- | ----------------------------------------------------------------------------------- |
-| `internal/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
-| `internal/api/docker/` | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
-| `internal/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                              |
-| `internal/api/health/` | Health check endpoints (liveness, readiness, status)                                |
-| `internal/api/common/` | Shared middleware, error handling, collection responses                             |
+| `internal/controller/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
+| `internal/controller/api/docker/` | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
+| `internal/controller/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                              |
+| `internal/controller/api/health/` | Health check endpoints (liveness, readiness, status)                                |
+| `internal/controller/api/common/` | Shared middleware, error handling, collection responses                             |
 | (metrics)              | Prometheus endpoint (`/metrics`) via OpenTelemetry                                  |
 
 All state-changing operations are dispatched as jobs through the job client
@@ -119,7 +119,7 @@ provider interface and registering it in the agent's processor dispatch.
 
 ### Agent Lifecycle (`internal/agent/`)
 
-All three runtime components — the API server, NATS server, and each agent —
+All three runtime components — the controller, NATS server, and each agent —
 heartbeat into a shared registry KV bucket (`agent-registry`) at regular
 intervals. Each heartbeat record includes process metrics (CPU percent, RSS
 bytes, goroutine count) collected by `internal/provider/process`. This gives
@@ -189,9 +189,9 @@ agent:
     group: 'web.dev'
 ```
 
-## Health Checks (`internal/api/health/`)
+## Health Checks (`internal/controller/api/health/`)
 
-The API server exposes three health check endpoints following the Kubernetes
+The controller exposes three health check endpoints following the Kubernetes
 liveness/readiness probe pattern. These endpoints live outside the `/api/v1/`
 prefix at `/health` because they serve infrastructure concerns rather than
 business operations.
