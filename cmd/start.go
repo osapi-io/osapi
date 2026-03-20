@@ -59,10 +59,10 @@ func (c *compositeLifecycle) Stop(ctx context.Context) {
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start all components (NATS, API server, agent)",
-	Long: `Start the embedded NATS server, API server, and agent in a single process.
+	Long: `Start the embedded NATS server, controller, and agent in a single process.
 
 This is the recommended way to run OSAPI on a single host. All three components
-start in order (NATS → API → agent) and shut down gracefully on SIGINT/SIGTERM.
+start in order (NATS → controller → agent) and shut down gracefully on SIGINT/SIGTERM.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
@@ -89,12 +89,12 @@ start in order (NATS → API → agent) and shut down gracefully on SIGINT/SIGTE
 
 		natsLog := logger.With("component", "nats")
 		natsServer := setupNATSServer(ctx, natsLog)
-		sm, apiBundle := setupAPIServer(
-			ctx, logger.With("component", "api"),
-			appConfig.API.NATS, metricsHandler, metricsPath,
+		sm, controllerBundle := setupController(
+			ctx, logger.With("component", "controller"),
+			appConfig.Controller.NATS, metricsHandler, metricsPath,
 		)
 
-		startNATSHeartbeatFromKV(ctx, natsLog, apiBundle.registryKV)
+		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
 
 		agentServer, agentBundle := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
@@ -113,7 +113,7 @@ start in order (NATS → API → agent) and shut down gracefully on SIGINT/SIGTE
 			_ = shutdownMeter(context.Background())
 			_ = shutdownTracer(context.Background())
 			cli.CloseNATSClient(agentBundle.nc)
-			cli.CloseNATSClient(apiBundle.nc)
+			cli.CloseNATSClient(controllerBundle.nc)
 		})
 	},
 }

@@ -48,7 +48,7 @@ var tokenGenerateCmd = &cobra.Command{
 This command allows you to customize the token properties for various use cases.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
-		signingKey := appConfig.API.Server.Security.SigningKey
+		signingKey := appConfig.Controller.API.Security.SigningKey
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 		subject, _ := cmd.Flags().GetString("subject")
 		permissions, _ := cmd.Flags().GetStringSlice("permissions")

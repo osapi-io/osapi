@@ -58,12 +58,12 @@ var clientCmd = &cobra.Command{
 			"client configuration",
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
-			slog.String("api.client.url", appConfig.API.URL),
+			slog.String("controller.client.url", appConfig.Controller.Client.URL),
 		)
 
 		sdkClient = client.New(
-			appConfig.API.URL,
-			appConfig.API.Client.Security.BearerToken,
+			appConfig.Controller.Client.URL,
+			appConfig.Controller.Client.Security.BearerToken,
 			client.WithLogger(logger),
 		)
 	},
@@ -82,5 +82,5 @@ func init() {
 	clientCmd.PersistentFlags().
 		StringP("target", "T", "_any", "Target: _any, _all, hostname, or label (group:web.dev)")
 
-	_ = viper.BindPFlag("api.client.url", clientCmd.PersistentFlags().Lookup("url"))
+	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
 }

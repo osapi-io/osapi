@@ -35,16 +35,17 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
-	"github.com/retr0h/osapi/internal/api"
-	"github.com/retr0h/osapi/internal/api/file"
-	"github.com/retr0h/osapi/internal/api/health"
+	"github.com/retr0h/osapi/internal/controller"
+	"github.com/retr0h/osapi/internal/controller/api"
+	"github.com/retr0h/osapi/internal/controller/api/file"
+	"github.com/retr0h/osapi/internal/controller/api/health"
 	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
-	"github.com/retr0h/osapi/internal/notify"
+	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -88,10 +89,10 @@ type natsBundle struct {
 	objStore   file.ObjectStoreManager
 }
 
-// setupAPIServer connects to NATS, creates the API server with all handlers,
+// setupController connects to NATS, creates the API server with all handlers,
 // and returns the server manager and NATS bundle. It is used by the standalone
 // API server start and combined start commands.
-func setupAPIServer(
+func setupController(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
@@ -135,12 +136,12 @@ func setupAPIServer(
 	)
 
 	sm := api.New(appConfig, log, serverOpts...)
-	registerAPIHandlers(
+	registerControllerHandlers(
 		sm, b.jobClient, checker, metricsProvider,
 		metricsHandler, metricsPath, auditStore, b.objStore,
 	)
 
-	startAPIHeartbeat(ctx, log, b.registryKV)
+	startControllerHeartbeat(ctx, log, b.registryKV)
 	startConditionWatcher(ctx, log, b.registryKV)
 
 	return sm, b
@@ -565,7 +566,7 @@ func createAuditStore(
 	return store, []api.Option{api.WithAuditStore(store)}
 }
 
-func registerAPIHandlers(
+func registerControllerHandlers(
 	sm ServerManager,
 	jc jobclient.JobClient,
 	checker health.Checker,
@@ -639,10 +640,10 @@ func startConditionWatcher(
 	}()
 }
 
-// startAPIHeartbeat resolves the local hostname, creates a ComponentHeartbeat
+// startControllerHeartbeat resolves the local hostname, creates a ComponentHeartbeat
 // for the API server, and starts it in a background goroutine. The heartbeat
 // deregisters when ctx is cancelled.
-func startAPIHeartbeat(
+func startControllerHeartbeat(
 	ctx context.Context,
 	log *slog.Logger,
 	registryKV jetstream.KeyValue,
@@ -650,13 +651,13 @@ func startAPIHeartbeat(
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Warn(
-			"failed to resolve hostname for API heartbeat, using 'unknown'",
+			"failed to resolve hostname for controller heartbeat, using 'unknown'",
 			slog.String("error", err.Error()),
 		)
 		hostname = "unknown"
 	}
 
-	hb := api.NewComponentHeartbeat(
+	hb := controller.NewComponentHeartbeat(
 		log,
 		registryKV,
 		hostname,

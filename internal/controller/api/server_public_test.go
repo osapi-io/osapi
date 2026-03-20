@@ -50,8 +50,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 		{
 			name: "creates server with default config",
 			appConfig: config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
 						},
@@ -62,8 +62,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 		{
 			name: "creates server with custom roles",
 			appConfig: config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
 							Roles: map[string]config.CustomRole{
@@ -79,8 +79,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 		{
 			name: "creates server with audit store option",
 			appConfig: config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
 						},
@@ -94,8 +94,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 		{
 			name: "creates server with CORS origins",
 			appConfig: config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
 							CORS: config.CORS{
@@ -158,8 +158,8 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Port: 0,
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
@@ -199,8 +199,8 @@ func (s *ServerPublicTestSuite) TestStartErrorPath() {
 			port := ln.Addr().(*net.TCPAddr).Port
 
 			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Port: port,
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
@@ -234,8 +234,8 @@ func (s *ServerPublicTestSuite) TestStopErrorPath() {
 			_ = ln.Close()
 
 			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Port: port,
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",

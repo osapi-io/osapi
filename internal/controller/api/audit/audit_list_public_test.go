@@ -349,8 +349,8 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 			}
 
 			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: rbacAuditListTestSigningKey,
 						},

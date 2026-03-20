@@ -41,13 +41,13 @@ func (s *ConfigTestSuite) TestValidateRegisterValidatorsError() {
 	}
 
 	c := &Config{
-		API: API{
+		Controller: Controller{
 			Client: Client{
 				Security: ClientSecurity{
 					BearerToken: "test-token",
 				},
 			},
-			Server: Server{
+			API: APIServer{
 				Security: ServerSecurity{
 					SigningKey: "test-key",
 				},

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,19 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package cmd provides CLI commands for OSAPI.
 package cmd
 
 import (
 	"github.com/spf13/cobra"
 )
 
-// apiCmd represents the api command.
-var apiCmd = &cobra.Command{
-	Use:   "api",
-	Short: "The api subcommand",
+// clientControllerCmd represents the controller parent command.
+var clientControllerCmd = &cobra.Command{
+	Use:   "controller",
+	Short: "Controller commands",
 }
 
 func init() {
-	rootCmd.AddCommand(apiCmd)
+	clientCmd.AddCommand(clientControllerCmd)
 }

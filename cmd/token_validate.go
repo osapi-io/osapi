@@ -47,7 +47,7 @@ var tokenValidateCmd = &cobra.Command{
 This command ensures that the token is authentic, has not expired, and conforms to the expected roles and audience.
 `,
 	Run: func(cmd *cobra.Command, _ []string) {
-		signingKey := appConfig.API.Server.Security.SigningKey
+		signingKey := appConfig.Controller.API.Security.SigningKey
 		tokenString, _ := cmd.Flags().GetString("token")
 
 		var tm TokenValidator = authtoken.New(logger)

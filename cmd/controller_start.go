@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,37 +21,49 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/telemetry"
 )
 
-// clientAPIStatusCmd shows health status for the API server.
-var clientAPIStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "API server component health",
-	Long:  `Show health status for all registered API servers.`,
+// controllerStartCmd represents the controller start command.
+var controllerStartCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start the controller",
+	Long:  `Start the control plane process (API server, heartbeat, notifications).`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		resp, err := sdkClient.Health.Status(ctx)
+		shutdownTracer, err := telemetry.InitTracer(ctx, "osapi-controller", appConfig.Telemetry.Tracing)
 		if err != nil {
-			cli.HandleError(err, logger)
-			return
+			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
-		if jsonOutput {
-			fmt.Println(string(resp.RawJSON()))
-			return
+		metricsHandler, metricsPath, shutdownMeter, err := telemetry.InitMeter(
+			appConfig.Telemetry.Metrics,
+		)
+		if err != nil {
+			cli.LogFatal(logger, "failed to initialize meter", err)
 		}
 
-		fmt.Println()
-		displayComponentTable(resp.Data.Registry, "api")
+		job.Init(appConfig.Controller.NATS.Namespace)
+
+		log := logger.With("component", "controller")
+		sm, b := setupController(ctx, log, appConfig.Controller.NATS, metricsHandler, metricsPath)
+
+		sm.Start()
+		cli.RunServer(ctx, sm, func() {
+			_ = shutdownMeter(context.Background())
+			_ = shutdownTracer(context.Background())
+			cli.CloseNATSClient(b.nc)
+		})
 	},
 }
 
 func init() {
-	clientAPICmd.AddCommand(clientAPIStatusCmd)
+	controllerCmd.AddCommand(controllerStartCmd)
 }

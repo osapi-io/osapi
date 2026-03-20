@@ -32,10 +32,12 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 )
 
-// apiServerCmd represents the apiServer command.
-var apiServerCmd = &cobra.Command{
-	Use:   "server",
-	Short: "The server subcommand",
+// controllerCmd represents the controller command.
+var controllerCmd = &cobra.Command{
+	Use:   "controller",
+	Short: "Manage the controller process",
+	Long: `Manage the control plane process. The controller runs the REST API,
+component heartbeat, and condition notification watcher.`,
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		cli.ValidateDistribution(logger)
 
@@ -51,32 +53,32 @@ var apiServerCmd = &cobra.Command{
 		}
 
 		logger.Debug(
-			"api server configuration",
+			"controller configuration",
 			slog.String("config_file", viper.ConfigFileUsed()),
 			slog.Bool("debug", appConfig.Debug),
-			slog.Int("api.server.port", appConfig.API.Port),
-			slog.String("api.server.nats.host", appConfig.API.NATS.Host),
-			slog.Int("api.server.nats.port", appConfig.API.NATS.Port),
-			slog.String("api.server.nats.client_name", appConfig.API.NATS.ClientName),
-			slog.String("api.server.nats.namespace", appConfig.API.NATS.Namespace),
-			slog.String("api.server.nats.auth.type", appConfig.API.NATS.Auth.Type),
+			slog.Int("controller.api.port", appConfig.Controller.API.Port),
+			slog.String("controller.nats.host", appConfig.Controller.NATS.Host),
+			slog.Int("controller.nats.port", appConfig.Controller.NATS.Port),
+			slog.String("controller.nats.client_name", appConfig.Controller.NATS.ClientName),
+			slog.String("controller.nats.namespace", appConfig.Controller.NATS.Namespace),
+			slog.String("controller.nats.auth.type", appConfig.Controller.NATS.Auth.Type),
 			slog.String(
-				"api.server.security.cors.allow_origins",
-				strings.Join(appConfig.API.Server.Security.CORS.AllowOrigins, ","),
+				"controller.api.security.cors.allow_origins",
+				strings.Join(appConfig.Controller.API.Security.CORS.AllowOrigins, ","),
 			),
 			slog.String(
-				"api.server.security.signing_key",
-				maskedAppConfig.API.Server.Security.SigningKey,
+				"controller.api.security.signing_key",
+				maskedAppConfig.Controller.API.Security.SigningKey,
 			),
 		)
 	},
 }
 
 func init() {
-	apiCmd.AddCommand(apiServerCmd)
+	rootCmd.AddCommand(controllerCmd)
 
-	apiServerCmd.PersistentFlags().
+	controllerCmd.PersistentFlags().
 		IntP("port", "p", 8080, "Port the server will bind to")
 
-	_ = viper.BindPFlag("api.server.port", apiServerCmd.PersistentFlags().Lookup("port"))
+	_ = viper.BindPFlag("controller.api.port", controllerCmd.PersistentFlags().Lookup("port"))
 }

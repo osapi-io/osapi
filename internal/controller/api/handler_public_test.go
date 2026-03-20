@@ -72,8 +72,8 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
 	appConfig := config.Config{
-		API: config.API{
-			Server: config.Server{
+		Controller: config.Controller{
+			API: config.APIServer{
 				Security: config.ServerSecurity{
 					SigningKey: "test-signing-key",
 				},

@@ -345,8 +345,8 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeRBACHTTP() {
 			jobMock := tc.setupJobMock()
 
 			appConfig := config.Config{
-				API: config.API{
-					Server: config.Server{
+				Controller: config.Controller{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: rbacUptimeTestSigningKey,
 						},
