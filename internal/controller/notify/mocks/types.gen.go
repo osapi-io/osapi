@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	notify "github.com/retr0h/osapi/internal/notify"
+	notify "github.com/retr0h/osapi/internal/controller/notify"
 )
 
 // MockNotifier is a mock of Notifier interface.

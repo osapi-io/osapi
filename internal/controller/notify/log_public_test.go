@@ -28,7 +28,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/notify"
+	"github.com/retr0h/osapi/internal/controller/notify"
 )
 
 type LogNotifierPublicTestSuite struct {
