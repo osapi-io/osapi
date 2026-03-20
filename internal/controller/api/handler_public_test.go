@@ -1,0 +1,450 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package api_test
+
+import (
+	"context"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/controller/api"
+	fileMocks "github.com/retr0h/osapi/internal/controller/api/file/mocks"
+	"github.com/retr0h/osapi/internal/controller/api/health"
+	auditstore "github.com/retr0h/osapi/internal/audit"
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job/mocks"
+)
+
+// fakeAuditStore implements audit.Store for handler wiring tests.
+type fakeAuditStore struct{}
+
+func (f *fakeAuditStore) Write(_ context.Context, _ auditstore.Entry) error {
+	return nil
+}
+
+func (f *fakeAuditStore) Get(_ context.Context, _ string) (*auditstore.Entry, error) {
+	return nil, nil
+}
+
+func (f *fakeAuditStore) List(_ context.Context, _ int, _ int) ([]auditstore.Entry, int, error) {
+	return nil, 0, nil
+}
+
+func (f *fakeAuditStore) ListAll(_ context.Context) ([]auditstore.Entry, error) {
+	return nil, nil
+}
+
+type HandlerPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *mocks.MockJobClient
+	server        *api.Server
+}
+
+func (s *HandlerPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+
+	appConfig := config.Config{
+		API: config.API{
+			Server: config.Server{
+				Security: config.ServerSecurity{
+					SigningKey: "test-signing-key",
+				},
+			},
+		},
+	}
+
+	s.server = api.New(appConfig, slog.Default())
+}
+
+func (s *HandlerPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *HandlerPublicTestSuite) TestGetAgentHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/agent", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetAgentHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetNodeHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetNodeHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetJobHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns job handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/job", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetJobHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns health handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes for unauthenticated",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/health", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes for authenticated",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/health/status", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			checker := &health.NATSChecker{}
+			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetMetricsHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns metrics handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers route at provided path",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+
+				s.Equal(http.StatusOK, rec.Code)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			metricsHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+			handlers := s.server.GetMetricsHandler(metricsHandler, "/metrics")
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetAuditHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns audit handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/audit", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+		{
+			name: "closure registers export route and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/audit/export", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			store := &fakeAuditStore{}
+			handlers := s.server.GetAuditHandler(store)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetFileHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/file", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+			mockObjStore := fileMocks.NewMockObjectStoreManager(ctrl)
+
+			handlers := s.server.GetFileHandler(mockObjStore)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestGetDockerHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns docker handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname/container/docker", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetDockerHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "registers handlers with Echo",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			checker := &health.NATSChecker{}
+
+			handlers := make([]func(e *echo.Echo), 0, 5)
+			handlers = append(handlers, s.server.GetAgentHandler(s.mockJobClient)...)
+			handlers = append(handlers, s.server.GetNodeHandler(s.mockJobClient)...)
+			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)
+			handlers = append(
+				handlers,
+				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)...)
+
+			routesBefore := len(s.server.Echo.Routes())
+			s.server.RegisterHandlers(handlers)
+			routesAfter := len(s.server.Echo.Routes())
+
+			s.Greater(routesAfter, routesBefore)
+		})
+	}
+}
+
+func TestHandlerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerPublicTestSuite))
+}
