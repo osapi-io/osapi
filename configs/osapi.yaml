@@ -1,23 +1,13 @@
 ---
 debug: true
 
-api:
+controller:
   client:
     url: http://0.0.0.0:8080
     security:
-      # admin
-      # bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc0MDg2NDIxNywiaWF0IjoxNzMyOTE1NDE3fQ.0YBwFSKXs2G16TACO-uDsIklPhaYNw63-q95IeNuneU
-      # read
       bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
-  server:
+  api:
     port: 8080
-    nats:
-      host: localhost
-      port: 4222
-      client_name: osapi-api
-      namespace: osapi
-      auth:
-        type: none
     security:
       # openssl rand -hex 32
       signing_key: 111fdb0cfd9788fa6af8815f856a0374bf7a0174ad62fa8b98ec07a55f68d8d8
@@ -41,6 +31,13 @@ api:
       #       - network:read
       #       - network:write
       #       - health:read
+  nats:
+    host: localhost
+    port: 4222
+    client_name: osapi-api
+    namespace: osapi
+    auth:
+      type: none
 
 nats:
   server:

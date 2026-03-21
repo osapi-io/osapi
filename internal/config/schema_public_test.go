@@ -42,13 +42,13 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 		{
 			name: "valid config",
 			config: config.Config{
-				API: config.API{
+				Controller: config.Controller{
 					Client: config.Client{
 						Security: config.ClientSecurity{
 							BearerToken: "test-bearer-token",
 						},
 					},
-					Server: config.Server{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-signing-key",
 						},
@@ -60,13 +60,13 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 		{
 			name: "missing signing key",
 			config: config.Config{
-				API: config.API{
+				Controller: config.Controller{
 					Client: config.Client{
 						Security: config.ClientSecurity{
 							BearerToken: "test-bearer-token",
 						},
 					},
-					Server: config.Server{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "",
 						},
@@ -79,13 +79,13 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 		{
 			name: "missing bearer token",
 			config: config.Config{
-				API: config.API{
+				Controller: config.Controller{
 					Client: config.Client{
 						Security: config.ClientSecurity{
 							BearerToken: "",
 						},
 					},
-					Server: config.Server{
+					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-signing-key",
 						},

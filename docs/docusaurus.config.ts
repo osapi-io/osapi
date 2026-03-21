@@ -401,7 +401,7 @@ const config: Config = {
         docsPluginId: 'classic',
         config: {
           osapi: {
-            specPath: '../internal/api/gen/api.yaml',
+            specPath: '../internal/controller/api/gen/api.yaml',
             outputDir: 'docs/gen/api',
             sidebarOptions: {
               groupPathsBy: 'tag',

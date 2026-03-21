@@ -1,0 +1,370 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package file_test
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/api"
+	apifile "github.com/retr0h/osapi/internal/controller/api/file"
+	"github.com/retr0h/osapi/internal/controller/api/file/gen"
+	"github.com/retr0h/osapi/internal/controller/api/file/mocks"
+)
+
+type FileListPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl     *gomock.Controller
+	mockObjStore *mocks.MockObjectStoreManager
+	handler      *apifile.File
+	ctx          context.Context
+	appConfig    config.Config
+	logger       *slog.Logger
+}
+
+func (s *FileListPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockObjStore = mocks.NewMockObjectStoreManager(s.mockCtrl)
+	s.handler = apifile.New(slog.Default(), s.mockObjStore)
+	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func (s *FileListPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *FileListPublicTestSuite) TestGetFiles() {
+	tests := []struct {
+		name         string
+		setupMock    func()
+		validateFunc func(resp gen.GetFilesResponseObject)
+	}{
+		{
+			name: "success with files",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return([]*jetstream.ObjectInfo{
+						{
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "nginx.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   1024,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
+						},
+						{
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "app.yaml",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"template"},
+								},
+							},
+							Size:   512,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				r, ok := resp.(gen.GetFiles200JSONResponse)
+				s.True(ok)
+				s.Equal(2, r.Total)
+				s.Len(r.Files, 2)
+				s.Equal("nginx.conf", r.Files[0].Name)
+				s.Equal(
+					"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+					r.Files[0].Sha256,
+				)
+				s.Equal(1024, r.Files[0].Size)
+				s.Equal("raw", r.Files[0].ContentType)
+				s.Equal("template", r.Files[1].ContentType)
+			},
+		},
+		{
+			name: "success with empty store",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return([]*jetstream.ObjectInfo{}, nil)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				r, ok := resp.(gen.GetFiles200JSONResponse)
+				s.True(ok)
+				s.Equal(0, r.Total)
+				s.Empty(r.Files)
+			},
+		},
+		{
+			name: "when ErrNoObjectsFound returns empty list",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return(nil, jetstream.ErrNoObjectsFound)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				r, ok := resp.(gen.GetFiles200JSONResponse)
+				s.True(ok)
+				s.Equal(0, r.Total)
+				s.Empty(r.Files)
+			},
+		},
+		{
+			name: "filters deleted objects",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return([]*jetstream.ObjectInfo{
+						{
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "active.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   100,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
+						},
+						{
+							ObjectMeta: jetstream.ObjectMeta{Name: "deleted.conf"},
+							Size:       200,
+							Digest:     "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
+							Deleted:    true,
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				r, ok := resp.(gen.GetFiles200JSONResponse)
+				s.True(ok)
+				s.Equal(1, r.Total)
+				s.Len(r.Files, 1)
+				s.Equal("active.conf", r.Files[0].Name)
+			},
+		},
+		{
+			name: "object store error",
+			setupMock: func() {
+				s.mockObjStore.EXPECT().
+					List(gomock.Any()).
+					Return(nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetFilesResponseObject) {
+				_, ok := resp.(gen.GetFiles500JSONResponse)
+				s.True(ok)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+
+			resp, err := s.handler.GetFiles(s.ctx, gen.GetFilesRequestObject{})
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *FileListPublicTestSuite) TestGetFilesHTTP() {
+	tests := []struct {
+		name         string
+		setupMock    func() *mocks.MockObjectStoreManager
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when list Ok",
+			setupMock: func() *mocks.MockObjectStoreManager {
+				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
+				mock.EXPECT().
+					List(gomock.Any()).
+					Return([]*jetstream.ObjectInfo{
+						{
+							ObjectMeta: jetstream.ObjectMeta{
+								Name: "nginx.conf",
+								Headers: nats.Header{
+									"Osapi-Content-Type": []string{"raw"},
+								},
+							},
+							Size:   1024,
+							Digest: "SHA-256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU=",
+						},
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"files"`, `"nginx.conf"`, `"total":1`, `"content_type":"raw"`},
+		},
+		{
+			name: "when object store error",
+			setupMock: func() *mocks.MockObjectStoreManager {
+				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
+				mock.EXPECT().
+					List(gomock.Any()).
+					Return(nil, assert.AnError)
+				return mock
+			},
+			wantCode:     http.StatusInternalServerError,
+			wantContains: []string{"failed to list files"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			objMock := tc.setupMock()
+
+			fileHandler := apifile.New(s.logger, objMock)
+			strictHandler := gen.NewStrictHandler(fileHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(http.MethodGet, "/file", nil)
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacListTestSigningKey = "test-signing-key-for-file-list-rbac"
+
+func (s *FileListPublicTestSuite) TestGetFilesRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupMock    func() *mocks.MockObjectStoreManager
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupMock: func() *mocks.MockObjectStoreManager {
+				return mocks.NewMockObjectStoreManager(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacListTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"node:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupMock: func() *mocks.MockObjectStoreManager {
+				return mocks.NewMockObjectStoreManager(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with file:read returns 200",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacListTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					[]string{"file:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupMock: func() *mocks.MockObjectStoreManager {
+				mock := mocks.NewMockObjectStoreManager(s.mockCtrl)
+				mock.EXPECT().
+					List(gomock.Any()).
+					Return([]*jetstream.ObjectInfo{}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"files"`, `"total":0`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			objMock := tc.setupMock()
+
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: rbacListTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetFileHandler(objMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(http.MethodGet, "/file", nil)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+func TestFileListPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(FileListPublicTestSuite))
+}

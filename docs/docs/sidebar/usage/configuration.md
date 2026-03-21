@@ -26,14 +26,14 @@ uppercased:
 | Config Key                                       | Environment Variable                                   |
 | ------------------------------------------------ | ------------------------------------------------------ |
 | `debug`                                          | `OSAPI_DEBUG`                                          |
-| `api.server.port`                                | `OSAPI_API_SERVER_PORT`                                |
-| `api.server.nats.host`                           | `OSAPI_API_SERVER_NATS_HOST`                           |
-| `api.server.nats.port`                           | `OSAPI_API_SERVER_NATS_PORT`                           |
-| `api.server.nats.client_name`                    | `OSAPI_API_SERVER_NATS_CLIENT_NAME`                    |
-| `api.server.nats.namespace`                      | `OSAPI_API_SERVER_NATS_NAMESPACE`                      |
-| `api.server.nats.auth.type`                      | `OSAPI_API_SERVER_NATS_AUTH_TYPE`                      |
-| `api.server.security.signing_key`                | `OSAPI_API_SERVER_SECURITY_SIGNING_KEY`                |
-| `api.client.security.bearer_token`               | `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN`               |
+| `controller.api.port`                            | `OSAPI_CONTROLLER_API_PORT`                            |
+| `controller.api.nats.host`                       | `OSAPI_CONTROLLER_API_NATS_HOST`                       |
+| `controller.api.nats.port`                       | `OSAPI_CONTROLLER_API_NATS_PORT`                       |
+| `controller.api.nats.client_name`                | `OSAPI_CONTROLLER_API_NATS_CLIENT_NAME`                |
+| `controller.api.nats.namespace`                  | `OSAPI_CONTROLLER_API_NATS_NAMESPACE`                  |
+| `controller.api.nats.auth.type`                  | `OSAPI_CONTROLLER_API_NATS_AUTH_TYPE`                  |
+| `controller.api.security.signing_key`            | `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY`            |
+| `controller.client.security.bearer_token`        | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`        |
 | `nats.server.host`                               | `OSAPI_NATS_SERVER_HOST`                               |
 | `nats.server.port`                               | `OSAPI_NATS_SERVER_PORT`                               |
 | `nats.server.namespace`                          | `OSAPI_NATS_SERVER_NAMESPACE`                          |
@@ -91,10 +91,10 @@ Environment variables take precedence over file values.
 Two fields carry a `required` validation tag and must be set before the server
 or client will start:
 
-| Key                                | Purpose                       |
-| ---------------------------------- | ----------------------------- |
-| `api.server.security.signing_key`  | HS256 key for signing JWTs    |
-| `api.client.security.bearer_token` | JWT sent with client requests |
+| Key                                       | Purpose                       |
+| ----------------------------------------- | ----------------------------- |
+| `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
+| `controller.client.security.bearer_token` | JWT sent with client requests |
 
 Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 `osapi token generate`.
@@ -102,7 +102,7 @@ Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 ## Authentication
 
 Each NATS connection supports pluggable authentication. Set the `auth.type`
-field in the relevant section (`nats.server`, `api.server.nats`, or
+field in the relevant section (`nats.server`, `controller.api.nats`, or
 `agent.nats`):
 
 | Type        | Description                          | Extra Fields           |
@@ -117,7 +117,7 @@ The embedded NATS server (`nats.server.auth`) accepts a list of users or nkeys:
 
 ```yaml
 nats:
-  server:
+  api:
     auth:
       type: user_pass
       users:
@@ -127,12 +127,12 @@ nats:
 
 ### Client-Side Auth
 
-API server and agent connections (`api.server.nats.auth`, `agent.nats.auth`)
+API server and agent connections (`controller.api.nats.auth`, `agent.nats.auth`)
 authenticate as a single identity:
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     nats:
       auth:
         type: user_pass
@@ -154,13 +154,13 @@ of permissions:
 
 ### Custom Roles
 
-You can define custom roles in the `api.server.security.roles` section. Custom
-roles override the default permission mapping for the same name, or define
-entirely new role names:
+You can define custom roles in the `controller.api.security.roles` section.
+Custom roles override the default permission mapping for the same name, or
+define entirely new role names:
 
 ```yaml
-api:
-  server:
+controller:
+  api:
     security:
       roles:
         ops:
@@ -198,8 +198,8 @@ NATS cluster without collisions.
 | `job-queue` (KV bucket) | `osapi-job-queue`       |
 
 Set the same namespace value in `nats.server.namespace`,
-`api.server.nats.namespace`, and `agent.nats.namespace` so all components agree
-on naming. An empty string disables prefixing.
+`controller.api.nats.namespace`, and `agent.nats.namespace` so all components
+agree on naming. An empty string disables prefixing.
 
 ## Full Reference
 
@@ -210,7 +210,7 @@ Values shown are representative defaults from the repository's config file.
 # Enable verbose logging.
 debug: true
 
-api:
+controller:
   client:
     # Base URL the CLI client connects to.
     url: 'http://0.0.0.0:8080'
@@ -219,7 +219,7 @@ api:
       # Generate with: osapi token generate
       bearer_token: '<jwt>'
 
-  server:
+  api:
     # Port the REST API server listens on.
     port: 8080
     nats:
@@ -256,7 +256,7 @@ api:
       #       - health:read
 
 nats:
-  server:
+  api:
     # Hostname the embedded NATS server binds to.
     host: 'localhost'
     # Port the embedded NATS server binds to.
@@ -471,14 +471,14 @@ agent:
 
 ## Section Reference
 
-### `api.client`
+### `controller.client`
 
 | Key                     | Type   | Description                        |
 | ----------------------- | ------ | ---------------------------------- |
 | `url`                   | string | Base URL the CLI client targets    |
 | `security.bearer_token` | string | JWT for client auth (**required**) |
 
-### `api.server`
+### `controller.api`
 
 | Key                           | Type     | Description                          |
 | ----------------------------- | -------- | ------------------------------------ |

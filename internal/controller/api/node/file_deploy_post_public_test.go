@@ -1,0 +1,490 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package node_test
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/api"
+	apinode "github.com/retr0h/osapi/internal/controller/api/node"
+	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
+)
+
+type FileDeployPostPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *jobmocks.MockJobClient
+	handler       *apinode.Node
+	ctx           context.Context
+	appConfig     config.Config
+	logger        *slog.Logger
+}
+
+func (s *FileDeployPostPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
+}
+
+func (s *FileDeployPostPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
+	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func (s *FileDeployPostPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
+	tests := []struct {
+		name         string
+		request      gen.PostNodeFileDeployRequestObject
+		setupMock    func()
+		validateFunc func(resp gen.PostNodeFileDeployResponseObject)
+	}{
+		{
+			name: "when success",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+					Mode:        strPtr("0644"),
+					Owner:       strPtr("root"),
+					Group:       strPtr("root"),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeploy(
+						gomock.Any(),
+						"_any",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"0644",
+						"root",
+						"root",
+						map[string]any(nil),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						"agent1",
+						true,
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId)
+				s.Equal("agent1", r.Hostname)
+				s.True(r.Changed)
+			},
+		},
+		{
+			name: "when success with template vars",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "app.conf.tmpl",
+					Path:        "/etc/app/app.conf",
+					ContentType: gen.Template,
+					Vars: &map[string]interface{}{
+						"port": float64(8080),
+					},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeploy(
+						gomock.Any(),
+						"_any",
+						"app.conf.tmpl",
+						"/etc/app/app.conf",
+						"template",
+						"",
+						"",
+						"",
+						map[string]any{"port": float64(8080)},
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						"agent1",
+						true,
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Equal("agent1", r.Hostname)
+				s.True(r.Changed)
+			},
+		},
+		{
+			name: "when validation error empty hostname",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "when validation error missing object_name",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ObjectName")
+			},
+		},
+		{
+			name: "when validation error missing path",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "Path")
+			},
+		},
+		{
+			name: "when validation error invalid content_type",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.FileDeployRequestContentType("invalid"),
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "ContentType")
+			},
+		},
+		{
+			name: "when job client error",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_any",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeploy(
+						gomock.Any(),
+						"_any",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"",
+						"",
+						"",
+						map[string]any(nil),
+					).
+					Return("", "", false, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)
+				s.True(ok)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+
+			resp, err := s.handler.PostNodeFileDeploy(s.ctx, tt.request)
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
+	tests := []struct {
+		name         string
+		path         string
+		body         string
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when valid request",
+			path: "/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"job_id"`, `"agent1"`, `"changed":true`},
+		},
+		{
+			name: "when missing object_name",
+			path: "/node/server1/file/deploy",
+			body: `{"path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "ObjectName", "required"},
+		},
+		{
+			name: "when invalid content_type",
+			path: "/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"invalid"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "ContentType"},
+		},
+		{
+			name: "when server error",
+			path: "/node/server1/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return("", "", false, assert.AnError)
+				return mock
+			},
+			wantCode:     http.StatusInternalServerError,
+			wantContains: []string{`"error"`},
+		},
+		{
+			name: "when target agent not found",
+			path: "/node/nonexistent/file/deploy",
+			body: `{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "valid_target", "not found"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			nodeHandler := apinode.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+
+			a := api.New(s.appConfig, s.logger)
+			gen.RegisterHandlers(a.Echo, strictHandler)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				tc.path,
+				strings.NewReader(tc.body),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+
+			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacFileDeployTestSigningKey = "test-signing-key-for-file-deploy-rbac"
+
+func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacFileDeployTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"node:read"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid token with file:write returns 202",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacFileDeployTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					[]string{"file:write"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						"agent1",
+						true,
+						nil,
+					)
+				return mock
+			},
+			wantCode:     http.StatusAccepted,
+			wantContains: []string{`"job_id"`, `"changed":true`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: rbacFileDeployTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetNodeHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/file/deploy",
+				strings.NewReader(
+					`{"object_name":"nginx.conf","path":"/etc/nginx/nginx.conf","content_type":"raw"}`,
+				),
+			)
+			req.Header.Set("Content-Type", "application/json")
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+func TestFileDeployPostPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(FileDeployPostPublicTestSuite))
+}
