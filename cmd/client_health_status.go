@@ -165,7 +165,9 @@ func displayStatusHealth(
 ) {
 	fmt.Println()
 
-	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
+	cli.PrintKV("Status", data.Status)
+	cli.PrintKV("Version", data.Version)
+	cli.PrintKV("Uptime", data.Uptime)
 	fmt.Println()
 
 	displayComponentTable(data.Registry, "", data.Components)
