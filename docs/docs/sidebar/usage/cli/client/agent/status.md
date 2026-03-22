@@ -7,7 +7,11 @@ $ osapi client agent status
 
   TYPE    HOSTNAME   STATUS  CONDITIONS    AGE    CPU    MEM
   agent   web-01     Ready   DiskPressure  7h 6m  1.2%   96 MB
+          ├─ heartbeat               ok
+          └─ metrics                 ok
   agent   web-02     Ready   -             3h 2m  0.8%   82 MB
+          ├─ heartbeat               ok
+          └─ metrics                 ok
 ```
 
 Use `--json` for the full health status JSON response:

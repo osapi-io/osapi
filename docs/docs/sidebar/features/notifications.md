@@ -83,8 +83,8 @@ controller:
     renotify_interval: '5m'
 ```
 
-| Key                 | Env Variable                            | Description                           |
-| ------------------- | --------------------------------------- | ------------------------------------- |
+| Key                 | Env Variable                                       | Description                           |
+| ------------------- | -------------------------------------------------- | ------------------------------------- |
 | `enabled`           | `OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED`           | Enable the watcher (default: `false`) |
 | `notifier`          | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`          | Backend: `"log"` (default)            |
 | `renotify_interval` | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL` | Re-fire interval (default: `"0"`)     |

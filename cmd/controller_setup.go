@@ -584,7 +584,9 @@ func registerControllerHandlers(
 		return "disabled"
 	}
 
-	subComponents["controller.notifier"] = enabledOrDisabled(appConfig.Controller.Notifications.Enabled)
+	subComponents["controller.notifier"] = enabledOrDisabled(
+		appConfig.Controller.Notifications.Enabled,
+	)
 	subComponents["controller.metrics"] = enabledOrDisabled(appConfig.Controller.Metrics.Enabled)
 	subComponents["controller.tracing"] = enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)
 	subComponents["agent.heartbeat"] = "ok"
