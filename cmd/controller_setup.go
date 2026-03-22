@@ -158,9 +158,6 @@ type NATSClient interface {
 	) (jetstream.Stream, error)
 }
 
-// Ensure natsclient.Client implements NATSClient interface.
-var _ NATSClient = (*natsclient.Client)(nil)
-
 // natsBundle holds the NATS connection, job client, and KV handles created
 // by connectNATSBundle.
 type natsBundle struct {
