@@ -150,6 +150,35 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 	}
 }
 
+func (s *HeartbeatTestSuite) TestWriteRegistrationStoresHeartbeatTime() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "when Put succeeds stores last heartbeat time",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.mockKV.EXPECT().
+				Put(gomock.Any(), "agents.test_agent", gomock.Any()).
+				Return(uint64(1), nil)
+
+			before := time.Now()
+			s.agent.writeRegistration(context.Background(), "test-agent")
+			after := time.Now()
+
+			got := s.agent.LastHeartbeatTime()
+			s.False(got.IsZero(), "expected non-zero heartbeat time after successful Put")
+			s.True(
+				!got.Before(before) && !got.After(after),
+				"heartbeat time should be between before and after write",
+			)
+		})
+	}
+}
+
 func (s *HeartbeatTestSuite) TestDeregister() {
 	tests := []struct {
 		name      string

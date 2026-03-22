@@ -255,6 +255,64 @@ func (s *ServerPublicTestSuite) TestRegisterSubsystems() {
 	}
 }
 
+func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
+	scrapeMetrics := func(port int) string {
+		url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
+
+		resp, err := http.Get(url) //nolint:gosec
+		s.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		return string(body)
+	}
+
+	tests := []struct {
+		name         string
+		timeFn       func() time.Time
+		wantContains []string
+	}{
+		{
+			name:         "reports 0 when heartbeat time is zero",
+			timeFn:       func() time.Time { return time.Time{} },
+			wantContains: []string{"osapi_heartbeat_age_seconds", "} 0"},
+		},
+		{
+			name: "reports positive age when heartbeat time is in the past",
+			timeFn: func() time.Time {
+				return time.Now().Add(-5 * time.Second)
+			},
+			wantContains: []string{"osapi_heartbeat_age_seconds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv.RegisterHeartbeatAge(tc.timeFn)
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			body := scrapeMetrics(port)
+			for _, want := range tc.wantContains {
+				s.Contains(body, want)
+			}
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
 func (s *ServerPublicTestSuite) TestStartListenError() {
 	tests := []struct {
 		name         string
