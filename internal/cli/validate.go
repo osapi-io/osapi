@@ -35,6 +35,8 @@ var supportedVersions = []struct {
 	Distribution string
 	Version      string
 }{
+	{"debian", "12"},
+	{"debian", "13"},
 	{"ubuntu", "20.04"},
 	{"ubuntu", "22.04"},
 	{"ubuntu", "24.04"},
@@ -49,7 +51,8 @@ func IsLinuxVersionSupported(
 	distro = strings.ToLower(distro)
 
 	for _, supported := range supportedVersions {
-		if strings.ToLower(supported.Distribution) == distro && supported.Version == version {
+		if strings.ToLower(supported.Distribution) == distro &&
+			(supported.Version == version || strings.HasPrefix(version, supported.Version+".")) {
 			return true
 		}
 	}

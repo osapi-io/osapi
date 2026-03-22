@@ -45,6 +45,24 @@ func (suite *ValidatePublicTestSuite) TestIsLinuxVersionSupported() {
 		want    bool
 	}{
 		{
+			name:    "when debian 12 is supported",
+			distro:  "debian",
+			version: "12",
+			want:    true,
+		},
+		{
+			name:    "when debian 12 point release is supported",
+			distro:  "debian",
+			version: "12.13",
+			want:    true,
+		},
+		{
+			name:    "when debian 13 is supported",
+			distro:  "debian",
+			version: "13",
+			want:    true,
+		},
+		{
 			name:    "when ubuntu 20.04 is supported",
 			distro:  "ubuntu",
 			version: "20.04",
