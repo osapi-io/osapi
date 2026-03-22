@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Metrics | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/metrics"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Metrics | OSAPI"><meta data-rh="true" name="description" content="Each OSAPI component exposes a Prometheus-compatible /metrics endpoint on a"><meta data-rh="true" property="og:description" content="Each OSAPI component exposes a Prometheus-compatible /metrics endpoint on a"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/metrics"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.56a51dbd.css">
-<script src="/osapi/assets/js/runtime~main.ab610ad6.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.1ca185a3.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.605f516a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -14,6 +14,31 @@ dedicated port. Metrics are collected using OpenTelemetry with an isolated
 Prometheus registry per component, so each endpoint shows only that component&#x27;s
 data.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="endpoints">Endpoints<a href="#endpoints" class="hash-link" aria-label="Direct link to Endpoints" title="Direct link to Endpoints">​</a></h2>
+<p>Each component&#x27;s metrics server exposes three endpoints:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Endpoint</th><th>Description</th></tr></thead><tbody><tr><td><code>/metrics</code></td><td>Prometheus metrics in text exposition format</td></tr><tr><td><code>/health</code></td><td>Liveness probe — always returns <code>{&quot;status&quot;:&quot;ok&quot;}</code></td></tr><tr><td><code>/health/ready</code></td><td>Readiness probe — 200 when ready, 503 when not</td></tr></tbody></table>
+<p>The health probes are unauthenticated and always available when the metrics
+server is enabled.</p>
 
 
 
@@ -40,16 +65,97 @@ data.</p>
 
 
 <table><thead><tr><th>Component</th><th>Default Port</th><th>Config Key</th></tr></thead><tbody><tr><td>Controller</td><td>9090</td><td><code>controller.metrics.port</code></td></tr><tr><td>Agent</td><td>9091</td><td><code>agent.metrics.port</code></td></tr><tr><td>NATS</td><td>9092</td><td><code>nats.server.metrics.port</code></td></tr></tbody></table>
-<p>Each endpoint returns metrics in the standard Prometheus text exposition format
-at <code>/metrics</code>.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-it-exposes">What It Exposes<a href="#what-it-exposes" class="hash-link" aria-label="Direct link to What It Exposes" title="Direct link to What It Exposes">​</a></h2>
-<p>Each component&#x27;s <code>/metrics</code> endpoint exposes:</p>
-<ul>
-<li>Go runtime (goroutines, memory, GC)</li>
-<li>Process metrics (CPU, memory, file descriptors)</li>
-</ul>
-<p>The controller additionally exposes HTTP request metrics collected by the Echo
-framework (counts, durations, response sizes by route).</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="application-metrics-reference">Application Metrics Reference<a href="#application-metrics-reference" class="hash-link" aria-label="Direct link to Application Metrics Reference" title="Direct link to Application Metrics Reference">​</a></h2>
+<p>All application metrics are instrumented through OpenTelemetry and exported via
+the OTEL Prometheus exporter with the <code>osapi</code> namespace. The <code>osapi_</code> prefix is
+applied automatically. OTEL scope labels (<code>otel_scope_name</code>, etc.) are included
+in the output for traceability.</p>
+<p>Go runtime (goroutines, memory, GC) and process metrics (CPU, memory, file
+descriptors) are included on every component.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th><th>Labels</th><th>Component</th><th>Description</th></tr></thead><tbody><tr><td><code>osapi_component_up</code></td><td>gauge</td><td></td><td>all</td><td>1 when ready, 0 when not</td></tr><tr><td><code>osapi_subsystem_up</code></td><td>gauge</td><td>subsystem</td><td>all</td><td>1 when subsystem is ok, 0 when not</td></tr><tr><td><code>osapi_jobs_created_total</code></td><td>counter</td><td></td><td>controller</td><td>Jobs submitted via API</td></tr><tr><td><code>osapi_jobs_processed_total</code></td><td>counter</td><td>status</td><td>agent</td><td>Jobs completed or failed</td></tr><tr><td><code>osapi_jobs_active</code></td><td>gauge</td><td></td><td>agent</td><td>Currently executing jobs</td></tr><tr><td><code>osapi_job_duration_seconds</code></td><td>histogram</td><td></td><td>agent</td><td>Job execution duration</td></tr><tr><td><code>osapi_heartbeat_age_seconds</code></td><td>gauge</td><td></td><td>agent</td><td>Seconds since last heartbeat write</td></tr></tbody></table>
+<p>The <code>osapi_subsystem_up</code> gauge has a <code>subsystem</code> label identifying which
+internal service it represents (e.g., <code>api</code>, <code>heartbeat</code>, <code>metrics</code>, <code>notifier</code>,
+<code>tracing</code>, <code>facts</code>). A value of 1 means the subsystem status is <code>ok</code>; 0 means
+<code>disabled</code> or <code>error</code>.</p>
+<p>The controller also exposes HTTP request metrics from the OTEL middleware using
+standard <code>http.server.*</code> names (<code>http.server.request.duration</code>,
+<code>http.server.active_requests</code>, etc.).</p>
+<p>The NATS component exposes <code>osapi_component_up</code> and <code>osapi_subsystem_up</code> only —
+NATS has its own native monitoring.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="health-probes">Health Probes<a href="#health-probes" class="hash-link" aria-label="Direct link to Health Probes" title="Direct link to Health Probes">​</a></h2>
+<p>Each metrics server also serves lightweight health probes on the same port.
+These are always unauthenticated.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="liveness-health">Liveness (<code>/health</code>)<a href="#liveness-health" class="hash-link" aria-label="Direct link to liveness-health" title="Direct link to liveness-health">​</a></h3>
+<p>Always returns <code>200 OK</code> with <code>{&quot;status&quot;:&quot;ok&quot;}</code> when the metrics server is
+running. Use this to detect hung or crashed processes.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="readiness-healthready">Readiness (<code>/health/ready</code>)<a href="#readiness-healthready" class="hash-link" aria-label="Direct link to readiness-healthready" title="Direct link to readiness-healthready">​</a></h3>
+<p>Returns <code>200 OK</code> when the component is ready, or <code>503 Service Unavailable</code> when
+it is not. Use this to gate traffic until the component has fully started.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="kubernetes-example">Kubernetes Example<a href="#kubernetes-example" class="hash-link" aria-label="Direct link to Kubernetes Example" title="Direct link to Kubernetes Example">​</a></h3>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token key atrule">livenessProbe</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">httpGet</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">path</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> /health</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">port</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">9090</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">initialDelaySeconds</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">5</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">periodSeconds</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">10</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token key atrule">readinessProbe</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">httpGet</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">path</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> /health/ready</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">port</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">9090</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">initialDelaySeconds</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">5</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token key atrule">periodSeconds</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token number" style="color:rgb(247, 140, 108)">10</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<p>Adjust the port to match the component (<code>9090</code> for controller, <code>9091</code> for agent,
+<code>9092</code> for NATS).</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="integration">Integration<a href="#integration" class="hash-link" aria-label="Direct link to Integration" title="Direct link to Integration">​</a></h2>
 <p>Point your Prometheus instance at each component:</p>
 <div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic"># prometheus.yml</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token key atrule">scrape_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">job_name</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;osapi-controller&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">static_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">      </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">targets</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">[</span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;localhost:9090&#x27;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">]</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">job_name</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;osapi-agent&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">static_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">      </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">targets</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">[</span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;localhost:9091&#x27;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">]</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">job_name</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;osapi-nats&#x27;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">static_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">      </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">targets</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">[</span><span class="token string" style="color:rgb(195, 232, 141)">&#x27;localhost:9092&#x27;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">]</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
@@ -64,6 +170,6 @@ settings and environment variable overrides.</p>
 <li><a href="/osapi/sidebar/features/health-checks">Health Checks</a> -- liveness, readiness, and status probes</li>
 <li><a href="/osapi/sidebar/features/distributed-tracing">Distributed Tracing</a> -- OpenTelemetry tracing</li>
 <li><a href="/osapi/sidebar/usage/configuration">Configuration</a> -- full configuration reference</li>
-</ul></div></div></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/distributed-tracing"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Distributed Tracing</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/file-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">File Management</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a></li><li><a href="#what-it-exposes" class="table-of-contents__link toc-highlight">What It Exposes</a></li><li><a href="#integration" class="table-of-contents__link toc-highlight">Integration</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/retr0h/osapi" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 <a href="https://github.com/retr0h">@retr0h</a></div></div></div></footer></div>
+</ul></div></div></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/distributed-tracing"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Distributed Tracing</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/file-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">File Management</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a></li><li><a href="#application-metrics-reference" class="table-of-contents__link toc-highlight">Application Metrics Reference</a></li><li><a href="#health-probes" class="table-of-contents__link toc-highlight">Health Probes</a><ul><li><a href="#liveness-health" class="table-of-contents__link toc-highlight">Liveness (<code>/health</code>)</a></li><li><a href="#readiness-healthready" class="table-of-contents__link toc-highlight">Readiness (<code>/health/ready</code>)</a></li><li><a href="#kubernetes-example" class="table-of-contents__link toc-highlight">Kubernetes Example</a></li></ul></li><li><a href="#integration" class="table-of-contents__link toc-highlight">Integration</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/retr0h/osapi" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 <a href="https://github.com/retr0h">@retr0h</a></div></div></div></footer></div>
 </body>
 </html>
