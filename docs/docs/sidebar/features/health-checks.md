@@ -41,8 +41,9 @@ this for dashboards and monitoring.
 
 All three runtime components heartbeat into a shared registry KV bucket on a
 regular interval. Each heartbeat writes a JSON record keyed by component type
-and hostname (e.g., `agents.web-01`, `controller.api-server`, `nats.nats-server`). The
-records include process metrics collected at heartbeat time:
+and hostname (e.g., `agents.web-01`, `controller.api-server`,
+`nats.nats-server`). The records include process metrics collected at heartbeat
+time:
 
 | Metric      | Description                              |
 | ----------- | ---------------------------------------- |
@@ -74,11 +75,11 @@ internal service across all hosts — even in multi-node deployments.
 Sub-components use a `{type}.{name}` naming convention. Each component reports
 only its own sub-components:
 
-| Component  | Sub-Components                                                     |
-| ---------- | ------------------------------------------------------------------ |
+| Component  | Sub-Components                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
 | controller | `controller.api`, `controller.heartbeat`, `controller.metrics`, `controller.notifier`, `controller.tracing` |
-| agent      | `agent.heartbeat`, `agent.metrics`                                 |
-| nats       | `nats.server`, `nats.heartbeat`, `nats.metrics`                    |
+| agent      | `agent.heartbeat`, `agent.metrics`                                                                          |
+| nats       | `nats.server`, `nats.heartbeat`, `nats.metrics`                                                             |
 
 Sub-components report a status (`ok`, `disabled`, or `error`) and an optional
 network address. The controller also performs live connectivity checks against
