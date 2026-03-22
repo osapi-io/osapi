@@ -86,6 +86,7 @@ func setupAgent(
 	}
 
 	a.SetSubComponents(map[string]job.SubComponentInfo{
+		"agent.facts":     {Status: "ok"},
 		"agent.heartbeat": {Status: "ok"},
 		"agent.metrics": {
 			Status: enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
