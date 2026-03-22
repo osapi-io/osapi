@@ -49,3 +49,28 @@ const (
 	// JobStatusPending indicates the job is queued but not yet processed.
 	JobStatusPending JobStatus = "pending"
 )
+
+// AgentSchedulingState represents the scheduling state of an agent.
+type AgentSchedulingState = string
+
+// Agent scheduling state constants.
+const (
+	// AgentReady indicates the agent is accepting and processing jobs.
+	AgentReady AgentSchedulingState = "Ready"
+	// AgentDraining indicates the agent is finishing in-flight jobs
+	// but not accepting new ones.
+	AgentDraining AgentSchedulingState = "Draining"
+	// AgentCordoned indicates the agent is blocked from receiving
+	// new jobs until manually uncordoned.
+	AgentCordoned AgentSchedulingState = "Cordoned"
+)
+
+// ConditionType represents a node or process condition evaluated agent-side.
+type ConditionType = string
+
+// Condition type constants.
+const (
+	ConditionMemoryPressure ConditionType = "MemoryPressure"
+	ConditionHighLoad       ConditionType = "HighLoad"
+	ConditionDiskPressure   ConditionType = "DiskPressure"
+)

@@ -373,18 +373,18 @@ type FactsRegistration struct {
 	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
-// Condition type constants.
+// Condition type constants re-exported from the SDK.
 const (
-	ConditionMemoryPressure = "MemoryPressure"
-	ConditionHighLoad       = "HighLoad"
-	ConditionDiskPressure   = "DiskPressure"
+	ConditionMemoryPressure = client.ConditionMemoryPressure
+	ConditionHighLoad       = client.ConditionHighLoad
+	ConditionDiskPressure   = client.ConditionDiskPressure
 )
 
-// Agent state constants.
+// Agent state constants re-exported from the SDK.
 const (
-	AgentStateReady    = "Ready"
-	AgentStateDraining = "Draining"
-	AgentStateCordoned = "Cordoned"
+	AgentStateReady    = client.AgentReady
+	AgentStateDraining = client.AgentDraining
+	AgentStateCordoned = client.AgentCordoned
 )
 
 // Condition represents a node condition evaluated agent-side.

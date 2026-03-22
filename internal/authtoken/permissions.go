@@ -20,26 +20,28 @@
 
 package authtoken
 
-// Permission represents a fine-grained resource:verb permission.
-type Permission = string
+import "github.com/retr0h/osapi/pkg/sdk/client"
 
-// Permission constants using resource:verb format.
+// Permission is a type alias for client.Permission.
+type Permission = client.Permission
+
+// Permission constants re-exported from the SDK.
 const (
-	PermAgentRead      Permission = "agent:read"
-	PermAgentWrite     Permission = "agent:write"
-	PermNodeRead       Permission = "node:read"
-	PermNetworkRead    Permission = "network:read"
-	PermNetworkWrite   Permission = "network:write"
-	PermJobRead        Permission = "job:read"
-	PermJobWrite       Permission = "job:write"
-	PermHealthRead     Permission = "health:read"
-	PermAuditRead      Permission = "audit:read"
-	PermCommandExecute Permission = "command:execute"
-	PermFileRead       Permission = "file:read"
-	PermFileWrite      Permission = "file:write"
-	PermDockerRead     Permission = "docker:read"
-	PermDockerWrite    Permission = "docker:write"
-	PermDockerExecute  Permission = "docker:execute"
+	PermAgentRead      = client.PermAgentRead
+	PermAgentWrite     = client.PermAgentWrite
+	PermNodeRead       = client.PermNodeRead
+	PermNetworkRead    = client.PermNetworkRead
+	PermNetworkWrite   = client.PermNetworkWrite
+	PermJobRead        = client.PermJobRead
+	PermJobWrite       = client.PermJobWrite
+	PermHealthRead     = client.PermHealthRead
+	PermAuditRead      = client.PermAuditRead
+	PermCommandExecute = client.PermCommandExecute
+	PermFileRead       = client.PermFileRead
+	PermFileWrite      = client.PermFileWrite
+	PermDockerRead     = client.PermDockerRead
+	PermDockerWrite    = client.PermDockerWrite
+	PermDockerExecute  = client.PermDockerExecute
 )
 
 // AllPermissions is the full set of known permissions.
@@ -63,7 +65,7 @@ var AllPermissions = []Permission{
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
 var DefaultRolePermissions = map[string][]Permission{
-	"admin": {
+	client.RoleAdmin: {
 		PermAgentRead,
 		PermAgentWrite,
 		PermNodeRead,
@@ -80,7 +82,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermDockerWrite,
 		PermDockerExecute,
 	},
-	"write": {
+	client.RoleWrite: {
 		PermAgentRead,
 		PermNodeRead,
 		PermNetworkRead,
@@ -93,7 +95,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermDockerRead,
 		PermDockerWrite,
 	},
-	"read": {
+	client.RoleRead: {
 		PermAgentRead,
 		PermNodeRead,
 		PermNetworkRead,
