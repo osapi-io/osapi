@@ -57,10 +57,12 @@ type MetricsConfig struct {
 	Path string `mapstructure:"path"`
 }
 
-// OpsServer configures the per-component metrics HTTP server.
-type OpsServer struct {
+// MetricsServer configures the per-component metrics HTTP server.
+type MetricsServer struct {
 	// Enabled activates the metrics server.
 	Enabled bool `mapstructure:"enabled"`
+	// Host the metrics server binds to.
+	Host string `mapstructure:"host"`
 	// Port the metrics server listens on.
 	Port int `mapstructure:"port"`
 }
@@ -185,7 +187,7 @@ type NATSServer struct {
 	Namespace string `mapstructure:"namespace"`
 	// Auth holds server-side authentication configuration.
 	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
-	Metrics OpsServer      `mapstructure:"metrics"`
+	Metrics MetricsServer  `mapstructure:"metrics"`
 }
 
 // NATSStream configuration for JetStream stream settings.
@@ -240,7 +242,7 @@ type Controller struct {
 	Client        Client              `mapstructure:"client"`
 	API           APIServer           `mapstructure:"api"                     mask:"struct"`
 	NATS          NATSConnection      `mapstructure:"nats"`
-	Metrics       OpsServer           `mapstructure:"metrics"`
+	Metrics       MetricsServer       `mapstructure:"metrics"`
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 }
 
@@ -345,5 +347,5 @@ type AgentConfig struct {
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
-	Metrics           OpsServer         `mapstructure:"metrics"`
+	Metrics           MetricsServer     `mapstructure:"metrics"`
 }

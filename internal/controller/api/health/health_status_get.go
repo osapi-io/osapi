@@ -65,15 +65,16 @@ func (h *Health) buildStatusResponse(
 	uptime := time.Since(h.StartTime).Round(time.Second).String()
 
 	components := map[string]gen.ComponentHealth{
-		"nats": natsComponent,
-		"kv":   kvComponent,
+		"controller.nats": natsComponent,
+		"controller.kv":   kvComponent,
 	}
 
 	for name, info := range h.SubComponents {
 		ch := gen.ComponentHealth{Status: info.Status}
-		if info.Port > 0 {
-			ch.Port = &info.Port
+		if info.Address != "" {
+			ch.Address = &info.Address
 		}
+
 		components[name] = ch
 	}
 

@@ -191,10 +191,10 @@ func (p *ClosureMetricsProvider) GetComponentRegistry(
 	return p.ComponentRegistryFn(ctx)
 }
 
-// SubComponentInfo holds the status and optional port of a sub-component.
+// SubComponentInfo holds the status and optional address of a sub-component.
 type SubComponentInfo struct {
-	Status string
-	Port   int // 0 means no port.
+	Status  string
+	Address string // Empty means no network endpoint.
 }
 
 // Health implementation of the Health APIs operations.

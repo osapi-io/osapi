@@ -75,7 +75,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New(port, slog.Default())
+			srv := metrics.New("127.0.0.1", port, slog.Default())
 			tc.validateFunc(srv)
 		})
 	}
@@ -119,7 +119,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New(port, slog.Default())
+			srv := metrics.New("127.0.0.1", port, slog.Default())
 			srv.Start()
 
 			time.Sleep(100 * time.Millisecond)

@@ -58,6 +58,7 @@ It processes jobs as they become available.
 		var opsServer *metrics.Server
 		if appConfig.Agent.Metrics.Enabled {
 			opsServer = metrics.New(
+				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
 				log.With("subsystem", "ops"),
 			)

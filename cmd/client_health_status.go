@@ -55,11 +55,11 @@ Requires authentication.
 	},
 }
 
-// subComponent holds a name, status, and optional port for display under a parent.
+// subComponent holds a name, status, and optional address for display under a parent.
 type subComponent struct {
-	name   string
-	status string
-	port   int
+	name    string
+	status  string
+	address string
 }
 
 // subComponentsFor discovers sub-components for the given component type
@@ -78,7 +78,7 @@ func subComponentsFor(
 	for key, c := range components {
 		if strings.HasPrefix(key, prefix) {
 			name := strings.TrimPrefix(key, prefix)
-			result = append(result, subComponent{name: name, status: c.Status, port: c.Port})
+			result = append(result, subComponent{name: name, status: c.Status, address: c.Address})
 		}
 	}
 
@@ -137,8 +137,8 @@ func displayComponentTable(
 			}
 
 			status := sc.status
-			if sc.port > 0 {
-				status += " " + cli.DimStyle.Render(fmt.Sprintf(":%d", sc.port))
+			if sc.address != "" {
+				status += " " + cli.DimStyle.Render(sc.address)
 			}
 
 			rows = append(rows, []string{
@@ -165,39 +165,13 @@ func displayStatusHealth(
 ) {
 	fmt.Println()
 
+	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
+	fmt.Println()
+
 	displayComponentTable(data.Registry, "", data.Components)
 	if len(data.Registry) > 0 {
 		fmt.Println()
 	}
-
-	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
-
-	// NATS connection info (merged with component health)
-	if data.NATS != nil {
-		natsStatus := "ok"
-		if c, ok := data.Components["nats"]; ok && c.Status != "ok" {
-			natsStatus = c.Status
-			if c.Error != "" {
-				natsStatus += " " + cli.DimStyle.Render(c.Error)
-			}
-		}
-		natsVal := natsStatus + " " + cli.DimStyle.Render(data.NATS.URL)
-		if data.NATS.Version != "" {
-			natsVal += " " + cli.DimStyle.Render("(v"+data.NATS.Version+")")
-		}
-		cli.PrintKV("NATS", natsVal)
-	}
-
-	// KV component (without duplicating the NATS line)
-	if c, ok := data.Components["kv"]; ok {
-		kvVal := c.Status
-		if c.Error != "" {
-			kvVal += " " + cli.DimStyle.Render(c.Error)
-		}
-		cli.PrintKV("KV", kvVal)
-	}
-
-	// Sub-components (heartbeat, notifier) are shown in the component table above.
 
 	// Agent details are shown in the component table above.
 	// Use "osapi client agent list" for labels and detailed info.

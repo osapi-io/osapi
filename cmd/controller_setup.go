@@ -572,8 +572,8 @@ func registerControllerHandlers(
 ) {
 	startTime := time.Now()
 
-	sc := func(status string, port int) health.SubComponentInfo {
-		return health.SubComponentInfo{Status: status, Port: port}
+	httpAddr := func(host string, port int) string {
+		return fmt.Sprintf("http://%s:%d", host, port)
 	}
 
 	enabledOrDisabled := func(enabled bool) string {
@@ -584,17 +584,36 @@ func registerControllerHandlers(
 		return "disabled"
 	}
 
+	natsAddr := fmt.Sprintf("nats://%s:%d", appConfig.NATS.Server.Host, appConfig.NATS.Server.Port)
+
 	subComponents := map[string]health.SubComponentInfo{
-		"controller.api":       sc("ok", appConfig.Controller.API.Port),
-		"controller.heartbeat": sc("ok", 0),
-		"controller.notifier":  sc(enabledOrDisabled(appConfig.Controller.Notifications.Enabled), 0),
-		"controller.metrics":   sc(enabledOrDisabled(appConfig.Controller.Metrics.Enabled), appConfig.Controller.Metrics.Port),
-		"controller.tracing":   sc(enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled), 0),
-		"agent.heartbeat":      sc("ok", 0),
-		"agent.metrics":        sc(enabledOrDisabled(appConfig.Agent.Metrics.Enabled), appConfig.Agent.Metrics.Port),
-		"nats.server":          sc("ok", appConfig.NATS.Server.Port),
-		"nats.heartbeat":       sc("ok", 0),
-		"nats.metrics":         sc(enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled), appConfig.NATS.Server.Metrics.Port),
+		"controller.api": {
+			Status:  "ok",
+			Address: httpAddr("0.0.0.0", appConfig.Controller.API.Port),
+		},
+		"controller.heartbeat": {Status: "ok"},
+		"controller.metrics": {
+			Status:  enabledOrDisabled(appConfig.Controller.Metrics.Enabled),
+			Address: httpAddr(appConfig.Controller.Metrics.Host, appConfig.Controller.Metrics.Port),
+		},
+		"controller.notifier": {
+			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
+		},
+		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
+		"agent.heartbeat":    {Status: "ok"},
+		"agent.metrics": {
+			Status:  enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
+			Address: httpAddr(appConfig.Agent.Metrics.Host, appConfig.Agent.Metrics.Port),
+		},
+		"nats.heartbeat": {Status: "ok"},
+		"nats.metrics": {
+			Status: enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled),
+			Address: httpAddr(
+				appConfig.NATS.Server.Metrics.Host,
+				appConfig.NATS.Server.Metrics.Port,
+			),
+		},
+		"nats.server": {Status: "ok", Address: natsAddr},
 	}
 
 	handlers := make([]func(e *echo.Echo), 0, 8)

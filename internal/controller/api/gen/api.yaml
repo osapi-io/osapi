@@ -3104,10 +3104,10 @@ components:
         error:
           type: string
           description: Error message when component is unhealthy.
-        port:
-          type: integer
-          description: Port the component listens on (if applicable).
-          example: 8080
+        address:
+          type: string
+          description: Listen address of the component (if applicable).
+          example: http://0.0.0.0:8080
       required:
         - status
     NATSInfo:

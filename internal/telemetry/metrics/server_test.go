@@ -81,7 +81,7 @@ func (s *ServerTestSuite) TestNew() {
 			}
 
 			port := s.getFreePort()
-			srv := New(port, slog.Default())
+			srv := New("127.0.0.1", port, slog.Default())
 			tc.validateFunc(srv)
 		})
 	}
@@ -101,7 +101,7 @@ func (s *ServerTestSuite) TestStartListenError() {
 
 				port := l.Addr().(*net.TCPAddr).Port
 
-				srv := New(port, slog.Default())
+				srv := New("127.0.0.1", port, slog.Default())
 				s.Require().NotNil(srv)
 
 				srv.Start()
@@ -129,7 +129,7 @@ func (s *ServerTestSuite) TestStopErrors() {
 			name: "handles shutdown after already stopped",
 			validateFunc: func() {
 				port := s.getFreePort()
-				srv := New(port, slog.Default())
+				srv := New("127.0.0.1", port, slog.Default())
 				s.Require().NotNil(srv)
 
 				srv.Start()
@@ -155,7 +155,7 @@ func (s *ServerTestSuite) TestStopErrors() {
 				port := s.getFreePort()
 
 				// Add a slow handler that holds the connection open.
-				srv := New(port, slog.Default())
+				srv := New("127.0.0.1", port, slog.Default())
 				s.Require().NotNil(srv)
 
 				srv.httpServer.Handler.(*http.ServeMux).HandleFunc(

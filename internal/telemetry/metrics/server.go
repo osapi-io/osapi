@@ -42,6 +42,7 @@ var prometheusNewFn = prometheusExporter.New
 // New creates a new ops server on the given port with an isolated
 // Prometheus registry and OTEL MeterProvider.
 func New(
+	host string,
 	port int,
 	logger *slog.Logger,
 ) *Server {
@@ -70,7 +71,7 @@ func New(
 
 	return &Server{
 		httpServer: &http.Server{
-			Addr:              fmt.Sprintf(":%d", port),
+			Addr:              fmt.Sprintf("%s:%d", host, port),
 			Handler:           mux,
 			ReadHeaderTimeout: 10 * time.Second,
 		},

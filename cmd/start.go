@@ -99,6 +99,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
+				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
 				logger.With("component", "controller-ops"),
 			)
@@ -109,6 +110,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		if appConfig.Agent.Metrics.Enabled {
 			s := metrics.New(
+				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
 				logger.With("component", "agent-ops"),
 			)
@@ -119,6 +121,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		if appConfig.NATS.Server.Metrics.Enabled {
 			s := metrics.New(
+				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
 				logger.With("component", "nats-ops"),
 			)

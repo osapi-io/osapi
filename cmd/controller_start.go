@@ -56,6 +56,7 @@ var controllerStartCmd = &cobra.Command{
 		var opsServer *metrics.Server
 		if appConfig.Controller.Metrics.Enabled {
 			opsServer = metrics.New(
+				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
 				log.With("subsystem", "ops"),
 			)
