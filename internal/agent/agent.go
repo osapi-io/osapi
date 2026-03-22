@@ -126,15 +126,15 @@ func (a *Agent) SetMeterProvider(
 ) {
 	meter := mp.Meter("osapi-agent")
 	a.jobsProcessed, _ = meter.Int64Counter(
-		"osapi_jobs_processed_total",
+		"jobs_processed_total",
 		metric.WithDescription("Total jobs processed"),
 	)
 	a.jobsActive, _ = meter.Int64UpDownCounter(
-		"osapi_jobs_active",
+		"jobs_active",
 		metric.WithDescription("Currently executing jobs"),
 	)
 	a.jobDuration, _ = meter.Float64Histogram(
-		"osapi_job_duration_seconds",
+		"job_duration_seconds",
 		metric.WithDescription("Job execution duration in seconds"),
 	)
 }

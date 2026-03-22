@@ -65,12 +65,6 @@ func (s *ServerPublicTestSuite) TestNew() {
 				s.NotNil(srv.MeterProvider())
 			},
 		},
-		{
-			name: "has registry",
-			validateFunc: func(srv *metrics.Server) {
-				s.NotNil(srv.Registry())
-			},
-		},
 	}
 
 	for _, tc := range tests {
@@ -155,22 +149,22 @@ func (s *ServerPublicTestSuite) TestComponentUpGauge() {
 	tests := []struct {
 		name          string
 		readinessFunc func() error
-		wantContains  string
+		wantContains  []string
 	}{
 		{
 			name:          "reports 0 when no readiness func set",
 			readinessFunc: nil,
-			wantContains:  "osapi_component_up 0",
+			wantContains:  []string{"osapi_component_up", "} 0"},
 		},
 		{
 			name:          "reports 1 when readiness func returns nil",
 			readinessFunc: func() error { return nil },
-			wantContains:  "osapi_component_up 1",
+			wantContains:  []string{"osapi_component_up", "} 1"},
 		},
 		{
 			name:          "reports 0 when readiness func returns error",
 			readinessFunc: func() error { return errors.New("fail") },
-			wantContains:  "osapi_component_up 0",
+			wantContains:  []string{"osapi_component_up", "} 0"},
 		},
 	}
 
@@ -187,7 +181,9 @@ func (s *ServerPublicTestSuite) TestComponentUpGauge() {
 			time.Sleep(100 * time.Millisecond)
 
 			body := scrapeMetrics(port)
-			s.Contains(body, tc.wantContains)
+			for _, want := range tc.wantContains {
+				s.Contains(body, want)
+			}
 
 			ctx, cancel := context.WithTimeout(
 				context.Background(),
@@ -227,9 +223,9 @@ func (s *ServerPublicTestSuite) TestRegisterSubsystems() {
 				{Name: "notifier", StatusFn: func() string { return "disabled" }},
 			},
 			wantContains: []string{
-				`osapi_subsystem_up{subsystem="api"} 1`,
-				`osapi_subsystem_up{subsystem="heartbeat"} 1`,
-				`osapi_subsystem_up{subsystem="notifier"} 0`,
+				`subsystem="api"} 1`,
+				`subsystem="heartbeat"} 1`,
+				`subsystem="notifier"} 0`,
 			},
 		},
 	}

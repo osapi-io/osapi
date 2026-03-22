@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -34,7 +35,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	slogecho "github.com/samber/slog-echo"
+	"go.opentelemetry.io/otel/attribute"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
@@ -56,6 +59,7 @@ func New(
 
 	exporter, err := prometheusNewFn(
 		prometheusExporter.WithRegisterer(reg),
+		prometheusExporter.WithNamespace("osapi"),
 	)
 	if err != nil {
 		logger.Error("failed to create prometheus exporter", "error", err)
@@ -72,21 +76,23 @@ func New(
 		meterProvider: mp,
 	}
 
-	reg.MustRegister(prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Name: "osapi_component_up",
-			Help: "Whether the component is ready (1) or not (0).",
-		},
-		func() float64 {
+	meter := mp.Meter("osapi")
+	_, _ = meter.Float64ObservableGauge(
+		"component_up",
+		metric.WithDescription("Whether the component is ready (1) or not (0)."),
+		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
 			if srv.readinessFunc == nil {
-				return 0
+				o.Observe(0)
+				return nil
 			}
 			if srv.readinessFunc() != nil {
-				return 0
+				o.Observe(0)
+				return nil
 			}
-			return 1
-		},
-	))
+			o.Observe(1)
+			return nil
+		}),
+	)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -118,28 +124,51 @@ type SubsystemStatus struct {
 	StatusFn func() string
 }
 
-// RegisterSubsystems registers an osapi_subsystem_up gauge for each
-// sub-component. The gauge reports 1 when the status function returns
-// "ok" and 0 otherwise. The status is read at scrape time.
+// RegisterSubsystems registers an osapi_subsystem_up gauge that reports
+// 1 when each subsystem status function returns "ok" and 0 otherwise.
+// All subsystems are emitted in a single callback with a "subsystem" attribute.
 func (s *Server) RegisterSubsystems(
 	subsystems []SubsystemStatus,
 ) {
-	for _, sub := range subsystems {
-		fn := sub.StatusFn // capture for closure
-		s.registry.MustRegister(prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "osapi_subsystem_up",
-				Help:        "Whether a subsystem is healthy (1) or not (0).",
-				ConstLabels: prometheus.Labels{"subsystem": sub.Name},
-			},
-			func() float64 {
-				if fn() == "ok" {
-					return 1
+	meter := s.meterProvider.Meter("osapi")
+	_, _ = meter.Float64ObservableGauge(
+		"subsystem_up",
+		metric.WithDescription("Whether a subsystem is healthy (1) or not (0)."),
+		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
+			for _, sub := range subsystems {
+				val := float64(0)
+				if sub.StatusFn() == "ok" {
+					val = 1
 				}
-				return 0
-			},
-		))
-	}
+				o.Observe(val, metric.WithAttributes(
+					attribute.String("subsystem", sub.Name),
+				))
+			}
+			return nil
+		}),
+	)
+}
+
+// RegisterHeartbeatAge registers an osapi_heartbeat_age_seconds gauge that
+// reports the time since the last successful heartbeat write. The timeFn
+// should return the timestamp of the last heartbeat, or zero time if none.
+func (s *Server) RegisterHeartbeatAge(
+	timeFn func() time.Time,
+) {
+	meter := s.meterProvider.Meter("osapi")
+	_, _ = meter.Float64ObservableGauge(
+		"heartbeat_age_seconds",
+		metric.WithDescription("Seconds since last successful heartbeat write."),
+		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
+			t := timeFn()
+			if t.IsZero() {
+				o.Observe(0)
+				return nil
+			}
+			o.Observe(time.Since(t).Seconds())
+			return nil
+		}),
+	)
 }
 
 // MeterProvider returns the isolated OTEL MeterProvider for this server.
@@ -147,11 +176,6 @@ func (s *Server) RegisterSubsystems(
 // /metrics endpoint.
 func (s *Server) MeterProvider() *sdkmetric.MeterProvider {
 	return s.meterProvider
-}
-
-// Registry returns the isolated Prometheus registry for this server.
-func (s *Server) Registry() *prometheus.Registry {
-	return s.registry
 }
 
 // Start starts the HTTP server in a background goroutine.

@@ -23,9 +23,7 @@ package cmd
 import (
 	"context"
 	"sync"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -149,22 +147,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 			agentServer.SetMeterProvider(s.MeterProvider())
 			s.RegisterSubsystems(subsystemStatuses(agentSubs))
-
-			s.Registry().MustRegister(
-				prometheus.NewGaugeFunc(
-					prometheus.GaugeOpts{
-						Name: "osapi_heartbeat_age_seconds",
-						Help: "Seconds since last successful heartbeat write.",
-					},
-					func() float64 {
-						t := agentServer.LastHeartbeatTime()
-						if t.IsZero() {
-							return 0
-						}
-						return time.Since(t).Seconds()
-					},
-				),
-			)
+			s.RegisterHeartbeatAge(agentServer.LastHeartbeatTime)
 
 			s.Start()
 

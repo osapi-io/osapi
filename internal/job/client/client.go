@@ -101,7 +101,7 @@ func (c *Client) SetMeterProvider(
 ) {
 	meter := mp.Meter("osapi-controller")
 	c.jobsCreated, _ = meter.Int64Counter(
-		"osapi_jobs_created_total",
+		"jobs_created_total",
 		metric.WithDescription("Total jobs submitted via API"),
 	)
 }
