@@ -30,6 +30,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	slogecho "github.com/samber/slog-echo"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel"
 
 	"github.com/retr0h/osapi/internal/config"
 )
@@ -51,13 +52,6 @@ func New(
 		corsConfig.AllowOrigins = allowOrigins
 	}
 
-	e.Use(otelecho.Middleware("osapi-api"))
-	e.Use(slogecho.New(logger))
-	e.Use(middleware.Recover())
-	e.Use(middleware.RequestID())
-	e.Use(middleware.CORSWithConfig(corsConfig))
-	e.Use(middleware.Recover())
-
 	// Build custom roles map from config.
 	var customRoles map[string][]string
 	if cfgRoles := appConfig.Controller.API.Security.Roles; len(cfgRoles) > 0 {
@@ -77,6 +71,23 @@ func New(
 	for _, opt := range opts {
 		opt(s)
 	}
+
+	// Register middleware after options so MeterProvider is available.
+	otelOpts := []otelecho.Option{
+		otelecho.WithTracerProvider(otel.GetTracerProvider()),
+	}
+	if s.meterProvider != nil {
+		otelOpts = append(
+			otelOpts,
+			otelecho.WithMeterProvider(s.meterProvider),
+		)
+	}
+
+	e.Use(otelecho.Middleware("osapi-api", otelOpts...))
+	e.Use(slogecho.New(logger))
+	e.Use(middleware.Recover())
+	e.Use(middleware.RequestID())
+	e.Use(middleware.CORSWithConfig(corsConfig))
 
 	// Register audit middleware if an audit store is configured.
 	if s.auditStore != nil {

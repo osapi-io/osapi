@@ -90,11 +90,13 @@ type natsBundle struct {
 
 // setupController connects to NATS, creates the API server with all handlers,
 // and returns the server manager and NATS bundle. It is used by the standalone
-// API server start and combined start commands.
+// API server start and combined start commands. Extra api.Option values are
+// appended after the audit-store option (e.g., WithMeterProvider).
 func setupController(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
+	extraOpts ...api.Option,
 ) (ServerManager, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -133,6 +135,7 @@ func setupController(
 		b.registryKV,
 	)
 
+	serverOpts = append(serverOpts, extraOpts...)
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
 		sm, b.jobClient, checker, metricsProvider,

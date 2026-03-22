@@ -24,6 +24,7 @@ import (
 	"log/slog"
 
 	"github.com/labstack/echo/v4"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
@@ -31,11 +32,12 @@ import (
 
 // Server implementation of the Server's API operations.
 type Server struct {
-	Echo        *echo.Echo
-	logger      *slog.Logger
-	appConfig   config.Config
-	customRoles map[string][]string
-	auditStore  audit.Store
+	Echo          *echo.Echo
+	logger        *slog.Logger
+	appConfig     config.Config
+	customRoles   map[string][]string
+	auditStore    audit.Store
+	meterProvider *sdkmetric.MeterProvider
 }
 
 // Option is a functional option for configuring the Server.
@@ -47,5 +49,16 @@ func WithAuditStore(
 ) Option {
 	return func(s *Server) {
 		s.auditStore = store
+	}
+}
+
+// WithMeterProvider sets the OTEL MeterProvider for HTTP metrics.
+// When set, the otelecho middleware routes metrics to this provider
+// instead of the global provider.
+func WithMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) Option {
+	return func(s *Server) {
+		s.meterProvider = mp
 	}
 }

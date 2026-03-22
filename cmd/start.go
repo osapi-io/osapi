@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
@@ -83,19 +84,11 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		natsLog := logger.With("component", "nats")
 		natsServer := setupNATSServer(ctx, natsLog)
-		sm, controllerBundle := setupController(
-			ctx, logger.With("component", "controller"),
-			appConfig.Controller.NATS,
-		)
 
-		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
-
-		agentServer, agentBundle := setupAgent(
-			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
-		)
-
-		// Start per-component metrics servers.
+		// Create the controller metrics server before the API server so the
+		// MeterProvider can be injected into otelecho middleware.
 		var metricsServers []*metrics.Server
+		var controllerOpts []api.Option
 
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
@@ -103,13 +96,34 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.Controller.Metrics.Port,
 				logger.With("component", "controller-metrics"),
 			)
+			if s != nil {
+				controllerOpts = append(
+					controllerOpts,
+					api.WithMeterProvider(s.MeterProvider()),
+				)
+				metricsServers = append(metricsServers, s)
+			}
+		}
+
+		sm, controllerBundle := setupController(
+			ctx, logger.With("component", "controller"),
+			appConfig.Controller.NATS,
+			controllerOpts...,
+		)
+
+		// Set readiness and start controller metrics server.
+		for _, s := range metricsServers {
 			s.SetReadinessFunc(func() error {
 				return controllerBundle.checker.CheckHealth(context.Background())
 			})
 			s.Start()
-
-			metricsServers = append(metricsServers, s)
 		}
+
+		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
+
+		agentServer, agentBundle := setupAgent(
+			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
+		)
 
 		if appConfig.Agent.Metrics.Enabled {
 			s := metrics.New(

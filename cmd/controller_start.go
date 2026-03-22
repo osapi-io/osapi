@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
+	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
@@ -51,9 +52,12 @@ var controllerStartCmd = &cobra.Command{
 		job.Init(appConfig.Controller.NATS.Namespace)
 
 		log := logger.With("component", "controller")
-		sm, b := setupController(ctx, log, appConfig.Controller.NATS)
 
+		// Create the metrics server before the API server so the
+		// MeterProvider can be injected into otelecho middleware.
 		var metricsServer *metrics.Server
+		var controllerOpts []api.Option
+
 		if appConfig.Controller.Metrics.Enabled {
 			metricsServer = metrics.New(
 				appConfig.Controller.Metrics.Host,
@@ -62,11 +66,19 @@ var controllerStartCmd = &cobra.Command{
 			)
 
 			if metricsServer != nil {
-				metricsServer.SetReadinessFunc(func() error {
-					return b.checker.CheckHealth(context.Background())
-				})
+				controllerOpts = append(
+					controllerOpts,
+					api.WithMeterProvider(metricsServer.MeterProvider()),
+				)
 			}
+		}
 
+		sm, b := setupController(ctx, log, appConfig.Controller.NATS, controllerOpts...)
+
+		if metricsServer != nil {
+			metricsServer.SetReadinessFunc(func() error {
+				return b.checker.CheckHealth(context.Background())
+			})
 			metricsServer.Start()
 		}
 
