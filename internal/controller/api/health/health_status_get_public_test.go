@@ -80,8 +80,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["controller.nats"].Status)
-				s.Equal("ok", r.Components["controller.kv"].Status)
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 				s.Equal("0.1.0", r.Version)
 				s.NotEmpty(r.Uptime)
 			},
@@ -96,10 +96,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["controller.nats"].Status)
-				s.Require().NotNil(r.Components["controller.nats"].Error)
-				s.Contains(*r.Components["controller.nats"].Error, "nats not connected")
-				s.Equal("ok", r.Components["controller.kv"].Status)
+				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
+				s.Require().NotNil(r.Components["controller.nats (connectivity)"].Error)
+				s.Contains(*r.Components["controller.nats (connectivity)"].Error, "nats not connected")
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{
@@ -112,10 +112,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("ok", r.Components["controller.nats"].Status)
-				s.Equal("error", r.Components["controller.kv"].Status)
-				s.Require().NotNil(r.Components["controller.kv"].Error)
-				s.Contains(*r.Components["controller.kv"].Error, "kv bucket not accessible")
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
+				s.Require().NotNil(r.Components["controller.kv (connectivity)"].Error)
+				s.Contains(*r.Components["controller.kv (connectivity)"].Error, "kv bucket not accessible")
 			},
 		},
 		{
@@ -128,8 +128,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["controller.nats"].Status)
-				s.Equal("error", r.Components["controller.kv"].Status)
+				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{
@@ -152,8 +152,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["controller.nats"].Status)
-				s.Equal("ok", r.Components["controller.kv"].Status)
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{

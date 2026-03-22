@@ -65,8 +65,8 @@ func (h *Health) buildStatusResponse(
 	uptime := time.Since(h.StartTime).Round(time.Second).String()
 
 	components := map[string]gen.ComponentHealth{
-		"controller.nats": natsComponent,
-		"controller.kv":   kvComponent,
+		"controller.nats (connectivity)": natsComponent,
+		"controller.kv (connectivity)":   kvComponent,
 	}
 
 	for name, info := range h.SubComponents {
