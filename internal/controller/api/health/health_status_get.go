@@ -337,6 +337,14 @@ func (h *Health) populateMetrics(
 				entry.Conditions = &conds
 			}
 			entries = append(entries, entry)
+
+			for name, sc := range e.SubComponents {
+				ch := gen.ComponentHealth{Status: sc.Status}
+				if sc.Address != "" {
+					ch.Address = &sc.Address
+				}
+				resp.Components[name] = ch
+			}
 		}
 		resp.Registry = &entries
 	}

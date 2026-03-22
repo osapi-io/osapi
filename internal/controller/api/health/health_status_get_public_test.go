@@ -363,6 +363,87 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 		},
 		{
+			name: "registry sub-components merged into components",
+			checker: &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			},
+			metrics: &health.ClosureMetricsProvider{
+				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
+					return &health.NATSMetrics{URL: "nats://localhost:4222", Version: "2.10.0"}, nil
+				},
+				StreamInfoFn: func(_ context.Context) ([]health.StreamMetrics, error) {
+					return []health.StreamMetrics{}, nil
+				},
+				KVInfoFn: func(_ context.Context) ([]health.KVMetrics, error) {
+					return []health.KVMetrics{}, nil
+				},
+				ObjectStoreInfoFn: func(_ context.Context) ([]health.ObjectStoreMetrics, error) {
+					return []health.ObjectStoreMetrics{}, nil
+				},
+				ConsumerStatsFn: func(_ context.Context) (*health.ConsumerMetrics, error) {
+					return &health.ConsumerMetrics{}, nil
+				},
+				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
+					return &health.JobMetrics{}, nil
+				},
+				AgentStatsFn: func(_ context.Context) (*health.AgentMetrics, error) {
+					return &health.AgentMetrics{}, nil
+				},
+				ComponentRegistryFn: func(_ context.Context) ([]health.ComponentEntry, error) {
+					return []health.ComponentEntry{
+						{
+							Type:     "nats",
+							Hostname: "nats-01",
+							Status:   "Ready",
+							Age:      "1h",
+							SubComponents: map[string]health.SubComponentInfo{
+								"nats.server":    {Status: "ok", Address: "nats://localhost:4222"},
+								"nats.heartbeat": {Status: "ok"},
+								"nats.metrics":   {Status: "ok", Address: "http://0.0.0.0:9092"},
+							},
+						},
+						{
+							Type:     "agent",
+							Hostname: "web-01",
+							Status:   "Ready",
+							Age:      "30m",
+							SubComponents: map[string]health.SubComponentInfo{
+								"agent.heartbeat": {Status: "ok"},
+								"agent.metrics":   {Status: "disabled"},
+							},
+						},
+					}, nil
+				},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+
+				// Sub-components from registry entries merged into components map.
+				natsServer := r.Components["nats.server"]
+				s.Equal("ok", natsServer.Status)
+				s.Require().NotNil(natsServer.Address)
+				s.Equal("nats://localhost:4222", *natsServer.Address)
+
+				natsHB := r.Components["nats.heartbeat"]
+				s.Equal("ok", natsHB.Status)
+				s.Nil(natsHB.Address)
+
+				natsMetrics := r.Components["nats.metrics"]
+				s.Equal("ok", natsMetrics.Status)
+				s.Require().NotNil(natsMetrics.Address)
+				s.Equal("http://0.0.0.0:9092", *natsMetrics.Address)
+
+				agentHB := r.Components["agent.heartbeat"]
+				s.Equal("ok", agentHB.Status)
+
+				agentMetrics := r.Components["agent.metrics"]
+				s.Equal("disabled", agentMetrics.Status)
+				s.Nil(agentMetrics.Address)
+			},
+		},
+		{
 			name: "registry failure degrades gracefully",
 			checker: &health.NATSChecker{
 				NATSCheck: func() error { return nil },

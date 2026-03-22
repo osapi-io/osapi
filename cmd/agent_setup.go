@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/retr0h/osapi/internal/agent"
@@ -73,6 +74,26 @@ func setupAgent(
 		b.registryKV,
 		b.factsKV,
 	)
+
+	enabledOrDisabled := func(enabled bool) string {
+		if enabled {
+			return "ok"
+		}
+
+		return "disabled"
+	}
+
+	a.SetSubComponents(map[string]job.SubComponentInfo{
+		"agent.heartbeat": {Status: "ok"},
+		"agent.metrics": {
+			Status: enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
+			Address: fmt.Sprintf(
+				"http://%s:%d",
+				appConfig.Agent.Metrics.Host,
+				appConfig.Agent.Metrics.Port,
+			),
+		},
+	})
 
 	return a, b
 }

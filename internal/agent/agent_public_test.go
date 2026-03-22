@@ -32,6 +32,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
@@ -116,6 +117,10 @@ func (s *AgentPublicTestSuite) TestNew() {
 			)
 
 			s.NotNil(a)
+
+			a.SetSubComponents(map[string]job.SubComponentInfo{
+				"agent.heartbeat": {Status: "ok"},
+			})
 		})
 	}
 }

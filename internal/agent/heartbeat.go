@@ -99,11 +99,12 @@ func (a *Agent) writeRegistration(
 	a.handleDrainDetection(ctx, hostname)
 
 	reg := job.AgentRegistration{
-		Hostname:     hostname,
-		Labels:       a.appConfig.Agent.Labels,
-		RegisteredAt: time.Now(),
-		StartedAt:    a.startedAt,
-		State:        a.state,
+		Hostname:      hostname,
+		Labels:        a.appConfig.Agent.Labels,
+		RegisteredAt:  time.Now(),
+		StartedAt:     a.startedAt,
+		State:         a.state,
+		SubComponents: a.subComponents,
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {

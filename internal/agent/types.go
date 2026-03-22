@@ -114,6 +114,9 @@ type Agent struct {
 	consumerCtx    context.Context
 	consumerCancel context.CancelFunc
 	consumerWg     sync.WaitGroup
+
+	// subComponents reports the status of internal services in heartbeat.
+	subComponents map[string]job.SubComponentInfo
 }
 
 // JobContext contains the context and data for a single job execution.

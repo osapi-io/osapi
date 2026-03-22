@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -32,6 +33,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/provider/process"
 )
@@ -83,6 +85,8 @@ func startNATSHeartbeat(
 		return
 	}
 
+	subComponents := buildNATSSubComponents()
+
 	hb := controller.NewComponentHeartbeat(
 		log,
 		registryKV,
@@ -95,6 +99,7 @@ func startNATSHeartbeat(
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
+		subComponents,
 	)
 
 	go func() {
@@ -120,6 +125,8 @@ func startNATSHeartbeatFromKV(
 		hostname = "unknown"
 	}
 
+	subComponents := buildNATSSubComponents()
+
 	hb := controller.NewComponentHeartbeat(
 		log,
 		registryKV,
@@ -132,7 +139,45 @@ func startNATSHeartbeatFromKV(
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
+		subComponents,
 	)
 
 	go hb.Start(ctx)
+}
+
+// buildNATSSubComponents constructs the sub-component map for the NATS server heartbeat.
+func buildNATSSubComponents() map[string]job.SubComponentInfo {
+	natsAddr := fmt.Sprintf(
+		"nats://%s:%d",
+		appConfig.NATS.Server.Host,
+		appConfig.NATS.Server.Port,
+	)
+
+	enabledOrDisabled := func(enabled bool) string {
+		if enabled {
+			return "ok"
+		}
+
+		return "disabled"
+	}
+
+	scs := map[string]job.SubComponentInfo{
+		"nats.heartbeat": {Status: "ok"},
+		"nats.server":    {Status: "ok", Address: natsAddr},
+	}
+
+	if appConfig.NATS.Server.Metrics.Enabled {
+		scs["nats.metrics"] = job.SubComponentInfo{
+			Status: enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled),
+			Address: fmt.Sprintf(
+				"http://%s:%d",
+				appConfig.NATS.Server.Metrics.Host,
+				appConfig.NATS.Server.Metrics.Port,
+			),
+		}
+	} else {
+		scs["nats.metrics"] = job.SubComponentInfo{Status: "disabled"}
+	}
+
+	return scs
 }
