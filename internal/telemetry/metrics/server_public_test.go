@@ -22,6 +22,7 @@ package metrics_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -125,6 +126,68 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(port)
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestComponentUpGauge() {
+	scrapeMetrics := func(port int) string {
+		url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
+
+		resp, err := http.Get(url) //nolint:gosec
+		s.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		return string(body)
+	}
+
+	tests := []struct {
+		name          string
+		readinessFunc func() error
+		wantContains  string
+	}{
+		{
+			name:          "reports 0 when no readiness func set",
+			readinessFunc: nil,
+			wantContains:  "osapi_component_up 0",
+		},
+		{
+			name:          "reports 1 when readiness func returns nil",
+			readinessFunc: func() error { return nil },
+			wantContains:  "osapi_component_up 1",
+		},
+		{
+			name:          "reports 0 when readiness func returns error",
+			readinessFunc: func() error { return errors.New("fail") },
+			wantContains:  "osapi_component_up 0",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+
+			if tc.readinessFunc != nil {
+				srv.SetReadinessFunc(tc.readinessFunc)
+			}
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			body := scrapeMetrics(port)
+			s.Contains(body, tc.wantContains)
 
 			ctx, cancel := context.WithTimeout(
 				context.Background(),

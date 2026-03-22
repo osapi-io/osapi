@@ -69,6 +69,22 @@ func New(
 		meterProvider: mp,
 	}
 
+	reg.MustRegister(prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "osapi_component_up",
+			Help: "Whether the component is ready (1) or not (0).",
+		},
+		func() float64 {
+			if srv.readinessFunc == nil {
+				return 0
+			}
+			if srv.readinessFunc() != nil {
+				return 0
+			}
+			return 1
+		},
+	))
+
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 	mux.HandleFunc("/health", srv.handleHealth)
