@@ -27,11 +27,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	slogecho "github.com/samber/slog-echo"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
@@ -64,6 +66,7 @@ func New(
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 
 	srv := &Server{
+		addr:          fmt.Sprintf("%s:%d", host, port),
 		logger:        logger,
 		registry:      reg,
 		meterProvider: mp,
@@ -85,16 +88,18 @@ func New(
 		},
 	))
 
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
-	mux.HandleFunc("/health", srv.handleHealth)
-	mux.HandleFunc("/health/ready", srv.handleReady)
+	e := echo.New()
+	e.HideBanner = true
+	e.Use(slogecho.New(logger))
+	e.Use(middleware.Recover())
 
-	srv.httpServer = &http.Server{
-		Addr:              fmt.Sprintf("%s:%d", host, port),
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
-	}
+	e.GET("/metrics", echo.WrapHandler(
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}),
+	))
+	e.GET("/health", srv.handleHealth)
+	e.GET("/health/ready", srv.handleReady)
+
+	srv.echo = e
 
 	return srv
 }
@@ -121,9 +126,9 @@ func (s *Server) Registry() *prometheus.Registry {
 // Start starts the HTTP server in a background goroutine.
 func (s *Server) Start() {
 	go func() {
-		s.logger.Info("metrics server started", "addr", s.httpServer.Addr)
+		s.logger.Info("metrics server started", "addr", s.addr)
 
-		if err := s.httpServer.ListenAndServe(); err != nil &&
+		if err := s.echo.Start(s.addr); err != nil &&
 			err != http.ErrServerClosed {
 			s.logger.Error("metrics server error", "error", err)
 		}
@@ -136,7 +141,7 @@ func (s *Server) Stop(ctx context.Context) {
 		s.logger.Error("meter provider shutdown error", "error", err)
 	}
 
-	if err := s.httpServer.Shutdown(ctx); err != nil {
+	if err := s.echo.Shutdown(ctx); err != nil {
 		s.logger.Error("metrics server shutdown error", "error", err)
 	}
 

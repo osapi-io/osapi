@@ -22,18 +22,19 @@ package metrics
 
 import (
 	"log/slog"
-	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-// Server is a lightweight HTTP server that serves /metrics with an
-// isolated Prometheus registry and OTEL MeterProvider.
+// Server is a per-component HTTP server that serves /metrics, /health,
+// and /health/ready with an isolated Prometheus registry and OTEL MeterProvider.
 type Server struct {
-	httpServer     *http.Server
-	logger         *slog.Logger
-	registry       *prometheus.Registry
-	meterProvider  *sdkmetric.MeterProvider
-	readinessFunc  func() error
+	echo          *echo.Echo
+	addr          string
+	logger        *slog.Logger
+	registry      *prometheus.Registry
+	meterProvider *sdkmetric.MeterProvider
+	readinessFunc func() error
 }
