@@ -1,8 +1,8 @@
 # Health Probes and Application Metrics Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development
-> (if subagents available) or superpowers:executing-plans to implement this plan.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> (if subagents available) or superpowers:executing-plans to implement this
+> plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add `/health` and `/health/ready` probes to the per-component metrics
 server, register application-specific Prometheus metrics for each component, and
@@ -26,6 +26,7 @@ otelecho middleware, testify/suite
 ### Task 1: Add health handlers
 
 **Files:**
+
 - Create: `internal/telemetry/metrics/health.go`
 - Create: `internal/telemetry/metrics/health_public_test.go`
 - Modify: `internal/telemetry/metrics/types.go`
@@ -103,11 +104,12 @@ func (s *Server) handleReady(
 }
 ```
 
-- [ ] **Step 3: Refactor `New()` to support health routes and add `SetReadinessFunc`**
+- [ ] **Step 3: Refactor `New()` to support health routes and add
+      `SetReadinessFunc`**
 
 Refactor `internal/telemetry/metrics/server.go` so the `Server` is created
-before the mux routes are registered (health handlers are methods on
-`*Server` and need a receiver). The full refactored `New()`:
+before the mux routes are registered (health handlers are methods on `*Server`
+and need a receiver). The full refactored `New()`:
 
 ```go
 func New(
@@ -156,6 +158,7 @@ func New(
 ```
 
 Add the setter method:
+
 ```go
 // SetReadinessFunc sets the function called by /health/ready and the
 // osapi_component_up gauge. The function should return nil when the
@@ -206,6 +209,7 @@ git commit -m "feat: add /health and /health/ready probes to metrics server"
 ### Task 2: Add `osapi_component_up` gauge
 
 **Files:**
+
 - Modify: `internal/telemetry/metrics/server.go`
 - Modify: `internal/telemetry/metrics/server_public_test.go`
 
@@ -239,10 +243,9 @@ sees the updated value at scrape time.
 
 Add test cases to `TestStartAndStop` in `server_public_test.go`:
 
-1. When no readiness func set, `/metrics` contains
-   `osapi_component_up 0`
-2. After `SetReadinessFunc(func() error { return nil })`, `/metrics`
-   contains `osapi_component_up 1`
+1. When no readiness func set, `/metrics` contains `osapi_component_up 0`
+2. After `SetReadinessFunc(func() error { return nil })`, `/metrics` contains
+   `osapi_component_up 1`
 3. After `SetReadinessFunc(func() error { return errors.New("...") })`,
    `/metrics` contains `osapi_component_up 0`
 
@@ -266,6 +269,7 @@ git commit -m "feat: add osapi_component_up gauge to metrics server"
 ### Task 3: Wire readiness checks for all three components
 
 **Files:**
+
 - Modify: `cmd/controller_start.go`
 - Modify: `cmd/agent_start.go`
 - Modify: `cmd/agent_setup.go`
@@ -289,15 +293,15 @@ func (a *Agent) IsReady() error {
 }
 ```
 
-Test in `agent_public_test.go`: call before `Start()` → error, after
-`Start()` → nil.
+Test in `agent_public_test.go`: call before `Start()` → error, after `Start()` →
+nil.
 
 - [ ] **Step 2: Wire controller readiness**
 
-The `NATSChecker` is created inside `setupController` as a local variable
-and not stored on the bundle. Add a `checker` field to `natsBundle` (or the
-equivalent controller bundle struct in `cmd/controller_setup.go`) and store
-the `NATSChecker` there so it can be accessed from the startup command.
+The `NATSChecker` is created inside `setupController` as a local variable and
+not stored on the bundle. Add a `checker` field to `natsBundle` (or the
+equivalent controller bundle struct in `cmd/controller_setup.go`) and store the
+`NATSChecker` there so it can be accessed from the startup command.
 
 Then in `cmd/controller_start.go`, after creating the metrics server:
 
@@ -311,12 +315,12 @@ if metricsServer != nil {
 
 - [ ] **Step 3: Wire agent readiness**
 
-Note: `setupAgent` returns `(cli.Lifecycle, *natsBundle)`, not
-`*agent.Agent`. The `cli.Lifecycle` interface only has `Start()` and
-`Stop(ctx)`. To call `IsReady()`, `SetMeterProvider()`, and
-`LastHeartbeatTime()`, change `setupAgent` to return `*agent.Agent`
-directly (it satisfies `cli.Lifecycle` since it has `Start()` and
-`Stop(ctx)`). Update the call sites in `agent_start.go` and `start.go`.
+Note: `setupAgent` returns `(cli.Lifecycle, *natsBundle)`, not `*agent.Agent`.
+The `cli.Lifecycle` interface only has `Start()` and `Stop(ctx)`. To call
+`IsReady()`, `SetMeterProvider()`, and `LastHeartbeatTime()`, change
+`setupAgent` to return `*agent.Agent` directly (it satisfies `cli.Lifecycle`
+since it has `Start()` and `Stop(ctx)`). Update the call sites in
+`agent_start.go` and `start.go`.
 
 Then in `cmd/agent_start.go`, after creating the metrics server:
 
@@ -332,10 +336,10 @@ if metricsServer != nil {
 
 - [ ] **Step 4: Wire NATS readiness**
 
-The `natsembedded.Server` does not expose `JetStreamEnabled()` on its
-public interface. Since `setupNATSServer` only returns successfully after
-JetStream infrastructure is fully configured, the NATS server is always
-ready if the process is running. Use a simple always-ready check:
+The `natsembedded.Server` does not expose `JetStreamEnabled()` on its public
+interface. Since `setupNATSServer` only returns successfully after JetStream
+infrastructure is fully configured, the NATS server is always ready if the
+process is running. Use a simple always-ready check:
 
 ```go
 if metricsServer != nil {
@@ -345,16 +349,16 @@ if metricsServer != nil {
 }
 ```
 
-If a more meaningful readiness check is needed later (e.g., checking that
-the NATS server is still accepting connections), the `natsembedded` package
-can be extended with a health method. For now, the `osapi_component_up`
-gauge will reflect 1 as long as the process is running, and the heartbeat
-TTL expiry handles the "server is down" case in the registry.
+If a more meaningful readiness check is needed later (e.g., checking that the
+NATS server is still accepting connections), the `natsembedded` package can be
+extended with a health method. For now, the `osapi_component_up` gauge will
+reflect 1 as long as the process is running, and the heartbeat TTL expiry
+handles the "server is down" case in the registry.
 
 - [ ] **Step 5: Wire readiness in combined start mode**
 
-In `cmd/start.go`, wire each metrics server's readiness after creation,
-using the same patterns as the standalone commands.
+In `cmd/start.go`, wire each metrics server's readiness after creation, using
+the same patterns as the standalone commands.
 
 - [ ] **Step 6: Run full test suite**
 
@@ -376,6 +380,7 @@ git commit -m "feat: wire readiness checks for all components"
 ### Task 4: Controller HTTP metrics via otelecho
 
 **Files:**
+
 - Modify: `internal/controller/api/server.go`
 - Modify: `internal/controller/api/types.go`
 - Modify: `cmd/controller_start.go`
@@ -383,12 +388,13 @@ git commit -m "feat: wire readiness checks for all components"
 - Modify: `cmd/start.go`
 
 The `otelecho` middleware is already wired in `server.go:54`:
+
 ```go
 e.Use(otelecho.Middleware("osapi-api"))
 ```
 
-Currently it uses the global OTEL provider (from tracing). To route metrics
-to the metrics server's isolated `MeterProvider`, we need to pass the
+Currently it uses the global OTEL provider (from tracing). To route metrics to
+the metrics server's isolated `MeterProvider`, we need to pass the
 `MeterProvider` to the middleware via options.
 
 - [ ] **Step 1: Add `MeterProvider` option to `Server`**
@@ -411,17 +417,16 @@ func WithMeterProvider(mp *sdkmetric.MeterProvider) Option {
 
 - [ ] **Step 2: Move otelecho middleware after option application**
 
-In `server.go`, the current `e.Use(otelecho.Middleware("osapi-api"))` at
-line 54 runs before the options loop at lines 77-79, so `s.meterProvider`
-is always nil when the middleware is registered.
+In `server.go`, the current `e.Use(otelecho.Middleware("osapi-api"))` at line 54
+runs before the options loop at lines 77-79, so `s.meterProvider` is always nil
+when the middleware is registered.
 
-Fix: move all `e.Use(...)` calls to after the options loop. The order
-should be:
+Fix: move all `e.Use(...)` calls to after the options loop. The order should be:
 
 1. Create echo instance
 2. Apply options (which sets `s.meterProvider`, `s.auditStore`, etc.)
-3. Register middleware (otelecho with optional MeterProvider, slogecho,
-   recover, requestID, CORS, audit)
+3. Register middleware (otelecho with optional MeterProvider, slogecho, recover,
+   requestID, CORS, audit)
 
 ```go
 // After opts loop:
@@ -439,13 +444,13 @@ e.Use(middleware.RequestID())
 e.Use(middleware.CORSWithConfig(corsConfig))
 ```
 
-Remove the duplicate `e.Use(middleware.Recover())` that currently exists
-at line 59.
+Remove the duplicate `e.Use(middleware.Recover())` that currently exists at
+line 59.
 
 - [ ] **Step 3: Pass `MeterProvider` from cmd**
 
-In `cmd/controller_start.go` (and the controller setup in `start.go`),
-pass the metrics server's `MeterProvider` to `api.New()`:
+In `cmd/controller_start.go` (and the controller setup in `start.go`), pass the
+metrics server's `MeterProvider` to `api.New()`:
 
 ```go
 if metricsServer != nil {
@@ -453,33 +458,32 @@ if metricsServer != nil {
 }
 ```
 
-Check how `setupController` creates the API server — the options are built
-in `controller_setup.go`. Pass the `MeterProvider` through.
+Check how `setupController` creates the API server — the options are built in
+`controller_setup.go`. Pass the `MeterProvider` through.
 
 - [ ] **Step 4: Add `osapi_jobs_created_total` counter**
 
 Job creation happens in `internal/controller/api/job/` handlers that call
-`jc.PublishJob()`. The `jobclient.JobClient` is passed into the job handler
-via `sm.GetJobHandler(jc)`. To instrument job creation:
+`jc.PublishJob()`. The `jobclient.JobClient` is passed into the job handler via
+`sm.GetJobHandler(jc)`. To instrument job creation:
 
-1. Add a `jobsCreated metric.Int64Counter` field to the job handler struct
-   in `internal/controller/api/job/types.go`
-2. Create the counter in `cmd/controller_setup.go` using the metrics
-   server's `MeterProvider` and pass it to the job handler via a new option
-   (e.g., `job.WithJobsCreatedCounter(counter)`)
-3. In each job handler that calls `PublishJob`, increment the counter after
-   a successful publish
+1. Add a `jobsCreated metric.Int64Counter` field to the job handler struct in
+   `internal/controller/api/job/types.go`
+2. Create the counter in `cmd/controller_setup.go` using the metrics server's
+   `MeterProvider` and pass it to the job handler via a new option (e.g.,
+   `job.WithJobsCreatedCounter(counter)`)
+3. In each job handler that calls `PublishJob`, increment the counter after a
+   successful publish
 
-If the metrics server is nil (disabled), skip counter creation and the
-handler nil-checks the counter before incrementing (same pattern as agent
-metrics).
+If the metrics server is nil (disabled), skip counter creation and the handler
+nil-checks the counter before incrementing (same pattern as agent metrics).
 
 - [ ] **Step 5: Test controller metrics appear in `/metrics` output**
 
-Write an integration-style test or verify manually that after wiring,
-hitting the API server and then scraping `/metrics` on the metrics port
-shows `osapi_api_request_duration_seconds` and `osapi_api_requests_total`
-(these come from otelecho automatically).
+Write an integration-style test or verify manually that after wiring, hitting
+the API server and then scraping `/metrics` on the metrics port shows
+`osapi_api_request_duration_seconds` and `osapi_api_requests_total` (these come
+from otelecho automatically).
 
 - [ ] **Step 6: Commit**
 
@@ -493,6 +497,7 @@ git commit -m "feat: add controller HTTP and job creation metrics"
 ### Task 5: Agent job metrics
 
 **Files:**
+
 - Modify: `internal/agent/types.go` (add meter fields)
 - Modify: `internal/agent/agent.go` (add `SetMeterProvider()`)
 - Modify: `internal/agent/handler.go` (instrument job processing)
@@ -547,6 +552,7 @@ func (a *Agent) SetMeterProvider(
 In `internal/agent/handler.go`, around the job processing:
 
 At the start of job processing (after "Write started event"):
+
 ```go
 if a.jobsActive != nil {
 	a.jobsActive.Add(ctx, 1)
@@ -554,6 +560,7 @@ if a.jobsActive != nil {
 ```
 
 After processing completes (both success and failure paths):
+
 ```go
 if a.jobsActive != nil {
 	a.jobsActive.Add(ctx, -1)
@@ -574,16 +581,19 @@ if a.jobsProcessed != nil {
 - [ ] **Step 4: Track `lastHeartbeatTime`**
 
 In `internal/agent/types.go`, add:
+
 ```go
 lastHeartbeatTime atomic.Value // stores time.Time
 ```
 
 In `internal/agent/heartbeat.go`, after successful KV put (line 189):
+
 ```go
 a.lastHeartbeatTime.Store(time.Now())
 ```
 
 In `internal/agent/agent.go`, add accessor:
+
 ```go
 // LastHeartbeatTime returns the timestamp of the last successful
 // heartbeat write. Returns zero time if no heartbeat has been written.
@@ -597,8 +607,8 @@ func (a *Agent) LastHeartbeatTime() time.Time {
 
 - [ ] **Step 5: Wire agent metrics in cmd**
 
-In `cmd/agent_start.go` (and `cmd/start.go` for combined mode), after
-creating the metrics server:
+In `cmd/agent_start.go` (and `cmd/start.go` for combined mode), after creating
+the metrics server:
 
 ```go
 if metricsServer != nil {
@@ -625,8 +635,8 @@ if metricsServer != nil {
 
 - [ ] **Step 6: Test agent metrics**
 
-Add test for `SetMeterProvider` in `agent_public_test.go` — verify it
-doesn't panic and instruments are created.
+Add test for `SetMeterProvider` in `agent_public_test.go` — verify it doesn't
+panic and instruments are created.
 
 Add test for `LastHeartbeatTime` — returns zero before heartbeat, non-zero
 after.
@@ -651,6 +661,7 @@ git commit -m "feat: add agent job and heartbeat metrics"
 ### Task 6: Update documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/features/metrics.md`
 - Modify: `docs/docs/sidebar/features/health-checks.md`
 - Modify: `docs/docs/sidebar/usage/configuration.md`
@@ -694,17 +705,17 @@ Plus note that Go runtime and process metrics are always included.
 
 - [ ] **Step 2: Update health-checks.md**
 
-Add a note in the "Endpoints" section or a new "Metrics Server Health
-Probes" section explaining that `/health` and `/health/ready` are also
-available on each component's metrics port (9090, 9091, 9092) without
-authentication. Cross-reference the metrics page.
+Add a note in the "Endpoints" section or a new "Metrics Server Health Probes"
+section explaining that `/health` and `/health/ready` are also available on each
+component's metrics port (9090, 9091, 9092) without authentication.
+Cross-reference the metrics page.
 
 - [ ] **Step 3: Update configuration.md**
 
-In `docs/docs/sidebar/usage/configuration.md`, add a note to each metrics
-server section (`controller.metrics`, `agent.metrics`, `nats.server.metrics`)
-that the metrics port also serves `/health` and `/health/ready` endpoints
-for liveness and readiness probes.
+In `docs/docs/sidebar/usage/configuration.md`, add a note to each metrics server
+section (`controller.metrics`, `agent.metrics`, `nats.server.metrics`) that the
+metrics port also serves `/health` and `/health/ready` endpoints for liveness
+and readiness probes.
 
 - [ ] **Step 4: Run prettier**
 

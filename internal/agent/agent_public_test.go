@@ -35,7 +35,6 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -45,6 +44,7 @@ import (
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 type AgentPublicTestSuite struct {
