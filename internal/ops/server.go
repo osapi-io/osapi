@@ -39,15 +39,6 @@ import (
 // prometheusNewFn is injectable for testing the exporter creation error path.
 var prometheusNewFn = prometheusExporter.New
 
-// Server is a lightweight HTTP server that serves /metrics with an
-// isolated Prometheus registry and OTEL MeterProvider.
-type Server struct {
-	httpServer    *http.Server
-	logger        *slog.Logger
-	registry      *prometheus.Registry
-	meterProvider *sdkmetric.MeterProvider
-}
-
 // New creates a new ops server on the given port with an isolated
 // Prometheus registry and OTEL MeterProvider.
 func New(
