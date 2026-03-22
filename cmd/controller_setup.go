@@ -142,8 +142,8 @@ func setupController(
 		auditStore, b.objStore,
 	)
 
-	startControllerHeartbeat(ctx, log, b.registryKV)
-	startConditionWatcher(ctx, log, b.registryKV)
+	startControllerHeartbeat(ctx, log.With("subsystem", "heartbeat"), b.registryKV)
+	startConditionWatcher(ctx, log.With("subsystem", "notifier"), b.registryKV)
 
 	return sm, b
 }

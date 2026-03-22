@@ -31,6 +31,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/job"
+	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
@@ -91,14 +92,16 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		// MeterProvider can be injected into otelecho middleware.
 		var metricsServers []*metrics.Server
 		var controllerOpts []api.Option
+		var controllerMetrics *metrics.Server
 
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
-				logger.With("component", "controller-metrics"),
+				logger.With("component", "controller", "subsystem", "metrics"),
 			)
 			if s != nil {
+				controllerMetrics = s
 				controllerOpts = append(
 					controllerOpts,
 					api.WithMeterProvider(s.MeterProvider()),
@@ -112,6 +115,12 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			appConfig.Controller.NATS,
 			controllerOpts...,
 		)
+
+		if controllerMetrics != nil {
+			if jc, ok := controllerBundle.jobClient.(*jobclient.Client); ok {
+				jc.SetMeterProvider(controllerMetrics.MeterProvider())
+			}
+		}
 
 		// Set readiness and start controller metrics server.
 		for _, s := range metricsServers {
@@ -131,7 +140,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s := metrics.New(
 				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
-				logger.With("component", "agent-metrics"),
+				logger.With("component", "agent", "subsystem", "metrics"),
 			)
 			s.SetReadinessFunc(func() error {
 				return agentServer.IsReady()
@@ -164,7 +173,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s := metrics.New(
 				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
-				logger.With("component", "nats-metrics"),
+				logger.With("component", "nats", "subsystem", "metrics"),
 			)
 			s.SetReadinessFunc(func() error {
 				return nil

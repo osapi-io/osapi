@@ -30,6 +30,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/messaging"
@@ -48,6 +50,7 @@ type Client struct {
 	// JSONMarshalFn is the function used to marshal JSON. Defaults to json.Marshal.
 	// Exported for testing.
 	JSONMarshalFn func(v any) ([]byte, error)
+	jobsCreated   metric.Int64Counter
 }
 
 // Options configures the jobs client.
@@ -90,6 +93,17 @@ func New(
 		timeout:       opts.Timeout,
 		JSONMarshalFn: json.Marshal,
 	}, nil
+}
+
+// SetMeterProvider creates OTEL instruments for job metrics.
+func (c *Client) SetMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) {
+	meter := mp.Meter("osapi-controller")
+	c.jobsCreated, _ = meter.Int64Counter(
+		"osapi_jobs_created_total",
+		metric.WithDescription("Total jobs submitted via API"),
+	)
 }
 
 // publishAndWait stores a job in KV, publishes a notification, and waits for the agent response.
@@ -144,6 +158,10 @@ func (c *Client) publishAndWait(
 	// Trace context is propagated via NATS message headers automatically by nats-client.
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
+	}
+
+	if c.jobsCreated != nil {
+		c.jobsCreated.Add(ctx, 1)
 	}
 
 	// Watch for agent response in KV
@@ -255,6 +273,10 @@ func (c *Client) publishAndCollect(
 	// Trace context is propagated via NATS message headers automatically by nats-client.
 	if err := c.natsClient.Publish(ctx, subject, []byte(jobID)); err != nil {
 		return "", nil, fmt.Errorf("failed to publish notification: %w", err)
+	}
+
+	if c.jobsCreated != nil {
+		c.jobsCreated.Add(ctx, 1)
 	}
 
 	// Watch for agent responses in KV

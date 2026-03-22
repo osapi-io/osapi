@@ -28,6 +28,7 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/job"
+	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
@@ -74,6 +75,12 @@ var controllerStartCmd = &cobra.Command{
 		}
 
 		sm, b := setupController(ctx, log, appConfig.Controller.NATS, controllerOpts...)
+
+		if metricsServer != nil {
+			if jc, ok := b.jobClient.(*jobclient.Client); ok {
+				jc.SetMeterProvider(metricsServer.MeterProvider())
+			}
+		}
 
 		if metricsServer != nil {
 			metricsServer.SetReadinessFunc(func() error {
