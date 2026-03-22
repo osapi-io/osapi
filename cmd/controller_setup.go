@@ -573,14 +573,24 @@ func registerControllerHandlers(
 	startTime := time.Now()
 
 	subComponents := map[string]string{
-		"heartbeat": "ok",
+		"controller.heartbeat": "ok",
 	}
 
-	if appConfig.Controller.Notifications.Enabled {
-		subComponents["notifier"] = "ok"
-	} else {
-		subComponents["notifier"] = "disabled"
+	enabledOrDisabled := func(enabled bool) string {
+		if enabled {
+			return "ok"
+		}
+
+		return "disabled"
 	}
+
+	subComponents["controller.notifier"] = enabledOrDisabled(appConfig.Controller.Notifications.Enabled)
+	subComponents["controller.metrics"] = enabledOrDisabled(appConfig.Controller.Metrics.Enabled)
+	subComponents["controller.tracing"] = enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)
+	subComponents["agent.heartbeat"] = "ok"
+	subComponents["agent.metrics"] = enabledOrDisabled(appConfig.Agent.Metrics.Enabled)
+	subComponents["nats.heartbeat"] = "ok"
+	subComponents["nats.metrics"] = enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled)
 
 	handlers := make([]func(e *echo.Echo), 0, 8)
 	handlers = append(handlers, sm.GetAgentHandler(jc)...)

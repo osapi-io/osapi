@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
@@ -60,28 +61,29 @@ type subComponent struct {
 	status string
 }
 
-// componentSubComponents maps component types to their sub-component names.
-var componentSubComponents = map[string][]string{
-	"controller": {"heartbeat", "notifier"},
-	"agent":      {"heartbeat"},
-}
-
-// subComponentsFor returns sub-components for the given component type.
+// subComponentsFor discovers sub-components for the given component type
+// by matching keys with the "{type}." prefix in the components map.
 func subComponentsFor(
 	componentType string,
 	components map[string]client.ComponentHealth,
 ) []subComponent {
-	names, ok := componentSubComponents[componentType]
-	if !ok || components == nil {
+	if components == nil {
 		return nil
 	}
 
+	prefix := componentType + "."
 	var result []subComponent
-	for _, name := range names {
-		if c, found := components[name]; found {
+
+	for key, c := range components {
+		if strings.HasPrefix(key, prefix) {
+			name := strings.TrimPrefix(key, prefix)
 			result = append(result, subComponent{name: name, status: c.Status})
 		}
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].name < result[j].name
+	})
 
 	return result
 }
