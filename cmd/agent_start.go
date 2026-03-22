@@ -55,20 +55,20 @@ It processes jobs as they become available.
 		log := logger.With("component", "agent")
 		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
 
-		var opsServer *metrics.Server
+		var metricsServer *metrics.Server
 		if appConfig.Agent.Metrics.Enabled {
-			opsServer = metrics.New(
+			metricsServer = metrics.New(
 				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
-				log.With("subsystem", "ops"),
+				log.With("subsystem", "metrics"),
 			)
-			opsServer.Start()
+			metricsServer.Start()
 		}
 
 		a.Start()
 		cli.RunServer(ctx, a, func() {
-			if opsServer != nil {
-				opsServer.Stop(context.Background())
+			if metricsServer != nil {
+				metricsServer.Stop(context.Background())
 			}
 
 			_ = shutdownTracer(context.Background())

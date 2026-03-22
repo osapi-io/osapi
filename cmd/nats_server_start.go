@@ -54,20 +54,20 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			appConfig.NATS.Server.Auth,
 		)
 
-		var opsServer *metrics.Server
+		var metricsServer *metrics.Server
 		if appConfig.NATS.Server.Metrics.Enabled {
-			opsServer = metrics.New(
+			metricsServer = metrics.New(
 				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
-				log.With("subsystem", "ops"),
+				log.With("subsystem", "metrics"),
 			)
-			opsServer.Start()
+			metricsServer.Start()
 		}
 
 		var ns cli.Lifecycle = &natsLifecycle{server: s}
 		cli.RunServer(ctx, ns, func() {
-			if opsServer != nil {
-				opsServer.Stop(context.Background())
+			if metricsServer != nil {
+				metricsServer.Stop(context.Background())
 			}
 		})
 	},

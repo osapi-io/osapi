@@ -94,40 +94,40 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
 		)
 
-		// Start per-component ops servers for /metrics.
-		var opsServers []*metrics.Server
+		// Start per-component metrics servers.
+		var metricsServers []*metrics.Server
 
 		if appConfig.Controller.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
-				logger.With("component", "controller-ops"),
+				logger.With("component", "controller-metrics"),
 			)
 			s.Start()
 
-			opsServers = append(opsServers, s)
+			metricsServers = append(metricsServers, s)
 		}
 
 		if appConfig.Agent.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.Agent.Metrics.Host,
 				appConfig.Agent.Metrics.Port,
-				logger.With("component", "agent-ops"),
+				logger.With("component", "agent-metrics"),
 			)
 			s.Start()
 
-			opsServers = append(opsServers, s)
+			metricsServers = append(metricsServers, s)
 		}
 
 		if appConfig.NATS.Server.Metrics.Enabled {
 			s := metrics.New(
 				appConfig.NATS.Server.Metrics.Host,
 				appConfig.NATS.Server.Metrics.Port,
-				logger.With("component", "nats-ops"),
+				logger.With("component", "nats-metrics"),
 			)
 			s.Start()
 
-			opsServers = append(opsServers, s)
+			metricsServers = append(metricsServers, s)
 		}
 
 		composite := &compositeLifecycle{
@@ -140,8 +140,8 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		composite.Start()
 		cli.RunServer(ctx, composite, func() {
-			for _, o := range opsServers {
-				o.Stop(context.Background())
+			for _, s := range metricsServers {
+				s.Stop(context.Background())
 			}
 
 			_ = shutdownTracer(context.Background())

@@ -39,7 +39,7 @@ import (
 // prometheusNewFn is injectable for testing the exporter creation error path.
 var prometheusNewFn = prometheusExporter.New
 
-// New creates a new ops server on the given port with an isolated
+// New creates a new metrics server on the given port with an isolated
 // Prometheus registry and OTEL MeterProvider.
 func New(
 	host string,
@@ -96,11 +96,11 @@ func (s *Server) Registry() *prometheus.Registry {
 // Start starts the HTTP server in a background goroutine.
 func (s *Server) Start() {
 	go func() {
-		s.logger.Info("ops server started", "addr", s.httpServer.Addr)
+		s.logger.Info("metrics server started", "addr", s.httpServer.Addr)
 
 		if err := s.httpServer.ListenAndServe(); err != nil &&
 			err != http.ErrServerClosed {
-			s.logger.Error("ops server error", "error", err)
+			s.logger.Error("metrics server error", "error", err)
 		}
 	}()
 }
@@ -112,8 +112,8 @@ func (s *Server) Stop(ctx context.Context) {
 	}
 
 	if err := s.httpServer.Shutdown(ctx); err != nil {
-		s.logger.Error("ops server shutdown error", "error", err)
+		s.logger.Error("metrics server shutdown error", "error", err)
 	}
 
-	s.logger.Info("ops server stopped")
+	s.logger.Info("metrics server stopped")
 }

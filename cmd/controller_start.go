@@ -53,20 +53,20 @@ var controllerStartCmd = &cobra.Command{
 		log := logger.With("component", "controller")
 		sm, b := setupController(ctx, log, appConfig.Controller.NATS)
 
-		var opsServer *metrics.Server
+		var metricsServer *metrics.Server
 		if appConfig.Controller.Metrics.Enabled {
-			opsServer = metrics.New(
+			metricsServer = metrics.New(
 				appConfig.Controller.Metrics.Host,
 				appConfig.Controller.Metrics.Port,
-				log.With("subsystem", "ops"),
+				log.With("subsystem", "metrics"),
 			)
-			opsServer.Start()
+			metricsServer.Start()
 		}
 
 		sm.Start()
 		cli.RunServer(ctx, sm, func() {
-			if opsServer != nil {
-				opsServer.Stop(context.Background())
+			if metricsServer != nil {
+				metricsServer.Stop(context.Background())
 			}
 
 			_ = shutdownTracer(context.Background())
