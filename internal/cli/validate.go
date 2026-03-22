@@ -43,6 +43,12 @@ type OSFamily struct {
 // supportedFamilies defines the OS families and distributions OSAPI supports.
 var supportedFamilies = []OSFamily{
 	{
+		Name: "Darwin",
+		Distributions: map[string][]string{
+			"darwin": {},
+		},
+	},
+	{
 		Name: "Debian",
 		Distributions: map[string][]string{
 			"debian": {"12", "13"},
@@ -63,6 +69,11 @@ func IsOSFamilySupported(
 		versions, ok := family.Distributions[distro]
 		if !ok {
 			continue
+		}
+
+		// Empty version list means any version is accepted.
+		if len(versions) == 0 {
+			return family.Name, true
 		}
 
 		for _, v := range versions {

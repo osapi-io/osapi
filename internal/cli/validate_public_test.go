@@ -45,6 +45,13 @@ func (suite *ValidatePublicTestSuite) TestIsOSFamilySupported() {
 		wantOK     bool
 	}{
 		{
+			name:       "when darwin is supported with any version",
+			distro:     "darwin",
+			version:    "14.0",
+			wantFamily: "Darwin",
+			wantOK:     true,
+		},
+		{
 			name:       "when debian 12 is supported",
 			distro:     "debian",
 			version:    "12",
