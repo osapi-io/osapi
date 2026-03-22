@@ -27,7 +27,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/ops"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 // natsServerStartCmd represents the natsServerStart command.
@@ -54,9 +54,9 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			appConfig.NATS.Server.Auth,
 		)
 
-		var opsServer *ops.Server
+		var opsServer *metrics.Server
 		if appConfig.NATS.Server.Metrics.Enabled {
-			opsServer = ops.New(
+			opsServer = metrics.New(
 				appConfig.NATS.Server.Metrics.Port,
 				log.With("subsystem", "ops"),
 			)

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package telemetry_test
+package tracing_test
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 type SlogPublicTestSuite struct {
@@ -97,7 +97,7 @@ func (s *SlogPublicTestSuite) TestNewTraceHandler() {
 		s.Run(tc.name, func() {
 			var buf bytes.Buffer
 			inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-			handler := telemetry.NewTraceHandler(inner)
+			handler := tracing.NewTraceHandler(inner)
 			logger := slog.New(handler)
 
 			ctx := tc.setupCtx()
@@ -111,7 +111,7 @@ func (s *SlogPublicTestSuite) TestNewTraceHandler() {
 func (s *SlogPublicTestSuite) TestTraceHandlerWithAttrs() {
 	var buf bytes.Buffer
 	inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-	handler := telemetry.NewTraceHandler(inner)
+	handler := tracing.NewTraceHandler(inner)
 
 	withAttrs := handler.WithAttrs([]slog.Attr{slog.String("key", "value")})
 	s.NotNil(withAttrs)
@@ -126,7 +126,7 @@ func (s *SlogPublicTestSuite) TestTraceHandlerWithAttrs() {
 func (s *SlogPublicTestSuite) TestTraceHandlerWithGroup() {
 	var buf bytes.Buffer
 	inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-	handler := telemetry.NewTraceHandler(inner)
+	handler := tracing.NewTraceHandler(inner)
 
 	withGroup := handler.WithGroup("mygroup")
 	s.NotNil(withGroup)
@@ -139,7 +139,7 @@ func (s *SlogPublicTestSuite) TestTraceHandlerWithGroup() {
 
 func (s *SlogPublicTestSuite) TestTraceHandlerEnabled() {
 	inner := slog.NewTextHandler(nil, &slog.HandlerOptions{Level: slog.LevelWarn})
-	handler := telemetry.NewTraceHandler(inner)
+	handler := tracing.NewTraceHandler(inner)
 
 	s.False(handler.Enabled(s.ctx, slog.LevelDebug))
 	s.True(handler.Enabled(s.ctx, slog.LevelWarn))

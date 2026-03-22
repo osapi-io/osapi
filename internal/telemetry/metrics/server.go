@@ -20,7 +20,7 @@
 
 // Package ops provides a lightweight HTTP server for per-component
 // Prometheus metrics with isolated registries.
-package ops
+package metrics
 
 import (
 	"context"

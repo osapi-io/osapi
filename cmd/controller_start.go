@@ -27,8 +27,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/ops"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 // controllerStartCmd represents the controller start command.
@@ -39,7 +39,7 @@ var controllerStartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		shutdownTracer, err := telemetry.InitTracer(
+		shutdownTracer, err := tracing.InitTracer(
 			ctx,
 			"osapi-controller",
 			appConfig.Telemetry.Tracing,
@@ -53,9 +53,9 @@ var controllerStartCmd = &cobra.Command{
 		log := logger.With("component", "controller")
 		sm, b := setupController(ctx, log, appConfig.Controller.NATS)
 
-		var opsServer *ops.Server
+		var opsServer *metrics.Server
 		if appConfig.Controller.Metrics.Enabled {
-			opsServer = ops.New(
+			opsServer = metrics.New(
 				appConfig.Controller.Metrics.Port,
 				log.With("subsystem", "ops"),
 			)

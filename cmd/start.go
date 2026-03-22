@@ -28,8 +28,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/ops"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 // compositeLifecycle manages multiple Lifecycle components, starting them
@@ -70,7 +70,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		cli.ValidateDistribution(logger)
 
-		shutdownTracer, err := telemetry.InitTracer(
+		shutdownTracer, err := tracing.InitTracer(
 			ctx,
 			"osapi",
 			appConfig.Telemetry.Tracing,
@@ -95,10 +95,10 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		)
 
 		// Start per-component ops servers for /metrics.
-		var opsServers []*ops.Server
+		var opsServers []*metrics.Server
 
 		if appConfig.Controller.Metrics.Enabled {
-			s := ops.New(
+			s := metrics.New(
 				appConfig.Controller.Metrics.Port,
 				logger.With("component", "controller-ops"),
 			)
@@ -108,7 +108,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		}
 
 		if appConfig.Agent.Metrics.Enabled {
-			s := ops.New(
+			s := metrics.New(
 				appConfig.Agent.Metrics.Port,
 				logger.With("component", "agent-ops"),
 			)
@@ -118,7 +118,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		}
 
 		if appConfig.NATS.Server.Metrics.Enabled {
-			s := ops.New(
+			s := metrics.New(
 				appConfig.NATS.Server.Metrics.Port,
 				logger.With("component", "nats-ops"),
 			)

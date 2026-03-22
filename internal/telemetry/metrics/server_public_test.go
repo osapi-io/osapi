@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package ops_test
+package metrics_test
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/ops"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 type ServerPublicTestSuite struct {
@@ -50,23 +50,23 @@ func (s *ServerPublicTestSuite) getFreePort() int {
 func (s *ServerPublicTestSuite) TestNew() {
 	tests := []struct {
 		name         string
-		validateFunc func(*ops.Server)
+		validateFunc func(*metrics.Server)
 	}{
 		{
 			name: "returns non-nil server",
-			validateFunc: func(srv *ops.Server) {
+			validateFunc: func(srv *metrics.Server) {
 				s.NotNil(srv)
 			},
 		},
 		{
 			name: "has meter provider",
-			validateFunc: func(srv *ops.Server) {
+			validateFunc: func(srv *metrics.Server) {
 				s.NotNil(srv.MeterProvider())
 			},
 		},
 		{
 			name: "has registry",
-			validateFunc: func(srv *ops.Server) {
+			validateFunc: func(srv *metrics.Server) {
 				s.NotNil(srv.Registry())
 			},
 		},
@@ -75,7 +75,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := ops.New(port, slog.Default())
+			srv := metrics.New(port, slog.Default())
 			tc.validateFunc(srv)
 		})
 	}
@@ -119,7 +119,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := ops.New(port, slog.Default())
+			srv := metrics.New(port, slog.Default())
 			srv.Start()
 
 			time.Sleep(100 * time.Millisecond)

@@ -35,7 +35,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 // extractChanged parses the processor result JSON and extracts the "changed"
@@ -116,7 +116,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Extract trace context from NATS message headers and create a processing span
-	ctx := telemetry.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Headers()))
+	ctx := tracing.ExtractTraceContextFromHeader(context.Background(), http.Header(msg.Headers()))
 	ctx, span := otel.Tracer("osapi-agent").Start(ctx, "job.process")
 	defer span.End()
 

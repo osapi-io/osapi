@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package telemetry provides OpenTelemetry tracing initialization and helpers.
-package telemetry
+package tracing
 
 import (
 	"context"

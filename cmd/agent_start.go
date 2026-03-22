@@ -27,8 +27,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/ops"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 // agentStartCmd represents the agentStart command.
@@ -41,7 +41,7 @@ It processes jobs as they become available.
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 
-		shutdownTracer, err := telemetry.InitTracer(
+		shutdownTracer, err := tracing.InitTracer(
 			ctx,
 			"osapi-agent",
 			appConfig.Telemetry.Tracing,
@@ -55,9 +55,9 @@ It processes jobs as they become available.
 		log := logger.With("component", "agent")
 		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
 
-		var opsServer *ops.Server
+		var opsServer *metrics.Server
 		if appConfig.Agent.Metrics.Enabled {
-			opsServer = ops.New(
+			opsServer = metrics.New(
 				appConfig.Agent.Metrics.Port,
 				log.With("subsystem", "ops"),
 			)

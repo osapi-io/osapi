@@ -38,7 +38,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 var (
@@ -149,6 +149,6 @@ func initLogger() {
 		})
 	}
 
-	handler = telemetry.NewTraceHandler(handler)
+	handler = tracing.NewTraceHandler(handler)
 	logger = slog.New(handler)
 }
