@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package ops provides a lightweight HTTP server for per-component
+// Package metrics provides a lightweight HTTP server for per-component
 // Prometheus metrics with isolated registries.
 package metrics
 

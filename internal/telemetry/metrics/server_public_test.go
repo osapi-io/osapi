@@ -42,7 +42,7 @@ type ServerPublicTestSuite struct {
 func (s *ServerPublicTestSuite) getFreePort() int {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	s.Require().NoError(err)
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	return l.Addr().(*net.TCPAddr).Port
 }
@@ -93,7 +93,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 
 				resp, err := http.Get(url) //nolint:gosec
 				s.Require().NoError(err)
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 
 				s.Equal(200, resp.StatusCode)
 
@@ -109,7 +109,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 
 				resp, err := http.Get(url) //nolint:gosec
 				s.Require().NoError(err)
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 
 				s.Equal(404, resp.StatusCode)
 			},

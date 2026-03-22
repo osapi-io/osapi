@@ -41,7 +41,7 @@ type ServerTestSuite struct {
 func (s *ServerTestSuite) getFreePort() int {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	s.Require().NoError(err)
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	return l.Addr().(*net.TCPAddr).Port
 }
@@ -95,13 +95,11 @@ func (s *ServerTestSuite) TestStartListenError() {
 		{
 			name: "logs error when port is already in use",
 			validateFunc: func() {
-				port := s.getFreePort()
-
-				// Occupy the port.
+				// Occupy a port.
 				l, err := net.Listen("tcp", ":0")
 				s.Require().NoError(err)
 
-				port = l.Addr().(*net.TCPAddr).Port
+				port := l.Addr().(*net.TCPAddr).Port
 
 				srv := New(port, slog.Default())
 				s.Require().NotNil(srv)
@@ -110,7 +108,7 @@ func (s *ServerTestSuite) TestStartListenError() {
 				// Give the goroutine time to fail.
 				time.Sleep(100 * time.Millisecond)
 
-				l.Close()
+				_ = l.Close()
 			},
 		},
 	}
@@ -183,7 +181,7 @@ func (s *ServerTestSuite) TestStopErrors() {
 						fmt.Sprintf("http://127.0.0.1:%d/slow", port),
 					)
 					if err == nil {
-						resp.Body.Close()
+						_ = resp.Body.Close()
 					}
 				}()
 
