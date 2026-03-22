@@ -21,19 +21,43 @@
 package metrics
 
 import (
-	"log/slog"
+	"fmt"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-// Server is a lightweight HTTP server that serves /metrics with an
-// isolated Prometheus registry and OTEL MeterProvider.
-type Server struct {
-	httpServer     *http.Server
-	logger         *slog.Logger
-	registry       *prometheus.Registry
-	meterProvider  *sdkmetric.MeterProvider
-	readinessFunc  func() error
+// handleHealth handles GET /health and always returns 200 with {"status":"ok"}.
+func (s *Server) handleHealth(
+	w http.ResponseWriter,
+	_ *http.Request,
+) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprint(w, `{"status":"ok"}`)
+}
+
+// handleReady handles GET /health/ready. It returns 503 when no readiness
+// func is configured or the readiness func returns an error, and 200 when
+// the readiness func returns nil.
+func (s *Server) handleReady(
+	w http.ResponseWriter,
+	_ *http.Request,
+) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if s.readinessFunc == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = fmt.Fprint(w, `{"status":"not_ready","error":"readiness check not configured"}`)
+
+		return
+	}
+
+	if err := s.readinessFunc(); err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = fmt.Fprintf(w, `{"status":"not_ready","error":%q}`, err.Error())
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprint(w, `{"status":"ready"}`)
 }

@@ -63,22 +63,31 @@ func New(
 
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.HandlerFor(
-		reg,
-		promhttp.HandlerOpts{Registry: reg},
-	))
-
-	return &Server{
-		httpServer: &http.Server{
-			Addr:              fmt.Sprintf("%s:%d", host, port),
-			Handler:           mux,
-			ReadHeaderTimeout: 10 * time.Second,
-		},
+	srv := &Server{
 		logger:        logger,
 		registry:      reg,
 		meterProvider: mp,
 	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	mux.HandleFunc("/health", srv.handleHealth)
+	mux.HandleFunc("/health/ready", srv.handleReady)
+
+	srv.httpServer = &http.Server{
+		Addr:              fmt.Sprintf("%s:%d", host, port),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	return srv
+}
+
+// SetReadinessFunc sets a function called by /health/ready to determine
+// whether this component is ready to serve traffic. If fn returns an error
+// the endpoint responds 503; if nil it responds 200.
+func (s *Server) SetReadinessFunc(fn func() error) {
+	s.readinessFunc = fn
 }
 
 // MeterProvider returns the isolated OTEL MeterProvider for this server.
