@@ -128,7 +128,11 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 							Status: "unhealthy",
 							Error:  &errMsg,
 						},
+					"controller.api": {
+						Status:  "ok",
+						Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
 					},
+				},
 					Nats: &gen.NATSInfo{
 						Url:     "nats://localhost:4222",
 						Version: "2.10.0",
@@ -239,11 +243,14 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 				suite.Equal("5d 3h", s.Uptime)
 				suite.False(s.ServiceUnavailable)
 
-				suite.Require().Len(s.Components, 2)
+				suite.Require().Len(s.Components, 3)
 				suite.Equal("healthy", s.Components["nats"].Status)
 				suite.Empty(s.Components["nats"].Error)
 				suite.Equal("unhealthy", s.Components["store"].Status)
 				suite.Equal("connection timeout", s.Components["store"].Error)
+
+				suite.Equal("ok", s.Components["controller.api"].Status)
+				suite.Equal("http://0.0.0.0:8080", s.Components["controller.api"].Address)
 
 				suite.Require().NotNil(s.NATS)
 				suite.Equal("nats://localhost:4222", s.NATS.URL)
