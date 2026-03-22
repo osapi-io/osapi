@@ -33,14 +33,16 @@ import (
 	"github.com/retr0h/osapi/internal/provider/process"
 )
 
-// setupAgent connects to NATS, creates providers, and builds the agent
-// Lifecycle. It is used by the standalone agent start and combined start
-// commands.
+// Ensure cli import is used (for BuildFileStateKVConfig etc.)
+var _ = cli.BuildFileStateKVConfig
+
+// setupAgent connects to NATS, creates providers, and builds the agent.
+// It is used by the standalone agent start and combined start commands.
 func setupAgent(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-) (cli.Lifecycle, *natsBundle) {
+) (*agent.Agent, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)

@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -102,6 +103,16 @@ func New(
 	)
 
 	return a
+}
+
+// IsReady returns nil when the agent is ready to process jobs,
+// or an error describing why it is not.
+func (a *Agent) IsReady() error {
+	if a.ctx == nil || a.ctx.Err() != nil {
+		return fmt.Errorf("agent not started")
+	}
+
+	return nil
 }
 
 // SetSubComponents sets the sub-component info published in heartbeats.

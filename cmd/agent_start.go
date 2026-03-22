@@ -62,6 +62,13 @@ It processes jobs as they become available.
 				appConfig.Agent.Metrics.Port,
 				log.With("subsystem", "metrics"),
 			)
+
+			if metricsServer != nil {
+				metricsServer.SetReadinessFunc(func() error {
+					return a.IsReady()
+				})
+			}
+
 			metricsServer.Start()
 		}
 

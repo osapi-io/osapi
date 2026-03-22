@@ -103,6 +103,9 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.Controller.Metrics.Port,
 				logger.With("component", "controller-metrics"),
 			)
+			s.SetReadinessFunc(func() error {
+				return controllerBundle.checker.CheckHealth(context.Background())
+			})
 			s.Start()
 
 			metricsServers = append(metricsServers, s)
@@ -114,6 +117,9 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.Agent.Metrics.Port,
 				logger.With("component", "agent-metrics"),
 			)
+			s.SetReadinessFunc(func() error {
+				return agentServer.IsReady()
+			})
 			s.Start()
 
 			metricsServers = append(metricsServers, s)
@@ -125,6 +131,9 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 				appConfig.NATS.Server.Metrics.Port,
 				logger.With("component", "nats-metrics"),
 			)
+			s.SetReadinessFunc(func() error {
+				return nil
+			})
 			s.Start()
 
 			metricsServers = append(metricsServers, s)

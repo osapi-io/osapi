@@ -60,6 +60,13 @@ var controllerStartCmd = &cobra.Command{
 				appConfig.Controller.Metrics.Port,
 				log.With("subsystem", "metrics"),
 			)
+
+			if metricsServer != nil {
+				metricsServer.SetReadinessFunc(func() error {
+					return b.checker.CheckHealth(context.Background())
+				})
+			}
+
 			metricsServer.Start()
 		}
 

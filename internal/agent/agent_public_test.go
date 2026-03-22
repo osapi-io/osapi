@@ -243,6 +243,103 @@ func (s *AgentPublicTestSuite) TestStart() {
 	}
 }
 
+func (s *AgentPublicTestSuite) TestIsReady() {
+	tests := []struct {
+		name      string
+		setupFunc func() *agent.Agent
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name: "returns error when agent not started",
+			setupFunc: func() *agent.Agent {
+				return agent.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					"test-stream",
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+				)
+			},
+			wantErr: true,
+			errMsg:  "agent not started",
+		},
+		{
+			name: "returns nil when agent is started",
+			setupFunc: func() *agent.Agent {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				a := agent.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					"test-stream",
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+				)
+
+				a.Start()
+				s.T().Cleanup(func() {
+					stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+
+					a.Stop(stopCtx)
+				})
+
+				return a
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := tt.setupFunc()
+			err := a.IsReady()
+
+			if tt.wantErr {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errMsg)
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
 func TestAgentPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(AgentPublicTestSuite))
 }

@@ -85,6 +85,7 @@ type natsBundle struct {
 	registryKV jetstream.KeyValue
 	factsKV    jetstream.KeyValue
 	objStore   file.ObjectStoreManager
+	checker    health.Checker
 }
 
 // setupController connects to NATS, creates the API server with all handlers,
@@ -119,6 +120,7 @@ func setupController(
 	)
 
 	checker := newHealthChecker(b.nc, b.jobsKV)
+	b.checker = checker
 	auditStore, serverOpts := createAuditStore(ctx, log, b.nc, namespace)
 	kvBuckets := configuredKVBuckets(namespace)
 	objBuckets := configuredObjectBuckets(namespace)
