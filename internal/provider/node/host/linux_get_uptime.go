@@ -22,11 +22,13 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 	"time"
 )
 
 // GetUptime retrieves the system uptime.
 // It returns the uptime as a time.Duration, and an error if something goes wrong.
 func (l *Linux) GetUptime() (time.Duration, error) {
-	return 0, fmt.Errorf("getUptime is not implemented for LinuxProvider")
+	return 0, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

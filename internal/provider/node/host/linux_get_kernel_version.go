@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetKernelVersion retrieves the running kernel version string.
 // It returns an error because it is not implemented for LinuxProvider.
 func (l *Linux) GetKernelVersion() (string, error) {
-	return "", fmt.Errorf("getKernelVersion is not implemented for LinuxProvider")
+	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

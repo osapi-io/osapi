@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,16 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host
+package provider
 
-import (
-	"fmt"
+import "errors"
 
-	"github.com/retr0h/osapi/internal/provider"
-)
-
-// GetHostname retrieves the hostname of the system.
-// It returns the hostname as a string, and an error if something goes wrong.
-func (dls *Linux) GetHostname() (string, error) {
-	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
-}
+// ErrUnsupported is returned by providers when an operation is not supported
+// on the current OS family. The agent maps this to StatusSkipped instead of
+// StatusFailed.
+var ErrUnsupported = errors.New("operation not supported on this OS family")

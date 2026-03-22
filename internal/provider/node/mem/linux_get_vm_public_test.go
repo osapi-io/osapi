@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetStatsPublicTestSuite struct {
@@ -52,7 +53,7 @@ func (suite *LinuxGetStatsPublicTestSuite) TestGetStats() {
 			got, err := linux.GetStats()
 
 			suite.Nil(got)
-			suite.EqualError(err, "getStats is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

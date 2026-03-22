@@ -22,11 +22,13 @@ package ping
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // Do pings the given host and returns the ping statistics or an error.
 func (l *Linux) Do(
 	_ string,
 ) (*Result, error) {
-	return nil, fmt.Errorf("do is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

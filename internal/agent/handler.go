@@ -23,6 +23,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -36,6 +37,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
@@ -253,7 +255,18 @@ func (a *Agent) handleJobMessage(
 	} else {
 		result, err = a.processJobOperation(jobRequest)
 	}
-	if err != nil {
+	if err != nil && errors.Is(err, provider.ErrUnsupported) {
+		a.logger.WarnContext(
+			ctx,
+			"job skipped: unsupported on this OS family",
+			slog.String("job_id", jobKey),
+			slog.String("category", jobRequest.Category),
+			slog.String("operation", jobRequest.Operation),
+			slog.String("error", err.Error()),
+		)
+		response.Status = job.StatusSkipped
+		response.Error = err.Error()
+	} else if err != nil {
 		a.logger.ErrorContext(
 			ctx,
 			"job processing failed",

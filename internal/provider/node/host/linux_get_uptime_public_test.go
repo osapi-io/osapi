@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetUptimePublicTestSuite struct {
@@ -53,7 +54,7 @@ func (suite *LinuxGetUptimePublicTestSuite) TestGetUptime() {
 			got, err := linux.GetUptime()
 
 			suite.Equal(time.Duration(0), got)
-			suite.EqualError(err, "getUptime is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

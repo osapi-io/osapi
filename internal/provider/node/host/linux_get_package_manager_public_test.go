@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetPackageManagerPublicTestSuite struct {
@@ -52,7 +53,7 @@ func (suite *LinuxGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 			got, err := linux.GetPackageManager()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getPackageManager is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

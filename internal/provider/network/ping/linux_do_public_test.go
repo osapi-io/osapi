@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxDoStatsPublicTestSuite struct {
@@ -58,7 +59,7 @@ func (suite *LinuxDoStatsPublicTestSuite) TestDo() {
 			got, err := linux.Do("1.1.1.1")
 
 			suite.Empty(got)
-			suite.EqualError(err, "do is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

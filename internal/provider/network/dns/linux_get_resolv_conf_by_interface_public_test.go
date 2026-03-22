@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetResolvConfByInterfacePublicTestSuite struct {
@@ -54,7 +55,7 @@ func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByIn
 			got, err := linux.GetResolvConfByInterface(interfaceName)
 
 			suite.Nil(got)
-			suite.EqualError(err, "getResolvConfByInterface is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

@@ -22,11 +22,13 @@ package mem
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetStats retrieves memory statistics of the system.
 // It returns a Stats struct with total, free, and cached memory in
 // bytes, and an error if something goes wrong.
 func (l *Linux) GetStats() (*Result, error) {
-	return nil, fmt.Errorf("getStats is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

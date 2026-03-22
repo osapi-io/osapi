@@ -22,6 +22,8 @@ package dns
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // UpdateResolvConfByInterface updates the DNS configuration for a specific network interface
@@ -33,5 +35,5 @@ func (l *Linux) UpdateResolvConfByInterface(
 	_ []string,
 	_ string,
 ) (*UpdateResult, error) {
-	return nil, fmt.Errorf("updateResolvConfByInterface is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

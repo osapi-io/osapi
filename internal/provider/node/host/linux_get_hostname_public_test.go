@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetHostnamePublicTestSuite struct {
@@ -52,7 +53,7 @@ func (suite *LinuxGetHostnamePublicTestSuite) TestGetHostname() {
 			got, err := linux.GetHostname()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getHostname is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

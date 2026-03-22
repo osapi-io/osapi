@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/disk"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetLocalUsageStatsPublicTestSuite struct {
@@ -53,7 +54,7 @@ func (suite *LinuxGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 			got, err := linux.GetLocalUsageStats()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getLocalUsageStats is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

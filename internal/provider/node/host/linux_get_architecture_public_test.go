@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxGetArchitecturePublicTestSuite struct {
@@ -52,7 +53,7 @@ func (suite *LinuxGetArchitecturePublicTestSuite) TestGetArchitecture() {
 			got, err := linux.GetArchitecture()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getArchitecture is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

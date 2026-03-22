@@ -22,6 +22,8 @@ package disk
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetLocalUsageStats retrieves disk space statistics for local disks only.
@@ -29,5 +31,5 @@ import (
 // and free space in bytes for the corresponding local disk.
 // An error is returned if somethng goes wrong.
 func (l *Linux) GetLocalUsageStats() ([]Result, error) {
-	return nil, fmt.Errorf("getLocalUsageStats is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

@@ -52,6 +52,9 @@ const (
 	StatusCompleted Status = "completed"
 	// StatusFailed indicates the job failed during processing.
 	StatusFailed Status = "failed"
+	// StatusSkipped indicates the job was skipped because the operation
+	// is not supported on the target OS family.
+	StatusSkipped Status = "skipped"
 )
 
 // Request represents a request to perform a job operation.
