@@ -34,8 +34,10 @@ The control plane process. It runs several sub-components:
   requests, and translates them into jobs published to NATS. The controller
   never executes system commands directly — it creates a job and returns a job
   ID. Clients poll for results.
-- **Component heartbeat** — registers the controller in the agent registry so
-  `health status` can report its state.
+- **Component heartbeat** — registers the controller in the registry KV so
+  `health status` can report its state. The heartbeat includes sub-component
+  status (api, metrics, notifier, tracing) so operators can see the health of
+  each internal service.
 - **Condition watcher** — monitors the registry KV for condition transitions and
   dispatches notifications.
 
@@ -47,6 +49,8 @@ A background process that subscribes to NATS, picks up jobs, and executes the
 actual system operations (reading hostname, querying DNS, checking disk usage,
 etc.). Agents run with whatever privileges they have — if an agent can't read
 something due to permissions, it reports the error rather than failing silently.
+Each agent publishes its own sub-component status (heartbeat, metrics) via the
+registry heartbeat.
 
 Start it with `osapi agent start`.
 

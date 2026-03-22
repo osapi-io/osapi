@@ -41,7 +41,7 @@ this for dashboards and monitoring.
 
 All three runtime components heartbeat into a shared registry KV bucket on a
 regular interval. Each heartbeat writes a JSON record keyed by component type
-and hostname (e.g., `agents.web-01`, `api.api-server`, `nats.nats-server`). The
+and hostname (e.g., `agents.web-01`, `controller.api-server`, `nats.nats-server`). The
 records include process metrics collected at heartbeat time:
 
 | Metric      | Description                              |
@@ -54,15 +54,36 @@ The `/health/status` response includes a `components` table that aggregates
 these heartbeat records. A component whose registry key has expired (TTL elapsed
 without a fresh heartbeat) is reported as unreachable.
 
-Example `components` output:
+Example registry output:
 
 ```
-COMPONENT    HOSTNAME      STATUS    CPU    RSS       GOROUTINES
-api          api-server    ready     0.4%   42.3 MiB  87
-agent        web-01        ready     0.1%   18.1 MiB  23
-agent        web-02        ready     0.2%   17.8 MiB  22
-nats         nats-server   ready     0.3%   31.6 MiB  41
+TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM
+agent       web-01        Ready   -           7h 6m   1.2%   96 MB
+agent       web-02        Ready   -           3h 2m   0.8%   82 MB
+controller  api-server    Ready   -           7h 6m   2.1%   128 MB
+nats        nats-server   Ready   -           7h 6m   0.3%   64 MB
 ```
+
+## Sub-Component Health
+
+Each component publishes the status of its internal services alongside its
+heartbeat registration. The `/health/status` endpoint aggregates these
+sub-components from the registry so operators can see the health of every
+internal service across all hosts — even in multi-node deployments.
+
+Sub-components use a `{type}.{name}` naming convention. Each component reports
+only its own sub-components:
+
+| Component  | Sub-Components                                                     |
+| ---------- | ------------------------------------------------------------------ |
+| controller | `controller.api`, `controller.heartbeat`, `controller.metrics`, `controller.notifier`, `controller.tracing` |
+| agent      | `agent.heartbeat`, `agent.metrics`                                 |
+| nats       | `nats.server`, `nats.heartbeat`, `nats.metrics`                    |
+
+Sub-components report a status (`ok`, `disabled`, or `error`) and an optional
+network address. The controller also performs live connectivity checks against
+NATS and KV, which appear as `controller.nats (connectivity)` and
+`controller.kv (connectivity)` in the response.
 
 ## Condition Notifications
 
