@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package telemetry_test
+package tracing_test
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 type PropagationPublicTestSuite struct {
@@ -69,7 +69,7 @@ func (s *PropagationPublicTestSuite) TestInjectExtractRoundtrip() {
 				s.NotEmpty(data["traceparent"])
 
 				// Extract and verify trace ID matches
-				extractedCtx := telemetry.ExtractTraceContext(context.Background(), data)
+				extractedCtx := tracing.ExtractTraceContext(context.Background(), data)
 				originalSC := trace.SpanContextFromContext(originalCtx)
 				extractedSC := trace.SpanContextFromContext(extractedCtx)
 
@@ -91,7 +91,7 @@ func (s *PropagationPublicTestSuite) TestInjectExtractRoundtrip() {
 				return context.Background()
 			},
 			validateFunc: func(_ context.Context, data map[string]interface{}) {
-				extractedCtx := telemetry.ExtractTraceContext(context.Background(), data)
+				extractedCtx := tracing.ExtractTraceContext(context.Background(), data)
 				sc := trace.SpanContextFromContext(extractedCtx)
 				s.False(sc.IsValid())
 			},
@@ -102,7 +102,7 @@ func (s *PropagationPublicTestSuite) TestInjectExtractRoundtrip() {
 		s.Run(tc.name, func() {
 			ctx := tc.setupCtx()
 			data := make(map[string]interface{})
-			telemetry.InjectTraceContext(ctx, data)
+			tracing.InjectTraceContext(ctx, data)
 			tc.validateFunc(ctx, data)
 		})
 	}
@@ -124,7 +124,7 @@ func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
 			validateFunc: func(originalCtx context.Context, header http.Header) {
 				s.NotEmpty(header.Get("Traceparent"))
 
-				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+				extractedCtx := tracing.ExtractTraceContextFromHeader(
 					context.Background(),
 					header,
 				)
@@ -148,7 +148,7 @@ func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
 					lowercaseHeader[strings.ToLower(k)] = v
 				}
 
-				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+				extractedCtx := tracing.ExtractTraceContextFromHeader(
 					context.Background(),
 					lowercaseHeader,
 				)
@@ -173,7 +173,7 @@ func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
 				return context.Background()
 			},
 			validateFunc: func(_ context.Context, header http.Header) {
-				extractedCtx := telemetry.ExtractTraceContextFromHeader(
+				extractedCtx := tracing.ExtractTraceContextFromHeader(
 					context.Background(),
 					header,
 				)
@@ -187,7 +187,7 @@ func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
 		s.Run(tc.name, func() {
 			ctx := tc.setupCtx()
 			header := make(http.Header)
-			telemetry.InjectTraceContextToHeader(ctx, header)
+			tracing.InjectTraceContextToHeader(ctx, header)
 			tc.validateFunc(ctx, header)
 		})
 	}

@@ -21,10 +21,13 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 // natsServerStartCmd represents the natsServerStart command.
@@ -51,8 +54,22 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			appConfig.NATS.Server.Auth,
 		)
 
+		var metricsServer *metrics.Server
+		if appConfig.NATS.Server.Metrics.Enabled {
+			metricsServer = metrics.New(
+				appConfig.NATS.Server.Metrics.Host,
+				appConfig.NATS.Server.Metrics.Port,
+				log.With("subsystem", "metrics"),
+			)
+			metricsServer.Start()
+		}
+
 		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns)
+		cli.RunServer(ctx, ns, func() {
+			if metricsServer != nil {
+				metricsServer.Stop(context.Background())
+			}
+		})
 	},
 }
 

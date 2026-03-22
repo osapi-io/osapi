@@ -43,10 +43,11 @@ func (s *Server) GetHealthHandler(
 	startTime time.Time,
 	version string,
 	metrics health.MetricsProvider,
+	subComponents map[string]health.SubComponentInfo,
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
 
-	healthHandler := health.New(s.logger, checker, startTime, version, metrics)
+	healthHandler := health.New(s.logger, checker, startTime, version, metrics, subComponents)
 
 	strictHandler := healthGen.NewStrictHandler(
 		healthHandler,

@@ -48,7 +48,7 @@ var clientAgentStatusCmd = &cobra.Command{
 		}
 
 		fmt.Println()
-		displayComponentTable(resp.Data.Registry, "agent")
+		displayComponentTable(resp.Data.Registry, "agent", resp.Data.Components)
 	},
 }
 

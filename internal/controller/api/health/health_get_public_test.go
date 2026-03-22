@@ -53,6 +53,7 @@ func (s *HealthGetPublicTestSuite) SetupTest() {
 		time.Now(),
 		"0.1.0",
 		nil,
+		nil,
 	)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
@@ -104,6 +105,7 @@ func (s *HealthGetPublicTestSuite) TestGetHealthHTTP() {
 				checker,
 				time.Now(),
 				"0.1.0",
+				nil,
 				nil,
 			)
 			strictHandler := gen.NewStrictHandler(healthHandler, nil)

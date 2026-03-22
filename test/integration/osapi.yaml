@@ -19,6 +19,10 @@ controller:
     namespace: ""
     auth:
       type: none
+  metrics:
+    enabled: false
+  notifications:
+    enabled: false
 
 nats:
   server:
@@ -111,7 +115,6 @@ agent:
   queue_group: job-agents
   hostname: ""
   max_jobs: 10
+  metrics:
+    enabled: false
 
-notifications:
-  enabled: false
-  notifier: 'log'

@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/retr0h/osapi/internal/cli"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 var (
@@ -45,7 +45,7 @@ var clientCmd = &cobra.Command{
 		cli.ValidateDistribution(logger)
 
 		var err error
-		tracerShutdown, err = telemetry.InitTracer(
+		tracerShutdown, err = tracing.InitTracer(
 			cmd.Context(),
 			"osapi-cli",
 			appConfig.Telemetry.Tracing,

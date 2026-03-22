@@ -28,7 +28,8 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 // compositeLifecycle manages multiple Lifecycle components, starting them
@@ -58,7 +59,7 @@ func (c *compositeLifecycle) Stop(ctx context.Context) {
 // startCmd represents the top-level start command.
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start all components (NATS, API server, agent)",
+	Short: "Start all components (NATS, controller, agent)",
 	Long: `Start the embedded NATS server, controller, and agent in a single process.
 
 This is the recommended way to run OSAPI on a single host. All three components
@@ -69,7 +70,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		cli.ValidateDistribution(logger)
 
-		shutdownTracer, err := telemetry.InitTracer(
+		shutdownTracer, err := tracing.InitTracer(
 			ctx,
 			"osapi",
 			appConfig.Telemetry.Tracing,
@@ -78,20 +79,13 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
-		metricsHandler, metricsPath, shutdownMeter, err := telemetry.InitMeter(
-			appConfig.Telemetry.Metrics,
-		)
-		if err != nil {
-			cli.LogFatal(logger, "failed to initialize meter", err)
-		}
-
 		job.Init(appConfig.NATS.Server.Namespace)
 
 		natsLog := logger.With("component", "nats")
 		natsServer := setupNATSServer(ctx, natsLog)
 		sm, controllerBundle := setupController(
 			ctx, logger.With("component", "controller"),
-			appConfig.Controller.NATS, metricsHandler, metricsPath,
+			appConfig.Controller.NATS,
 		)
 
 		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
@@ -99,6 +93,42 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		agentServer, agentBundle := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
 		)
+
+		// Start per-component metrics servers.
+		var metricsServers []*metrics.Server
+
+		if appConfig.Controller.Metrics.Enabled {
+			s := metrics.New(
+				appConfig.Controller.Metrics.Host,
+				appConfig.Controller.Metrics.Port,
+				logger.With("component", "controller-metrics"),
+			)
+			s.Start()
+
+			metricsServers = append(metricsServers, s)
+		}
+
+		if appConfig.Agent.Metrics.Enabled {
+			s := metrics.New(
+				appConfig.Agent.Metrics.Host,
+				appConfig.Agent.Metrics.Port,
+				logger.With("component", "agent-metrics"),
+			)
+			s.Start()
+
+			metricsServers = append(metricsServers, s)
+		}
+
+		if appConfig.NATS.Server.Metrics.Enabled {
+			s := metrics.New(
+				appConfig.NATS.Server.Metrics.Host,
+				appConfig.NATS.Server.Metrics.Port,
+				logger.With("component", "nats-metrics"),
+			)
+			s.Start()
+
+			metricsServers = append(metricsServers, s)
+		}
 
 		composite := &compositeLifecycle{
 			components: []cli.Lifecycle{
@@ -110,7 +140,10 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 
 		composite.Start()
 		cli.RunServer(ctx, composite, func() {
-			_ = shutdownMeter(context.Background())
+			for _, s := range metricsServers {
+				s.Stop(context.Background())
+			}
+
 			_ = shutdownTracer(context.Background())
 			cli.CloseNATSClient(agentBundle.nc)
 			cli.CloseNATSClient(controllerBundle.nc)

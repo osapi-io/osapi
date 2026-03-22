@@ -64,8 +64,9 @@ type RegistryEntry struct {
 
 // ComponentHealth represents a component's health.
 type ComponentHealth struct {
-	Status string `json:"status"`
-	Error  string `json:"error,omitempty"`
+	Status  string `json:"status"`
+	Error   string `json:"error,omitempty"`
+	Address string `json:"address,omitempty"`
 }
 
 // NATSInfo represents NATS connection info.
@@ -180,6 +181,10 @@ func systemStatusFromGen(
 
 			if v.Error != nil {
 				ch.Error = *v.Error
+			}
+
+			if v.Address != nil {
+				ch.Address = *v.Address
 			}
 
 			comps[k] = ch

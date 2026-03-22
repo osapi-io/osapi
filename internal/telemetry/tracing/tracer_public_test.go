@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package telemetry_test
+package tracing_test
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 	"go.opentelemetry.io/otel"
 
 	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/telemetry"
+	"github.com/retr0h/osapi/internal/telemetry/tracing"
 )
 
 type InitTracerPublicTestSuite struct {
@@ -88,7 +88,7 @@ func (s *InitTracerPublicTestSuite) TestInitTracer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			shutdown, err := telemetry.InitTracer(s.ctx, "test-service", tc.cfg)
+			shutdown, err := tracing.InitTracer(s.ctx, "test-service", tc.cfg)
 			if tc.expectErr {
 				s.Error(err)
 				s.Contains(err.Error(), tc.errContains)

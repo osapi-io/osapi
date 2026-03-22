@@ -21,13 +21,18 @@
 package metrics
 
 import (
+	"log/slog"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-// Metrics implementation of the Metrics API operations.
-type Metrics struct {
-	// Handler is the Prometheus HTTP handler.
-	Handler http.Handler
-	// Path is the HTTP path for the scrape endpoint.
-	Path string
+// Server is a lightweight HTTP server that serves /metrics with an
+// isolated Prometheus registry and OTEL MeterProvider.
+type Server struct {
+	httpServer    *http.Server
+	logger        *slog.Logger
+	registry      *prometheus.Registry
+	meterProvider *sdkmetric.MeterProvider
 }

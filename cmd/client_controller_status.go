@@ -48,7 +48,7 @@ var clientControllerStatusCmd = &cobra.Command{
 		}
 
 		fmt.Println()
-		displayComponentTable(resp.Data.Registry, "controller")
+		displayComponentTable(resp.Data.Registry, "controller", resp.Data.Components)
 	},
 }
 

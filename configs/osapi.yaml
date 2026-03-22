@@ -38,6 +38,14 @@ controller:
     namespace: osapi
     auth:
       type: none
+  metrics:
+    enabled: true
+    host: '0.0.0.0'
+    port: 9090
+  notifications:
+    enabled: true
+    notifier: 'log'
+    renotify_interval: '5m'
 
 nats:
   server:
@@ -52,6 +60,10 @@ nats:
       #     password: '<secret>'
       # nkeys:
       #   - '<public-nkey>'
+    metrics:
+      enabled: true
+      host: '0.0.0.0'
+      port: 9092
 
   stream:
     name: JOBS
@@ -116,8 +128,6 @@ telemetry:
     enabled: true
     # exporter: stdout
     # otlp_endpoint: localhost:4317
-  metrics:
-    path: /metrics
 
 agent:
   nats:
@@ -155,12 +165,8 @@ agent:
     memory_pressure_bytes: 0
     # Process CPU threshold as percentage (0 = disabled).
     high_cpu_percent: 0
+  metrics:
+    enabled: true
+    host: '0.0.0.0'
+    port: 9091
 
-notifications:
-  # Enable the condition watcher and notifier (default: false).
-  enabled: true
-  # Notifier backend: "log" (default).
-  notifier: 'log'
-  # How often to re-fire active conditions (Go duration: 1m, 5m, 1h).
-  # Zero disables re-notification.
-  renotify_interval: '5m'

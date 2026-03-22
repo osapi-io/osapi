@@ -80,8 +80,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["nats"].Status)
-				s.Equal("ok", r.Components["kv"].Status)
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 				s.Equal("0.1.0", r.Version)
 				s.NotEmpty(r.Uptime)
 			},
@@ -96,10 +96,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["nats"].Status)
-				s.Require().NotNil(r.Components["nats"].Error)
-				s.Contains(*r.Components["nats"].Error, "nats not connected")
-				s.Equal("ok", r.Components["kv"].Status)
+				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
+				s.Require().NotNil(r.Components["controller.nats (connectivity)"].Error)
+				s.Contains(
+					*r.Components["controller.nats (connectivity)"].Error,
+					"nats not connected",
+				)
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{
@@ -112,10 +115,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("ok", r.Components["nats"].Status)
-				s.Equal("error", r.Components["kv"].Status)
-				s.Require().NotNil(r.Components["kv"].Error)
-				s.Contains(*r.Components["kv"].Error, "kv bucket not accessible")
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
+				s.Require().NotNil(r.Components["controller.kv (connectivity)"].Error)
+				s.Contains(
+					*r.Components["controller.kv (connectivity)"].Error,
+					"kv bucket not accessible",
+				)
 			},
 		},
 		{
@@ -128,8 +134,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus503JSONResponse)
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["nats"].Status)
-				s.Equal("error", r.Components["kv"].Status)
+				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{
@@ -152,8 +158,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["nats"].Status)
-				s.Equal("ok", r.Components["kv"].Status)
+				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
+				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
 		{
@@ -523,7 +529,71 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics)
+			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics, nil)
+
+			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
+	tests := []struct {
+		name         string
+		subs         map[string]health.SubComponentInfo
+		validateFunc func(resp gen.GetHealthStatusResponseObject)
+	}{
+		{
+			name: "sub-components with ports appear in response",
+			subs: map[string]health.SubComponentInfo{
+				"controller.api":       {Status: "ok", Address: "http://0.0.0.0:8080"},
+				"controller.heartbeat": {Status: "ok"},
+				"controller.metrics":   {Status: "ok", Address: "http://0.0.0.0:9090"},
+				"controller.notifier":  {Status: "disabled"},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+
+				api := r.Components["controller.api"]
+				s.Equal("ok", api.Status)
+				s.Require().NotNil(api.Address)
+				s.Equal("http://0.0.0.0:8080", *api.Address)
+
+				hb := r.Components["controller.heartbeat"]
+				s.Equal("ok", hb.Status)
+				s.Nil(hb.Address)
+
+				metrics := r.Components["controller.metrics"]
+				s.Equal("ok", metrics.Status)
+				s.Require().NotNil(metrics.Address)
+				s.Equal("http://0.0.0.0:9090", *metrics.Address)
+
+				notifier := r.Components["controller.notifier"]
+				s.Equal("disabled", notifier.Status)
+				s.Nil(notifier.Address)
+			},
+		},
+		{
+			name: "nil sub-components produces no extra keys",
+			subs: nil,
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+				s.Len(r.Components, 2) // nats + kv only
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			checker := &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			}
+
+			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, tt.subs)
 
 			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
 			s.NoError(err)
@@ -661,6 +731,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				time.Now(),
 				"0.1.0",
 				tc.metrics,
+				nil,
 			)
 			strictHandler := gen.NewStrictHandler(healthHandler, nil)
 
@@ -797,6 +868,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 				time.Now(),
 				"0.1.0",
 				metrics,
+				nil,
 			)
 			server.RegisterHandlers(handlers)
 

@@ -67,9 +67,9 @@ nats         nats-server   ready     0.3%   31.6 MiB  41
 ## Condition Notifications
 
 The component registry enables an optional condition notification system. When
-`notifications.enabled` is true, a watcher monitors the registry KV bucket for
-condition transitions on any component and dispatches events via the configured
-notifier backend.
+`controller.notifications.enabled` is true, a watcher monitors the registry KV
+bucket for condition transitions on any component and dispatches events via the
+configured notifier backend.
 
 ### Conditions Reference
 

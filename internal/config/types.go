@@ -23,11 +23,10 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	Controller    Controller          `mapstructure:"controller"              mask:"struct"`
-	Agent         AgentConfig         `mapstructure:"agent,omitempty"`
-	NATS          NATS                `mapstructure:"nats"`
-	Telemetry     Telemetry           `mapstructure:"telemetry"`
-	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
+	Controller Controller  `mapstructure:"controller"      mask:"struct"`
+	Agent      AgentConfig `mapstructure:"agent,omitempty"`
+	NATS       NATS        `mapstructure:"nats"`
+	Telemetry  Telemetry   `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
 }
@@ -56,6 +55,16 @@ type MetricsConfig struct {
 	// Path is the HTTP path for the Prometheus scrape endpoint.
 	// Defaults to "/metrics" when empty.
 	Path string `mapstructure:"path"`
+}
+
+// MetricsServer configures the per-component metrics HTTP server.
+type MetricsServer struct {
+	// Enabled activates the metrics server.
+	Enabled bool `mapstructure:"enabled"`
+	// Host the metrics server binds to.
+	Host string `mapstructure:"host"`
+	// Port the metrics server listens on.
+	Port int `mapstructure:"port"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
@@ -177,7 +186,8 @@ type NATSServer struct {
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
 	Namespace string `mapstructure:"namespace"`
 	// Auth holds server-side authentication configuration.
-	Auth NATSServerAuth `mapstructure:"auth,omitempty"`
+	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
+	Metrics MetricsServer  `mapstructure:"metrics"`
 }
 
 // NATSStream configuration for JetStream stream settings.
@@ -229,9 +239,11 @@ type NATSConnection struct {
 
 // Controller holds the control plane configuration.
 type Controller struct {
-	Client Client         `mapstructure:"client"`
-	API    APIServer      `mapstructure:"api"    mask:"struct"`
-	NATS   NATSConnection `mapstructure:"nats"`
+	Client        Client              `mapstructure:"client"`
+	API           APIServer           `mapstructure:"api"                     mask:"struct"`
+	NATS          NATSConnection      `mapstructure:"nats"`
+	Metrics       MetricsServer       `mapstructure:"metrics"`
+	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 }
 
 // APIServer holds the HTTP server config (port + security).
@@ -335,4 +347,5 @@ type AgentConfig struct {
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
+	Metrics           MetricsServer     `mapstructure:"metrics"`
 }

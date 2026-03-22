@@ -31,6 +31,7 @@ deps:
 
 # Run all tests
 test: linux-tune
+    just just::fmt-check
     just go::test
 
 # Generate code

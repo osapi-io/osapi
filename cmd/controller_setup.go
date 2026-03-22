@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"sort"
 	"strings"
@@ -65,9 +64,8 @@ type ServerManager interface {
 		startTime time.Time,
 		version string,
 		metrics health.MetricsProvider,
+		subComponents map[string]health.SubComponentInfo,
 	) []func(e *echo.Echo)
-	// GetMetricsHandler returns Prometheus metrics handler for registration.
-	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// GetDockerHandler returns Docker handler for registration.
@@ -96,8 +94,6 @@ func setupController(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-	metricsHandler http.Handler,
-	metricsPath string,
 ) (ServerManager, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -138,7 +134,7 @@ func setupController(
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
 		sm, b.jobClient, checker, metricsProvider,
-		metricsHandler, metricsPath, auditStore, b.objStore,
+		auditStore, b.objStore,
 	)
 
 	startControllerHeartbeat(ctx, log, b.registryKV)
@@ -571,12 +567,54 @@ func registerControllerHandlers(
 	jc jobclient.JobClient,
 	checker health.Checker,
 	metricsProvider health.MetricsProvider,
-	metricsHandler http.Handler,
-	metricsPath string,
 	auditStore audit.Store,
 	objStore file.ObjectStoreManager,
 ) {
 	startTime := time.Now()
+
+	httpAddr := func(host string, port int) string {
+		return fmt.Sprintf("http://%s:%d", host, port)
+	}
+
+	enabledOrDisabled := func(enabled bool) string {
+		if enabled {
+			return "ok"
+		}
+
+		return "disabled"
+	}
+
+	natsAddr := fmt.Sprintf("nats://%s:%d", appConfig.NATS.Server.Host, appConfig.NATS.Server.Port)
+
+	subComponents := map[string]health.SubComponentInfo{
+		"controller.api": {
+			Status:  "ok",
+			Address: httpAddr("0.0.0.0", appConfig.Controller.API.Port),
+		},
+		"controller.heartbeat": {Status: "ok"},
+		"controller.metrics": {
+			Status:  enabledOrDisabled(appConfig.Controller.Metrics.Enabled),
+			Address: httpAddr(appConfig.Controller.Metrics.Host, appConfig.Controller.Metrics.Port),
+		},
+		"controller.notifier": {
+			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
+		},
+		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
+		"agent.heartbeat":    {Status: "ok"},
+		"agent.metrics": {
+			Status:  enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
+			Address: httpAddr(appConfig.Agent.Metrics.Host, appConfig.Agent.Metrics.Port),
+		},
+		"nats.heartbeat": {Status: "ok"},
+		"nats.metrics": {
+			Status: enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled),
+			Address: httpAddr(
+				appConfig.NATS.Server.Metrics.Host,
+				appConfig.NATS.Server.Metrics.Port,
+			),
+		},
+		"nats.server": {Status: "ok", Address: natsAddr},
+	}
 
 	handlers := make([]func(e *echo.Echo), 0, 8)
 	handlers = append(handlers, sm.GetAgentHandler(jc)...)
@@ -584,9 +622,8 @@ func registerControllerHandlers(
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
 	handlers = append(
 		handlers,
-		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
+		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider, subComponents)...)
 	handlers = append(handlers, sm.GetDockerHandler(jc)...)
-	handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
 	}
@@ -605,7 +642,7 @@ func startConditionWatcher(
 	log *slog.Logger,
 	registryKV jetstream.KeyValue,
 ) {
-	if !appConfig.Notifications.Enabled {
+	if !appConfig.Controller.Notifications.Enabled {
 		return
 	}
 
@@ -614,12 +651,12 @@ func startConditionWatcher(
 	}
 
 	var renotifyInterval time.Duration
-	if appConfig.Notifications.RenotifyInterval != "" {
-		d, err := time.ParseDuration(appConfig.Notifications.RenotifyInterval)
+	if appConfig.Controller.Notifications.RenotifyInterval != "" {
+		d, err := time.ParseDuration(appConfig.Controller.Notifications.RenotifyInterval)
 		if err != nil {
 			log.Warn(
 				"invalid renotify_interval, using default (0 = disabled)",
-				slog.String("value", appConfig.Notifications.RenotifyInterval),
+				slog.String("value", appConfig.Controller.Notifications.RenotifyInterval),
 				slog.String("error", err.Error()),
 			)
 		} else {

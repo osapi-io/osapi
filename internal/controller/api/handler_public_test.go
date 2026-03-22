@@ -240,48 +240,7 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			checker := &health.NATSChecker{}
-			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)
-
-			tt.validate(handlers)
-		})
-	}
-}
-
-func (s *HandlerPublicTestSuite) TestGetMetricsHandler() {
-	tests := []struct {
-		name     string
-		validate func([]func(e *echo.Echo))
-	}{
-		{
-			name: "returns metrics handler functions",
-			validate: func(handlers []func(e *echo.Echo)) {
-				s.NotEmpty(handlers)
-			},
-		},
-		{
-			name: "closure registers route at provided path",
-			validate: func(handlers []func(e *echo.Echo)) {
-				e := echo.New()
-				for _, h := range handlers {
-					h(e)
-				}
-				s.NotEmpty(e.Routes())
-
-				req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
-				rec := httptest.NewRecorder()
-				e.ServeHTTP(rec, req)
-
-				s.Equal(http.StatusOK, rec.Code)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			metricsHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
-			handlers := s.server.GetMetricsHandler(metricsHandler, "/metrics")
+			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil, nil)
 
 			tt.validate(handlers)
 		})
@@ -434,7 +393,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)
 			handlers = append(
 				handlers,
-				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)...)
+				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil, nil)...)
 
 			routesBefore := len(s.server.Echo.Routes())
 			s.server.RegisterHandlers(handlers)

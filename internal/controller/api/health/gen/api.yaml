@@ -142,6 +142,10 @@ components:
         error:
           type: string
           description: Error message when component is unhealthy.
+        address:
+          type: string
+          description: Listen address of the component (if applicable).
+          example: "http://0.0.0.0:8080"
       required:
         - status
 

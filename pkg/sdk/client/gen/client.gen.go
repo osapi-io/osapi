@@ -302,6 +302,9 @@ type ComponentEntry struct {
 
 // ComponentHealth defines model for ComponentHealth.
 type ComponentHealth struct {
+	// Address Listen address of the component (if applicable).
+	Address *string `json:"address,omitempty"`
+
 	// Error Error message when component is unhealthy.
 	Error *string `json:"error,omitempty"`
 

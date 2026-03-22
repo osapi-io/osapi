@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
@@ -54,11 +55,46 @@ Requires authentication.
 	},
 }
 
+// subComponent holds a name, status, and optional address for display under a parent.
+type subComponent struct {
+	name    string
+	status  string
+	address string
+}
+
+// subComponentsFor discovers sub-components for the given component type
+// by matching keys with the "{type}." prefix in the components map.
+func subComponentsFor(
+	componentType string,
+	components map[string]client.ComponentHealth,
+) []subComponent {
+	if components == nil {
+		return nil
+	}
+
+	prefix := componentType + "."
+	var result []subComponent
+
+	for key, c := range components {
+		if strings.HasPrefix(key, prefix) {
+			name := strings.TrimPrefix(key, prefix)
+			result = append(result, subComponent{name: name, status: c.Status, address: c.Address})
+		}
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].name < result[j].name
+	})
+
+	return result
+}
+
 // displayComponentTable renders the component registry table,
 // optionally filtered by component type. Pass "" for all types.
 func displayComponentTable(
 	registry []client.RegistryEntry,
 	filterType string,
+	subComponents map[string]client.ComponentHealth,
 ) {
 	var filtered []client.RegistryEntry
 	for _, e := range registry {
@@ -91,6 +127,30 @@ func displayComponentTable(
 			cpu,
 			mem,
 		})
+
+		// Show sub-components indented under their parent.
+		scs := subComponentsFor(e.Type, subComponents)
+		for i, sc := range scs {
+			prefix := "  ├─ "
+			if i == len(scs)-1 {
+				prefix = "  └─ "
+			}
+
+			status := sc.status
+			if sc.address != "" {
+				status += " " + cli.DimStyle.Render(sc.address)
+			}
+
+			rows = append(rows, []string{
+				"",
+				prefix + sc.name,
+				status,
+				"",
+				"",
+				"",
+				"",
+			})
+		}
 	}
 
 	cli.PrintCompactTable([]cli.Section{{
@@ -105,48 +165,13 @@ func displayStatusHealth(
 ) {
 	fmt.Println()
 
-	displayComponentTable(data.Registry, "")
+	cli.PrintKV("Status", data.Status)
+	cli.PrintKV("Version", data.Version)
+	cli.PrintKV("Uptime", data.Uptime)
+
+	displayComponentTable(data.Registry, "", data.Components)
 	if len(data.Registry) > 0 {
 		fmt.Println()
-	}
-
-	cli.PrintKV("Status", data.Status, "Version", data.Version, "Uptime", data.Uptime)
-
-	// NATS connection info (merged with component health)
-	if data.NATS != nil {
-		natsStatus := "ok"
-		if c, ok := data.Components["nats"]; ok && c.Status != "ok" {
-			natsStatus = c.Status
-			if c.Error != "" {
-				natsStatus += " " + cli.DimStyle.Render(c.Error)
-			}
-		}
-		natsVal := natsStatus + " " + cli.DimStyle.Render(data.NATS.URL)
-		if data.NATS.Version != "" {
-			natsVal += " " + cli.DimStyle.Render("(v"+data.NATS.Version+")")
-		}
-		cli.PrintKV("NATS", natsVal)
-	}
-
-	// KV component (without duplicating the NATS line)
-	if c, ok := data.Components["kv"]; ok {
-		kvVal := c.Status
-		if c.Error != "" {
-			kvVal += " " + cli.DimStyle.Render(c.Error)
-		}
-		cli.PrintKV("KV", kvVal)
-	}
-
-	// Non-standard components (skip nats/kv already shown above)
-	for name, component := range data.Components {
-		if name == "nats" || name == "kv" {
-			continue
-		}
-		val := component.Status
-		if component.Error != "" {
-			val += " " + cli.DimStyle.Render(component.Error)
-		}
-		cli.PrintKV(name, val)
 	}
 
 	// Agent details are shown in the component table above.
