@@ -13,5 +13,6 @@ multi-step operations.
 | [Guidelines](guidelines.md)                  | SDK development rules and patterns |
 | [Client Library](client/client.md)           | Typed Go client for the REST API   |
 | [Orchestrator](orchestrator/orchestrator.md) | DAG-based task orchestration       |
+| [Platform Detection](platform.md)            | OS family detection for providers  |
 
 <DocCardList />
