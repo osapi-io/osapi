@@ -128,11 +128,11 @@ func (suite *HealthTypesTestSuite) TestSystemStatusFromGen() {
 							Status: "unhealthy",
 							Error:  &errMsg,
 						},
-					"controller.api": {
-						Status:  "ok",
-						Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
+						"controller.api": {
+							Status:  "ok",
+							Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
+						},
 					},
-				},
 					Nats: &gen.NATSInfo{
 						Url:     "nats://localhost:4222",
 						Version: "2.10.0",
