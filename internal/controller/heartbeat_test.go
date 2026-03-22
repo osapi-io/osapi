@@ -60,6 +60,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 		s.mockProcess,
 		10*time.Second,
 		process.ConditionThresholds{},
+		nil,
 	)
 }
 
@@ -182,6 +183,35 @@ func (s *HeartbeatTestSuite) TestWriteRegistration() {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Nil(reg.Process)
+						return uint64(1), nil
+					})
+			},
+		},
+		{
+			name: "includes sub-components when configured",
+			setupMock: func() {
+				s.heartbeat.subComponents = map[string]job.SubComponentInfo{
+					"api.server":    {Status: "ok", Address: "http://0.0.0.0:8080"},
+					"api.heartbeat": {Status: "ok"},
+				}
+				s.T().Cleanup(func() {
+					s.heartbeat.subComponents = nil
+				})
+
+				s.mockProcess.EXPECT().
+					GetMetrics().
+					Return(nil, errors.New("no metrics"))
+
+				s.mockKV.EXPECT().
+					Put(gomock.Any(), "api.web_server_01", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, data []byte) (uint64, error) {
+						var reg job.ComponentRegistration
+						s.Require().NoError(json.Unmarshal(data, &reg))
+						s.Require().Len(reg.SubComponents, 2)
+						s.Equal("ok", reg.SubComponents["api.server"].Status)
+						s.Equal("http://0.0.0.0:8080", reg.SubComponents["api.server"].Address)
+						s.Equal("ok", reg.SubComponents["api.heartbeat"].Status)
+						s.Empty(reg.SubComponents["api.heartbeat"].Address)
 						return uint64(1), nil
 					})
 			},
@@ -323,6 +353,7 @@ func (s *HeartbeatTestSuite) TestStart() {
 				mockProcess,
 				10*time.Millisecond,
 				process.ConditionThresholds{},
+				nil,
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -377,6 +408,7 @@ func (s *HeartbeatTestSuite) TestRegistryKey() {
 				s.mockProcess,
 				10*time.Second,
 				process.ConditionThresholds{},
+				nil,
 			)
 			s.Equal(tt.expected, hb.registryKey())
 		})

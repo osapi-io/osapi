@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
@@ -101,4 +102,11 @@ func New(
 	)
 
 	return a
+}
+
+// SetSubComponents sets the sub-component info published in heartbeats.
+func (a *Agent) SetSubComponents(
+	scs map[string]job.SubComponentInfo,
+) {
+	a.subComponents = scs
 }

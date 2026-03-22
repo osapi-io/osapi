@@ -502,6 +502,7 @@ func newMetricsProvider(
 						entry.CPUPercent = reg.Process.CPUPercent
 						entry.MemBytes = reg.Process.RSSBytes
 					}
+					entry.SubComponents = convertSubComponents(reg.SubComponents)
 				case "controller", "nats":
 					var reg job.ComponentRegistration
 					if err := json.Unmarshal(kvEntry.Value(), &reg); err != nil {
@@ -522,6 +523,7 @@ func newMetricsProvider(
 						entry.CPUPercent = reg.Process.CPUPercent
 						entry.MemBytes = reg.Process.RSSBytes
 					}
+					entry.SubComponents = convertSubComponents(reg.SubComponents)
 				default:
 					continue
 				}
@@ -539,6 +541,25 @@ func newMetricsProvider(
 			return entries, nil
 		},
 	}
+}
+
+// convertSubComponents converts job.SubComponentInfo map to health.SubComponentInfo map.
+func convertSubComponents(
+	src map[string]job.SubComponentInfo,
+) map[string]health.SubComponentInfo {
+	if len(src) == 0 {
+		return nil
+	}
+
+	result := make(map[string]health.SubComponentInfo, len(src))
+	for k, v := range src {
+		result[k] = health.SubComponentInfo{
+			Status:  v.Status,
+			Address: v.Address,
+		}
+	}
+
+	return result
 }
 
 func createAuditStore(
@@ -584,8 +605,6 @@ func registerControllerHandlers(
 		return "disabled"
 	}
 
-	natsAddr := fmt.Sprintf("nats://%s:%d", appConfig.NATS.Server.Host, appConfig.NATS.Server.Port)
-
 	subComponents := map[string]health.SubComponentInfo{
 		"controller.api": {
 			Status:  "ok",
@@ -600,20 +619,6 @@ func registerControllerHandlers(
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
 		},
 		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
-		"agent.heartbeat":    {Status: "ok"},
-		"agent.metrics": {
-			Status:  enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
-			Address: httpAddr(appConfig.Agent.Metrics.Host, appConfig.Agent.Metrics.Port),
-		},
-		"nats.heartbeat": {Status: "ok"},
-		"nats.metrics": {
-			Status: enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled),
-			Address: httpAddr(
-				appConfig.NATS.Server.Metrics.Host,
-				appConfig.NATS.Server.Metrics.Port,
-			),
-		},
-		"nats.server": {Status: "ok", Address: natsAddr},
 	}
 
 	handlers := make([]func(e *echo.Echo), 0, 8)
@@ -694,6 +699,34 @@ func startControllerHeartbeat(
 		hostname = "unknown"
 	}
 
+	httpAddr := func(host string, port int) string {
+		return fmt.Sprintf("http://%s:%d", host, port)
+	}
+
+	enabledOrDisabled := func(enabled bool) string {
+		if enabled {
+			return "ok"
+		}
+
+		return "disabled"
+	}
+
+	subComponents := map[string]job.SubComponentInfo{
+		"controller.api": {
+			Status:  "ok",
+			Address: httpAddr("0.0.0.0", appConfig.Controller.API.Port),
+		},
+		"controller.heartbeat": {Status: "ok"},
+		"controller.metrics": {
+			Status:  enabledOrDisabled(appConfig.Controller.Metrics.Enabled),
+			Address: httpAddr(appConfig.Controller.Metrics.Host, appConfig.Controller.Metrics.Port),
+		},
+		"controller.notifier": {
+			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
+		},
+		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
+	}
+
 	hb := controller.NewComponentHeartbeat(
 		log,
 		registryKV,
@@ -706,6 +739,7 @@ func startControllerHeartbeat(
 			MemoryPressureBytes: appConfig.Agent.ProcessConditions.MemoryPressureBytes,
 			HighCPUPercent:      appConfig.Agent.ProcessConditions.HighCPUPercent,
 		},
+		subComponents,
 	)
 
 	go hb.Start(ctx)

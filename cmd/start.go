@@ -79,7 +79,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
-		job.Init(appConfig.NATS.Server.Namespace)
+		job.Init(appConfig.Controller.NATS.Namespace)
 
 		natsLog := logger.With("component", "nats")
 		natsServer := setupNATSServer(ctx, natsLog)

@@ -409,10 +409,18 @@ type ProcessMetrics struct {
 	Goroutines int `json:"goroutines"`
 }
 
+// SubComponentInfo holds the status and optional address of a sub-component.
+type SubComponentInfo struct {
+	// Status is the sub-component status (e.g., "ok", "disabled").
+	Status string `json:"status"`
+	// Address is the optional network endpoint (e.g., "http://0.0.0.0:9090").
+	Address string `json:"address,omitempty"`
+}
+
 // ComponentRegistration represents a non-agent component's heartbeat
 // entry in the KV registry. Used by API server and NATS server.
 type ComponentRegistration struct {
-	// Type is the component type: "api" or "nats".
+	// Type is the component type: "controller" or "nats".
 	Type string `json:"type"`
 	// Hostname is the hostname of the component.
 	Hostname string `json:"hostname"`
@@ -426,6 +434,8 @@ type ComponentRegistration struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 	// Version is the component binary version.
 	Version string `json:"version,omitempty"`
+	// SubComponents reports the status of internal services.
+	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
 
 // AgentRegistration represents an agent's registration entry in the KV registry.
@@ -454,6 +464,8 @@ type AgentRegistration struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 	// State is the agent's scheduling state (Ready, Draining, Cordoned).
 	State string `json:"state,omitempty"`
+	// SubComponents reports the status of internal services.
+	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
 
 // AgentInfo represents information about an active agent.
