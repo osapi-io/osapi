@@ -62,10 +62,11 @@ By default, a condition fires once when it becomes active and once when it
 resolves. To keep active conditions visible, configure `renotify_interval`:
 
 ```yaml
-notifications:
-  enabled: true
-  notifier: 'log'
-  renotify_interval: '5m'
+controller:
+  notifications:
+    enabled: true
+    notifier: 'log'
+    renotify_interval: '5m'
 ```
 
 With `renotify_interval: '5m'`, an active `DiskPressure` condition re-fires
@@ -75,17 +76,18 @@ to `'0'` to disable re-notification.
 ## Configuration
 
 ```yaml
-notifications:
-  enabled: true
-  notifier: 'log'
-  renotify_interval: '5m'
+controller:
+  notifications:
+    enabled: true
+    notifier: 'log'
+    renotify_interval: '5m'
 ```
 
 | Key                 | Env Variable                            | Description                           |
 | ------------------- | --------------------------------------- | ------------------------------------- |
-| `enabled`           | `OSAPI_NOTIFICATIONS_ENABLED`           | Enable the watcher (default: `false`) |
-| `notifier`          | `OSAPI_NOTIFICATIONS_NOTIFIER`          | Backend: `"log"` (default)            |
-| `renotify_interval` | `OSAPI_NOTIFICATIONS_RENOTIFY_INTERVAL` | Re-fire interval (default: `"0"`)     |
+| `enabled`           | `OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED`           | Enable the watcher (default: `false`) |
+| `notifier`          | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`          | Backend: `"log"` (default)            |
+| `renotify_interval` | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL` | Re-fire interval (default: `"0"`)     |
 
 See [Configuration](../usage/configuration.md) for the full reference.
 

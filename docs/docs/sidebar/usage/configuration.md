@@ -14,7 +14,7 @@ By default OSAPI looks for `/etc/osapi/osapi.yaml`. Override the path with the
 `-f` / `--osapi-file` flag:
 
 ```bash
-osapi -f /path/to/osapi.yaml api server start
+osapi -f /path/to/osapi.yaml controller start
 ```
 
 ## Environment Variables
@@ -72,9 +72,9 @@ uppercased:
 | `telemetry.tracing.enabled`                      | `OSAPI_TELEMETRY_TRACING_ENABLED`                      |
 | `telemetry.tracing.exporter`                     | `OSAPI_TELEMETRY_TRACING_EXPORTER`                     |
 | `telemetry.tracing.otlp_endpoint`                | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`                |
-| `controller.notifications.enabled`                          | `OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED`                          |
-| `controller.notifications.notifier`                         | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`                         |
-| `controller.notifications.renotify_interval`                | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL`                |
+| `controller.notifications.enabled`               | `OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED`               |
+| `controller.notifications.notifier`              | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`              |
+| `controller.notifications.renotify_interval`     | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL`     |
 | `agent.nats.host`                                | `OSAPI_AGENT_NATS_HOST`                                |
 | `agent.nats.port`                                | `OSAPI_AGENT_NATS_PORT`                                |
 | `agent.nats.client_name`                         | `OSAPI_AGENT_NATS_CLIENT_NAME`                         |
@@ -97,12 +97,12 @@ Environment variables take precedence over file values.
 Two fields carry a `required` validation tag and must be set before the server
 or client will start:
 
-| Key                                       | Purpose                       |
-| ----------------------------------------- | ----------------------------- |
-| `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
-| `controller.client.security.bearer_token` | JWT sent with client requests |
-| `controller.metrics.enabled`                     | `OSAPI_CONTROLLER_METRICS_ENABLED`                     |
-| `controller.metrics.port`                        | `OSAPI_CONTROLLER_METRICS_PORT`                        |
+| Key                                       | Purpose                            |
+| ----------------------------------------- | ---------------------------------- |
+| `controller.api.security.signing_key`     | HS256 key for signing JWTs         |
+| `controller.client.security.bearer_token` | JWT sent with client requests      |
+| `controller.metrics.enabled`              | `OSAPI_CONTROLLER_METRICS_ENABLED` |
+| `controller.metrics.port`                 | `OSAPI_CONTROLLER_METRICS_PORT`    |
 
 Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 `osapi token generate`.
@@ -524,9 +524,9 @@ agent:
 
 ### `controller.metrics`
 
-| Key       | Type | Description                                     |
-| --------- | ---- | ----------------------------------------------- |
-| `enabled` | bool | Enable the metrics server (default: `true`)     |
+| Key       | Type | Description                                        |
+| --------- | ---- | -------------------------------------------------- |
+| `enabled` | bool | Enable the metrics server (default: `true`)        |
 | `port`    | int  | Port the metrics server listens on (default: 9090) |
 
 ### `nats.server`
@@ -543,9 +543,9 @@ agent:
 
 ### `nats.server.metrics`
 
-| Key       | Type | Description                                     |
-| --------- | ---- | ----------------------------------------------- |
-| `enabled` | bool | Enable the metrics server (default: `true`)     |
+| Key       | Type | Description                                        |
+| --------- | ---- | -------------------------------------------------- |
+| `enabled` | bool | Enable the metrics server (default: `true`)        |
 | `port`    | int  | Port the metrics server listens on (default: 9092) |
 
 ### `nats.stream`

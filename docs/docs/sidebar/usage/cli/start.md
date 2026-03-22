@@ -43,8 +43,8 @@ separately:
 # On the NATS host
 osapi nats server start
 
-# On the API host
-osapi api server start
+# On the controller host
+osapi controller start
 
 # On each managed host
 osapi agent start
