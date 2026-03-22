@@ -22,9 +22,9 @@ package host
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"time"
 )
 
 // GetUptime retrieves the system uptime.

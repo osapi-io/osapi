@@ -28,6 +28,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // Type represents the type of job operation.
@@ -41,20 +42,21 @@ const (
 )
 
 // Status represents the current status of a job.
-type Status string
+// Status is a type alias for client.JobStatus so internal code and the SDK
+// share the same type. All status constants are defined in pkg/sdk/client/.
+type Status = client.JobStatus
 
 const (
-	// StatusPending indicates the job is queued but not yet processed.
-	StatusPending Status = "pending"
-	// StatusProcessing indicates the job is currently being processed.
-	StatusProcessing Status = "processing"
-	// StatusCompleted indicates the job completed successfully.
-	StatusCompleted Status = "completed"
-	// StatusFailed indicates the job failed during processing.
-	StatusFailed Status = "failed"
-	// StatusSkipped indicates the job was skipped because the operation
-	// is not supported on the target OS family.
-	StatusSkipped Status = "skipped"
+	StatusSubmitted      = client.JobStatusSubmitted
+	StatusAcknowledged   = client.JobStatusAcknowledged
+	StatusStarted        = client.JobStatusStarted
+	StatusPending        = client.JobStatusPending
+	StatusProcessing     = client.JobStatusProcessing
+	StatusCompleted      = client.JobStatusCompleted
+	StatusFailed         = client.JobStatusFailed
+	StatusSkipped        = client.JobStatusSkipped
+	StatusPartialFailure = client.JobStatusPartialFailure
+	StatusRetried        = client.JobStatusRetried
 )
 
 // Request represents a request to perform a job operation.

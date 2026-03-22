@@ -178,7 +178,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Write acknowledged event
-	if err := a.writeStatusEvent(ctx, jobKey, "acknowledged", map[string]interface{}{
+	if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusAcknowledged), map[string]interface{}{
 		"subject":   msg.Subject(),
 		"category":  jobRequest.Category,
 		"operation": jobRequest.Operation,
@@ -220,7 +220,7 @@ func (a *Agent) handleJobMessage(
 
 	// Write started event
 	startTime := time.Now()
-	if err := a.writeStatusEvent(ctx, jobKey, "started", map[string]interface{}{
+	if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusStarted), map[string]interface{}{
 		"agent_version": "1.0.0", // TODO: get from config or build info
 		"pid":           os.Getpid(),
 	}); err != nil {
@@ -319,19 +319,23 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Write terminal status event after the response is persisted.
-	if response.Status == job.StatusFailed {
-		if err := a.writeStatusEvent(ctx, jobKey, "failed", map[string]interface{}{
+	switch response.Status {
+	case job.StatusFailed:
+		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusFailed), map[string]interface{}{
 			"error":       response.Error,
 			"duration_ms": time.Since(startTime).Milliseconds(),
 		}); err != nil {
-			a.logger.ErrorContext(
-				ctx,
-				"failed to write failed event",
-				slog.String("error", err.Error()),
-			)
+			a.logger.ErrorContext(ctx, "failed to write failed event", slog.String("error", err.Error()))
 		}
-	} else {
-		if err := a.writeStatusEvent(ctx, jobKey, "completed", map[string]interface{}{
+	case job.StatusSkipped:
+		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusSkipped), map[string]interface{}{
+			"error":       response.Error,
+			"duration_ms": time.Since(startTime).Milliseconds(),
+		}); err != nil {
+			a.logger.ErrorContext(ctx, "failed to write skipped event", slog.String("error", err.Error()))
+		}
+	default:
+		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusCompleted), map[string]interface{}{
 			"duration_ms": time.Since(startTime).Milliseconds(),
 			"result_size": len(result),
 		}); err != nil {

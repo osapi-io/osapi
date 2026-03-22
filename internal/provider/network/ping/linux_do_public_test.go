@@ -27,8 +27,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
 type LinuxDoStatsPublicTestSuite struct {

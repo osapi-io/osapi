@@ -25,8 +25,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 type LinuxGetStatsPublicTestSuite struct {
