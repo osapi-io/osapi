@@ -33,20 +33,27 @@ server is enabled.
 Go runtime (goroutines, memory, GC) and process metrics (CPU, memory, file
 descriptors) are included on every component.
 
-| Metric                        | Type      | Labels | Component | Description                        |
-| ----------------------------- | --------- | ------ | --------- | ---------------------------------- |
-| `osapi_component_up`          | gauge     |        | all       | 1 when ready, 0 when not           |
-| `osapi_jobs_processed_total`  | counter   | status | agent     | Jobs completed or failed           |
-| `osapi_jobs_active`           | gauge     |        | agent     | Currently executing jobs           |
-| `osapi_job_duration_seconds`  | histogram |        | agent     | Job execution duration             |
-| `osapi_heartbeat_age_seconds` | gauge     |        | agent     | Seconds since last heartbeat write |
+| Metric                        | Type      | Labels    | Component  | Description                        |
+| ----------------------------- | --------- | --------- | ---------- | ---------------------------------- |
+| `osapi_component_up`          | gauge     |           | all        | 1 when ready, 0 when not           |
+| `osapi_subsystem_up`          | gauge     | subsystem | all        | 1 when subsystem is ok, 0 when not |
+| `osapi_jobs_created_total`    | counter   |           | controller | Jobs submitted via API             |
+| `osapi_jobs_processed_total`  | counter   | status    | agent      | Jobs completed or failed           |
+| `osapi_jobs_active`           | gauge     |           | agent      | Currently executing jobs           |
+| `osapi_job_duration_seconds`  | histogram |           | agent      | Job execution duration             |
+| `osapi_heartbeat_age_seconds` | gauge     |           | agent      | Seconds since last heartbeat write |
+
+The `osapi_subsystem_up` gauge has a `subsystem` label identifying which
+internal service it represents (e.g., `api`, `heartbeat`, `metrics`, `notifier`,
+`tracing`, `facts`). A value of 1 means the subsystem status is `ok`; 0 means
+`disabled` or `error`.
 
 The controller also exposes HTTP request metrics from the OTEL middleware using
 standard `http.server.*` names (`http.server.request.duration`,
 `http.server.active_requests`, etc.).
 
-The NATS component exposes `osapi_component_up` only — NATS has its own native
-monitoring.
+The NATS component exposes `osapi_component_up` and `osapi_subsystem_up` only —
+NATS has its own native monitoring.
 
 ## Health Probes
 
