@@ -10,44 +10,44 @@ Package config provides configuration types and validation for OSAPI.
 
 ## Index
 
-- [func Validate\(c \*Config\) error](<#Validate>)
-- [type APIServer](<#APIServer>)
-- [type AgentConditions](<#AgentConditions>)
-- [type AgentConfig](<#AgentConfig>)
-- [type AgentConsumer](<#AgentConsumer>)
-- [type AgentFacts](<#AgentFacts>)
-- [type CORS](<#CORS>)
-- [type Client](<#Client>)
-- [type ClientSecurity](<#ClientSecurity>)
-- [type Config](<#Config>)
-- [type Controller](<#Controller>)
-- [type CustomRole](<#CustomRole>)
-- [type MetricsConfig](<#MetricsConfig>)
-- [type MetricsServer](<#MetricsServer>)
-- [type NATS](<#NATS>)
-- [type NATSAudit](<#NATSAudit>)
-- [type NATSAuth](<#NATSAuth>)
-- [type NATSConnection](<#NATSConnection>)
-- [type NATSDLQ](<#NATSDLQ>)
-- [type NATSFacts](<#NATSFacts>)
-- [type NATSFileState](<#NATSFileState>)
-- [type NATSKV](<#NATSKV>)
-- [type NATSObjects](<#NATSObjects>)
-- [type NATSRegistry](<#NATSRegistry>)
-- [type NATSServer](<#NATSServer>)
-- [type NATSServerAuth](<#NATSServerAuth>)
-- [type NATSServerUser](<#NATSServerUser>)
-- [type NATSState](<#NATSState>)
-- [type NATSStream](<#NATSStream>)
-- [type NotificationsConfig](<#NotificationsConfig>)
-- [type ProcessConditions](<#ProcessConditions>)
-- [type ServerSecurity](<#ServerSecurity>)
-- [type Telemetry](<#Telemetry>)
-- [type TracingConfig](<#TracingConfig>)
-
+- [func Validate\(c \*Config\) error](#Validate)
+- [type APIServer](#APIServer)
+- [type AgentConditions](#AgentConditions)
+- [type AgentConfig](#AgentConfig)
+- [type AgentConsumer](#AgentConsumer)
+- [type AgentFacts](#AgentFacts)
+- [type CORS](#CORS)
+- [type Client](#Client)
+- [type ClientSecurity](#ClientSecurity)
+- [type Config](#Config)
+- [type Controller](#Controller)
+- [type CustomRole](#CustomRole)
+- [type MetricsConfig](#MetricsConfig)
+- [type MetricsServer](#MetricsServer)
+- [type NATS](#NATS)
+- [type NATSAudit](#NATSAudit)
+- [type NATSAuth](#NATSAuth)
+- [type NATSConnection](#NATSConnection)
+- [type NATSDLQ](#NATSDLQ)
+- [type NATSFacts](#NATSFacts)
+- [type NATSFileState](#NATSFileState)
+- [type NATSKV](#NATSKV)
+- [type NATSObjects](#NATSObjects)
+- [type NATSRegistry](#NATSRegistry)
+- [type NATSServer](#NATSServer)
+- [type NATSServerAuth](#NATSServerAuth)
+- [type NATSServerUser](#NATSServerUser)
+- [type NATSState](#NATSState)
+- [type NATSStream](#NATSStream)
+- [type NotificationsConfig](#NotificationsConfig)
+- [type ProcessConditions](#ProcessConditions)
+- [type ServerSecurity](#ServerSecurity)
+- [type Telemetry](#Telemetry)
+- [type TracingConfig](#TracingConfig)
 
 <a name="Validate"></a>
-## func [Validate](<https://github.com/osapi-io/osapi/blob/main/internal/config/schema.go#L42-L44>)
+
+## func [Validate](https://github.com/osapi-io/osapi/blob/main/internal/config/schema.go#L42-L44)
 
 ```go
 func Validate(c *Config) error
@@ -56,7 +56,8 @@ func Validate(c *Config) error
 Validate validates a structs exposed fields.
 
 <a name="APIServer"></a>
-## type [APIServer](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L250-L255>)
+
+## type [APIServer](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L250-L255)
 
 APIServer holds the HTTP server config \(port \+ security\).
 
@@ -70,7 +71,8 @@ type APIServer struct {
 ```
 
 <a name="AgentConditions"></a>
-## type [AgentConditions](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L316-L320>)
+
+## type [AgentConditions](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L316-L320)
 
 AgentConditions holds threshold configuration for node conditions.
 
@@ -83,7 +85,8 @@ type AgentConditions struct {
 ```
 
 <a name="AgentConfig"></a>
-## type [AgentConfig](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L331-L351>)
+
+## type [AgentConfig](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L331-L351)
 
 AgentConfig configuration settings.
 
@@ -112,7 +115,8 @@ type AgentConfig struct {
 ```
 
 <a name="AgentConsumer"></a>
-## type [AgentConsumer](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L294-L307>)
+
+## type [AgentConsumer](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L294-L307)
 
 AgentConsumer configuration for the agent's JetStream consumer settings.
 
@@ -134,7 +138,8 @@ type AgentConsumer struct {
 ```
 
 <a name="AgentFacts"></a>
-## type [AgentFacts](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L310-L313>)
+
+## type [AgentFacts](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L310-L313)
 
 AgentFacts configuration for the agent's facts collection settings.
 
@@ -146,7 +151,8 @@ type AgentFacts struct {
 ```
 
 <a name="CORS"></a>
-## type [CORS](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L288-L291>)
+
+## type [CORS](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L288-L291)
 
 CORS represents the CORS \(Cross\-Origin Resource Sharing\) settings.
 
@@ -158,7 +164,8 @@ type CORS struct {
 ```
 
 <a name="Client"></a>
-## type [Client](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L258-L263>)
+
+## type [Client](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L258-L263)
 
 Client configuration settings.
 
@@ -172,7 +179,8 @@ type Client struct {
 ```
 
 <a name="ClientSecurity"></a>
-## type [ClientSecurity](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L282-L285>)
+
+## type [ClientSecurity](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L282-L285)
 
 ClientSecurity represents security\-related settings for the client.
 
@@ -184,9 +192,11 @@ type ClientSecurity struct {
 ```
 
 <a name="Config"></a>
-## type [Config](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L25-L32>)
 
-Config represents the root structure of the YAML configuration file. This struct is used to unmarshal configuration data from Viper.
+## type [Config](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L25-L32)
+
+Config represents the root structure of the YAML configuration file. This struct
+is used to unmarshal configuration data from Viper.
 
 ```go
 type Config struct {
@@ -200,7 +210,8 @@ type Config struct {
 ```
 
 <a name="Controller"></a>
-## type [Controller](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L241-L247>)
+
+## type [Controller](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L241-L247)
 
 Controller holds the control plane configuration.
 
@@ -215,7 +226,8 @@ type Controller struct {
 ```
 
 <a name="CustomRole"></a>
-## type [CustomRole](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L266-L269>)
+
+## type [CustomRole](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L266-L269)
 
 CustomRole defines a named set of permissions that can be assigned to tokens.
 
@@ -227,7 +239,8 @@ type CustomRole struct {
 ```
 
 <a name="MetricsConfig"></a>
-## type [MetricsConfig](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L54-L58>)
+
+## type [MetricsConfig](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L54-L58)
 
 MetricsConfig configuration settings for Prometheus metrics.
 
@@ -240,7 +253,8 @@ type MetricsConfig struct {
 ```
 
 <a name="MetricsServer"></a>
-## type [MetricsServer](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L61-L68>)
+
+## type [MetricsServer](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L61-L68)
 
 MetricsServer configures the per\-component metrics HTTP server.
 
@@ -256,7 +270,8 @@ type MetricsServer struct {
 ```
 
 <a name="NATS"></a>
-## type [NATS](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L111-L122>)
+
+## type [NATS](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L111-L122)
 
 NATS configuration settings.
 
@@ -276,7 +291,8 @@ type NATS struct {
 ```
 
 <a name="NATSAudit"></a>
-## type [NATSAudit](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L125-L132>)
+
+## type [NATSAudit](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L125-L132)
 
 NATSAudit configuration for the audit log KV bucket.
 
@@ -292,7 +308,8 @@ type NATSAudit struct {
 ```
 
 <a name="NATSAuth"></a>
-## type [NATSAuth](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L81-L90>)
+
+## type [NATSAuth](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L81-L90)
 
 NATSAuth holds client\-side authentication settings for connecting to NATS.
 
@@ -310,7 +327,8 @@ type NATSAuth struct {
 ```
 
 <a name="NATSConnection"></a>
-## type [NATSConnection](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L227-L238>)
+
+## type [NATSConnection](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L227-L238)
 
 NATSConnection is a reusable NATS connection configuration block.
 
@@ -330,7 +348,8 @@ type NATSConnection struct {
 ```
 
 <a name="NATSDLQ"></a>
-## type [NATSDLQ](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L219-L224>)
+
+## type [NATSDLQ](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L219-L224)
 
 NATSDLQ configuration for Dead Letter Queue stream settings.
 
@@ -344,7 +363,8 @@ type NATSDLQ struct {
 ```
 
 <a name="NATSFacts"></a>
-## type [NATSFacts](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L144-L150>)
+
+## type [NATSFacts](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L144-L150)
 
 NATSFacts configuration for the agent facts KV bucket.
 
@@ -359,9 +379,11 @@ type NATSFacts struct {
 ```
 
 <a name="NATSFileState"></a>
-## type [NATSFileState](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L171-L176>)
 
-NATSFileState configuration for the file deployment state KV bucket. No TTL — deployed file state persists until explicitly removed.
+## type [NATSFileState](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L171-L176)
+
+NATSFileState configuration for the file deployment state KV bucket. No TTL —
+deployed file state persists until explicitly removed.
 
 ```go
 type NATSFileState struct {
@@ -373,7 +395,8 @@ type NATSFileState struct {
 ```
 
 <a name="NATSKV"></a>
-## type [NATSKV](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L207-L216>)
+
+## type [NATSKV](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L207-L216)
 
 NATSKV configuration for KeyValue bucket settings.
 
@@ -391,7 +414,8 @@ type NATSKV struct {
 ```
 
 <a name="NATSObjects"></a>
-## type [NATSObjects](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L161-L167>)
+
+## type [NATSObjects](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L161-L167)
 
 NATSObjects configuration for the NATS Object Store bucket.
 
@@ -406,7 +430,8 @@ type NATSObjects struct {
 ```
 
 <a name="NATSRegistry"></a>
-## type [NATSRegistry](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L135-L141>)
+
+## type [NATSRegistry](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L135-L141)
 
 NATSRegistry configuration for the agent registry KV bucket.
 
@@ -421,7 +446,8 @@ type NATSRegistry struct {
 ```
 
 <a name="NATSServer"></a>
-## type [NATSServer](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L179-L191>)
+
+## type [NATSServer](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L179-L191)
 
 NATSServer configuration settings for the embedded NATS server.
 
@@ -442,9 +468,11 @@ type NATSServer struct {
 ```
 
 <a name="NATSServerAuth"></a>
-## type [NATSServerAuth](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L93-L100>)
 
-NATSServerAuth holds server\-side authentication settings for the embedded NATS server.
+## type [NATSServerAuth](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L93-L100)
+
+NATSServerAuth holds server\-side authentication settings for the embedded NATS
+server.
 
 ```go
 type NATSServerAuth struct {
@@ -458,7 +486,8 @@ type NATSServerAuth struct {
 ```
 
 <a name="NATSServerUser"></a>
-## type [NATSServerUser](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L103-L108>)
+
+## type [NATSServerUser](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L103-L108)
 
 NATSServerUser represents an allowed username/password pair for the NATS server.
 
@@ -472,9 +501,11 @@ type NATSServerUser struct {
 ```
 
 <a name="NATSState"></a>
-## type [NATSState](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L153-L158>)
 
-NATSState configuration for the agent state KV bucket \(drain flags, timeline events\).
+## type [NATSState](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L153-L158)
+
+NATSState configuration for the agent state KV bucket \(drain flags, timeline
+events\).
 
 ```go
 type NATSState struct {
@@ -486,7 +517,8 @@ type NATSState struct {
 ```
 
 <a name="NATSStream"></a>
-## type [NATSStream](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L194-L204>)
+
+## type [NATSStream](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L194-L204)
 
 NATSStream configuration for JetStream stream settings.
 
@@ -505,9 +537,12 @@ type NATSStream struct {
 ```
 
 <a name="NotificationsConfig"></a>
-## type [NotificationsConfig](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L37-L45>)
 
-NotificationsConfig holds settings for the pluggable condition notification system. When Enabled is true, a Watcher monitors the registry KV bucket and dispatches ConditionEvents via the configured Notifier.
+## type [NotificationsConfig](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L37-L45)
+
+NotificationsConfig holds settings for the pluggable condition notification
+system. When Enabled is true, a Watcher monitors the registry KV bucket and
+dispatches ConditionEvents via the configured Notifier.
 
 ```go
 type NotificationsConfig struct {
@@ -522,7 +557,8 @@ type NotificationsConfig struct {
 ```
 
 <a name="ProcessConditions"></a>
-## type [ProcessConditions](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L323-L328>)
+
+## type [ProcessConditions](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L323-L328)
 
 ProcessConditions holds threshold configuration for process\-level conditions.
 
@@ -536,7 +572,8 @@ type ProcessConditions struct {
 ```
 
 <a name="ServerSecurity"></a>
-## type [ServerSecurity](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L272-L279>)
+
+## type [ServerSecurity](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L272-L279)
 
 ServerSecurity represents security\-related settings for the server.
 
@@ -552,7 +589,8 @@ type ServerSecurity struct {
 ```
 
 <a name="Telemetry"></a>
-## type [Telemetry](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L48-L51>)
+
+## type [Telemetry](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L48-L51)
 
 Telemetry configuration settings.
 
@@ -564,7 +602,8 @@ type Telemetry struct {
 ```
 
 <a name="TracingConfig"></a>
-## type [TracingConfig](<https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L71-L78>)
+
+## type [TracingConfig](https://github.com/osapi-io/osapi/blob/main/internal/config/types.go#L71-L78)
 
 TracingConfig configuration settings for distributed tracing.
 
@@ -579,4 +618,4 @@ type TracingConfig struct {
 }
 ```
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

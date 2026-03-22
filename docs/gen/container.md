@@ -10,21 +10,21 @@ Package container provides container\-related API handlers.
 
 ## Index
 
-- [type Container](<#Container>)
-  - [func New\(logger \*slog.Logger, jobClient client.JobClient\) \*Container](<#New>)
-  - [func \(s \*Container\) DeleteNodeContainerDockerByID\(ctx context.Context, request gen.DeleteNodeContainerDockerByIDRequestObject\) \(gen.DeleteNodeContainerDockerByIDResponseObject, error\)](<#Container.DeleteNodeContainerDockerByID>)
-  - [func \(s \*Container\) DeleteNodeContainerDockerImage\(ctx context.Context, request gen.DeleteNodeContainerDockerImageRequestObject\) \(gen.DeleteNodeContainerDockerImageResponseObject, error\)](<#Container.DeleteNodeContainerDockerImage>)
-  - [func \(s \*Container\) GetNodeContainerDocker\(ctx context.Context, request gen.GetNodeContainerDockerRequestObject\) \(gen.GetNodeContainerDockerResponseObject, error\)](<#Container.GetNodeContainerDocker>)
-  - [func \(s \*Container\) GetNodeContainerDockerByID\(ctx context.Context, request gen.GetNodeContainerDockerByIDRequestObject\) \(gen.GetNodeContainerDockerByIDResponseObject, error\)](<#Container.GetNodeContainerDockerByID>)
-  - [func \(s \*Container\) PostNodeContainerDocker\(ctx context.Context, request gen.PostNodeContainerDockerRequestObject\) \(gen.PostNodeContainerDockerResponseObject, error\)](<#Container.PostNodeContainerDocker>)
-  - [func \(s \*Container\) PostNodeContainerDockerExec\(ctx context.Context, request gen.PostNodeContainerDockerExecRequestObject\) \(gen.PostNodeContainerDockerExecResponseObject, error\)](<#Container.PostNodeContainerDockerExec>)
-  - [func \(s \*Container\) PostNodeContainerDockerPull\(ctx context.Context, request gen.PostNodeContainerDockerPullRequestObject\) \(gen.PostNodeContainerDockerPullResponseObject, error\)](<#Container.PostNodeContainerDockerPull>)
-  - [func \(s \*Container\) PostNodeContainerDockerStart\(ctx context.Context, request gen.PostNodeContainerDockerStartRequestObject\) \(gen.PostNodeContainerDockerStartResponseObject, error\)](<#Container.PostNodeContainerDockerStart>)
-  - [func \(s \*Container\) PostNodeContainerDockerStop\(ctx context.Context, request gen.PostNodeContainerDockerStopRequestObject\) \(gen.PostNodeContainerDockerStopResponseObject, error\)](<#Container.PostNodeContainerDockerStop>)
-
+- [type Container](#Container)
+  - [func New\(logger \*slog.Logger, jobClient client.JobClient\) \*Container](#New)
+  - [func \(s \*Container\) DeleteNodeContainerDockerByID\(ctx context.Context, request gen.DeleteNodeContainerDockerByIDRequestObject\) \(gen.DeleteNodeContainerDockerByIDResponseObject, error\)](#Container.DeleteNodeContainerDockerByID)
+  - [func \(s \*Container\) DeleteNodeContainerDockerImage\(ctx context.Context, request gen.DeleteNodeContainerDockerImageRequestObject\) \(gen.DeleteNodeContainerDockerImageResponseObject, error\)](#Container.DeleteNodeContainerDockerImage)
+  - [func \(s \*Container\) GetNodeContainerDocker\(ctx context.Context, request gen.GetNodeContainerDockerRequestObject\) \(gen.GetNodeContainerDockerResponseObject, error\)](#Container.GetNodeContainerDocker)
+  - [func \(s \*Container\) GetNodeContainerDockerByID\(ctx context.Context, request gen.GetNodeContainerDockerByIDRequestObject\) \(gen.GetNodeContainerDockerByIDResponseObject, error\)](#Container.GetNodeContainerDockerByID)
+  - [func \(s \*Container\) PostNodeContainerDocker\(ctx context.Context, request gen.PostNodeContainerDockerRequestObject\) \(gen.PostNodeContainerDockerResponseObject, error\)](#Container.PostNodeContainerDocker)
+  - [func \(s \*Container\) PostNodeContainerDockerExec\(ctx context.Context, request gen.PostNodeContainerDockerExecRequestObject\) \(gen.PostNodeContainerDockerExecResponseObject, error\)](#Container.PostNodeContainerDockerExec)
+  - [func \(s \*Container\) PostNodeContainerDockerPull\(ctx context.Context, request gen.PostNodeContainerDockerPullRequestObject\) \(gen.PostNodeContainerDockerPullResponseObject, error\)](#Container.PostNodeContainerDockerPull)
+  - [func \(s \*Container\) PostNodeContainerDockerStart\(ctx context.Context, request gen.PostNodeContainerDockerStartRequestObject\) \(gen.PostNodeContainerDockerStartResponseObject, error\)](#Container.PostNodeContainerDockerStart)
+  - [func \(s \*Container\) PostNodeContainerDockerStop\(ctx context.Context, request gen.PostNodeContainerDockerStopRequestObject\) \(gen.PostNodeContainerDockerStopResponseObject, error\)](#Container.PostNodeContainerDockerStop)
 
 <a name="Container"></a>
-## type [Container](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/types.go#L30-L34>)
+
+## type [Container](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/types.go#L30-L34)
 
 Container implementation of the Container APIs operations.
 
@@ -37,7 +37,8 @@ type Container struct {
 ```
 
 <a name="New"></a>
-### func [New](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container.go#L35-L38>)
+
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container.go#L35-L38)
 
 ```go
 func New(logger *slog.Logger, jobClient client.JobClient) *Container
@@ -46,7 +47,8 @@ func New(logger *slog.Logger, jobClient client.JobClient) *Container
 New factory to create a new instance.
 
 <a name="Container.DeleteNodeContainerDockerByID"></a>
-### func \(\*Container\) [DeleteNodeContainerDockerByID](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_remove.go#L35-L38>)
+
+### func \(\*Container\) [DeleteNodeContainerDockerByID](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_remove.go#L35-L38)
 
 ```go
 func (s *Container) DeleteNodeContainerDockerByID(ctx context.Context, request gen.DeleteNodeContainerDockerByIDRequestObject) (gen.DeleteNodeContainerDockerByIDResponseObject, error)
@@ -55,7 +57,8 @@ func (s *Container) DeleteNodeContainerDockerByID(ctx context.Context, request g
 DeleteNodeContainerDockerByID removes a container from a target node.
 
 <a name="Container.DeleteNodeContainerDockerImage"></a>
-### func \(\*Container\) [DeleteNodeContainerDockerImage](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_image_remove.go#L35-L38>)
+
+### func \(\*Container\) [DeleteNodeContainerDockerImage](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_image_remove.go#L35-L38)
 
 ```go
 func (s *Container) DeleteNodeContainerDockerImage(ctx context.Context, request gen.DeleteNodeContainerDockerImageRequestObject) (gen.DeleteNodeContainerDockerImageResponseObject, error)
@@ -64,7 +67,8 @@ func (s *Container) DeleteNodeContainerDockerImage(ctx context.Context, request 
 DeleteNodeContainerDockerImage removes a container image from a target node.
 
 <a name="Container.GetNodeContainerDocker"></a>
-### func \(\*Container\) [GetNodeContainerDocker](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_list.go#L36-L39>)
+
+### func \(\*Container\) [GetNodeContainerDocker](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_list.go#L36-L39)
 
 ```go
 func (s *Container) GetNodeContainerDocker(ctx context.Context, request gen.GetNodeContainerDockerRequestObject) (gen.GetNodeContainerDockerResponseObject, error)
@@ -73,7 +77,8 @@ func (s *Container) GetNodeContainerDocker(ctx context.Context, request gen.GetN
 GetNodeContainerDocker lists containers on a target node.
 
 <a name="Container.GetNodeContainerDockerByID"></a>
-### func \(\*Container\) [GetNodeContainerDockerByID](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_inspect.go#L35-L38>)
+
+### func \(\*Container\) [GetNodeContainerDockerByID](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_inspect.go#L35-L38)
 
 ```go
 func (s *Container) GetNodeContainerDockerByID(ctx context.Context, request gen.GetNodeContainerDockerByIDRequestObject) (gen.GetNodeContainerDockerByIDResponseObject, error)
@@ -82,7 +87,8 @@ func (s *Container) GetNodeContainerDockerByID(ctx context.Context, request gen.
 GetNodeContainerDockerByID inspects a container on a target node.
 
 <a name="Container.PostNodeContainerDocker"></a>
-### func \(\*Container\) [PostNodeContainerDocker](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_create.go#L36-L39>)
+
+### func \(\*Container\) [PostNodeContainerDocker](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_create.go#L36-L39)
 
 ```go
 func (s *Container) PostNodeContainerDocker(ctx context.Context, request gen.PostNodeContainerDockerRequestObject) (gen.PostNodeContainerDockerResponseObject, error)
@@ -91,7 +97,8 @@ func (s *Container) PostNodeContainerDocker(ctx context.Context, request gen.Pos
 PostNodeContainerDocker creates a container on a target node.
 
 <a name="Container.PostNodeContainerDockerExec"></a>
-### func \(\*Container\) [PostNodeContainerDockerExec](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_exec.go#L36-L39>)
+
+### func \(\*Container\) [PostNodeContainerDockerExec](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_exec.go#L36-L39)
 
 ```go
 func (s *Container) PostNodeContainerDockerExec(ctx context.Context, request gen.PostNodeContainerDockerExecRequestObject) (gen.PostNodeContainerDockerExecResponseObject, error)
@@ -100,7 +107,8 @@ func (s *Container) PostNodeContainerDockerExec(ctx context.Context, request gen
 PostNodeContainerDockerExec executes a command in a container on a target node.
 
 <a name="Container.PostNodeContainerDockerPull"></a>
-### func \(\*Container\) [PostNodeContainerDockerPull](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_pull.go#L36-L39>)
+
+### func \(\*Container\) [PostNodeContainerDockerPull](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_pull.go#L36-L39)
 
 ```go
 func (s *Container) PostNodeContainerDockerPull(ctx context.Context, request gen.PostNodeContainerDockerPullRequestObject) (gen.PostNodeContainerDockerPullResponseObject, error)
@@ -109,7 +117,8 @@ func (s *Container) PostNodeContainerDockerPull(ctx context.Context, request gen
 PostNodeContainerDockerPull pulls a container image on a target node.
 
 <a name="Container.PostNodeContainerDockerStart"></a>
-### func \(\*Container\) [PostNodeContainerDockerStart](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_start.go#L34-L37>)
+
+### func \(\*Container\) [PostNodeContainerDockerStart](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_start.go#L34-L37)
 
 ```go
 func (s *Container) PostNodeContainerDockerStart(ctx context.Context, request gen.PostNodeContainerDockerStartRequestObject) (gen.PostNodeContainerDockerStartResponseObject, error)
@@ -118,7 +127,8 @@ func (s *Container) PostNodeContainerDockerStart(ctx context.Context, request ge
 PostNodeContainerDockerStart starts a container on a target node.
 
 <a name="Container.PostNodeContainerDockerStop"></a>
-### func \(\*Container\) [PostNodeContainerDockerStop](<https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_stop.go#L35-L38>)
+
+### func \(\*Container\) [PostNodeContainerDockerStop](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/docker/container_stop.go#L35-L38)
 
 ```go
 func (s *Container) PostNodeContainerDockerStop(ctx context.Context, request gen.PostNodeContainerDockerStopRequestObject) (gen.PostNodeContainerDockerStopResponseObject, error)
@@ -126,4 +136,4 @@ func (s *Container) PostNodeContainerDockerStop(ctx context.Context, request gen
 
 PostNodeContainerDockerStop stops a container on a target node.
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

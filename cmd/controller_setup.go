@@ -76,6 +76,91 @@ type ServerManager interface {
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
 
+// NATSClient defines the NATS operations needed by cmd setup, runtime, and
+// metrics functions. Each function that receives a NATSClient uses only a
+// subset of these methods; the full interface is defined here so the
+// natsBundle can store a single value that satisfies all consumers.
+type NATSClient interface {
+	// Connection management
+	Connect() error
+	Close()
+
+	// Stream operations
+	CreateOrUpdateStreamWithConfig(
+		ctx context.Context,
+		streamConfig jetstream.StreamConfig,
+	) error
+	GetStreamInfo(
+		ctx context.Context,
+		streamName string,
+	) (*jetstream.StreamInfo, error)
+
+	// KV operations
+	CreateOrUpdateKVBucket(
+		ctx context.Context,
+		bucketName string,
+	) (jetstream.KeyValue, error)
+	CreateOrUpdateKVBucketWithConfig(
+		ctx context.Context,
+		config jetstream.KeyValueConfig,
+	) (jetstream.KeyValue, error)
+
+	// Object Store operations
+	CreateOrUpdateObjectStore(
+		ctx context.Context,
+		cfg jetstream.ObjectStoreConfig,
+	) (jetstream.ObjectStore, error)
+	ObjectStore(
+		ctx context.Context,
+		name string,
+	) (jetstream.ObjectStore, error)
+
+	// Message publishing
+	Publish(
+		ctx context.Context,
+		subject string,
+		data []byte,
+	) error
+
+	// Message consumption
+	ConsumeMessages(
+		ctx context.Context,
+		streamName string,
+		consumerName string,
+		handler natsclient.JetStreamMessageHandler,
+		opts *natsclient.ConsumeOptions,
+	) error
+	CreateOrUpdateConsumerWithConfig(
+		ctx context.Context,
+		streamName string,
+		consumerConfig jetstream.ConsumerConfig,
+	) error
+
+	// KV convenience operations
+	KVPut(
+		bucket string,
+		key string,
+		value []byte,
+	) error
+
+	// Connection inspection
+	ConnectedURL() string
+	ConnectedServerVersion() string
+
+	// JetStream handle access
+	KeyValue(
+		ctx context.Context,
+		bucket string,
+	) (jetstream.KeyValue, error)
+	Stream(
+		ctx context.Context,
+		name string,
+	) (jetstream.Stream, error)
+}
+
+// Ensure natsclient.Client implements NATSClient interface.
+var _ NATSClient = (*natsclient.Client)(nil)
+
 // natsBundle holds the NATS connection, job client, and KV handles created
 // by connectNATSBundle.
 type natsBundle struct {

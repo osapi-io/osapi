@@ -8,21 +8,21 @@ import "github.com/retr0h/osapi/internal/provider/node/disk"
 
 ## Index
 
-- [type Darwin](<#Darwin>)
-  - [func NewDarwinProvider\(logger \*slog.Logger\) \*Darwin](<#NewDarwinProvider>)
-  - [func \(d \*Darwin\) GetLocalUsageStats\(\) \(\[\]Result, error\)](<#Darwin.GetLocalUsageStats>)
-- [type Linux](<#Linux>)
-  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
-  - [func \(l \*Linux\) GetLocalUsageStats\(\) \(\[\]Result, error\)](<#Linux.GetLocalUsageStats>)
-- [type Provider](<#Provider>)
-- [type Result](<#Result>)
-- [type Ubuntu](<#Ubuntu>)
-  - [func NewUbuntuProvider\(logger \*slog.Logger\) \*Ubuntu](<#NewUbuntuProvider>)
-  - [func \(u \*Ubuntu\) GetLocalUsageStats\(\) \(\[\]Result, error\)](<#Ubuntu.GetLocalUsageStats>)
-
+- [type Darwin](#Darwin)
+  - [func NewDarwinProvider\(logger \*slog.Logger\) \*Darwin](#NewDarwinProvider)
+  - [func \(d \*Darwin\) GetLocalUsageStats\(\) \(\[\]Result, error\)](#Darwin.GetLocalUsageStats)
+- [type Linux](#Linux)
+  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
+  - [func \(l \*Linux\) GetLocalUsageStats\(\) \(\[\]Result, error\)](#Linux.GetLocalUsageStats)
+- [type Provider](#Provider)
+- [type Result](#Result)
+- [type Ubuntu](#Ubuntu)
+  - [func NewUbuntuProvider\(logger \*slog.Logger\) \*Ubuntu](#NewUbuntuProvider)
+  - [func \(u \*Ubuntu\) GetLocalUsageStats\(\) \(\[\]Result, error\)](#Ubuntu.GetLocalUsageStats)
 
 <a name="Darwin"></a>
-## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin.go#L32-L38>)
+
+## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin.go#L32-L38)
 
 Darwin implements the Disk interface for Darwin \(macOS\).
 
@@ -37,7 +37,8 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin.go#L41-L43>)
+
+### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin.go#L41-L43)
 
 ```go
 func NewDarwinProvider(logger *slog.Logger) *Darwin
@@ -46,16 +47,23 @@ func NewDarwinProvider(logger *slog.Logger) *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetLocalUsageStats"></a>
-### func \(\*Darwin\) [GetLocalUsageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin_get_local_usage.go#L40>)
+
+### func \(\*Darwin\) [GetLocalUsageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/darwin_get_local_usage.go#L40)
 
 ```go
 func (d *Darwin) GetLocalUsageStats() ([]Result, error)
 ```
 
-GetLocalUsageStats retrieves disk space statistics for local disks only. It returns a slice of Result structs, each containing the total, used, and free space in bytes for the corresponding local disk. It gracefully skips partitions where a permission error occurs \(e.g., for mounts that the user cannot access without root privileges\), and continues processing the remaining partitions. If a non\-permission\-related error occurs, the function returns an error.
+GetLocalUsageStats retrieves disk space statistics for local disks only. It
+returns a slice of Result structs, each containing the total, used, and free
+space in bytes for the corresponding local disk. It gracefully skips partitions
+where a permission error occurs \(e.g., for mounts that the user cannot access
+without root privileges\), and continues processing the remaining partitions. If
+a non\-permission\-related error occurs, the function returns an error.
 
 <a name="Linux"></a>
-## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux.go#L28-L30>)
+
+## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux.go#L28-L30)
 
 Linux implements the Disk interface for Linux.
 
@@ -66,7 +74,8 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux.go#L33>)
+
+### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux.go#L33)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -75,16 +84,21 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetLocalUsageStats"></a>
-### func \(\*Linux\) [GetLocalUsageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux_get_local_usage.go#L31>)
+
+### func \(\*Linux\) [GetLocalUsageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/linux_get_local_usage.go#L31)
 
 ```go
 func (l *Linux) GetLocalUsageStats() ([]Result, error)
 ```
 
-GetLocalUsageStats retrieves disk space statistics for local disks only. It returns a slice of Result structs, each containing the total, used, and free space in bytes for the corresponding local disk. An error is returned if somethng goes wrong.
+GetLocalUsageStats retrieves disk space statistics for local disks only. It
+returns a slice of Result structs, each containing the total, used, and free
+space in bytes for the corresponding local disk. An error is returned if
+somethng goes wrong.
 
 <a name="Provider"></a>
-## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/types.go#L24-L27>)
+
+## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/types.go#L24-L27)
 
 Provider implements the methods to interact with various Disk components.
 
@@ -96,7 +110,8 @@ type Provider interface {
 ```
 
 <a name="Result"></a>
-## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/types.go#L30-L41>)
+
+## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/types.go#L30-L41)
 
 Result holds information about disk space usage.
 
@@ -116,7 +131,8 @@ type Result struct {
 ```
 
 <a name="Ubuntu"></a>
-## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu.go#L32-L38>)
+
+## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu.go#L32-L38)
 
 Ubuntu implements the Mem interface for Ubuntu.
 
@@ -131,7 +147,8 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu.go#L41-L43>)
+
+### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu.go#L41-L43)
 
 ```go
 func NewUbuntuProvider(logger *slog.Logger) *Ubuntu
@@ -140,12 +157,18 @@ func NewUbuntuProvider(logger *slog.Logger) *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.GetLocalUsageStats"></a>
-### func \(\*Ubuntu\) [GetLocalUsageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu_get_local_usage.go#L40>)
+
+### func \(\*Ubuntu\) [GetLocalUsageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/disk/ubuntu_get_local_usage.go#L40)
 
 ```go
 func (u *Ubuntu) GetLocalUsageStats() ([]Result, error)
 ```
 
-GetLocalUsageStats retrieves disk space statistics for local disks only. It returns a slice of Result structs, each containing the total, used, and free space in bytes for the corresponding local disk. It gracefully skips partitions where a permission error occurs \(e.g., for mounts that the user cannot access without root privileges\), and continues processing the remaining partitions. If a non\-permission\-related error occurs, the function returns an error.
+GetLocalUsageStats retrieves disk space statistics for local disks only. It
+returns a slice of Result structs, each containing the total, used, and free
+space in bytes for the corresponding local disk. It gracefully skips partitions
+where a permission error occurs \(e.g., for mounts that the user cannot access
+without root privileges\), and continues processing the remaining partitions. If
+a non\-permission\-related error occurs, the function returns an error.
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

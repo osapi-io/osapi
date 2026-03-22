@@ -10,21 +10,21 @@ Package load provides system load average statistics.
 
 ## Index
 
-- [type Darwin](<#Darwin>)
-  - [func NewDarwinProvider\(\) \*Darwin](<#NewDarwinProvider>)
-  - [func \(d \*Darwin\) GetAverageStats\(\) \(\*Result, error\)](<#Darwin.GetAverageStats>)
-- [type Linux](<#Linux>)
-  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
-  - [func \(l \*Linux\) GetAverageStats\(\) \(\*Result, error\)](<#Linux.GetAverageStats>)
-- [type Provider](<#Provider>)
-- [type Result](<#Result>)
-- [type Ubuntu](<#Ubuntu>)
-  - [func NewUbuntuProvider\(\) \*Ubuntu](<#NewUbuntuProvider>)
-  - [func \(u \*Ubuntu\) GetAverageStats\(\) \(\*Result, error\)](<#Ubuntu.GetAverageStats>)
-
+- [type Darwin](#Darwin)
+  - [func NewDarwinProvider\(\) \*Darwin](#NewDarwinProvider)
+  - [func \(d \*Darwin\) GetAverageStats\(\) \(\*Result, error\)](#Darwin.GetAverageStats)
+- [type Linux](#Linux)
+  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
+  - [func \(l \*Linux\) GetAverageStats\(\) \(\*Result, error\)](#Linux.GetAverageStats)
+- [type Provider](#Provider)
+- [type Result](#Result)
+- [type Ubuntu](#Ubuntu)
+  - [func NewUbuntuProvider\(\) \*Ubuntu](#NewUbuntuProvider)
+  - [func \(u \*Ubuntu\) GetAverageStats\(\) \(\*Result, error\)](#Ubuntu.GetAverageStats)
 
 <a name="Darwin"></a>
-## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin.go#L30-L34>)
+
+## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin.go#L30-L34)
 
 Darwin implements the Load interface for Darwin \(macOS\).
 
@@ -37,7 +37,8 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin.go#L37>)
+
+### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin.go#L37)
 
 ```go
 func NewDarwinProvider() *Darwin
@@ -46,16 +47,20 @@ func NewDarwinProvider() *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetAverageStats"></a>
-### func \(\*Darwin\) [GetAverageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin_get_avg.go#L26>)
+
+### func \(\*Darwin\) [GetAverageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/darwin_get_avg.go#L26)
 
 ```go
 func (d *Darwin) GetAverageStats() (*Result, error)
 ```
 
-GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error if something goes wrong.
+GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It
+returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error
+if something goes wrong.
 
 <a name="Linux"></a>
-## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux.go#L29-L31>)
+
+## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux.go#L29-L31)
 
 Linux implements the Load interface for Linux.
 
@@ -66,7 +71,8 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux.go#L34>)
+
+### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux.go#L34)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -75,16 +81,20 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetAverageStats"></a>
-### func \(\*Linux\) [GetAverageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux_get_avg.go#L30>)
+
+### func \(\*Linux\) [GetAverageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/linux_get_avg.go#L30)
 
 ```go
 func (l *Linux) GetAverageStats() (*Result, error)
 ```
 
-GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error if something goes wrong.
+GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It
+returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error
+if something goes wrong.
 
 <a name="Provider"></a>
-## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/types.go#L24-L27>)
+
+## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/types.go#L24-L27)
 
 Provider implements the methods to interact with various Load components.
 
@@ -96,7 +106,8 @@ type Provider interface {
 ```
 
 <a name="Result"></a>
-## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/types.go#L30-L39>)
+
+## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/types.go#L30-L39)
 
 Result represents the system load averages over 1, 5, and 15 minutes.
 
@@ -114,7 +125,8 @@ type Result struct {
 ```
 
 <a name="Ubuntu"></a>
-## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu.go#L30-L34>)
+
+## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu.go#L30-L34)
 
 Ubuntu implements the Mem interface for Ubuntu.
 
@@ -127,7 +139,8 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu.go#L37>)
+
+### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu.go#L37)
 
 ```go
 func NewUbuntuProvider() *Ubuntu
@@ -136,12 +149,15 @@ func NewUbuntuProvider() *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.GetAverageStats"></a>
-### func \(\*Ubuntu\) [GetAverageStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu_get_avg.go#L26>)
+
+### func \(\*Ubuntu\) [GetAverageStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/load/ubuntu_get_avg.go#L26)
 
 ```go
 func (u *Ubuntu) GetAverageStats() (*Result, error)
 ```
 
-GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error if something goes wrong.
+GetAverageStats returns the system's load averages over 1, 5, and 15 minutes. It
+returns a AverageStats struct with load over 1, 5, and 15 minutes, and an error
+if something goes wrong.
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

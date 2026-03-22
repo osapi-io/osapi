@@ -6,24 +6,25 @@
 import "github.com/retr0h/osapi/internal/provider/file"
 ```
 
-Package file implements file deploy and status operations using NATS Object Store for content and KV for state tracking.
+Package file implements file deploy and status operations using NATS Object
+Store for content and KV for state tracking.
 
 ## Index
 
-- [type DeployRequest](<#DeployRequest>)
-- [type DeployResult](<#DeployResult>)
-- [type Provider](<#Provider>)
-- [type Service](<#Service>)
-  - [func New\(logger \*slog.Logger, fs afero.Fs, objStore jetstream.ObjectStore, stateKV jetstream.KeyValue, hostname string\) \*Service](<#New>)
-  - [func \(p \*Service\) Deploy\(ctx context.Context, req DeployRequest\) \(\*DeployResult, error\)](<#Service.Deploy>)
-  - [func \(p \*Service\) Status\(ctx context.Context, req StatusRequest\) \(\*StatusResult, error\)](<#Service.Status>)
-- [type StatusRequest](<#StatusRequest>)
-- [type StatusResult](<#StatusResult>)
-- [type TemplateContext](<#TemplateContext>)
-
+- [type DeployRequest](#DeployRequest)
+- [type DeployResult](#DeployResult)
+- [type Provider](#Provider)
+- [type Service](#Service)
+  - [func New\(logger \*slog.Logger, fs afero.Fs, objStore jetstream.ObjectStore, stateKV jetstream.KeyValue, hostname string\) \*Service](#New)
+  - [func \(p \*Service\) Deploy\(ctx context.Context, req DeployRequest\) \(\*DeployResult, error\)](#Service.Deploy)
+  - [func \(p \*Service\) Status\(ctx context.Context, req StatusRequest\) \(\*StatusResult, error\)](#Service.Status)
+- [type StatusRequest](#StatusRequest)
+- [type StatusResult](#StatusResult)
+- [type TemplateContext](#TemplateContext)
 
 <a name="DeployRequest"></a>
-## type [DeployRequest](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L26-L41>)
+
+## type [DeployRequest](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L26-L41)
 
 DeployRequest contains parameters for deploying a file to disk.
 
@@ -47,7 +48,8 @@ type DeployRequest struct {
 ```
 
 <a name="DeployResult"></a>
-## type [DeployResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L44-L51>)
+
+## type [DeployResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L44-L51)
 
 DeployResult contains the result of a file deploy operation.
 
@@ -63,7 +65,8 @@ type DeployResult struct {
 ```
 
 <a name="Provider"></a>
-## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L72-L85>)
+
+## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L72-L85)
 
 Provider defines the interface for file operations.
 
@@ -85,9 +88,11 @@ type Provider interface {
 ```
 
 <a name="Service"></a>
-## type [Service](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/provider.go#L39-L47>)
 
-Service implements the Provider interface for file deploy and status operations using NATS Object Store for content and KV for state tracking.
+## type [Service](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/provider.go#L39-L47)
+
+Service implements the Provider interface for file deploy and status operations
+using NATS Object Store for content and KV for state tracking.
 
 ```go
 type Service struct {
@@ -97,34 +102,44 @@ type Service struct {
 ```
 
 <a name="New"></a>
-### func [New](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/provider.go#L52-L58>)
+
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/provider.go#L52-L58)
 
 ```go
 func New(logger *slog.Logger, fs afero.Fs, objStore jetstream.ObjectStore, stateKV jetstream.KeyValue, hostname string) *Service
 ```
 
-New creates a new Service with the given dependencies. Facts are not available at construction time; call SetFactsFunc after the agent is initialized to wire template rendering to live facts.
+New creates a new Service with the given dependencies. Facts are not available
+at construction time; call SetFactsFunc after the agent is initialized to wire
+template rendering to live facts.
 
 <a name="Service.Deploy"></a>
-### func \(\*Service\) [Deploy](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/deploy.go#L46-L49>)
+
+### func \(\*Service\) [Deploy](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/deploy.go#L46-L49)
 
 ```go
 func (p *Service) Deploy(ctx context.Context, req DeployRequest) (*DeployResult, error)
 ```
 
-Deploy writes file content to the target path with the specified permissions. It uses SHA\-256 checksums for idempotency: if the content hasn't changed since the last deploy, the file is not rewritten and changed is false.
+Deploy writes file content to the target path with the specified permissions. It
+uses SHA\-256 checksums for idempotency: if the content hasn't changed since the
+last deploy, the file is not rewritten and changed is false.
 
 <a name="Service.Status"></a>
-### func \(\*Service\) [Status](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/status.go#L36-L39>)
+
+### func \(\*Service\) [Status](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/status.go#L36-L39)
 
 ```go
 func (p *Service) Status(ctx context.Context, req StatusRequest) (*StatusResult, error)
 ```
 
-Status checks the current state of a deployed file against its expected SHA\-256 from the file\-state KV. Returns "in\-sync" if the file matches, "drifted" if it differs, or "missing" if the file or state entry is absent.
+Status checks the current state of a deployed file against its expected SHA\-256
+from the file\-state KV. Returns "in\-sync" if the file matches, "drifted" if it
+differs, or "missing" if the file or state entry is absent.
 
 <a name="StatusRequest"></a>
-## type [StatusRequest](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L54-L57>)
+
+## type [StatusRequest](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L54-L57)
 
 StatusRequest contains parameters for checking file status.
 
@@ -136,7 +151,8 @@ type StatusRequest struct {
 ```
 
 <a name="StatusResult"></a>
-## type [StatusResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L60-L69>)
+
+## type [StatusResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/types.go#L60-L69)
 
 StatusResult contains the result of a file status check.
 
@@ -154,7 +170,8 @@ type StatusResult struct {
 ```
 
 <a name="TemplateContext"></a>
-## type [TemplateContext](<https://github.com/osapi-io/osapi/blob/main/internal/provider/file/template.go#L30-L37>)
+
+## type [TemplateContext](https://github.com/osapi-io/osapi/blob/main/internal/provider/file/template.go#L30-L37)
 
 TemplateContext is the data available to Go templates during rendering.
 
@@ -169,4 +186,4 @@ type TemplateContext struct {
 }
 ```
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

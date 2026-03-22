@@ -10,21 +10,21 @@ Package mem provides memory usage statistics.
 
 ## Index
 
-- [type Darwin](<#Darwin>)
-  - [func NewDarwinProvider\(\) \*Darwin](<#NewDarwinProvider>)
-  - [func \(d \*Darwin\) GetStats\(\) \(\*Result, error\)](<#Darwin.GetStats>)
-- [type Linux](<#Linux>)
-  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
-  - [func \(l \*Linux\) GetStats\(\) \(\*Result, error\)](<#Linux.GetStats>)
-- [type Provider](<#Provider>)
-- [type Result](<#Result>)
-- [type Ubuntu](<#Ubuntu>)
-  - [func NewUbuntuProvider\(\) \*Ubuntu](<#NewUbuntuProvider>)
-  - [func \(u \*Ubuntu\) GetStats\(\) \(\*Result, error\)](<#Ubuntu.GetStats>)
-
+- [type Darwin](#Darwin)
+  - [func NewDarwinProvider\(\) \*Darwin](#NewDarwinProvider)
+  - [func \(d \*Darwin\) GetStats\(\) \(\*Result, error\)](#Darwin.GetStats)
+- [type Linux](#Linux)
+  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
+  - [func \(l \*Linux\) GetStats\(\) \(\*Result, error\)](#Linux.GetStats)
+- [type Provider](#Provider)
+- [type Result](#Result)
+- [type Ubuntu](#Ubuntu)
+  - [func NewUbuntuProvider\(\) \*Ubuntu](#NewUbuntuProvider)
+  - [func \(u \*Ubuntu\) GetStats\(\) \(\*Result, error\)](#Ubuntu.GetStats)
 
 <a name="Darwin"></a>
-## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin.go#L30-L34>)
+
+## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin.go#L30-L34)
 
 Darwin implements the Mem interface for Darwin \(macOS\).
 
@@ -37,7 +37,8 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin.go#L37>)
+
+### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin.go#L37)
 
 ```go
 func NewDarwinProvider() *Darwin
@@ -46,16 +47,20 @@ func NewDarwinProvider() *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetStats"></a>
-### func \(\*Darwin\) [GetStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin_get_vm.go#L26>)
+
+### func \(\*Darwin\) [GetStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/darwin_get_vm.go#L26)
 
 ```go
 func (d *Darwin) GetStats() (*Result, error)
 ```
 
-GetStats retrieves memory statistics of the system. It returns a Stats struct with total, free, and cached memory in bytes, and an error if something goes wrong.
+GetStats retrieves memory statistics of the system. It returns a Stats struct
+with total, free, and cached memory in bytes, and an error if something goes
+wrong.
 
 <a name="Linux"></a>
-## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux.go#L29-L31>)
+
+## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux.go#L29-L31)
 
 Linux implements the Mem interface for Linux.
 
@@ -66,7 +71,8 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux.go#L34>)
+
+### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux.go#L34)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -75,16 +81,20 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetStats"></a>
-### func \(\*Linux\) [GetStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux_get_vm.go#L30>)
+
+### func \(\*Linux\) [GetStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/linux_get_vm.go#L30)
 
 ```go
 func (l *Linux) GetStats() (*Result, error)
 ```
 
-GetStats retrieves memory statistics of the system. It returns a Stats struct with total, free, and cached memory in bytes, and an error if something goes wrong.
+GetStats retrieves memory statistics of the system. It returns a Stats struct
+with total, free, and cached memory in bytes, and an error if something goes
+wrong.
 
 <a name="Provider"></a>
-## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/types.go#L24-L27>)
+
+## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/types.go#L24-L27)
 
 Provider implements the methods to interact with various Mem components.
 
@@ -96,7 +106,8 @@ type Provider interface {
 ```
 
 <a name="Result"></a>
-## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/types.go#L30-L41>)
+
+## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/types.go#L30-L41)
 
 Result holds memory information in bytes.
 
@@ -116,7 +127,8 @@ type Result struct {
 ```
 
 <a name="Ubuntu"></a>
-## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu.go#L30-L34>)
+
+## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu.go#L30-L34)
 
 Ubuntu implements the Mem interface for Ubuntu.
 
@@ -129,7 +141,8 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu.go#L37>)
+
+### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu.go#L37)
 
 ```go
 func NewUbuntuProvider() *Ubuntu
@@ -138,12 +151,15 @@ func NewUbuntuProvider() *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.GetStats"></a>
-### func \(\*Ubuntu\) [GetStats](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu_get_vm.go#L26>)
+
+### func \(\*Ubuntu\) [GetStats](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/mem/ubuntu_get_vm.go#L26)
 
 ```go
 func (u *Ubuntu) GetStats() (*Result, error)
 ```
 
-GetStats retrieves memory statistics of the system. It returns a Stats struct with total, free, and cached memory in bytes, and an error if something goes wrong.
+GetStats retrieves memory statistics of the system. It returns a Stats struct
+with total, free, and cached memory in bytes, and an error if something goes
+wrong.
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

@@ -10,21 +10,21 @@ Package authtoken provides JWT token generation and validation.
 
 ## Index
 
-- [Variables](<#variables>)
-- [func GenerateAllowedRoles\(roleHierarchy map\[string\]\[\]string\) \[\]string](<#GenerateAllowedRoles>)
-- [func HasPermission\(resolved map\[string\]bool, required string\) bool](<#HasPermission>)
-- [func ResolvePermissions\(roles \[\]string, directPermissions \[\]string, customRoles map\[string\]\[\]string\) map\[string\]bool](<#ResolvePermissions>)
-- [type CustomClaims](<#CustomClaims>)
-- [type Permission](<#Permission>)
-- [type Token](<#Token>)
-  - [func New\(logger \*slog.Logger\) \*Token](<#New>)
-  - [func \(t \*Token\) Generate\(signingKey string, roles \[\]string, subject string, permissions \[\]string\) \(string, error\)](<#Token.Generate>)
-  - [func \(t \*Token\) Validate\(tokenString string, signingKey string\) \(\*CustomClaims, error\)](<#Token.Validate>)
-
+- [Variables](#variables)
+- [func GenerateAllowedRoles\(roleHierarchy map\[string\]\[\]string\) \[\]string](#GenerateAllowedRoles)
+- [func HasPermission\(resolved map\[string\]bool, required string\) bool](#HasPermission)
+- [func ResolvePermissions\(roles \[\]string, directPermissions \[\]string, customRoles map\[string\]\[\]string\) map\[string\]bool](#ResolvePermissions)
+- [type CustomClaims](#CustomClaims)
+- [type Permission](#Permission)
+- [type Token](#Token)
+  - [func New\(logger \*slog.Logger\) \*Token](#New)
+  - [func \(t \*Token\) Generate\(signingKey string, roles \[\]string, subject string, permissions \[\]string\) \(string, error\)](#Token.Generate)
+  - [func \(t \*Token\) Validate\(tokenString string, signingKey string\) \(\*CustomClaims, error\)](#Token.Validate)
 
 ## Variables
 
-<a name="AllPermissions"></a>AllPermissions is the full set of known permissions.
+<a name="AllPermissions"></a>AllPermissions is the full set of known
+permissions.
 
 ```go
 var AllPermissions = []Permission{
@@ -46,7 +46,8 @@ var AllPermissions = []Permission{
 }
 ```
 
-<a name="DefaultRolePermissions"></a>DefaultRolePermissions maps built\-in role names to their granted permissions.
+<a name="DefaultRolePermissions"></a>DefaultRolePermissions maps built\-in role
+names to their granted permissions.
 
 ```go
 var DefaultRolePermissions = map[string][]Permission{
@@ -92,7 +93,10 @@ var DefaultRolePermissions = map[string][]Permission{
 }
 ```
 
-<a name="RoleHierarchy"></a>RoleHierarchy defines the relationship between roles and their associated scopes. Each role is mapped to a list of permissible scopes. This hierarchy is used to determine whether a user with a given role has access to specific actions.
+<a name="RoleHierarchy"></a>RoleHierarchy defines the relationship between roles
+and their associated scopes. Each role is mapped to a list of permissible
+scopes. This hierarchy is used to determine whether a user with a given role has
+access to specific actions.
 
 Example:
 
@@ -109,16 +113,19 @@ var RoleHierarchy = map[string][]string{
 ```
 
 <a name="GenerateAllowedRoles"></a>
-## func [GenerateAllowedRoles](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/token.go#L51-L53>)
+
+## func [GenerateAllowedRoles](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/token.go#L51-L53)
 
 ```go
 func GenerateAllowedRoles(roleHierarchy map[string][]string) []string
 ```
 
-GenerateAllowedRoles extracts the keys from RoleHierarchy to create a list of allowed roles.
+GenerateAllowedRoles extracts the keys from RoleHierarchy to create a list of
+allowed roles.
 
 <a name="HasPermission"></a>
-## func [HasPermission](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L145-L148>)
+
+## func [HasPermission](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L145-L148)
 
 ```go
 func HasPermission(resolved map[string]bool, required string) bool
@@ -127,16 +134,21 @@ func HasPermission(resolved map[string]bool, required string) bool
 HasPermission checks whether the resolved set contains the required permission.
 
 <a name="ResolvePermissions"></a>
-## func [ResolvePermissions](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L110-L114>)
+
+## func [ResolvePermissions](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L110-L114)
 
 ```go
 func ResolvePermissions(roles []string, directPermissions []string, customRoles map[string][]string) map[string]bool
 ```
 
-ResolvePermissions computes the effective permission set for a token. If directPermissions is non\-empty, it is returned directly \(IdP override\). Otherwise roles are expanded through customRoles first, then DefaultRolePermissions.
+ResolvePermissions computes the effective permission set for a token. If
+directPermissions is non\-empty, it is returned directly \(IdP override\).
+Otherwise roles are expanded through customRoles first, then
+DefaultRolePermissions.
 
 <a name="CustomClaims"></a>
-## type [CustomClaims](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/types.go#L35-L39>)
+
+## type [CustomClaims](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/types.go#L35-L39)
 
 CustomClaims defines the structure of your token claims
 
@@ -149,7 +161,8 @@ type CustomClaims struct {
 ```
 
 <a name="Permission"></a>
-## type [Permission](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L24>)
+
+## type [Permission](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/permissions.go#L24)
 
 Permission represents a fine\-grained resource:verb permission.
 
@@ -180,7 +193,8 @@ const (
 ```
 
 <a name="Token"></a>
-## type [Token](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/types.go#L30-L32>)
+
+## type [Token](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/types.go#L30-L32)
 
 Token implementation of the token operations.
 
@@ -191,7 +205,8 @@ type Token struct {
 ```
 
 <a name="New"></a>
-### func [New](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/token.go#L42-L44>)
+
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/token.go#L42-L44)
 
 ```go
 func New(logger *slog.Logger) *Token
@@ -200,7 +215,8 @@ func New(logger *slog.Logger) *Token
 New factory to create a new instance.
 
 <a name="Token.Generate"></a>
-### func \(\*Token\) [Generate](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/generate.go#L31-L36>)
+
+### func \(\*Token\) [Generate](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/generate.go#L31-L36)
 
 ```go
 func (t *Token) Generate(signingKey string, roles []string, subject string, permissions []string) (string, error)
@@ -209,7 +225,8 @@ func (t *Token) Generate(signingKey string, roles []string, subject string, perm
 Generate generates a signed JWT with the given roles and optional permissions.
 
 <a name="Token.Validate"></a>
-### func \(\*Token\) [Validate](<https://github.com/osapi-io/osapi/blob/main/internal/authtoken/validate.go#L32-L35>)
+
+### func \(\*Token\) [Validate](https://github.com/osapi-io/osapi/blob/main/internal/authtoken/validate.go#L32-L35)
 
 ```go
 func (t *Token) Validate(tokenString string, signingKey string) (*CustomClaims, error)
@@ -217,4 +234,4 @@ func (t *Token) Validate(tokenString string, signingKey string) (*CustomClaims, 
 
 Validate parses and validates the JWT.
 
-Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
+Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
