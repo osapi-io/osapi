@@ -23,11 +23,10 @@ package config
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	Controller    Controller          `mapstructure:"controller"              mask:"struct"`
-	Agent         AgentConfig         `mapstructure:"agent,omitempty"`
-	NATS          NATS                `mapstructure:"nats"`
-	Telemetry     Telemetry           `mapstructure:"telemetry"`
-	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
+	Controller Controller  `mapstructure:"controller"              mask:"struct"`
+	Agent      AgentConfig `mapstructure:"agent,omitempty"`
+	NATS       NATS        `mapstructure:"nats"`
+	Telemetry  Telemetry   `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
 	Debug bool `mapstructure:"debug"`
 }
@@ -238,10 +237,11 @@ type NATSConnection struct {
 
 // Controller holds the control plane configuration.
 type Controller struct {
-	Client  Client         `mapstructure:"client"`
-	API     APIServer      `mapstructure:"api"     mask:"struct"`
-	NATS    NATSConnection `mapstructure:"nats"`
-	Metrics OpsServer      `mapstructure:"metrics"`
+	Client        Client              `mapstructure:"client"`
+	API           APIServer           `mapstructure:"api"     mask:"struct"`
+	NATS          NATSConnection      `mapstructure:"nats"`
+	Metrics       OpsServer           `mapstructure:"metrics"`
+	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
 }
 
 // APIServer holds the HTTP server config (port + security).

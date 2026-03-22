@@ -21,6 +21,8 @@ controller:
       type: none
   metrics:
     enabled: false
+  notifications:
+    enabled: false
 
 nats:
   server:
@@ -116,6 +118,3 @@ agent:
   metrics:
     enabled: false
 
-notifications:
-  enabled: false
-  notifier: 'log'

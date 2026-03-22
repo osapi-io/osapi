@@ -576,7 +576,7 @@ func registerControllerHandlers(
 		"heartbeat": "ok",
 	}
 
-	if appConfig.Notifications.Enabled {
+	if appConfig.Controller.Notifications.Enabled {
 		subComponents["notifier"] = "ok"
 	} else {
 		subComponents["notifier"] = "disabled"
@@ -608,7 +608,7 @@ func startConditionWatcher(
 	log *slog.Logger,
 	registryKV jetstream.KeyValue,
 ) {
-	if !appConfig.Notifications.Enabled {
+	if !appConfig.Controller.Notifications.Enabled {
 		return
 	}
 
@@ -617,12 +617,12 @@ func startConditionWatcher(
 	}
 
 	var renotifyInterval time.Duration
-	if appConfig.Notifications.RenotifyInterval != "" {
-		d, err := time.ParseDuration(appConfig.Notifications.RenotifyInterval)
+	if appConfig.Controller.Notifications.RenotifyInterval != "" {
+		d, err := time.ParseDuration(appConfig.Controller.Notifications.RenotifyInterval)
 		if err != nil {
 			log.Warn(
 				"invalid renotify_interval, using default (0 = disabled)",
-				slog.String("value", appConfig.Notifications.RenotifyInterval),
+				slog.String("value", appConfig.Controller.Notifications.RenotifyInterval),
 				slog.String("error", err.Error()),
 			)
 		} else {

@@ -73,7 +73,7 @@ subpackages:
 | `internal/controller/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                              |
 | `internal/controller/api/health/` | Health check endpoints (liveness, readiness, status)                                |
 | `internal/controller/api/common/` | Shared middleware, error handling, collection responses                             |
-| (metrics)                         | Prometheus endpoint (`/metrics`) via OpenTelemetry                                  |
+| `internal/telemetry/metrics/` | Per-component Prometheus metrics server with isolated registries             |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection

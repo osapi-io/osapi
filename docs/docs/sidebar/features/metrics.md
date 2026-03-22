@@ -4,46 +4,78 @@ sidebar_position: 8
 
 # Metrics
 
-OSAPI exposes a Prometheus-compatible metrics endpoint for monitoring and
-alerting. Metrics are collected automatically by the API server and available
-for scraping without additional configuration.
+Each OSAPI component exposes a Prometheus-compatible `/metrics` endpoint on a
+dedicated port. Metrics are collected using OpenTelemetry with an isolated
+Prometheus registry per component, so each endpoint shows only that component's
+data.
 
-## Endpoint
+## Endpoints
 
-The metrics endpoint is available at `/metrics` on the API server. It returns
-metrics in the standard Prometheus text exposition format. See
-[CLI Reference](../usage/cli/client/metrics/metrics.mdx) for usage, or the
-[API Reference](/category/api) for the REST endpoints.
+| Component  | Default Port | Config Key                 |
+| ---------- | ------------ | -------------------------- |
+| Controller | 9090         | `controller.metrics.port`  |
+| Agent      | 9091         | `agent.metrics.port`       |
+| NATS       | 9092         | `nats.server.metrics.port` |
+
+Each endpoint returns metrics in the standard Prometheus text exposition format
+at `/metrics`.
 
 ## What It Exposes
 
-The `/metrics` endpoint exposes standard Go runtime metrics and HTTP request
-metrics collected by the Echo framework, including:
+Each component's `/metrics` endpoint exposes:
 
 - Go runtime (goroutines, memory, GC)
-- HTTP request counts, durations, and response sizes by route
-- NATS connection metrics
+- Process metrics (CPU, memory, file descriptors)
+
+The controller additionally exposes HTTP request metrics collected by the Echo
+framework (counts, durations, response sizes by route).
 
 ## Integration
 
-Point your Prometheus instance at the OSAPI server:
+Point your Prometheus instance at each component:
 
 ```yaml
 # prometheus.yml
 scrape_configs:
-  - job_name: 'osapi'
+  - job_name: 'osapi-controller'
     static_configs:
-      - targets: ['localhost:8080']
+      - targets: ['localhost:9090']
+  - job_name: 'osapi-agent'
+    static_configs:
+      - targets: ['localhost:9091']
+  - job_name: 'osapi-nats'
+    static_configs:
+      - targets: ['localhost:9092']
 ```
 
 ## Configuration
 
-The metrics endpoint is always enabled and requires no configuration. It is
-unauthenticated by design so that Prometheus can scrape it without a token.
+Each component's metrics server can be enabled or disabled independently:
+
+```yaml
+controller:
+  metrics:
+    enabled: true
+    port: 9090
+
+agent:
+  metrics:
+    enabled: true
+    port: 9091
+
+nats:
+  server:
+    metrics:
+      enabled: true
+      port: 9092
+```
+
+Set `enabled: false` to disable the metrics endpoint for a component. See the
+[Configuration](../usage/configuration.md) reference for the full list of
+settings and environment variable overrides.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/metrics/metrics.mdx) -- metrics CLI
-  command
-- [API Reference](/category/api) -- REST API documentation
-- [Health Checks](health-checks.md) -- liveness and readiness probes
+- [Health Checks](health-checks.md) -- liveness, readiness, and status probes
+- [Distributed Tracing](distributed-tracing.md) -- OpenTelemetry tracing
+- [Configuration](../usage/configuration.md) -- full configuration reference

@@ -41,6 +41,10 @@ controller:
   metrics:
     enabled: true
     port: 9090
+  notifications:
+    enabled: true
+    notifier: 'log'
+    renotify_interval: '5m'
 
 nats:
   server:
@@ -122,8 +126,6 @@ telemetry:
     enabled: true
     # exporter: stdout
     # otlp_endpoint: localhost:4317
-  metrics:
-    path: /metrics
 
 agent:
   nats:
@@ -165,11 +167,3 @@ agent:
     enabled: true
     port: 9091
 
-notifications:
-  # Enable the condition watcher and notifier (default: false).
-  enabled: true
-  # Notifier backend: "log" (default).
-  notifier: 'log'
-  # How often to re-fire active conditions (Go duration: 1m, 5m, 1h).
-  # Zero disables re-notification.
-  renotify_interval: '5m'

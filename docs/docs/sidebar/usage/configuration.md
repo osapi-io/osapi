@@ -34,10 +34,14 @@ uppercased:
 | `controller.api.nats.auth.type`                  | `OSAPI_CONTROLLER_API_NATS_AUTH_TYPE`                  |
 | `controller.api.security.signing_key`            | `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY`            |
 | `controller.client.security.bearer_token`        | `OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN`        |
+| `controller.metrics.enabled`                     | `OSAPI_CONTROLLER_METRICS_ENABLED`                     |
+| `controller.metrics.port`                        | `OSAPI_CONTROLLER_METRICS_PORT`                        |
 | `nats.server.host`                               | `OSAPI_NATS_SERVER_HOST`                               |
 | `nats.server.port`                               | `OSAPI_NATS_SERVER_PORT`                               |
 | `nats.server.namespace`                          | `OSAPI_NATS_SERVER_NAMESPACE`                          |
 | `nats.server.auth.type`                          | `OSAPI_NATS_SERVER_AUTH_TYPE`                          |
+| `nats.server.metrics.enabled`                    | `OSAPI_NATS_SERVER_METRICS_ENABLED`                    |
+| `nats.server.metrics.port`                       | `OSAPI_NATS_SERVER_METRICS_PORT`                       |
 | `nats.stream.name`                               | `OSAPI_NATS_STREAM_NAME`                               |
 | `nats.kv.bucket`                                 | `OSAPI_NATS_KV_BUCKET`                                 |
 | `nats.kv.response_bucket`                        | `OSAPI_NATS_KV_RESPONSE_BUCKET`                        |
@@ -68,9 +72,9 @@ uppercased:
 | `telemetry.tracing.enabled`                      | `OSAPI_TELEMETRY_TRACING_ENABLED`                      |
 | `telemetry.tracing.exporter`                     | `OSAPI_TELEMETRY_TRACING_EXPORTER`                     |
 | `telemetry.tracing.otlp_endpoint`                | `OSAPI_TELEMETRY_TRACING_OTLP_ENDPOINT`                |
-| `notifications.enabled`                          | `OSAPI_NOTIFICATIONS_ENABLED`                          |
-| `notifications.notifier`                         | `OSAPI_NOTIFICATIONS_NOTIFIER`                         |
-| `notifications.renotify_interval`                | `OSAPI_NOTIFICATIONS_RENOTIFY_INTERVAL`                |
+| `controller.notifications.enabled`                          | `OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED`                          |
+| `controller.notifications.notifier`                         | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`                         |
+| `controller.notifications.renotify_interval`                | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL`                |
 | `agent.nats.host`                                | `OSAPI_AGENT_NATS_HOST`                                |
 | `agent.nats.port`                                | `OSAPI_AGENT_NATS_PORT`                                |
 | `agent.nats.client_name`                         | `OSAPI_AGENT_NATS_CLIENT_NAME`                         |
@@ -83,6 +87,8 @@ uppercased:
 | `agent.conditions.disk_pressure_threshold`       | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`       |
 | `agent.process_conditions.memory_pressure_bytes` | `OSAPI_AGENT_PROCESS_CONDITIONS_MEMORY_PRESSURE_BYTES` |
 | `agent.process_conditions.high_cpu_percent`      | `OSAPI_AGENT_PROCESS_CONDITIONS_HIGH_CPU_PERCENT`      |
+| `agent.metrics.enabled`                          | `OSAPI_AGENT_METRICS_ENABLED`                          |
+| `agent.metrics.port`                             | `OSAPI_AGENT_METRICS_PORT`                             |
 
 Environment variables take precedence over file values.
 
@@ -95,6 +101,8 @@ or client will start:
 | ----------------------------------------- | ----------------------------- |
 | `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
 | `controller.client.security.bearer_token` | JWT sent with client requests |
+| `controller.metrics.enabled`                     | `OSAPI_CONTROLLER_METRICS_ENABLED`                     |
+| `controller.metrics.port`                        | `OSAPI_CONTROLLER_METRICS_PORT`                        |
 
 Generate a signing key with `openssl rand -hex 32`. Generate a bearer token with
 `osapi token generate`.
@@ -255,6 +263,23 @@ controller:
       #       - node:read
       #       - health:read
 
+  # Per-component metrics server.
+  metrics:
+    # Enable the metrics endpoint (default: true).
+    enabled: true
+    # Port the metrics server listens on.
+    port: 9090
+
+  # Condition notification system.
+  notifications:
+    # Enable the condition watcher and notifier (default: true).
+    enabled: true
+    # Notifier backend: "log" (default).
+    notifier: 'log'
+    # How often to re-fire active conditions (Go duration).
+    # Zero disables re-notification.
+    renotify_interval: '5m'
+
 nats:
   api:
     # Hostname the embedded NATS server binds to.
@@ -275,6 +300,12 @@ nats:
       # NKeys for nkey auth (server-side only).
       # nkeys:
       #   - '<public-nkey>'
+    # Per-component metrics server.
+    metrics:
+      # Enable the metrics endpoint (default: true).
+      enabled: true
+      # Port the metrics server listens on.
+      port: 9092
 
   # ── JetStream stream ──────────────────────────────────────
   stream:
@@ -397,15 +428,6 @@ telemetry:
     # gRPC endpoint for OTLP exporter (e.g., Jaeger, Tempo).
     # otlp_endpoint: localhost:4317
 
-notifications:
-  # Enable the condition watcher and notifier (default: false).
-  enabled: false
-  # Notifier backend: "log" (default).
-  notifier: 'log'
-  # How often to re-fire active conditions (Go duration).
-  # Zero disables re-notification.
-  renotify_interval: '5m'
-
 agent:
   nats:
     # NATS server hostname for the agent.
@@ -467,6 +489,12 @@ agent:
   # See Job System Architecture for details.
   labels:
     group: 'web.dev.us-east'
+  # Per-component metrics server.
+  metrics:
+    # Enable the metrics endpoint (default: true).
+    enabled: true
+    # Port the metrics server listens on.
+    port: 9091
 ```
 
 ## Section Reference
@@ -494,6 +522,13 @@ agent:
 | `security.cors.allow_origins` | []string | Allowed CORS origins                 |
 | `security.roles`              | map      | Custom roles with permissions lists  |
 
+### `controller.metrics`
+
+| Key       | Type | Description                                     |
+| --------- | ---- | ----------------------------------------------- |
+| `enabled` | bool | Enable the metrics server (default: `true`)     |
+| `port`    | int  | Port the metrics server listens on (default: 9090) |
+
 ### `nats.server`
 
 | Key          | Type   | Description                            |
@@ -505,6 +540,13 @@ agent:
 | `auth.type`  | string | Auth type: `none`, `user_pass`         |
 | `auth.users` | list   | Users for `user_pass` auth (see below) |
 | `auth.nkeys` | list   | Public nkeys for `nkey` auth           |
+
+### `nats.server.metrics`
+
+| Key       | Type | Description                                     |
+| --------- | ---- | ----------------------------------------------- |
+| `enabled` | bool | Enable the metrics server (default: `true`)     |
+| `port`    | int  | Port the metrics server listens on (default: 9092) |
 
 ### `nats.stream`
 
@@ -600,7 +642,7 @@ agent:
 | `exporter`      | string | `"stdout"`, `"otlp"`, or unset (log correlation only, no span export)  |
 | `otlp_endpoint` | string | gRPC endpoint for OTLP exporter (required when `exporter` is `"otlp"`) |
 
-### `notifications`
+### `controller.notifications`
 
 | Key                 | Type   | Description                                                             |
 | ------------------- | ------ | ----------------------------------------------------------------------- |
@@ -635,3 +677,5 @@ agent:
 | `process_conditions.memory_pressure_bytes` | int64             | Process RSS threshold in bytes (0 = disabled)              |
 | `process_conditions.high_cpu_percent`      | float             | Process CPU usage threshold as a percentage (0 = disabled) |
 | `labels`                                   | map[string]string | Key-value pairs for label-based routing                    |
+| `metrics.enabled`                          | bool              | Enable the metrics server (default: true)                  |
+| `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
