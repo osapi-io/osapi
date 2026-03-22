@@ -203,5 +203,5 @@ type Health struct {
 	Metrics MetricsProvider
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]string
-	logger  *slog.Logger
+	logger        *slog.Logger
 }

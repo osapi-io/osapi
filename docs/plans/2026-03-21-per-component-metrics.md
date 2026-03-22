@@ -1,8 +1,8 @@
 # Per-Component Metrics and Sub-Component Health Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development
-> (if subagents available) or superpowers:executing-plans to implement this plan.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> (if subagents available) or superpowers:executing-plans to implement this
+> plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add per-component `/metrics` endpoints on dedicated ports for the
 controller, agent, and NATS server with isolated Prometheus registries and OTEL
@@ -10,8 +10,8 @@ MeterProviders. Add sub-component health to the controller's `/health/status`.
 
 **Architecture:** New `internal/ops/` package provides a lightweight HTTP server
 with its own Prometheus registry. Each component creates one if
-`metrics.enabled` is true. Remove `/metrics` from the controller's API port.
-Add `notifier` and `heartbeat` to the `/health/status` components map.
+`metrics.enabled` is true. Remove `/metrics` from the controller's API port. Add
+`notifier` and `heartbeat` to the `/health/status` components map.
 
 **Tech Stack:** Go 1.25, OTEL SDK, Prometheus client, Echo HTTP
 
@@ -22,6 +22,7 @@ Add `notifier` and `heartbeat` to the `/health/status` components map.
 ### Task 1: Add OpsServer config type
 
 **Files:**
+
 - Modify: `internal/config/types.go`
 
 - [ ] **Step 1: Add OpsServer struct**
@@ -47,8 +48,8 @@ func (o OpsServer) IsEnabled() bool {
 }
 ```
 
-Use `*bool` so we can distinguish "not set" (default true) from "explicitly
-set to false".
+Use `*bool` so we can distinguish "not set" (default true) from "explicitly set
+to false".
 
 - [ ] **Step 2: Add to Controller, AgentConfig, NATSServer**
 
@@ -92,12 +93,14 @@ feat(config): add OpsServer metrics config to all components
 ### Task 2: Update YAML config files
 
 **Files:**
+
 - Modify: `configs/osapi.yaml`
 - Modify: `test/integration/osapi.yaml`
 
 - [ ] **Step 1: Add metrics sections to configs/osapi.yaml**
 
 Under `controller:`:
+
 ```yaml
 controller:
   metrics:
@@ -106,6 +109,7 @@ controller:
 ```
 
 Under `agent:`:
+
 ```yaml
 agent:
   metrics:
@@ -114,6 +118,7 @@ agent:
 ```
 
 Under `nats.server:`:
+
 ```yaml
 nats:
   server:
@@ -149,6 +154,7 @@ feat(config): add metrics sections to YAML configs
 ### Task 3: Create internal/ops package
 
 **Files:**
+
 - Create: `internal/ops/server.go`
 - Create: `internal/ops/server_test.go`
 
@@ -230,8 +236,8 @@ func TestServerPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./internal/ops/... -count=1 -v`
-Expected: FAIL (package doesn't exist)
+Run: `go test ./internal/ops/... -count=1 -v` Expected: FAIL (package doesn't
+exist)
 
 - [ ] **Step 3: Write the implementation**
 
@@ -341,8 +347,7 @@ func (s *Server) Stop(ctx context.Context) {
 
 - [ ] **Step 4: Run tests**
 
-Run: `go test ./internal/ops/... -count=1 -v`
-Expected: PASS
+Run: `go test ./internal/ops/... -count=1 -v` Expected: PASS
 
 - [ ] **Step 5: Commit**
 
@@ -357,6 +362,7 @@ feat: add internal/ops package for per-component metrics
 ### Task 4: Wire into controller
 
 **Files:**
+
 - Modify: `cmd/controller_start.go`
 - Modify: `cmd/controller_setup.go`
 
@@ -400,8 +406,8 @@ Add import: `"github.com/retr0h/osapi/internal/ops"`
 - [ ] **Step 2: Remove metrics from API port**
 
 In `cmd/controller_setup.go`, remove the `metricsHandler` and `metricsPath`
-parameters from `setupController()`. Remove `sm.GetMetricsHandler()` call
-from `registerControllerHandlers()`.
+parameters from `setupController()`. Remove `sm.GetMetricsHandler()` call from
+`registerControllerHandlers()`.
 
 Update `setupController` signature:
 
@@ -422,8 +428,8 @@ rm internal/controller/api/handler_metrics.go
 rm -rf internal/controller/api/metrics/
 ```
 
-Remove `GetMetricsHandler` method from `internal/controller/api/types.go`
-if it exists, and remove it from `registerControllerHandlers()`.
+Remove `GetMetricsHandler` method from `internal/controller/api/types.go` if it
+exists, and remove it from `registerControllerHandlers()`.
 
 - [ ] **Step 4: Verify build and tests**
 
@@ -443,6 +449,7 @@ feat: wire ops server into controller, remove /metrics from API port
 ### Task 5: Wire into agent
 
 **Files:**
+
 - Modify: `cmd/agent_start.go`
 
 - [ ] **Step 1: Add ops server to agent startup**
@@ -491,6 +498,7 @@ feat: wire ops server into agent
 ### Task 6: Wire into NATS server
 
 **Files:**
+
 - Modify: `cmd/nats_server_start.go`
 
 - [ ] **Step 1: Add ops server to NATS server startup**
@@ -527,6 +535,7 @@ feat: wire ops server into NATS server
 ### Task 7: Wire into combined start
 
 **Files:**
+
 - Modify: `cmd/start.go`
 
 - [ ] **Step 1: Create ops servers for all three components**
@@ -604,6 +613,7 @@ feat: wire ops servers into combined start
 ### Task 8: Add notifier and heartbeat to /health/status components
 
 **Files:**
+
 - Modify: `cmd/controller_setup.go`
 - Modify: `internal/controller/api/health/health_status_get.go`
 - Modify: `internal/controller/api/health/types.go`
@@ -611,8 +621,8 @@ feat: wire ops servers into combined start
 - [ ] **Step 1: Add component status fields to health handler**
 
 In `internal/controller/api/health/types.go`, add to the `Health` struct or
-`MetricsProvider` a way to report sub-component status. The simplest approach
-is to pass them as static values when creating the health handler.
+`MetricsProvider` a way to report sub-component status. The simplest approach is
+to pass them as static values when creating the health handler.
 
 Add to the `Health` struct in `internal/controller/api/health/health.go`:
 
@@ -676,12 +686,13 @@ feat: add notifier and heartbeat to /health/status components
 ### Task 9: Remove old telemetry.metrics.path config
 
 **Files:**
+
 - Modify: `internal/config/types.go`
 
 - [ ] **Step 1: Remove Path from MetricsConfig**
 
-The `MetricsConfig.Path` field is no longer used — the ops server always
-serves on `/metrics`. Remove the field or leave it for backwards compat.
+The `MetricsConfig.Path` field is no longer used — the ops server always serves
+on `/metrics`. Remove the field or leave it for backwards compat.
 
 Since nothing reads it anymore, remove it:
 
@@ -700,11 +711,11 @@ type Telemetry struct {
 
 - [ ] **Step 2: Remove metricsPath references from controller_start.go**
 
-Remove the `metricsHandler, metricsPath, shutdownMeter` variables if
-`InitMeter` is no longer called (since ops server handles it).
+Remove the `metricsHandler, metricsPath, shutdownMeter` variables if `InitMeter`
+is no longer called (since ops server handles it).
 
-Check if `InitMeter` is still needed for OTEL initialization. If not,
-remove the call.
+Check if `InitMeter` is still needed for OTEL initialization. If not, remove the
+call.
 
 - [ ] **Step 3: Verify build and tests**
 
@@ -724,6 +735,7 @@ refactor: remove unused telemetry.metrics.path config
 ### Task 10: Update handler_public_test.go
 
 **Files:**
+
 - Modify: `internal/controller/api/handler_public_test.go`
 
 - [ ] **Step 1: Remove GetMetricsHandler test**
@@ -747,6 +759,7 @@ test: remove GetMetricsHandler test
 ### Task 11: Update docs
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Modify: `docs/docs/sidebar/features/metrics.md`
@@ -757,13 +770,14 @@ Add `internal/ops/` to architecture section.
 
 - [ ] **Step 2: Update configuration.md**
 
-Add `controller.metrics`, `agent.metrics`, `nats.server.metrics` sections
-with the `enabled` and `port` fields. Add env var mappings. Remove
+Add `controller.metrics`, `agent.metrics`, `nats.server.metrics` sections with
+the `enabled` and `port` fields. Add env var mappings. Remove
 `telemetry.metrics.path` if removed.
 
 - [ ] **Step 3: Update metrics.md**
 
 Update to describe per-component metrics:
+
 - Controller on port 9090
 - Agent on port 9091
 - NATS on port 9092
@@ -842,24 +856,24 @@ just go::unit-int
 
 ## Files Summary
 
-| File | Change |
-|---|---|
-| `internal/config/types.go` | Add `OpsServer`, add `Metrics` to Controller/Agent/NATSServer |
-| `internal/ops/server.go` | New: ops server with isolated registry |
-| `internal/ops/server_test.go` | New: tests |
-| `cmd/controller_start.go` | Create/start/stop ops server |
-| `cmd/controller_setup.go` | Remove metricsHandler params, add sub-components |
-| `cmd/agent_start.go` | Create/start/stop ops server |
-| `cmd/nats_server_start.go` | Create/start/stop ops server |
-| `cmd/start.go` | Wire all three ops servers |
-| `configs/osapi.yaml` | Add metrics sections |
-| `test/integration/osapi.yaml` | Add metrics (disabled) |
-| `internal/controller/api/handler_metrics.go` | Delete |
-| `internal/controller/api/metrics/` | Delete entire package |
-| `internal/controller/api/handler_public_test.go` | Remove metrics test |
-| `internal/controller/api/health/health.go` | Add SubComponents field |
-| `internal/controller/api/health/health_status_get.go` | Emit sub-components |
-| `internal/controller/api/health/health_status_get_public_test.go` | Add test |
-| `CLAUDE.md` | Add `internal/ops/` |
-| `docs/docs/sidebar/usage/configuration.md` | Add metrics config |
-| `docs/docs/sidebar/features/metrics.md` | Rewrite for per-component |
+| File                                                              | Change                                                        |
+| ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| `internal/config/types.go`                                        | Add `OpsServer`, add `Metrics` to Controller/Agent/NATSServer |
+| `internal/ops/server.go`                                          | New: ops server with isolated registry                        |
+| `internal/ops/server_test.go`                                     | New: tests                                                    |
+| `cmd/controller_start.go`                                         | Create/start/stop ops server                                  |
+| `cmd/controller_setup.go`                                         | Remove metricsHandler params, add sub-components              |
+| `cmd/agent_start.go`                                              | Create/start/stop ops server                                  |
+| `cmd/nats_server_start.go`                                        | Create/start/stop ops server                                  |
+| `cmd/start.go`                                                    | Wire all three ops servers                                    |
+| `configs/osapi.yaml`                                              | Add metrics sections                                          |
+| `test/integration/osapi.yaml`                                     | Add metrics (disabled)                                        |
+| `internal/controller/api/handler_metrics.go`                      | Delete                                                        |
+| `internal/controller/api/metrics/`                                | Delete entire package                                         |
+| `internal/controller/api/handler_public_test.go`                  | Remove metrics test                                           |
+| `internal/controller/api/health/health.go`                        | Add SubComponents field                                       |
+| `internal/controller/api/health/health_status_get.go`             | Emit sub-components                                           |
+| `internal/controller/api/health/health_status_get_public_test.go` | Add test                                                      |
+| `CLAUDE.md`                                                       | Add `internal/ops/`                                           |
+| `docs/docs/sidebar/usage/configuration.md`                        | Add metrics config                                            |
+| `docs/docs/sidebar/features/metrics.md`                           | Rewrite for per-component                                     |

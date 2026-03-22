@@ -36,6 +36,9 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
+// prometheusNewFn is injectable for testing the exporter creation error path.
+var prometheusNewFn = prometheusExporter.New
+
 // Server is a lightweight HTTP server that serves /metrics with an
 // isolated Prometheus registry and OTEL MeterProvider.
 type Server struct {
@@ -57,7 +60,7 @@ func New(
 		collectors.ProcessCollectorOpts{},
 	))
 
-	exporter, err := prometheusExporter.New(
+	exporter, err := prometheusNewFn(
 		prometheusExporter.WithRegisterer(reg),
 	)
 	if err != nil {

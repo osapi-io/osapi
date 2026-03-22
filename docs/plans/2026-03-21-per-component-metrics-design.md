@@ -33,31 +33,31 @@ type OpsServer struct {
 ```yaml
 controller:
   metrics:
-    enabled: true    # default: true
-    port: 9090       # default: 9090
+    enabled: true # default: true
+    port: 9090 # default: 9090
 
 agent:
   metrics:
-    enabled: true    # default: true
-    port: 9091       # default: 9091
+    enabled: true # default: true
+    port: 9091 # default: 9091
 
 nats:
   server:
     metrics:
-      enabled: true  # default: true
-      port: 9092     # default: 9092
+      enabled: true # default: true
+      port: 9092 # default: 9092
 ```
 
 ### Environment variables
 
-| Config Key | Environment Variable |
-|---|---|
-| `controller.metrics.enabled` | `OSAPI_CONTROLLER_METRICS_ENABLED` |
-| `controller.metrics.port` | `OSAPI_CONTROLLER_METRICS_PORT` |
-| `agent.metrics.enabled` | `OSAPI_AGENT_METRICS_ENABLED` |
-| `agent.metrics.port` | `OSAPI_AGENT_METRICS_PORT` |
+| Config Key                    | Environment Variable                |
+| ----------------------------- | ----------------------------------- |
+| `controller.metrics.enabled`  | `OSAPI_CONTROLLER_METRICS_ENABLED`  |
+| `controller.metrics.port`     | `OSAPI_CONTROLLER_METRICS_PORT`     |
+| `agent.metrics.enabled`       | `OSAPI_AGENT_METRICS_ENABLED`       |
+| `agent.metrics.port`          | `OSAPI_AGENT_METRICS_PORT`          |
 | `nats.server.metrics.enabled` | `OSAPI_NATS_SERVER_METRICS_ENABLED` |
-| `nats.server.metrics.port` | `OSAPI_NATS_SERVER_METRICS_PORT` |
+| `nats.server.metrics.port`    | `OSAPI_NATS_SERVER_METRICS_PORT`    |
 
 ## Architecture
 
@@ -81,8 +81,8 @@ func (s *Server) Stop(ctx context.Context)
 - Implements `cli.Lifecycle`
 - Creates its own `prometheus.Registry` (not the global default)
 - Registers Go runtime and process collectors on that registry
-- Creates an OTEL `MeterProvider` backed by a `prometheus.Exporter` tied to
-  that registry
+- Creates an OTEL `MeterProvider` backed by a `prometheus.Exporter` tied to that
+  registry
 - Does NOT call `otel.SetMeterProvider()` — no global state
 - Serves `promhttp.HandlerFor(registry)` on `/metrics`
 
@@ -126,15 +126,15 @@ existing `components` map:
 
 ### Component status values
 
-| Component | When `ok` | When `disabled` | When `error` |
-|---|---|---|---|
-| `nats` | Connected | — | Connection failed |
-| `kv` | Accessible | — | Access failed |
-| `notifier` | Watcher running | `notifications.enabled: false` | — |
-| `heartbeat` | Always (started unconditionally) | — | — |
+| Component   | When `ok`                        | When `disabled`                | When `error`      |
+| ----------- | -------------------------------- | ------------------------------ | ----------------- |
+| `nats`      | Connected                        | —                              | Connection failed |
+| `kv`        | Accessible                       | —                              | Access failed     |
+| `notifier`  | Watcher running                  | `notifications.enabled: false` | —                 |
+| `heartbeat` | Always (started unconditionally) | —                              | —                 |
 
-The `disabled` status is a new value. Today only `ok` and error strings exist.
-A disabled component is not unhealthy — it was intentionally turned off.
+The `disabled` status is a new value. Today only `ok` and error strings exist. A
+disabled component is not unhealthy — it was intentionally turned off.
 
 ### Agent and NATS sub-components
 
@@ -147,40 +147,40 @@ Future work could add `/health` to the ops server if needed for k8s probes.
 
 ### New files
 
-| File | Purpose |
-|---|---|
-| `internal/ops/server.go` | Ops server: Start/Stop, registry, MeterProvider |
-| `internal/ops/server_test.go` | Unit tests |
-| `internal/ops/types.go` | Interface definitions |
+| File                          | Purpose                                         |
+| ----------------------------- | ----------------------------------------------- |
+| `internal/ops/server.go`      | Ops server: Start/Stop, registry, MeterProvider |
+| `internal/ops/server_test.go` | Unit tests                                      |
+| `internal/ops/types.go`       | Interface definitions                           |
 
 ### Modified files
 
-| File | Change |
-|---|---|
-| `internal/config/types.go` | Add `OpsServer` to `Controller`, `AgentConfig`, `NATSServer` |
-| `cmd/controller_start.go` | Create and start ops server |
-| `cmd/controller_setup.go` | Remove metrics handler from API, add notifier/heartbeat to components |
-| `cmd/agent_start.go` | Create and start ops server |
-| `cmd/nats_server_start.go` | Create and start ops server |
-| `cmd/start.go` | Wire all three ops servers, stop them on shutdown |
-| `configs/osapi.yaml` | Add metrics sections |
-| `test/integration/osapi.yaml` | Add metrics sections (disabled or test ports) |
+| File                          | Change                                                                |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `internal/config/types.go`    | Add `OpsServer` to `Controller`, `AgentConfig`, `NATSServer`          |
+| `cmd/controller_start.go`     | Create and start ops server                                           |
+| `cmd/controller_setup.go`     | Remove metrics handler from API, add notifier/heartbeat to components |
+| `cmd/agent_start.go`          | Create and start ops server                                           |
+| `cmd/nats_server_start.go`    | Create and start ops server                                           |
+| `cmd/start.go`                | Wire all three ops servers, stop them on shutdown                     |
+| `configs/osapi.yaml`          | Add metrics sections                                                  |
+| `test/integration/osapi.yaml` | Add metrics sections (disabled or test ports)                         |
 
 ### Removed files
 
-| File | Reason |
-|---|---|
-| `internal/controller/api/handler_metrics.go` | Metrics moved to ops server |
-| `internal/controller/api/metrics/` | Entire metrics domain package |
+| File                                         | Reason                        |
+| -------------------------------------------- | ----------------------------- |
+| `internal/controller/api/handler_metrics.go` | Metrics moved to ops server   |
+| `internal/controller/api/metrics/`           | Entire metrics domain package |
 
 ### Docs
 
-| File | Change |
-|---|---|
-| `docs/docs/sidebar/usage/configuration.md` | Add metrics config for all components |
-| `docs/docs/sidebar/features/metrics.md` | Update for per-component metrics |
-| `docs/docs/sidebar/architecture/architecture.md` | Mention ops servers |
-| `CLAUDE.md` | Add `internal/ops/` to architecture |
+| File                                             | Change                                |
+| ------------------------------------------------ | ------------------------------------- |
+| `docs/docs/sidebar/usage/configuration.md`       | Add metrics config for all components |
+| `docs/docs/sidebar/features/metrics.md`          | Update for per-component metrics      |
+| `docs/docs/sidebar/architecture/architecture.md` | Mention ops servers                   |
+| `CLAUDE.md`                                      | Add `internal/ops/` to architecture   |
 
 ## What doesn't change
 
