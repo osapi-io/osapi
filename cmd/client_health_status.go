@@ -54,11 +54,44 @@ Requires authentication.
 	},
 }
 
+// subComponent holds a name and status for display under a parent.
+type subComponent struct {
+	name   string
+	status string
+}
+
+// componentSubComponents maps component types to their sub-component names.
+var componentSubComponents = map[string][]string{
+	"controller": {"heartbeat", "notifier"},
+	"agent":      {"heartbeat"},
+}
+
+// subComponentsFor returns sub-components for the given component type.
+func subComponentsFor(
+	componentType string,
+	components map[string]client.ComponentHealth,
+) []subComponent {
+	names, ok := componentSubComponents[componentType]
+	if !ok || components == nil {
+		return nil
+	}
+
+	var result []subComponent
+	for _, name := range names {
+		if c, found := components[name]; found {
+			result = append(result, subComponent{name: name, status: c.Status})
+		}
+	}
+
+	return result
+}
+
 // displayComponentTable renders the component registry table,
 // optionally filtered by component type. Pass "" for all types.
 func displayComponentTable(
 	registry []client.RegistryEntry,
 	filterType string,
+	subComponents map[string]client.ComponentHealth,
 ) {
 	var filtered []client.RegistryEntry
 	for _, e := range registry {
@@ -91,6 +124,25 @@ func displayComponentTable(
 			cpu,
 			mem,
 		})
+
+		// Show sub-components indented under their parent.
+		scs := subComponentsFor(e.Type, subComponents)
+		for i, sc := range scs {
+			prefix := "  ├─ "
+			if i == len(scs)-1 {
+				prefix = "  └─ "
+			}
+
+			rows = append(rows, []string{
+				"",
+				prefix + sc.name,
+				sc.status,
+				"",
+				"",
+				"",
+				"",
+			})
+		}
 	}
 
 	cli.PrintCompactTable([]cli.Section{{
@@ -105,7 +157,7 @@ func displayStatusHealth(
 ) {
 	fmt.Println()
 
-	displayComponentTable(data.Registry, "")
+	displayComponentTable(data.Registry, "", data.Components)
 	if len(data.Registry) > 0 {
 		fmt.Println()
 	}
@@ -137,17 +189,7 @@ func displayStatusHealth(
 		cli.PrintKV("KV", kvVal)
 	}
 
-	// Non-standard components (skip nats/kv already shown above)
-	for name, component := range data.Components {
-		if name == "nats" || name == "kv" {
-			continue
-		}
-		val := component.Status
-		if component.Error != "" {
-			val += " " + cli.DimStyle.Render(component.Error)
-		}
-		cli.PrintKV(name, val)
-	}
+	// Sub-components (heartbeat, notifier) are shown in the component table above.
 
 	// Agent details are shown in the component table above.
 	// Use "osapi client agent list" for labels and detailed info.

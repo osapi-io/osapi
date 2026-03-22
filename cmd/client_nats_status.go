@@ -48,7 +48,7 @@ var clientNATSStatusCmd = &cobra.Command{
 		}
 
 		fmt.Println()
-		displayComponentTable(resp.Data.Registry, "nats")
+		displayComponentTable(resp.Data.Registry, "nats", resp.Data.Components)
 	},
 }
 
