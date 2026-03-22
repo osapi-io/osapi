@@ -23,19 +23,19 @@ package agent_test
 import (
 	"context"
 	"log/slog"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
-	promexporter "go.opentelemetry.io/otel/exporters/prometheus"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -55,6 +55,14 @@ type AgentPublicTestSuite struct {
 	appFs         afero.Fs
 	appConfig     config.Config
 	logger        *slog.Logger
+}
+
+func (s *AgentPublicTestSuite) getFreePort() int {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	s.Require().NoError(err)
+	defer func() { _ = l.Close() }()
+
+	return l.Addr().(*net.TCPAddr).Port
 }
 
 func (s *AgentPublicTestSuite) SetupTest() {
@@ -374,17 +382,21 @@ func (s *AgentPublicTestSuite) TestSetMeterProvider() {
 				nil,
 			)
 
-			promExporter, err := promexporter.New()
-			s.Require().NoError(err)
-
-			mp := sdkmetric.NewMeterProvider(
-				sdkmetric.WithReader(promExporter),
-			)
-			defer func() { _ = mp.Shutdown(context.Background()) }()
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NotNil(srv)
 
 			s.NotPanics(func() {
-				a.SetMeterProvider(mp)
+				a.SetMeterProvider(srv.MeterProvider())
 			})
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
 		})
 	}
 }

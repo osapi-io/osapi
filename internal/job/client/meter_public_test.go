@@ -23,17 +23,16 @@ package client_test
 import (
 	"context"
 	"log/slog"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	promexporter "go.opentelemetry.io/otel/exporters/prometheus"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 type MeterPublicTestSuite struct {
@@ -44,6 +43,14 @@ type MeterPublicTestSuite struct {
 	mockKV         *jobmocks.MockKeyValue
 	jobsClient     *client.Client
 	ctx            context.Context
+}
+
+func (s *MeterPublicTestSuite) getFreePort() int {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	s.Require().NoError(err)
+	defer func() { _ = l.Close() }()
+
+	return l.Addr().(*net.TCPAddr).Port
 }
 
 func (s *MeterPublicTestSuite) SetupTest() {
@@ -76,17 +83,21 @@ func (s *MeterPublicTestSuite) TestSetMeterProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			promExp, err := promexporter.New()
-			s.Require().NoError(err)
-
-			mp := sdkmetric.NewMeterProvider(
-				sdkmetric.WithReader(promExp),
-			)
-			defer func() { _ = mp.Shutdown(context.Background()) }()
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NotNil(srv)
 
 			s.NotPanics(func() {
-				s.jobsClient.SetMeterProvider(mp)
+				s.jobsClient.SetMeterProvider(srv.MeterProvider())
 			})
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
 		})
 	}
 }
