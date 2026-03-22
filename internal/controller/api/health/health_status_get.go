@@ -69,8 +69,12 @@ func (h *Health) buildStatusResponse(
 		"kv":   kvComponent,
 	}
 
-	for name, status := range h.SubComponents {
-		components[name] = gen.ComponentHealth{Status: status}
+	for name, info := range h.SubComponents {
+		ch := gen.ComponentHealth{Status: info.Status}
+		if info.Port > 0 {
+			ch.Port = &info.Port
+		}
+		components[name] = ch
 	}
 
 	overall := "ok"

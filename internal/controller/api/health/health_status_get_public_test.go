@@ -532,6 +532,70 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 	}
 }
 
+func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
+	tests := []struct {
+		name         string
+		subs         map[string]health.SubComponentInfo
+		validateFunc func(resp gen.GetHealthStatusResponseObject)
+	}{
+		{
+			name: "sub-components with ports appear in response",
+			subs: map[string]health.SubComponentInfo{
+				"controller.api":       {Status: "ok", Port: 8080},
+				"controller.heartbeat": {Status: "ok"},
+				"controller.metrics":   {Status: "ok", Port: 9090},
+				"controller.notifier":  {Status: "disabled"},
+			},
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+
+				api := r.Components["controller.api"]
+				s.Equal("ok", api.Status)
+				s.Require().NotNil(api.Port)
+				s.Equal(8080, *api.Port)
+
+				hb := r.Components["controller.heartbeat"]
+				s.Equal("ok", hb.Status)
+				s.Nil(hb.Port)
+
+				metrics := r.Components["controller.metrics"]
+				s.Equal("ok", metrics.Status)
+				s.Require().NotNil(metrics.Port)
+				s.Equal(9090, *metrics.Port)
+
+				notifier := r.Components["controller.notifier"]
+				s.Equal("disabled", notifier.Status)
+				s.Nil(notifier.Port)
+			},
+		},
+		{
+			name: "nil sub-components produces no extra keys",
+			subs: nil,
+			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
+				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
+				s.True(ok)
+				s.Len(r.Components, 2) // nats + kv only
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			checker := &health.NATSChecker{
+				NATSCheck: func() error { return nil },
+				KVCheck:   func() error { return nil },
+			}
+
+			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, tt.subs)
+
+			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
 func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 	tests := []struct {
 		name         string

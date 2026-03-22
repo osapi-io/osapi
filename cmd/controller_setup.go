@@ -64,7 +64,7 @@ type ServerManager interface {
 		startTime time.Time,
 		version string,
 		metrics health.MetricsProvider,
-		subComponents map[string]string,
+		subComponents map[string]health.SubComponentInfo,
 	) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
@@ -572,8 +572,8 @@ func registerControllerHandlers(
 ) {
 	startTime := time.Now()
 
-	subComponents := map[string]string{
-		"controller.heartbeat": "ok",
+	sc := func(status string, port int) health.SubComponentInfo {
+		return health.SubComponentInfo{Status: status, Port: port}
 	}
 
 	enabledOrDisabled := func(enabled bool) string {
@@ -584,15 +584,18 @@ func registerControllerHandlers(
 		return "disabled"
 	}
 
-	subComponents["controller.notifier"] = enabledOrDisabled(
-		appConfig.Controller.Notifications.Enabled,
-	)
-	subComponents["controller.metrics"] = enabledOrDisabled(appConfig.Controller.Metrics.Enabled)
-	subComponents["controller.tracing"] = enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)
-	subComponents["agent.heartbeat"] = "ok"
-	subComponents["agent.metrics"] = enabledOrDisabled(appConfig.Agent.Metrics.Enabled)
-	subComponents["nats.heartbeat"] = "ok"
-	subComponents["nats.metrics"] = enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled)
+	subComponents := map[string]health.SubComponentInfo{
+		"controller.api":       sc("ok", appConfig.Controller.API.Port),
+		"controller.heartbeat": sc("ok", 0),
+		"controller.notifier":  sc(enabledOrDisabled(appConfig.Controller.Notifications.Enabled), 0),
+		"controller.metrics":   sc(enabledOrDisabled(appConfig.Controller.Metrics.Enabled), appConfig.Controller.Metrics.Port),
+		"controller.tracing":   sc(enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled), 0),
+		"agent.heartbeat":      sc("ok", 0),
+		"agent.metrics":        sc(enabledOrDisabled(appConfig.Agent.Metrics.Enabled), appConfig.Agent.Metrics.Port),
+		"nats.server":          sc("ok", appConfig.NATS.Server.Port),
+		"nats.heartbeat":       sc("ok", 0),
+		"nats.metrics":         sc(enabledOrDisabled(appConfig.NATS.Server.Metrics.Enabled), appConfig.NATS.Server.Metrics.Port),
+	}
 
 	handlers := make([]func(e *echo.Echo), 0, 8)
 	handlers = append(handlers, sm.GetAgentHandler(jc)...)

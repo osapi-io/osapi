@@ -191,6 +191,12 @@ func (p *ClosureMetricsProvider) GetComponentRegistry(
 	return p.ComponentRegistryFn(ctx)
 }
 
+// SubComponentInfo holds the status and optional port of a sub-component.
+type SubComponentInfo struct {
+	Status string
+	Port   int // 0 means no port.
+}
+
 // Health implementation of the Health APIs operations.
 type Health struct {
 	// Checker performs dependency health checks.
@@ -202,6 +208,6 @@ type Health struct {
 	// Metrics provides system metrics (optional, can be nil).
 	Metrics MetricsProvider
 	// SubComponents reports the status of internal services.
-	SubComponents map[string]string
+	SubComponents map[string]SubComponentInfo
 	logger        *slog.Logger
 }

@@ -36,9 +36,10 @@ $ osapi client health status
 ```
 
 The component table shows all registered components with their health status,
-active conditions, uptime, and process resource usage. Sub-components (heartbeat,
-metrics, notifier, tracing) are displayed nested under their parent. Use
-`osapi client agent list` for agent-specific details like labels and OS info.
+active conditions, uptime, and process resource usage. Sub-components
+(heartbeat, metrics, notifier, tracing) are displayed nested under their parent.
+Use `osapi client agent list` for agent-specific details like labels and OS
+info.
 
 When a component is unhealthy, the overall status becomes `degraded` and the
 component shows the error:

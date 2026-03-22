@@ -305,6 +305,9 @@ type ComponentHealth struct {
 	// Error Error message when component is unhealthy.
 	Error *string `json:"error,omitempty"`
 
+	// Port Port the component listens on (if applicable).
+	Port *int `json:"port,omitempty"`
+
 	// Status Component health status.
 	Status string `json:"status"`
 }

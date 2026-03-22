@@ -55,10 +55,11 @@ Requires authentication.
 	},
 }
 
-// subComponent holds a name and status for display under a parent.
+// subComponent holds a name, status, and optional port for display under a parent.
 type subComponent struct {
 	name   string
 	status string
+	port   int
 }
 
 // subComponentsFor discovers sub-components for the given component type
@@ -77,7 +78,7 @@ func subComponentsFor(
 	for key, c := range components {
 		if strings.HasPrefix(key, prefix) {
 			name := strings.TrimPrefix(key, prefix)
-			result = append(result, subComponent{name: name, status: c.Status})
+			result = append(result, subComponent{name: name, status: c.Status, port: c.Port})
 		}
 	}
 
@@ -135,10 +136,15 @@ func displayComponentTable(
 				prefix = "  └─ "
 			}
 
+			status := sc.status
+			if sc.port > 0 {
+				status += " " + cli.DimStyle.Render(fmt.Sprintf(":%d", sc.port))
+			}
+
 			rows = append(rows, []string{
 				"",
 				prefix + sc.name,
-				sc.status,
+				status,
 				"",
 				"",
 				"",
