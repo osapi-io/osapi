@@ -8,7 +8,7 @@ import "github.com/retr0h/osapi/internal/job"
 
 Package job provides NATS subject hierarchy for distributed job routing.
 
-Subject Format: \[namespace.\]jobs.\{type\}.\{routing_type\}.\{value...\}
+Subject Format: \[namespace.\]jobs.\{type\}.\{routing\_type\}.\{value...\}
 
 Routing Patterns:
 
@@ -33,68 +33,73 @@ Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
 
 ## Index
 
-- [Constants](#constants)
-- [Variables](#variables)
-- [func ApplyNamespaceToInfraName\(namespace, name string\) string](#ApplyNamespaceToInfraName)
-- [func ApplyNamespaceToSubjects\(namespace, subjects string\) string](#ApplyNamespaceToSubjects)
-- [func BuildAgentQueueGroup\(category string\) string](#BuildAgentQueueGroup)
-- [func BuildAgentSubscriptionPattern\(hostname string, labels map\[string\]string\) \[\]string](#BuildAgentSubscriptionPattern)
-- [func BuildLabelSubjects\(key, value string\) \[\]string](#BuildLabelSubjects)
-- [func BuildModifySubject\(hostname string\) string](#BuildModifySubject)
-- [func BuildModifySubjectForAllHosts\(\) string](#BuildModifySubjectForAllHosts)
-- [func BuildQuerySubject\(hostname string\) string](#BuildQuerySubject)
-- [func BuildQuerySubjectForAllHosts\(\) string](#BuildQuerySubjectForAllHosts)
-- [func BuildSubjectFromTarget\(prefix, target string\) string](#BuildSubjectFromTarget)
-- [func CountExpectedAgents\(agents \[\]AgentInfo, target string\) int](#CountExpectedAgents)
-- [func GetAgentHostname\(configuredHostname string\) \(string, error\)](#GetAgentHostname)
-- [func GetAgentHostnameWithProvider\(configuredHostname string, provider HostnameProvider\) \(string, error\)](#GetAgentHostnameWithProvider)
-- [func GetJobsConsumerConfig\(consumerConfig \*config.AgentConsumer, streamSubjects string\) jetstream.ConsumerConfig](#GetJobsConsumerConfig)
-- [func GetJobsStreamConfig\(streamConfig \*config.NATSStream\) \*jetstream.StreamConfig](#GetJobsStreamConfig)
-- [func GetKVBucketConfig\(kvConfig \*config.NATSKV\) jetstream.KeyValueConfig](#GetKVBucketConfig)
-- [func GetLocalHostname\(\) \(string, error\)](#GetLocalHostname)
-- [func GetLocalHostnameWithProvider\(provider HostnameProvider\) \(string, error\)](#GetLocalHostnameWithProvider)
-- [func Init\(namespace string\)](#Init)
-- [func IsBroadcastTarget\(target string\) bool](#IsBroadcastTarget)
-- [func IsSpecialHostname\(hostname string\) bool](#IsSpecialHostname)
-- [func ParseSubject\(subject string\) \(prefix, hostname string, err error\)](#ParseSubject)
-- [func ParseTarget\(target string\) \(routingType, key, value string\)](#ParseTarget)
-- [func SanitizeHostname\(hostname string\) string](#SanitizeHostname)
-- [func ValidateLabel\(key, value string\) error](#ValidateLabel)
-- [type AgentInfo](#AgentInfo)
-- [type AgentRegistration](#AgentRegistration)
-- [type AgentState](#AgentState)
-- [type CommandExecData](#CommandExecData)
-- [type CommandShellData](#CommandShellData)
-- [type Condition](#Condition)
-- [type DockerCreateData](#DockerCreateData)
-- [type DockerExecData](#DockerExecData)
-- [type DockerListData](#DockerListData)
-- [type DockerPullData](#DockerPullData)
-- [type DockerRemoveData](#DockerRemoveData)
-- [type DockerStopData](#DockerStopData)
-- [type FactsRegistration](#FactsRegistration)
-- [type FileState](#FileState)
-- [type HostnameProvider](#HostnameProvider)
-- [type NetworkDNSUpdateData](#NetworkDNSUpdateData)
-- [type NetworkInterface](#NetworkInterface)
-- [type NetworkPingExecuteData](#NetworkPingExecuteData)
-- [type NodeDiskResponse](#NodeDiskResponse)
-- [type NodeHostnameGetData](#NodeHostnameGetData)
-- [type NodeShutdownData](#NodeShutdownData)
-- [type NodeStatusResponse](#NodeStatusResponse)
-- [type NodeUptimeResponse](#NodeUptimeResponse)
-- [type Operation](#Operation)
-- [type OperationType](#OperationType)
-- [type PortMapping](#PortMapping)
-- [type QueueStats](#QueueStats)
-- [type QueuedJob](#QueuedJob)
-- [type Request](#Request)
-- [type Response](#Response)
-- [type Route](#Route)
-- [type Status](#Status)
-- [type TimelineEvent](#TimelineEvent)
-- [type Type](#Type)
-- [type VolumeMapping](#VolumeMapping)
+- [Constants](<#constants>)
+- [Variables](<#variables>)
+- [func ApplyNamespaceToInfraName\(namespace, name string\) string](<#ApplyNamespaceToInfraName>)
+- [func ApplyNamespaceToSubjects\(namespace, subjects string\) string](<#ApplyNamespaceToSubjects>)
+- [func BuildAgentQueueGroup\(category string\) string](<#BuildAgentQueueGroup>)
+- [func BuildAgentSubscriptionPattern\(hostname string, labels map\[string\]string\) \[\]string](<#BuildAgentSubscriptionPattern>)
+- [func BuildLabelSubjects\(key, value string\) \[\]string](<#BuildLabelSubjects>)
+- [func BuildModifySubject\(hostname string\) string](<#BuildModifySubject>)
+- [func BuildModifySubjectForAllHosts\(\) string](<#BuildModifySubjectForAllHosts>)
+- [func BuildQuerySubject\(hostname string\) string](<#BuildQuerySubject>)
+- [func BuildQuerySubjectForAllHosts\(\) string](<#BuildQuerySubjectForAllHosts>)
+- [func BuildSubjectFromTarget\(prefix, target string\) string](<#BuildSubjectFromTarget>)
+- [func CountExpectedAgents\(agents \[\]AgentInfo, target string\) int](<#CountExpectedAgents>)
+- [func GetAgentHostname\(configuredHostname string\) \(string, error\)](<#GetAgentHostname>)
+- [func GetAgentHostnameWithProvider\(configuredHostname string, provider HostnameProvider\) \(string, error\)](<#GetAgentHostnameWithProvider>)
+- [func GetJobsConsumerConfig\(consumerConfig \*config.AgentConsumer, streamSubjects string\) jetstream.ConsumerConfig](<#GetJobsConsumerConfig>)
+- [func GetJobsStreamConfig\(streamConfig \*config.NATSStream\) \*jetstream.StreamConfig](<#GetJobsStreamConfig>)
+- [func GetKVBucketConfig\(kvConfig \*config.NATSKV\) jetstream.KeyValueConfig](<#GetKVBucketConfig>)
+- [func GetLocalHostname\(\) \(string, error\)](<#GetLocalHostname>)
+- [func GetLocalHostnameWithProvider\(provider HostnameProvider\) \(string, error\)](<#GetLocalHostnameWithProvider>)
+- [func Init\(namespace string\)](<#Init>)
+- [func IsBroadcastTarget\(target string\) bool](<#IsBroadcastTarget>)
+- [func IsSpecialHostname\(hostname string\) bool](<#IsSpecialHostname>)
+- [func ParseSubject\(subject string\) \(prefix, hostname string, err error\)](<#ParseSubject>)
+- [func ParseTarget\(target string\) \(routingType, key, value string\)](<#ParseTarget>)
+- [func SanitizeHostname\(hostname string\) string](<#SanitizeHostname>)
+- [func ValidateLabel\(key, value string\) error](<#ValidateLabel>)
+- [type AgentInfo](<#AgentInfo>)
+- [type AgentRegistration](<#AgentRegistration>)
+- [type AgentState](<#AgentState>)
+- [type CommandExecData](<#CommandExecData>)
+- [type CommandShellData](<#CommandShellData>)
+- [type ComponentRegistration](<#ComponentRegistration>)
+- [type Condition](<#Condition>)
+- [type DockerCreateData](<#DockerCreateData>)
+- [type DockerExecData](<#DockerExecData>)
+- [type DockerImageRemoveData](<#DockerImageRemoveData>)
+- [type DockerListData](<#DockerListData>)
+- [type DockerPullData](<#DockerPullData>)
+- [type DockerRemoveData](<#DockerRemoveData>)
+- [type DockerStopData](<#DockerStopData>)
+- [type FactsRegistration](<#FactsRegistration>)
+- [type FileState](<#FileState>)
+- [type HostnameProvider](<#HostnameProvider>)
+- [type NetworkDNSUpdateData](<#NetworkDNSUpdateData>)
+- [type NetworkInterface](<#NetworkInterface>)
+- [type NetworkPingExecuteData](<#NetworkPingExecuteData>)
+- [type NodeDiskResponse](<#NodeDiskResponse>)
+- [type NodeHostnameGetData](<#NodeHostnameGetData>)
+- [type NodeShutdownData](<#NodeShutdownData>)
+- [type NodeStatusResponse](<#NodeStatusResponse>)
+- [type NodeUptimeResponse](<#NodeUptimeResponse>)
+- [type Operation](<#Operation>)
+- [type OperationType](<#OperationType>)
+- [type PortMapping](<#PortMapping>)
+- [type ProcessMetrics](<#ProcessMetrics>)
+- [type QueueStats](<#QueueStats>)
+- [type QueuedJob](<#QueuedJob>)
+- [type Request](<#Request>)
+- [type Response](<#Response>)
+- [type Route](<#Route>)
+- [type Status](<#Status>)
+- [type SubComponentInfo](<#SubComponentInfo>)
+- [type TimelineEvent](<#TimelineEvent>)
+- [type Type](<#Type>)
+- [type VolumeMapping](<#VolumeMapping>)
+
 
 ## Constants
 
@@ -141,8 +146,7 @@ const (
 )
 ```
 
-<a name="OperationNodeHostnameGet"></a>Node operations \- read\-only operations
-that query node state
+<a name="OperationNodeHostnameGet"></a>Node operations \- read\-only operations that query node state
 
 ```go
 const (
@@ -156,8 +160,7 @@ const (
 )
 ```
 
-<a name="OperationNetworkDNSGet"></a>Network operations \- operations that can
-modify network configuration
+<a name="OperationNetworkDNSGet"></a>Network operations \- operations that can modify network configuration
 
 ```go
 const (
@@ -167,8 +170,7 @@ const (
 )
 ```
 
-<a name="OperationNodeShutdown"></a>Node operations \- operations that can
-modify node state
+<a name="OperationNodeShutdown"></a>Node operations \- operations that can modify node state
 
 ```go
 const (
@@ -177,8 +179,7 @@ const (
 )
 ```
 
-<a name="OperationCommandExecExecute"></a>Command operations \- execute
-arbitrary commands on agents
+<a name="OperationCommandExecExecute"></a>Command operations \- execute arbitrary commands on agents
 
 ```go
 const (
@@ -187,8 +188,7 @@ const (
 )
 ```
 
-<a name="OperationFileDeployExecute"></a>File operations — manage file
-deployments and status.
+<a name="OperationFileDeployExecute"></a>File operations — manage file deployments and status.
 
 ```go
 const (
@@ -201,14 +201,15 @@ const (
 
 ```go
 const (
-    OperationDockerCreate  = "docker.create.execute"
-    OperationDockerStart   = "docker.start.execute"
-    OperationDockerStop    = "docker.stop.execute"
-    OperationDockerRemove  = "docker.remove.execute"
-    OperationDockerList    = "docker.list.get"
-    OperationDockerInspect = "docker.inspect.get"
-    OperationDockerExec    = "docker.exec.execute"
-    OperationDockerPull    = "docker.pull.execute"
+    OperationDockerCreate      = "docker.create.execute"
+    OperationDockerStart       = "docker.start.execute"
+    OperationDockerStop        = "docker.stop.execute"
+    OperationDockerRemove      = "docker.remove.execute"
+    OperationDockerList        = "docker.list.get"
+    OperationDockerInspect     = "docker.inspect.get"
+    OperationDockerExec        = "docker.exec.execute"
+    OperationDockerPull        = "docker.pull.execute"
+    OperationDockerImageRemove = "docker.image-remove.execute"
 )
 ```
 
@@ -246,15 +247,13 @@ var (
 ```
 
 <a name="ApplyNamespaceToInfraName"></a>
-
-## func [ApplyNamespaceToInfraName](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L373-L375)
+## func [ApplyNamespaceToInfraName](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L373-L375>)
 
 ```go
 func ApplyNamespaceToInfraName(namespace, name string) string
 ```
 
-ApplyNamespaceToInfraName prefixes an infrastructure name \(stream, KV bucket\)
-with the namespace. Returns the name unchanged if namespace is empty.
+ApplyNamespaceToInfraName prefixes an infrastructure name \(stream, KV bucket\) with the namespace. Returns the name unchanged if namespace is empty.
 
 ```
 ApplyNamespaceToInfraName("", "JOBS")      -> "JOBS"
@@ -262,15 +261,13 @@ ApplyNamespaceToInfraName("osapi", "JOBS")  -> "osapi-JOBS"
 ```
 
 <a name="ApplyNamespaceToSubjects"></a>
-
-## func [ApplyNamespaceToSubjects](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L387-L389)
+## func [ApplyNamespaceToSubjects](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L387-L389>)
 
 ```go
 func ApplyNamespaceToSubjects(namespace, subjects string) string
 ```
 
-ApplyNamespaceToSubjects prefixes a subject filter with the namespace. Returns
-the subject unchanged if namespace is empty.
+ApplyNamespaceToSubjects prefixes a subject filter with the namespace. Returns the subject unchanged if namespace is empty.
 
 ```
 ApplyNamespaceToSubjects("", "jobs.>")      -> "jobs.>"
@@ -278,41 +275,31 @@ ApplyNamespaceToSubjects("osapi", "jobs.>")  -> "osapi.jobs.>"
 ```
 
 <a name="BuildAgentQueueGroup"></a>
-
-## func [BuildAgentQueueGroup](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L216-L218)
+## func [BuildAgentQueueGroup](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L216-L218>)
 
 ```go
 func BuildAgentQueueGroup(category string) string
 ```
 
-BuildAgentQueueGroup returns the queue group name for load\-balanced
-subscriptions. This ensures only one agent processes each "\_any" message.
+BuildAgentQueueGroup returns the queue group name for load\-balanced subscriptions. This ensures only one agent processes each "\_any" message.
 
 <a name="BuildAgentSubscriptionPattern"></a>
-
-## func [BuildAgentSubscriptionPattern](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L186-L189)
+## func [BuildAgentSubscriptionPattern](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L186-L189>)
 
 ```go
 func BuildAgentSubscriptionPattern(hostname string, labels map[string]string) []string
 ```
 
-BuildAgentSubscriptionPattern creates subscription patterns for agents. Agents
-typically subscribe to their own hostname and special routing patterns. If
-labels are provided, hierarchical prefix subscriptions are included for each
-label. For example, a label "group: web.dev.us\-east" generates subscriptions at
-every prefix level \(group:web, group:web.dev, group:web.dev.us\-east\).
+BuildAgentSubscriptionPattern creates subscription patterns for agents. Agents typically subscribe to their own hostname and special routing patterns. If labels are provided, hierarchical prefix subscriptions are included for each label. For example, a label "group: web.dev.us\-east" generates subscriptions at every prefix level \(group:web, group:web.dev, group:web.dev.us\-east\).
 
 <a name="BuildLabelSubjects"></a>
-
-## func [BuildLabelSubjects](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L319-L321)
+## func [BuildLabelSubjects](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L319-L321>)
 
 ```go
 func BuildLabelSubjects(key, value string) []string
 ```
 
-BuildLabelSubjects builds subscription subjects for a label with hierarchical
-prefix matching. For a label "group: web.dev.us\-east", it returns subjects for
-every prefix level:
+BuildLabelSubjects builds subscription subjects for a label with hierarchical prefix matching. For a label "group: web.dev.us\-east", it returns subjects for every prefix level:
 
 ```
 jobs.*.label.group.web
@@ -320,167 +307,133 @@ jobs.*.label.group.web.dev
 jobs.*.label.group.web.dev.us-east
 ```
 
-This enables targeting at any level of the hierarchy: \-\-target group:web
-matches all agents whose group label starts with "web".
+This enables targeting at any level of the hierarchy: \-\-target group:web matches all agents whose group label starts with "web".
 
 <a name="BuildModifySubject"></a>
-
-## func [BuildModifySubject](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L115-L117)
+## func [BuildModifySubject](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L115-L117>)
 
 ```go
 func BuildModifySubject(hostname string) string
 ```
 
-BuildModifySubject creates a subject for modify operations. Example:
-jobs.modify.hostname
+BuildModifySubject creates a subject for modify operations. Example: jobs.modify.hostname
 
 <a name="BuildModifySubjectForAllHosts"></a>
-
-## func [BuildModifySubjectForAllHosts](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L129)
+## func [BuildModifySubjectForAllHosts](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L129>)
 
 ```go
 func BuildModifySubjectForAllHosts() string
 ```
 
-BuildModifySubjectForAllHosts creates a modify subject targeting all hosts.
-Example: jobs.modify.\*
+BuildModifySubjectForAllHosts creates a modify subject targeting all hosts. Example: jobs.modify.\*
 
 <a name="BuildQuerySubject"></a>
-
-## func [BuildQuerySubject](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L107-L109)
+## func [BuildQuerySubject](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L107-L109>)
 
 ```go
 func BuildQuerySubject(hostname string) string
 ```
 
-BuildQuerySubject creates a subject for query operations. Example:
-jobs.query.hostname
+BuildQuerySubject creates a subject for query operations. Example: jobs.query.hostname
 
 <a name="BuildQuerySubjectForAllHosts"></a>
-
-## func [BuildQuerySubjectForAllHosts](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L123)
+## func [BuildQuerySubjectForAllHosts](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L123>)
 
 ```go
 func BuildQuerySubjectForAllHosts() string
 ```
 
-BuildQuerySubjectForAllHosts creates a query subject targeting all hosts.
-Example: jobs.query.\*
+BuildQuerySubjectForAllHosts creates a query subject targeting all hosts. Example: jobs.query.\*
 
 <a name="BuildSubjectFromTarget"></a>
-
-## func [BuildSubjectFromTarget](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L284-L286)
+## func [BuildSubjectFromTarget](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L284-L286>)
 
 ```go
 func BuildSubjectFromTarget(prefix, target string) string
 ```
 
-BuildSubjectFromTarget builds the full NATS subject for any target value. For
-label targets with hierarchical values \(e.g., "group:web.dev"\), each
-dot\-separated segment becomes a subject token: jobs.query.label.group.web.dev
+BuildSubjectFromTarget builds the full NATS subject for any target value. For label targets with hierarchical values \(e.g., "group:web.dev"\), each dot\-separated segment becomes a subject token: jobs.query.label.group.web.dev
 
 <a name="CountExpectedAgents"></a>
-
-## func [CountExpectedAgents](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L335-L338)
+## func [CountExpectedAgents](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L335-L338>)
 
 ```go
 func CountExpectedAgents(agents []AgentInfo, target string) int
 ```
 
-CountExpectedAgents returns the number of agents expected to respond to a
-broadcast target. For \_all it returns len\(agents\). For label targets it
-filters to agents whose label value equals or is a prefix of the target value
-\(mirroring hierarchical NATS subject matching\).
+CountExpectedAgents returns the number of agents expected to respond to a broadcast target. For \_all it returns len\(agents\). For label targets it filters to agents whose label value equals or is a prefix of the target value \(mirroring hierarchical NATS subject matching\).
 
 <a name="GetAgentHostname"></a>
-
-## func [GetAgentHostname](https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L52-L54)
+## func [GetAgentHostname](<https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L52-L54>)
 
 ```go
 func GetAgentHostname(configuredHostname string) (string, error)
 ```
 
-GetAgentHostname returns the hostname that should be used by agents. It first
-checks the configured hostname, then falls back to system hostname using
-gopsutil. This function respects configuration while using gopsutil for system
-detection.
+GetAgentHostname returns the hostname that should be used by agents. It first checks the configured hostname, then falls back to system hostname using gopsutil. This function respects configuration while using gopsutil for system detection.
 
 <a name="GetAgentHostnameWithProvider"></a>
-
-## func [GetAgentHostnameWithProvider](https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L71-L74)
+## func [GetAgentHostnameWithProvider](<https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L71-L74>)
 
 ```go
 func GetAgentHostnameWithProvider(configuredHostname string, provider HostnameProvider) (string, error)
 ```
 
-GetAgentHostnameWithProvider returns the hostname using the provided provider.
-This allows for testing with mock providers.
+GetAgentHostnameWithProvider returns the hostname using the provided provider. This allows for testing with mock providers.
 
 <a name="GetJobsConsumerConfig"></a>
-
-## func [GetJobsConsumerConfig](https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L68-L71)
+## func [GetJobsConsumerConfig](<https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L68-L71>)
 
 ```go
 func GetJobsConsumerConfig(consumerConfig *config.AgentConsumer, streamSubjects string) jetstream.ConsumerConfig
 ```
 
-GetJobsConsumerConfig returns the consumer configuration for processing job
-requests.
+GetJobsConsumerConfig returns the consumer configuration for processing job requests.
 
 <a name="GetJobsStreamConfig"></a>
-
-## func [GetJobsStreamConfig](https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L33-L35)
+## func [GetJobsStreamConfig](<https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L33-L35>)
 
 ```go
 func GetJobsStreamConfig(streamConfig *config.NATSStream) *jetstream.StreamConfig
 ```
 
-GetJobsStreamConfig returns the stream configuration for job processing. This
-creates a stream that accepts all job\-related subjects \(job.\>\).
+GetJobsStreamConfig returns the stream configuration for job processing. This creates a stream that accepts all job\-related subjects \(job.\>\).
 
 <a name="GetKVBucketConfig"></a>
-
-## func [GetKVBucketConfig](https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L97-L99)
+## func [GetKVBucketConfig](<https://github.com/osapi-io/osapi/blob/main/internal/job/config.go#L97-L99>)
 
 ```go
 func GetKVBucketConfig(kvConfig *config.NATSKV) jetstream.KeyValueConfig
 ```
 
-GetKVBucketConfig returns the KeyValue bucket configuration for storing job
-responses.
+GetKVBucketConfig returns the KeyValue bucket configuration for storing job responses.
 
 <a name="GetLocalHostname"></a>
-
-## func [GetLocalHostname](https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L91)
+## func [GetLocalHostname](<https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L91>)
 
 ```go
 func GetLocalHostname() (string, error)
 ```
 
-GetLocalHostname returns the current system hostname using gopsutil. This is for
-backward compatibility with existing code.
+GetLocalHostname returns the current system hostname using gopsutil. This is for backward compatibility with existing code.
 
 <a name="GetLocalHostnameWithProvider"></a>
-
-## func [GetLocalHostnameWithProvider](https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L97-L99)
+## func [GetLocalHostnameWithProvider](<https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L97-L99>)
 
 ```go
 func GetLocalHostnameWithProvider(provider HostnameProvider) (string, error)
 ```
 
-GetLocalHostnameWithProvider returns the hostname using the provided provider.
-This allows for testing with mock providers.
+GetLocalHostnameWithProvider returns the hostname using the provided provider. This allows for testing with mock providers.
 
 <a name="Init"></a>
-
-## func [Init](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L63-L65)
+## func [Init](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L63-L65>)
 
 ```go
 func Init(namespace string)
 ```
 
-Init configures the subject namespace. An empty namespace keeps the default
-"jobs.\*" hierarchy. A non\-empty namespace prepends it:
+Init configures the subject namespace. An empty namespace keeps the default "jobs.\*" hierarchy. A non\-empty namespace prepends it:
 
 ```
 Init("")      -> jobs.query, jobs.modify
@@ -488,19 +441,16 @@ Init("osapi") -> osapi.jobs.query, osapi.jobs.modify
 ```
 
 <a name="IsBroadcastTarget"></a>
-
-## func [IsBroadcastTarget](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L300-L302)
+## func [IsBroadcastTarget](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L300-L302>)
 
 ```go
 func IsBroadcastTarget(target string) bool
 ```
 
-IsBroadcastTarget returns true if the target requires publishAndCollect
-\(broadcast\) semantics: \_all or any key:value label target.
+IsBroadcastTarget returns true if the target requires publishAndCollect \(broadcast\) semantics: \_all or any key:value label target.
 
 <a name="IsSpecialHostname"></a>
-
-## func [IsSpecialHostname](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L223-L225)
+## func [IsSpecialHostname](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L223-L225>)
 
 ```go
 func IsSpecialHostname(hostname string) bool
@@ -509,15 +459,13 @@ func IsSpecialHostname(hostname string) bool
 IsSpecialHostname checks if a hostname is a special routing directive.
 
 <a name="ParseSubject"></a>
-
-## func [ParseSubject](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L139-L141)
+## func [ParseSubject](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L139-L141>)
 
 ```go
 func ParseSubject(subject string) (prefix, hostname string, err error)
 ```
 
-ParseSubject extracts the prefix and routing target from a job subject.
-Supported formats \(with optional namespace prefix\):
+ParseSubject extracts the prefix and routing target from a job subject. Supported formats \(with optional namespace prefix\):
 
 - \[ns.\]jobs.\{type\}.\_any
 - \[ns.\]jobs.\{type\}.\_all
@@ -525,45 +473,34 @@ Supported formats \(with optional namespace prefix\):
 - \[ns.\]jobs.\{type\}.label.\{key\}.\{value...\}
 
 <a name="ParseTarget"></a>
-
-## func [ParseTarget](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L267-L269)
+## func [ParseTarget](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L267-L269>)
 
 ```go
 func ParseTarget(target string) (routingType, key, value string)
 ```
 
-ParseTarget parses a \-\-target value into routing components. Returns
-routingType \("host", "label", AnyHost, or BroadcastHost\), key, and value.
-Label values may contain dots for hierarchical targeting \(e.g.,
-"group:web.dev.us\-east"\).
+ParseTarget parses a \-\-target value into routing components. Returns routingType \("host", "label", AnyHost, or BroadcastHost\), key, and value. Label values may contain dots for hierarchical targeting \(e.g., "group:web.dev.us\-east"\).
 
 <a name="SanitizeHostname"></a>
-
-## func [SanitizeHostname](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L232-L234)
+## func [SanitizeHostname](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L232-L234>)
 
 ```go
 func SanitizeHostname(hostname string) string
 ```
 
-SanitizeHostname converts a hostname to a valid NATS consumer/routing name. NATS
-consumer names and routing must be alphanumeric with underscores only.
+SanitizeHostname converts a hostname to a valid NATS consumer/routing name. NATS consumer names and routing must be alphanumeric with underscores only.
 
 <a name="ValidateLabel"></a>
-
-## func [ValidateLabel](https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L246-L248)
+## func [ValidateLabel](<https://github.com/osapi-io/osapi/blob/main/internal/job/subjects.go#L246-L248>)
 
 ```go
 func ValidateLabel(key, value string) error
 ```
 
-ValidateLabel checks that a label key and value are valid for use in NATS
-subjects. Keys must be a single segment matching \[a\-zA\-Z0\-9\_\-\]\+. Values
-may be hierarchical \(dot\-separated\), where each segment matches
-\[a\-zA\-Z0\-9\_\-\]\+.
+ValidateLabel checks that a label key and value are valid for use in NATS subjects. Keys must be a single segment matching \[a\-zA\-Z0\-9\_\-\]\+. Values may be hierarchical \(dot\-separated\), where each segment matches \[a\-zA\-Z0\-9\_\-\]\+.
 
 <a name="AgentInfo"></a>
-
-## type [AgentInfo](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L422-L467)
+## type [AgentInfo](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L472-L517>)
 
 AgentInfo represents information about an active agent.
 
@@ -617,8 +554,7 @@ type AgentInfo struct {
 ```
 
 <a name="AgentRegistration"></a>
-
-## type [AgentRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L396-L419)
+## type [AgentRegistration](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L442-L469>)
 
 AgentRegistration represents an agent's registration entry in the KV registry.
 
@@ -642,16 +578,19 @@ type AgentRegistration struct {
     MemoryStats *mem.Result `json:"memory_stats,omitempty"`
     // AgentVersion is the version of the agent binary.
     AgentVersion string `json:"agent_version,omitempty"`
+    // Process holds process-level resource usage.
+    Process *ProcessMetrics `json:"process,omitempty"`
     // Conditions contains the evaluated node conditions.
     Conditions []Condition `json:"conditions,omitempty"`
     // State is the agent's scheduling state (Ready, Draining, Cordoned).
     State string `json:"state,omitempty"`
+    // SubComponents reports the status of internal services.
+    SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
 ```
 
 <a name="AgentState"></a>
-
-## type [AgentState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L190-L196)
+## type [AgentState](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L191-L197>)
 
 AgentState represents the state of a specific agent processing a job
 
@@ -666,8 +605,7 @@ type AgentState struct {
 ```
 
 <a name="CommandExecData"></a>
-
-## type [CommandExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L242-L251)
+## type [CommandExecData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L243-L252>)
 
 CommandExecData represents data for direct command execution
 
@@ -685,8 +623,7 @@ type CommandExecData struct {
 ```
 
 <a name="CommandShellData"></a>
-
-## type [CommandShellData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L254-L261)
+## type [CommandShellData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L255-L262>)
 
 CommandShellData represents data for shell command execution
 
@@ -701,9 +638,34 @@ type CommandShellData struct {
 }
 ```
 
-<a name="Condition"></a>
+<a name="ComponentRegistration"></a>
+## type [ComponentRegistration](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L422-L439>)
 
-## type [Condition](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L388-L393)
+ComponentRegistration represents a non\-agent component's heartbeat entry in the KV registry. Used by API server and NATS server.
+
+```go
+type ComponentRegistration struct {
+    // Type is the component type: "controller" or "nats".
+    Type string `json:"type"`
+    // Hostname is the hostname of the component.
+    Hostname string `json:"hostname"`
+    // StartedAt is the timestamp when the component process started.
+    StartedAt time.Time `json:"started_at"`
+    // RegisteredAt is the timestamp of the last heartbeat.
+    RegisteredAt time.Time `json:"registered_at"`
+    // Process holds process-level resource usage.
+    Process *ProcessMetrics `json:"process,omitempty"`
+    // Conditions contains evaluated process conditions.
+    Conditions []Condition `json:"conditions,omitempty"`
+    // Version is the component binary version.
+    Version string `json:"version,omitempty"`
+    // SubComponents reports the status of internal services.
+    SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
+}
+```
+
+<a name="Condition"></a>
+## type [Condition](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L395-L400>)
 
 Condition represents a node condition evaluated agent\-side.
 
@@ -717,8 +679,7 @@ type Condition struct {
 ```
 
 <a name="DockerCreateData"></a>
-
-## type [DockerCreateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L264-L272)
+## type [DockerCreateData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L265-L273>)
 
 DockerCreateData represents data for docker container creation.
 
@@ -735,8 +696,7 @@ type DockerCreateData struct {
 ```
 
 <a name="DockerExecData"></a>
-
-## type [DockerExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L306-L310)
+## type [DockerExecData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L307-L311>)
 
 DockerExecData represents data for executing a command in a docker container.
 
@@ -748,9 +708,20 @@ type DockerExecData struct {
 }
 ```
 
-<a name="DockerListData"></a>
+<a name="DockerImageRemoveData"></a>
+## type [DockerImageRemoveData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L319-L322>)
 
-## type [DockerListData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L300-L303)
+DockerImageRemoveData represents data for removing a docker image.
+
+```go
+type DockerImageRemoveData struct {
+    Image string `json:"image"`
+    Force bool   `json:"force,omitempty"`
+}
+```
+
+<a name="DockerListData"></a>
+## type [DockerListData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L301-L304>)
 
 DockerListData represents data for listing docker containers.
 
@@ -762,8 +733,7 @@ type DockerListData struct {
 ```
 
 <a name="DockerPullData"></a>
-
-## type [DockerPullData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L313-L315)
+## type [DockerPullData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L314-L316>)
 
 DockerPullData represents data for pulling a docker image.
 
@@ -774,8 +744,7 @@ type DockerPullData struct {
 ```
 
 <a name="DockerRemoveData"></a>
-
-## type [DockerRemoveData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L295-L297)
+## type [DockerRemoveData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L296-L298>)
 
 DockerRemoveData represents data for removing a docker container.
 
@@ -786,8 +755,7 @@ type DockerRemoveData struct {
 ```
 
 <a name="DockerStopData"></a>
-
-## type [DockerStopData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L290-L292)
+## type [DockerStopData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L291-L293>)
 
 DockerStopData represents data for stopping a docker container.
 
@@ -798,8 +766,7 @@ type DockerStopData struct {
 ```
 
 <a name="FactsRegistration"></a>
-
-## type [FactsRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L360-L371)
+## type [FactsRegistration](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L367-L378>)
 
 FactsRegistration represents an agent's facts entry in the facts KV bucket.
 
@@ -819,11 +786,9 @@ type FactsRegistration struct {
 ```
 
 <a name="FileState"></a>
+## type [FileState](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L336-L345>)
 
-## type [FileState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L329-L338)
-
-FileState represents a deployed file's state in the file\-state KV. Keyed by
-\<hostname\>.\<sha256\-of\-path\>.
+FileState represents a deployed file's state in the file\-state KV. Keyed by \<hostname\>.\<sha256\-of\-path\>.
 
 ```go
 type FileState struct {
@@ -839,8 +804,7 @@ type FileState struct {
 ```
 
 <a name="HostnameProvider"></a>
-
-## type [HostnameProvider](https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L31-L33)
+## type [HostnameProvider](<https://github.com/osapi-io/osapi/blob/main/internal/job/hostname.go#L31-L33>)
 
 HostnameProvider defines the interface for getting hostname
 
@@ -851,8 +815,7 @@ type HostnameProvider interface {
 ```
 
 <a name="NetworkDNSUpdateData"></a>
-
-## type [NetworkDNSUpdateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L222-L229)
+## type [NetworkDNSUpdateData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L223-L230>)
 
 NetworkDNSUpdateData represents data for DNS configuration changes
 
@@ -868,8 +831,7 @@ type NetworkDNSUpdateData struct {
 ```
 
 <a name="NetworkInterface"></a>
-
-## type [NetworkInterface](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L341-L347)
+## type [NetworkInterface](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L348-L354>)
 
 NetworkInterface represents a network interface with its address.
 
@@ -884,8 +846,7 @@ type NetworkInterface struct {
 ```
 
 <a name="NetworkPingExecuteData"></a>
-
-## type [NetworkPingExecuteData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L232-L239)
+## type [NetworkPingExecuteData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L233-L240>)
 
 NetworkPingExecuteData represents data for ping operations
 
@@ -901,8 +862,7 @@ type NetworkPingExecuteData struct {
 ```
 
 <a name="NodeDiskResponse"></a>
-
-## type [NodeDiskResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L470-L472)
+## type [NodeDiskResponse](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L520-L522>)
 
 NodeDiskResponse represents the response for node.disk.get operations.
 
@@ -913,8 +873,7 @@ type NodeDiskResponse struct {
 ```
 
 <a name="NodeHostnameGetData"></a>
-
-## type [NodeHostnameGetData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L217-L219)
+## type [NodeHostnameGetData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L218-L220>)
 
 NodeHostnameGetData represents data for hostname retrieval
 
@@ -924,8 +883,7 @@ type NodeHostnameGetData struct {
 ```
 
 <a name="NodeShutdownData"></a>
-
-## type [NodeShutdownData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L318-L325)
+## type [NodeShutdownData](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L325-L332>)
 
 NodeShutdownData represents data for node shutdown/reboot operations
 
@@ -941,11 +899,9 @@ type NodeShutdownData struct {
 ```
 
 <a name="NodeStatusResponse"></a>
+## type [NodeStatusResponse](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L532-L545>)
 
-## type [NodeStatusResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L482-L495)
-
-NodeStatusResponse aggregates node status information from multiple providers.
-This represents the response for node.status.get operations in the job queue.
+NodeStatusResponse aggregates node status information from multiple providers. This represents the response for node.status.get operations in the job queue.
 
 ```go
 type NodeStatusResponse struct {
@@ -965,8 +921,7 @@ type NodeStatusResponse struct {
 ```
 
 <a name="NodeUptimeResponse"></a>
-
-## type [NodeUptimeResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L475-L478)
+## type [NodeUptimeResponse](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L525-L528>)
 
 NodeUptimeResponse represents the response for node.uptime.get operations.
 
@@ -978,8 +933,7 @@ type NodeUptimeResponse struct {
 ```
 
 <a name="Operation"></a>
-
-## type [Operation](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L148-L154)
+## type [Operation](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L149-L155>)
 
 Operation represents an operation in the new hierarchical format
 
@@ -994,23 +948,18 @@ type Operation struct {
 ```
 
 <a name="OperationType"></a>
+## type [OperationType](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L97>)
 
-## type [OperationType](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L97)
-
-OperationType represents the specific operation using hierarchical format. This
-complements the existing JobType \(query/modify\) with specific operations.
+OperationType represents the specific operation using hierarchical format. This complements the existing JobType \(query/modify\) with specific operations.
 
 ```go
 type OperationType string
 ```
 
 <a name="PortMapping"></a>
+## type [PortMapping](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L278-L281>)
 
-## type [PortMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L277-L280)
-
-PortMapping maps a host port to a container port \(job layer\). Intentionally
-duplicated from runtime.PortMapping to keep the job layer decoupled from the
-provider layer. Both have the same shape.
+PortMapping maps a host port to a container port \(job layer\). Intentionally duplicated from runtime.PortMapping to keep the job layer decoupled from the provider layer. Both have the same shape.
 
 ```go
 type PortMapping struct {
@@ -1019,9 +968,24 @@ type PortMapping struct {
 }
 ```
 
-<a name="QueueStats"></a>
+<a name="ProcessMetrics"></a>
+## type [ProcessMetrics](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L403-L410>)
 
-## type [QueueStats](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L208-L212)
+ProcessMetrics holds process\-level resource usage.
+
+```go
+type ProcessMetrics struct {
+    // CPUPercent is the process CPU usage as a percentage.
+    CPUPercent float64 `json:"cpu_percent"`
+    // RSSBytes is the resident set size in bytes.
+    RSSBytes int64 `json:"rss_bytes"`
+    // Goroutines is the number of active goroutines.
+    Goroutines int `json:"goroutines"`
+}
+```
+
+<a name="QueueStats"></a>
+## type [QueueStats](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L209-L213>)
 
 QueueStats represents statistics about the job queue.
 
@@ -1034,8 +998,7 @@ type QueueStats struct {
 ```
 
 <a name="QueuedJob"></a>
-
-## type [QueuedJob](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L157-L187)
+## type [QueuedJob](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L158-L188>)
 
 QueuedJob represents a job stored in the KV queue with metadata
 
@@ -1074,8 +1037,7 @@ type QueuedJob struct {
 ```
 
 <a name="Request"></a>
-
-## type [Request](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L58-L71)
+## type [Request](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L58-L71>)
 
 Request represents a request to perform a job operation.
 
@@ -1097,8 +1059,7 @@ type Request struct {
 ```
 
 <a name="Response"></a>
-
-## type [Response](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L74-L90)
+## type [Response](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L74-L90>)
 
 Response represents the response from a job operation.
 
@@ -1123,8 +1084,7 @@ type Response struct {
 ```
 
 <a name="Route"></a>
-
-## type [Route](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L350-L357)
+## type [Route](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L357-L364>)
 
 Route represents a network routing table entry.
 
@@ -1140,8 +1100,7 @@ type Route struct {
 ```
 
 <a name="Status"></a>
-
-## type [Status](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L44)
+## type [Status](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L44>)
 
 Status represents the current status of a job.
 
@@ -1164,9 +1123,22 @@ const (
 )
 ```
 
-<a name="TimelineEvent"></a>
+<a name="SubComponentInfo"></a>
+## type [SubComponentInfo](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L413-L418>)
 
-## type [TimelineEvent](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L199-L205)
+SubComponentInfo holds the status and optional address of a sub\-component.
+
+```go
+type SubComponentInfo struct {
+    // Status is the sub-component status (e.g., "ok", "disabled").
+    Status string `json:"status"`
+    // Address is the optional network endpoint (e.g., "http://0.0.0.0:9090").
+    Address string `json:"address,omitempty"`
+}
+```
+
+<a name="TimelineEvent"></a>
+## type [TimelineEvent](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L200-L206>)
 
 TimelineEvent represents a single event in the job timeline
 
@@ -1181,8 +1153,7 @@ type TimelineEvent struct {
 ```
 
 <a name="Type"></a>
-
-## type [Type](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L34)
+## type [Type](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L34>)
 
 Type represents the type of job operation.
 
@@ -1202,11 +1173,9 @@ const (
 ```
 
 <a name="VolumeMapping"></a>
+## type [VolumeMapping](<https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L285-L288>)
 
-## type [VolumeMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L284-L287)
-
-VolumeMapping maps a host path to a container path \(job layer\). Intentionally
-duplicated from runtime.VolumeMapping for the same reason.
+VolumeMapping maps a host path to a container path \(job layer\). Intentionally duplicated from runtime.VolumeMapping for the same reason.
 
 ```go
 type VolumeMapping struct {
@@ -1215,4 +1184,4 @@ type VolumeMapping struct {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

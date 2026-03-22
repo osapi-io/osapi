@@ -10,52 +10,51 @@ Package cli provides shared utilities for CLI startup commands.
 
 ## Index
 
-- [Constants](#constants)
-- [Variables](#variables)
-- [func BoolToSafeString\(b \*bool\) string](#BoolToSafeString)
-- [func BuildAuditKVConfig\(namespace string, auditCfg config.NATSAudit\) jetstream.KeyValueConfig](#BuildAuditKVConfig)
-- [func BuildBroadcastTable\(results \[\]ResultRow, fieldHeaders \[\]string\) \(\[\]string, \[\]\[\]string\)](#BuildBroadcastTable)
-- [func BuildFactsKVConfig\(namespace string, factsCfg config.NATSFacts\) jetstream.KeyValueConfig](#BuildFactsKVConfig)
-- [func BuildFileStateKVConfig\(namespace string, fileStateCfg config.NATSFileState\) jetstream.KeyValueConfig](#BuildFileStateKVConfig)
-- [func BuildMutationTable\(results \[\]MutationResultRow, fieldHeaders \[\]string\) \(\[\]string, \[\]\[\]string\)](#BuildMutationTable)
-- [func BuildNATSAuthOptions\(auth config.NATSAuth\) natsclient.AuthOptions](#BuildNATSAuthOptions)
-- [func BuildObjectStoreConfig\(namespace string, objectsCfg config.NATSObjects\) jetstream.ObjectStoreConfig](#BuildObjectStoreConfig)
-- [func BuildRegistryKVConfig\(namespace string, registryCfg config.NATSRegistry\) jetstream.KeyValueConfig](#BuildRegistryKVConfig)
-- [func BuildStateKVConfig\(namespace string, stateCfg config.NATSState\) jetstream.KeyValueConfig](#BuildStateKVConfig)
-- [func CalculateColumnWidths\(headers \[\]string, rows \[\]\[\]string, minPadding int\) \[\]int](#CalculateColumnWidths)
-- [func CloseNATSClient\(nc messaging.NATSClient\)](#CloseNATSClient)
-- [func DisplayJobDetail\(resp \*client.JobDetail\)](#DisplayJobDetail)
-- [func Float64ToSafeString\(f \*float64\) string](#Float64ToSafeString)
-- [func FormatAge\(d time.Duration\) string](#FormatAge)
-- [func FormatBytes\(b int\) string](#FormatBytes)
-- [func FormatLabels\(labels map\[string\]string\) string](#FormatLabels)
-- [func FormatList\(list \[\]string\) string](#FormatList)
-- [func GetMaxLineWidth\(text string\) int](#GetMaxLineWidth)
-- [func HandleError\(err error, logger \*slog.Logger\)](#HandleError)
-- [func IntToSafeString\(i \*int\) string](#IntToSafeString)
-- [func IsLinuxVersionSupported\(distro string, version string\) bool](#IsLinuxVersionSupported)
-- [func LogFatal\(logger \*slog.Logger, message string, err error, kvPairs ...any\)](#LogFatal)
-- [func MaxExitCode\(results \[\]RawResult\) int](#MaxExitCode)
-- [func ParseJetstreamStorageType\(s string\) jetstream.StorageType](#ParseJetstreamStorageType)
-- [func PrintCompactTable\(sections \[\]Section\)](#PrintCompactTable)
-- [func PrintKV\(pairs ...string\)](#PrintKV)
-- [func PrintRawOutput\(stdout io.Writer, stderr io.Writer, results \[\]RawResult, showStdout bool, showStderr bool\)](#PrintRawOutput)
-- [func PrintRawOutputPlain\(stdout io.Writer, stderr io.Writer, results \[\]RawResult, showStdout bool, showStderr bool\)](#PrintRawOutputPlain)
-- [func RunServer\(ctx context.Context, server Lifecycle, cleanupFns ...func\(\)\)](#RunServer)
-- [func SafeString\(s \*string\) string](#SafeString)
-- [func SafeUUID\(u \*uuid.UUID\) string](#SafeUUID)
-- [func ValidateDistribution\(logger \*slog.Logger\)](#ValidateDistribution)
-- [type Lifecycle](#Lifecycle)
-- [type MutationResultRow](#MutationResultRow)
-- [type RawResult](#RawResult)
-- [type ResultRow](#ResultRow)
-- [type Section](#Section)
+- [Constants](<#constants>)
+- [Variables](<#variables>)
+- [func BoolToSafeString\(b \*bool\) string](<#BoolToSafeString>)
+- [func BuildAuditKVConfig\(namespace string, auditCfg config.NATSAudit\) jetstream.KeyValueConfig](<#BuildAuditKVConfig>)
+- [func BuildBroadcastTable\(results \[\]ResultRow, fieldHeaders \[\]string\) \(\[\]string, \[\]\[\]string\)](<#BuildBroadcastTable>)
+- [func BuildFactsKVConfig\(namespace string, factsCfg config.NATSFacts\) jetstream.KeyValueConfig](<#BuildFactsKVConfig>)
+- [func BuildFileStateKVConfig\(namespace string, fileStateCfg config.NATSFileState\) jetstream.KeyValueConfig](<#BuildFileStateKVConfig>)
+- [func BuildMutationTable\(results \[\]MutationResultRow, fieldHeaders \[\]string\) \(\[\]string, \[\]\[\]string\)](<#BuildMutationTable>)
+- [func BuildNATSAuthOptions\(auth config.NATSAuth\) natsclient.AuthOptions](<#BuildNATSAuthOptions>)
+- [func BuildObjectStoreConfig\(namespace string, objectsCfg config.NATSObjects\) jetstream.ObjectStoreConfig](<#BuildObjectStoreConfig>)
+- [func BuildRegistryKVConfig\(namespace string, registryCfg config.NATSRegistry\) jetstream.KeyValueConfig](<#BuildRegistryKVConfig>)
+- [func BuildStateKVConfig\(namespace string, stateCfg config.NATSState\) jetstream.KeyValueConfig](<#BuildStateKVConfig>)
+- [func CalculateColumnWidths\(headers \[\]string, rows \[\]\[\]string, minPadding int\) \[\]int](<#CalculateColumnWidths>)
+- [func CloseNATSClient\(nc natsCloser\)](<#CloseNATSClient>)
+- [func DisplayJobDetail\(resp \*client.JobDetail\)](<#DisplayJobDetail>)
+- [func Float64ToSafeString\(f \*float64\) string](<#Float64ToSafeString>)
+- [func FormatAge\(d time.Duration\) string](<#FormatAge>)
+- [func FormatBytes\(b int\) string](<#FormatBytes>)
+- [func FormatLabels\(labels map\[string\]string\) string](<#FormatLabels>)
+- [func FormatList\(list \[\]string\) string](<#FormatList>)
+- [func GetMaxLineWidth\(text string\) int](<#GetMaxLineWidth>)
+- [func HandleError\(err error, logger \*slog.Logger\)](<#HandleError>)
+- [func IntToSafeString\(i \*int\) string](<#IntToSafeString>)
+- [func IsLinuxVersionSupported\(distro string, version string\) bool](<#IsLinuxVersionSupported>)
+- [func LogFatal\(logger \*slog.Logger, message string, err error, kvPairs ...any\)](<#LogFatal>)
+- [func MaxExitCode\(results \[\]RawResult\) int](<#MaxExitCode>)
+- [func ParseJetstreamStorageType\(s string\) jetstream.StorageType](<#ParseJetstreamStorageType>)
+- [func PrintCompactTable\(sections \[\]Section\)](<#PrintCompactTable>)
+- [func PrintKV\(pairs ...string\)](<#PrintKV>)
+- [func PrintRawOutput\(stdout io.Writer, stderr io.Writer, results \[\]RawResult, showStdout bool, showStderr bool\)](<#PrintRawOutput>)
+- [func PrintRawOutputPlain\(stdout io.Writer, stderr io.Writer, results \[\]RawResult, showStdout bool, showStderr bool\)](<#PrintRawOutputPlain>)
+- [func RunServer\(ctx context.Context, server Lifecycle, cleanupFns ...func\(\)\)](<#RunServer>)
+- [func SafeString\(s \*string\) string](<#SafeString>)
+- [func SafeUUID\(u \*uuid.UUID\) string](<#SafeUUID>)
+- [func ValidateDistribution\(logger \*slog.Logger\)](<#ValidateDistribution>)
+- [type Lifecycle](<#Lifecycle>)
+- [type MutationResultRow](<#MutationResultRow>)
+- [type RawResult](<#RawResult>)
+- [type ResultRow](<#ResultRow>)
+- [type Section](<#Section>)
+
 
 ## Constants
 
-<a name="KVMinColWidth"></a>KVMinColWidth is the minimum visual width for each
-key\-value column. A consistent minimum ensures columns align across consecutive
-PrintKV calls.
+<a name="KVMinColWidth"></a>KVMinColWidth is the minimum visual width for each key\-value column. A consistent minimum ensures columns align across consecutive PrintKV calls.
 
 ```go
 const KVMinColWidth = 20
@@ -86,8 +85,7 @@ var (
 ```
 
 <a name="BoolToSafeString"></a>
-
-## func [BoolToSafeString](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L168-L170)
+## func [BoolToSafeString](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L168-L170>)
 
 ```go
 func BoolToSafeString(b *bool) string
@@ -96,8 +94,7 @@ func BoolToSafeString(b *bool) string
 BoolToSafeString converts a \*bool to a string. Returns "" if nil.
 
 <a name="BuildAuditKVConfig"></a>
-
-## func [BuildAuditKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L126-L129)
+## func [BuildAuditKVConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L128-L131>)
 
 ```go
 func BuildAuditKVConfig(namespace string, auditCfg config.NATSAudit) jetstream.KeyValueConfig
@@ -106,20 +103,16 @@ func BuildAuditKVConfig(namespace string, auditCfg config.NATSAudit) jetstream.K
 BuildAuditKVConfig builds a jetstream.KeyValueConfig from audit config values.
 
 <a name="BuildBroadcastTable"></a>
-
-## func [BuildBroadcastTable](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L73-L76)
+## func [BuildBroadcastTable](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L73-L76>)
 
 ```go
 func BuildBroadcastTable(results []ResultRow, fieldHeaders []string) ([]string, [][]string)
 ```
 
-BuildBroadcastTable builds headers and rows for a broadcast result table. It
-prepends HOSTNAME to every row and conditionally inserts STATUS, CHANGED, and
-ERROR columns when any result carries an error.
+BuildBroadcastTable builds headers and rows for a broadcast result table. It prepends HOSTNAME to every row and conditionally inserts STATUS, CHANGED, and ERROR columns when any result carries an error.
 
 <a name="BuildFactsKVConfig"></a>
-
-## func [BuildFactsKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L95-L98)
+## func [BuildFactsKVConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L97-L100>)
 
 ```go
 func BuildFactsKVConfig(namespace string, factsCfg config.NATSFacts) jetstream.KeyValueConfig
@@ -128,32 +121,25 @@ func BuildFactsKVConfig(namespace string, factsCfg config.NATSFacts) jetstream.K
 BuildFactsKVConfig builds a jetstream.KeyValueConfig from facts config values.
 
 <a name="BuildFileStateKVConfig"></a>
-
-## func [BuildFileStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L159-L162)
+## func [BuildFileStateKVConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L161-L164>)
 
 ```go
 func BuildFileStateKVConfig(namespace string, fileStateCfg config.NATSFileState) jetstream.KeyValueConfig
 ```
 
-BuildFileStateKVConfig builds a jetstream.KeyValueConfig from file\-state config
-values. The file\-state bucket has no TTL so deployment SHA tracking persists
-indefinitely.
+BuildFileStateKVConfig builds a jetstream.KeyValueConfig from file\-state config values. The file\-state bucket has no TTL so deployment SHA tracking persists indefinitely.
 
 <a name="BuildMutationTable"></a>
-
-## func [BuildMutationTable](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L140-L143)
+## func [BuildMutationTable](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L140-L143>)
 
 ```go
 func BuildMutationTable(results []MutationResultRow, fieldHeaders []string) ([]string, [][]string)
 ```
 
-BuildMutationTable builds headers and rows for a mutation broadcast table.
-Unlike BuildBroadcastTable, STATUS and ERROR columns are always shown because
-mutation results carry an explicit status field.
+BuildMutationTable builds headers and rows for a mutation broadcast table. Unlike BuildBroadcastTable, STATUS and ERROR columns are always shown because mutation results carry an explicit status field.
 
 <a name="BuildNATSAuthOptions"></a>
-
-## func [BuildNATSAuthOptions](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L56-L58)
+## func [BuildNATSAuthOptions](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L58-L60>)
 
 ```go
 func BuildNATSAuthOptions(auth config.NATSAuth) natsclient.AuthOptions
@@ -162,74 +148,61 @@ func BuildNATSAuthOptions(auth config.NATSAuth) natsclient.AuthOptions
 BuildNATSAuthOptions converts a config NATSAuth to natsclient.AuthOptions.
 
 <a name="BuildObjectStoreConfig"></a>
-
-## func [BuildObjectStoreConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L143-L146)
+## func [BuildObjectStoreConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L145-L148>)
 
 ```go
 func BuildObjectStoreConfig(namespace string, objectsCfg config.NATSObjects) jetstream.ObjectStoreConfig
 ```
 
-BuildObjectStoreConfig builds a jetstream.ObjectStoreConfig from objects config
-values.
+BuildObjectStoreConfig builds a jetstream.ObjectStoreConfig from objects config values.
 
 <a name="BuildRegistryKVConfig"></a>
-
-## func [BuildRegistryKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L79-L82)
+## func [BuildRegistryKVConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L81-L84>)
 
 ```go
 func BuildRegistryKVConfig(namespace string, registryCfg config.NATSRegistry) jetstream.KeyValueConfig
 ```
 
-BuildRegistryKVConfig builds a jetstream.KeyValueConfig from registry config
-values.
+BuildRegistryKVConfig builds a jetstream.KeyValueConfig from registry config values.
 
 <a name="BuildStateKVConfig"></a>
-
-## func [BuildStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L112-L115)
+## func [BuildStateKVConfig](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L114-L117>)
 
 ```go
 func BuildStateKVConfig(namespace string, stateCfg config.NATSState) jetstream.KeyValueConfig
 ```
 
-BuildStateKVConfig builds a jetstream.KeyValueConfig from state config values.
-The state bucket has no TTL so drain flags and timeline events persist
-indefinitely.
+BuildStateKVConfig builds a jetstream.KeyValueConfig from state config values. The state bucket has no TTL so drain flags and timeline events persist indefinitely.
 
 <a name="CalculateColumnWidths"></a>
-
-## func [CalculateColumnWidths](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L399-L403)
+## func [CalculateColumnWidths](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L399-L403>)
 
 ```go
 func CalculateColumnWidths(headers []string, rows [][]string, minPadding int) []int
 ```
 
-CalculateColumnWidths calculates the optimal width for each column based on
-content.
+CalculateColumnWidths calculates the optimal width for each column based on content.
 
 <a name="CloseNATSClient"></a>
-
-## func [CloseNATSClient](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L47-L49)
+## func [CloseNATSClient](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L51-L53>)
 
 ```go
-func CloseNATSClient(nc messaging.NATSClient)
+func CloseNATSClient(nc natsCloser)
 ```
 
 CloseNATSClient safely closes a NATS client connection.
 
 <a name="DisplayJobDetail"></a>
-
-## func [DisplayJobDetail](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L511-L513)
+## func [DisplayJobDetail](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L511-L513>)
 
 ```go
 func DisplayJobDetail(resp *client.JobDetail)
 ```
 
-DisplayJobDetail displays detailed job information from domain types. Used by
-both job get and job run commands.
+DisplayJobDetail displays detailed job information from domain types. Used by both job get and job run commands.
 
 <a name="Float64ToSafeString"></a>
-
-## func [Float64ToSafeString](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L471-L473)
+## func [Float64ToSafeString](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L471-L473>)
 
 ```go
 func Float64ToSafeString(f *float64) string
@@ -238,30 +211,25 @@ func Float64ToSafeString(f *float64) string
 Float64ToSafeString converts a \*float64 to a string. Returns "N/A" if nil.
 
 <a name="FormatAge"></a>
-
-## func [FormatAge](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L322-L324)
+## func [FormatAge](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L322-L324>)
 
 ```go
 func FormatAge(d time.Duration) string
 ```
 
-FormatAge formats a duration as a human\-readable age string. Returns "3d 4h",
-"12h 30m", "45m", "30s" etc.
+FormatAge formats a duration as a human\-readable age string. Returns "3d 4h", "12h 30m", "45m", "30s" etc.
 
 <a name="FormatBytes"></a>
-
-## func [FormatBytes](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L346-L348)
+## func [FormatBytes](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L346-L348>)
 
 ```go
 func FormatBytes(b int) string
 ```
 
-FormatBytes formats a byte count as a human\-readable string \(e.g., "5.2 KB",
-"1.0 MB"\).
+FormatBytes formats a byte count as a human\-readable string \(e.g., "5.2 KB", "1.0 MB"\).
 
 <a name="FormatLabels"></a>
-
-## func [FormatLabels](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L378-L380)
+## func [FormatLabels](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L378-L380>)
 
 ```go
 func FormatLabels(labels map[string]string) string
@@ -270,8 +238,7 @@ func FormatLabels(labels map[string]string) string
 FormatLabels formats a label map as "key:value, key:value" sorted by key.
 
 <a name="FormatList"></a>
-
-## func [FormatList](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L368-L370)
+## func [FormatList](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L368-L370>)
 
 ```go
 func FormatList(list []string) string
@@ -280,8 +247,7 @@ func FormatList(list []string) string
 FormatList helper function to convert \[\]string to a formatted string.
 
 <a name="GetMaxLineWidth"></a>
-
-## func [GetMaxLineWidth](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L437-L439)
+## func [GetMaxLineWidth](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L437-L439>)
 
 ```go
 func GetMaxLineWidth(text string) int
@@ -290,8 +256,7 @@ func GetMaxLineWidth(text string) int
 GetMaxLineWidth returns the width of the longest line in a multi\-line string.
 
 <a name="HandleError"></a>
-
-## func [HandleError](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L491-L494)
+## func [HandleError](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L491-L494>)
 
 ```go
 func HandleError(err error, logger *slog.Logger)
@@ -300,8 +265,7 @@ func HandleError(err error, logger *slog.Logger)
 HandleError logs the appropriate error message based on the SDK error type.
 
 <a name="IntToSafeString"></a>
-
-## func [IntToSafeString](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L481-L483)
+## func [IntToSafeString](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L481-L483>)
 
 ```go
 func IntToSafeString(i *int) string
@@ -310,30 +274,25 @@ func IntToSafeString(i *int) string
 IntToSafeString converts a \*int to a string. Returns "N/A" if nil.
 
 <a name="IsLinuxVersionSupported"></a>
-
-## func [IsLinuxVersionSupported](https://github.com/osapi-io/osapi/blob/main/internal/cli/validate.go#L44-L47)
+## func [IsLinuxVersionSupported](<https://github.com/osapi-io/osapi/blob/main/internal/cli/validate.go#L44-L47>)
 
 ```go
 func IsLinuxVersionSupported(distro string, version string) bool
 ```
 
-IsLinuxVersionSupported checks if the given distribution and version are
-supported.
+IsLinuxVersionSupported checks if the given distribution and version are supported.
 
 <a name="LogFatal"></a>
-
-## func [LogFatal](https://github.com/osapi-io/osapi/blob/main/internal/cli/log.go#L33-L38)
+## func [LogFatal](<https://github.com/osapi-io/osapi/blob/main/internal/cli/log.go#L33-L38>)
 
 ```go
 func LogFatal(logger *slog.Logger, message string, err error, kvPairs ...any)
 ```
 
-LogFatal logs a fatal error message along with optional structured data and then
-exits the program with a status code of 1.
+LogFatal logs a fatal error message along with optional structured data and then exits the program with a status code of 1.
 
 <a name="MaxExitCode"></a>
-
-## func [MaxExitCode](https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L64-L66)
+## func [MaxExitCode](<https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L64-L66>)
 
 ```go
 func MaxExitCode(results []RawResult) int
@@ -342,8 +301,7 @@ func MaxExitCode(results []RawResult) int
 MaxExitCode returns the highest exit code from a slice of RawResults.
 
 <a name="ParseJetstreamStorageType"></a>
-
-## func [ParseJetstreamStorageType](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L36-L38)
+## func [ParseJetstreamStorageType](<https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L35-L37>)
 
 ```go
 func ParseJetstreamStorageType(s string) jetstream.StorageType
@@ -352,68 +310,52 @@ func ParseJetstreamStorageType(s string) jetstream.StorageType
 ParseJetstreamStorageType maps "memory"/"file" strings to jetstream.StorageType.
 
 <a name="PrintCompactTable"></a>
-
-## func [PrintCompactTable](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L196-L198)
+## func [PrintCompactTable](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L196-L198>)
 
 ```go
 func PrintCompactTable(sections []Section)
 ```
 
-PrintCompactTable renders a compact column\-aligned table \(kubectl\-style\).
-Headers are uppercase purple, data rows are teal, with 2\-space indent.
-Multi\-line cell values are flattened to a single line and long values are
-truncated with an ellipsis.
+PrintCompactTable renders a compact column\-aligned table \(kubectl\-style\). Headers are uppercase purple, data rows are teal, with 2\-space indent. Multi\-line cell values are flattened to a single line and long values are truncated with an ellipsis.
 
 <a name="PrintKV"></a>
-
-## func [PrintKV](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L291-L293)
+## func [PrintKV](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L291-L293>)
 
 ```go
 func PrintKV(pairs ...string)
 ```
 
-PrintKV prints labeled key\-value pairs on a single indented line. Pairs are
-padded to equal column widths for alignment. Arguments alternate between labels
-and values: label1, val1, label2, val2, ...
+PrintKV prints labeled key\-value pairs on a single indented line. Pairs are padded to equal column widths for alignment. Arguments alternate between labels and values: label1, val1, label2, val2, ...
 
 <a name="PrintRawOutput"></a>
-
-## func [PrintRawOutput](https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L41-L47)
+## func [PrintRawOutput](<https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L41-L47>)
 
 ```go
 func PrintRawOutput(stdout io.Writer, stderr io.Writer, results []RawResult, showStdout bool, showStderr bool)
 ```
 
-PrintRawOutput writes raw command output to the given writers. For single
-results, output is printed without hostname prefix. For multiple results, each
-line is prefixed with a styled hostname. showStdout/showStderr control which
-streams are printed.
+PrintRawOutput writes raw command output to the given writers. For single results, output is printed without hostname prefix. For multiple results, each line is prefixed with a styled hostname. showStdout/showStderr control which streams are printed.
 
 <a name="PrintRawOutputPlain"></a>
-
-## func [PrintRawOutputPlain](https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L53-L59)
+## func [PrintRawOutputPlain](<https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L53-L59>)
 
 ```go
 func PrintRawOutputPlain(stdout io.Writer, stderr io.Writer, results []RawResult, showStdout bool, showStderr bool)
 ```
 
-PrintRawOutputPlain writes raw output without lipgloss styling. Used for testing
-and non\-TTY output.
+PrintRawOutputPlain writes raw output without lipgloss styling. Used for testing and non\-TTY output.
 
 <a name="RunServer"></a>
-
-## func [RunServer](https://github.com/osapi-io/osapi/blob/main/internal/cli/lifecycle.go#L38-L42)
+## func [RunServer](<https://github.com/osapi-io/osapi/blob/main/internal/cli/lifecycle.go#L38-L42>)
 
 ```go
 func RunServer(ctx context.Context, server Lifecycle, cleanupFns ...func())
 ```
 
-RunServer blocks until ctx is cancelled, then shuts down the server with a
-timeout and runs cleanup functions.
+RunServer blocks until ctx is cancelled, then shuts down the server with a timeout and runs cleanup functions.
 
 <a name="SafeString"></a>
-
-## func [SafeString](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L451-L453)
+## func [SafeString](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L451-L453>)
 
 ```go
 func SafeString(s *string) string
@@ -422,8 +364,7 @@ func SafeString(s *string) string
 SafeString function to safely dereference string pointers.
 
 <a name="SafeUUID"></a>
-
-## func [SafeUUID](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L461-L463)
+## func [SafeUUID](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L461-L463>)
 
 ```go
 func SafeUUID(u *uuid.UUID) string
@@ -432,19 +373,16 @@ func SafeUUID(u *uuid.UUID) string
 SafeUUID converts a \*uuid.UUID to its string representation. Returns "" if nil.
 
 <a name="ValidateDistribution"></a>
-
-## func [ValidateDistribution](https://github.com/osapi-io/osapi/blob/main/internal/cli/validate.go#L60-L62)
+## func [ValidateDistribution](<https://github.com/osapi-io/osapi/blob/main/internal/cli/validate.go#L60-L62>)
 
 ```go
 func ValidateDistribution(logger *slog.Logger)
 ```
 
-ValidateDistribution checks if the CLI is being run on the correct Linux
-distribution.
+ValidateDistribution checks if the CLI is being run on the correct Linux distribution.
 
 <a name="Lifecycle"></a>
-
-## type [Lifecycle](https://github.com/osapi-io/osapi/blob/main/internal/cli/lifecycle.go#L29-L34)
+## type [Lifecycle](<https://github.com/osapi-io/osapi/blob/main/internal/cli/lifecycle.go#L29-L34>)
 
 Lifecycle represents a long\-running server or agent.
 
@@ -458,8 +396,7 @@ type Lifecycle interface {
 ```
 
 <a name="MutationResultRow"></a>
-
-## type [MutationResultRow](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L129-L135)
+## type [MutationResultRow](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L129-L135>)
 
 MutationResultRow is a per\-host mutation result used by BuildMutationTable.
 
@@ -474,8 +411,7 @@ type MutationResultRow struct {
 ```
 
 <a name="RawResult"></a>
-
-## type [RawResult](https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L30-L35)
+## type [RawResult](<https://github.com/osapi-io/osapi/blob/main/internal/cli/raw_output.go#L30-L35>)
 
 RawResult holds raw command output for a single host.
 
@@ -489,8 +425,7 @@ type RawResult struct {
 ```
 
 <a name="ResultRow"></a>
-
-## type [ResultRow](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L63-L68)
+## type [ResultRow](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L63-L68>)
 
 ResultRow is a per\-host broadcast result used by BuildBroadcastTable.
 
@@ -504,8 +439,7 @@ type ResultRow struct {
 ```
 
 <a name="Section"></a>
-
-## type [Section](https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L56-L60)
+## type [Section](<https://github.com/osapi-io/osapi/blob/main/internal/cli/ui.go#L56-L60>)
 
 Section represents a header with its corresponding rows.
 
@@ -517,4 +451,4 @@ type Section struct {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

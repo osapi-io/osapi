@@ -10,26 +10,109 @@ Package cmd provides CLI commands for OSAPI.
 
 ## Index
 
-- [func Execute\(\)](#Execute)
-- [type ServerManager](#ServerManager)
-- [type TokenGenerator](#TokenGenerator)
-- [type TokenValidator](#TokenValidator)
+- [func Execute\(\)](<#Execute>)
+- [type NATSClient](<#NATSClient>)
+- [type ServerManager](<#ServerManager>)
+- [type TokenGenerator](<#TokenGenerator>)
+- [type TokenValidator](<#TokenValidator>)
+
 
 <a name="Execute"></a>
-
-## func [Execute](https://github.com/osapi-io/osapi/blob/main/cmd/root.go#L67)
+## func [Execute](<https://github.com/osapi-io/osapi/blob/main/cmd/root.go#L71>)
 
 ```go
 func Execute()
 ```
 
-Execute adds all child commands to the root command and sets flags
-appropriately. This is called by main.main\(\). It only needs to happen once to
-the rootCmd.
+Execute adds all child commands to the root command and sets flags appropriately. This is called by main.main\(\). It only needs to happen once to the rootCmd.
+
+<a name="NATSClient"></a>
+## type [NATSClient](<https://github.com/osapi-io/osapi/blob/main/cmd/nats_interfaces.go#L34-L110>)
+
+NATSClient defines the NATS operations needed by cmd setup, runtime, and metrics functions. Each function that receives a NATSClient uses only a subset of these methods; the full interface is defined here so the natsBundle can store a single value that satisfies all consumers.
+
+```go
+type NATSClient interface {
+    // Connection management
+    Connect() error
+    Close()
+
+    // Stream operations
+    CreateOrUpdateStreamWithConfig(
+        ctx context.Context,
+        streamConfig jetstream.StreamConfig,
+    ) error
+    GetStreamInfo(
+        ctx context.Context,
+        streamName string,
+    ) (*jetstream.StreamInfo, error)
+
+    // KV operations
+    CreateOrUpdateKVBucket(
+        ctx context.Context,
+        bucketName string,
+    ) (jetstream.KeyValue, error)
+    CreateOrUpdateKVBucketWithConfig(
+        ctx context.Context,
+        config jetstream.KeyValueConfig,
+    ) (jetstream.KeyValue, error)
+
+    // Object Store operations
+    CreateOrUpdateObjectStore(
+        ctx context.Context,
+        cfg jetstream.ObjectStoreConfig,
+    ) (jetstream.ObjectStore, error)
+    ObjectStore(
+        ctx context.Context,
+        name string,
+    ) (jetstream.ObjectStore, error)
+
+    // Message publishing
+    Publish(
+        ctx context.Context,
+        subject string,
+        data []byte,
+    ) error
+
+    // Message consumption
+    ConsumeMessages(
+        ctx context.Context,
+        streamName string,
+        consumerName string,
+        handler natsclient.JetStreamMessageHandler,
+        opts *natsclient.ConsumeOptions,
+    ) error
+    CreateOrUpdateConsumerWithConfig(
+        ctx context.Context,
+        streamName string,
+        consumerConfig jetstream.ConsumerConfig,
+    ) error
+
+    // KV convenience operations
+    KVPut(
+        bucket string,
+        key string,
+        value []byte,
+    ) error
+
+    // Connection inspection (replaces type assertions against *natsclient.Client)
+    ConnectedURL() string
+    ConnectedServerVersion() string
+
+    // JetStream handle access (replaces ExtJS field access)
+    KeyValue(
+        ctx context.Context,
+        bucket string,
+    ) (jetstream.KeyValue, error)
+    Stream(
+        ctx context.Context,
+        name string,
+    ) (jetstream.Stream, error)
+}
+```
 
 <a name="ServerManager"></a>
-
-## type [ServerManager](https://github.com/osapi-io/osapi/blob/main/cmd/api_helpers.go#L47-L72)
+## type [ServerManager](<https://github.com/osapi-io/osapi/blob/main/cmd/controller_setup.go#L53-L77>)
 
 ServerManager responsible for Server operations.
 
@@ -48,9 +131,8 @@ type ServerManager interface {
         startTime time.Time,
         version string,
         metrics health.MetricsProvider,
+        subComponents map[string]health.SubComponentInfo,
     ) []func(e *echo.Echo)
-    // GetMetricsHandler returns Prometheus metrics handler for registration.
-    GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
     // GetAuditHandler returns audit handler for registration.
     GetAuditHandler(store audit.Store) []func(e *echo.Echo)
     // GetDockerHandler returns Docker handler for registration.
@@ -63,8 +145,7 @@ type ServerManager interface {
 ```
 
 <a name="TokenGenerator"></a>
-
-## type [TokenGenerator](https://github.com/osapi-io/osapi/blob/main/cmd/token_generate.go#L34-L41)
+## type [TokenGenerator](<https://github.com/osapi-io/osapi/blob/main/cmd/token_generate.go#L34-L41>)
 
 TokenGenerator generates signed JWT tokens.
 
@@ -80,8 +161,7 @@ type TokenGenerator interface {
 ```
 
 <a name="TokenValidator"></a>
-
-## type [TokenValidator](https://github.com/osapi-io/osapi/blob/main/cmd/token_validate.go#L35-L40)
+## type [TokenValidator](<https://github.com/osapi-io/osapi/blob/main/cmd/token_validate.go#L35-L40>)
 
 TokenValidator parses and validates JWT tokens.
 
@@ -94,4 +174,4 @@ type TokenValidator interface {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

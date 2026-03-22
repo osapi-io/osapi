@@ -21,6 +21,6 @@
 // Package mocks provides mock implementations for testing.
 package mocks
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=./messaging.gen.go -package=mocks github.com/retr0h/osapi/internal/messaging NATSClient
+//go:generate go tool github.com/golang/mock/mockgen -destination=./messaging.gen.go -package=mocks github.com/retr0h/osapi/internal/job/client NATSClient
 //go:generate go tool github.com/golang/mock/mockgen -destination=./kv.gen.go -package=mocks github.com/nats-io/nats.go/jetstream KeyValue,KeyValueEntry,KeyWatcher,KeyLister
 //go:generate go tool github.com/golang/mock/mockgen -destination=./job_client.gen.go -package=mocks github.com/retr0h/osapi/internal/job/client JobClient

@@ -10,23 +10,23 @@ Package netinfo provides network interface information.
 
 ## Index
 
-- [type Darwin](#Darwin)
-  - [func NewDarwinProvider\(em exec.Manager\) \*Darwin](#NewDarwinProvider)
-  - [func \(d \*Darwin\) GetPrimaryInterface\(\) \(string, error\)](#Darwin.GetPrimaryInterface)
-  - [func \(d \*Darwin\) GetRoutes\(\) \(\[\]RouteResult, error\)](#Darwin.GetRoutes)
-- [type InterfaceResult](#InterfaceResult)
-- [type Linux](#Linux)
-  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
-  - [func \(l \*Linux\) GetPrimaryInterface\(\) \(string, error\)](#Linux.GetPrimaryInterface)
-  - [func \(l \*Linux\) GetRoutes\(\) \(\[\]RouteResult, error\)](#Linux.GetRoutes)
-- [type Netinfo](#Netinfo)
-  - [func \(n \*Netinfo\) GetInterfaces\(\) \(\[\]InterfaceResult, error\)](#Netinfo.GetInterfaces)
-- [type Provider](#Provider)
-- [type RouteResult](#RouteResult)
+- [type Darwin](<#Darwin>)
+  - [func NewDarwinProvider\(em exec.Manager\) \*Darwin](<#NewDarwinProvider>)
+  - [func \(d \*Darwin\) GetPrimaryInterface\(\) \(string, error\)](<#Darwin.GetPrimaryInterface>)
+  - [func \(d \*Darwin\) GetRoutes\(\) \(\[\]RouteResult, error\)](<#Darwin.GetRoutes>)
+- [type InterfaceResult](<#InterfaceResult>)
+- [type Linux](<#Linux>)
+  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
+  - [func \(l \*Linux\) GetPrimaryInterface\(\) \(string, error\)](<#Linux.GetPrimaryInterface>)
+  - [func \(l \*Linux\) GetRoutes\(\) \(\[\]RouteResult, error\)](<#Linux.GetRoutes>)
+- [type Netinfo](<#Netinfo>)
+  - [func \(n \*Netinfo\) GetInterfaces\(\) \(\[\]InterfaceResult, error\)](<#Netinfo.GetInterfaces>)
+- [type Provider](<#Provider>)
+- [type RouteResult](<#RouteResult>)
+
 
 <a name="Darwin"></a>
-
-## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin.go#L32-L35)
+## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin.go#L32-L35>)
 
 Darwin implements the Provider interface for macOS systems.
 
@@ -38,8 +38,7 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-
-### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin.go#L38-L40)
+### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin.go#L38-L40>)
 
 ```go
 func NewDarwinProvider(em exec.Manager) *Darwin
@@ -48,19 +47,16 @@ func NewDarwinProvider(em exec.Manager) *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetPrimaryInterface"></a>
-
-### func \(\*Darwin\) [GetPrimaryInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin_get_routes.go#L113)
+### func \(\*Darwin\) [GetPrimaryInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin_get_routes.go#L113>)
 
 ```go
 func (d *Darwin) GetPrimaryInterface() (string, error)
 ```
 
-GetPrimaryInterface returns the name of the interface used for the default route
-from macOS \`netstat \-rn\` output.
+GetPrimaryInterface returns the name of the interface used for the default route from macOS \`netstat \-rn\` output.
 
 <a name="Darwin.GetRoutes"></a>
-
-### func \(\*Darwin\) [GetRoutes](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin_get_routes.go#L40)
+### func \(\*Darwin\) [GetRoutes](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/darwin_get_routes.go#L40>)
 
 ```go
 func (d *Darwin) GetRoutes() ([]RouteResult, error)
@@ -80,8 +76,7 @@ default            192.168.1.1        UGScg       en0
 ```
 
 <a name="InterfaceResult"></a>
-
-## type [InterfaceResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L24-L30)
+## type [InterfaceResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L24-L30>)
 
 InterfaceResult represents a network interface with its address.
 
@@ -96,8 +91,7 @@ type InterfaceResult struct {
 ```
 
 <a name="Linux"></a>
-
-## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux.go#L30-L33)
+## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux.go#L30-L33>)
 
 Linux implements the Provider interface for Linux systems.
 
@@ -109,8 +103,7 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-
-### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux.go#L36)
+### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux.go#L36>)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -119,19 +112,16 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetPrimaryInterface"></a>
-
-### func \(\*Linux\) [GetPrimaryInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux_get_routes.go#L119)
+### func \(\*Linux\) [GetPrimaryInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux_get_routes.go#L119>)
 
 ```go
 func (l *Linux) GetPrimaryInterface() (string, error)
 ```
 
-GetPrimaryInterface returns the name of the interface used for the default route
-by parsing /proc/net/route.
+GetPrimaryInterface returns the name of the interface used for the default route by parsing /proc/net/route.
 
 <a name="Linux.GetRoutes"></a>
-
-### func \(\*Linux\) [GetRoutes](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux_get_routes.go#L71)
+### func \(\*Linux\) [GetRoutes](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/linux_get_routes.go#L71>)
 
 ```go
 func (l *Linux) GetRoutes() ([]RouteResult, error)
@@ -140,12 +130,9 @@ func (l *Linux) GetRoutes() ([]RouteResult, error)
 GetRoutes returns the system routing table by parsing /proc/net/route.
 
 <a name="Netinfo"></a>
+## type [Netinfo](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/netinfo.go#L33-L38>)
 
-## type [Netinfo](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/netinfo.go#L33-L38)
-
-Netinfo provides cross\-platform network interface information.
-Platform\-specific types \(Linux, Darwin\) embed this for shared interface
-enumeration and add their own route implementations.
+Netinfo provides cross\-platform network interface information. Platform\-specific types \(Linux, Darwin\) embed this for shared interface enumeration and add their own route implementations.
 
 ```go
 type Netinfo struct {
@@ -157,19 +144,16 @@ type Netinfo struct {
 ```
 
 <a name="Netinfo.GetInterfaces"></a>
-
-### func \(\*Netinfo\) [GetInterfaces](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/netinfo.go#L42)
+### func \(\*Netinfo\) [GetInterfaces](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/netinfo.go#L42>)
 
 ```go
 func (n *Netinfo) GetInterfaces() ([]InterfaceResult, error)
 ```
 
-GetInterfaces retrieves non\-loopback, up network interfaces with name, IPv4,
-and MAC address.
+GetInterfaces retrieves non\-loopback, up network interfaces with name, IPv4, and MAC address.
 
 <a name="Provider"></a>
-
-## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L43-L52)
+## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L43-L52>)
 
 Provider implements the methods to interact with network interface information.
 
@@ -187,8 +171,7 @@ type Provider interface {
 ```
 
 <a name="RouteResult"></a>
-
-## type [RouteResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L33-L40)
+## type [RouteResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/netinfo/types.go#L33-L40>)
 
 RouteResult represents a network routing table entry.
 
@@ -203,4 +186,4 @@ type RouteResult struct {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

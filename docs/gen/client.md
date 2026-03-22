@@ -8,8 +8,7 @@ import "github.com/retr0h/osapi/pkg/sdk/client"
 
 Package client provides a Go SDK for the OSAPI REST API.
 
-Create a client with New\(\) and use the domain\-specific services to interact
-with the API:
+Create a client with New\(\) and use the domain\-specific services to interact with the API:
 
 ```
 client := client.New("http://localhost:8080", "your-jwt-token")
@@ -26,153 +25,154 @@ resp, err := client.Node.Exec(ctx, client.ExecRequest{
 
 ## Index
 
-- [type APIError](#APIError)
-  - [func \(e \*APIError\) Error\(\) string](#APIError.Error)
-- [type Agent](#Agent)
-- [type AgentJobResponse](#AgentJobResponse)
-- [type AgentList](#AgentList)
-- [type AgentService](#AgentService)
-  - [func \(s \*AgentService\) Drain\(ctx context.Context, hostname string\) \(\*Response\[MessageResponse\], error\)](#AgentService.Drain)
-  - [func \(s \*AgentService\) Get\(ctx context.Context, hostname string\) \(\*Response\[Agent\], error\)](#AgentService.Get)
-  - [func \(s \*AgentService\) List\(ctx context.Context\) \(\*Response\[AgentList\], error\)](#AgentService.List)
-  - [func \(s \*AgentService\) Undrain\(ctx context.Context, hostname string\) \(\*Response\[MessageResponse\], error\)](#AgentService.Undrain)
-- [type AgentState](#AgentState)
-- [type AgentStats](#AgentStats)
-- [type AgentSummary](#AgentSummary)
-- [type AuditEntry](#AuditEntry)
-- [type AuditList](#AuditList)
-- [type AuditService](#AuditService)
-  - [func \(s \*AuditService\) Export\(ctx context.Context\) \(\*Response\[AuditList\], error\)](#AuditService.Export)
-  - [func \(s \*AuditService\) Get\(ctx context.Context, id string\) \(\*Response\[AuditEntry\], error\)](#AuditService.Get)
-  - [func \(s \*AuditService\) List\(ctx context.Context, limit int, offset int\) \(\*Response\[AuditList\], error\)](#AuditService.List)
-- [type AuthError](#AuthError)
-  - [func \(e \*AuthError\) Unwrap\(\) error](#AuthError.Unwrap)
-- [type Client](#Client)
-  - [func New\(baseURL string, bearerToken string, opts ...Option\) \*Client](#New)
-- [type Collection](#Collection)
-  - [func \(c Collection\[T\]\) First\(\) \(T, bool\)](#Collection[T].First)
-- [type CommandResult](#CommandResult)
-- [type ComponentHealth](#ComponentHealth)
-- [type Condition](#Condition)
-- [type ConflictError](#ConflictError)
-  - [func \(e \*ConflictError\) Unwrap\(\) error](#ConflictError.Unwrap)
-- [type ConsumerDetail](#ConsumerDetail)
-- [type ConsumerStats](#ConsumerStats)
-- [type DNSConfig](#DNSConfig)
-- [type DNSUpdateResult](#DNSUpdateResult)
-- [type Disk](#Disk)
-- [type DiskResult](#DiskResult)
-- [type DockerActionResult](#DockerActionResult)
-- [type DockerCreateOpts](#DockerCreateOpts)
-- [type DockerDetailResult](#DockerDetailResult)
-- [type DockerExecOpts](#DockerExecOpts)
-- [type DockerExecResult](#DockerExecResult)
-- [type DockerListParams](#DockerListParams)
-- [type DockerListResult](#DockerListResult)
-- [type DockerPullOpts](#DockerPullOpts)
-- [type DockerPullResult](#DockerPullResult)
-- [type DockerRemoveParams](#DockerRemoveParams)
-- [type DockerResult](#DockerResult)
-- [type DockerService](#DockerService)
-  - [func \(s \*DockerService\) Create\(ctx context.Context, hostname string, opts DockerCreateOpts\) \(\*Response\[Collection\[DockerResult\]\], error\)](#DockerService.Create)
-  - [func \(s \*DockerService\) Exec\(ctx context.Context, hostname string, id string, opts DockerExecOpts\) \(\*Response\[Collection\[DockerExecResult\]\], error\)](#DockerService.Exec)
-  - [func \(s \*DockerService\) Inspect\(ctx context.Context, hostname string, id string\) \(\*Response\[Collection\[DockerDetailResult\]\], error\)](#DockerService.Inspect)
-  - [func \(s \*DockerService\) List\(ctx context.Context, hostname string, params \*DockerListParams\) \(\*Response\[Collection\[DockerListResult\]\], error\)](#DockerService.List)
-  - [func \(s \*DockerService\) Pull\(ctx context.Context, hostname string, opts DockerPullOpts\) \(\*Response\[Collection\[DockerPullResult\]\], error\)](#DockerService.Pull)
-  - [func \(s \*DockerService\) Remove\(ctx context.Context, hostname string, id string, params \*DockerRemoveParams\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](#DockerService.Remove)
-  - [func \(s \*DockerService\) Start\(ctx context.Context, hostname string, id string\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](#DockerService.Start)
-  - [func \(s \*DockerService\) Stop\(ctx context.Context, hostname string, id string, opts DockerStopOpts\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](#DockerService.Stop)
-- [type DockerStopOpts](#DockerStopOpts)
-- [type DockerSummaryItem](#DockerSummaryItem)
-- [type ExecRequest](#ExecRequest)
-- [type FileChanged](#FileChanged)
-- [type FileDelete](#FileDelete)
-- [type FileDeployOpts](#FileDeployOpts)
-- [type FileDeployResult](#FileDeployResult)
-- [type FileItem](#FileItem)
-- [type FileList](#FileList)
-- [type FileMetadata](#FileMetadata)
-- [type FileService](#FileService)
-  - [func \(s \*FileService\) Changed\(ctx context.Context, name string, file io.Reader\) \(\*Response\[FileChanged\], error\)](#FileService.Changed)
-  - [func \(s \*FileService\) Delete\(ctx context.Context, name string\) \(\*Response\[FileDelete\], error\)](#FileService.Delete)
-  - [func \(s \*FileService\) Get\(ctx context.Context, name string\) \(\*Response\[FileMetadata\], error\)](#FileService.Get)
-  - [func \(s \*FileService\) List\(ctx context.Context\) \(\*Response\[FileList\], error\)](#FileService.List)
-  - [func \(s \*FileService\) Upload\(ctx context.Context, name string, contentType string, file io.Reader, opts ...UploadOption\) \(\*Response\[FileUpload\], error\)](#FileService.Upload)
-- [type FileStatusResult](#FileStatusResult)
-- [type FileUpload](#FileUpload)
-- [type HealthService](#HealthService)
-  - [func \(s \*HealthService\) Liveness\(ctx context.Context\) \(\*Response\[HealthStatus\], error\)](#HealthService.Liveness)
-  - [func \(s \*HealthService\) Ready\(ctx context.Context\) \(\*Response\[ReadyStatus\], error\)](#HealthService.Ready)
-  - [func \(s \*HealthService\) Status\(ctx context.Context\) \(\*Response\[SystemStatus\], error\)](#HealthService.Status)
-- [type HealthStatus](#HealthStatus)
-- [type HostnameResult](#HostnameResult)
-- [type JobCreated](#JobCreated)
-- [type JobDetail](#JobDetail)
-- [type JobList](#JobList)
-- [type JobService](#JobService)
-  - [func \(s \*JobService\) Delete\(ctx context.Context, id string\) error](#JobService.Delete)
-  - [func \(s \*JobService\) Get\(ctx context.Context, id string\) \(\*Response\[JobDetail\], error\)](#JobService.Get)
-  - [func \(s \*JobService\) List\(ctx context.Context, params ListParams\) \(\*Response\[JobList\], error\)](#JobService.List)
-  - [func \(s \*JobService\) Retry\(ctx context.Context, id string, target string\) \(\*Response\[JobCreated\], error\)](#JobService.Retry)
-- [type JobStats](#JobStats)
-- [type KVBucketInfo](#KVBucketInfo)
-- [type ListParams](#ListParams)
-- [type LoadAverage](#LoadAverage)
-- [type LoadResult](#LoadResult)
-- [type Memory](#Memory)
-- [type MemoryResult](#MemoryResult)
-- [type MessageResponse](#MessageResponse)
-- [type MetricsService](#MetricsService)
-  - [func \(s \*MetricsService\) Get\(ctx context.Context\) \(string, error\)](#MetricsService.Get)
-- [type NATSInfo](#NATSInfo)
-- [type NetworkInterface](#NetworkInterface)
-- [type NodeService](#NodeService)
-  - [func \(s \*NodeService\) Disk\(ctx context.Context, target string\) \(\*Response\[Collection\[DiskResult\]\], error\)](#NodeService.Disk)
-  - [func \(s \*NodeService\) Exec\(ctx context.Context, req ExecRequest\) \(\*Response\[Collection\[CommandResult\]\], error\)](#NodeService.Exec)
-  - [func \(s \*NodeService\) FileDeploy\(ctx context.Context, req FileDeployOpts\) \(\*Response\[FileDeployResult\], error\)](#NodeService.FileDeploy)
-  - [func \(s \*NodeService\) FileStatus\(ctx context.Context, target string, path string\) \(\*Response\[FileStatusResult\], error\)](#NodeService.FileStatus)
-  - [func \(s \*NodeService\) GetDNS\(ctx context.Context, target string, interfaceName string\) \(\*Response\[Collection\[DNSConfig\]\], error\)](#NodeService.GetDNS)
-  - [func \(s \*NodeService\) Hostname\(ctx context.Context, target string\) \(\*Response\[Collection\[HostnameResult\]\], error\)](#NodeService.Hostname)
-  - [func \(s \*NodeService\) Load\(ctx context.Context, target string\) \(\*Response\[Collection\[LoadResult\]\], error\)](#NodeService.Load)
-  - [func \(s \*NodeService\) Memory\(ctx context.Context, target string\) \(\*Response\[Collection\[MemoryResult\]\], error\)](#NodeService.Memory)
-  - [func \(s \*NodeService\) OS\(ctx context.Context, target string\) \(\*Response\[Collection\[OSInfoResult\]\], error\)](#NodeService.OS)
-  - [func \(s \*NodeService\) Ping\(ctx context.Context, target string, address string\) \(\*Response\[Collection\[PingResult\]\], error\)](#NodeService.Ping)
-  - [func \(s \*NodeService\) Shell\(ctx context.Context, req ShellRequest\) \(\*Response\[Collection\[CommandResult\]\], error\)](#NodeService.Shell)
-  - [func \(s \*NodeService\) Status\(ctx context.Context, target string\) \(\*Response\[Collection\[NodeStatus\]\], error\)](#NodeService.Status)
-  - [func \(s \*NodeService\) UpdateDNS\(ctx context.Context, target string, interfaceName string, servers \[\]string, searchDomains \[\]string\) \(\*Response\[Collection\[DNSUpdateResult\]\], error\)](#NodeService.UpdateDNS)
-  - [func \(s \*NodeService\) Uptime\(ctx context.Context, target string\) \(\*Response\[Collection\[UptimeResult\]\], error\)](#NodeService.Uptime)
-- [type NodeStatus](#NodeStatus)
-- [type NotFoundError](#NotFoundError)
-  - [func \(e \*NotFoundError\) Unwrap\(\) error](#NotFoundError.Unwrap)
-- [type OSInfo](#OSInfo)
-- [type OSInfoResult](#OSInfoResult)
-- [type ObjectStoreInfo](#ObjectStoreInfo)
-- [type Option](#Option)
-  - [func WithHTTPTransport\(transport http.RoundTripper\) Option](#WithHTTPTransport)
-  - [func WithLogger\(logger \*slog.Logger\) Option](#WithLogger)
-- [type PingResult](#PingResult)
-- [type ReadyStatus](#ReadyStatus)
-- [type Response](#Response)
-  - [func NewResponse\[T any\]\(data T, rawJSON \[\]byte\) \*Response\[T\]](#NewResponse)
-  - [func \(r \*Response\[T\]\) RawJSON\(\) \[\]byte](#Response[T].RawJSON)
-- [type Route](#Route)
-- [type ServerError](#ServerError)
-  - [func \(e \*ServerError\) Unwrap\(\) error](#ServerError.Unwrap)
-- [type ShellRequest](#ShellRequest)
-- [type StreamInfo](#StreamInfo)
-- [type SystemStatus](#SystemStatus)
-- [type TimelineEvent](#TimelineEvent)
-- [type UnexpectedStatusError](#UnexpectedStatusError)
-  - [func \(e \*UnexpectedStatusError\) Unwrap\(\) error](#UnexpectedStatusError.Unwrap)
-- [type UploadOption](#UploadOption)
-  - [func WithForce\(\) UploadOption](#WithForce)
-- [type UptimeResult](#UptimeResult)
-- [type ValidationError](#ValidationError)
-  - [func \(e \*ValidationError\) Unwrap\(\) error](#ValidationError.Unwrap)
+- [type APIError](<#APIError>)
+  - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
+- [type Agent](<#Agent>)
+- [type AgentJobResponse](<#AgentJobResponse>)
+- [type AgentList](<#AgentList>)
+- [type AgentService](<#AgentService>)
+  - [func \(s \*AgentService\) Drain\(ctx context.Context, hostname string\) \(\*Response\[MessageResponse\], error\)](<#AgentService.Drain>)
+  - [func \(s \*AgentService\) Get\(ctx context.Context, hostname string\) \(\*Response\[Agent\], error\)](<#AgentService.Get>)
+  - [func \(s \*AgentService\) List\(ctx context.Context\) \(\*Response\[AgentList\], error\)](<#AgentService.List>)
+  - [func \(s \*AgentService\) Undrain\(ctx context.Context, hostname string\) \(\*Response\[MessageResponse\], error\)](<#AgentService.Undrain>)
+- [type AgentState](<#AgentState>)
+- [type AgentStats](<#AgentStats>)
+- [type AgentSummary](<#AgentSummary>)
+- [type AuditEntry](<#AuditEntry>)
+- [type AuditList](<#AuditList>)
+- [type AuditService](<#AuditService>)
+  - [func \(s \*AuditService\) Export\(ctx context.Context\) \(\*Response\[AuditList\], error\)](<#AuditService.Export>)
+  - [func \(s \*AuditService\) Get\(ctx context.Context, id string\) \(\*Response\[AuditEntry\], error\)](<#AuditService.Get>)
+  - [func \(s \*AuditService\) List\(ctx context.Context, limit int, offset int\) \(\*Response\[AuditList\], error\)](<#AuditService.List>)
+- [type AuthError](<#AuthError>)
+  - [func \(e \*AuthError\) Unwrap\(\) error](<#AuthError.Unwrap>)
+- [type Client](<#Client>)
+  - [func New\(baseURL string, bearerToken string, opts ...Option\) \*Client](<#New>)
+- [type Collection](<#Collection>)
+  - [func \(c Collection\[T\]\) First\(\) \(T, bool\)](<#Collection[T].First>)
+- [type CommandResult](<#CommandResult>)
+- [type ComponentHealth](<#ComponentHealth>)
+- [type Condition](<#Condition>)
+- [type ConflictError](<#ConflictError>)
+  - [func \(e \*ConflictError\) Unwrap\(\) error](<#ConflictError.Unwrap>)
+- [type ConsumerDetail](<#ConsumerDetail>)
+- [type ConsumerStats](<#ConsumerStats>)
+- [type DNSConfig](<#DNSConfig>)
+- [type DNSUpdateResult](<#DNSUpdateResult>)
+- [type Disk](<#Disk>)
+- [type DiskResult](<#DiskResult>)
+- [type DockerActionResult](<#DockerActionResult>)
+- [type DockerCreateOpts](<#DockerCreateOpts>)
+- [type DockerDetailResult](<#DockerDetailResult>)
+- [type DockerExecOpts](<#DockerExecOpts>)
+- [type DockerExecResult](<#DockerExecResult>)
+- [type DockerImageRemoveParams](<#DockerImageRemoveParams>)
+- [type DockerListParams](<#DockerListParams>)
+- [type DockerListResult](<#DockerListResult>)
+- [type DockerPullOpts](<#DockerPullOpts>)
+- [type DockerPullResult](<#DockerPullResult>)
+- [type DockerRemoveParams](<#DockerRemoveParams>)
+- [type DockerResult](<#DockerResult>)
+- [type DockerService](<#DockerService>)
+  - [func \(s \*DockerService\) Create\(ctx context.Context, hostname string, opts DockerCreateOpts\) \(\*Response\[Collection\[DockerResult\]\], error\)](<#DockerService.Create>)
+  - [func \(s \*DockerService\) Exec\(ctx context.Context, hostname string, id string, opts DockerExecOpts\) \(\*Response\[Collection\[DockerExecResult\]\], error\)](<#DockerService.Exec>)
+  - [func \(s \*DockerService\) ImageRemove\(ctx context.Context, hostname string, imageName string, params \*DockerImageRemoveParams\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](<#DockerService.ImageRemove>)
+  - [func \(s \*DockerService\) Inspect\(ctx context.Context, hostname string, id string\) \(\*Response\[Collection\[DockerDetailResult\]\], error\)](<#DockerService.Inspect>)
+  - [func \(s \*DockerService\) List\(ctx context.Context, hostname string, params \*DockerListParams\) \(\*Response\[Collection\[DockerListResult\]\], error\)](<#DockerService.List>)
+  - [func \(s \*DockerService\) Pull\(ctx context.Context, hostname string, opts DockerPullOpts\) \(\*Response\[Collection\[DockerPullResult\]\], error\)](<#DockerService.Pull>)
+  - [func \(s \*DockerService\) Remove\(ctx context.Context, hostname string, id string, params \*DockerRemoveParams\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](<#DockerService.Remove>)
+  - [func \(s \*DockerService\) Start\(ctx context.Context, hostname string, id string\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](<#DockerService.Start>)
+  - [func \(s \*DockerService\) Stop\(ctx context.Context, hostname string, id string, opts DockerStopOpts\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](<#DockerService.Stop>)
+- [type DockerStopOpts](<#DockerStopOpts>)
+- [type DockerSummaryItem](<#DockerSummaryItem>)
+- [type ExecRequest](<#ExecRequest>)
+- [type FileChanged](<#FileChanged>)
+- [type FileDelete](<#FileDelete>)
+- [type FileDeployOpts](<#FileDeployOpts>)
+- [type FileDeployResult](<#FileDeployResult>)
+- [type FileItem](<#FileItem>)
+- [type FileList](<#FileList>)
+- [type FileMetadata](<#FileMetadata>)
+- [type FileService](<#FileService>)
+  - [func \(s \*FileService\) Changed\(ctx context.Context, name string, file io.Reader\) \(\*Response\[FileChanged\], error\)](<#FileService.Changed>)
+  - [func \(s \*FileService\) Delete\(ctx context.Context, name string\) \(\*Response\[FileDelete\], error\)](<#FileService.Delete>)
+  - [func \(s \*FileService\) Get\(ctx context.Context, name string\) \(\*Response\[FileMetadata\], error\)](<#FileService.Get>)
+  - [func \(s \*FileService\) List\(ctx context.Context\) \(\*Response\[FileList\], error\)](<#FileService.List>)
+  - [func \(s \*FileService\) Upload\(ctx context.Context, name string, contentType string, file io.Reader, opts ...UploadOption\) \(\*Response\[FileUpload\], error\)](<#FileService.Upload>)
+- [type FileStatusResult](<#FileStatusResult>)
+- [type FileUpload](<#FileUpload>)
+- [type HealthService](<#HealthService>)
+  - [func \(s \*HealthService\) Liveness\(ctx context.Context\) \(\*Response\[HealthStatus\], error\)](<#HealthService.Liveness>)
+  - [func \(s \*HealthService\) Ready\(ctx context.Context\) \(\*Response\[ReadyStatus\], error\)](<#HealthService.Ready>)
+  - [func \(s \*HealthService\) Status\(ctx context.Context\) \(\*Response\[SystemStatus\], error\)](<#HealthService.Status>)
+- [type HealthStatus](<#HealthStatus>)
+- [type HostnameResult](<#HostnameResult>)
+- [type JobCreated](<#JobCreated>)
+- [type JobDetail](<#JobDetail>)
+- [type JobList](<#JobList>)
+- [type JobService](<#JobService>)
+  - [func \(s \*JobService\) Delete\(ctx context.Context, id string\) error](<#JobService.Delete>)
+  - [func \(s \*JobService\) Get\(ctx context.Context, id string\) \(\*Response\[JobDetail\], error\)](<#JobService.Get>)
+  - [func \(s \*JobService\) List\(ctx context.Context, params ListParams\) \(\*Response\[JobList\], error\)](<#JobService.List>)
+  - [func \(s \*JobService\) Retry\(ctx context.Context, id string, target string\) \(\*Response\[JobCreated\], error\)](<#JobService.Retry>)
+- [type JobStats](<#JobStats>)
+- [type KVBucketInfo](<#KVBucketInfo>)
+- [type ListParams](<#ListParams>)
+- [type LoadAverage](<#LoadAverage>)
+- [type LoadResult](<#LoadResult>)
+- [type Memory](<#Memory>)
+- [type MemoryResult](<#MemoryResult>)
+- [type MessageResponse](<#MessageResponse>)
+- [type NATSInfo](<#NATSInfo>)
+- [type NetworkInterface](<#NetworkInterface>)
+- [type NodeService](<#NodeService>)
+  - [func \(s \*NodeService\) Disk\(ctx context.Context, target string\) \(\*Response\[Collection\[DiskResult\]\], error\)](<#NodeService.Disk>)
+  - [func \(s \*NodeService\) Exec\(ctx context.Context, req ExecRequest\) \(\*Response\[Collection\[CommandResult\]\], error\)](<#NodeService.Exec>)
+  - [func \(s \*NodeService\) FileDeploy\(ctx context.Context, req FileDeployOpts\) \(\*Response\[FileDeployResult\], error\)](<#NodeService.FileDeploy>)
+  - [func \(s \*NodeService\) FileStatus\(ctx context.Context, target string, path string\) \(\*Response\[FileStatusResult\], error\)](<#NodeService.FileStatus>)
+  - [func \(s \*NodeService\) GetDNS\(ctx context.Context, target string, interfaceName string\) \(\*Response\[Collection\[DNSConfig\]\], error\)](<#NodeService.GetDNS>)
+  - [func \(s \*NodeService\) Hostname\(ctx context.Context, target string\) \(\*Response\[Collection\[HostnameResult\]\], error\)](<#NodeService.Hostname>)
+  - [func \(s \*NodeService\) Load\(ctx context.Context, target string\) \(\*Response\[Collection\[LoadResult\]\], error\)](<#NodeService.Load>)
+  - [func \(s \*NodeService\) Memory\(ctx context.Context, target string\) \(\*Response\[Collection\[MemoryResult\]\], error\)](<#NodeService.Memory>)
+  - [func \(s \*NodeService\) OS\(ctx context.Context, target string\) \(\*Response\[Collection\[OSInfoResult\]\], error\)](<#NodeService.OS>)
+  - [func \(s \*NodeService\) Ping\(ctx context.Context, target string, address string\) \(\*Response\[Collection\[PingResult\]\], error\)](<#NodeService.Ping>)
+  - [func \(s \*NodeService\) Shell\(ctx context.Context, req ShellRequest\) \(\*Response\[Collection\[CommandResult\]\], error\)](<#NodeService.Shell>)
+  - [func \(s \*NodeService\) Status\(ctx context.Context, target string\) \(\*Response\[Collection\[NodeStatus\]\], error\)](<#NodeService.Status>)
+  - [func \(s \*NodeService\) UpdateDNS\(ctx context.Context, target string, interfaceName string, servers \[\]string, searchDomains \[\]string\) \(\*Response\[Collection\[DNSUpdateResult\]\], error\)](<#NodeService.UpdateDNS>)
+  - [func \(s \*NodeService\) Uptime\(ctx context.Context, target string\) \(\*Response\[Collection\[UptimeResult\]\], error\)](<#NodeService.Uptime>)
+- [type NodeStatus](<#NodeStatus>)
+- [type NotFoundError](<#NotFoundError>)
+  - [func \(e \*NotFoundError\) Unwrap\(\) error](<#NotFoundError.Unwrap>)
+- [type OSInfo](<#OSInfo>)
+- [type OSInfoResult](<#OSInfoResult>)
+- [type ObjectStoreInfo](<#ObjectStoreInfo>)
+- [type Option](<#Option>)
+  - [func WithHTTPTransport\(transport http.RoundTripper\) Option](<#WithHTTPTransport>)
+  - [func WithLogger\(logger \*slog.Logger\) Option](<#WithLogger>)
+- [type PingResult](<#PingResult>)
+- [type ReadyStatus](<#ReadyStatus>)
+- [type RegistryEntry](<#RegistryEntry>)
+- [type Response](<#Response>)
+  - [func NewResponse\[T any\]\(data T, rawJSON \[\]byte\) \*Response\[T\]](<#NewResponse>)
+  - [func \(r \*Response\[T\]\) RawJSON\(\) \[\]byte](<#Response[T].RawJSON>)
+- [type Route](<#Route>)
+- [type ServerError](<#ServerError>)
+  - [func \(e \*ServerError\) Unwrap\(\) error](<#ServerError.Unwrap>)
+- [type ShellRequest](<#ShellRequest>)
+- [type StreamInfo](<#StreamInfo>)
+- [type SystemStatus](<#SystemStatus>)
+- [type TimelineEvent](<#TimelineEvent>)
+- [type UnexpectedStatusError](<#UnexpectedStatusError>)
+  - [func \(e \*UnexpectedStatusError\) Unwrap\(\) error](<#UnexpectedStatusError.Unwrap>)
+- [type UploadOption](<#UploadOption>)
+  - [func WithForce\(\) UploadOption](<#WithForce>)
+- [type UptimeResult](<#UptimeResult>)
+- [type ValidationError](<#ValidationError>)
+  - [func \(e \*ValidationError\) Unwrap\(\) error](<#ValidationError.Unwrap>)
+
 
 <a name="APIError"></a>
-
-## type [APIError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L26-L29)
+## type [APIError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L26-L29>)
 
 APIError is the base error type for OSAPI API errors.
 
@@ -184,8 +184,7 @@ type APIError struct {
 ```
 
 <a name="APIError.Error"></a>
-
-### func \(\*APIError\) [Error](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L32)
+### func \(\*APIError\) [Error](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L32>)
 
 ```go
 func (e *APIError) Error() string
@@ -194,8 +193,7 @@ func (e *APIError) Error() string
 Error returns a formatted error string.
 
 <a name="Agent"></a>
-
-## type [Agent](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L30-L53)
+## type [Agent](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L30-L53>)
 
 Agent represents a registered OSAPI agent.
 
@@ -227,8 +225,7 @@ type Agent struct {
 ```
 
 <a name="AgentJobResponse"></a>
-
-## type [AgentJobResponse](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L59-L65)
+## type [AgentJobResponse](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L59-L65>)
 
 AgentJobResponse represents an agent's response data for a broadcast job.
 
@@ -243,8 +240,7 @@ type AgentJobResponse struct {
 ```
 
 <a name="AgentList"></a>
-
-## type [AgentList](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L64-L67)
+## type [AgentList](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L64-L67>)
 
 AgentList is a collection of agents.
 
@@ -256,8 +252,7 @@ type AgentList struct {
 ```
 
 <a name="AgentService"></a>
-
-## type [AgentService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L36-L38)
+## type [AgentService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L36-L38>)
 
 AgentService provides agent discovery and details operations.
 
@@ -268,19 +263,16 @@ type AgentService struct {
 ```
 
 <a name="AgentService.Drain"></a>
-
-### func \(\*AgentService\) [Drain](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L89-L92)
+### func \(\*AgentService\) [Drain](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L89-L92>)
 
 ```go
 func (s *AgentService) Drain(ctx context.Context, hostname string) (*Response[MessageResponse], error)
 ```
 
-Drain initiates draining of an agent, stopping it from accepting new jobs while
-allowing in\-flight jobs to complete.
+Drain initiates draining of an agent, stopping it from accepting new jobs while allowing in\-flight jobs to complete.
 
 <a name="AgentService.Get"></a>
-
-### func \(\*AgentService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L64-L67)
+### func \(\*AgentService\) [Get](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L64-L67>)
 
 ```go
 func (s *AgentService) Get(ctx context.Context, hostname string) (*Response[Agent], error)
@@ -289,8 +281,7 @@ func (s *AgentService) Get(ctx context.Context, hostname string) (*Response[Agen
 Get retrieves detailed information about a specific agent by hostname.
 
 <a name="AgentService.List"></a>
-
-### func \(\*AgentService\) [List](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L41-L43)
+### func \(\*AgentService\) [List](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L41-L43>)
 
 ```go
 func (s *AgentService) List(ctx context.Context) (*Response[AgentList], error)
@@ -299,8 +290,7 @@ func (s *AgentService) List(ctx context.Context) (*Response[AgentList], error)
 List retrieves all active agents.
 
 <a name="AgentService.Undrain"></a>
-
-### func \(\*AgentService\) [Undrain](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L117-L120)
+### func \(\*AgentService\) [Undrain](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L117-L120>)
 
 ```go
 func (s *AgentService) Undrain(ctx context.Context, hostname string) (*Response[MessageResponse], error)
@@ -309,8 +299,7 @@ func (s *AgentService) Undrain(ctx context.Context, hostname string) (*Response[
 Undrain resumes job acceptance on a drained agent.
 
 <a name="AgentState"></a>
-
-## type [AgentState](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L52-L56)
+## type [AgentState](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L52-L56>)
 
 AgentState represents an agent's processing state for a broadcast job.
 
@@ -323,8 +312,7 @@ type AgentState struct {
 ```
 
 <a name="AgentStats"></a>
-
-## type [AgentStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L66-L70)
+## type [AgentStats](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L79-L83>)
 
 AgentStats represents agent statistics from the health endpoint.
 
@@ -337,8 +325,7 @@ type AgentStats struct {
 ```
 
 <a name="AgentSummary"></a>
-
-## type [AgentSummary](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L73-L77)
+## type [AgentSummary](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L86-L90>)
 
 AgentSummary represents a summary of an agent from the health endpoint.
 
@@ -351,8 +338,7 @@ type AgentSummary struct {
 ```
 
 <a name="AuditEntry"></a>
-
-## type [AuditEntry](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit_types.go#L30-L41)
+## type [AuditEntry](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit_types.go#L30-L41>)
 
 AuditEntry represents a single audit log entry.
 
@@ -372,8 +358,7 @@ type AuditEntry struct {
 ```
 
 <a name="AuditList"></a>
-
-## type [AuditList](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit_types.go#L44-L47)
+## type [AuditList](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit_types.go#L44-L47>)
 
 AuditList is a paginated list of audit entries.
 
@@ -385,8 +370,7 @@ type AuditList struct {
 ```
 
 <a name="AuditService"></a>
-
-## type [AuditService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L33-L35)
+## type [AuditService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L33-L35>)
 
 AuditService provides audit log operations.
 
@@ -397,8 +381,7 @@ type AuditService struct {
 ```
 
 <a name="AuditService.Export"></a>
-
-### func \(\*AuditService\) [Export](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L109-L111)
+### func \(\*AuditService\) [Export](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L109-L111>)
 
 ```go
 func (s *AuditService) Export(ctx context.Context) (*Response[AuditList], error)
@@ -407,8 +390,7 @@ func (s *AuditService) Export(ctx context.Context) (*Response[AuditList], error)
 Export retrieves all audit log entries for export.
 
 <a name="AuditService.Get"></a>
-
-### func \(\*AuditService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L74-L77)
+### func \(\*AuditService\) [Get](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L74-L77>)
 
 ```go
 func (s *AuditService) Get(ctx context.Context, id string) (*Response[AuditEntry], error)
@@ -417,8 +399,7 @@ func (s *AuditService) Get(ctx context.Context, id string) (*Response[AuditEntry
 Get retrieves a single audit log entry by ID.
 
 <a name="AuditService.List"></a>
-
-### func \(\*AuditService\) [List](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L38-L42)
+### func \(\*AuditService\) [List](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/audit.go#L38-L42>)
 
 ```go
 func (s *AuditService) List(ctx context.Context, limit int, offset int) (*Response[AuditList], error)
@@ -427,8 +408,7 @@ func (s *AuditService) List(ctx context.Context, limit int, offset int) (*Respon
 List retrieves audit log entries with pagination.
 
 <a name="AuthError"></a>
-
-## type [AuthError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L41-L43)
+## type [AuthError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L41-L43>)
 
 AuthError represents authentication/authorization errors \(401, 403\).
 
@@ -439,8 +419,7 @@ type AuthError struct {
 ```
 
 <a name="AuthError.Unwrap"></a>
-
-### func \(\*AuthError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L46)
+### func \(\*AuthError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L46>)
 
 ```go
 func (e *AuthError) Unwrap() error
@@ -449,8 +428,7 @@ func (e *AuthError) Unwrap() error
 Unwrap returns the underlying APIError.
 
 <a name="Client"></a>
-
-## type [Client](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L46-L77)
+## type [Client](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L46-L74>)
 
 Client is the top\-level OSAPI SDK client. Use New\(\) to create one.
 
@@ -472,9 +450,6 @@ type Client struct {
     // Audit provides audit log operations (list, get, export).
     Audit *AuditService
 
-    // Metrics provides Prometheus metrics access.
-    Metrics *MetricsService
-
     // File provides file management operations (upload, list, get, delete).
     File *FileService
 
@@ -486,8 +461,7 @@ type Client struct {
 ```
 
 <a name="New"></a>
-
-### func [New](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L101-L105)
+### func [New](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L98-L102>)
 
 ```go
 func New(baseURL string, bearerToken string, opts ...Option) *Client
@@ -496,8 +470,7 @@ func New(baseURL string, bearerToken string, opts ...Option) *Client
 New creates an OSAPI SDK client.
 
 <a name="Collection"></a>
-
-## type [Collection](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L30-L33)
+## type [Collection](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L30-L33>)
 
 Collection is a generic wrapper for collection responses from node queries.
 
@@ -509,19 +482,16 @@ type Collection[T any] struct {
 ```
 
 <a name="Collection[T].First"></a>
-
-### func \(Collection\[T\]\) [First](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L37)
+### func \(Collection\[T\]\) [First](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L37>)
 
 ```go
 func (c Collection[T]) First() (T, bool)
 ```
 
-First returns the first result and true, or the zero value and false if the
-collection is empty.
+First returns the first result and true, or the zero value and false if the collection is empty.
 
 <a name="CommandResult"></a>
-
-## type [CommandResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L146-L154)
+## type [CommandResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L146-L154>)
 
 CommandResult represents command execution result from a single agent.
 
@@ -538,21 +508,20 @@ type CommandResult struct {
 ```
 
 <a name="ComponentHealth"></a>
-
-## type [ComponentHealth](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L54-L57)
+## type [ComponentHealth](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L66-L70>)
 
 ComponentHealth represents a component's health.
 
 ```go
 type ComponentHealth struct {
-    Status string `json:"status"`
-    Error  string `json:"error,omitempty"`
+    Status  string `json:"status"`
+    Error   string `json:"error,omitempty"`
+    Address string `json:"address,omitempty"`
 }
 ```
 
 <a name="Condition"></a>
-
-## type [Condition](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L56-L61)
+## type [Condition](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L56-L61>)
 
 Condition represents a node condition evaluated agent\-side.
 
@@ -566,8 +535,7 @@ type Condition struct {
 ```
 
 <a name="ConflictError"></a>
-
-## type [ConflictError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L81-L83)
+## type [ConflictError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L81-L83>)
 
 ConflictError represents conflict errors \(409\).
 
@@ -578,8 +546,7 @@ type ConflictError struct {
 ```
 
 <a name="ConflictError.Unwrap"></a>
-
-### func \(\*ConflictError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L86)
+### func \(\*ConflictError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L86>)
 
 ```go
 func (e *ConflictError) Unwrap() error
@@ -588,8 +555,7 @@ func (e *ConflictError) Unwrap() error
 Unwrap returns the underlying APIError.
 
 <a name="ConsumerDetail"></a>
-
-## type [ConsumerDetail](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L96-L101)
+## type [ConsumerDetail](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L109-L114>)
 
 ConsumerDetail represents a single consumer's details.
 
@@ -603,8 +569,7 @@ type ConsumerDetail struct {
 ```
 
 <a name="ConsumerStats"></a>
-
-## type [ConsumerStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L90-L93)
+## type [ConsumerStats](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L103-L106>)
 
 ConsumerStats represents JetStream consumer statistics.
 
@@ -616,8 +581,7 @@ type ConsumerStats struct {
 ```
 
 <a name="DNSConfig"></a>
-
-## type [DNSConfig](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L116-L122)
+## type [DNSConfig](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L116-L122>)
 
 DNSConfig represents DNS configuration from a single agent.
 
@@ -632,8 +596,7 @@ type DNSConfig struct {
 ```
 
 <a name="DNSUpdateResult"></a>
-
-## type [DNSUpdateResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L125-L130)
+## type [DNSUpdateResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L125-L130>)
 
 DNSUpdateResult represents DNS update result from a single agent.
 
@@ -647,8 +610,7 @@ type DNSUpdateResult struct {
 ```
 
 <a name="Disk"></a>
-
-## type [Disk](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L48-L53)
+## type [Disk](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L48-L53>)
 
 Disk represents disk usage information.
 
@@ -662,8 +624,7 @@ type Disk struct {
 ```
 
 <a name="DiskResult"></a>
-
-## type [DiskResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L76-L81)
+## type [DiskResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L76-L81>)
 
 DiskResult represents disk query result from a single agent.
 
@@ -677,11 +638,9 @@ type DiskResult struct {
 ```
 
 <a name="DockerActionResult"></a>
+## type [DockerActionResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L134-L140>)
 
-## type [DockerActionResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L128-L134)
-
-DockerActionResult represents a docker container lifecycle action result from a
-single agent.
+DockerActionResult represents a docker container lifecycle action result from a single agent.
 
 ```go
 type DockerActionResult struct {
@@ -694,8 +653,7 @@ type DockerActionResult struct {
 ```
 
 <a name="DockerCreateOpts"></a>
-
-## type [DockerCreateOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L28-L43)
+## type [DockerCreateOpts](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L28-L43>)
 
 DockerCreateOpts contains options for creating a container.
 
@@ -719,11 +677,9 @@ type DockerCreateOpts struct {
 ```
 
 <a name="DockerDetailResult"></a>
+## type [DockerDetailResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L117-L131>)
 
-## type [DockerDetailResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L111-L125)
-
-DockerDetailResult represents a docker container inspect result from a single
-agent.
+DockerDetailResult represents a docker container inspect result from a single agent.
 
 ```go
 type DockerDetailResult struct {
@@ -744,8 +700,7 @@ type DockerDetailResult struct {
 ```
 
 <a name="DockerExecOpts"></a>
-
-## type [DockerExecOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L72-L79)
+## type [DockerExecOpts](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L78-L85>)
 
 DockerExecOpts contains options for executing a command in a container.
 
@@ -761,8 +716,7 @@ type DockerExecOpts struct {
 ```
 
 <a name="DockerExecResult"></a>
-
-## type [DockerExecResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L137-L144)
+## type [DockerExecResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L143-L150>)
 
 DockerExecResult represents a docker container exec result from a single agent.
 
@@ -777,9 +731,20 @@ type DockerExecResult struct {
 }
 ```
 
-<a name="DockerListParams"></a>
+<a name="DockerImageRemoveParams"></a>
+## type [DockerImageRemoveParams](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L72-L75>)
 
-## type [DockerListParams](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L52-L57)
+DockerImageRemoveParams contains parameters for removing an image.
+
+```go
+type DockerImageRemoveParams struct {
+    // Force forces removal even if the image is in use.
+    Force bool
+}
+```
+
+<a name="DockerListParams"></a>
+## type [DockerListParams](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L52-L57>)
 
 DockerListParams contains parameters for listing containers.
 
@@ -793,8 +758,7 @@ type DockerListParams struct {
 ```
 
 <a name="DockerListResult"></a>
-
-## type [DockerListResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L94-L99)
+## type [DockerListResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L100-L105>)
 
 DockerListResult represents a docker container list result from a single agent.
 
@@ -808,8 +772,7 @@ type DockerListResult struct {
 ```
 
 <a name="DockerPullOpts"></a>
-
-## type [DockerPullOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L66-L69)
+## type [DockerPullOpts](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L66-L69>)
 
 DockerPullOpts contains options for pulling an image.
 
@@ -821,8 +784,7 @@ type DockerPullOpts struct {
 ```
 
 <a name="DockerPullResult"></a>
-
-## type [DockerPullResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L147-L154)
+## type [DockerPullResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L153-L160>)
 
 DockerPullResult represents a docker image pull result from a single agent.
 
@@ -838,8 +800,7 @@ type DockerPullResult struct {
 ```
 
 <a name="DockerRemoveParams"></a>
-
-## type [DockerRemoveParams](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L60-L63)
+## type [DockerRemoveParams](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L60-L63>)
 
 DockerRemoveParams contains parameters for removing a container.
 
@@ -851,8 +812,7 @@ type DockerRemoveParams struct {
 ```
 
 <a name="DockerResult"></a>
-
-## type [DockerResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L82-L91)
+## type [DockerResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L88-L97>)
 
 DockerResult represents a docker container create result from a single agent.
 
@@ -870,8 +830,7 @@ type DockerResult struct {
 ```
 
 <a name="DockerService"></a>
-
-## type [DockerService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L31-L33)
+## type [DockerService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L31-L33>)
 
 DockerService provides Docker container management operations.
 
@@ -882,8 +841,7 @@ type DockerService struct {
 ```
 
 <a name="DockerService.Create"></a>
-
-### func \(\*DockerService\) [Create](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L36-L40)
+### func \(\*DockerService\) [Create](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L36-L40>)
 
 ```go
 func (s *DockerService) Create(ctx context.Context, hostname string, opts DockerCreateOpts) (*Response[Collection[DockerResult]], error)
@@ -892,8 +850,7 @@ func (s *DockerService) Create(ctx context.Context, hostname string, opts Docker
 Create creates a new container on the target host.
 
 <a name="DockerService.Exec"></a>
-
-### func \(\*DockerService\) [Exec](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L274-L279)
+### func \(\*DockerService\) [Exec](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L274-L279>)
 
 ```go
 func (s *DockerService) Exec(ctx context.Context, hostname string, id string, opts DockerExecOpts) (*Response[Collection[DockerExecResult]], error)
@@ -901,9 +858,17 @@ func (s *DockerService) Exec(ctx context.Context, hostname string, id string, op
 
 Exec executes a command inside a running container on the target host.
 
-<a name="DockerService.Inspect"></a>
+<a name="DockerService.ImageRemove"></a>
+### func \(\*DockerService\) [ImageRemove](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L317-L322>)
 
-### func \(\*DockerService\) [Inspect](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L132-L136)
+```go
+func (s *DockerService) ImageRemove(ctx context.Context, hostname string, imageName string, params *DockerImageRemoveParams) (*Response[Collection[DockerActionResult]], error)
+```
+
+ImageRemove removes a container image from the target host.
+
+<a name="DockerService.Inspect"></a>
+### func \(\*DockerService\) [Inspect](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L132-L136>)
 
 ```go
 func (s *DockerService) Inspect(ctx context.Context, hostname string, id string) (*Response[Collection[DockerDetailResult]], error)
@@ -912,8 +877,7 @@ func (s *DockerService) Inspect(ctx context.Context, hostname string, id string)
 Inspect retrieves detailed information about a specific container.
 
 <a name="DockerService.List"></a>
-
-### func \(\*DockerService\) [List](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L89-L93)
+### func \(\*DockerService\) [List](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L89-L93>)
 
 ```go
 func (s *DockerService) List(ctx context.Context, hostname string, params *DockerListParams) (*Response[Collection[DockerListResult]], error)
@@ -922,8 +886,7 @@ func (s *DockerService) List(ctx context.Context, hostname string, params *Docke
 List lists containers on the target host, optionally filtered by state.
 
 <a name="DockerService.Pull"></a>
-
-### func \(\*DockerService\) [Pull](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L317-L321)
+### func \(\*DockerService\) [Pull](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L361-L365>)
 
 ```go
 func (s *DockerService) Pull(ctx context.Context, hostname string, opts DockerPullOpts) (*Response[Collection[DockerPullResult]], error)
@@ -932,8 +895,7 @@ func (s *DockerService) Pull(ctx context.Context, hostname string, opts DockerPu
 Pull pulls a container image on the target host.
 
 <a name="DockerService.Remove"></a>
-
-### func \(\*DockerService\) [Remove](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L234-L239)
+### func \(\*DockerService\) [Remove](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L234-L239>)
 
 ```go
 func (s *DockerService) Remove(ctx context.Context, hostname string, id string, params *DockerRemoveParams) (*Response[Collection[DockerActionResult]], error)
@@ -942,8 +904,7 @@ func (s *DockerService) Remove(ctx context.Context, hostname string, id string, 
 Remove removes a container from the target host.
 
 <a name="DockerService.Start"></a>
-
-### func \(\*DockerService\) [Start](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L164-L168)
+### func \(\*DockerService\) [Start](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L164-L168>)
 
 ```go
 func (s *DockerService) Start(ctx context.Context, hostname string, id string) (*Response[Collection[DockerActionResult]], error)
@@ -952,8 +913,7 @@ func (s *DockerService) Start(ctx context.Context, hostname string, id string) (
 Start starts a stopped container on the target host.
 
 <a name="DockerService.Stop"></a>
-
-### func \(\*DockerService\) [Stop](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L196-L201)
+### func \(\*DockerService\) [Stop](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L196-L201>)
 
 ```go
 func (s *DockerService) Stop(ctx context.Context, hostname string, id string, opts DockerStopOpts) (*Response[Collection[DockerActionResult]], error)
@@ -962,8 +922,7 @@ func (s *DockerService) Stop(ctx context.Context, hostname string, id string, op
 Stop stops a running container on the target host.
 
 <a name="DockerStopOpts"></a>
-
-## type [DockerStopOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L46-L49)
+## type [DockerStopOpts](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L46-L49>)
 
 DockerStopOpts contains options for stopping a container.
 
@@ -975,8 +934,7 @@ type DockerStopOpts struct {
 ```
 
 <a name="DockerSummaryItem"></a>
-
-## type [DockerSummaryItem](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L102-L108)
+## type [DockerSummaryItem](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L108-L114>)
 
 DockerSummaryItem represents a brief docker container summary.
 
@@ -991,8 +949,7 @@ type DockerSummaryItem struct {
 ```
 
 <a name="ExecRequest"></a>
-
-## type [ExecRequest](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L36-L52)
+## type [ExecRequest](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L36-L52>)
 
 ExecRequest contains parameters for direct command execution.
 
@@ -1017,8 +974,7 @@ type ExecRequest struct {
 ```
 
 <a name="FileChanged"></a>
-
-## type [FileChanged](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L63-L67)
+## type [FileChanged](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L63-L67>)
 
 FileChanged represents the result of a change detection check.
 
@@ -1031,8 +987,7 @@ type FileChanged struct {
 ```
 
 <a name="FileDelete"></a>
-
-## type [FileDelete](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L57-L60)
+## type [FileDelete](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L57-L60>)
 
 FileDelete represents the result of a file deletion.
 
@@ -1044,8 +999,7 @@ type FileDelete struct {
 ```
 
 <a name="FileDeployOpts"></a>
-
-## type [FileDeployOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L55-L80)
+## type [FileDeployOpts](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L55-L80>)
 
 FileDeployOpts contains parameters for file deployment.
 
@@ -1079,8 +1033,7 @@ type FileDeployOpts struct {
 ```
 
 <a name="FileDeployResult"></a>
-
-## type [FileDeployResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L70-L74)
+## type [FileDeployResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L70-L74>)
 
 FileDeployResult represents the result of a file deploy operation.
 
@@ -1093,8 +1046,7 @@ type FileDeployResult struct {
 ```
 
 <a name="FileItem"></a>
-
-## type [FileItem](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L35-L40)
+## type [FileItem](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L35-L40>)
 
 FileItem represents file metadata in a list.
 
@@ -1108,8 +1060,7 @@ type FileItem struct {
 ```
 
 <a name="FileList"></a>
-
-## type [FileList](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L43-L46)
+## type [FileList](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L43-L46>)
 
 FileList is a collection of files with total count.
 
@@ -1121,8 +1072,7 @@ type FileList struct {
 ```
 
 <a name="FileMetadata"></a>
-
-## type [FileMetadata](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L49-L54)
+## type [FileMetadata](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L49-L54>)
 
 FileMetadata represents metadata for a single file.
 
@@ -1136,8 +1086,7 @@ type FileMetadata struct {
 ```
 
 <a name="FileService"></a>
-
-## type [FileService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L49-L51)
+## type [FileService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L49-L51>)
 
 FileService provides file management operations for the Object Store.
 
@@ -1148,20 +1097,16 @@ type FileService struct {
 ```
 
 <a name="FileService.Changed"></a>
-
-### func \(\*FileService\) [Changed](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L236-L240)
+### func \(\*FileService\) [Changed](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L236-L240>)
 
 ```go
 func (s *FileService) Changed(ctx context.Context, name string, file io.Reader) (*Response[FileChanged], error)
 ```
 
-Changed computes the SHA\-256 of the provided content and compares it against
-the stored hash in the Object Store. Returns true if the content differs or the
-file does not exist yet.
+Changed computes the SHA\-256 of the provided content and compares it against the stored hash in the Object Store. Returns true if the content differs or the file does not exist yet.
 
 <a name="FileService.Delete"></a>
-
-### func \(\*FileService\) [Delete](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L203-L206)
+### func \(\*FileService\) [Delete](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L203-L206>)
 
 ```go
 func (s *FileService) Delete(ctx context.Context, name string) (*Response[FileDelete], error)
@@ -1170,8 +1115,7 @@ func (s *FileService) Delete(ctx context.Context, name string) (*Response[FileDe
 Delete removes a file from the Object Store.
 
 <a name="FileService.Get"></a>
-
-### func \(\*FileService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L172-L175)
+### func \(\*FileService\) [Get](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L172-L175>)
 
 ```go
 func (s *FileService) Get(ctx context.Context, name string) (*Response[FileMetadata], error)
@@ -1180,8 +1124,7 @@ func (s *FileService) Get(ctx context.Context, name string) (*Response[FileMetad
 Get retrieves metadata for a specific file in the Object Store.
 
 <a name="FileService.List"></a>
-
-### func \(\*FileService\) [List](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L144-L146)
+### func \(\*FileService\) [List](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L144-L146>)
 
 ```go
 func (s *FileService) List(ctx context.Context) (*Response[FileList], error)
@@ -1190,20 +1133,16 @@ func (s *FileService) List(ctx context.Context) (*Response[FileList], error)
 List retrieves all files stored in the Object Store.
 
 <a name="FileService.Upload"></a>
-
-### func \(\*FileService\) [Upload](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L57-L63)
+### func \(\*FileService\) [Upload](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L57-L63>)
 
 ```go
 func (s *FileService) Upload(ctx context.Context, name string, contentType string, file io.Reader, opts ...UploadOption) (*Response[FileUpload], error)
 ```
 
-Upload uploads a file to the Object Store via multipart/form\-data. By default,
-it computes SHA\-256 locally and compares against the stored hash to skip the
-upload when content is unchanged. Use WithForce to bypass this check.
+Upload uploads a file to the Object Store via multipart/form\-data. By default, it computes SHA\-256 locally and compares against the stored hash to skip the upload when content is unchanged. Use WithForce to bypass this check.
 
 <a name="FileStatusResult"></a>
-
-## type [FileStatusResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L77-L85)
+## type [FileStatusResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L77-L85>)
 
 FileStatusResult represents the result of a file status check.
 
@@ -1220,8 +1159,7 @@ type FileStatusResult struct {
 ```
 
 <a name="FileUpload"></a>
-
-## type [FileUpload](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L26-L32)
+## type [FileUpload](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file_types.go#L26-L32>)
 
 FileUpload represents a successfully uploaded file.
 
@@ -1236,8 +1174,7 @@ type FileUpload struct {
 ```
 
 <a name="HealthService"></a>
-
-## type [HealthService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L31-L33)
+## type [HealthService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L31-L33>)
 
 HealthService provides health check operations.
 
@@ -1248,8 +1185,7 @@ type HealthService struct {
 ```
 
 <a name="HealthService.Liveness"></a>
-
-### func \(\*HealthService\) [Liveness](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L36-L38)
+### func \(\*HealthService\) [Liveness](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L36-L38>)
 
 ```go
 func (s *HealthService) Liveness(ctx context.Context) (*Response[HealthStatus], error)
@@ -1258,31 +1194,25 @@ func (s *HealthService) Liveness(ctx context.Context) (*Response[HealthStatus], 
 Liveness checks if the API server process is alive.
 
 <a name="HealthService.Ready"></a>
-
-### func \(\*HealthService\) [Ready](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L57-L59)
+### func \(\*HealthService\) [Ready](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L57-L59>)
 
 ```go
 func (s *HealthService) Ready(ctx context.Context) (*Response[ReadyStatus], error)
 ```
 
-Ready checks if the API server and its dependencies are ready to serve traffic.
-A 503 response is treated as success with the ServiceUnavailable flag set.
+Ready checks if the API server and its dependencies are ready to serve traffic. A 503 response is treated as success with the ServiceUnavailable flag set.
 
 <a name="HealthService.Status"></a>
-
-### func \(\*HealthService\) [Status](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L95-L97)
+### func \(\*HealthService\) [Status](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health.go#L95-L97>)
 
 ```go
 func (s *HealthService) Status(ctx context.Context) (*Response[SystemStatus], error)
 ```
 
-Status returns detailed system status including component health, NATS info,
-stream stats, and job queue counts. Requires authentication. A 503 response is
-treated as success with the ServiceUnavailable flag set.
+Status returns detailed system status including component health, NATS info, stream stats, and job queue counts. Requires authentication. A 503 response is treated as success with the ServiceUnavailable flag set.
 
 <a name="HealthStatus"></a>
-
-## type [HealthStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L26-L28)
+## type [HealthStatus](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L26-L28>)
 
 HealthStatus represents a liveness check response.
 
@@ -1293,8 +1223,7 @@ type HealthStatus struct {
 ```
 
 <a name="HostnameResult"></a>
-
-## type [HostnameResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L56-L61)
+## type [HostnameResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L56-L61>)
 
 HostnameResult represents a hostname query result from a single agent.
 
@@ -1308,8 +1237,7 @@ type HostnameResult struct {
 ```
 
 <a name="JobCreated"></a>
-
-## type [JobCreated](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L28-L33)
+## type [JobCreated](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L28-L33>)
 
 JobCreated represents a newly created job response.
 
@@ -1323,8 +1251,7 @@ type JobCreated struct {
 ```
 
 <a name="JobDetail"></a>
-
-## type [JobDetail](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L36-L49)
+## type [JobDetail](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L36-L49>)
 
 JobDetail represents a job's full details.
 
@@ -1346,8 +1273,7 @@ type JobDetail struct {
 ```
 
 <a name="JobList"></a>
-
-## type [JobList](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L68-L72)
+## type [JobList](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job_types.go#L68-L72>)
 
 JobList is a paginated list of jobs.
 
@@ -1360,8 +1286,7 @@ type JobList struct {
 ```
 
 <a name="JobService"></a>
-
-## type [JobService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L33-L35)
+## type [JobService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L33-L35>)
 
 JobService provides job queue operations.
 
@@ -1372,8 +1297,7 @@ type JobService struct {
 ```
 
 <a name="JobService.Delete"></a>
-
-### func \(\*JobService\) [Delete](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L67-L70)
+### func \(\*JobService\) [Delete](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L67-L70>)
 
 ```go
 func (s *JobService) Delete(ctx context.Context, id string) error
@@ -1382,8 +1306,7 @@ func (s *JobService) Delete(ctx context.Context, id string) error
 Delete deletes a job by ID.
 
 <a name="JobService.Get"></a>
-
-### func \(\*JobService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L38-L41)
+### func \(\*JobService\) [Get](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L38-L41>)
 
 ```go
 func (s *JobService) Get(ctx context.Context, id string) (*Response[JobDetail], error)
@@ -1392,8 +1315,7 @@ func (s *JobService) Get(ctx context.Context, id string) (*Response[JobDetail], 
 Get retrieves a job by ID.
 
 <a name="JobService.List"></a>
-
-### func \(\*JobService\) [List](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L102-L105)
+### func \(\*JobService\) [List](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L102-L105>)
 
 ```go
 func (s *JobService) List(ctx context.Context, params ListParams) (*Response[JobList], error)
@@ -1402,8 +1324,7 @@ func (s *JobService) List(ctx context.Context, params ListParams) (*Response[Job
 List retrieves jobs, optionally filtered by status.
 
 <a name="JobService.Retry"></a>
-
-### func \(\*JobService\) [Retry](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L141-L145)
+### func \(\*JobService\) [Retry](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L141-L145>)
 
 ```go
 func (s *JobService) Retry(ctx context.Context, id string, target string) (*Response[JobCreated], error)
@@ -1412,8 +1333,7 @@ func (s *JobService) Retry(ctx context.Context, id string, target string) (*Resp
 Retry retries a failed job by ID, optionally on a different target.
 
 <a name="JobStats"></a>
-
-## type [JobStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L80-L87)
+## type [JobStats](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L93-L100>)
 
 JobStats represents job queue statistics from the health endpoint.
 
@@ -1429,8 +1349,7 @@ type JobStats struct {
 ```
 
 <a name="KVBucketInfo"></a>
-
-## type [KVBucketInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L112-L116)
+## type [KVBucketInfo](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L125-L129>)
 
 KVBucketInfo represents a KV bucket's info.
 
@@ -1443,8 +1362,7 @@ type KVBucketInfo struct {
 ```
 
 <a name="ListParams"></a>
-
-## type [ListParams](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L89-L99)
+## type [ListParams](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/job.go#L89-L99>)
 
 ListParams contains optional filters for listing jobs.
 
@@ -1463,8 +1381,7 @@ type ListParams struct {
 ```
 
 <a name="LoadAverage"></a>
-
-## type [LoadAverage](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L89-L93)
+## type [LoadAverage](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L89-L93>)
 
 LoadAverage represents system load averages.
 
@@ -1477,8 +1394,7 @@ type LoadAverage struct {
 ```
 
 <a name="LoadResult"></a>
-
-## type [LoadResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L92-L97)
+## type [LoadResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L92-L97>)
 
 LoadResult represents load average query result from a single agent.
 
@@ -1492,8 +1408,7 @@ type LoadResult struct {
 ```
 
 <a name="Memory"></a>
-
-## type [Memory](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L96-L100)
+## type [Memory](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L96-L100>)
 
 Memory represents memory usage information.
 
@@ -1506,8 +1421,7 @@ type Memory struct {
 ```
 
 <a name="MemoryResult"></a>
-
-## type [MemoryResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L84-L89)
+## type [MemoryResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L84-L89>)
 
 MemoryResult represents memory query result from a single agent.
 
@@ -1521,8 +1435,7 @@ type MemoryResult struct {
 ```
 
 <a name="MessageResponse"></a>
-
-## type [MessageResponse](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L31-L33)
+## type [MessageResponse](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent.go#L31-L33>)
 
 MessageResponse represents a simple message response from the API.
 
@@ -1532,31 +1445,8 @@ type MessageResponse struct {
 }
 ```
 
-<a name="MetricsService"></a>
-
-## type [MetricsService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/metrics.go#L34-L37)
-
-MetricsService provides Prometheus metrics access.
-
-```go
-type MetricsService struct {
-    // contains filtered or unexported fields
-}
-```
-
-<a name="MetricsService.Get"></a>
-
-### func \(\*MetricsService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/metrics.go#L40-L42)
-
-```go
-func (s *MetricsService) Get(ctx context.Context) (string, error)
-```
-
-Get fetches the raw Prometheus metrics text from the /metrics endpoint.
-
 <a name="NATSInfo"></a>
-
-## type [NATSInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L60-L63)
+## type [NATSInfo](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L73-L76>)
 
 NATSInfo represents NATS connection info.
 
@@ -1568,8 +1458,7 @@ type NATSInfo struct {
 ```
 
 <a name="NetworkInterface"></a>
-
-## type [NetworkInterface](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L70-L76)
+## type [NetworkInterface](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L70-L76>)
 
 NetworkInterface represents a network interface on an agent.
 
@@ -1584,8 +1473,7 @@ type NetworkInterface struct {
 ```
 
 <a name="NodeService"></a>
-
-## type [NodeService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L31-L33)
+## type [NodeService](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L31-L33>)
 
 NodeService provides node management operations.
 
@@ -1596,8 +1484,7 @@ type NodeService struct {
 ```
 
 <a name="NodeService.Disk"></a>
-
-### func \(\*NodeService\) [Disk](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L148-L151)
+### func \(\*NodeService\) [Disk](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L148-L151>)
 
 ```go
 func (s *NodeService) Disk(ctx context.Context, target string) (*Response[Collection[DiskResult]], error)
@@ -1606,8 +1493,7 @@ func (s *NodeService) Disk(ctx context.Context, target string) (*Response[Collec
 Disk retrieves disk usage information from the target host.
 
 <a name="NodeService.Exec"></a>
-
-### func \(\*NodeService\) [Exec](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L363-L366)
+### func \(\*NodeService\) [Exec](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L363-L366>)
 
 ```go
 func (s *NodeService) Exec(ctx context.Context, req ExecRequest) (*Response[Collection[CommandResult]], error)
@@ -1616,8 +1502,7 @@ func (s *NodeService) Exec(ctx context.Context, req ExecRequest) (*Response[Coll
 Exec executes a command directly without a shell interpreter.
 
 <a name="NodeService.FileDeploy"></a>
-
-### func \(\*NodeService\) [FileDeploy](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L440-L443)
+### func \(\*NodeService\) [FileDeploy](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L440-L443>)
 
 ```go
 func (s *NodeService) FileDeploy(ctx context.Context, req FileDeployOpts) (*Response[FileDeployResult], error)
@@ -1626,8 +1511,7 @@ func (s *NodeService) FileDeploy(ctx context.Context, req FileDeployOpts) (*Resp
 FileDeploy deploys a file from the Object Store to the target host.
 
 <a name="NodeService.FileStatus"></a>
-
-### func \(\*NodeService\) [FileStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L486-L490)
+### func \(\*NodeService\) [FileStatus](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L486-L490>)
 
 ```go
 func (s *NodeService) FileStatus(ctx context.Context, target string, path string) (*Response[FileStatusResult], error)
@@ -1636,8 +1520,7 @@ func (s *NodeService) FileStatus(ctx context.Context, target string, path string
 FileStatus checks the deployment status of a file on the target host.
 
 <a name="NodeService.GetDNS"></a>
-
-### func \(\*NodeService\) [GetDNS](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L269-L273)
+### func \(\*NodeService\) [GetDNS](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L269-L273>)
 
 ```go
 func (s *NodeService) GetDNS(ctx context.Context, target string, interfaceName string) (*Response[Collection[DNSConfig]], error)
@@ -1646,8 +1529,7 @@ func (s *NodeService) GetDNS(ctx context.Context, target string, interfaceName s
 GetDNS retrieves DNS configuration for a network interface on the target host.
 
 <a name="NodeService.Hostname"></a>
-
-### func \(\*NodeService\) [Hostname](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L124-L127)
+### func \(\*NodeService\) [Hostname](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L124-L127>)
 
 ```go
 func (s *NodeService) Hostname(ctx context.Context, target string) (*Response[Collection[HostnameResult]], error)
@@ -1656,8 +1538,7 @@ func (s *NodeService) Hostname(ctx context.Context, target string) (*Response[Co
 Hostname retrieves the hostname from the target host.
 
 <a name="NodeService.Load"></a>
-
-### func \(\*NodeService\) [Load](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L196-L199)
+### func \(\*NodeService\) [Load](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L196-L199>)
 
 ```go
 func (s *NodeService) Load(ctx context.Context, target string) (*Response[Collection[LoadResult]], error)
@@ -1666,8 +1547,7 @@ func (s *NodeService) Load(ctx context.Context, target string) (*Response[Collec
 Load retrieves load average information from the target host.
 
 <a name="NodeService.Memory"></a>
-
-### func \(\*NodeService\) [Memory](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L172-L175)
+### func \(\*NodeService\) [Memory](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L172-L175>)
 
 ```go
 func (s *NodeService) Memory(ctx context.Context, target string) (*Response[Collection[MemoryResult]], error)
@@ -1676,8 +1556,7 @@ func (s *NodeService) Memory(ctx context.Context, target string) (*Response[Coll
 Memory retrieves memory usage information from the target host.
 
 <a name="NodeService.OS"></a>
-
-### func \(\*NodeService\) [OS](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L220-L223)
+### func \(\*NodeService\) [OS](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L220-L223>)
 
 ```go
 func (s *NodeService) OS(ctx context.Context, target string) (*Response[Collection[OSInfoResult]], error)
@@ -1686,8 +1565,7 @@ func (s *NodeService) OS(ctx context.Context, target string) (*Response[Collecti
 OS retrieves operating system information from the target host.
 
 <a name="NodeService.Ping"></a>
-
-### func \(\*NodeService\) [Ping](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L334-L338)
+### func \(\*NodeService\) [Ping](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L334-L338>)
 
 ```go
 func (s *NodeService) Ping(ctx context.Context, target string, address string) (*Response[Collection[PingResult]], error)
@@ -1696,30 +1574,25 @@ func (s *NodeService) Ping(ctx context.Context, target string, address string) (
 Ping sends an ICMP ping to the specified address from the target host.
 
 <a name="NodeService.Shell"></a>
-
-### func \(\*NodeService\) [Shell](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L404-L407)
+### func \(\*NodeService\) [Shell](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L404-L407>)
 
 ```go
 func (s *NodeService) Shell(ctx context.Context, req ShellRequest) (*Response[Collection[CommandResult]], error)
 ```
 
-Shell executes a command through /bin/sh \-c with shell features \(pipes,
-redirects, variable expansion\).
+Shell executes a command through /bin/sh \-c with shell features \(pipes, redirects, variable expansion\).
 
 <a name="NodeService.Status"></a>
-
-### func \(\*NodeService\) [Status](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L100-L103)
+### func \(\*NodeService\) [Status](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L100-L103>)
 
 ```go
 func (s *NodeService) Status(ctx context.Context, target string) (*Response[Collection[NodeStatus]], error)
 ```
 
-Status retrieves node status \(OS info, disk, memory, load\) from the target
-host.
+Status retrieves node status \(OS info, disk, memory, load\) from the target host.
 
 <a name="NodeService.UpdateDNS"></a>
-
-### func \(\*NodeService\) [UpdateDNS](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L295-L301)
+### func \(\*NodeService\) [UpdateDNS](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L295-L301>)
 
 ```go
 func (s *NodeService) UpdateDNS(ctx context.Context, target string, interfaceName string, servers []string, searchDomains []string) (*Response[Collection[DNSUpdateResult]], error)
@@ -1728,8 +1601,7 @@ func (s *NodeService) UpdateDNS(ctx context.Context, target string, interfaceNam
 UpdateDNS updates DNS configuration for a network interface on the target host.
 
 <a name="NodeService.Uptime"></a>
-
-### func \(\*NodeService\) [Uptime](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L244-L247)
+### func \(\*NodeService\) [Uptime](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L244-L247>)
 
 ```go
 func (s *NodeService) Uptime(ctx context.Context, target string) (*Response[Collection[UptimeResult]], error)
@@ -1738,8 +1610,7 @@ func (s *NodeService) Uptime(ctx context.Context, target string) (*Response[Coll
 Uptime retrieves uptime information from the target host.
 
 <a name="NodeStatus"></a>
-
-## type [NodeStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L64-L73)
+## type [NodeStatus](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L64-L73>)
 
 NodeStatus represents full node status from a single agent.
 
@@ -1757,8 +1628,7 @@ type NodeStatus struct {
 ```
 
 <a name="NotFoundError"></a>
-
-## type [NotFoundError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L51-L53)
+## type [NotFoundError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L51-L53>)
 
 NotFoundError represents resource not found errors \(404\).
 
@@ -1769,8 +1639,7 @@ type NotFoundError struct {
 ```
 
 <a name="NotFoundError.Unwrap"></a>
-
-### func \(\*NotFoundError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L56)
+### func \(\*NotFoundError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L56>)
 
 ```go
 func (e *NotFoundError) Unwrap() error
@@ -1779,8 +1648,7 @@ func (e *NotFoundError) Unwrap() error
 Unwrap returns the underlying APIError.
 
 <a name="OSInfo"></a>
-
-## type [OSInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L103-L106)
+## type [OSInfo](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L103-L106>)
 
 OSInfo represents operating system information.
 
@@ -1792,8 +1660,7 @@ type OSInfo struct {
 ```
 
 <a name="OSInfoResult"></a>
-
-## type [OSInfoResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L100-L105)
+## type [OSInfoResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L100-L105>)
 
 OSInfoResult represents OS info query result from a single agent.
 
@@ -1807,8 +1674,7 @@ type OSInfoResult struct {
 ```
 
 <a name="ObjectStoreInfo"></a>
-
-## type [ObjectStoreInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L119-L122)
+## type [ObjectStoreInfo](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L132-L135>)
 
 ObjectStoreInfo represents an Object Store bucket's info.
 
@@ -1820,8 +1686,7 @@ type ObjectStoreInfo struct {
 ```
 
 <a name="Option"></a>
-
-## type [Option](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L80)
+## type [Option](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L77>)
 
 Option configures the Client.
 
@@ -1830,8 +1695,7 @@ type Option func(*Client)
 ```
 
 <a name="WithHTTPTransport"></a>
-
-### func [WithHTTPTransport](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L92-L94)
+### func [WithHTTPTransport](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L89-L91>)
 
 ```go
 func WithHTTPTransport(transport http.RoundTripper) Option
@@ -1840,8 +1704,7 @@ func WithHTTPTransport(transport http.RoundTripper) Option
 WithHTTPTransport sets a custom base HTTP transport.
 
 <a name="WithLogger"></a>
-
-### func [WithLogger](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L83-L85)
+### func [WithLogger](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L80-L82>)
 
 ```go
 func WithLogger(logger *slog.Logger) Option
@@ -1850,8 +1713,7 @@ func WithLogger(logger *slog.Logger) Option
 WithLogger sets a custom logger. Defaults to slog.Default\(\).
 
 <a name="PingResult"></a>
-
-## type [PingResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L133-L143)
+## type [PingResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L133-L143>)
 
 PingResult represents ping result from a single agent.
 
@@ -1870,8 +1732,7 @@ type PingResult struct {
 ```
 
 <a name="ReadyStatus"></a>
-
-## type [ReadyStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L31-L35)
+## type [ReadyStatus](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L31-L35>)
 
 ReadyStatus represents a readiness check response.
 
@@ -1883,9 +1744,25 @@ type ReadyStatus struct {
 }
 ```
 
-<a name="Response"></a>
+<a name="RegistryEntry"></a>
+## type [RegistryEntry](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L55-L63>)
 
-## type [Response](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L30-L33)
+RegistryEntry represents a unified component registration in the health registry.
+
+```go
+type RegistryEntry struct {
+    Type       string   `json:"type"`
+    Hostname   string   `json:"hostname"`
+    Status     string   `json:"status"`
+    Conditions []string `json:"conditions,omitempty"`
+    Age        string   `json:"age"`
+    CPUPercent float64  `json:"cpu_percent"`
+    MemBytes   int64    `json:"mem_bytes"`
+}
+```
+
+<a name="Response"></a>
+## type [Response](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L30-L33>)
 
 Response wraps a domain type with raw JSON for CLI \-\-json mode.
 
@@ -1897,8 +1774,7 @@ type Response[T any] struct {
 ```
 
 <a name="NewResponse"></a>
-
-### func [NewResponse](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L36-L39)
+### func [NewResponse](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L36-L39>)
 
 ```go
 func NewResponse[T any](data T, rawJSON []byte) *Response[T]
@@ -1907,8 +1783,7 @@ func NewResponse[T any](data T, rawJSON []byte) *Response[T]
 NewResponse creates a Response with the given data and raw JSON body.
 
 <a name="Response[T].RawJSON"></a>
-
-### func \(\*Response\[T\]\) [RawJSON](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L47)
+### func \(\*Response\[T\]\) [RawJSON](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/response.go#L47>)
 
 ```go
 func (r *Response[T]) RawJSON() []byte
@@ -1917,8 +1792,7 @@ func (r *Response[T]) RawJSON() []byte
 RawJSON returns the raw HTTP response body.
 
 <a name="Route"></a>
-
-## type [Route](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L79-L86)
+## type [Route](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/agent_types.go#L79-L86>)
 
 Route represents a network routing table entry.
 
@@ -1934,8 +1808,7 @@ type Route struct {
 ```
 
 <a name="ServerError"></a>
-
-## type [ServerError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L71-L73)
+## type [ServerError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L71-L73>)
 
 ServerError represents internal server errors \(500\).
 
@@ -1946,8 +1819,7 @@ type ServerError struct {
 ```
 
 <a name="ServerError.Unwrap"></a>
-
-### func \(\*ServerError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L76)
+### func \(\*ServerError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L76>)
 
 ```go
 func (e *ServerError) Unwrap() error
@@ -1956,8 +1828,7 @@ func (e *ServerError) Unwrap() error
 Unwrap returns the underlying APIError.
 
 <a name="ShellRequest"></a>
-
-## type [ShellRequest](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L83-L96)
+## type [ShellRequest](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node.go#L83-L96>)
 
 ShellRequest contains parameters for shell command execution.
 
@@ -1979,8 +1850,7 @@ type ShellRequest struct {
 ```
 
 <a name="StreamInfo"></a>
-
-## type [StreamInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L104-L109)
+## type [StreamInfo](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L117-L122>)
 
 StreamInfo represents a JetStream stream's info.
 
@@ -1994,8 +1864,7 @@ type StreamInfo struct {
 ```
 
 <a name="SystemStatus"></a>
-
-## type [SystemStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L38-L51)
+## type [SystemStatus](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L38-L52>)
 
 SystemStatus represents detailed system status.
 
@@ -2013,15 +1882,14 @@ type SystemStatus struct {
     Streams            []StreamInfo               `json:"streams,omitempty"`
     KVBuckets          []KVBucketInfo             `json:"kv_buckets,omitempty"`
     ObjectStores       []ObjectStoreInfo          `json:"object_stores,omitempty"`
+    Registry           []RegistryEntry            `json:"registry,omitempty"`
 }
 ```
 
 <a name="TimelineEvent"></a>
+## type [TimelineEvent](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/types.go#L25-L31>)
 
-## type [TimelineEvent](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/types.go#L25-L31)
-
-TimelineEvent represents a lifecycle event. Used by both job timelines and agent
-state transition history.
+TimelineEvent represents a lifecycle event. Used by both job timelines and agent state transition history.
 
 ```go
 type TimelineEvent struct {
@@ -2034,8 +1902,7 @@ type TimelineEvent struct {
 ```
 
 <a name="UnexpectedStatusError"></a>
-
-## type [UnexpectedStatusError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L91-L93)
+## type [UnexpectedStatusError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L91-L93>)
 
 UnexpectedStatusError represents unexpected HTTP status codes.
 
@@ -2046,8 +1913,7 @@ type UnexpectedStatusError struct {
 ```
 
 <a name="UnexpectedStatusError.Unwrap"></a>
-
-### func \(\*UnexpectedStatusError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L96)
+### func \(\*UnexpectedStatusError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L96>)
 
 ```go
 func (e *UnexpectedStatusError) Unwrap() error
@@ -2056,8 +1922,7 @@ func (e *UnexpectedStatusError) Unwrap() error
 Unwrap returns the underlying APIError.
 
 <a name="UploadOption"></a>
-
-## type [UploadOption](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L36)
+## type [UploadOption](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L36>)
 
 UploadOption configures Upload behavior.
 
@@ -2066,19 +1931,16 @@ type UploadOption func(*uploadOptions)
 ```
 
 <a name="WithForce"></a>
-
-### func [WithForce](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L44)
+### func [WithForce](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/file.go#L44>)
 
 ```go
 func WithForce() UploadOption
 ```
 
-WithForce bypasses both SDK\-side pre\-check and server\-side digest check. The
-file is always uploaded and changed is always true.
+WithForce bypasses both SDK\-side pre\-check and server\-side digest check. The file is always uploaded and changed is always true.
 
 <a name="UptimeResult"></a>
-
-## type [UptimeResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L108-L113)
+## type [UptimeResult](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/node_types.go#L108-L113>)
 
 UptimeResult represents uptime query result from a single agent.
 
@@ -2092,8 +1954,7 @@ type UptimeResult struct {
 ```
 
 <a name="ValidationError"></a>
-
-## type [ValidationError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L61-L63)
+## type [ValidationError](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L61-L63>)
 
 ValidationError represents validation errors \(400\).
 
@@ -2104,8 +1965,7 @@ type ValidationError struct {
 ```
 
 <a name="ValidationError.Unwrap"></a>
-
-### func \(\*ValidationError\) [Unwrap](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L66)
+### func \(\*ValidationError\) [Unwrap](<https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/errors.go#L66>)
 
 ```go
 func (e *ValidationError) Unwrap() error
@@ -2113,4 +1973,4 @@ func (e *ValidationError) Unwrap() error
 
 Unwrap returns the underlying APIError.
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

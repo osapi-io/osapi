@@ -34,13 +34,12 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/messaging"
 )
 
 // Client provides methods for publishing job requests and retrieving responses.
 type Client struct {
 	logger     *slog.Logger
-	natsClient messaging.NATSClient
+	natsClient NATSClient
 	kv         jetstream.KeyValue
 	registryKV jetstream.KeyValue
 	factsKV    jetstream.KeyValue
@@ -72,7 +71,7 @@ type Options struct {
 // New creates a new jobs client using an existing NATS client.
 func New(
 	logger *slog.Logger,
-	natsClient messaging.NATSClient,
+	natsClient NATSClient,
 	opts *Options,
 ) (*Client, error) {
 	if opts == nil {

@@ -44,7 +44,6 @@ import (
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/provider/process"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/validation"
@@ -80,7 +79,7 @@ type ServerManager interface {
 // natsBundle holds the NATS connection, job client, and KV handles created
 // by connectNATSBundle.
 type natsBundle struct {
-	nc            messaging.NATSClient
+	nc            NATSClient
 	jobClient     jobclient.JobClient
 	jobsKV        jetstream.KeyValue
 	registryKV    jetstream.KeyValue
@@ -159,7 +158,7 @@ func connectNATSBundle(
 	namespace string,
 	streamName string,
 ) *natsBundle {
-	var nc messaging.NATSClient = natsclient.New(log, &natsclient.Options{
+	var nc NATSClient = natsclient.New(log, &natsclient.Options{
 		Host: connCfg.Host,
 		Port: connCfg.Port,
 		Auth: cli.BuildNATSAuthOptions(connCfg.Auth),
@@ -235,17 +234,12 @@ func connectNATSBundle(
 }
 
 func newHealthChecker(
-	nc messaging.NATSClient,
+	nc NATSClient,
 	jobsKV jetstream.KeyValue,
 ) *health.NATSChecker {
 	return &health.NATSChecker{
 		NATSCheck: func() error {
-			natsConn, ok := nc.(*natsclient.Client)
-			if !ok || natsConn.NC == nil {
-				return fmt.Errorf("nats client unavailable")
-			}
-
-			if natsConn.NC.ConnectedUrl() == "" {
+			if nc.ConnectedURL() == "" {
 				return fmt.Errorf("nats not connected")
 			}
 
@@ -298,7 +292,7 @@ func configuredObjectBuckets(namespace string) []string {
 }
 
 func newMetricsProvider(
-	nc messaging.NATSClient,
+	nc NATSClient,
 	streamName string,
 	kvBuckets []string,
 	objBuckets []string,
@@ -307,21 +301,15 @@ func newMetricsProvider(
 ) *health.ClosureMetricsProvider {
 	return &health.ClosureMetricsProvider{
 		NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
-			natsConn, ok := nc.(*natsclient.Client)
-			if !ok || natsConn.NC == nil {
+			url := nc.ConnectedURL()
+			if url == "" {
 				return nil, fmt.Errorf("NATS client unavailable")
 			}
 
-			metrics := &health.NATSMetrics{
-				URL: natsConn.NC.ConnectedUrl(),
-			}
-
-			if wrapper, ok := natsConn.NC.(*natsclient.NATSConnWrapper); ok &&
-				wrapper.Conn != nil {
-				metrics.Version = wrapper.Conn.ConnectedServerVersion()
-			}
-
-			return metrics, nil
+			return &health.NATSMetrics{
+				URL:     url,
+				Version: nc.ConnectedServerVersion(),
+			}, nil
 		},
 		StreamInfoFn: func(fnCtx context.Context) ([]health.StreamMetrics, error) {
 			info, err := nc.GetStreamInfo(fnCtx, streamName)
@@ -339,14 +327,9 @@ func newMetricsProvider(
 			}, nil
 		},
 		KVInfoFn: func(fnCtx context.Context) ([]health.KVMetrics, error) {
-			natsConn, ok := nc.(*natsclient.Client)
-			if !ok || natsConn.ExtJS == nil {
-				return nil, fmt.Errorf("jetstream client unavailable")
-			}
-
 			results := make([]health.KVMetrics, 0, len(kvBuckets))
 			for _, name := range kvBuckets {
-				kv, err := natsConn.ExtJS.KeyValue(fnCtx, name)
+				kv, err := nc.KeyValue(fnCtx, name)
 				if err != nil {
 					continue
 				}
@@ -364,14 +347,9 @@ func newMetricsProvider(
 			return results, nil
 		},
 		ObjectStoreInfoFn: func(fnCtx context.Context) ([]health.ObjectStoreMetrics, error) {
-			natsConn, ok := nc.(*natsclient.Client)
-			if !ok || natsConn.ExtJS == nil {
-				return nil, fmt.Errorf("jetstream client unavailable")
-			}
-
 			results := make([]health.ObjectStoreMetrics, 0, len(objBuckets))
 			for _, name := range objBuckets {
-				obj, err := natsConn.ExtJS.ObjectStore(fnCtx, name)
+				obj, err := nc.ObjectStore(fnCtx, name)
 				if err != nil {
 					continue
 				}
@@ -388,12 +366,7 @@ func newMetricsProvider(
 			return results, nil
 		},
 		ConsumerStatsFn: func(fnCtx context.Context) (*health.ConsumerMetrics, error) {
-			natsConn, ok := nc.(*natsclient.Client)
-			if !ok || natsConn.ExtJS == nil {
-				return nil, fmt.Errorf("jetstream client unavailable")
-			}
-
-			stream, err := natsConn.ExtJS.Stream(fnCtx, streamName)
+			stream, err := nc.Stream(fnCtx, streamName)
 			if err != nil {
 				return nil, fmt.Errorf("stream: %w", err)
 			}
@@ -590,7 +563,7 @@ func subsystemStatuses(
 func createAuditStore(
 	ctx context.Context,
 	log *slog.Logger,
-	nc messaging.NATSClient,
+	nc NATSClient,
 	namespace string,
 ) (audit.Store, []api.Option) {
 	if appConfig.NATS.Audit.Bucket == "" {

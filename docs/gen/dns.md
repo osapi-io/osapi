@@ -10,25 +10,25 @@ Package dns provides DNS configuration management.
 
 ## Index
 
-- [type Darwin](#Darwin)
-  - [func NewDarwinProvider\(logger \*slog.Logger, em exec.Manager\) \*Darwin](#NewDarwinProvider)
-  - [func \(d \*Darwin\) GetResolvConfByInterface\(interfaceName string\) \(\*GetResult, error\)](#Darwin.GetResolvConfByInterface)
-  - [func \(d \*Darwin\) UpdateResolvConfByInterface\(servers \[\]string, searchDomains \[\]string, interfaceName string\) \(\*UpdateResult, error\)](#Darwin.UpdateResolvConfByInterface)
-- [type GetResult](#GetResult)
-- [type Linux](#Linux)
-  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
-  - [func \(l \*Linux\) GetResolvConfByInterface\(\_ string\) \(\*GetResult, error\)](#Linux.GetResolvConfByInterface)
-  - [func \(l \*Linux\) UpdateResolvConfByInterface\(\_ \[\]string, \_ \[\]string, \_ string\) \(\*UpdateResult, error\)](#Linux.UpdateResolvConfByInterface)
-- [type Provider](#Provider)
-- [type Ubuntu](#Ubuntu)
-  - [func NewUbuntuProvider\(logger \*slog.Logger, em exec.Manager\) \*Ubuntu](#NewUbuntuProvider)
-  - [func \(u \*Ubuntu\) GetResolvConfByInterface\(interfaceName string\) \(\*GetResult, error\)](#Ubuntu.GetResolvConfByInterface)
-  - [func \(u \*Ubuntu\) UpdateResolvConfByInterface\(servers \[\]string, searchDomains \[\]string, interfaceName string\) \(\*UpdateResult, error\)](#Ubuntu.UpdateResolvConfByInterface)
-- [type UpdateResult](#UpdateResult)
+- [type Darwin](<#Darwin>)
+  - [func NewDarwinProvider\(logger \*slog.Logger, em exec.Manager\) \*Darwin](<#NewDarwinProvider>)
+  - [func \(d \*Darwin\) GetResolvConfByInterface\(interfaceName string\) \(\*GetResult, error\)](<#Darwin.GetResolvConfByInterface>)
+  - [func \(d \*Darwin\) UpdateResolvConfByInterface\(servers \[\]string, searchDomains \[\]string, interfaceName string\) \(\*UpdateResult, error\)](<#Darwin.UpdateResolvConfByInterface>)
+- [type GetResult](<#GetResult>)
+- [type Linux](<#Linux>)
+  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
+  - [func \(l \*Linux\) GetResolvConfByInterface\(\_ string\) \(\*GetResult, error\)](<#Linux.GetResolvConfByInterface>)
+  - [func \(l \*Linux\) UpdateResolvConfByInterface\(\_ \[\]string, \_ \[\]string, \_ string\) \(\*UpdateResult, error\)](<#Linux.UpdateResolvConfByInterface>)
+- [type Provider](<#Provider>)
+- [type Ubuntu](<#Ubuntu>)
+  - [func NewUbuntuProvider\(logger \*slog.Logger, em exec.Manager\) \*Ubuntu](<#NewUbuntuProvider>)
+  - [func \(u \*Ubuntu\) GetResolvConfByInterface\(interfaceName string\) \(\*GetResult, error\)](<#Ubuntu.GetResolvConfByInterface>)
+  - [func \(u \*Ubuntu\) UpdateResolvConfByInterface\(servers \[\]string, searchDomains \[\]string, interfaceName string\) \(\*UpdateResult, error\)](<#Ubuntu.UpdateResolvConfByInterface>)
+- [type UpdateResult](<#UpdateResult>)
+
 
 <a name="Darwin"></a>
-
-## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin.go#L31-L36)
+## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin.go#L31-L36>)
 
 Darwin implements the DNS interface for Darwin \(macOS\).
 
@@ -40,8 +40,7 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-
-### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin.go#L39-L42)
+### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin.go#L39-L42>)
 
 ```go
 func NewDarwinProvider(logger *slog.Logger, em exec.Manager) *Darwin
@@ -50,19 +49,15 @@ func NewDarwinProvider(logger *slog.Logger, em exec.Manager) *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetResolvConfByInterface"></a>
-
-### func \(\*Darwin\) [GetResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin_get_by_interface_resolv_conf.go#L43-L45)
+### func \(\*Darwin\) [GetResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin_get_by_interface_resolv_conf.go#L43-L45>)
 
 ```go
 func (d *Darwin) GetResolvConfByInterface(interfaceName string) (*GetResult, error)
 ```
 
-GetResolvConfByInterface retrieves the DNS configuration for a specific network
-interface using the \`scutil \-\-dns\` command on macOS.
+GetResolvConfByInterface retrieves the DNS configuration for a specific network interface using the \`scutil \-\-dns\` command on macOS.
 
-It parses resolver blocks from scutil output, matching by interface name via the
-\`if_index\` field. If no resolver matches the requested interface, it returns
-an error.
+It parses resolver blocks from scutil output, matching by interface name via the \`if\_index\` field. If no resolver matches the requested interface, it returns an error.
 
 Example scutil \-\-dns output:
 
@@ -75,23 +70,18 @@ resolver #1
 ```
 
 <a name="Darwin.UpdateResolvConfByInterface"></a>
-
-### func \(\*Darwin\) [UpdateResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin_update_resolv_conf_by_interface.go#L37-L41)
+### func \(\*Darwin\) [UpdateResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/darwin_update_resolv_conf_by_interface.go#L37-L41>)
 
 ```go
 func (d *Darwin) UpdateResolvConfByInterface(servers []string, searchDomains []string, interfaceName string) (*UpdateResult, error)
 ```
 
-UpdateResolvConfByInterface updates the DNS configuration for a macOS network
-interface using \`networksetup\`. It resolves the interface name \(e.g., "en0"\)
-to a network service name \(e.g., "Wi\-Fi"\) via \`networksetup
-\-listallhardwareports\`, then applies DNS servers and search domains.
+UpdateResolvConfByInterface updates the DNS configuration for a macOS network interface using \`networksetup\`. It resolves the interface name \(e.g., "en0"\) to a network service name \(e.g., "Wi\-Fi"\) via \`networksetup \-listallhardwareports\`, then applies DNS servers and search domains.
 
 This command requires root privileges on macOS.
 
 <a name="GetResult"></a>
-
-## type [GetResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L39-L46)
+## type [GetResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L39-L46>)
 
 GetResult represents the DNS configuration with servers and search domains.
 
@@ -107,8 +97,7 @@ type GetResult struct {
 ```
 
 <a name="Linux"></a>
-
-## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux.go#L29-L31)
+## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux.go#L29-L31>)
 
 Linux implements the DNS interface for Linux.
 
@@ -119,8 +108,7 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-
-### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux.go#L34)
+### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux.go#L34>)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -129,34 +117,25 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetResolvConfByInterface"></a>
-
-### func \(\*Linux\) [GetResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux_get_by_interface_resolv_conf.go#L30-L32)
+### func \(\*Linux\) [GetResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux_get_by_interface_resolv_conf.go#L30-L32>)
 
 ```go
 func (l *Linux) GetResolvConfByInterface(_ string) (*GetResult, error)
 ```
 
-GetResolvConfByInterface retrieves the DNS configuration for a specific network
-interface using the \`resolvectl\` command. It returns a Config struct
-containing the DNS servers and search domains for the interface, and an error if
-something goes wrong.
+GetResolvConfByInterface retrieves the DNS configuration for a specific network interface using the \`resolvectl\` command. It returns a Config struct containing the DNS servers and search domains for the interface, and an error if something goes wrong.
 
 <a name="Linux.UpdateResolvConfByInterface"></a>
-
-### func \(\*Linux\) [UpdateResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux_update_resolv_conf_by_interface.go#L31-L35)
+### func \(\*Linux\) [UpdateResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/linux_update_resolv_conf_by_interface.go#L31-L35>)
 
 ```go
 func (l *Linux) UpdateResolvConfByInterface(_ []string, _ []string, _ string) (*UpdateResult, error)
 ```
 
-UpdateResolvConfByInterface updates the DNS configuration for a specific network
-interface using the \`resolvectl\` command. It applies new DNS servers and
-search domains if provided, while preserving existing settings for values that
-are not specified. The function returns an error if the operation fails.
+UpdateResolvConfByInterface updates the DNS configuration for a specific network interface using the \`resolvectl\` command. It applies new DNS servers and search domains if provided, while preserving existing settings for values that are not specified. The function returns an error if the operation fails.
 
 <a name="Provider"></a>
-
-## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L24-L36)
+## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L24-L36>)
 
 Provider implements the methods to interact with various DNS components.
 
@@ -177,8 +156,7 @@ type Provider interface {
 ```
 
 <a name="Ubuntu"></a>
-
-## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu.go#L31-L36)
+## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu.go#L31-L36>)
 
 Ubuntu implements the DNS interface for Ubuntu.
 
@@ -190,8 +168,7 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-
-### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu.go#L39-L42)
+### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu.go#L39-L42>)
 
 ```go
 func NewUbuntuProvider(logger *slog.Logger, em exec.Manager) *Ubuntu
@@ -200,82 +177,59 @@ func NewUbuntuProvider(logger *slog.Logger, em exec.Manager) *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.GetResolvConfByInterface"></a>
-
-### func \(\*Ubuntu\) [GetResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu_get_resolv_conf_by_interface.go#L53-L55)
+### func \(\*Ubuntu\) [GetResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu_get_resolv_conf_by_interface.go#L53-L55>)
 
 ```go
 func (u *Ubuntu) GetResolvConfByInterface(interfaceName string) (*GetResult, error)
 ```
 
-GetResolvConfByInterface retrieves the DNS configuration for a specific network
-interface using the \`resolvectl\` command. It returns a Config struct
-containing the DNS servers and search domains for the interface, and an error if
-something goes wrong.
+GetResolvConfByInterface retrieves the DNS configuration for a specific network interface using the \`resolvectl\` command. It returns a Config struct containing the DNS servers and search domains for the interface, and an error if something goes wrong.
 
 Cross\-platform considerations:
 
-- This function is designed specifically for Linux systems that utilize
-  \`systemd\-resolved\` for managing DNS configurations.
-- It relies on the \`resolvectl\` command, which is available on systems with
-  \`systemd\` version 237 or later. On non\-systemd systems or older versions of
-  Linux, this functionality may not be available.
+- This function is designed specifically for Linux systems that utilize \`systemd\-resolved\` for managing DNS configurations.
+- It relies on the \`resolvectl\` command, which is available on systems with \`systemd\` version 237 or later. On non\-systemd systems or older versions of Linux, this functionality may not be available.
 
 Notes about the implementation:
 
-- This function queries DNS information dynamically using \`resolvectl\`, which
-  supports per\-interface configurations and reflects the live state of DNS
-  settings managed by \`systemd\-resolved\`.
-- If no search domains are configured for the interface, the function defaults
-  to returning \`\["."\]\` to indicate the root domain.
+- This function queries DNS information dynamically using \`resolvectl\`, which supports per\-interface configurations and reflects the live state of DNS settings managed by \`systemd\-resolved\`.
+- If no search domains are configured for the interface, the function defaults to returning \`\["."\]\` to indicate the root domain.
 
 Requirements:
 
 - The \`resolvectl\` command must be installed and available in the system path.
-- The caller must have sufficient privileges to query network settings for the
-  specified interface.
+- The caller must have sufficient privileges to query network settings for the specified interface.
 
 See \`systemd\-resolved.service\(8\)\` manual page for further information.
 
 <a name="Ubuntu.UpdateResolvConfByInterface"></a>
-
-### func \(\*Ubuntu\) [UpdateResolvConfByInterface](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu_update_resolv_conf_by_interface.go#L55-L59)
+### func \(\*Ubuntu\) [UpdateResolvConfByInterface](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/ubuntu_update_resolv_conf_by_interface.go#L55-L59>)
 
 ```go
 func (u *Ubuntu) UpdateResolvConfByInterface(servers []string, searchDomains []string, interfaceName string) (*UpdateResult, error)
 ```
 
-UpdateResolvConfByInterface updates the DNS configuration for a specific network
-interface using the \`resolvectl\` command. It applies new DNS servers and
-search domains if provided, while preserving existing settings for values that
-are not specified. The function returns an error if the operation fails.
+UpdateResolvConfByInterface updates the DNS configuration for a specific network interface using the \`resolvectl\` command. It applies new DNS servers and search domains if provided, while preserving existing settings for values that are not specified. The function returns an error if the operation fails.
 
 Cross\-platform considerations:
 
-- This function is designed specifically for Linux systems that utilize
-  \`systemd\-resolved\` for managing DNS configurations.
-- It relies on the \`resolvectl\` command, which is available on systems with
-  \`systemd\` version 237 or later. On non\-systemd systems or older versions of
-  Linux, this functionality may not be available.
+- This function is designed specifically for Linux systems that utilize \`systemd\-resolved\` for managing DNS configurations.
+- It relies on the \`resolvectl\` command, which is available on systems with \`systemd\` version 237 or later. On non\-systemd systems or older versions of Linux, this functionality may not be available.
 
 Notes about the implementation:
 
-- This function queries DNS information dynamically using \`resolvectl\`, which
-  supports per\-interface configurations and reflects the live state of DNS
-  settings managed by \`systemd\-resolved\`.
-- If no search domains are configured for the interface, the function defaults
-  to returning \`\["."\]\` to indicate the root domain.
+- This function queries DNS information dynamically using \`resolvectl\`, which supports per\-interface configurations and reflects the live state of DNS settings managed by \`systemd\-resolved\`.
+- If no search domains are configured for the interface, the function defaults to returning \`\["."\]\` to indicate the root domain.
 
 Requirements:
 
 - The \`resolvectl\` command must be installed and available in the system path.
-- The caller must have sufficient privileges to query network settings for the
-  specified interface.
+- The caller must have sufficient privileges to query network settings for the specified interface.
 
 See \`systemd\-resolved.service\(8\)\` manual page for further information.
 
 <a name="UpdateResult"></a>
-
-## type [UpdateResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L49-L52)
+## type [UpdateResult](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/dns/types.go#L49-L52>)
 
 UpdateResult represents the outcome of a DNS update operation.
 
@@ -286,4 +240,4 @@ type UpdateResult struct {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

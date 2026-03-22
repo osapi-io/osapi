@@ -10,47 +10,47 @@ Package host provides system host information.
 
 ## Index
 
-- [type Darwin](#Darwin)
-  - [func NewDarwinProvider\(\) \*Darwin](#NewDarwinProvider)
-  - [func \(d \*Darwin\) GetArchitecture\(\) \(string, error\)](#Darwin.GetArchitecture)
-  - [func \(d \*Darwin\) GetCPUCount\(\) \(int, error\)](#Darwin.GetCPUCount)
-  - [func \(d \*Darwin\) GetFQDN\(\) \(string, error\)](#Darwin.GetFQDN)
-  - [func \(d \*Darwin\) GetHostname\(\) \(string, error\)](#Darwin.GetHostname)
-  - [func \(d \*Darwin\) GetKernelVersion\(\) \(string, error\)](#Darwin.GetKernelVersion)
-  - [func \(d \*Darwin\) GetOSInfo\(\) \(\*Result, error\)](#Darwin.GetOSInfo)
-  - [func \(d \*Darwin\) GetPackageManager\(\) \(string, error\)](#Darwin.GetPackageManager)
-  - [func \(d \*Darwin\) GetServiceManager\(\) \(string, error\)](#Darwin.GetServiceManager)
-  - [func \(d \*Darwin\) GetUptime\(\) \(time.Duration, error\)](#Darwin.GetUptime)
-- [type ExecNotFoundError](#ExecNotFoundError)
-  - [func \(e \*ExecNotFoundError\) Error\(\) string](#ExecNotFoundError.Error)
-- [type Linux](#Linux)
-  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
-  - [func \(l \*Linux\) GetArchitecture\(\) \(string, error\)](#Linux.GetArchitecture)
-  - [func \(l \*Linux\) GetCPUCount\(\) \(int, error\)](#Linux.GetCPUCount)
-  - [func \(l \*Linux\) GetFQDN\(\) \(string, error\)](#Linux.GetFQDN)
-  - [func \(dls \*Linux\) GetHostname\(\) \(string, error\)](#Linux.GetHostname)
-  - [func \(l \*Linux\) GetKernelVersion\(\) \(string, error\)](#Linux.GetKernelVersion)
-  - [func \(l \*Linux\) GetOSInfo\(\) \(\*Result, error\)](#Linux.GetOSInfo)
-  - [func \(l \*Linux\) GetPackageManager\(\) \(string, error\)](#Linux.GetPackageManager)
-  - [func \(l \*Linux\) GetServiceManager\(\) \(string, error\)](#Linux.GetServiceManager)
-  - [func \(l \*Linux\) GetUptime\(\) \(time.Duration, error\)](#Linux.GetUptime)
-- [type Provider](#Provider)
-- [type Result](#Result)
-- [type Ubuntu](#Ubuntu)
-  - [func NewUbuntuProvider\(\) \*Ubuntu](#NewUbuntuProvider)
-  - [func \(u \*Ubuntu\) GetArchitecture\(\) \(string, error\)](#Ubuntu.GetArchitecture)
-  - [func \(u \*Ubuntu\) GetCPUCount\(\) \(int, error\)](#Ubuntu.GetCPUCount)
-  - [func \(u \*Ubuntu\) GetFQDN\(\) \(string, error\)](#Ubuntu.GetFQDN)
-  - [func \(u \*Ubuntu\) GetHostname\(\) \(string, error\)](#Ubuntu.GetHostname)
-  - [func \(u \*Ubuntu\) GetKernelVersion\(\) \(string, error\)](#Ubuntu.GetKernelVersion)
-  - [func \(u \*Ubuntu\) GetOSInfo\(\) \(\*Result, error\)](#Ubuntu.GetOSInfo)
-  - [func \(u \*Ubuntu\) GetPackageManager\(\) \(string, error\)](#Ubuntu.GetPackageManager)
-  - [func \(u \*Ubuntu\) GetServiceManager\(\) \(string, error\)](#Ubuntu.GetServiceManager)
-  - [func \(u \*Ubuntu\) GetUptime\(\) \(time.Duration, error\)](#Ubuntu.GetUptime)
+- [type Darwin](<#Darwin>)
+  - [func NewDarwinProvider\(\) \*Darwin](<#NewDarwinProvider>)
+  - [func \(d \*Darwin\) GetArchitecture\(\) \(string, error\)](<#Darwin.GetArchitecture>)
+  - [func \(d \*Darwin\) GetCPUCount\(\) \(int, error\)](<#Darwin.GetCPUCount>)
+  - [func \(d \*Darwin\) GetFQDN\(\) \(string, error\)](<#Darwin.GetFQDN>)
+  - [func \(d \*Darwin\) GetHostname\(\) \(string, error\)](<#Darwin.GetHostname>)
+  - [func \(d \*Darwin\) GetKernelVersion\(\) \(string, error\)](<#Darwin.GetKernelVersion>)
+  - [func \(d \*Darwin\) GetOSInfo\(\) \(\*Result, error\)](<#Darwin.GetOSInfo>)
+  - [func \(d \*Darwin\) GetPackageManager\(\) \(string, error\)](<#Darwin.GetPackageManager>)
+  - [func \(d \*Darwin\) GetServiceManager\(\) \(string, error\)](<#Darwin.GetServiceManager>)
+  - [func \(d \*Darwin\) GetUptime\(\) \(time.Duration, error\)](<#Darwin.GetUptime>)
+- [type ExecNotFoundError](<#ExecNotFoundError>)
+  - [func \(e \*ExecNotFoundError\) Error\(\) string](<#ExecNotFoundError.Error>)
+- [type Linux](<#Linux>)
+  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
+  - [func \(l \*Linux\) GetArchitecture\(\) \(string, error\)](<#Linux.GetArchitecture>)
+  - [func \(l \*Linux\) GetCPUCount\(\) \(int, error\)](<#Linux.GetCPUCount>)
+  - [func \(l \*Linux\) GetFQDN\(\) \(string, error\)](<#Linux.GetFQDN>)
+  - [func \(dls \*Linux\) GetHostname\(\) \(string, error\)](<#Linux.GetHostname>)
+  - [func \(l \*Linux\) GetKernelVersion\(\) \(string, error\)](<#Linux.GetKernelVersion>)
+  - [func \(l \*Linux\) GetOSInfo\(\) \(\*Result, error\)](<#Linux.GetOSInfo>)
+  - [func \(l \*Linux\) GetPackageManager\(\) \(string, error\)](<#Linux.GetPackageManager>)
+  - [func \(l \*Linux\) GetServiceManager\(\) \(string, error\)](<#Linux.GetServiceManager>)
+  - [func \(l \*Linux\) GetUptime\(\) \(time.Duration, error\)](<#Linux.GetUptime>)
+- [type Provider](<#Provider>)
+- [type Result](<#Result>)
+- [type Ubuntu](<#Ubuntu>)
+  - [func NewUbuntuProvider\(\) \*Ubuntu](<#NewUbuntuProvider>)
+  - [func \(u \*Ubuntu\) GetArchitecture\(\) \(string, error\)](<#Ubuntu.GetArchitecture>)
+  - [func \(u \*Ubuntu\) GetCPUCount\(\) \(int, error\)](<#Ubuntu.GetCPUCount>)
+  - [func \(u \*Ubuntu\) GetFQDN\(\) \(string, error\)](<#Ubuntu.GetFQDN>)
+  - [func \(u \*Ubuntu\) GetHostname\(\) \(string, error\)](<#Ubuntu.GetHostname>)
+  - [func \(u \*Ubuntu\) GetKernelVersion\(\) \(string, error\)](<#Ubuntu.GetKernelVersion>)
+  - [func \(u \*Ubuntu\) GetOSInfo\(\) \(\*Result, error\)](<#Ubuntu.GetOSInfo>)
+  - [func \(u \*Ubuntu\) GetPackageManager\(\) \(string, error\)](<#Ubuntu.GetPackageManager>)
+  - [func \(u \*Ubuntu\) GetServiceManager\(\) \(string, error\)](<#Ubuntu.GetServiceManager>)
+  - [func \(u \*Ubuntu\) GetUptime\(\) \(time.Duration, error\)](<#Ubuntu.GetUptime>)
+
 
 <a name="Darwin"></a>
-
-## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin.go#L34-L42)
+## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin.go#L34-L42>)
 
 Darwin implements the Host interface for Darwin \(macOS\).
 
@@ -67,8 +67,7 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-
-### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin.go#L45)
+### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin.go#L45>)
 
 ```go
 func NewDarwinProvider() *Darwin
@@ -77,108 +76,88 @@ func NewDarwinProvider() *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.GetArchitecture"></a>
-
-### func \(\*Darwin\) [GetArchitecture](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_architecture.go#L26)
+### func \(\*Darwin\) [GetArchitecture](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_architecture.go#L26>)
 
 ```go
 func (d *Darwin) GetArchitecture() (string, error)
 ```
 
-GetArchitecture retrieves the system CPU architecture \(e.g., x86_64, arm64\).
-It uses gopsutil's KernelArch field which returns the native architecture as
-reported by \`uname \-m\`.
+GetArchitecture retrieves the system CPU architecture \(e.g., x86\_64, arm64\). It uses gopsutil's KernelArch field which returns the native architecture as reported by \`uname \-m\`.
 
 <a name="Darwin.GetCPUCount"></a>
-
-### func \(\*Darwin\) [GetCPUCount](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_cpu_count.go#L25)
+### func \(\*Darwin\) [GetCPUCount](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_cpu_count.go#L25>)
 
 ```go
 func (d *Darwin) GetCPUCount() (int, error)
 ```
 
-GetCPUCount retrieves the number of logical CPUs available to the process. It
-uses runtime.NumCPU under the hood.
+GetCPUCount retrieves the number of logical CPUs available to the process. It uses runtime.NumCPU under the hood.
 
 <a name="Darwin.GetFQDN"></a>
-
-### func \(\*Darwin\) [GetFQDN](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_fqdn.go#L29)
+### func \(\*Darwin\) [GetFQDN](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_fqdn.go#L29>)
 
 ```go
 func (d *Darwin) GetFQDN() (string, error)
 ```
 
-GetFQDN retrieves the fully qualified domain name of the system. It returns the
-hostname as reported by the operating system.
+GetFQDN retrieves the fully qualified domain name of the system. It returns the hostname as reported by the operating system.
 
 <a name="Darwin.GetHostname"></a>
-
-### func \(\*Darwin\) [GetHostname](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_hostname.go#L25)
+### func \(\*Darwin\) [GetHostname](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_hostname.go#L25>)
 
 ```go
 func (d *Darwin) GetHostname() (string, error)
 ```
 
-GetHostname retrieves the hostname of the system. It returns the hostname as a
-string, and an error if something goes wrong.
+GetHostname retrieves the hostname of the system. It returns the hostname as a string, and an error if something goes wrong.
 
 <a name="Darwin.GetKernelVersion"></a>
-
-### func \(\*Darwin\) [GetKernelVersion](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_kernel_version.go#L25)
+### func \(\*Darwin\) [GetKernelVersion](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_kernel_version.go#L25>)
 
 ```go
 func (d *Darwin) GetKernelVersion() (string, error)
 ```
 
-GetKernelVersion retrieves the running kernel version string. It uses gopsutil's
-KernelVersion field.
+GetKernelVersion retrieves the running kernel version string. It uses gopsutil's KernelVersion field.
 
 <a name="Darwin.GetOSInfo"></a>
-
-### func \(\*Darwin\) [GetOSInfo](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_os_info.go#L29)
+### func \(\*Darwin\) [GetOSInfo](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_os_info.go#L29>)
 
 ```go
 func (d *Darwin) GetOSInfo() (*Result, error)
 ```
 
-GetOSInfo retrieves information about the operating system, including the
-distribution name and version. It returns the
+GetOSInfo retrieves information about the operating system, including the distribution name and version. It returns the
 
 <a name="Darwin.GetPackageManager"></a>
-
-### func \(\*Darwin\) [GetPackageManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_package_manager.go#L25)
+### func \(\*Darwin\) [GetPackageManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_package_manager.go#L25>)
 
 ```go
 func (d *Darwin) GetPackageManager() (string, error)
 ```
 
-GetPackageManager detects the system's package manager. On macOS, it checks for
-brew.
+GetPackageManager detects the system's package manager. On macOS, it checks for brew.
 
 <a name="Darwin.GetServiceManager"></a>
-
-### func \(\*Darwin\) [GetServiceManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_service_manager.go#L25)
+### func \(\*Darwin\) [GetServiceManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_service_manager.go#L25>)
 
 ```go
 func (d *Darwin) GetServiceManager() (string, error)
 ```
 
-GetServiceManager detects the system's service manager. On macOS, launchd is
-always the service manager.
+GetServiceManager detects the system's service manager. On macOS, launchd is always the service manager.
 
 <a name="Darwin.GetUptime"></a>
-
-### func \(\*Darwin\) [GetUptime](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_uptime.go#L29)
+### func \(\*Darwin\) [GetUptime](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/darwin_get_uptime.go#L29>)
 
 ```go
 func (d *Darwin) GetUptime() (time.Duration, error)
 ```
 
-GetUptime retrieves the system uptime. It returns the uptime as a time.Duration,
-and an error if something goes wrong.
+GetUptime retrieves the system uptime. It returns the uptime as a time.Duration, and an error if something goes wrong.
 
 <a name="ExecNotFoundError"></a>
-
-## type [ExecNotFoundError](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L56-L58)
+## type [ExecNotFoundError](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L56-L58>)
 
 ExecNotFoundError wraps exec.ErrNotFound for testability.
 
@@ -189,8 +168,7 @@ type ExecNotFoundError struct {
 ```
 
 <a name="ExecNotFoundError.Error"></a>
-
-### func \(\*ExecNotFoundError\) [Error](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L61)
+### func \(\*ExecNotFoundError\) [Error](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L61>)
 
 ```go
 func (e *ExecNotFoundError) Error() string
@@ -199,8 +177,7 @@ func (e *ExecNotFoundError) Error() string
 Error implements the error interface.
 
 <a name="Linux"></a>
-
-## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux.go#L29-L31)
+## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux.go#L29-L31>)
 
 Linux implements the Load interface for Linux.
 
@@ -211,8 +188,7 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-
-### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux.go#L34)
+### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux.go#L34>)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -221,107 +197,88 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.GetArchitecture"></a>
-
-### func \(\*Linux\) [GetArchitecture](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_architecture.go#L29)
+### func \(\*Linux\) [GetArchitecture](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_architecture.go#L29>)
 
 ```go
 func (l *Linux) GetArchitecture() (string, error)
 ```
 
-GetArchitecture retrieves the system CPU architecture. It returns an error
-because it is not implemented for LinuxProvider.
+GetArchitecture retrieves the system CPU architecture. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetCPUCount"></a>
-
-### func \(\*Linux\) [GetCPUCount](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_cpu_count.go#L29)
+### func \(\*Linux\) [GetCPUCount](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_cpu_count.go#L29>)
 
 ```go
 func (l *Linux) GetCPUCount() (int, error)
 ```
 
-GetCPUCount retrieves the number of logical CPUs available. It returns an error
-because it is not implemented for LinuxProvider.
+GetCPUCount retrieves the number of logical CPUs available. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetFQDN"></a>
-
-### func \(\*Linux\) [GetFQDN](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_fqdn.go#L29)
+### func \(\*Linux\) [GetFQDN](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_fqdn.go#L29>)
 
 ```go
 func (l *Linux) GetFQDN() (string, error)
 ```
 
-GetFQDN retrieves the fully qualified domain name of the system. It returns an
-error because it is not implemented for LinuxProvider.
+GetFQDN retrieves the fully qualified domain name of the system. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetHostname"></a>
-
-### func \(\*Linux\) [GetHostname](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_hostname.go#L29)
+### func \(\*Linux\) [GetHostname](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_hostname.go#L29>)
 
 ```go
 func (dls *Linux) GetHostname() (string, error)
 ```
 
-GetHostname retrieves the hostname of the system. It returns the hostname as a
-string, and an error if something goes wrong.
+GetHostname retrieves the hostname of the system. It returns the hostname as a string, and an error if something goes wrong.
 
 <a name="Linux.GetKernelVersion"></a>
-
-### func \(\*Linux\) [GetKernelVersion](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_kernel_version.go#L29)
+### func \(\*Linux\) [GetKernelVersion](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_kernel_version.go#L29>)
 
 ```go
 func (l *Linux) GetKernelVersion() (string, error)
 ```
 
-GetKernelVersion retrieves the running kernel version string. It returns an
-error because it is not implemented for LinuxProvider.
+GetKernelVersion retrieves the running kernel version string. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetOSInfo"></a>
-
-### func \(\*Linux\) [GetOSInfo](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_os_info.go#L29)
+### func \(\*Linux\) [GetOSInfo](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_os_info.go#L29>)
 
 ```go
 func (l *Linux) GetOSInfo() (*Result, error)
 ```
 
-GetOSInfo retrieves information about the operating system, including the
-distribution name and version. It returns the
+GetOSInfo retrieves information about the operating system, including the distribution name and version. It returns the
 
 <a name="Linux.GetPackageManager"></a>
-
-### func \(\*Linux\) [GetPackageManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_package_manager.go#L29)
+### func \(\*Linux\) [GetPackageManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_package_manager.go#L29>)
 
 ```go
 func (l *Linux) GetPackageManager() (string, error)
 ```
 
-GetPackageManager detects the system's package manager. It returns an error
-because it is not implemented for LinuxProvider.
+GetPackageManager detects the system's package manager. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetServiceManager"></a>
-
-### func \(\*Linux\) [GetServiceManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_service_manager.go#L29)
+### func \(\*Linux\) [GetServiceManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_service_manager.go#L29>)
 
 ```go
 func (l *Linux) GetServiceManager() (string, error)
 ```
 
-GetServiceManager detects the system's service manager. It returns an error
-because it is not implemented for LinuxProvider.
+GetServiceManager detects the system's service manager. It returns an error because it is not implemented for LinuxProvider.
 
 <a name="Linux.GetUptime"></a>
-
-### func \(\*Linux\) [GetUptime](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_uptime.go#L30)
+### func \(\*Linux\) [GetUptime](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/linux_get_uptime.go#L30>)
 
 ```go
 func (l *Linux) GetUptime() (time.Duration, error)
 ```
 
-GetUptime retrieves the system uptime. It returns the uptime as a time.Duration,
-and an error if something goes wrong.
+GetUptime retrieves the system uptime. It returns the uptime as a time.Duration, and an error if something goes wrong.
 
 <a name="Provider"></a>
-
-## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/types.go#L28-L48)
+## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/types.go#L28-L48>)
 
 Provider implements the methods to interact with various Host components.
 
@@ -350,8 +307,7 @@ type Provider interface {
 ```
 
 <a name="Result"></a>
-
-## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/types.go#L51-L58)
+## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/types.go#L51-L58>)
 
 Result represents the operating system information.
 
@@ -367,8 +323,7 @@ type Result struct {
 ```
 
 <a name="Ubuntu"></a>
-
-## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L34-L42)
+## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L34-L42>)
 
 Ubuntu implements the Mem interface for Ubuntu.
 
@@ -385,8 +340,7 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-
-### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L45)
+### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu.go#L45>)
 
 ```go
 func NewUbuntuProvider() *Ubuntu
@@ -395,103 +349,84 @@ func NewUbuntuProvider() *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.GetArchitecture"></a>
-
-### func \(\*Ubuntu\) [GetArchitecture](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_architecture.go#L26)
+### func \(\*Ubuntu\) [GetArchitecture](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_architecture.go#L26>)
 
 ```go
 func (u *Ubuntu) GetArchitecture() (string, error)
 ```
 
-GetArchitecture retrieves the system CPU architecture \(e.g., x86_64, arm64\).
-It uses gopsutil's KernelArch field which returns the native architecture as
-reported by \`uname \-m\`.
+GetArchitecture retrieves the system CPU architecture \(e.g., x86\_64, arm64\). It uses gopsutil's KernelArch field which returns the native architecture as reported by \`uname \-m\`.
 
 <a name="Ubuntu.GetCPUCount"></a>
-
-### func \(\*Ubuntu\) [GetCPUCount](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_cpu_count.go#L25)
+### func \(\*Ubuntu\) [GetCPUCount](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_cpu_count.go#L25>)
 
 ```go
 func (u *Ubuntu) GetCPUCount() (int, error)
 ```
 
-GetCPUCount retrieves the number of logical CPUs available to the process. It
-uses runtime.NumCPU under the hood.
+GetCPUCount retrieves the number of logical CPUs available to the process. It uses runtime.NumCPU under the hood.
 
 <a name="Ubuntu.GetFQDN"></a>
-
-### func \(\*Ubuntu\) [GetFQDN](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_fqdn.go#L29)
+### func \(\*Ubuntu\) [GetFQDN](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_fqdn.go#L29>)
 
 ```go
 func (u *Ubuntu) GetFQDN() (string, error)
 ```
 
-GetFQDN retrieves the fully qualified domain name of the system. It returns the
-hostname as reported by the operating system.
+GetFQDN retrieves the fully qualified domain name of the system. It returns the hostname as reported by the operating system.
 
 <a name="Ubuntu.GetHostname"></a>
-
-### func \(\*Ubuntu\) [GetHostname](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_hostname.go#L25)
+### func \(\*Ubuntu\) [GetHostname](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_hostname.go#L25>)
 
 ```go
 func (u *Ubuntu) GetHostname() (string, error)
 ```
 
-GetHostname retrieves the hostname of the system. It returns the hostname as a
-string, and an error if something goes wrong.
+GetHostname retrieves the hostname of the system. It returns the hostname as a string, and an error if something goes wrong.
 
 <a name="Ubuntu.GetKernelVersion"></a>
-
-### func \(\*Ubuntu\) [GetKernelVersion](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_kernel_version.go#L25)
+### func \(\*Ubuntu\) [GetKernelVersion](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_kernel_version.go#L25>)
 
 ```go
 func (u *Ubuntu) GetKernelVersion() (string, error)
 ```
 
-GetKernelVersion retrieves the running kernel version string. It uses gopsutil's
-KernelVersion field.
+GetKernelVersion retrieves the running kernel version string. It uses gopsutil's KernelVersion field.
 
 <a name="Ubuntu.GetOSInfo"></a>
-
-### func \(\*Ubuntu\) [GetOSInfo](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_os_info.go#L29)
+### func \(\*Ubuntu\) [GetOSInfo](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_os_info.go#L29>)
 
 ```go
 func (u *Ubuntu) GetOSInfo() (*Result, error)
 ```
 
-GetOSInfo retrieves information about the operating system, including the
-distribution name and version. It returns the
+GetOSInfo retrieves information about the operating system, including the distribution name and version. It returns the
 
 <a name="Ubuntu.GetPackageManager"></a>
-
-### func \(\*Ubuntu\) [GetPackageManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_package_manager.go#L28)
+### func \(\*Ubuntu\) [GetPackageManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_package_manager.go#L28>)
 
 ```go
 func (u *Ubuntu) GetPackageManager() (string, error)
 ```
 
-GetPackageManager detects the system's package manager by checking for known
-executables in order of preference: apt, dnf, yum.
+GetPackageManager detects the system's package manager by checking for known executables in order of preference: apt, dnf, yum.
 
 <a name="Ubuntu.GetServiceManager"></a>
-
-### func \(\*Ubuntu\) [GetServiceManager](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_service_manager.go#L27)
+### func \(\*Ubuntu\) [GetServiceManager](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_service_manager.go#L27>)
 
 ```go
 func (u *Ubuntu) GetServiceManager() (string, error)
 ```
 
-GetServiceManager detects the system's service manager. It checks for the
-presence of /run/systemd/system to detect systemd.
+GetServiceManager detects the system's service manager. It checks for the presence of /run/systemd/system to detect systemd.
 
 <a name="Ubuntu.GetUptime"></a>
-
-### func \(\*Ubuntu\) [GetUptime](https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_uptime.go#L29)
+### func \(\*Ubuntu\) [GetUptime](<https://github.com/osapi-io/osapi/blob/main/internal/provider/node/host/ubuntu_get_uptime.go#L29>)
 
 ```go
 func (u *Ubuntu) GetUptime() (time.Duration, error)
 ```
 
-GetUptime retrieves the system uptime. It returns the uptime as a time.Duration,
-and an error if something goes wrong.
+GetUptime retrieves the system uptime. It returns the uptime as a time.Duration, and an error if something goes wrong.
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

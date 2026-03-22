@@ -34,7 +34,6 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/provider/process"
 )
 
@@ -59,7 +58,7 @@ func startNATSHeartbeat(
 		hostname = "unknown"
 	}
 
-	var nc messaging.NATSClient = natsclient.New(log, &natsclient.Options{
+	var nc NATSClient = natsclient.New(log, &natsclient.Options{
 		Host: host,
 		Port: port,
 		Auth: buildSetupAuth(serverAuth),

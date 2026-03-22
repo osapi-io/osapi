@@ -10,21 +10,20 @@ Package exec provides command execution utilities.
 
 ## Index
 
-- [type CmdResult](#CmdResult)
-- [type Exec](#Exec)
-  - [func New\(logger \*slog.Logger\) \*Exec](#New)
-  - [func \(e \*Exec\) RunCmd\(name string, args \[\]string\) \(string, error\)](#Exec.RunCmd)
-  - [func \(e \*Exec\) RunCmdFull\(name string, args \[\]string, cwd string, timeout int\) \(\*CmdResult, error\)](#Exec.RunCmdFull)
-  - [func \(e \*Exec\) RunCmdImpl\(name string, args \[\]string, cwd string\) \(string, error\)](#Exec.RunCmdImpl)
-  - [func \(e \*Exec\) RunCmdInDir\(name string, args \[\]string, cwd string\) \(string, error\)](#Exec.RunCmdInDir)
-- [type Manager](#Manager)
+- [type CmdResult](<#CmdResult>)
+- [type Exec](<#Exec>)
+  - [func New\(logger \*slog.Logger\) \*Exec](<#New>)
+  - [func \(e \*Exec\) RunCmd\(name string, args \[\]string\) \(string, error\)](<#Exec.RunCmd>)
+  - [func \(e \*Exec\) RunCmdFull\(name string, args \[\]string, cwd string, timeout int\) \(\*CmdResult, error\)](<#Exec.RunCmdFull>)
+  - [func \(e \*Exec\) RunCmdImpl\(name string, args \[\]string, cwd string\) \(string, error\)](<#Exec.RunCmdImpl>)
+  - [func \(e \*Exec\) RunCmdInDir\(name string, args \[\]string, cwd string\) \(string, error\)](<#Exec.RunCmdInDir>)
+- [type Manager](<#Manager>)
+
 
 <a name="CmdResult"></a>
+## type [CmdResult](<https://github.com/osapi-io/osapi/blob/main/internal/exec/types.go#L34-L43>)
 
-## type [CmdResult](https://github.com/osapi-io/osapi/blob/main/internal/exec/types.go#L34-L43)
-
-CmdResult contains the full result of a command execution with separate stdout
-and stderr streams.
+CmdResult contains the full result of a command execution with separate stdout and stderr streams.
 
 ```go
 type CmdResult struct {
@@ -40,8 +39,7 @@ type CmdResult struct {
 ```
 
 <a name="Exec"></a>
-
-## type [Exec](https://github.com/osapi-io/osapi/blob/main/internal/exec/types.go#L28-L30)
+## type [Exec](<https://github.com/osapi-io/osapi/blob/main/internal/exec/types.go#L28-L30>)
 
 Exec disk implementation.
 
@@ -52,8 +50,7 @@ type Exec struct {
 ```
 
 <a name="New"></a>
-
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/exec/exec.go#L34-L36)
+### func [New](<https://github.com/osapi-io/osapi/blob/main/internal/exec/exec.go#L34-L36>)
 
 ```go
 func New(logger *slog.Logger) *Exec
@@ -62,54 +59,43 @@ func New(logger *slog.Logger) *Exec
 New factory to create a new Exec instance.
 
 <a name="Exec.RunCmd"></a>
-
-### func \(\*Exec\) [RunCmd](https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd.go#L25-L28)
+### func \(\*Exec\) [RunCmd](<https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd.go#L25-L28>)
 
 ```go
 func (e *Exec) RunCmd(name string, args []string) (string, error)
 ```
 
-RunCmd executes the provided command with arguments, using the current working
-directory.
+RunCmd executes the provided command with arguments, using the current working directory.
 
 <a name="Exec.RunCmdFull"></a>
-
-### func \(\*Exec\) [RunCmdFull](https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd_full.go#L37-L42)
+### func \(\*Exec\) [RunCmdFull](<https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd_full.go#L37-L42>)
 
 ```go
 func (e *Exec) RunCmdFull(name string, args []string, cwd string, timeout int) (*CmdResult, error)
 ```
 
-RunCmdFull executes the provided command with separate stdout and stderr
-capture, an optional working directory, and a timeout in seconds. A timeout of 0
-defaults to 30 seconds.
+RunCmdFull executes the provided command with separate stdout and stderr capture, an optional working directory, and a timeout in seconds. A timeout of 0 defaults to 30 seconds.
 
 <a name="Exec.RunCmdImpl"></a>
-
-### func \(\*Exec\) [RunCmdImpl](https://github.com/osapi-io/osapi/blob/main/internal/exec/exec.go#L45-L49)
+### func \(\*Exec\) [RunCmdImpl](<https://github.com/osapi-io/osapi/blob/main/internal/exec/exec.go#L45-L49>)
 
 ```go
 func (e *Exec) RunCmdImpl(name string, args []string, cwd string) (string, error)
 ```
 
-RunCmdImpl executes the provided command with the specified arguments and an
-optional working directory. It captures and logs the combined output \(stdout
-and stderr\) of the command.
+RunCmdImpl executes the provided command with the specified arguments and an optional working directory. It captures and logs the combined output \(stdout and stderr\) of the command.
 
 <a name="Exec.RunCmdInDir"></a>
-
-### func \(\*Exec\) [RunCmdInDir](https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd_dir.go#L25-L29)
+### func \(\*Exec\) [RunCmdInDir](<https://github.com/osapi-io/osapi/blob/main/internal/exec/run_cmd_dir.go#L25-L29>)
 
 ```go
 func (e *Exec) RunCmdInDir(name string, args []string, cwd string) (string, error)
 ```
 
-RunCmdInDir executes the provided command with arguments, using the current
-provided directory.
+RunCmdInDir executes the provided command with arguments, using the current provided directory.
 
 <a name="Manager"></a>
-
-## type [Manager](https://github.com/osapi-io/osapi/blob/main/internal/exec/manager.go#L24-L40)
+## type [Manager](<https://github.com/osapi-io/osapi/blob/main/internal/exec/manager.go#L24-L40>)
 
 Manager manager responsible for exec operations.
 
@@ -133,4 +119,4 @@ type Manager interface {
 }
 ```
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

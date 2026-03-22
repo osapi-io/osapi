@@ -10,24 +10,24 @@ Package ping provides network ping functionality.
 
 ## Index
 
-- [type Darwin](#Darwin)
-  - [func NewDarwinProvider\(\) \*Darwin](#NewDarwinProvider)
-  - [func \(d \*Darwin\) Do\(address string\) \(\*Result, error\)](#Darwin.Do)
-- [type Linux](#Linux)
-  - [func NewLinuxProvider\(\) \*Linux](#NewLinuxProvider)
-  - [func \(l \*Linux\) Do\(\_ string\) \(\*Result, error\)](#Linux.Do)
-- [type Pinger](#Pinger)
-- [type PingerWrapper](#PingerWrapper)
-  - [func \(p \*PingerWrapper\) SetCount\(count int\)](#PingerWrapper.SetCount)
-- [type Provider](#Provider)
-- [type Result](#Result)
-- [type Ubuntu](#Ubuntu)
-  - [func NewUbuntuProvider\(\) \*Ubuntu](#NewUbuntuProvider)
-  - [func \(u \*Ubuntu\) Do\(address string\) \(\*Result, error\)](#Ubuntu.Do)
+- [type Darwin](<#Darwin>)
+  - [func NewDarwinProvider\(\) \*Darwin](<#NewDarwinProvider>)
+  - [func \(d \*Darwin\) Do\(address string\) \(\*Result, error\)](<#Darwin.Do>)
+- [type Linux](<#Linux>)
+  - [func NewLinuxProvider\(\) \*Linux](<#NewLinuxProvider>)
+  - [func \(l \*Linux\) Do\(\_ string\) \(\*Result, error\)](<#Linux.Do>)
+- [type Pinger](<#Pinger>)
+- [type PingerWrapper](<#PingerWrapper>)
+  - [func \(p \*PingerWrapper\) SetCount\(count int\)](<#PingerWrapper.SetCount>)
+- [type Provider](<#Provider>)
+- [type Result](<#Result>)
+- [type Ubuntu](<#Ubuntu>)
+  - [func NewUbuntuProvider\(\) \*Ubuntu](<#NewUbuntuProvider>)
+  - [func \(u \*Ubuntu\) Do\(address string\) \(\*Result, error\)](<#Ubuntu.Do>)
+
 
 <a name="Darwin"></a>
-
-## type [Darwin](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin.go#L30-L34)
+## type [Darwin](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin.go#L30-L34>)
 
 Darwin implements the Ping interface for Darwin \(macOS\).
 
@@ -40,8 +40,7 @@ type Darwin struct {
 ```
 
 <a name="NewDarwinProvider"></a>
-
-### func [NewDarwinProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin.go#L37)
+### func [NewDarwinProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin.go#L37>)
 
 ```go
 func NewDarwinProvider() *Darwin
@@ -50,8 +49,7 @@ func NewDarwinProvider() *Darwin
 NewDarwinProvider factory to create a new Darwin instance.
 
 <a name="Darwin.Do"></a>
-
-### func \(\*Darwin\) [Do](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin_do.go#L33-L35)
+### func \(\*Darwin\) [Do](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/darwin_do.go#L33-L35>)
 
 ```go
 func (d *Darwin) Do(address string) (*Result, error)
@@ -59,12 +57,10 @@ func (d *Darwin) Do(address string) (*Result, error)
 
 Do pings the given host and returns the ping statistics or an error.
 
-On macOS, it uses privileged mode \(raw sockets\) for ICMP. This may require
-running the binary as root or with appropriate entitlements.
+On macOS, it uses privileged mode \(raw sockets\) for ICMP. This may require running the binary as root or with appropriate entitlements.
 
 <a name="Linux"></a>
-
-## type [Linux](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux.go#L29-L31)
+## type [Linux](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux.go#L29-L31>)
 
 Linux implements the Ping interface for Linux.
 
@@ -75,8 +71,7 @@ type Linux struct {
 ```
 
 <a name="NewLinuxProvider"></a>
-
-### func [NewLinuxProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux.go#L34)
+### func [NewLinuxProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux.go#L34>)
 
 ```go
 func NewLinuxProvider() *Linux
@@ -85,8 +80,7 @@ func NewLinuxProvider() *Linux
 NewLinuxProvider factory to create a new Linux instance.
 
 <a name="Linux.Do"></a>
-
-### func \(\*Linux\) [Do](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux_do.go#L28-L30)
+### func \(\*Linux\) [Do](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/linux_do.go#L28-L30>)
 
 ```go
 func (l *Linux) Do(_ string) (*Result, error)
@@ -95,8 +89,7 @@ func (l *Linux) Do(_ string) (*Result, error)
 Do pings the given host and returns the ping statistics or an error.
 
 <a name="Pinger"></a>
-
-## type [Pinger](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L38-L52)
+## type [Pinger](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L38-L52>)
 
 Pinger is the interface representing the pinging functionality.
 
@@ -119,8 +112,7 @@ type Pinger interface {
 ```
 
 <a name="PingerWrapper"></a>
-
-## type [PingerWrapper](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L55-L57)
+## type [PingerWrapper](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L55-L57>)
 
 PingerWrapper wrapper struct around probing.Pinger.
 
@@ -131,8 +123,7 @@ type PingerWrapper struct {
 ```
 
 <a name="PingerWrapper.SetCount"></a>
-
-### func \(\*PingerWrapper\) [SetCount](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L50-L52)
+### func \(\*PingerWrapper\) [SetCount](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L50-L52>)
 
 ```go
 func (p *PingerWrapper) SetCount(count int)
@@ -141,8 +132,7 @@ func (p *PingerWrapper) SetCount(count int)
 SetCount sets the count of pings to be sent.
 
 <a name="Provider"></a>
-
-## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L30-L35)
+## type [Provider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L30-L35>)
 
 Provider implements the methods to interact with various ping components.
 
@@ -156,8 +146,7 @@ type Provider interface {
 ```
 
 <a name="Result"></a>
-
-## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L60-L75)
+## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/types.go#L60-L75>)
 
 Result represents custom ping result details.
 
@@ -181,8 +170,7 @@ type Result struct {
 ```
 
 <a name="Ubuntu"></a>
-
-## type [Ubuntu](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L30-L34)
+## type [Ubuntu](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L30-L34>)
 
 Ubuntu implements the Ping interface for Ubuntu.
 
@@ -195,8 +183,7 @@ type Ubuntu struct {
 ```
 
 <a name="NewUbuntuProvider"></a>
-
-### func [NewUbuntuProvider](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L37)
+### func [NewUbuntuProvider](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu.go#L37>)
 
 ```go
 func NewUbuntuProvider() *Ubuntu
@@ -205,28 +192,23 @@ func NewUbuntuProvider() *Ubuntu
 NewUbuntuProvider factory to create a new Ubuntu instance.
 
 <a name="Ubuntu.Do"></a>
-
-### func \(\*Ubuntu\) [Do](https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu_do.go#L42-L44)
+### func \(\*Ubuntu\) [Do](<https://github.com/osapi-io/osapi/blob/main/internal/provider/network/ping/ubuntu_do.go#L42-L44>)
 
 ```go
 func (u *Ubuntu) Do(address string) (*Result, error)
 ```
 
-Do pings the given host and returns the ping statistics or an error. It returns
-a Result struct, and an error if something goes wrong.
+Do pings the given host and returns the ping statistics or an error. It returns a Result struct, and an error if something goes wrong.
 
-On Linux, it attempts an "unprivileged" ping via UDP by default. To enable
-unprivileged pings, run the following command:
+On Linux, it attempts an "unprivileged" ping via UDP by default. To enable unprivileged pings, run the following command:
 
 ```
 sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
 ```
 
-Alternatively, call pinger.SetPrivileged\(true\) to use raw sockets. After doing
-so, you may either:
+Alternatively, call pinger.SetPrivileged\(true\) to use raw sockets. After doing so, you may either:
 
 1. Run the binary as root, or
-2. Set capabilities on the binary to allow raw socket usage: sudo setcap
-   cap_net_raw=\+ep /path/to/your/compiled/binary
+2. Set capabilities on the binary to allow raw socket usage: sudo setcap cap\_net\_raw=\+ep /path/to/your/compiled/binary
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

@@ -10,24 +10,24 @@ Package export provides pluggable audit log export with pagination.
 
 ## Index
 
-- [func MarshalJSONFunc\(\) func\(any\) \(\[\]byte, error\)](#MarshalJSONFunc)
-- [func OpenFileFunc\(\) func\(string\) \(io.WriteCloser, error\)](#OpenFileFunc)
-- [func SetMarshalJSONFunc\(fn func\(any\) \(\[\]byte, error\)\)](#SetMarshalJSONFunc)
-- [func SetOpenFileFunc\(fn func\(string\) \(io.WriteCloser, error\)\)](#SetOpenFileFunc)
-- [type Exporter](#Exporter)
-- [type Fetcher](#Fetcher)
-- [type FileExporter](#FileExporter)
-  - [func NewFileExporter\(path string\) \*FileExporter](#NewFileExporter)
-  - [func \(e \*FileExporter\) Close\(\_ context.Context\) error](#FileExporter.Close)
-  - [func \(e \*FileExporter\) Open\(\_ context.Context\) error](#FileExporter.Open)
-  - [func \(e \*FileExporter\) Write\(\_ context.Context, entry client.AuditEntry\) error](#FileExporter.Write)
-- [type ProgressFunc](#ProgressFunc)
-- [type Result](#Result)
-  - [func Run\(ctx context.Context, logger \*slog.Logger, fetcher Fetcher, exporter Exporter, batchSize int, onProgress ProgressFunc\) \(\*Result, error\)](#Run)
+- [func MarshalJSONFunc\(\) func\(any\) \(\[\]byte, error\)](<#MarshalJSONFunc>)
+- [func OpenFileFunc\(\) func\(string\) \(io.WriteCloser, error\)](<#OpenFileFunc>)
+- [func SetMarshalJSONFunc\(fn func\(any\) \(\[\]byte, error\)\)](<#SetMarshalJSONFunc>)
+- [func SetOpenFileFunc\(fn func\(string\) \(io.WriteCloser, error\)\)](<#SetOpenFileFunc>)
+- [type Exporter](<#Exporter>)
+- [type Fetcher](<#Fetcher>)
+- [type FileExporter](<#FileExporter>)
+  - [func NewFileExporter\(path string\) \*FileExporter](<#NewFileExporter>)
+  - [func \(e \*FileExporter\) Close\(\_ context.Context\) error](<#FileExporter.Close>)
+  - [func \(e \*FileExporter\) Open\(\_ context.Context\) error](<#FileExporter.Open>)
+  - [func \(e \*FileExporter\) Write\(\_ context.Context, entry client.AuditEntry\) error](<#FileExporter.Write>)
+- [type ProgressFunc](<#ProgressFunc>)
+- [type Result](<#Result>)
+  - [func Run\(ctx context.Context, logger \*slog.Logger, fetcher Fetcher, exporter Exporter, batchSize int, onProgress ProgressFunc\) \(\*Result, error\)](<#Run>)
+
 
 <a name="MarshalJSONFunc"></a>
-
-## func [MarshalJSONFunc](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L38)
+## func [MarshalJSONFunc](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L38>)
 
 ```go
 func MarshalJSONFunc() func(any) ([]byte, error)
@@ -36,8 +36,7 @@ func MarshalJSONFunc() func(any) ([]byte, error)
 MarshalJSONFunc returns the current JSON marshaler for test inspection.
 
 <a name="OpenFileFunc"></a>
-
-## func [OpenFileFunc](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L50)
+## func [OpenFileFunc](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L50>)
 
 ```go
 func OpenFileFunc() func(string) (io.WriteCloser, error)
@@ -46,8 +45,7 @@ func OpenFileFunc() func(string) (io.WriteCloser, error)
 OpenFileFunc returns the current file opener for test inspection.
 
 <a name="SetMarshalJSONFunc"></a>
-
-## func [SetMarshalJSONFunc](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L43-L45)
+## func [SetMarshalJSONFunc](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L43-L45>)
 
 ```go
 func SetMarshalJSONFunc(fn func(any) ([]byte, error))
@@ -56,8 +54,7 @@ func SetMarshalJSONFunc(fn func(any) ([]byte, error))
 SetMarshalJSONFunc replaces the JSON marshaler. Used by tests.
 
 <a name="SetOpenFileFunc"></a>
-
-## func [SetOpenFileFunc](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L55-L57)
+## func [SetOpenFileFunc](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L55-L57>)
 
 ```go
 func SetOpenFileFunc(fn func(string) (io.WriteCloser, error))
@@ -66,8 +63,7 @@ func SetOpenFileFunc(fn func(string) (io.WriteCloser, error))
 SetOpenFileFunc replaces the file opener. Used by tests.
 
 <a name="Exporter"></a>
-
-## type [Exporter](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L30-L34)
+## type [Exporter](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L30-L34>)
 
 Exporter writes audit entries to a backend.
 
@@ -80,11 +76,9 @@ type Exporter interface {
 ```
 
 <a name="Fetcher"></a>
+## type [Fetcher](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L38-L42>)
 
-## type [Fetcher](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L38-L42)
-
-Fetcher retrieves a page of audit entries. Returns the entries, total count, and
-any error.
+Fetcher retrieves a page of audit entries. Returns the entries, total count, and any error.
 
 ```go
 type Fetcher func(
@@ -95,8 +89,7 @@ type Fetcher func(
 ```
 
 <a name="FileExporter"></a>
-
-## type [FileExporter](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L69-L73)
+## type [FileExporter](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L69-L73>)
 
 FileExporter writes audit entries as JSON lines to a file.
 
@@ -108,8 +101,7 @@ type FileExporter struct {
 ```
 
 <a name="NewFileExporter"></a>
-
-### func [NewFileExporter](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L76-L78)
+### func [NewFileExporter](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L76-L78>)
 
 ```go
 func NewFileExporter(path string) *FileExporter
@@ -118,8 +110,7 @@ func NewFileExporter(path string) *FileExporter
 NewFileExporter creates a new FileExporter for the given path.
 
 <a name="FileExporter.Close"></a>
-
-### func \(\*FileExporter\) [Close](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L125-L127)
+### func \(\*FileExporter\) [Close](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L125-L127>)
 
 ```go
 func (e *FileExporter) Close(_ context.Context) error
@@ -128,8 +119,7 @@ func (e *FileExporter) Close(_ context.Context) error
 Close flushes the buffer and closes the file.
 
 <a name="FileExporter.Open"></a>
-
-### func \(\*FileExporter\) [Open](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L85-L87)
+### func \(\*FileExporter\) [Open](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L85-L87>)
 
 ```go
 func (e *FileExporter) Open(_ context.Context) error
@@ -138,8 +128,7 @@ func (e *FileExporter) Open(_ context.Context) error
 Open creates the output file and prepares for writing.
 
 <a name="FileExporter.Write"></a>
-
-### func \(\*FileExporter\) [Write](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L100-L103)
+### func \(\*FileExporter\) [Write](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/file.go#L100-L103>)
 
 ```go
 func (e *FileExporter) Write(_ context.Context, entry client.AuditEntry) error
@@ -148,19 +137,16 @@ func (e *FileExporter) Write(_ context.Context, entry client.AuditEntry) error
 Write marshals an audit entry to JSON and writes it as a single line.
 
 <a name="ProgressFunc"></a>
+## type [ProgressFunc](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/export.go#L31>)
 
-## type [ProgressFunc](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/export.go#L31)
-
-ProgressFunc is called after each batch with the running exported count and
-total.
+ProgressFunc is called after each batch with the running exported count and total.
 
 ```go
 type ProgressFunc func(exported int, total int)
 ```
 
 <a name="Result"></a>
-
-## type [Result](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L45-L48)
+## type [Result](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/types.go#L45-L48>)
 
 Result holds export outcome.
 
@@ -172,8 +158,7 @@ type Result struct {
 ```
 
 <a name="Run"></a>
-
-### func [Run](https://github.com/osapi-io/osapi/blob/main/internal/audit/export/export.go#L34-L41)
+### func [Run](<https://github.com/osapi-io/osapi/blob/main/internal/audit/export/export.go#L34-L41>)
 
 ```go
 func Run(ctx context.Context, logger *slog.Logger, fetcher Fetcher, exporter Exporter, batchSize int, onProgress ProgressFunc) (*Result, error)
@@ -181,4 +166,4 @@ func Run(ctx context.Context, logger *slog.Logger, fetcher Fetcher, exporter Exp
 
 Run paginates through audit entries and writes each to the exporter.
 
-Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

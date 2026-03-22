@@ -33,7 +33,6 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	climocks "github.com/retr0h/osapi/internal/cli/mocks"
 	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
 type NATSPublicTestSuite struct {
@@ -59,16 +58,6 @@ func (suite *NATSPublicTestSuite) TestCloseNATSClient() {
 		name    string
 		setupFn func() func()
 	}{
-		{
-			name: "when mock client does not panic",
-			setupFn: func() func() {
-				mock := mocks.NewMockNATSClient(suite.ctrl)
-
-				return func() {
-					cli.CloseNATSClient(mock)
-				}
-			},
-		},
 		{
 			name: "when real client with nil NC does not panic",
 			setupFn: func() func() {
