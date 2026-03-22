@@ -38,12 +38,14 @@ func New(
 	startTime time.Time,
 	version string,
 	metrics MetricsProvider,
+	subComponents map[string]string,
 ) *Health {
 	return &Health{
-		Checker:   checker,
-		StartTime: startTime,
-		Version:   version,
-		Metrics:   metrics,
-		logger:    logger,
+		Checker:       checker,
+		StartTime:     startTime,
+		Version:       version,
+		Metrics:       metrics,
+		SubComponents: subComponents,
+		logger:        logger,
 	}
 }

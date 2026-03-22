@@ -201,5 +201,7 @@ type Health struct {
 	Version string
 	// Metrics provides system metrics (optional, can be nil).
 	Metrics MetricsProvider
+	// SubComponents reports the status of internal services.
+	SubComponents map[string]string
 	logger  *slog.Logger
 }

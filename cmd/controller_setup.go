@@ -65,6 +65,7 @@ type ServerManager interface {
 		startTime time.Time,
 		version string,
 		metrics health.MetricsProvider,
+		subComponents map[string]string,
 	) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
@@ -94,8 +95,6 @@ func setupController(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-	
-	
 ) (ServerManager, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -569,12 +568,20 @@ func registerControllerHandlers(
 	jc jobclient.JobClient,
 	checker health.Checker,
 	metricsProvider health.MetricsProvider,
-	
-	
 	auditStore audit.Store,
 	objStore file.ObjectStoreManager,
 ) {
 	startTime := time.Now()
+
+	subComponents := map[string]string{
+		"heartbeat": "ok",
+	}
+
+	if appConfig.Notifications.Enabled {
+		subComponents["notifier"] = "ok"
+	} else {
+		subComponents["notifier"] = "disabled"
+	}
 
 	handlers := make([]func(e *echo.Echo), 0, 8)
 	handlers = append(handlers, sm.GetAgentHandler(jc)...)
@@ -582,7 +589,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, sm.GetJobHandler(jc)...)
 	handlers = append(
 		handlers,
-		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
+		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider, subComponents)...)
 	handlers = append(handlers, sm.GetDockerHandler(jc)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)

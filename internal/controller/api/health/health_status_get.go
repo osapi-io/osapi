@@ -69,6 +69,10 @@ func (h *Health) buildStatusResponse(
 		"kv":   kvComponent,
 	}
 
+	for name, status := range h.SubComponents {
+		components[name] = gen.ComponentHealth{Status: status}
+	}
+
 	overall := "ok"
 	if natsErr != nil || kvErr != nil {
 		overall = "degraded"

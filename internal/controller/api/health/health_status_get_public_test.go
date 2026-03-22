@@ -523,7 +523,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics)
+			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics, nil)
 
 			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
 			s.NoError(err)
@@ -661,6 +661,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusHTTP() {
 				time.Now(),
 				"0.1.0",
 				tc.metrics,
+				nil,
 			)
 			strictHandler := gen.NewStrictHandler(healthHandler, nil)
 
@@ -797,6 +798,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 				time.Now(),
 				"0.1.0",
 				metrics,
+				nil,
 			)
 			server.RegisterHandlers(handlers)
 

@@ -240,7 +240,7 @@ func (s *HandlerPublicTestSuite) TestGetHealthHandler() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			checker := &health.NATSChecker{}
-			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)
+			handlers := s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil, nil)
 
 			tt.validate(handlers)
 		})
@@ -393,7 +393,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers = append(handlers, s.server.GetJobHandler(s.mockJobClient)...)
 			handlers = append(
 				handlers,
-				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil)...)
+				s.server.GetHealthHandler(checker, time.Now(), "0.1.0", nil, nil)...)
 
 			routesBefore := len(s.server.Echo.Routes())
 			s.server.RegisterHandlers(handlers)
