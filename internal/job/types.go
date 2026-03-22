@@ -34,6 +34,7 @@ import (
 // Type is a type alias for client.JobType.
 type Type = client.JobType
 
+// Job type constants re-exported from the SDK.
 const (
 	TypeQuery  = client.JobTypeQuery
 	TypeModify = client.JobTypeModify
@@ -44,6 +45,7 @@ const (
 // share the same type. All status constants are defined in pkg/sdk/client/.
 type Status = client.JobStatus
 
+// Job status constants re-exported from the SDK.
 const (
 	StatusSubmitted      = client.JobStatusSubmitted
 	StatusAcknowledged   = client.JobStatusAcknowledged
