@@ -30,6 +30,11 @@ server is enabled.
 
 ## Application Metrics Reference
 
+All application metrics are instrumented through OpenTelemetry and exported via
+the OTEL Prometheus exporter with the `osapi` namespace. The `osapi_` prefix is
+applied automatically. OTEL scope labels (`otel_scope_name`, etc.) are included
+in the output for traceability.
+
 Go runtime (goroutines, memory, GC) and process metrics (CPU, memory, file
 descriptors) are included on every component.
 
