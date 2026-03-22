@@ -33,31 +33,31 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 )
 
-type UbuntuGetLocalUsageStatsPublicTestSuite struct {
+type DebianGetLocalUsageStatsPublicTestSuite struct {
 	suite.Suite
 
 	logger *slog.Logger
 }
 
-func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) SetupTest() {
+func (suite *DebianGetLocalUsageStatsPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TearDownTest() {
+func (suite *DebianGetLocalUsageStatsPublicTestSuite) TearDownTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
+func (suite *DebianGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 	tests := []struct {
 		name        string
-		setupMock   func(*disk.Ubuntu)
+		setupMock   func(*disk.Debian)
 		want        interface{}
 		wantErr     bool
 		wantErrType error
 	}{
 		{
 			name: "when GetLocalUsageStats Ok",
-			setupMock: func(u *disk.Ubuntu) {
+			setupMock: func(u *disk.Debian) {
 				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return []sysDisk.PartitionStat{
 						{
@@ -134,7 +134,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 		},
 		{
 			name: "when disk.Partitions errors",
-			setupMock: func(u *disk.Ubuntu) {
+			setupMock: func(u *disk.Debian) {
 				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return nil, assert.AnError
 				}
@@ -144,7 +144,7 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 		},
 		{
 			name: "when disk.Usage errors",
-			setupMock: func(u *disk.Ubuntu) {
+			setupMock: func(u *disk.Debian) {
 				u.PartitionsFn = func(_ bool) ([]sysDisk.PartitionStat, error) {
 					return []sysDisk.PartitionStat{
 						{
@@ -165,13 +165,13 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := disk.NewUbuntuProvider(suite.logger)
+			debian := disk.NewDebianProvider(suite.logger)
 
 			if tc.setupMock != nil {
-				tc.setupMock(ubuntu)
+				tc.setupMock(debian)
 			}
 
-			got, err := ubuntu.GetLocalUsageStats()
+			got, err := debian.GetLocalUsageStats()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -188,6 +188,6 @@ func (suite *UbuntuGetLocalUsageStatsPublicTestSuite) TestGetLocalUsageStats() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetLocalUsageStatsPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetLocalUsageStatsPublicTestSuite))
+func TestDebianGetLocalUsageStatsPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetLocalUsageStatsPublicTestSuite))
 }

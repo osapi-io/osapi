@@ -28,8 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// Ubuntu implements the Mem interface for Ubuntu.
-type Ubuntu struct {
+// Debian implements the Mem interface for Debian.
+type Debian struct {
 	provider.FactsAware
 
 	logger       *slog.Logger
@@ -37,11 +37,11 @@ type Ubuntu struct {
 	UsageFn      func(path string) (*disk.UsageStat, error)
 }
 
-// NewUbuntuProvider factory to create a new Ubuntu instance.
-func NewUbuntuProvider(
+// NewDebianProvider factory to create a new Debian instance.
+func NewDebianProvider(
 	logger *slog.Logger,
-) *Ubuntu {
-	return &Ubuntu{
+) *Debian {
+	return &Debian{
 		logger:       logger,
 		PartitionsFn: disk.Partitions,
 		UsageFn:      disk.Usage,

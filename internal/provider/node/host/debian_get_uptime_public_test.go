@@ -31,15 +31,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetUptimePublicTestSuite struct {
+type DebianGetUptimePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetUptimePublicTestSuite) SetupTest() {}
+func (suite *DebianGetUptimePublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetUptimePublicTestSuite) TearDownTest() {}
+func (suite *DebianGetUptimePublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetUptimePublicTestSuite) TestGetUptime() {
+func (suite *DebianGetUptimePublicTestSuite) TestGetUptime() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -71,13 +71,13 @@ func (suite *UbuntuGetUptimePublicTestSuite) TestGetUptime() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				debian.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetUptime()
+			got, err := debian.GetUptime()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -94,6 +94,6 @@ func (suite *UbuntuGetUptimePublicTestSuite) TestGetUptime() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetUptimePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetUptimePublicTestSuite))
+func TestDebianGetUptimePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetUptimePublicTestSuite))
 }

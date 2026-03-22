@@ -28,24 +28,24 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetCPUCountPublicTestSuite struct {
+type DebianGetCPUCountPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetCPUCountPublicTestSuite) SetupTest() {}
+func (suite *DebianGetCPUCountPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetCPUCountPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetCPUCountPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetCPUCountPublicTestSuite) TestGetCPUCount() {
+func (suite *DebianGetCPUCountPublicTestSuite) TestGetCPUCount() {
 	tests := []struct {
 		name      string
-		setupMock func(u *host.Ubuntu)
+		setupMock func(u *host.Debian)
 		want      interface{}
 		wantErr   bool
 	}{
 		{
 			name: "when GetCPUCount Ok",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.NumCPUFn = func() int {
 					return 8
 				}
@@ -55,7 +55,7 @@ func (suite *UbuntuGetCPUCountPublicTestSuite) TestGetCPUCount() {
 		},
 		{
 			name: "when NumCPU returns 1",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.NumCPUFn = func() int {
 					return 1
 				}
@@ -67,13 +67,13 @@ func (suite *UbuntuGetCPUCountPublicTestSuite) TestGetCPUCount() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				tc.setupMock(ubuntu)
+				tc.setupMock(debian)
 			}
 
-			got, err := ubuntu.GetCPUCount()
+			got, err := debian.GetCPUCount()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -88,6 +88,6 @@ func (suite *UbuntuGetCPUCountPublicTestSuite) TestGetCPUCount() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetCPUCountPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetCPUCountPublicTestSuite))
+func TestDebianGetCPUCountPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetCPUCountPublicTestSuite))
 }

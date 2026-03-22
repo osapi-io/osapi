@@ -29,25 +29,25 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetFQDNPublicTestSuite struct {
+type DebianGetFQDNPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetFQDNPublicTestSuite) SetupTest() {}
+func (suite *DebianGetFQDNPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetFQDNPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetFQDNPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetFQDNPublicTestSuite) TestGetFQDN() {
+func (suite *DebianGetFQDNPublicTestSuite) TestGetFQDN() {
 	tests := []struct {
 		name        string
-		setupMock   func(u *host.Ubuntu)
+		setupMock   func(u *host.Debian)
 		want        interface{}
 		wantErr     bool
 		wantErrType error
 	}{
 		{
 			name: "when GetFQDN Ok",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.HostnameFn = func() (string, error) {
 					return "node-01.example.com", nil
 				}
@@ -57,7 +57,7 @@ func (suite *UbuntuGetFQDNPublicTestSuite) TestGetFQDN() {
 		},
 		{
 			name: "when os.Hostname errors",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.HostnameFn = func() (string, error) {
 					return "", assert.AnError
 				}
@@ -69,13 +69,13 @@ func (suite *UbuntuGetFQDNPublicTestSuite) TestGetFQDN() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				tc.setupMock(ubuntu)
+				tc.setupMock(debian)
 			}
 
-			got, err := ubuntu.GetFQDN()
+			got, err := debian.GetFQDN()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -92,6 +92,6 @@ func (suite *UbuntuGetFQDNPublicTestSuite) TestGetFQDN() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetFQDNPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetFQDNPublicTestSuite))
+func TestDebianGetFQDNPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetFQDNPublicTestSuite))
 }

@@ -29,24 +29,24 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetServiceManagerPublicTestSuite struct {
+type DebianGetServiceManagerPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetServiceManagerPublicTestSuite) SetupTest() {}
+func (suite *DebianGetServiceManagerPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetServiceManagerPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetServiceManagerPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
+func (suite *DebianGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 	tests := []struct {
 		name      string
-		setupMock func(u *host.Ubuntu)
+		setupMock func(u *host.Debian)
 		want      interface{}
 		wantErr   bool
 	}{
 		{
 			name: "when systemd detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.StatFn = func(_ string) (os.FileInfo, error) {
 					return nil, nil
 				}
@@ -56,7 +56,7 @@ func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 		},
 		{
 			name: "when systemd not detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.StatFn = func(_ string) (os.FileInfo, error) {
 					return nil, os.ErrNotExist
 				}
@@ -68,13 +68,13 @@ func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				tc.setupMock(ubuntu)
+				tc.setupMock(debian)
 			}
 
-			got, err := ubuntu.GetServiceManager()
+			got, err := debian.GetServiceManager()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -89,6 +89,6 @@ func (suite *UbuntuGetServiceManagerPublicTestSuite) TestGetServiceManager() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetServiceManagerPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetServiceManagerPublicTestSuite))
+func TestDebianGetServiceManagerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetServiceManagerPublicTestSuite))
 }

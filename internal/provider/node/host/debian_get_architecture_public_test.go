@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetArchitecturePublicTestSuite struct {
+type DebianGetArchitecturePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetArchitecturePublicTestSuite) SetupTest() {}
+func (suite *DebianGetArchitecturePublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetArchitecturePublicTestSuite) TearDownTest() {}
+func (suite *DebianGetArchitecturePublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetArchitecturePublicTestSuite) TestGetArchitecture() {
+func (suite *DebianGetArchitecturePublicTestSuite) TestGetArchitecture() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -70,13 +70,13 @@ func (suite *UbuntuGetArchitecturePublicTestSuite) TestGetArchitecture() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				debian.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetArchitecture()
+			got, err := debian.GetArchitecture()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -93,6 +93,6 @@ func (suite *UbuntuGetArchitecturePublicTestSuite) TestGetArchitecture() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetArchitecturePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetArchitecturePublicTestSuite))
+func TestDebianGetArchitecturePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetArchitecturePublicTestSuite))
 }

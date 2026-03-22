@@ -24,7 +24,7 @@ const systemdPath = "/run/systemd/system"
 
 // GetServiceManager detects the system's service manager.
 // It checks for the presence of /run/systemd/system to detect systemd.
-func (u *Ubuntu) GetServiceManager() (string, error) {
+func (u *Debian) GetServiceManager() (string, error) {
 	if _, err := u.StatFn(systemdPath); err == nil {
 		return "systemd", nil
 	}

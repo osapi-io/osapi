@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 )
 
-type UbuntuGetAverageStatsPublicTestSuite struct {
+type DebianGetAverageStatsPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetAverageStatsPublicTestSuite) SetupTest() {}
+func (suite *DebianGetAverageStatsPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetAverageStatsPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetAverageStatsPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetAverageStatsPublicTestSuite) TestGetAverageStats() {
+func (suite *DebianGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysLoad.AvgStat, error)
@@ -79,13 +79,13 @@ func (suite *UbuntuGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := load.NewUbuntuProvider()
+			debian := load.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.AvgFn = tc.setupMock()
+				debian.AvgFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetAverageStats()
+			got, err := debian.GetAverageStats()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -102,6 +102,6 @@ func (suite *UbuntuGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetAverageStatsPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetAverageStatsPublicTestSuite))
+func TestDebianGetAverageStatsPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetAverageStatsPublicTestSuite))
 }

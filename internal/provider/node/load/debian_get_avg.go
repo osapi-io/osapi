@@ -23,7 +23,7 @@ package load
 // GetAverageStats returns the system's load averages over 1, 5, and 15 minutes.
 // It returns a AverageStats struct with load over 1, 5, and 15 minutes,
 // and an error if something goes wrong.
-func (u *Ubuntu) GetAverageStats() (*Result, error) {
+func (u *Debian) GetAverageStats() (*Result, error) {
 	avg, err := u.AvgFn()
 	if err != nil {
 		return nil, err

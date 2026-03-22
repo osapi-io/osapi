@@ -22,6 +22,6 @@ package host
 
 // GetCPUCount retrieves the number of logical CPUs available to the process.
 // It uses runtime.NumCPU under the hood.
-func (u *Ubuntu) GetCPUCount() (int, error) {
+func (u *Debian) GetCPUCount() (int, error) {
 	return u.NumCPUFn(), nil
 }

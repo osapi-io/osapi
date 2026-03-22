@@ -23,7 +23,7 @@ package host
 // GetArchitecture retrieves the system CPU architecture (e.g., x86_64, arm64).
 // It uses gopsutil's KernelArch field which returns the native architecture
 // as reported by `uname -m`.
-func (u *Ubuntu) GetArchitecture() (string, error) {
+func (u *Debian) GetArchitecture() (string, error) {
 	hostInfo, err := u.InfoFn()
 	if err != nil {
 		return "", err

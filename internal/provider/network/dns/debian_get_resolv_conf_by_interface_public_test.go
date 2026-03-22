@@ -34,28 +34,28 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type UbuntuGetResolvConfPublicTestSuite struct {
+type DebianGetResolvConfPublicTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 
 	logger *slog.Logger
 }
 
-func (suite *UbuntuGetResolvConfPublicTestSuite) SetupTest() {
+func (suite *DebianGetResolvConfPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *UbuntuGetResolvConfPublicTestSuite) SetupSubTest() {
+func (suite *DebianGetResolvConfPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *UbuntuGetResolvConfPublicTestSuite) TearDownTest() {
+func (suite *DebianGetResolvConfPublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() {
+func (suite *DebianGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() {
 	tests := []struct {
 		name          string
 		setupMock     func() *mocks.MockManager
@@ -148,7 +148,7 @@ func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 		suite.Run(tc.name, func() {
 			mock := tc.setupMock()
 
-			net := dns.NewUbuntuProvider(suite.logger, mock)
+			net := dns.NewDebianProvider(suite.logger, mock)
 			got, err := net.GetResolvConfByInterface(tc.interfaceName)
 
 			if !tc.wantErr {
@@ -164,6 +164,6 @@ func (suite *UbuntuGetResolvConfPublicTestSuite) TestGetResolvConfByInterface() 
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetResolvConfPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetResolvConfPublicTestSuite))
+func TestDebianGetResolvConfPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetResolvConfPublicTestSuite))
 }

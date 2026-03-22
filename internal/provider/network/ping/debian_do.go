@@ -39,7 +39,7 @@ import (
 //  1. Run the binary as root, or
 //  2. Set capabilities on the binary to allow raw socket usage:
 //     sudo setcap cap_net_raw=+ep /path/to/your/compiled/binary
-func (u *Ubuntu) Do(
+func (u *Debian) Do(
 	address string,
 ) (*Result, error) {
 	pinger, err := u.NewPingerFn(address)

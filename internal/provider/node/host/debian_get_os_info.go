@@ -26,7 +26,7 @@ import (
 
 // GetOSInfo retrieves information about the operating system, including the
 // distribution name and version. It returns the
-func (u *Ubuntu) GetOSInfo() (*Result, error) {
+func (u *Debian) GetOSInfo() (*Result, error) {
 	info, err := u.InfoFn()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get host info: %w", err)

@@ -50,7 +50,7 @@ import (
 //     specified interface.
 //
 // See `systemd-resolved.service(8)` manual page for further information.
-func (u *Ubuntu) GetResolvConfByInterface(
+func (u *Debian) GetResolvConfByInterface(
 	interfaceName string,
 ) (*GetResult, error) {
 	cmd := "resolvectl"

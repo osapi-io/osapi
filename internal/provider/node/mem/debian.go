@@ -26,16 +26,16 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// Ubuntu implements the Mem interface for Ubuntu.
-type Ubuntu struct {
+// Debian implements the Mem interface for Debian.
+type Debian struct {
 	provider.FactsAware
 
 	VirtualMemoryFn func() (*mem.VirtualMemoryStat, error)
 }
 
-// NewUbuntuProvider factory to create a new Ubuntu instance.
-func NewUbuntuProvider() *Ubuntu {
-	return &Ubuntu{
+// NewDebianProvider factory to create a new Debian instance.
+func NewDebianProvider() *Debian {
+	return &Debian{
 		VirtualMemoryFn: mem.VirtualMemory,
 	}
 }

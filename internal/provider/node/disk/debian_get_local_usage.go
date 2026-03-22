@@ -37,7 +37,7 @@ import (
 // that the user cannot access without root privileges), and continues processing
 // the remaining partitions.
 // If a non-permission-related error occurs, the function returns an error.
-func (u *Ubuntu) GetLocalUsageStats() ([]Result, error) {
+func (u *Debian) GetLocalUsageStats() ([]Result, error) {
 	partitions, err := u.PartitionsFn(false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get disk partitions: %w", err)

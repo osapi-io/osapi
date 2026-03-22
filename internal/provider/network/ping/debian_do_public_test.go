@@ -33,25 +33,25 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 )
 
-type UbuntuDoPublicTestSuite struct {
+type DebianDoPublicTestSuite struct {
 	suite.Suite
 
 	ctrl *gomock.Controller
 }
 
-func (suite *UbuntuDoPublicTestSuite) SetupTest() {
+func (suite *DebianDoPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 }
 
-func (suite *UbuntuDoPublicTestSuite) SetupSubTest() {
+func (suite *DebianDoPublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *UbuntuDoPublicTestSuite) TearDownTest() {
+func (suite *DebianDoPublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *UbuntuDoPublicTestSuite) TestDo() {
+func (suite *DebianDoPublicTestSuite) TestDo() {
 	tests := []struct {
 		name        string
 		setupMock   func() *mocks.MockPinger
@@ -124,14 +124,14 @@ func (suite *UbuntuDoPublicTestSuite) TestDo() {
 		suite.Run(tc.name, func() {
 			mock := tc.setupMock()
 
-			ubuntu := ping.NewUbuntuProvider()
+			debian := ping.NewDebianProvider()
 			if mock != nil {
-				ubuntu.NewPingerFn = func(_ string) (ping.Pinger, error) {
+				debian.NewPingerFn = func(_ string) (ping.Pinger, error) {
 					return mock, nil
 				}
 			}
 
-			got, err := ubuntu.Do(tc.address)
+			got, err := debian.Do(tc.address)
 
 			if !tc.wantErr {
 				suite.NoError(err)
@@ -144,19 +144,19 @@ func (suite *UbuntuDoPublicTestSuite) TestDo() {
 	}
 }
 
-func (suite *UbuntuDoPublicTestSuite) TestNewUbuntuProviderDefaultPingerFn() {
-	ubuntu := ping.NewUbuntuProvider()
+func (suite *DebianDoPublicTestSuite) TestNewDebianProviderDefaultPingerFn() {
+	debian := ping.NewDebianProvider()
 
-	pinger, err := ubuntu.NewPingerFn("127.0.0.1")
+	pinger, err := debian.NewPingerFn("127.0.0.1")
 
 	suite.NoError(err)
 	suite.NotNil(pinger)
 }
 
-func (suite *UbuntuDoPublicTestSuite) TestSetCount() {
-	ubuntu := ping.NewUbuntuProvider()
+func (suite *DebianDoPublicTestSuite) TestSetCount() {
+	debian := ping.NewDebianProvider()
 
-	pinger, err := ubuntu.NewPingerFn("127.0.0.1")
+	pinger, err := debian.NewPingerFn("127.0.0.1")
 	suite.Require().NoError(err)
 
 	pinger.SetCount(5)
@@ -164,6 +164,6 @@ func (suite *UbuntuDoPublicTestSuite) TestSetCount() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuDoPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuDoPublicTestSuite))
+func TestDebianDoPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianDoPublicTestSuite))
 }

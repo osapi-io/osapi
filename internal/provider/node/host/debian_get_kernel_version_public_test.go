@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetKernelVersionPublicTestSuite struct {
+type DebianGetKernelVersionPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetKernelVersionPublicTestSuite) SetupTest() {}
+func (suite *DebianGetKernelVersionPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetKernelVersionPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetKernelVersionPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetKernelVersionPublicTestSuite) TestGetKernelVersion() {
+func (suite *DebianGetKernelVersionPublicTestSuite) TestGetKernelVersion() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -70,13 +70,13 @@ func (suite *UbuntuGetKernelVersionPublicTestSuite) TestGetKernelVersion() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				debian.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetKernelVersion()
+			got, err := debian.GetKernelVersion()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -93,6 +93,6 @@ func (suite *UbuntuGetKernelVersionPublicTestSuite) TestGetKernelVersion() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetKernelVersionPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetKernelVersionPublicTestSuite))
+func TestDebianGetKernelVersionPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetKernelVersionPublicTestSuite))
 }

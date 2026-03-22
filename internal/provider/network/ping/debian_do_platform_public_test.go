@@ -1,5 +1,5 @@
-//go:build ubuntu
-// +build ubuntu
+//go:build debian
+// +build debian
 
 // Copyright (c) 2024 John Dewey
 
@@ -31,17 +31,17 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 )
 
-type UbuntuDoPlatformPublicTestSuite struct {
+type DebianDoPlatformPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuDoPlatformPublicTestSuite) SetupTest() {}
+func (suite *DebianDoPlatformPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuDoPlatformPublicTestSuite) SetupSubTest() {}
+func (suite *DebianDoPlatformPublicTestSuite) SetupSubTest() {}
 
-func (suite *UbuntuDoPlatformPublicTestSuite) TearDownTest() {}
+func (suite *DebianDoPlatformPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuDoPlatformPublicTestSuite) TestDo() {
+func (suite *DebianDoPlatformPublicTestSuite) TestDo() {
 	tests := []struct {
 		name        string
 		address     string
@@ -67,9 +67,9 @@ func (suite *UbuntuDoPlatformPublicTestSuite) TestDo() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := ping.NewUbuntuProvider()
+			debian := ping.NewDebianProvider()
 
-			got, err := ubuntu.Do(tc.address)
+			got, err := debian.Do(tc.address)
 
 			if !tc.wantErr {
 				suite.NoError(err)
@@ -84,6 +84,6 @@ func (suite *UbuntuDoPlatformPublicTestSuite) TestDo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuDoPlatformPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuDoPlatformPublicTestSuite))
+func TestDebianDoPlatformPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianDoPlatformPublicTestSuite))
 }

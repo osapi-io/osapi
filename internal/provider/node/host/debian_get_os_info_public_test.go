@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetOSInfoPublicTestSuite struct {
+type DebianGetOSInfoPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) SetupTest() {}
+func (suite *DebianGetOSInfoPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetOSInfoPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
+func (suite *DebianGetOSInfoPublicTestSuite) TestGetOSInfo() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -51,13 +51,13 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 			setupMock: func() func() (*sysHost.InfoStat, error) {
 				return func() (*sysHost.InfoStat, error) {
 					return &sysHost.InfoStat{
-						Platform:        "Ubuntu",
+						Platform:        "Debian",
 						PlatformVersion: "24.04",
 					}, nil
 				}
 			},
 			want: &host.Result{
-				Distribution: "Ubuntu",
+				Distribution: "Debian",
 				Version:      "24.04",
 			},
 			wantErr: false,
@@ -76,13 +76,13 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				debian.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetOSInfo()
+			got, err := debian.GetOSInfo()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -99,6 +99,6 @@ func (suite *UbuntuGetOSInfoPublicTestSuite) TestGetOSInfo() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetOSInfoPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetOSInfoPublicTestSuite))
+func TestDebianGetOSInfoPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetOSInfoPublicTestSuite))
 }

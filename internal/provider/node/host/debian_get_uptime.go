@@ -26,7 +26,7 @@ import (
 
 // GetUptime retrieves the system uptime.
 // It returns the uptime as a time.Duration, and an error if something goes wrong.
-func (u *Ubuntu) GetUptime() (time.Duration, error) {
+func (u *Debian) GetUptime() (time.Duration, error) {
 	hostInfo, err := u.InfoFn()
 	if err != nil {
 		return 0, err

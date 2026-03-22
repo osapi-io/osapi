@@ -22,7 +22,7 @@ package host
 
 // GetKernelVersion retrieves the running kernel version string.
 // It uses gopsutil's KernelVersion field.
-func (u *Ubuntu) GetKernelVersion() (string, error) {
+func (u *Debian) GetKernelVersion() (string, error) {
 	hostInfo, err := u.InfoFn()
 	if err != nil {
 		return "", err

@@ -27,20 +27,20 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-// Ubuntu implements the DNS interface for Ubuntu.
-type Ubuntu struct {
+// Debian implements the DNS interface for Debian.
+type Debian struct {
 	provider.FactsAware
 
 	logger      *slog.Logger
 	execManager exec.Manager
 }
 
-// NewUbuntuProvider factory to create a new Ubuntu instance.
-func NewUbuntuProvider(
+// NewDebianProvider factory to create a new Debian instance.
+func NewDebianProvider(
 	logger *slog.Logger,
 	em exec.Manager,
-) *Ubuntu {
-	return &Ubuntu{
+) *Debian {
+	return &Debian{
 		logger:      logger,
 		execManager: em,
 	}

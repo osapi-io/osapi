@@ -26,7 +26,7 @@ import (
 
 // GetFQDN retrieves the fully qualified domain name of the system.
 // It returns the hostname as reported by the operating system.
-func (u *Ubuntu) GetFQDN() (string, error) {
+func (u *Debian) GetFQDN() (string, error) {
 	hostname, err := u.HostnameFn()
 	if err != nil {
 		return "", fmt.Errorf("failed to get FQDN: %w", err)

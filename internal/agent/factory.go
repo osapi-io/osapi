@@ -75,8 +75,8 @@ func (f *ProviderFactory) CreateProviders() (
 	// Create system providers
 	var hostProvider nodeHost.Provider
 	switch plat {
-	case "ubuntu":
-		hostProvider = nodeHost.NewUbuntuProvider()
+	case "debian":
+		hostProvider = nodeHost.NewDebianProvider()
 	case "darwin":
 		hostProvider = nodeHost.NewDarwinProvider()
 	default:
@@ -85,8 +85,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var diskProvider disk.Provider
 	switch plat {
-	case "ubuntu":
-		diskProvider = disk.NewUbuntuProvider(f.logger)
+	case "debian":
+		diskProvider = disk.NewDebianProvider(f.logger)
 	case "darwin":
 		diskProvider = disk.NewDarwinProvider(f.logger)
 	default:
@@ -95,8 +95,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var memProvider mem.Provider
 	switch plat {
-	case "ubuntu":
-		memProvider = mem.NewUbuntuProvider()
+	case "debian":
+		memProvider = mem.NewDebianProvider()
 	case "darwin":
 		memProvider = mem.NewDarwinProvider()
 	default:
@@ -105,8 +105,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var loadProvider load.Provider
 	switch plat {
-	case "ubuntu":
-		loadProvider = load.NewUbuntuProvider()
+	case "debian":
+		loadProvider = load.NewDebianProvider()
 	case "darwin":
 		loadProvider = load.NewDarwinProvider()
 	default:
@@ -117,8 +117,8 @@ func (f *ProviderFactory) CreateProviders() (
 	var dnsProvider dns.Provider
 	execManager := exec.New(f.logger)
 	switch plat {
-	case "ubuntu":
-		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)
+	case "debian":
+		dnsProvider = dns.NewDebianProvider(f.logger, execManager)
 	case "darwin":
 		dnsProvider = dns.NewDarwinProvider(f.logger, execManager)
 	default:
@@ -127,8 +127,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var pingProvider ping.Provider
 	switch plat {
-	case "ubuntu":
-		pingProvider = ping.NewUbuntuProvider()
+	case "debian":
+		pingProvider = ping.NewDebianProvider()
 	case "darwin":
 		pingProvider = ping.NewDarwinProvider()
 	default:

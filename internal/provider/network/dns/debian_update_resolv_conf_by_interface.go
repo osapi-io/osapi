@@ -52,7 +52,7 @@ import (
 //     specified interface.
 //
 // See `systemd-resolved.service(8)` manual page for further information.
-func (u *Ubuntu) UpdateResolvConfByInterface(
+func (u *Debian) UpdateResolvConfByInterface(
 	servers []string,
 	searchDomains []string,
 	interfaceName string,

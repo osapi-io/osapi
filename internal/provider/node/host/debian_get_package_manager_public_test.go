@@ -28,25 +28,25 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetPackageManagerPublicTestSuite struct {
+type DebianGetPackageManagerPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetPackageManagerPublicTestSuite) SetupTest() {}
+func (suite *DebianGetPackageManagerPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetPackageManagerPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetPackageManagerPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
+func (suite *DebianGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 	tests := []struct {
 		name         string
-		setupMock    func(u *host.Ubuntu)
+		setupMock    func(u *host.Debian)
 		want         interface{}
 		wantErr      bool
 		validateFunc func(got string)
 	}{
 		{
 			name: "when apt detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.LookPathFn = func(file string) (string, error) {
 					if file == "apt" {
 						return "/usr/bin/apt", nil
@@ -59,7 +59,7 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 		},
 		{
 			name: "when dnf detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.LookPathFn = func(file string) (string, error) {
 					if file == "dnf" {
 						return "/usr/bin/dnf", nil
@@ -72,7 +72,7 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 		},
 		{
 			name: "when yum detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.LookPathFn = func(file string) (string, error) {
 					if file == "yum" {
 						return "/usr/bin/yum", nil
@@ -85,7 +85,7 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 		},
 		{
 			name: "when no package manager detected",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.LookPathFn = func(_ string) (string, error) {
 					return "", &host.ExecNotFoundError{Name: "unknown"}
 				}
@@ -95,7 +95,7 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 		},
 		{
 			name: "when ExecNotFoundError formats message",
-			setupMock: func(u *host.Ubuntu) {
+			setupMock: func(u *host.Debian) {
 				u.LookPathFn = func(file string) (string, error) {
 					return "", &host.ExecNotFoundError{Name: file}
 				}
@@ -111,13 +111,13 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				tc.setupMock(ubuntu)
+				tc.setupMock(debian)
 			}
 
-			got, err := ubuntu.GetPackageManager()
+			got, err := debian.GetPackageManager()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -136,6 +136,6 @@ func (suite *UbuntuGetPackageManagerPublicTestSuite) TestGetPackageManager() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetPackageManagerPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetPackageManagerPublicTestSuite))
+func TestDebianGetPackageManagerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetPackageManagerPublicTestSuite))
 }

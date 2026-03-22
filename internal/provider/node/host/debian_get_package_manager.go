@@ -25,7 +25,7 @@ var packageManagers = []string{"apt", "dnf", "yum"}
 
 // GetPackageManager detects the system's package manager by checking for
 // known executables in order of preference: apt, dnf, yum.
-func (u *Ubuntu) GetPackageManager() (string, error) {
+func (u *Debian) GetPackageManager() (string, error) {
 	for _, pm := range packageManagers {
 		if _, err := u.LookPathFn(pm); err == nil {
 			return pm, nil

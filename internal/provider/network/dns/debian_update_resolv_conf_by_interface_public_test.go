@@ -34,28 +34,28 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type UbuntuUpdateResolvConfByInterfacePublicTestSuite struct {
+type DebianUpdateResolvConfByInterfacePublicTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 
 	logger *slog.Logger
 }
 
-func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
+func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) SetupSubTest() {
+func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
+func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
+func (suite *DebianUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
 		name          string
 		setupMock     func() *mocks.MockManager
@@ -247,7 +247,7 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 		suite.Run(tc.name, func() {
 			mock := tc.setupMock()
 
-			net := dns.NewUbuntuProvider(suite.logger, mock)
+			net := dns.NewDebianProvider(suite.logger, mock)
 			result, err := net.UpdateResolvConfByInterface(
 				tc.servers,
 				tc.searchDomains,
@@ -272,6 +272,6 @@ func (suite *UbuntuUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvC
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuUpdateResolvConfByInterfacePublicTestSuite))
+func TestDebianUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianUpdateResolvConfByInterfacePublicTestSuite))
 }

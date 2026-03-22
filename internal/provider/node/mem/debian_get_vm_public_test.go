@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
-type UbuntuGetStatsPublicTestSuite struct {
+type DebianGetStatsPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetStatsPublicTestSuite) SetupTest() {}
+func (suite *DebianGetStatsPublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetStatsPublicTestSuite) TearDownTest() {}
+func (suite *DebianGetStatsPublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetStatsPublicTestSuite) TestGetStats() {
+func (suite *DebianGetStatsPublicTestSuite) TestGetStats() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysMem.VirtualMemoryStat, error)
@@ -79,13 +79,13 @@ func (suite *UbuntuGetStatsPublicTestSuite) TestGetStats() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := mem.NewUbuntuProvider()
+			debian := mem.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.VirtualMemoryFn = tc.setupMock()
+				debian.VirtualMemoryFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetStats()
+			got, err := debian.GetStats()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -102,6 +102,6 @@ func (suite *UbuntuGetStatsPublicTestSuite) TestGetStats() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetStatsPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetStatsPublicTestSuite))
+func TestDebianGetStatsPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetStatsPublicTestSuite))
 }

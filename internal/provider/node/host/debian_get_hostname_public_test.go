@@ -30,15 +30,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type UbuntuGetHostnamePublicTestSuite struct {
+type DebianGetHostnamePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *UbuntuGetHostnamePublicTestSuite) SetupTest() {}
+func (suite *DebianGetHostnamePublicTestSuite) SetupTest() {}
 
-func (suite *UbuntuGetHostnamePublicTestSuite) TearDownTest() {}
+func (suite *DebianGetHostnamePublicTestSuite) TearDownTest() {}
 
-func (suite *UbuntuGetHostnamePublicTestSuite) TestGetHostname() {
+func (suite *DebianGetHostnamePublicTestSuite) TestGetHostname() {
 	tests := []struct {
 		name        string
 		setupMock   func() func() (*sysHost.InfoStat, error)
@@ -70,13 +70,13 @@ func (suite *UbuntuGetHostnamePublicTestSuite) TestGetHostname() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ubuntu := host.NewUbuntuProvider()
+			debian := host.NewDebianProvider()
 
 			if tc.setupMock != nil {
-				ubuntu.InfoFn = tc.setupMock()
+				debian.InfoFn = tc.setupMock()
 			}
 
-			got, err := ubuntu.GetHostname()
+			got, err := debian.GetHostname()
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -93,6 +93,6 @@ func (suite *UbuntuGetHostnamePublicTestSuite) TestGetHostname() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestUbuntuGetHostnamePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuGetHostnamePublicTestSuite))
+func TestDebianGetHostnamePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianGetHostnamePublicTestSuite))
 }
