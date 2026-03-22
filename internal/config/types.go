@@ -58,6 +58,24 @@ type MetricsConfig struct {
 	Path string `mapstructure:"path"`
 }
 
+// OpsServer configures the per-component metrics HTTP server.
+type OpsServer struct {
+	// Enabled activates the metrics server (default: true).
+	Enabled *bool `mapstructure:"enabled"`
+	// Port the metrics server listens on.
+	Port int `mapstructure:"port"`
+}
+
+// IsEnabled returns true if the ops server is enabled.
+// Defaults to true when Enabled is nil.
+func (o OpsServer) IsEnabled() bool {
+	if o.Enabled == nil {
+		return true
+	}
+
+	return *o.Enabled
+}
+
 // TracingConfig configuration settings for distributed tracing.
 type TracingConfig struct {
 	// Enabled enables or disables tracing.
@@ -177,7 +195,8 @@ type NATSServer struct {
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
 	Namespace string `mapstructure:"namespace"`
 	// Auth holds server-side authentication configuration.
-	Auth NATSServerAuth `mapstructure:"auth,omitempty"`
+	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
+	Metrics OpsServer      `mapstructure:"metrics"`
 }
 
 // NATSStream configuration for JetStream stream settings.
@@ -229,9 +248,10 @@ type NATSConnection struct {
 
 // Controller holds the control plane configuration.
 type Controller struct {
-	Client Client         `mapstructure:"client"`
-	API    APIServer      `mapstructure:"api"    mask:"struct"`
-	NATS   NATSConnection `mapstructure:"nats"`
+	Client  Client         `mapstructure:"client"`
+	API     APIServer      `mapstructure:"api"    mask:"struct"`
+	NATS    NATSConnection `mapstructure:"nats"`
+	Metrics OpsServer      `mapstructure:"metrics"`
 }
 
 // APIServer holds the HTTP server config (port + security).
@@ -335,4 +355,5 @@ type AgentConfig struct {
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.
 	ProcessConditions ProcessConditions `mapstructure:"process_conditions,omitempty"`
+	Metrics           OpsServer         `mapstructure:"metrics"`
 }

@@ -38,6 +38,9 @@ controller:
     namespace: osapi
     auth:
       type: none
+  metrics:
+    enabled: true
+    port: 9090
 
 nats:
   server:
@@ -52,6 +55,9 @@ nats:
       #     password: '<secret>'
       # nkeys:
       #   - '<public-nkey>'
+    metrics:
+      enabled: true
+      port: 9092
 
   stream:
     name: JOBS
@@ -155,6 +161,9 @@ agent:
     memory_pressure_bytes: 0
     # Process CPU threshold as percentage (0 = disabled).
     high_cpu_percent: 0
+  metrics:
+    enabled: true
+    port: 9091
 
 notifications:
   # Enable the condition watcher and notifier (default: false).
