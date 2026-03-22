@@ -23,7 +23,7 @@ Package cli provides shared utilities for CLI startup commands.
 - [func BuildRegistryKVConfig\(namespace string, registryCfg config.NATSRegistry\) jetstream.KeyValueConfig](#BuildRegistryKVConfig)
 - [func BuildStateKVConfig\(namespace string, stateCfg config.NATSState\) jetstream.KeyValueConfig](#BuildStateKVConfig)
 - [func CalculateColumnWidths\(headers \[\]string, rows \[\]\[\]string, minPadding int\) \[\]int](#CalculateColumnWidths)
-- [func CloseNATSClient\(nc messaging.NATSClient\)](#CloseNATSClient)
+- [func CloseNATSClient\(nc natsCloser\)](#CloseNATSClient)
 - [func DisplayJobDetail\(resp \*client.JobDetail\)](#DisplayJobDetail)
 - [func Float64ToSafeString\(f \*float64\) string](#Float64ToSafeString)
 - [func FormatAge\(d time.Duration\) string](#FormatAge)
@@ -97,7 +97,7 @@ BoolToSafeString converts a \*bool to a string. Returns "" if nil.
 
 <a name="BuildAuditKVConfig"></a>
 
-## func [BuildAuditKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L126-L129)
+## func [BuildAuditKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L128-L131)
 
 ```go
 func BuildAuditKVConfig(namespace string, auditCfg config.NATSAudit) jetstream.KeyValueConfig
@@ -119,7 +119,7 @@ ERROR columns when any result carries an error.
 
 <a name="BuildFactsKVConfig"></a>
 
-## func [BuildFactsKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L95-L98)
+## func [BuildFactsKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L97-L100)
 
 ```go
 func BuildFactsKVConfig(namespace string, factsCfg config.NATSFacts) jetstream.KeyValueConfig
@@ -129,7 +129,7 @@ BuildFactsKVConfig builds a jetstream.KeyValueConfig from facts config values.
 
 <a name="BuildFileStateKVConfig"></a>
 
-## func [BuildFileStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L159-L162)
+## func [BuildFileStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L161-L164)
 
 ```go
 func BuildFileStateKVConfig(namespace string, fileStateCfg config.NATSFileState) jetstream.KeyValueConfig
@@ -153,7 +153,7 @@ mutation results carry an explicit status field.
 
 <a name="BuildNATSAuthOptions"></a>
 
-## func [BuildNATSAuthOptions](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L56-L58)
+## func [BuildNATSAuthOptions](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L58-L60)
 
 ```go
 func BuildNATSAuthOptions(auth config.NATSAuth) natsclient.AuthOptions
@@ -163,7 +163,7 @@ BuildNATSAuthOptions converts a config NATSAuth to natsclient.AuthOptions.
 
 <a name="BuildObjectStoreConfig"></a>
 
-## func [BuildObjectStoreConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L143-L146)
+## func [BuildObjectStoreConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L145-L148)
 
 ```go
 func BuildObjectStoreConfig(namespace string, objectsCfg config.NATSObjects) jetstream.ObjectStoreConfig
@@ -174,7 +174,7 @@ values.
 
 <a name="BuildRegistryKVConfig"></a>
 
-## func [BuildRegistryKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L79-L82)
+## func [BuildRegistryKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L81-L84)
 
 ```go
 func BuildRegistryKVConfig(namespace string, registryCfg config.NATSRegistry) jetstream.KeyValueConfig
@@ -185,7 +185,7 @@ values.
 
 <a name="BuildStateKVConfig"></a>
 
-## func [BuildStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L112-L115)
+## func [BuildStateKVConfig](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L114-L117)
 
 ```go
 func BuildStateKVConfig(namespace string, stateCfg config.NATSState) jetstream.KeyValueConfig
@@ -208,10 +208,10 @@ content.
 
 <a name="CloseNATSClient"></a>
 
-## func [CloseNATSClient](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L47-L49)
+## func [CloseNATSClient](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L51-L53)
 
 ```go
-func CloseNATSClient(nc messaging.NATSClient)
+func CloseNATSClient(nc natsCloser)
 ```
 
 CloseNATSClient safely closes a NATS client connection.
@@ -343,7 +343,7 @@ MaxExitCode returns the highest exit code from a slice of RawResults.
 
 <a name="ParseJetstreamStorageType"></a>
 
-## func [ParseJetstreamStorageType](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L36-L38)
+## func [ParseJetstreamStorageType](https://github.com/osapi-io/osapi/blob/main/internal/cli/nats.go#L35-L37)
 
 ```go
 func ParseJetstreamStorageType(s string) jetstream.StorageType

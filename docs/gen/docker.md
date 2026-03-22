@@ -13,12 +13,14 @@ Package docker provides the Docker container management provider.
 
 ## Index
 
+- [type APIClient](#APIClient)
 - [type ActionResult](#ActionResult)
 - [type Client](#Client)
   - [func New\(\) \(\*Client, error\)](#New)
-  - [func NewWithClient\(client dockerclient.APIClient\) \*Client](#NewWithClient)
+  - [func NewWithClient\(client APIClient\) \*Client](#NewWithClient)
   - [func \(d \*Client\) Create\(ctx context.Context, params CreateParams\) \(\*Container, error\)](#Client.Create)
   - [func \(d \*Client\) Exec\(ctx context.Context, id string, params ExecParams\) \(\*ExecResult, error\)](#Client.Exec)
+  - [func \(d \*Client\) ImageRemove\(ctx context.Context, imageName string, force bool\) \(\*ActionResult, error\)](#Client.ImageRemove)
   - [func \(d \*Client\) Inspect\(ctx context.Context, id string\) \(\*ContainerDetail, error\)](#Client.Inspect)
   - [func \(d \*Client\) List\(ctx context.Context, params ListParams\) \(\[\]Container, error\)](#Client.List)
   - [func \(d \*Client\) Ping\(ctx context.Context\) error](#Client.Ping)
@@ -38,9 +40,83 @@ Package docker provides the Docker container management provider.
 - [type PullResult](#PullResult)
 - [type VolumeMapping](#VolumeMapping)
 
+<a name="APIClient"></a>
+
+## type [APIClient](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/client.go#L38-L102)
+
+APIClient defines the subset of the Docker Engine API used by this provider.
+
+```go
+type APIClient interface {
+    ContainerCreate(
+        ctx context.Context,
+        config *container.Config,
+        hostConfig *container.HostConfig,
+        networkingConfig *network.NetworkingConfig,
+        platform *ocispec.Platform,
+        containerName string,
+    ) (container.CreateResponse, error)
+    ContainerStart(
+        ctx context.Context,
+        containerID string,
+        options container.StartOptions,
+    ) error
+    ContainerStop(
+        ctx context.Context,
+        containerID string,
+        options container.StopOptions,
+    ) error
+    ContainerRemove(
+        ctx context.Context,
+        containerID string,
+        options container.RemoveOptions,
+    ) error
+    ContainerList(
+        ctx context.Context,
+        options container.ListOptions,
+    ) ([]container.Summary, error)
+    ContainerInspect(
+        ctx context.Context,
+        containerID string,
+    ) (container.InspectResponse, error)
+    ContainerExecCreate(
+        ctx context.Context,
+        container string,
+        options container.ExecOptions,
+    ) (common.IDResponse, error)
+    ContainerExecAttach(
+        ctx context.Context,
+        execID string,
+        options container.ExecStartOptions,
+    ) (types.HijackedResponse, error)
+    ContainerExecInspect(
+        ctx context.Context,
+        execID string,
+    ) (container.ExecInspect, error)
+    ImagePull(
+        ctx context.Context,
+        ref string,
+        options image.PullOptions,
+    ) (io.ReadCloser, error)
+    ImageInspect(
+        ctx context.Context,
+        imageID string,
+        options ...dockerclient.ImageInspectOption,
+    ) (image.InspectResponse, error)
+    ImageRemove(
+        ctx context.Context,
+        imageID string,
+        options image.RemoveOptions,
+    ) ([]image.DeleteResponse, error)
+    Ping(
+        ctx context.Context,
+    ) (types.Ping, error)
+}
+```
+
 <a name="ActionResult"></a>
 
-## type [ActionResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L110-L113)
+## type [ActionResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L116-L119)
 
 ActionResult holds the result of a lifecycle action \(start, stop, remove\).
 
@@ -78,7 +154,7 @@ New creates a new Docker provider using default client options.
 ### func [NewWithClient](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/docker.go#L42-L44)
 
 ```go
-func NewWithClient(client dockerclient.APIClient) *Client
+func NewWithClient(client APIClient) *Client
 ```
 
 NewWithClient creates a Docker provider with an injected client \(for testing\).
@@ -102,6 +178,16 @@ func (d *Client) Exec(ctx context.Context, id string, params ExecParams) (*ExecR
 ```
 
 Exec executes a command in a running container.
+
+<a name="Client.ImageRemove"></a>
+
+### func \(\*Client\) [ImageRemove](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/docker.go#L395-L399)
+
+```go
+func (d *Client) ImageRemove(ctx context.Context, imageName string, force bool) (*ActionResult, error)
+```
+
+ImageRemove removes a container image from the local Docker daemon.
 
 <a name="Client.Inspect"></a>
 
@@ -135,7 +221,7 @@ Ping verifies connectivity to the Docker daemon.
 
 <a name="Client.Pull"></a>
 
-### func \(\*Client\) [Pull](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/docker.go#L396-L399)
+### func \(\*Client\) [Pull](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/docker.go#L417-L420)
 
 ```go
 func (d *Client) Pull(ctx context.Context, imageName string) (*PullResult, error)
@@ -176,7 +262,7 @@ Stop stops a running container with an optional timeout.
 
 <a name="Container"></a>
 
-## type [Container](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L100-L107)
+## type [Container](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L106-L113)
 
 Container holds summary info for a container.
 
@@ -193,7 +279,7 @@ type Container struct {
 
 <a name="ContainerDetail"></a>
 
-## type [ContainerDetail](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L116-L122)
+## type [ContainerDetail](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L122-L128)
 
 ContainerDetail holds detailed info for a container.
 
@@ -209,7 +295,7 @@ type ContainerDetail struct {
 
 <a name="CreateParams"></a>
 
-## type [CreateParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L62-L77)
+## type [CreateParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L68-L83)
 
 CreateParams contains parameters for container creation.
 
@@ -234,7 +320,7 @@ type CreateParams struct {
 
 <a name="ExecParams"></a>
 
-## type [ExecParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L131-L138)
+## type [ExecParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L137-L144)
 
 ExecParams contains parameters for executing a command in a container.
 
@@ -251,7 +337,7 @@ type ExecParams struct {
 
 <a name="ExecResult"></a>
 
-## type [ExecResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L141-L146)
+## type [ExecResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L147-L152)
 
 ExecResult contains the output of a command execution in a container.
 
@@ -266,7 +352,7 @@ type ExecResult struct {
 
 <a name="ListParams"></a>
 
-## type [ListParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L92-L97)
+## type [ListParams](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L98-L103)
 
 ListParams contains parameters for listing containers.
 
@@ -281,7 +367,7 @@ type ListParams struct {
 
 <a name="NetworkSettings"></a>
 
-## type [NetworkSettings](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L125-L128)
+## type [NetworkSettings](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L131-L134)
 
 NetworkSettings holds container network configuration.
 
@@ -294,7 +380,7 @@ type NetworkSettings struct {
 
 <a name="PortMapping"></a>
 
-## type [PortMapping](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L80-L83)
+## type [PortMapping](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L86-L89)
 
 PortMapping maps a host port to a container port.
 
@@ -307,7 +393,7 @@ type PortMapping struct {
 
 <a name="Provider"></a>
 
-## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L12-L59)
+## type [Provider](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L12-L65)
 
 Provider defines the Docker container management interface. All methods accept
 context.Context for cancellation and timeout propagation, which is important
@@ -361,12 +447,18 @@ type Provider interface {
         ctx context.Context,
         image string,
     ) (*PullResult, error)
+
+    ImageRemove(
+        ctx context.Context,
+        image string,
+        force bool,
+    ) (*ActionResult, error)
 }
 ```
 
 <a name="PullResult"></a>
 
-## type [PullResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L149-L154)
+## type [PullResult](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L155-L160)
 
 PullResult contains the result of an image pull.
 
@@ -381,7 +473,7 @@ type PullResult struct {
 
 <a name="VolumeMapping"></a>
 
-## type [VolumeMapping](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L86-L89)
+## type [VolumeMapping](https://github.com/osapi-io/osapi/blob/main/internal/provider/docker/types.go#L92-L95)
 
 VolumeMapping maps a host path to a container path.
 

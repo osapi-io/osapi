@@ -3,7 +3,7 @@
 # agent
 
 ```go
-import "github.com/retr0h/osapi/internal/api/agent"
+import "github.com/retr0h/osapi/internal/controller/api/agent"
 ```
 
 Package agent provides agent\-related API handlers.
@@ -19,7 +19,7 @@ Package agent provides agent\-related API handlers.
 
 <a name="Agent"></a>
 
-## type [Agent](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/types.go#L30-L34)
+## type [Agent](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/types.go#L30-L34)
 
 Agent implementation of the Agent APIs operations.
 
@@ -33,7 +33,7 @@ type Agent struct {
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/agent.go#L35-L38)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/agent.go#L35-L38)
 
 ```go
 func New(logger *slog.Logger, jobClient client.JobClient) *Agent
@@ -43,7 +43,7 @@ New factory to create a new instance.
 
 <a name="Agent.DrainAgent"></a>
 
-### func \(\*Agent\) [DrainAgent](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/agent_drain.go#L33-L36)
+### func \(\*Agent\) [DrainAgent](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/agent_drain.go#L33-L36)
 
 ```go
 func (a *Agent) DrainAgent(ctx context.Context, request gen.DrainAgentRequestObject) (gen.DrainAgentResponseObject, error)
@@ -53,7 +53,7 @@ DrainAgent handles POST /agent/\{hostname\}/drain.
 
 <a name="Agent.GetAgent"></a>
 
-### func \(\*Agent\) [GetAgent](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/agent_list.go#L33-L36)
+### func \(\*Agent\) [GetAgent](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/agent_list.go#L33-L36)
 
 ```go
 func (a *Agent) GetAgent(ctx context.Context, _ gen.GetAgentRequestObject) (gen.GetAgentResponseObject, error)
@@ -63,7 +63,7 @@ GetAgent discovers all active agents in the fleet.
 
 <a name="Agent.GetAgentDetails"></a>
 
-### func \(\*Agent\) [GetAgentDetails](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/agent_get.go#L31-L34)
+### func \(\*Agent\) [GetAgentDetails](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/agent_get.go#L31-L34)
 
 ```go
 func (a *Agent) GetAgentDetails(ctx context.Context, request gen.GetAgentDetailsRequestObject) (gen.GetAgentDetailsResponseObject, error)
@@ -73,7 +73,7 @@ GetAgentDetails retrieves detailed information about a specific agent.
 
 <a name="Agent.UndrainAgent"></a>
 
-### func \(\*Agent\) [UndrainAgent](https://github.com/osapi-io/osapi/blob/main/internal/api/agent/agent_undrain.go#L33-L36)
+### func \(\*Agent\) [UndrainAgent](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/agent/agent_undrain.go#L33-L36)
 
 ```go
 func (a *Agent) UndrainAgent(ctx context.Context, request gen.UndrainAgentRequestObject) (gen.UndrainAgentResponseObject, error)

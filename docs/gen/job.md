@@ -65,9 +65,11 @@ Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
 - [type AgentState](#AgentState)
 - [type CommandExecData](#CommandExecData)
 - [type CommandShellData](#CommandShellData)
+- [type ComponentRegistration](#ComponentRegistration)
 - [type Condition](#Condition)
 - [type DockerCreateData](#DockerCreateData)
 - [type DockerExecData](#DockerExecData)
+- [type DockerImageRemoveData](#DockerImageRemoveData)
 - [type DockerListData](#DockerListData)
 - [type DockerPullData](#DockerPullData)
 - [type DockerRemoveData](#DockerRemoveData)
@@ -86,12 +88,14 @@ Init("osapi") -> osapi.jobs.query._any, osapi.jobs.*.host.server1, etc.
 - [type Operation](#Operation)
 - [type OperationType](#OperationType)
 - [type PortMapping](#PortMapping)
+- [type ProcessMetrics](#ProcessMetrics)
 - [type QueueStats](#QueueStats)
 - [type QueuedJob](#QueuedJob)
 - [type Request](#Request)
 - [type Response](#Response)
 - [type Route](#Route)
 - [type Status](#Status)
+- [type SubComponentInfo](#SubComponentInfo)
 - [type TimelineEvent](#TimelineEvent)
 - [type Type](#Type)
 - [type VolumeMapping](#VolumeMapping)
@@ -201,14 +205,15 @@ const (
 
 ```go
 const (
-    OperationDockerCreate  = "docker.create.execute"
-    OperationDockerStart   = "docker.start.execute"
-    OperationDockerStop    = "docker.stop.execute"
-    OperationDockerRemove  = "docker.remove.execute"
-    OperationDockerList    = "docker.list.get"
-    OperationDockerInspect = "docker.inspect.get"
-    OperationDockerExec    = "docker.exec.execute"
-    OperationDockerPull    = "docker.pull.execute"
+    OperationDockerCreate      = "docker.create.execute"
+    OperationDockerStart       = "docker.start.execute"
+    OperationDockerStop        = "docker.stop.execute"
+    OperationDockerRemove      = "docker.remove.execute"
+    OperationDockerList        = "docker.list.get"
+    OperationDockerInspect     = "docker.inspect.get"
+    OperationDockerExec        = "docker.exec.execute"
+    OperationDockerPull        = "docker.pull.execute"
+    OperationDockerImageRemove = "docker.image-remove.execute"
 )
 ```
 
@@ -563,7 +568,7 @@ may be hierarchical \(dot\-separated\), where each segment matches
 
 <a name="AgentInfo"></a>
 
-## type [AgentInfo](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L422-L467)
+## type [AgentInfo](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L472-L517)
 
 AgentInfo represents information about an active agent.
 
@@ -618,7 +623,7 @@ type AgentInfo struct {
 
 <a name="AgentRegistration"></a>
 
-## type [AgentRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L396-L419)
+## type [AgentRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L442-L469)
 
 AgentRegistration represents an agent's registration entry in the KV registry.
 
@@ -642,16 +647,20 @@ type AgentRegistration struct {
     MemoryStats *mem.Result `json:"memory_stats,omitempty"`
     // AgentVersion is the version of the agent binary.
     AgentVersion string `json:"agent_version,omitempty"`
+    // Process holds process-level resource usage.
+    Process *ProcessMetrics `json:"process,omitempty"`
     // Conditions contains the evaluated node conditions.
     Conditions []Condition `json:"conditions,omitempty"`
     // State is the agent's scheduling state (Ready, Draining, Cordoned).
     State string `json:"state,omitempty"`
+    // SubComponents reports the status of internal services.
+    SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 }
 ```
 
 <a name="AgentState"></a>
 
-## type [AgentState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L190-L196)
+## type [AgentState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L191-L197)
 
 AgentState represents the state of a specific agent processing a job
 
@@ -667,7 +676,7 @@ type AgentState struct {
 
 <a name="CommandExecData"></a>
 
-## type [CommandExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L242-L251)
+## type [CommandExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L243-L252)
 
 CommandExecData represents data for direct command execution
 
@@ -686,7 +695,7 @@ type CommandExecData struct {
 
 <a name="CommandShellData"></a>
 
-## type [CommandShellData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L254-L261)
+## type [CommandShellData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L255-L262)
 
 CommandShellData represents data for shell command execution
 
@@ -701,9 +710,37 @@ type CommandShellData struct {
 }
 ```
 
+<a name="ComponentRegistration"></a>
+
+## type [ComponentRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L422-L439)
+
+ComponentRegistration represents a non\-agent component's heartbeat entry in the
+KV registry. Used by API server and NATS server.
+
+```go
+type ComponentRegistration struct {
+    // Type is the component type: "controller" or "nats".
+    Type string `json:"type"`
+    // Hostname is the hostname of the component.
+    Hostname string `json:"hostname"`
+    // StartedAt is the timestamp when the component process started.
+    StartedAt time.Time `json:"started_at"`
+    // RegisteredAt is the timestamp of the last heartbeat.
+    RegisteredAt time.Time `json:"registered_at"`
+    // Process holds process-level resource usage.
+    Process *ProcessMetrics `json:"process,omitempty"`
+    // Conditions contains evaluated process conditions.
+    Conditions []Condition `json:"conditions,omitempty"`
+    // Version is the component binary version.
+    Version string `json:"version,omitempty"`
+    // SubComponents reports the status of internal services.
+    SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
+}
+```
+
 <a name="Condition"></a>
 
-## type [Condition](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L388-L393)
+## type [Condition](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L395-L400)
 
 Condition represents a node condition evaluated agent\-side.
 
@@ -718,7 +755,7 @@ type Condition struct {
 
 <a name="DockerCreateData"></a>
 
-## type [DockerCreateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L264-L272)
+## type [DockerCreateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L265-L273)
 
 DockerCreateData represents data for docker container creation.
 
@@ -736,7 +773,7 @@ type DockerCreateData struct {
 
 <a name="DockerExecData"></a>
 
-## type [DockerExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L306-L310)
+## type [DockerExecData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L307-L311)
 
 DockerExecData represents data for executing a command in a docker container.
 
@@ -748,9 +785,22 @@ type DockerExecData struct {
 }
 ```
 
+<a name="DockerImageRemoveData"></a>
+
+## type [DockerImageRemoveData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L319-L322)
+
+DockerImageRemoveData represents data for removing a docker image.
+
+```go
+type DockerImageRemoveData struct {
+    Image string `json:"image"`
+    Force bool   `json:"force,omitempty"`
+}
+```
+
 <a name="DockerListData"></a>
 
-## type [DockerListData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L300-L303)
+## type [DockerListData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L301-L304)
 
 DockerListData represents data for listing docker containers.
 
@@ -763,7 +813,7 @@ type DockerListData struct {
 
 <a name="DockerPullData"></a>
 
-## type [DockerPullData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L313-L315)
+## type [DockerPullData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L314-L316)
 
 DockerPullData represents data for pulling a docker image.
 
@@ -775,7 +825,7 @@ type DockerPullData struct {
 
 <a name="DockerRemoveData"></a>
 
-## type [DockerRemoveData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L295-L297)
+## type [DockerRemoveData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L296-L298)
 
 DockerRemoveData represents data for removing a docker container.
 
@@ -787,7 +837,7 @@ type DockerRemoveData struct {
 
 <a name="DockerStopData"></a>
 
-## type [DockerStopData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L290-L292)
+## type [DockerStopData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L291-L293)
 
 DockerStopData represents data for stopping a docker container.
 
@@ -799,7 +849,7 @@ type DockerStopData struct {
 
 <a name="FactsRegistration"></a>
 
-## type [FactsRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L360-L371)
+## type [FactsRegistration](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L367-L378)
 
 FactsRegistration represents an agent's facts entry in the facts KV bucket.
 
@@ -820,7 +870,7 @@ type FactsRegistration struct {
 
 <a name="FileState"></a>
 
-## type [FileState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L329-L338)
+## type [FileState](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L336-L345)
 
 FileState represents a deployed file's state in the file\-state KV. Keyed by
 \<hostname\>.\<sha256\-of\-path\>.
@@ -852,7 +902,7 @@ type HostnameProvider interface {
 
 <a name="NetworkDNSUpdateData"></a>
 
-## type [NetworkDNSUpdateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L222-L229)
+## type [NetworkDNSUpdateData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L223-L230)
 
 NetworkDNSUpdateData represents data for DNS configuration changes
 
@@ -869,7 +919,7 @@ type NetworkDNSUpdateData struct {
 
 <a name="NetworkInterface"></a>
 
-## type [NetworkInterface](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L341-L347)
+## type [NetworkInterface](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L348-L354)
 
 NetworkInterface represents a network interface with its address.
 
@@ -885,7 +935,7 @@ type NetworkInterface struct {
 
 <a name="NetworkPingExecuteData"></a>
 
-## type [NetworkPingExecuteData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L232-L239)
+## type [NetworkPingExecuteData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L233-L240)
 
 NetworkPingExecuteData represents data for ping operations
 
@@ -902,7 +952,7 @@ type NetworkPingExecuteData struct {
 
 <a name="NodeDiskResponse"></a>
 
-## type [NodeDiskResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L470-L472)
+## type [NodeDiskResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L520-L522)
 
 NodeDiskResponse represents the response for node.disk.get operations.
 
@@ -914,7 +964,7 @@ type NodeDiskResponse struct {
 
 <a name="NodeHostnameGetData"></a>
 
-## type [NodeHostnameGetData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L217-L219)
+## type [NodeHostnameGetData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L218-L220)
 
 NodeHostnameGetData represents data for hostname retrieval
 
@@ -925,7 +975,7 @@ type NodeHostnameGetData struct {
 
 <a name="NodeShutdownData"></a>
 
-## type [NodeShutdownData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L318-L325)
+## type [NodeShutdownData](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L325-L332)
 
 NodeShutdownData represents data for node shutdown/reboot operations
 
@@ -942,7 +992,7 @@ type NodeShutdownData struct {
 
 <a name="NodeStatusResponse"></a>
 
-## type [NodeStatusResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L482-L495)
+## type [NodeStatusResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L532-L545)
 
 NodeStatusResponse aggregates node status information from multiple providers.
 This represents the response for node.status.get operations in the job queue.
@@ -966,7 +1016,7 @@ type NodeStatusResponse struct {
 
 <a name="NodeUptimeResponse"></a>
 
-## type [NodeUptimeResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L475-L478)
+## type [NodeUptimeResponse](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L525-L528)
 
 NodeUptimeResponse represents the response for node.uptime.get operations.
 
@@ -979,7 +1029,7 @@ type NodeUptimeResponse struct {
 
 <a name="Operation"></a>
 
-## type [Operation](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L148-L154)
+## type [Operation](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L149-L155)
 
 Operation represents an operation in the new hierarchical format
 
@@ -1006,7 +1056,7 @@ type OperationType string
 
 <a name="PortMapping"></a>
 
-## type [PortMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L277-L280)
+## type [PortMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L278-L281)
 
 PortMapping maps a host port to a container port \(job layer\). Intentionally
 duplicated from runtime.PortMapping to keep the job layer decoupled from the
@@ -1019,9 +1069,26 @@ type PortMapping struct {
 }
 ```
 
+<a name="ProcessMetrics"></a>
+
+## type [ProcessMetrics](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L403-L410)
+
+ProcessMetrics holds process\-level resource usage.
+
+```go
+type ProcessMetrics struct {
+    // CPUPercent is the process CPU usage as a percentage.
+    CPUPercent float64 `json:"cpu_percent"`
+    // RSSBytes is the resident set size in bytes.
+    RSSBytes int64 `json:"rss_bytes"`
+    // Goroutines is the number of active goroutines.
+    Goroutines int `json:"goroutines"`
+}
+```
+
 <a name="QueueStats"></a>
 
-## type [QueueStats](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L208-L212)
+## type [QueueStats](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L209-L213)
 
 QueueStats represents statistics about the job queue.
 
@@ -1035,7 +1102,7 @@ type QueueStats struct {
 
 <a name="QueuedJob"></a>
 
-## type [QueuedJob](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L157-L187)
+## type [QueuedJob](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L158-L188)
 
 QueuedJob represents a job stored in the KV queue with metadata
 
@@ -1124,7 +1191,7 @@ type Response struct {
 
 <a name="Route"></a>
 
-## type [Route](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L350-L357)
+## type [Route](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L357-L364)
 
 Route represents a network routing table entry.
 
@@ -1164,9 +1231,24 @@ const (
 )
 ```
 
+<a name="SubComponentInfo"></a>
+
+## type [SubComponentInfo](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L413-L418)
+
+SubComponentInfo holds the status and optional address of a sub\-component.
+
+```go
+type SubComponentInfo struct {
+    // Status is the sub-component status (e.g., "ok", "disabled").
+    Status string `json:"status"`
+    // Address is the optional network endpoint (e.g., "http://0.0.0.0:9090").
+    Address string `json:"address,omitempty"`
+}
+```
+
 <a name="TimelineEvent"></a>
 
-## type [TimelineEvent](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L199-L205)
+## type [TimelineEvent](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L200-L206)
 
 TimelineEvent represents a single event in the job timeline
 
@@ -1203,7 +1285,7 @@ const (
 
 <a name="VolumeMapping"></a>
 
-## type [VolumeMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L284-L287)
+## type [VolumeMapping](https://github.com/osapi-io/osapi/blob/main/internal/job/types.go#L285-L288)
 
 VolumeMapping maps a host path to a container path \(job layer\). Intentionally
 duplicated from runtime.VolumeMapping for the same reason.

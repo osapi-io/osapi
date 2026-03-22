@@ -67,6 +67,7 @@ resp, err := client.Node.Exec(ctx, client.ExecRequest{
 - [type DockerDetailResult](#DockerDetailResult)
 - [type DockerExecOpts](#DockerExecOpts)
 - [type DockerExecResult](#DockerExecResult)
+- [type DockerImageRemoveParams](#DockerImageRemoveParams)
 - [type DockerListParams](#DockerListParams)
 - [type DockerListResult](#DockerListResult)
 - [type DockerPullOpts](#DockerPullOpts)
@@ -76,6 +77,7 @@ resp, err := client.Node.Exec(ctx, client.ExecRequest{
 - [type DockerService](#DockerService)
   - [func \(s \*DockerService\) Create\(ctx context.Context, hostname string, opts DockerCreateOpts\) \(\*Response\[Collection\[DockerResult\]\], error\)](#DockerService.Create)
   - [func \(s \*DockerService\) Exec\(ctx context.Context, hostname string, id string, opts DockerExecOpts\) \(\*Response\[Collection\[DockerExecResult\]\], error\)](#DockerService.Exec)
+  - [func \(s \*DockerService\) ImageRemove\(ctx context.Context, hostname string, imageName string, params \*DockerImageRemoveParams\) \(\*Response\[Collection\[DockerActionResult\]\], error\)](#DockerService.ImageRemove)
   - [func \(s \*DockerService\) Inspect\(ctx context.Context, hostname string, id string\) \(\*Response\[Collection\[DockerDetailResult\]\], error\)](#DockerService.Inspect)
   - [func \(s \*DockerService\) List\(ctx context.Context, hostname string, params \*DockerListParams\) \(\*Response\[Collection\[DockerListResult\]\], error\)](#DockerService.List)
   - [func \(s \*DockerService\) Pull\(ctx context.Context, hostname string, opts DockerPullOpts\) \(\*Response\[Collection\[DockerPullResult\]\], error\)](#DockerService.Pull)
@@ -122,8 +124,6 @@ resp, err := client.Node.Exec(ctx, client.ExecRequest{
 - [type Memory](#Memory)
 - [type MemoryResult](#MemoryResult)
 - [type MessageResponse](#MessageResponse)
-- [type MetricsService](#MetricsService)
-  - [func \(s \*MetricsService\) Get\(ctx context.Context\) \(string, error\)](#MetricsService.Get)
 - [type NATSInfo](#NATSInfo)
 - [type NetworkInterface](#NetworkInterface)
 - [type NodeService](#NodeService)
@@ -152,6 +152,7 @@ resp, err := client.Node.Exec(ctx, client.ExecRequest{
   - [func WithLogger\(logger \*slog.Logger\) Option](#WithLogger)
 - [type PingResult](#PingResult)
 - [type ReadyStatus](#ReadyStatus)
+- [type RegistryEntry](#RegistryEntry)
 - [type Response](#Response)
   - [func NewResponse\[T any\]\(data T, rawJSON \[\]byte\) \*Response\[T\]](#NewResponse)
   - [func \(r \*Response\[T\]\) RawJSON\(\) \[\]byte](#Response[T].RawJSON)
@@ -324,7 +325,7 @@ type AgentState struct {
 
 <a name="AgentStats"></a>
 
-## type [AgentStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L66-L70)
+## type [AgentStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L79-L83)
 
 AgentStats represents agent statistics from the health endpoint.
 
@@ -338,7 +339,7 @@ type AgentStats struct {
 
 <a name="AgentSummary"></a>
 
-## type [AgentSummary](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L73-L77)
+## type [AgentSummary](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L86-L90)
 
 AgentSummary represents a summary of an agent from the health endpoint.
 
@@ -450,7 +451,7 @@ Unwrap returns the underlying APIError.
 
 <a name="Client"></a>
 
-## type [Client](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L46-L77)
+## type [Client](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L46-L74)
 
 Client is the top\-level OSAPI SDK client. Use New\(\) to create one.
 
@@ -472,9 +473,6 @@ type Client struct {
     // Audit provides audit log operations (list, get, export).
     Audit *AuditService
 
-    // Metrics provides Prometheus metrics access.
-    Metrics *MetricsService
-
     // File provides file management operations (upload, list, get, delete).
     File *FileService
 
@@ -487,7 +485,7 @@ type Client struct {
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L101-L105)
+### func [New](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L98-L102)
 
 ```go
 func New(baseURL string, bearerToken string, opts ...Option) *Client
@@ -539,14 +537,15 @@ type CommandResult struct {
 
 <a name="ComponentHealth"></a>
 
-## type [ComponentHealth](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L54-L57)
+## type [ComponentHealth](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L66-L70)
 
 ComponentHealth represents a component's health.
 
 ```go
 type ComponentHealth struct {
-    Status string `json:"status"`
-    Error  string `json:"error,omitempty"`
+    Status  string `json:"status"`
+    Error   string `json:"error,omitempty"`
+    Address string `json:"address,omitempty"`
 }
 ```
 
@@ -589,7 +588,7 @@ Unwrap returns the underlying APIError.
 
 <a name="ConsumerDetail"></a>
 
-## type [ConsumerDetail](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L96-L101)
+## type [ConsumerDetail](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L109-L114)
 
 ConsumerDetail represents a single consumer's details.
 
@@ -604,7 +603,7 @@ type ConsumerDetail struct {
 
 <a name="ConsumerStats"></a>
 
-## type [ConsumerStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L90-L93)
+## type [ConsumerStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L103-L106)
 
 ConsumerStats represents JetStream consumer statistics.
 
@@ -678,7 +677,7 @@ type DiskResult struct {
 
 <a name="DockerActionResult"></a>
 
-## type [DockerActionResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L128-L134)
+## type [DockerActionResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L134-L140)
 
 DockerActionResult represents a docker container lifecycle action result from a
 single agent.
@@ -720,7 +719,7 @@ type DockerCreateOpts struct {
 
 <a name="DockerDetailResult"></a>
 
-## type [DockerDetailResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L111-L125)
+## type [DockerDetailResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L117-L131)
 
 DockerDetailResult represents a docker container inspect result from a single
 agent.
@@ -745,7 +744,7 @@ type DockerDetailResult struct {
 
 <a name="DockerExecOpts"></a>
 
-## type [DockerExecOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L72-L79)
+## type [DockerExecOpts](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L78-L85)
 
 DockerExecOpts contains options for executing a command in a container.
 
@@ -762,7 +761,7 @@ type DockerExecOpts struct {
 
 <a name="DockerExecResult"></a>
 
-## type [DockerExecResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L137-L144)
+## type [DockerExecResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L143-L150)
 
 DockerExecResult represents a docker container exec result from a single agent.
 
@@ -774,6 +773,19 @@ type DockerExecResult struct {
     ExitCode int    `json:"exit_code"`
     Changed  bool   `json:"changed"`
     Error    string `json:"error,omitempty"`
+}
+```
+
+<a name="DockerImageRemoveParams"></a>
+
+## type [DockerImageRemoveParams](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L72-L75)
+
+DockerImageRemoveParams contains parameters for removing an image.
+
+```go
+type DockerImageRemoveParams struct {
+    // Force forces removal even if the image is in use.
+    Force bool
 }
 ```
 
@@ -794,7 +806,7 @@ type DockerListParams struct {
 
 <a name="DockerListResult"></a>
 
-## type [DockerListResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L94-L99)
+## type [DockerListResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L100-L105)
 
 DockerListResult represents a docker container list result from a single agent.
 
@@ -822,7 +834,7 @@ type DockerPullOpts struct {
 
 <a name="DockerPullResult"></a>
 
-## type [DockerPullResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L147-L154)
+## type [DockerPullResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L153-L160)
 
 DockerPullResult represents a docker image pull result from a single agent.
 
@@ -852,7 +864,7 @@ type DockerRemoveParams struct {
 
 <a name="DockerResult"></a>
 
-## type [DockerResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L82-L91)
+## type [DockerResult](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L88-L97)
 
 DockerResult represents a docker container create result from a single agent.
 
@@ -901,6 +913,16 @@ func (s *DockerService) Exec(ctx context.Context, hostname string, id string, op
 
 Exec executes a command inside a running container on the target host.
 
+<a name="DockerService.ImageRemove"></a>
+
+### func \(\*DockerService\) [ImageRemove](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L317-L322)
+
+```go
+func (s *DockerService) ImageRemove(ctx context.Context, hostname string, imageName string, params *DockerImageRemoveParams) (*Response[Collection[DockerActionResult]], error)
+```
+
+ImageRemove removes a container image from the target host.
+
 <a name="DockerService.Inspect"></a>
 
 ### func \(\*DockerService\) [Inspect](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L132-L136)
@@ -923,7 +945,7 @@ List lists containers on the target host, optionally filtered by state.
 
 <a name="DockerService.Pull"></a>
 
-### func \(\*DockerService\) [Pull](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L317-L321)
+### func \(\*DockerService\) [Pull](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker.go#L361-L365)
 
 ```go
 func (s *DockerService) Pull(ctx context.Context, hostname string, opts DockerPullOpts) (*Response[Collection[DockerPullResult]], error)
@@ -976,7 +998,7 @@ type DockerStopOpts struct {
 
 <a name="DockerSummaryItem"></a>
 
-## type [DockerSummaryItem](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L102-L108)
+## type [DockerSummaryItem](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/docker_types.go#L108-L114)
 
 DockerSummaryItem represents a brief docker container summary.
 
@@ -1413,7 +1435,7 @@ Retry retries a failed job by ID, optionally on a different target.
 
 <a name="JobStats"></a>
 
-## type [JobStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L80-L87)
+## type [JobStats](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L93-L100)
 
 JobStats represents job queue statistics from the health endpoint.
 
@@ -1430,7 +1452,7 @@ type JobStats struct {
 
 <a name="KVBucketInfo"></a>
 
-## type [KVBucketInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L112-L116)
+## type [KVBucketInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L125-L129)
 
 KVBucketInfo represents a KV bucket's info.
 
@@ -1532,31 +1554,9 @@ type MessageResponse struct {
 }
 ```
 
-<a name="MetricsService"></a>
-
-## type [MetricsService](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/metrics.go#L34-L37)
-
-MetricsService provides Prometheus metrics access.
-
-```go
-type MetricsService struct {
-    // contains filtered or unexported fields
-}
-```
-
-<a name="MetricsService.Get"></a>
-
-### func \(\*MetricsService\) [Get](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/metrics.go#L40-L42)
-
-```go
-func (s *MetricsService) Get(ctx context.Context) (string, error)
-```
-
-Get fetches the raw Prometheus metrics text from the /metrics endpoint.
-
 <a name="NATSInfo"></a>
 
-## type [NATSInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L60-L63)
+## type [NATSInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L73-L76)
 
 NATSInfo represents NATS connection info.
 
@@ -1808,7 +1808,7 @@ type OSInfoResult struct {
 
 <a name="ObjectStoreInfo"></a>
 
-## type [ObjectStoreInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L119-L122)
+## type [ObjectStoreInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L132-L135)
 
 ObjectStoreInfo represents an Object Store bucket's info.
 
@@ -1821,7 +1821,7 @@ type ObjectStoreInfo struct {
 
 <a name="Option"></a>
 
-## type [Option](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L80)
+## type [Option](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L77)
 
 Option configures the Client.
 
@@ -1831,7 +1831,7 @@ type Option func(*Client)
 
 <a name="WithHTTPTransport"></a>
 
-### func [WithHTTPTransport](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L92-L94)
+### func [WithHTTPTransport](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L89-L91)
 
 ```go
 func WithHTTPTransport(transport http.RoundTripper) Option
@@ -1841,7 +1841,7 @@ WithHTTPTransport sets a custom base HTTP transport.
 
 <a name="WithLogger"></a>
 
-### func [WithLogger](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L83-L85)
+### func [WithLogger](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/osapi.go#L80-L82)
 
 ```go
 func WithLogger(logger *slog.Logger) Option
@@ -1880,6 +1880,25 @@ type ReadyStatus struct {
     Status             string `json:"status"`
     Error              string `json:"error,omitempty"`
     ServiceUnavailable bool   `json:"service_unavailable"`
+}
+```
+
+<a name="RegistryEntry"></a>
+
+## type [RegistryEntry](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L55-L63)
+
+RegistryEntry represents a unified component registration in the health
+registry.
+
+```go
+type RegistryEntry struct {
+    Type       string   `json:"type"`
+    Hostname   string   `json:"hostname"`
+    Status     string   `json:"status"`
+    Conditions []string `json:"conditions,omitempty"`
+    Age        string   `json:"age"`
+    CPUPercent float64  `json:"cpu_percent"`
+    MemBytes   int64    `json:"mem_bytes"`
 }
 ```
 
@@ -1980,7 +1999,7 @@ type ShellRequest struct {
 
 <a name="StreamInfo"></a>
 
-## type [StreamInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L104-L109)
+## type [StreamInfo](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L117-L122)
 
 StreamInfo represents a JetStream stream's info.
 
@@ -1995,7 +2014,7 @@ type StreamInfo struct {
 
 <a name="SystemStatus"></a>
 
-## type [SystemStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L38-L51)
+## type [SystemStatus](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/client/health_types.go#L38-L52)
 
 SystemStatus represents detailed system status.
 
@@ -2013,6 +2032,7 @@ type SystemStatus struct {
     Streams            []StreamInfo               `json:"streams,omitempty"`
     KVBuckets          []KVBucketInfo             `json:"kv_buckets,omitempty"`
     ObjectStores       []ObjectStoreInfo          `json:"object_stores,omitempty"`
+    Registry           []RegistryEntry            `json:"registry,omitempty"`
 }
 ```
 

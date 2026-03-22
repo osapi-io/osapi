@@ -3,50 +3,128 @@
 # metrics
 
 ```go
-import "github.com/retr0h/osapi/internal/api/metrics"
+import "github.com/retr0h/osapi/internal/telemetry/metrics"
 ```
 
-Package metrics provides the Prometheus metrics endpoint handler.
+Package metrics provides a lightweight HTTP server for per\-component Prometheus
+metrics with isolated registries.
 
 ## Index
 
-- [type Metrics](#Metrics)
-  - [func New\(handler http.Handler, path string\) \*Metrics](#New)
-  - [func \(m \*Metrics\) RegisterHandler\(\) func\(e \*echo.Echo\)](#Metrics.RegisterHandler)
+- [type Server](#Server)
+  - [func New\(host string, port int, logger \*slog.Logger\) \*Server](#New)
+  - [func \(s \*Server\) MeterProvider\(\) \*sdkmetric.MeterProvider](#Server.MeterProvider)
+  - [func \(s \*Server\) RegisterHeartbeatAge\(timeFn func\(\) time.Time\)](#Server.RegisterHeartbeatAge)
+  - [func \(s \*Server\) RegisterSubsystems\(subsystems \[\]SubsystemStatus\)](#Server.RegisterSubsystems)
+  - [func \(s \*Server\) SetReadinessFunc\(fn func\(\) error\)](#Server.SetReadinessFunc)
+  - [func \(s \*Server\) Start\(\)](#Server.Start)
+  - [func \(s \*Server\) Stop\(ctx context.Context\)](#Server.Stop)
+- [type SubsystemStatus](#SubsystemStatus)
 
-<a name="Metrics"></a>
+<a name="Server"></a>
 
-## type [Metrics](https://github.com/osapi-io/osapi/blob/main/internal/api/metrics/types.go#L28-L33)
+## type [Server](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/types.go#L33-L40)
 
-Metrics implementation of the Metrics API operations.
+Server is a per\-component HTTP server that serves /metrics, /health, and
+/health/ready with an isolated Prometheus registry and OTEL MeterProvider.
 
 ```go
-type Metrics struct {
-    // Handler is the Prometheus HTTP handler.
-    Handler http.Handler
-    // Path is the HTTP path for the scrape endpoint.
-    Path string
+type Server struct {
+    // contains filtered or unexported fields
 }
 ```
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/api/metrics/metrics.go#L29-L32)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L49-L53)
 
 ```go
-func New(handler http.Handler, path string) *Metrics
+func New(host string, port int, logger *slog.Logger) *Server
 ```
 
-New factory to create a new instance.
+New creates a new metrics server on the given port with an isolated Prometheus
+registry and OTEL MeterProvider.
 
-<a name="Metrics.RegisterHandler"></a>
+<a name="Server.MeterProvider"></a>
 
-### func \(\*Metrics\) [RegisterHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/metrics/metrics_get.go#L28)
+### func \(\*Server\) [MeterProvider](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L177)
 
 ```go
-func (m *Metrics) RegisterHandler() func(e *echo.Echo)
+func (s *Server) MeterProvider() *sdkmetric.MeterProvider
 ```
 
-RegisterHandler returns a closure that registers the Prometheus scrape endpoint.
+MeterProvider returns the isolated OTEL MeterProvider for this server.
+Components use this to create instruments that appear on this server's /metrics
+endpoint.
+
+<a name="Server.RegisterHeartbeatAge"></a>
+
+### func \(\*Server\) [RegisterHeartbeatAge](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L155-L157)
+
+```go
+func (s *Server) RegisterHeartbeatAge(timeFn func() time.Time)
+```
+
+RegisterHeartbeatAge registers an osapi_heartbeat_age_seconds gauge that reports
+the time since the last successful heartbeat write. The timeFn should return the
+timestamp of the last heartbeat, or zero time if none.
+
+<a name="Server.RegisterSubsystems"></a>
+
+### func \(\*Server\) [RegisterSubsystems](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L130-L132)
+
+```go
+func (s *Server) RegisterSubsystems(subsystems []SubsystemStatus)
+```
+
+RegisterSubsystems registers an osapi_subsystem_up gauge that reports 1 when
+each subsystem status function returns "ok" and 0 otherwise. All subsystems are
+emitted in a single callback with a "subsystem" attribute.
+
+<a name="Server.SetReadinessFunc"></a>
+
+### func \(\*Server\) [SetReadinessFunc](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L116)
+
+```go
+func (s *Server) SetReadinessFunc(fn func() error)
+```
+
+SetReadinessFunc sets a function called by /health/ready to determine whether
+this component is ready to serve traffic. If fn returns an error the endpoint
+responds 503; if nil it responds 200.
+
+<a name="Server.Start"></a>
+
+### func \(\*Server\) [Start](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L182)
+
+```go
+func (s *Server) Start()
+```
+
+Start starts the HTTP server in a background goroutine.
+
+<a name="Server.Stop"></a>
+
+### func \(\*Server\) [Stop](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L194)
+
+```go
+func (s *Server) Stop(ctx context.Context)
+```
+
+Stop gracefully shuts down the HTTP server and meter provider.
+
+<a name="SubsystemStatus"></a>
+
+## type [SubsystemStatus](https://github.com/osapi-io/osapi/blob/main/internal/telemetry/metrics/server.go#L122-L125)
+
+SubsystemStatus holds a subsystem name and a function that returns its current
+status string \(e.g., "ok", "disabled", "error"\).
+
+```go
+type SubsystemStatus struct {
+    Name     string
+    StatusFn func() string
+}
+```
 
 Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

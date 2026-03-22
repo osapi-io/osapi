@@ -3,148 +3,71 @@
 # audit
 
 ```go
-import "github.com/retr0h/osapi/internal/audit"
+import "github.com/retr0h/osapi/internal/controller/api/audit"
 ```
 
-Package audit provides audit logging types and storage.
+Package audit provides audit log API handlers.
 
 ## Index
 
-- [type Entry](#Entry)
-- [type KVStore](#KVStore)
-  - [func NewKVStore\(logger \*slog.Logger, kv jetstream.KeyValue\) \*KVStore](#NewKVStore)
-  - [func \(s \*KVStore\) Get\(ctx context.Context, id string\) \(\*Entry, error\)](#KVStore.Get)
-  - [func \(s \*KVStore\) List\(ctx context.Context, limit int, offset int\) \(\[\]Entry, int, error\)](#KVStore.List)
-  - [func \(s \*KVStore\) ListAll\(ctx context.Context\) \(\[\]Entry, error\)](#KVStore.ListAll)
-  - [func \(s \*KVStore\) Write\(ctx context.Context, entry Entry\) error](#KVStore.Write)
-- [type Store](#Store)
+- [type Audit](#Audit)
+  - [func New\(logger \*slog.Logger, store auditstore.Store\) \*Audit](#New)
+  - [func \(a \*Audit\) GetAuditExport\(ctx context.Context, \_ gen.GetAuditExportRequestObject\) \(gen.GetAuditExportResponseObject, error\)](#Audit.GetAuditExport)
+  - [func \(a \*Audit\) GetAuditLogByID\(ctx context.Context, request gen.GetAuditLogByIDRequestObject\) \(gen.GetAuditLogByIDResponseObject, error\)](#Audit.GetAuditLogByID)
+  - [func \(a \*Audit\) GetAuditLogs\(ctx context.Context, request gen.GetAuditLogsRequestObject\) \(gen.GetAuditLogsResponseObject, error\)](#Audit.GetAuditLogs)
 
-<a name="Entry"></a>
+<a name="Audit"></a>
 
-## type [Entry](https://github.com/osapi-io/osapi/blob/main/internal/audit/types.go#L27-L48)
+## type [Audit](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/audit/types.go#L30-L34)
 
-Entry represents a single audit log record.
+Audit implementation of the Audit APIs operations.
 
 ```go
-type Entry struct {
-    // ID is the unique identifier for this audit entry.
-    ID  string `json:"id"`
-    // Timestamp is when the request was processed.
-    Timestamp time.Time `json:"timestamp"`
-    // User is the authenticated subject (from JWT sub claim).
-    User string `json:"user"`
-    // Roles are the roles from the JWT token.
-    Roles []string `json:"roles"`
-    // Method is the HTTP method (GET, POST, PUT, DELETE).
-    Method string `json:"method"`
-    // Path is the request URL path.
-    Path string `json:"path"`
-    // OperationID is the OpenAPI operation ID (if available).
-    OperationID string `json:"operation_id,omitempty"`
-    // SourceIP is the client's IP address.
-    SourceIP string `json:"source_ip"`
-    // ResponseCode is the HTTP response status code.
-    ResponseCode int `json:"response_code"`
-    // DurationMs is the request processing time in milliseconds.
-    DurationMs int64 `json:"duration_ms"`
-}
-```
-
-<a name="KVStore"></a>
-
-## type [KVStore](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L41-L44)
-
-KVStore implements Store backed by a NATS KeyValue bucket.
-
-```go
-type KVStore struct {
+type Audit struct {
+    // Store persists and retrieves audit log entries.
+    Store auditstore.Store
     // contains filtered or unexported fields
 }
 ```
 
-<a name="NewKVStore"></a>
+<a name="New"></a>
 
-### func [NewKVStore](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L47-L50)
-
-```go
-func NewKVStore(logger *slog.Logger, kv jetstream.KeyValue) *KVStore
-```
-
-NewKVStore creates a new KVStore.
-
-<a name="KVStore.Get"></a>
-
-### func \(\*KVStore\) [Get](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L75-L78)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/audit/audit.go#L35-L38)
 
 ```go
-func (s *KVStore) Get(ctx context.Context, id string) (*Entry, error)
+func New(logger *slog.Logger, store auditstore.Store) *Audit
 ```
 
-Get retrieves a single audit entry by ID.
+New factory to create a new instance.
 
-<a name="KVStore.List"></a>
+<a name="Audit.GetAuditExport"></a>
 
-### func \(\*KVStore\) [List](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L93-L97)
+### func \(\*Audit\) [GetAuditExport](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/audit/audit_export.go#L31-L34)
 
 ```go
-func (s *KVStore) List(ctx context.Context, limit int, offset int) ([]Entry, int, error)
+func (a *Audit) GetAuditExport(ctx context.Context, _ gen.GetAuditExportRequestObject) (gen.GetAuditExportResponseObject, error)
 ```
 
-List retrieves audit entries with pagination.
+GetAuditExport returns all audit log entries without pagination.
 
-<a name="KVStore.ListAll"></a>
+<a name="Audit.GetAuditLogByID"></a>
 
-### func \(\*KVStore\) [ListAll](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L153-L155)
+### func \(\*Audit\) [GetAuditLogByID](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/audit/audit_get.go#L32-L35)
 
 ```go
-func (s *KVStore) ListAll(ctx context.Context) ([]Entry, error)
+func (a *Audit) GetAuditLogByID(ctx context.Context, request gen.GetAuditLogByIDRequestObject) (gen.GetAuditLogByIDResponseObject, error)
 ```
 
-ListAll retrieves all audit entries without pagination.
+GetAuditLogByID returns a single audit log entry by ID.
 
-<a name="KVStore.Write"></a>
+<a name="Audit.GetAuditLogs"></a>
 
-### func \(\*KVStore\) [Write](https://github.com/osapi-io/osapi/blob/main/internal/audit/kv_store.go#L58-L61)
+### func \(\*Audit\) [GetAuditLogs](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/audit/audit_list.go#L35-L38)
 
 ```go
-func (s *KVStore) Write(ctx context.Context, entry Entry) error
+func (a *Audit) GetAuditLogs(ctx context.Context, request gen.GetAuditLogsRequestObject) (gen.GetAuditLogsResponseObject, error)
 ```
 
-Write persists an audit entry to the KV bucket.
-
-<a name="Store"></a>
-
-## type [Store](https://github.com/osapi-io/osapi/blob/main/internal/audit/store.go#L26-L51)
-
-Store defines the interface for audit log persistence.
-
-```go
-type Store interface {
-    // Write persists an audit entry.
-    Write(
-        ctx context.Context,
-        entry Entry,
-    ) error
-
-    // Get retrieves a single audit entry by ID.
-    Get(
-        ctx context.Context,
-        id string,
-    ) (*Entry, error)
-
-    // List retrieves audit entries with pagination.
-    // Returns the entries, total count, and any error.
-    List(
-        ctx context.Context,
-        limit int,
-        offset int,
-    ) ([]Entry, int, error)
-
-    // ListAll retrieves all audit entries without pagination.
-    ListAll(
-        ctx context.Context,
-    ) ([]Entry, error)
-}
-```
+GetAuditLogs returns a paginated list of audit log entries.
 
 Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

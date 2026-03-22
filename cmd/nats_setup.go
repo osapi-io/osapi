@@ -34,7 +34,6 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/messaging"
 )
 
 // natsLifecycle adapts the embedded NATS server to the Lifecycle interface.
@@ -96,7 +95,7 @@ func setupJetStream(
 	namespace string,
 	serverAuth config.NATSServerAuth,
 ) error {
-	var nc messaging.NATSClient = natsclient.New(log, &natsclient.Options{
+	var nc NATSClient = natsclient.New(log, &natsclient.Options{
 		Host: host,
 		Port: port,
 		Auth: buildSetupAuth(serverAuth),

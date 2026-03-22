@@ -3,7 +3,7 @@
 # node
 
 ```go
-import "github.com/retr0h/osapi/internal/api/node"
+import "github.com/retr0h/osapi/internal/controller/api/node"
 ```
 
 Package node provides node\-related API handlers.
@@ -29,7 +29,7 @@ Package node provides node\-related API handlers.
 
 <a name="Node"></a>
 
-## type [Node](https://github.com/osapi-io/osapi/blob/main/internal/api/node/types.go#L30-L34)
+## type [Node](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/types.go#L30-L34)
 
 Node implementation of the Node APIs operations.
 
@@ -43,7 +43,7 @@ type Node struct {
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node.go#L35-L38)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node.go#L35-L38)
 
 ```go
 func New(logger *slog.Logger, jobClient client.JobClient) *Node
@@ -53,7 +53,7 @@ New factory to create a new instance.
 
 <a name="Node.GetNodeDisk"></a>
 
-### func \(\*Node\) [GetNodeDisk](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_disk_get.go#L34-L37)
+### func \(\*Node\) [GetNodeDisk](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_disk_get.go#L34-L37)
 
 ```go
 func (s *Node) GetNodeDisk(ctx context.Context, request gen.GetNodeDiskRequestObject) (gen.GetNodeDiskResponseObject, error)
@@ -63,7 +63,7 @@ GetNodeDisk get the node disk usage API endpoint.
 
 <a name="Node.GetNodeHostname"></a>
 
-### func \(\*Node\) [GetNodeHostname](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_hostname_get.go#L34-L37)
+### func \(\*Node\) [GetNodeHostname](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_hostname_get.go#L34-L37)
 
 ```go
 func (s *Node) GetNodeHostname(ctx context.Context, request gen.GetNodeHostnameRequestObject) (gen.GetNodeHostnameResponseObject, error)
@@ -73,7 +73,7 @@ GetNodeHostname get the node hostname API endpoint.
 
 <a name="Node.GetNodeLoad"></a>
 
-### func \(\*Node\) [GetNodeLoad](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_load_get.go#L35-L38)
+### func \(\*Node\) [GetNodeLoad](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_load_get.go#L35-L38)
 
 ```go
 func (s *Node) GetNodeLoad(ctx context.Context, request gen.GetNodeLoadRequestObject) (gen.GetNodeLoadResponseObject, error)
@@ -83,7 +83,7 @@ GetNodeLoad get the node load averages API endpoint.
 
 <a name="Node.GetNodeMemory"></a>
 
-### func \(\*Node\) [GetNodeMemory](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_memory_get.go#L35-L38)
+### func \(\*Node\) [GetNodeMemory](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_memory_get.go#L35-L38)
 
 ```go
 func (s *Node) GetNodeMemory(ctx context.Context, request gen.GetNodeMemoryRequestObject) (gen.GetNodeMemoryResponseObject, error)
@@ -93,7 +93,7 @@ GetNodeMemory get the node memory stats API endpoint.
 
 <a name="Node.GetNodeNetworkDNSByInterface"></a>
 
-### func \(\*Node\) [GetNodeNetworkDNSByInterface](https://github.com/osapi-io/osapi/blob/main/internal/api/node/network_dns_get_by_interface.go#L34-L37)
+### func \(\*Node\) [GetNodeNetworkDNSByInterface](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/network_dns_get_by_interface.go#L34-L37)
 
 ```go
 func (s *Node) GetNodeNetworkDNSByInterface(ctx context.Context, request gen.GetNodeNetworkDNSByInterfaceRequestObject) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error)
@@ -103,7 +103,7 @@ GetNodeNetworkDNSByInterface get the node network dns get API endpoint.
 
 <a name="Node.GetNodeOS"></a>
 
-### func \(\*Node\) [GetNodeOS](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_os_get.go#L35-L38)
+### func \(\*Node\) [GetNodeOS](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_os_get.go#L35-L38)
 
 ```go
 func (s *Node) GetNodeOS(ctx context.Context, request gen.GetNodeOSRequestObject) (gen.GetNodeOSResponseObject, error)
@@ -113,7 +113,7 @@ GetNodeOS get the node OS info API endpoint.
 
 <a name="Node.GetNodeStatus"></a>
 
-### func \(\*Node\) [GetNodeStatus](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_status_get.go#L35-L38)
+### func \(\*Node\) [GetNodeStatus](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_status_get.go#L35-L38)
 
 ```go
 func (s *Node) GetNodeStatus(ctx context.Context, request gen.GetNodeStatusRequestObject) (gen.GetNodeStatusResponseObject, error)
@@ -123,7 +123,7 @@ GetNodeStatus get the node status API endpoint.
 
 <a name="Node.GetNodeUptime"></a>
 
-### func \(\*Node\) [GetNodeUptime](https://github.com/osapi-io/osapi/blob/main/internal/api/node/node_uptime_get.go#L34-L37)
+### func \(\*Node\) [GetNodeUptime](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/node_uptime_get.go#L34-L37)
 
 ```go
 func (s *Node) GetNodeUptime(ctx context.Context, request gen.GetNodeUptimeRequestObject) (gen.GetNodeUptimeResponseObject, error)
@@ -133,7 +133,7 @@ GetNodeUptime get the node uptime API endpoint.
 
 <a name="Node.PostNodeCommandExec"></a>
 
-### func \(\*Node\) [PostNodeCommandExec](https://github.com/osapi-io/osapi/blob/main/internal/api/node/command_exec_post.go#L35-L38)
+### func \(\*Node\) [PostNodeCommandExec](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/command_exec_post.go#L35-L38)
 
 ```go
 func (s *Node) PostNodeCommandExec(ctx context.Context, request gen.PostNodeCommandExecRequestObject) (gen.PostNodeCommandExecResponseObject, error)
@@ -143,7 +143,7 @@ PostNodeCommandExec post the node command exec API endpoint.
 
 <a name="Node.PostNodeCommandShell"></a>
 
-### func \(\*Node\) [PostNodeCommandShell](https://github.com/osapi-io/osapi/blob/main/internal/api/node/command_shell_post.go#L35-L38)
+### func \(\*Node\) [PostNodeCommandShell](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/command_shell_post.go#L35-L38)
 
 ```go
 func (s *Node) PostNodeCommandShell(ctx context.Context, request gen.PostNodeCommandShellRequestObject) (gen.PostNodeCommandShellResponseObject, error)
@@ -153,7 +153,7 @@ PostNodeCommandShell post the node command shell API endpoint.
 
 <a name="Node.PostNodeFileDeploy"></a>
 
-### func \(\*Node\) [PostNodeFileDeploy](https://github.com/osapi-io/osapi/blob/main/internal/api/node/file_deploy_post.go#L32-L35)
+### func \(\*Node\) [PostNodeFileDeploy](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/file_deploy_post.go#L32-L35)
 
 ```go
 func (s *Node) PostNodeFileDeploy(ctx context.Context, request gen.PostNodeFileDeployRequestObject) (gen.PostNodeFileDeployResponseObject, error)
@@ -163,7 +163,7 @@ PostNodeFileDeploy post the node file deploy API endpoint.
 
 <a name="Node.PostNodeFileStatus"></a>
 
-### func \(\*Node\) [PostNodeFileStatus](https://github.com/osapi-io/osapi/blob/main/internal/api/node/file_status_post.go#L32-L35)
+### func \(\*Node\) [PostNodeFileStatus](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/file_status_post.go#L32-L35)
 
 ```go
 func (s *Node) PostNodeFileStatus(ctx context.Context, request gen.PostNodeFileStatusRequestObject) (gen.PostNodeFileStatusResponseObject, error)
@@ -173,7 +173,7 @@ PostNodeFileStatus post the node file status API endpoint.
 
 <a name="Node.PostNodeNetworkPing"></a>
 
-### func \(\*Node\) [PostNodeNetworkPing](https://github.com/osapi-io/osapi/blob/main/internal/api/node/network_ping_post.go#L38-L41)
+### func \(\*Node\) [PostNodeNetworkPing](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/network_ping_post.go#L38-L41)
 
 ```go
 func (s *Node) PostNodeNetworkPing(ctx context.Context, request gen.PostNodeNetworkPingRequestObject) (gen.PostNodeNetworkPingResponseObject, error)
@@ -183,7 +183,7 @@ PostNodeNetworkPing post the node network ping API endpoint.
 
 <a name="Node.PutNodeNetworkDNS"></a>
 
-### func \(\*Node\) [PutNodeNetworkDNS](https://github.com/osapi-io/osapi/blob/main/internal/api/node/network_dns_put_by_interface.go#L36-L39)
+### func \(\*Node\) [PutNodeNetworkDNS](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/node/network_dns_put_by_interface.go#L36-L39)
 
 ```go
 func (s *Node) PutNodeNetworkDNS(ctx context.Context, request gen.PutNodeNetworkDNSRequestObject) (gen.PutNodeNetworkDNSResponseObject, error)

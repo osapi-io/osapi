@@ -3,7 +3,7 @@
 # api
 
 ```go
-import "github.com/retr0h/osapi/internal/api"
+import "github.com/retr0h/osapi/internal/controller/api"
 ```
 
 Package api provides the REST API server and handler registration.
@@ -13,15 +13,15 @@ Package api provides the REST API server and handler registration.
 - [Constants](#constants)
 - [type Option](#Option)
   - [func WithAuditStore\(store audit.Store\) Option](#WithAuditStore)
+  - [func WithMeterProvider\(mp \*sdkmetric.MeterProvider\) Option](#WithMeterProvider)
 - [type Server](#Server)
   - [func New\(appConfig config.Config, logger \*slog.Logger, opts ...Option\) \*Server](#New)
   - [func \(s \*Server\) GetAgentHandler\(jobClient client.JobClient\) \[\]func\(e \*echo.Echo\)](#Server.GetAgentHandler)
   - [func \(s \*Server\) GetAuditHandler\(store auditstore.Store\) \[\]func\(e \*echo.Echo\)](#Server.GetAuditHandler)
   - [func \(s \*Server\) GetDockerHandler\(jobClient client.JobClient\) \[\]func\(e \*echo.Echo\)](#Server.GetDockerHandler)
   - [func \(s \*Server\) GetFileHandler\(objStore file.ObjectStoreManager\) \[\]func\(e \*echo.Echo\)](#Server.GetFileHandler)
-  - [func \(s \*Server\) GetHealthHandler\(checker health.Checker, startTime time.Time, version string, metrics health.MetricsProvider\) \[\]func\(e \*echo.Echo\)](#Server.GetHealthHandler)
+  - [func \(s \*Server\) GetHealthHandler\(checker health.Checker, startTime time.Time, version string, metrics health.MetricsProvider, subComponents map\[string\]health.SubComponentInfo\) \[\]func\(e \*echo.Echo\)](#Server.GetHealthHandler)
   - [func \(s \*Server\) GetJobHandler\(jobClient client.JobClient\) \[\]func\(e \*echo.Echo\)](#Server.GetJobHandler)
-  - [func \(s \*Server\) GetMetricsHandler\(metricsHandler http.Handler, path string\) \[\]func\(e \*echo.Echo\)](#Server.GetMetricsHandler)
   - [func \(s \*Server\) GetNodeHandler\(jobClient client.JobClient\) \[\]func\(e \*echo.Echo\)](#Server.GetNodeHandler)
   - [func \(s \*Server\) RegisterHandlers\(handlers \[\]func\(e \*echo.Echo\)\)](#Server.RegisterHandlers)
   - [func \(s \*Server\) Start\(\)](#Server.Start)
@@ -42,7 +42,7 @@ const (
 
 <a name="Option"></a>
 
-## type [Option](https://github.com/osapi-io/osapi/blob/main/internal/api/types.go#L42)
+## type [Option](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/types.go#L44)
 
 Option is a functional option for configuring the Server.
 
@@ -52,7 +52,7 @@ type Option func(*Server)
 
 <a name="WithAuditStore"></a>
 
-### func [WithAuditStore](https://github.com/osapi-io/osapi/blob/main/internal/api/types.go#L45-L47)
+### func [WithAuditStore](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/types.go#L47-L49)
 
 ```go
 func WithAuditStore(store audit.Store) Option
@@ -60,9 +60,21 @@ func WithAuditStore(store audit.Store) Option
 
 WithAuditStore sets the audit store for audit middleware.
 
+<a name="WithMeterProvider"></a>
+
+### func [WithMeterProvider](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/types.go#L58-L60)
+
+```go
+func WithMeterProvider(mp *sdkmetric.MeterProvider) Option
+```
+
+WithMeterProvider sets the OTEL MeterProvider for HTTP metrics. When set, the
+otelecho middleware routes metrics to this provider instead of the global
+provider.
+
 <a name="Server"></a>
 
-## type [Server](https://github.com/osapi-io/osapi/blob/main/internal/api/types.go#L33-L39)
+## type [Server](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/types.go#L34-L41)
 
 Server implementation of the Server's API operations.
 
@@ -75,7 +87,7 @@ type Server struct {
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/api/server.go#L38-L42)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/server.go#L39-L43)
 
 ```go
 func New(appConfig config.Config, logger *slog.Logger, opts ...Option) *Server
@@ -85,7 +97,7 @@ New initialize a new Server and configure an Echo server.
 
 <a name="Server.GetAgentHandler"></a>
 
-### func \(\*Server\) [GetAgentHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_agent.go#L34-L36)
+### func \(\*Server\) [GetAgentHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_agent.go#L34-L36)
 
 ```go
 func (s *Server) GetAgentHandler(jobClient client.JobClient) []func(e *echo.Echo)
@@ -95,7 +107,7 @@ GetAgentHandler returns agent handler for registration.
 
 <a name="Server.GetAuditHandler"></a>
 
-### func \(\*Server\) [GetAuditHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_audit.go#L34-L36)
+### func \(\*Server\) [GetAuditHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_audit.go#L34-L36)
 
 ```go
 func (s *Server) GetAuditHandler(store auditstore.Store) []func(e *echo.Echo)
@@ -105,7 +117,7 @@ GetAuditHandler returns audit handler for registration.
 
 <a name="Server.GetDockerHandler"></a>
 
-### func \(\*Server\) [GetDockerHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_docker.go#L34-L36)
+### func \(\*Server\) [GetDockerHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_docker.go#L34-L36)
 
 ```go
 func (s *Server) GetDockerHandler(jobClient client.JobClient) []func(e *echo.Echo)
@@ -115,7 +127,7 @@ GetDockerHandler returns Docker handler for registration.
 
 <a name="Server.GetFileHandler"></a>
 
-### func \(\*Server\) [GetFileHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_file.go#L33-L35)
+### func \(\*Server\) [GetFileHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_file.go#L33-L35)
 
 ```go
 func (s *Server) GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
@@ -125,17 +137,17 @@ GetFileHandler returns file handler for registration.
 
 <a name="Server.GetHealthHandler"></a>
 
-### func \(\*Server\) [GetHealthHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_health.go#L41-L46)
+### func \(\*Server\) [GetHealthHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_health.go#L41-L47)
 
 ```go
-func (s *Server) GetHealthHandler(checker health.Checker, startTime time.Time, version string, metrics health.MetricsProvider) []func(e *echo.Echo)
+func (s *Server) GetHealthHandler(checker health.Checker, startTime time.Time, version string, metrics health.MetricsProvider, subComponents map[string]health.SubComponentInfo) []func(e *echo.Echo)
 ```
 
 GetHealthHandler returns health handler for registration.
 
 <a name="Server.GetJobHandler"></a>
 
-### func \(\*Server\) [GetJobHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_job.go#L34-L36)
+### func \(\*Server\) [GetJobHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_job.go#L34-L36)
 
 ```go
 func (s *Server) GetJobHandler(jobClient client.JobClient) []func(e *echo.Echo)
@@ -143,20 +155,9 @@ func (s *Server) GetJobHandler(jobClient client.JobClient) []func(e *echo.Echo)
 
 GetJobHandler returns job handler for registration.
 
-<a name="Server.GetMetricsHandler"></a>
-
-### func \(\*Server\) [GetMetricsHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_metrics.go#L32-L35)
-
-```go
-func (s *Server) GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
-```
-
-GetMetricsHandler returns a handler that registers the Prometheus scrape
-endpoint.
-
 <a name="Server.GetNodeHandler"></a>
 
-### func \(\*Server\) [GetNodeHandler](https://github.com/osapi-io/osapi/blob/main/internal/api/handler_node.go#L34-L36)
+### func \(\*Server\) [GetNodeHandler](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler_node.go#L34-L36)
 
 ```go
 func (s *Server) GetNodeHandler(jobClient client.JobClient) []func(e *echo.Echo)
@@ -166,7 +167,7 @@ GetNodeHandler returns node handler for registration.
 
 <a name="Server.RegisterHandlers"></a>
 
-### func \(\*Server\) [RegisterHandlers](https://github.com/osapi-io/osapi/blob/main/internal/api/handler.go#L29-L31)
+### func \(\*Server\) [RegisterHandlers](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/handler.go#L29-L31)
 
 ```go
 func (s *Server) RegisterHandlers(handlers []func(e *echo.Echo))
@@ -176,7 +177,7 @@ RegisterHandlers registers a list of handlers with the Echo instance.
 
 <a name="Server.Start"></a>
 
-### func \(\*Server\) [Start](https://github.com/osapi-io/osapi/blob/main/internal/api/server.go#L90)
+### func \(\*Server\) [Start](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/server.go#L101)
 
 ```go
 func (s *Server) Start()
@@ -186,7 +187,7 @@ Start starts the Echo server with the configured port.
 
 <a name="Server.Stop"></a>
 
-### func \(\*Server\) [Stop](https://github.com/osapi-io/osapi/blob/main/internal/api/server.go#L104-L106)
+### func \(\*Server\) [Stop](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/server.go#L115-L117)
 
 ```go
 func (s *Server) Stop(ctx context.Context)
@@ -196,7 +197,7 @@ Stop gracefully shuts down the Echo server.
 
 <a name="TokenValidator"></a>
 
-## type [TokenValidator](https://github.com/osapi-io/osapi/blob/main/internal/api/middleware.go#L42-L47)
+## type [TokenValidator](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/middleware.go#L42-L47)
 
 TokenValidator parses and validates JWT tokens.
 

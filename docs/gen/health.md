@@ -3,7 +3,7 @@
 # health
 
 ```go
-import "github.com/retr0h/osapi/internal/api/health"
+import "github.com/retr0h/osapi/internal/controller/api/health"
 ```
 
 Package health provides health check API handlers.
@@ -15,16 +15,18 @@ Package health provides health check API handlers.
 - [type Checker](#Checker)
 - [type ClosureMetricsProvider](#ClosureMetricsProvider)
   - [func \(p \*ClosureMetricsProvider\) GetAgentStats\(ctx context.Context\) \(\*AgentMetrics, error\)](#ClosureMetricsProvider.GetAgentStats)
+  - [func \(p \*ClosureMetricsProvider\) GetComponentRegistry\(ctx context.Context\) \(\[\]ComponentEntry, error\)](#ClosureMetricsProvider.GetComponentRegistry)
   - [func \(p \*ClosureMetricsProvider\) GetConsumerStats\(ctx context.Context\) \(\*ConsumerMetrics, error\)](#ClosureMetricsProvider.GetConsumerStats)
   - [func \(p \*ClosureMetricsProvider\) GetJobStats\(ctx context.Context\) \(\*JobMetrics, error\)](#ClosureMetricsProvider.GetJobStats)
   - [func \(p \*ClosureMetricsProvider\) GetKVInfo\(ctx context.Context\) \(\[\]KVMetrics, error\)](#ClosureMetricsProvider.GetKVInfo)
   - [func \(p \*ClosureMetricsProvider\) GetNATSInfo\(ctx context.Context\) \(\*NATSMetrics, error\)](#ClosureMetricsProvider.GetNATSInfo)
   - [func \(p \*ClosureMetricsProvider\) GetObjectStoreInfo\(ctx context.Context\) \(\[\]ObjectStoreMetrics, error\)](#ClosureMetricsProvider.GetObjectStoreInfo)
   - [func \(p \*ClosureMetricsProvider\) GetStreamInfo\(ctx context.Context\) \(\[\]StreamMetrics, error\)](#ClosureMetricsProvider.GetStreamInfo)
+- [type ComponentEntry](#ComponentEntry)
 - [type ConsumerDetail](#ConsumerDetail)
 - [type ConsumerMetrics](#ConsumerMetrics)
 - [type Health](#Health)
-  - [func New\(logger \*slog.Logger, checker Checker, startTime time.Time, version string, metrics MetricsProvider\) \*Health](#New)
+  - [func New\(logger \*slog.Logger, checker Checker, startTime time.Time, version string, metrics MetricsProvider, subComponents map\[string\]SubComponentInfo\) \*Health](#New)
   - [func \(h \*Health\) GetHealth\(\_ context.Context, \_ gen.GetHealthRequestObject\) \(gen.GetHealthResponseObject, error\)](#Health.GetHealth)
   - [func \(h \*Health\) GetHealthReady\(ctx context.Context, \_ gen.GetHealthReadyRequestObject\) \(gen.GetHealthReadyResponseObject, error\)](#Health.GetHealthReady)
   - [func \(h \*Health\) GetHealthStatus\(ctx context.Context, \_ gen.GetHealthStatusRequestObject\) \(gen.GetHealthStatusResponseObject, error\)](#Health.GetHealthStatus)
@@ -38,10 +40,11 @@ Package health provides health check API handlers.
 - [type NATSMetrics](#NATSMetrics)
 - [type ObjectStoreMetrics](#ObjectStoreMetrics)
 - [type StreamMetrics](#StreamMetrics)
+- [type SubComponentInfo](#SubComponentInfo)
 
 <a name="AgentDetail"></a>
 
-## type [AgentDetail](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L104-L108)
+## type [AgentDetail](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L105-L109)
 
 AgentDetail holds per\-agent registration info.
 
@@ -55,7 +58,7 @@ type AgentDetail struct {
 
 <a name="AgentMetrics"></a>
 
-## type [AgentMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L97-L101)
+## type [AgentMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L98-L102)
 
 AgentMetrics holds agent fleet statistics.
 
@@ -69,7 +72,7 @@ type AgentMetrics struct {
 
 <a name="Checker"></a>
 
-## type [Checker](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L30-L32)
+## type [Checker](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L30-L32)
 
 Checker checks the health of a dependency.
 
@@ -81,25 +84,26 @@ type Checker interface {
 
 <a name="ClosureMetricsProvider"></a>
 
-## type [ClosureMetricsProvider](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L111-L119)
+## type [ClosureMetricsProvider](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L124-L133)
 
 ClosureMetricsProvider implements MetricsProvider using function closures.
 
 ```go
 type ClosureMetricsProvider struct {
-    NATSInfoFn        func(ctx context.Context) (*NATSMetrics, error)
-    StreamInfoFn      func(ctx context.Context) ([]StreamMetrics, error)
-    KVInfoFn          func(ctx context.Context) ([]KVMetrics, error)
-    ObjectStoreInfoFn func(ctx context.Context) ([]ObjectStoreMetrics, error)
-    ConsumerStatsFn   func(ctx context.Context) (*ConsumerMetrics, error)
-    JobStatsFn        func(ctx context.Context) (*JobMetrics, error)
-    AgentStatsFn      func(ctx context.Context) (*AgentMetrics, error)
+    NATSInfoFn          func(ctx context.Context) (*NATSMetrics, error)
+    StreamInfoFn        func(ctx context.Context) ([]StreamMetrics, error)
+    KVInfoFn            func(ctx context.Context) ([]KVMetrics, error)
+    ObjectStoreInfoFn   func(ctx context.Context) ([]ObjectStoreMetrics, error)
+    ConsumerStatsFn     func(ctx context.Context) (*ConsumerMetrics, error)
+    JobStatsFn          func(ctx context.Context) (*JobMetrics, error)
+    AgentStatsFn        func(ctx context.Context) (*AgentMetrics, error)
+    ComponentRegistryFn func(ctx context.Context) ([]ComponentEntry, error)
 }
 ```
 
 <a name="ClosureMetricsProvider.GetAgentStats"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetAgentStats](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L164-L166)
+### func \(\*ClosureMetricsProvider\) [GetAgentStats](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L178-L180)
 
 ```go
 func (p *ClosureMetricsProvider) GetAgentStats(ctx context.Context) (*AgentMetrics, error)
@@ -107,9 +111,20 @@ func (p *ClosureMetricsProvider) GetAgentStats(ctx context.Context) (*AgentMetri
 
 GetAgentStats delegates to the AgentStatsFn closure.
 
+<a name="ClosureMetricsProvider.GetComponentRegistry"></a>
+
+### func \(\*ClosureMetricsProvider\) [GetComponentRegistry](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L186-L188)
+
+```go
+func (p *ClosureMetricsProvider) GetComponentRegistry(ctx context.Context) ([]ComponentEntry, error)
+```
+
+GetComponentRegistry delegates to the ComponentRegistryFn closure. Returns nil,
+nil when the closure is not configured.
+
 <a name="ClosureMetricsProvider.GetConsumerStats"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetConsumerStats](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L150-L152)
+### func \(\*ClosureMetricsProvider\) [GetConsumerStats](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L164-L166)
 
 ```go
 func (p *ClosureMetricsProvider) GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
@@ -119,7 +134,7 @@ GetConsumerStats delegates to the ConsumerStatsFn closure.
 
 <a name="ClosureMetricsProvider.GetJobStats"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetJobStats](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L157-L159)
+### func \(\*ClosureMetricsProvider\) [GetJobStats](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L171-L173)
 
 ```go
 func (p *ClosureMetricsProvider) GetJobStats(ctx context.Context) (*JobMetrics, error)
@@ -129,7 +144,7 @@ GetJobStats delegates to the JobStatsFn closure.
 
 <a name="ClosureMetricsProvider.GetKVInfo"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetKVInfo](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L136-L138)
+### func \(\*ClosureMetricsProvider\) [GetKVInfo](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L150-L152)
 
 ```go
 func (p *ClosureMetricsProvider) GetKVInfo(ctx context.Context) ([]KVMetrics, error)
@@ -139,7 +154,7 @@ GetKVInfo delegates to the KVInfoFn closure.
 
 <a name="ClosureMetricsProvider.GetNATSInfo"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetNATSInfo](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L122-L124)
+### func \(\*ClosureMetricsProvider\) [GetNATSInfo](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L136-L138)
 
 ```go
 func (p *ClosureMetricsProvider) GetNATSInfo(ctx context.Context) (*NATSMetrics, error)
@@ -149,7 +164,7 @@ GetNATSInfo delegates to the NATSInfoFn closure.
 
 <a name="ClosureMetricsProvider.GetObjectStoreInfo"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetObjectStoreInfo](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L143-L145)
+### func \(\*ClosureMetricsProvider\) [GetObjectStoreInfo](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L157-L159)
 
 ```go
 func (p *ClosureMetricsProvider) GetObjectStoreInfo(ctx context.Context) ([]ObjectStoreMetrics, error)
@@ -159,7 +174,7 @@ GetObjectStoreInfo delegates to the ObjectStoreInfoFn closure.
 
 <a name="ClosureMetricsProvider.GetStreamInfo"></a>
 
-### func \(\*ClosureMetricsProvider\) [GetStreamInfo](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L129-L131)
+### func \(\*ClosureMetricsProvider\) [GetStreamInfo](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L143-L145)
 
 ```go
 func (p *ClosureMetricsProvider) GetStreamInfo(ctx context.Context) ([]StreamMetrics, error)
@@ -167,9 +182,28 @@ func (p *ClosureMetricsProvider) GetStreamInfo(ctx context.Context) ([]StreamMet
 
 GetStreamInfo delegates to the StreamInfoFn closure.
 
+<a name="ComponentEntry"></a>
+
+## type [ComponentEntry](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L112-L121)
+
+ComponentEntry holds unified component registration details for the registry.
+
+```go
+type ComponentEntry struct {
+    Type          string
+    Hostname      string
+    Status        string
+    Conditions    []string
+    Age           string
+    CPUPercent    float64
+    MemBytes      int64
+    SubComponents map[string]SubComponentInfo
+}
+```
+
 <a name="ConsumerDetail"></a>
 
-## type [ConsumerDetail](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L79-L84)
+## type [ConsumerDetail](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L80-L85)
 
 ConsumerDetail holds per\-consumer information.
 
@@ -184,7 +218,7 @@ type ConsumerDetail struct {
 
 <a name="ConsumerMetrics"></a>
 
-## type [ConsumerMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L73-L76)
+## type [ConsumerMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L74-L77)
 
 ConsumerMetrics holds JetStream consumer statistics.
 
@@ -197,7 +231,7 @@ type ConsumerMetrics struct {
 
 <a name="Health"></a>
 
-## type [Health](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L171-L181)
+## type [Health](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L202-L214)
 
 Health implementation of the Health APIs operations.
 
@@ -211,23 +245,25 @@ type Health struct {
     Version string
     // Metrics provides system metrics (optional, can be nil).
     Metrics MetricsProvider
+    // SubComponents reports the status of internal services.
+    SubComponents map[string]SubComponentInfo
     // contains filtered or unexported fields
 }
 ```
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi/blob/main/internal/api/health/health.go#L35-L41)
+### func [New](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/health.go#L35-L42)
 
 ```go
-func New(logger *slog.Logger, checker Checker, startTime time.Time, version string, metrics MetricsProvider) *Health
+func New(logger *slog.Logger, checker Checker, startTime time.Time, version string, metrics MetricsProvider, subComponents map[string]SubComponentInfo) *Health
 ```
 
 New factory to create a new instance.
 
 <a name="Health.GetHealth"></a>
 
-### func \(\*Health\) [GetHealth](https://github.com/osapi-io/osapi/blob/main/internal/api/health/health_get.go#L30-L33)
+### func \(\*Health\) [GetHealth](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/health_get.go#L30-L33)
 
 ```go
 func (h *Health) GetHealth(_ context.Context, _ gen.GetHealthRequestObject) (gen.GetHealthResponseObject, error)
@@ -237,7 +273,7 @@ GetHealth liveness probe — always returns 200 if the process is running.
 
 <a name="Health.GetHealthReady"></a>
 
-### func \(\*Health\) [GetHealthReady](https://github.com/osapi-io/osapi/blob/main/internal/api/health/health_ready_get.go#L30-L33)
+### func \(\*Health\) [GetHealthReady](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/health_ready_get.go#L30-L33)
 
 ```go
 func (h *Health) GetHealthReady(ctx context.Context, _ gen.GetHealthReadyRequestObject) (gen.GetHealthReadyResponseObject, error)
@@ -247,7 +283,7 @@ GetHealthReady readiness probe — returns 200 when dependencies are reachable.
 
 <a name="Health.GetHealthStatus"></a>
 
-### func \(\*Health\) [GetHealthStatus](https://github.com/osapi-io/osapi/blob/main/internal/api/health/health_status_get.go#L32-L35)
+### func \(\*Health\) [GetHealthStatus](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/health_status_get.go#L32-L35)
 
 ```go
 func (h *Health) GetHealthStatus(ctx context.Context, _ gen.GetHealthStatusRequestObject) (gen.GetHealthStatusResponseObject, error)
@@ -258,7 +294,7 @@ GetHealthStatus returns per\-component health status with system metrics
 
 <a name="JobMetrics"></a>
 
-## type [JobMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L87-L94)
+## type [JobMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L88-L95)
 
 JobMetrics holds job queue statistics.
 
@@ -275,7 +311,7 @@ type JobMetrics struct {
 
 <a name="KVMetrics"></a>
 
-## type [KVMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L60-L64)
+## type [KVMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L61-L65)
 
 KVMetrics holds KV bucket statistics.
 
@@ -289,7 +325,7 @@ type KVMetrics struct {
 
 <a name="MetricsProvider"></a>
 
-## type [MetricsProvider](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L35-L43)
+## type [MetricsProvider](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L35-L44)
 
 MetricsProvider retrieves system metrics for the status endpoint.
 
@@ -302,12 +338,13 @@ type MetricsProvider interface {
     GetConsumerStats(ctx context.Context) (*ConsumerMetrics, error)
     GetJobStats(ctx context.Context) (*JobMetrics, error)
     GetAgentStats(ctx context.Context) (*AgentMetrics, error)
+    GetComponentRegistry(ctx context.Context) ([]ComponentEntry, error)
 }
 ```
 
 <a name="NATSChecker"></a>
 
-## type [NATSChecker](https://github.com/osapi-io/osapi/blob/main/internal/api/health/checker.go#L29-L34)
+## type [NATSChecker](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/checker.go#L29-L34)
 
 NATSChecker checks NATS and KV bucket connectivity.
 
@@ -322,7 +359,7 @@ type NATSChecker struct {
 
 <a name="NATSChecker.CheckHealth"></a>
 
-### func \(\*NATSChecker\) [CheckHealth](https://github.com/osapi-io/osapi/blob/main/internal/api/health/checker.go#L37-L39)
+### func \(\*NATSChecker\) [CheckHealth](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/checker.go#L37-L39)
 
 ```go
 func (c *NATSChecker) CheckHealth(_ context.Context) error
@@ -332,7 +369,7 @@ CheckHealth runs all dependency checks and returns the first error.
 
 <a name="NATSChecker.CheckKV"></a>
 
-### func \(\*NATSChecker\) [CheckKV](https://github.com/osapi-io/osapi/blob/main/internal/api/health/checker.go#L67)
+### func \(\*NATSChecker\) [CheckKV](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/checker.go#L67)
 
 ```go
 func (c *NATSChecker) CheckKV() error
@@ -342,7 +379,7 @@ CheckKV runs only the KV bucket check.
 
 <a name="NATSChecker.CheckNATS"></a>
 
-### func \(\*NATSChecker\) [CheckNATS](https://github.com/osapi-io/osapi/blob/main/internal/api/health/checker.go#L58)
+### func \(\*NATSChecker\) [CheckNATS](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/checker.go#L58)
 
 ```go
 func (c *NATSChecker) CheckNATS() error
@@ -352,7 +389,7 @@ CheckNATS runs only the NATS connectivity check.
 
 <a name="NATSMetrics"></a>
 
-## type [NATSMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L46-L49)
+## type [NATSMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L47-L50)
 
 NATSMetrics holds NATS connection information.
 
@@ -365,7 +402,7 @@ type NATSMetrics struct {
 
 <a name="ObjectStoreMetrics"></a>
 
-## type [ObjectStoreMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L67-L70)
+## type [ObjectStoreMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L68-L71)
 
 ObjectStoreMetrics holds Object Store bucket statistics.
 
@@ -378,7 +415,7 @@ type ObjectStoreMetrics struct {
 
 <a name="StreamMetrics"></a>
 
-## type [StreamMetrics](https://github.com/osapi-io/osapi/blob/main/internal/api/health/types.go#L52-L57)
+## type [StreamMetrics](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L53-L58)
 
 StreamMetrics holds JetStream stream statistics.
 
@@ -388,6 +425,19 @@ type StreamMetrics struct {
     Messages  uint64
     Bytes     uint64
     Consumers int
+}
+```
+
+<a name="SubComponentInfo"></a>
+
+## type [SubComponentInfo](https://github.com/osapi-io/osapi/blob/main/internal/controller/api/health/types.go#L196-L199)
+
+SubComponentInfo holds the status and optional address of a sub\-component.
+
+```go
+type SubComponentInfo struct {
+    Status  string
+    Address string // Empty means no network endpoint.
 }
 ```
 

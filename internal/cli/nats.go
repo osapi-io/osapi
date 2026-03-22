@@ -29,7 +29,6 @@ import (
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/messaging"
 )
 
 // ParseJetstreamStorageType maps "memory"/"file" strings to jetstream.StorageType.
@@ -43,13 +42,16 @@ func ParseJetstreamStorageType(
 	return jetstream.FileStorage
 }
 
+// natsCloser is implemented by any NATS client that can be closed.
+type natsCloser interface {
+	Close()
+}
+
 // CloseNATSClient safely closes a NATS client connection.
 func CloseNATSClient(
-	nc messaging.NATSClient,
+	nc natsCloser,
 ) {
-	if natsConn, ok := nc.(*natsclient.Client); ok && natsConn.NC != nil {
-		natsConn.NC.Close()
-	}
+	nc.Close()
 }
 
 // BuildNATSAuthOptions converts a config NATSAuth to natsclient.AuthOptions.

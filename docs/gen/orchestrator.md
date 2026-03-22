@@ -53,11 +53,13 @@ Package orchestrator provides DAG\-based task orchestration primitives.
   - [func \(t \*Task\) ErrorStrategy\(\) \*ErrorStrategy](#Task.ErrorStrategy)
   - [func \(t \*Task\) Fn\(\) TaskFn](#Task.Fn)
   - [func \(t \*Task\) Guard\(\) GuardFn](#Task.Guard)
+  - [func \(t \*Task\) GuardReason\(\) string](#Task.GuardReason)
   - [func \(t \*Task\) IsFunc\(\) bool](#Task.IsFunc)
   - [func \(t \*Task\) Name\(\) string](#Task.Name)
   - [func \(t \*Task\) OnError\(strategy ErrorStrategy\)](#Task.OnError)
   - [func \(t \*Task\) OnlyIfChanged\(\)](#Task.OnlyIfChanged)
   - [func \(t \*Task\) RequiresChange\(\) bool](#Task.RequiresChange)
+  - [func \(t \*Task\) SetGuardReason\(reason string\)](#Task.SetGuardReason)
   - [func \(t \*Task\) SetName\(name string\)](#Task.SetName)
   - [func \(t \*Task\) When\(fn GuardFn\)](#Task.When)
   - [func \(t \*Task\) WhenWithReason\(fn GuardFn, reason string\)](#Task.WhenWithReason)
@@ -545,7 +547,7 @@ DependsOn sets this task's dependencies. Returns the task for chaining.
 
 <a name="Task.ErrorStrategy"></a>
 
-### func \(\*Task\) [ErrorStrategy](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L142)
+### func \(\*Task\) [ErrorStrategy](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L156)
 
 ```go
 func (t *Task) ErrorStrategy() *ErrorStrategy
@@ -574,6 +576,16 @@ func (t *Task) Guard() GuardFn
 
 Guard returns the guard function, or nil if none is set.
 
+<a name="Task.GuardReason"></a>
+
+### func \(\*Task\) [GuardReason](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L143)
+
+```go
+func (t *Task) GuardReason() string
+```
+
+GuardReason returns the current guard reason.
+
 <a name="Task.IsFunc"></a>
 
 ### func \(\*Task\) [IsFunc](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L75)
@@ -596,7 +608,7 @@ Name returns the task name.
 
 <a name="Task.OnError"></a>
 
-### func \(\*Task\) [OnError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L134-L136)
+### func \(\*Task\) [OnError](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L148-L150)
 
 ```go
 func (t *Task) OnError(strategy ErrorStrategy)
@@ -624,6 +636,17 @@ func (t *Task) RequiresChange() bool
 ```
 
 RequiresChange returns true if OnlyIfChanged was set.
+
+<a name="Task.SetGuardReason"></a>
+
+### func \(\*Task\) [SetGuardReason](https://github.com/osapi-io/osapi/blob/main/pkg/sdk/orchestrator/task.go#L136-L138)
+
+```go
+func (t *Task) SetGuardReason(reason string)
+```
+
+SetGuardReason updates the skip reason shown when the guard returns false. Use
+inside a guard function to provide a dynamic reason based on runtime conditions.
 
 <a name="Task.SetName"></a>
 
