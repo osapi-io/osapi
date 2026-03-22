@@ -31,14 +31,12 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-// Type represents the type of job operation.
-type Type string
+// Type is a type alias for client.JobType.
+type Type = client.JobType
 
 const (
-	// TypeQuery represents read operations that query system state.
-	TypeQuery Type = "query"
-	// TypeModify represents write operations that modify system state.
-	TypeModify Type = "modify"
+	TypeQuery  = client.JobTypeQuery
+	TypeModify = client.JobTypeModify
 )
 
 // Status represents the current status of a job.
@@ -68,7 +66,7 @@ type Request struct {
 	// Category specifies the operation category (node, network, etc.).
 	Category string `json:"category"`
 	// Operation specifies the specific operation to perform.
-	Operation string `json:"operation"`
+	Operation OperationType `json:"operation"`
 	// Data contains operation-specific parameters as raw JSON.
 	Data json.RawMessage `json:"data,omitempty"`
 	// Timestamp indicates when the request was created.
@@ -97,57 +95,50 @@ type Response struct {
 // Operation type definitions for hierarchical job routing
 // These support the new dot-notation format used by the jobs CLI
 
-// OperationType represents the specific operation using hierarchical format.
-// This complements the existing JobType (query/modify) with specific operations.
-type OperationType string
+// OperationType is a type alias for client.JobOperation.
+type OperationType = client.JobOperation
 
-// Node operations - read-only operations that query node state
+// Node operations — read-only operations that query node state.
 const (
-	OperationNodeHostnameGet = "node.hostname.get"
-	OperationNodeStatusGet   = "node.status.get"
-	OperationNodeUptimeGet   = "node.uptime.get"
-	OperationNodeLoadGet     = "node.load.get"
-	OperationNodeMemoryGet   = "node.memory.get"
-	OperationNodeDiskGet     = "node.disk.get"
-	OperationNodeOSGet       = "node.os.get"
+	OperationNodeHostnameGet = client.OpNodeHostnameGet
+	OperationNodeStatusGet   = client.OpNodeStatusGet
+	OperationNodeUptimeGet   = client.OpNodeUptimeGet
+	OperationNodeLoadGet     = client.OpNodeLoadGet
+	OperationNodeMemoryGet   = client.OpNodeMemoryGet
+	OperationNodeDiskGet     = client.OpNodeDiskGet
+	OperationNodeOSGet       = client.OpNodeOSGet
 )
 
-// Network operations - operations that can modify network configuration
+// Network operations.
 const (
-	OperationNetworkDNSGet    = "network.dns.get"
-	OperationNetworkDNSUpdate = "network.dns.update"
-	OperationNetworkPingDo    = "network.ping.do"
+	OperationNetworkDNSGet    = client.OpNetworkDNSGet
+	OperationNetworkDNSUpdate = client.OpNetworkDNSUpdate
+	OperationNetworkPingDo    = client.OpNetworkPingDo
 )
 
-// Node operations - operations that can modify node state
+// Command operations — execute arbitrary commands on agents.
 const (
-	OperationNodeShutdown = "node.shutdown.execute"
-	OperationNodeReboot   = "node.reboot.execute"
-)
-
-// Command operations - execute arbitrary commands on agents
-const (
-	OperationCommandExecExecute  = "command.exec.execute"
-	OperationCommandShellExecute = "command.shell.execute"
+	OperationCommandExecExecute  = client.OpCommandExec
+	OperationCommandShellExecute = client.OpCommandShell
 )
 
 // File operations — manage file deployments and status.
 const (
-	OperationFileDeployExecute = "file.deploy.execute"
-	OperationFileStatusGet     = "file.status.get"
+	OperationFileDeployExecute = client.OpFileDeploy
+	OperationFileStatusGet     = client.OpFileStatusGet
 )
 
-// Docker operation types
+// Docker operations.
 const (
-	OperationDockerCreate      = "docker.create.execute"
-	OperationDockerStart       = "docker.start.execute"
-	OperationDockerStop        = "docker.stop.execute"
-	OperationDockerRemove      = "docker.remove.execute"
-	OperationDockerList        = "docker.list.get"
-	OperationDockerInspect     = "docker.inspect.get"
-	OperationDockerExec        = "docker.exec.execute"
-	OperationDockerPull        = "docker.pull.execute"
-	OperationDockerImageRemove = "docker.image-remove.execute"
+	OperationDockerCreate      = client.OpDockerCreate
+	OperationDockerStart       = client.OpDockerStart
+	OperationDockerStop        = client.OpDockerStop
+	OperationDockerRemove      = client.OpDockerRemove
+	OperationDockerList        = client.OpDockerList
+	OperationDockerInspect     = client.OpDockerInspect
+	OperationDockerExec        = client.OpDockerExec
+	OperationDockerPull        = client.OpDockerPull
+	OperationDockerImageRemove = client.OpDockerImageRemove
 )
 
 // Operation represents an operation in the new hierarchical format
