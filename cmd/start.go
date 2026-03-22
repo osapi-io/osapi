@@ -122,17 +122,18 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			}
 		}
 
-		// Set readiness and start controller metrics server.
+		// Set readiness, register subsystems, and start controller metrics server.
 		for _, s := range metricsServers {
 			s.SetReadinessFunc(func() error {
 				return controllerBundle.checker.CheckHealth(context.Background())
 			})
+			s.RegisterSubsystems(subsystemStatuses(controllerBundle.subComponents))
 			s.Start()
 		}
 
 		startNATSHeartbeatFromKV(ctx, natsLog, controllerBundle.registryKV)
 
-		agentServer, agentBundle := setupAgent(
+		agentServer, agentBundle, agentSubs := setupAgent(
 			ctx, logger.With("component", "agent"), appConfig.Agent.NATS,
 		)
 
@@ -147,6 +148,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			})
 
 			agentServer.SetMeterProvider(s.MeterProvider())
+			s.RegisterSubsystems(subsystemStatuses(agentSubs))
 
 			s.Registry().MustRegister(
 				prometheus.NewGaugeFunc(
@@ -178,6 +180,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			s.SetReadinessFunc(func() error {
 				return nil
 			})
+			s.RegisterSubsystems(subsystemStatuses(buildNATSSubComponents()))
 			s.Start()
 
 			metricsServers = append(metricsServers, s)

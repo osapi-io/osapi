@@ -46,6 +46,7 @@ import (
 	jobclient "github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/messaging"
 	"github.com/retr0h/osapi/internal/provider/process"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -79,13 +80,14 @@ type ServerManager interface {
 // natsBundle holds the NATS connection, job client, and KV handles created
 // by connectNATSBundle.
 type natsBundle struct {
-	nc         messaging.NATSClient
-	jobClient  jobclient.JobClient
-	jobsKV     jetstream.KeyValue
-	registryKV jetstream.KeyValue
-	factsKV    jetstream.KeyValue
-	objStore   file.ObjectStoreManager
-	checker    health.Checker
+	nc            messaging.NATSClient
+	jobClient     jobclient.JobClient
+	jobsKV        jetstream.KeyValue
+	registryKV    jetstream.KeyValue
+	factsKV       jetstream.KeyValue
+	objStore      file.ObjectStoreManager
+	checker       health.Checker
+	subComponents map[string]job.SubComponentInfo
 }
 
 // setupController connects to NATS, creates the API server with all handlers,
@@ -142,7 +144,8 @@ func setupController(
 		auditStore, b.objStore,
 	)
 
-	startControllerHeartbeat(ctx, log.With("subsystem", "heartbeat"), b.registryKV)
+	b.subComponents = buildControllerSubComponents()
+	startControllerHeartbeat(ctx, log.With("subsystem", "heartbeat"), b.registryKV, b.subComponents)
 	startConditionWatcher(ctx, log.With("subsystem", "notifier"), b.registryKV)
 
 	return sm, b
@@ -567,6 +570,23 @@ func convertSubComponents(
 	return result
 }
 
+// subsystemStatuses converts a sub-components map into SubsystemStatus
+// entries for registering osapi_subsystem_up gauges on a metrics server.
+func subsystemStatuses(
+	scs map[string]job.SubComponentInfo,
+) []metrics.SubsystemStatus {
+	result := make([]metrics.SubsystemStatus, 0, len(scs))
+	for name, info := range scs {
+		status := info.Status
+		result = append(result, metrics.SubsystemStatus{
+			Name:     name,
+			StatusFn: func() string { return status },
+		})
+	}
+
+	return result
+}
+
 func createAuditStore(
 	ctx context.Context,
 	log *slog.Logger,
@@ -687,23 +707,8 @@ func startConditionWatcher(
 	}()
 }
 
-// startControllerHeartbeat resolves the local hostname, creates a ComponentHeartbeat
-// for the API server, and starts it in a background goroutine. The heartbeat
-// deregisters when ctx is cancelled.
-func startControllerHeartbeat(
-	ctx context.Context,
-	log *slog.Logger,
-	registryKV jetstream.KeyValue,
-) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Warn(
-			"failed to resolve hostname for controller heartbeat, using 'unknown'",
-			slog.String("error", err.Error()),
-		)
-		hostname = "unknown"
-	}
-
+// buildControllerSubComponents creates the sub-component map for the controller.
+func buildControllerSubComponents() map[string]job.SubComponentInfo {
 	httpAddr := func(host string, port int) string {
 		return fmt.Sprintf("http://%s:%d", host, port)
 	}
@@ -716,7 +721,7 @@ func startControllerHeartbeat(
 		return "disabled"
 	}
 
-	subComponents := map[string]job.SubComponentInfo{
+	return map[string]job.SubComponentInfo{
 		"controller.api": {
 			Status:  "ok",
 			Address: httpAddr("0.0.0.0", appConfig.Controller.API.Port),
@@ -730,6 +735,25 @@ func startControllerHeartbeat(
 			Status: enabledOrDisabled(appConfig.Controller.Notifications.Enabled),
 		},
 		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
+	}
+}
+
+// startControllerHeartbeat resolves the local hostname, creates a ComponentHeartbeat
+// for the API server, and starts it in a background goroutine. The heartbeat
+// deregisters when ctx is cancelled.
+func startControllerHeartbeat(
+	ctx context.Context,
+	log *slog.Logger,
+	registryKV jetstream.KeyValue,
+	subComponents map[string]job.SubComponentInfo,
+) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Warn(
+			"failed to resolve hostname for controller heartbeat, using 'unknown'",
+			slog.String("error", err.Error()),
+		)
+		hostname = "unknown"
 	}
 
 	hb := controller.NewComponentHeartbeat(

@@ -42,7 +42,7 @@ func setupAgent(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-) (*agent.Agent, *natsBundle) {
+) (*agent.Agent, *natsBundle, map[string]job.SubComponentInfo) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
@@ -85,7 +85,7 @@ func setupAgent(
 		return "disabled"
 	}
 
-	a.SetSubComponents(map[string]job.SubComponentInfo{
+	subComponents := map[string]job.SubComponentInfo{
 		"agent.facts":     {Status: "ok"},
 		"agent.heartbeat": {Status: "ok"},
 		"agent.metrics": {
@@ -96,9 +96,10 @@ func setupAgent(
 				appConfig.Agent.Metrics.Port,
 			),
 		},
-	})
+	}
+	a.SetSubComponents(subComponents)
 
-	return a, b
+	return a, b, subComponents
 }
 
 // createFileProvider creates a file provider if Object Store and file-state KV

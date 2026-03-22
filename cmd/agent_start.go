@@ -55,7 +55,7 @@ It processes jobs as they become available.
 		job.Init(appConfig.Agent.NATS.Namespace)
 
 		log := logger.With("component", "agent")
-		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
+		a, b, agentSubs := setupAgent(ctx, log, appConfig.Agent.NATS)
 
 		var metricsServer *metrics.Server
 		if appConfig.Agent.Metrics.Enabled {
@@ -76,6 +76,7 @@ It processes jobs as they become available.
 
 		if metricsServer != nil {
 			a.SetMeterProvider(metricsServer.MeterProvider())
+			metricsServer.RegisterSubsystems(subsystemStatuses(agentSubs))
 
 			metricsServer.Registry().MustRegister(
 				prometheus.NewGaugeFunc(

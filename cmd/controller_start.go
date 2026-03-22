@@ -86,6 +86,7 @@ var controllerStartCmd = &cobra.Command{
 			metricsServer.SetReadinessFunc(func() error {
 				return b.checker.CheckHealth(context.Background())
 			})
+			metricsServer.RegisterSubsystems(subsystemStatuses(b.subComponents))
 			metricsServer.Start()
 		}
 

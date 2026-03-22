@@ -111,6 +111,37 @@ func (s *Server) SetReadinessFunc(fn func() error) {
 	s.readinessFunc = fn
 }
 
+// SubsystemStatus holds a subsystem name and a function that returns its
+// current status string (e.g., "ok", "disabled", "error").
+type SubsystemStatus struct {
+	Name     string
+	StatusFn func() string
+}
+
+// RegisterSubsystems registers an osapi_subsystem_up gauge for each
+// sub-component. The gauge reports 1 when the status function returns
+// "ok" and 0 otherwise. The status is read at scrape time.
+func (s *Server) RegisterSubsystems(
+	subsystems []SubsystemStatus,
+) {
+	for _, sub := range subsystems {
+		fn := sub.StatusFn // capture for closure
+		s.registry.MustRegister(prometheus.NewGaugeFunc(
+			prometheus.GaugeOpts{
+				Name:        "osapi_subsystem_up",
+				Help:        "Whether a subsystem is healthy (1) or not (0).",
+				ConstLabels: prometheus.Labels{"subsystem": sub.Name},
+			},
+			func() float64 {
+				if fn() == "ok" {
+					return 1
+				}
+				return 0
+			},
+		))
+	}
+}
+
 // MeterProvider returns the isolated OTEL MeterProvider for this server.
 // Components use this to create instruments that appear on this server's
 // /metrics endpoint.
