@@ -21,6 +21,7 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -31,35 +32,50 @@ import (
 // hostInfoFn allows tests to override host.Info.
 var hostInfoFn = host.Info
 
-var supportedVersions = []struct {
-	Distribution string
-	Version      string
-}{
-	{"debian", "12"},
-	{"debian", "13"},
-	{"ubuntu", "20.04"},
-	{"ubuntu", "22.04"},
-	{"ubuntu", "24.04"},
+// OSFamily represents a supported OS family with its member distributions.
+type OSFamily struct {
+	// Name is the family name following Ansible conventions (e.g., "Debian", "RedHat").
+	Name string
+	// Distributions maps distribution names to their supported versions.
+	Distributions map[string][]string
 }
 
-// IsLinuxVersionSupported checks if the given distribution and version are supported.
-func IsLinuxVersionSupported(
+// supportedFamilies defines the OS families and distributions OSAPI supports.
+var supportedFamilies = []OSFamily{
+	{
+		Name: "Debian",
+		Distributions: map[string][]string{
+			"debian": {"12", "13"},
+			"ubuntu": {"20.04", "22.04", "24.04"},
+		},
+	},
+}
+
+// IsOSFamilySupported checks if the given distribution and version belong
+// to a supported OS family. Returns the family name and true if supported.
+func IsOSFamilySupported(
 	distro string,
 	version string,
-) bool {
-	// Convert both distro and version to lowercase to make the check case-insensitive
+) (string, bool) {
 	distro = strings.ToLower(distro)
 
-	for _, supported := range supportedVersions {
-		if strings.ToLower(supported.Distribution) == distro &&
-			(supported.Version == version || strings.HasPrefix(version, supported.Version+".")) {
-			return true
+	for _, family := range supportedFamilies {
+		versions, ok := family.Distributions[distro]
+		if !ok {
+			continue
+		}
+
+		for _, v := range versions {
+			if v == version || strings.HasPrefix(version, v+".") {
+				return family.Name, true
+			}
 		}
 	}
-	return false
+
+	return "", false
 }
 
-// ValidateDistribution checks if the CLI is being run on the correct Linux distribution.
+// ValidateDistribution checks if the CLI is being run on a supported OS family.
 func ValidateDistribution(
 	logger *slog.Logger,
 ) {
@@ -72,15 +88,27 @@ func ValidateDistribution(
 		return
 	}
 
-	if !IsLinuxVersionSupported(info.Platform, info.PlatformVersion) {
+	family, supported := IsOSFamilySupported(info.Platform, info.PlatformVersion)
+	if !supported {
 		LogFatal(
 			logger,
-			"distro not supported",
-			nil,
+			"os family not supported",
+			fmt.Errorf(
+				"%s %s is not a supported distribution",
+				info.Platform,
+				info.PlatformVersion,
+			),
 			"distro",
 			info.Platform,
 			"version",
 			info.PlatformVersion,
 		)
 	}
+
+	logger.Debug(
+		"os family detected",
+		slog.String("family", family),
+		slog.String("distro", info.Platform),
+		slog.String("version", info.PlatformVersion),
+	)
 }

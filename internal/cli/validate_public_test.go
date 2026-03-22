@@ -23,7 +23,6 @@ package cli_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -37,86 +36,99 @@ func TestValidatePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ValidatePublicTestSuite))
 }
 
-func (suite *ValidatePublicTestSuite) TestIsLinuxVersionSupported() {
+func (suite *ValidatePublicTestSuite) TestIsOSFamilySupported() {
 	tests := []struct {
-		name    string
-		distro  string
-		version string
-		want    bool
+		name       string
+		distro     string
+		version    string
+		wantFamily string
+		wantOK     bool
 	}{
 		{
-			name:    "when debian 12 is supported",
-			distro:  "debian",
-			version: "12",
-			want:    true,
+			name:       "when debian 12 is supported",
+			distro:     "debian",
+			version:    "12",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when debian 12 point release is supported",
-			distro:  "debian",
-			version: "12.13",
-			want:    true,
+			name:       "when debian 12 point release is supported",
+			distro:     "debian",
+			version:    "12.13",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when debian 13 is supported",
-			distro:  "debian",
-			version: "13",
-			want:    true,
+			name:       "when debian 13 is supported",
+			distro:     "debian",
+			version:    "13",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when ubuntu 20.04 is supported",
-			distro:  "ubuntu",
-			version: "20.04",
-			want:    true,
+			name:       "when ubuntu 20.04 is supported",
+			distro:     "ubuntu",
+			version:    "20.04",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when ubuntu 22.04 is supported",
-			distro:  "ubuntu",
-			version: "22.04",
-			want:    true,
+			name:       "when ubuntu 22.04 is supported",
+			distro:     "ubuntu",
+			version:    "22.04",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when ubuntu 24.04 is supported",
-			distro:  "ubuntu",
-			version: "24.04",
-			want:    true,
+			name:       "when ubuntu 24.04 is supported",
+			distro:     "ubuntu",
+			version:    "24.04",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when Ubuntu with uppercase is supported",
-			distro:  "Ubuntu",
-			version: "24.04",
-			want:    true,
+			name:       "when Ubuntu with uppercase is supported",
+			distro:     "Ubuntu",
+			version:    "24.04",
+			wantFamily: "Debian",
+			wantOK:     true,
 		},
 		{
-			name:    "when unsupported distro returns false",
-			distro:  "centos",
-			version: "8",
-			want:    false,
+			name:       "when unsupported distro returns false",
+			distro:     "centos",
+			version:    "8",
+			wantFamily: "",
+			wantOK:     false,
 		},
 		{
-			name:    "when unsupported version returns false",
-			distro:  "ubuntu",
-			version: "18.04",
-			want:    false,
+			name:       "when unsupported version returns false",
+			distro:     "ubuntu",
+			version:    "18.04",
+			wantFamily: "",
+			wantOK:     false,
 		},
 		{
-			name:    "when empty distro returns false",
-			distro:  "",
-			version: "24.04",
-			want:    false,
+			name:       "when empty distro returns false",
+			distro:     "",
+			version:    "24.04",
+			wantFamily: "",
+			wantOK:     false,
 		},
 		{
-			name:    "when empty version returns false",
-			distro:  "ubuntu",
-			version: "",
-			want:    false,
+			name:       "when empty version returns false",
+			distro:     "ubuntu",
+			version:    "",
+			wantFamily: "",
+			wantOK:     false,
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got := cli.IsLinuxVersionSupported(tc.distro, tc.version)
+			family, ok := cli.IsOSFamilySupported(tc.distro, tc.version)
 
-			assert.Equal(suite.T(), tc.want, got)
+			suite.Equal(tc.wantFamily, family)
+			suite.Equal(tc.wantOK, ok)
 		})
 	}
 }
