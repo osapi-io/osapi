@@ -27,6 +27,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/ops"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
@@ -54,8 +55,21 @@ It processes jobs as they become available.
 		log := logger.With("component", "agent")
 		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
 
+		var opsServer *ops.Server
+		if appConfig.Agent.Metrics.IsEnabled() {
+			opsServer = ops.New(
+				appConfig.Agent.Metrics.Port,
+				log.With("subsystem", "ops"),
+			)
+			opsServer.Start()
+		}
+
 		a.Start()
 		cli.RunServer(ctx, a, func() {
+			if opsServer != nil {
+				opsServer.Stop(context.Background())
+			}
+
 			_ = shutdownTracer(context.Background())
 			cli.CloseNATSClient(b.nc)
 		})

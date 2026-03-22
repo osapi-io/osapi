@@ -21,10 +21,13 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/ops"
 )
 
 // natsServerStartCmd represents the natsServerStart command.
@@ -51,8 +54,21 @@ Configures streams, consumers, and KV buckets needed by the job system.
 			appConfig.NATS.Server.Auth,
 		)
 
+		var opsServer *ops.Server
+		if appConfig.NATS.Server.Metrics.IsEnabled() {
+			opsServer = ops.New(
+				appConfig.NATS.Server.Metrics.Port,
+				log.With("subsystem", "ops"),
+			)
+			opsServer.Start()
+		}
+
 		var ns cli.Lifecycle = &natsLifecycle{server: s}
-		cli.RunServer(ctx, ns)
+		cli.RunServer(ctx, ns, func() {
+			if opsServer != nil {
+				opsServer.Stop(context.Background())
+			}
+		})
 	},
 }
 
