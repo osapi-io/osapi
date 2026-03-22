@@ -57,7 +57,7 @@ func (a *Agent) startHeartbeat(
 
 	a.writeRegistration(ctx, hostname)
 
-	a.logger.Info(
+	a.heartbeatLogger.Info(
 		"registered in agent registry",
 		slog.String("hostname", hostname),
 		slog.String("key", key),
@@ -79,7 +79,7 @@ func (a *Agent) startHeartbeat(
 			case <-ticker.C:
 				a.writeRegistration(ctx, hostname)
 
-				a.logger.Info(
+				a.heartbeatLogger.Info(
 					"heartbeat refreshed",
 					slog.String("hostname", hostname),
 					slog.String("key", key),
@@ -177,7 +177,7 @@ func (a *Agent) writeRegistration(
 
 	data, err := marshalJSON(reg)
 	if err != nil {
-		a.logger.Warn(
+		a.heartbeatLogger.Warn(
 			"failed to marshal agent registration",
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
@@ -187,7 +187,7 @@ func (a *Agent) writeRegistration(
 
 	key := registryKey(hostname)
 	if _, err := a.registryKV.Put(ctx, key, data); err != nil {
-		a.logger.Warn(
+		a.heartbeatLogger.Warn(
 			"failed to write agent registration",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
@@ -204,7 +204,7 @@ func (a *Agent) deregister(
 ) {
 	key := registryKey(hostname)
 	if err := a.registryKV.Delete(context.Background(), key); err != nil {
-		a.logger.Warn(
+		a.heartbeatLogger.Warn(
 			"failed to deregister agent",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
@@ -213,7 +213,7 @@ func (a *Agent) deregister(
 		return
 	}
 
-	a.logger.Info(
+	a.heartbeatLogger.Info(
 		"agent deregistered",
 		slog.String("hostname", hostname),
 		slog.String("key", key),

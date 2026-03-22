@@ -120,6 +120,10 @@ type Agent struct {
 	// subComponents reports the status of internal services in heartbeat.
 	subComponents map[string]job.SubComponentInfo
 
+	// Subsystem-specific loggers for background processes.
+	heartbeatLogger *slog.Logger
+	factsLogger     *slog.Logger
+
 	// OTEL instruments for job metrics
 	jobsProcessed metric.Int64Counter
 	jobsActive    metric.Int64UpDownCounter

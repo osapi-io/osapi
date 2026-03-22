@@ -87,6 +87,8 @@ func New(
 		processProvider: processProvider,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
+		heartbeatLogger: logger.With("subsystem", "heartbeat"),
+		factsLogger:     logger.With("subsystem", "facts"),
 	}
 
 	// Wire agent facts into all providers so they can access the latest
