@@ -193,6 +193,8 @@ func (a *Agent) writeRegistration(
 			slog.String("key", key),
 			slog.String("error", err.Error()),
 		)
+	} else {
+		a.lastHeartbeatTime.Store(time.Now())
 	}
 }
 

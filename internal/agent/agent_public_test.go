@@ -29,6 +29,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
+	promexporter "go.opentelemetry.io/otel/exporters/prometheus"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/config"
@@ -335,6 +337,95 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 				s.Contains(err.Error(), tt.errMsg)
 			} else {
 				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestSetMeterProvider() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates OTEL instruments without panic",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := agent.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				"test-stream",
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+				commandMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+				processMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+			)
+
+			promExporter, err := promexporter.New()
+			s.Require().NoError(err)
+
+			mp := sdkmetric.NewMeterProvider(
+				sdkmetric.WithReader(promExporter),
+			)
+			defer func() { _ = mp.Shutdown(context.Background()) }()
+
+			s.NotPanics(func() {
+				a.SetMeterProvider(mp)
+			})
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestLastHeartbeatTime() {
+	tests := []struct {
+		name     string
+		wantZero bool
+	}{
+		{
+			name:     "returns zero time before any heartbeat",
+			wantZero: true,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := agent.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				"test-stream",
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+				commandMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+				processMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+			)
+
+			got := a.LastHeartbeatTime()
+			if tt.wantZero {
+				s.True(got.IsZero())
 			}
 		})
 	}

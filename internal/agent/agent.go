@@ -23,9 +23,12 @@ package agent
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
@@ -113,6 +116,34 @@ func (a *Agent) IsReady() error {
 	}
 
 	return nil
+}
+
+// SetMeterProvider creates OTEL instruments for job metrics.
+func (a *Agent) SetMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) {
+	meter := mp.Meter("osapi-agent")
+	a.jobsProcessed, _ = meter.Int64Counter(
+		"osapi_jobs_processed_total",
+		metric.WithDescription("Total jobs processed"),
+	)
+	a.jobsActive, _ = meter.Int64UpDownCounter(
+		"osapi_jobs_active",
+		metric.WithDescription("Currently executing jobs"),
+	)
+	a.jobDuration, _ = meter.Float64Histogram(
+		"osapi_job_duration_seconds",
+		metric.WithDescription("Job execution duration in seconds"),
+	)
+}
+
+// LastHeartbeatTime returns the timestamp of the last successful
+// heartbeat write. Returns zero time if no heartbeat has been written.
+func (a *Agent) LastHeartbeatTime() time.Time {
+	if t, ok := a.lastHeartbeatTime.Load().(time.Time); ok {
+		return t
+	}
+	return time.Time{}
 }
 
 // SetSubComponents sets the sub-component info published in heartbeats.

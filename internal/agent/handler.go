@@ -33,6 +33,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/telemetry/tracing"
@@ -228,6 +229,10 @@ func (a *Agent) handleJobMessage(
 		)
 	}
 
+	if a.jobsActive != nil {
+		a.jobsActive.Add(ctx, 1)
+	}
+
 	// Get agent hostname (GetAgentHostname always succeeds)
 	hostname, _ := job.GetAgentHostname(a.appConfig.Agent.Hostname)
 
@@ -267,6 +272,21 @@ func (a *Agent) handleJobMessage(
 		if jobRequest.Type == job.TypeModify {
 			response.Changed = extractChanged(result)
 		}
+	}
+
+	if a.jobsActive != nil {
+		a.jobsActive.Add(ctx, -1)
+	}
+	if a.jobDuration != nil {
+		a.jobDuration.Record(ctx, time.Since(startTime).Seconds())
+	}
+	if a.jobsProcessed != nil {
+		status := "completed"
+		if response.Status == job.StatusFailed {
+			status = "failed"
+		}
+		a.jobsProcessed.Add(ctx, 1,
+			metric.WithAttributes(attribute.String("status", status)))
 	}
 
 	response.Timestamp = time.Now()

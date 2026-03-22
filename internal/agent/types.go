@@ -24,10 +24,12 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
@@ -117,6 +119,14 @@ type Agent struct {
 
 	// subComponents reports the status of internal services in heartbeat.
 	subComponents map[string]job.SubComponentInfo
+
+	// OTEL instruments for job metrics
+	jobsProcessed metric.Int64Counter
+	jobsActive    metric.Int64UpDownCounter
+	jobDuration   metric.Float64Histogram
+
+	// lastHeartbeatTime stores time.Time of the last successful heartbeat write.
+	lastHeartbeatTime atomic.Value
 }
 
 // JobContext contains the context and data for a single job execution.

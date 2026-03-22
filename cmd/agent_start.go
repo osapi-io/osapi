@@ -22,7 +22,9 @@ package cmd
 
 import (
 	"context"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 
 	"github.com/retr0h/osapi/internal/cli"
@@ -70,6 +72,26 @@ It processes jobs as they become available.
 			}
 
 			metricsServer.Start()
+		}
+
+		if metricsServer != nil {
+			a.SetMeterProvider(metricsServer.MeterProvider())
+
+			metricsServer.Registry().MustRegister(
+				prometheus.NewGaugeFunc(
+					prometheus.GaugeOpts{
+						Name: "osapi_heartbeat_age_seconds",
+						Help: "Seconds since last successful heartbeat write.",
+					},
+					func() float64 {
+						t := a.LastHeartbeatTime()
+						if t.IsZero() {
+							return 0
+						}
+						return time.Since(t).Seconds()
+					},
+				),
+			)
 		}
 
 		a.Start()
