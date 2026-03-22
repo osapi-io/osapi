@@ -325,21 +325,33 @@ func (a *Agent) handleJobMessage(
 			"error":       response.Error,
 			"duration_ms": time.Since(startTime).Milliseconds(),
 		}); err != nil {
-			a.logger.ErrorContext(ctx, "failed to write failed event", slog.String("error", err.Error()))
+			a.logger.ErrorContext(
+				ctx,
+				"failed to write failed event",
+				slog.String("error", err.Error()),
+			)
 		}
 	case job.StatusSkipped:
 		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusSkipped), map[string]interface{}{
 			"error":       response.Error,
 			"duration_ms": time.Since(startTime).Milliseconds(),
 		}); err != nil {
-			a.logger.ErrorContext(ctx, "failed to write skipped event", slog.String("error", err.Error()))
+			a.logger.ErrorContext(
+				ctx,
+				"failed to write skipped event",
+				slog.String("error", err.Error()),
+			)
 		}
 	default:
 		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusCompleted), map[string]interface{}{
 			"duration_ms": time.Since(startTime).Milliseconds(),
 			"result_size": len(result),
 		}); err != nil {
-			a.logger.ErrorContext(ctx, "failed to write completed event", slog.String("error", err.Error()))
+			a.logger.ErrorContext(
+				ctx,
+				"failed to write completed event",
+				slog.String("error", err.Error()),
+			)
 		}
 	}
 

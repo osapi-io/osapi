@@ -174,10 +174,10 @@ func (c *Client) GetQueueSummary(
 	_, jobStatuses := computeStatusFromKeyNames(keys)
 
 	statusCounts := map[string]int{
-		string(job.StatusSubmitted):       0,
-		string(job.StatusProcessing):      0,
-		string(job.StatusCompleted):       0,
-		string(job.StatusFailed):          0,
+		string(job.StatusSubmitted):      0,
+		string(job.StatusProcessing):     0,
+		string(job.StatusCompleted):      0,
+		string(job.StatusFailed):         0,
 		string(job.StatusPartialFailure): 0,
 	}
 
@@ -321,10 +321,10 @@ func (c *Client) ListJobs(
 
 	// Compute status counts from key-name-derived statuses (free — no extra reads)
 	statusCounts := map[string]int{
-		string(job.StatusSubmitted):       0,
-		string(job.StatusProcessing):      0,
-		string(job.StatusCompleted):       0,
-		string(job.StatusFailed):          0,
+		string(job.StatusSubmitted):      0,
+		string(job.StatusProcessing):     0,
+		string(job.StatusCompleted):      0,
+		string(job.StatusFailed):         0,
 		string(job.StatusPartialFailure): 0,
 	}
 	for _, info := range jobStatuses {
@@ -551,7 +551,10 @@ func (c *Client) computeStatusFromEvents(
 		case string(job.StatusCompleted):
 			timelineEvent.Message = fmt.Sprintf("Job completed successfully on %s", hostname)
 		case string(job.StatusSkipped):
-			timelineEvent.Message = fmt.Sprintf("Job skipped on %s (unsupported OS family)", hostname)
+			timelineEvent.Message = fmt.Sprintf(
+				"Job skipped on %s (unsupported OS family)",
+				hostname,
+			)
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if errMsg, ok := data["error"].(string); ok {
 					timelineEvent.Error = errMsg

@@ -113,9 +113,12 @@ provider is selected at runtime through a platform-aware factory pattern.
 | `docker/runtime` | Docker container lifecycle (create, start, stop, remove) |
 | `process`        | Current process CPU, RSS, and goroutine metrics          |
 
-Providers are stateless and platform-specific (e.g., a Ubuntu DNS provider vs. a
-generic Linux DNS provider). Adding a new operation means implementing the
-provider interface and registering it in the agent's processor dispatch.
+Providers are stateless and OS-family-specific. OSAPI follows Ansible's OS
+family naming — the Debian family includes Ubuntu, Debian, and Raspbian. Darwin
+(macOS) providers are also available for development. When a provider does not
+support the current OS family, it returns `provider.ErrUnsupported` and the job
+is marked as `skipped`. Adding a new operation means implementing the provider
+interface and registering it in the agent's processor dispatch.
 
 ### Agent Lifecycle (`internal/agent/`)
 
