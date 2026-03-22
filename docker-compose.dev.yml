@@ -1,0 +1,17 @@
+---
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/workspace
+      - go-cache:/root/go/pkg/mod
+    environment:
+      - OSAPI_OSAPIFILE=configs/osapi.dev.yaml
+    command: ["agent", "start"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  go-cache:
