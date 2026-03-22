@@ -137,6 +137,38 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 	}
 }
 
+func (s *ServerPublicTestSuite) TestStartListenError() {
+	tests := []struct {
+		name         string
+		validateFunc func()
+	}{
+		{
+			name: "logs error when port is already in use",
+			validateFunc: func() {
+				// Occupy a port on the same interface the server will bind to.
+				l, err := net.Listen("tcp", "127.0.0.1:0")
+				s.Require().NoError(err)
+
+				port := l.Addr().(*net.TCPAddr).Port
+
+				srv := metrics.New("127.0.0.1", port, slog.Default())
+				s.Require().NotNil(srv)
+
+				srv.Start()
+				time.Sleep(100 * time.Millisecond)
+
+				_ = l.Close()
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc()
+		})
+	}
+}
+
 func TestServerPublicTestSuite(
 	t *testing.T,
 ) {

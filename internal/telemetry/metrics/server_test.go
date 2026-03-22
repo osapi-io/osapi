@@ -87,39 +87,6 @@ func (s *ServerTestSuite) TestNew() {
 	}
 }
 
-func (s *ServerTestSuite) TestStartListenError() {
-	tests := []struct {
-		name         string
-		validateFunc func()
-	}{
-		{
-			name: "logs error when port is already in use",
-			validateFunc: func() {
-				// Occupy a port.
-				l, err := net.Listen("tcp", ":0")
-				s.Require().NoError(err)
-
-				port := l.Addr().(*net.TCPAddr).Port
-
-				srv := New("127.0.0.1", port, slog.Default())
-				s.Require().NotNil(srv)
-
-				srv.Start()
-				// Give the goroutine time to fail.
-				time.Sleep(100 * time.Millisecond)
-
-				_ = l.Close()
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc()
-		})
-	}
-}
-
 func (s *ServerTestSuite) TestStopErrors() {
 	tests := []struct {
 		name         string

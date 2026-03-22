@@ -98,7 +98,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("degraded", r.Status)
 				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
 				s.Require().NotNil(r.Components["controller.nats (connectivity)"].Error)
-				s.Contains(*r.Components["controller.nats (connectivity)"].Error, "nats not connected")
+				s.Contains(
+					*r.Components["controller.nats (connectivity)"].Error,
+					"nats not connected",
+				)
 				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
 			},
 		},
@@ -115,7 +118,10 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
 				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
 				s.Require().NotNil(r.Components["controller.kv (connectivity)"].Error)
-				s.Contains(*r.Components["controller.kv (connectivity)"].Error, "kv bucket not accessible")
+				s.Contains(
+					*r.Components["controller.kv (connectivity)"].Error,
+					"kv bucket not accessible",
+				)
 			},
 		},
 		{
