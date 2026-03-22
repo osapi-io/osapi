@@ -27,6 +27,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/ops"
 	"github.com/retr0h/osapi/internal/telemetry"
 )
 
@@ -47,21 +48,26 @@ var controllerStartCmd = &cobra.Command{
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
 
-		metricsHandler, metricsPath, shutdownMeter, err := telemetry.InitMeter(
-			appConfig.Telemetry.Metrics,
-		)
-		if err != nil {
-			cli.LogFatal(logger, "failed to initialize meter", err)
-		}
-
 		job.Init(appConfig.Controller.NATS.Namespace)
 
 		log := logger.With("component", "controller")
-		sm, b := setupController(ctx, log, appConfig.Controller.NATS, metricsHandler, metricsPath)
+		sm, b := setupController(ctx, log, appConfig.Controller.NATS)
+
+		var opsServer *ops.Server
+		if appConfig.Controller.Metrics.IsEnabled() {
+			opsServer = ops.New(
+				appConfig.Controller.Metrics.Port,
+				log.With("subsystem", "ops"),
+			)
+			opsServer.Start()
+		}
 
 		sm.Start()
 		cli.RunServer(ctx, sm, func() {
-			_ = shutdownMeter(context.Background())
+			if opsServer != nil {
+				opsServer.Stop(context.Background())
+			}
+
 			_ = shutdownTracer(context.Background())
 			cli.CloseNATSClient(b.nc)
 		})

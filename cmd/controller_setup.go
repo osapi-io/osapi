@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
+
 	"os"
 	"sort"
 	"strings"
@@ -66,8 +66,6 @@ type ServerManager interface {
 		version string,
 		metrics health.MetricsProvider,
 	) []func(e *echo.Echo)
-	// GetMetricsHandler returns Prometheus metrics handler for registration.
-	GetMetricsHandler(metricsHandler http.Handler, path string) []func(e *echo.Echo)
 	// GetAuditHandler returns audit handler for registration.
 	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
 	// GetDockerHandler returns Docker handler for registration.
@@ -96,8 +94,8 @@ func setupController(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-	metricsHandler http.Handler,
-	metricsPath string,
+	
+	
 ) (ServerManager, *natsBundle) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
@@ -138,7 +136,7 @@ func setupController(
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
 		sm, b.jobClient, checker, metricsProvider,
-		metricsHandler, metricsPath, auditStore, b.objStore,
+		auditStore, b.objStore,
 	)
 
 	startControllerHeartbeat(ctx, log, b.registryKV)
@@ -571,8 +569,8 @@ func registerControllerHandlers(
 	jc jobclient.JobClient,
 	checker health.Checker,
 	metricsProvider health.MetricsProvider,
-	metricsHandler http.Handler,
-	metricsPath string,
+	
+	
 	auditStore audit.Store,
 	objStore file.ObjectStoreManager,
 ) {
@@ -586,7 +584,6 @@ func registerControllerHandlers(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider)...)
 	handlers = append(handlers, sm.GetDockerHandler(jc)...)
-	handlers = append(handlers, sm.GetMetricsHandler(metricsHandler, metricsPath)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
 	}
