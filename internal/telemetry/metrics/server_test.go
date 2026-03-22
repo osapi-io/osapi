@@ -30,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 )
@@ -125,16 +126,15 @@ func (s *ServerTestSuite) TestStopErrors() {
 				srv := New("127.0.0.1", port, slog.Default())
 				s.Require().NotNil(srv)
 
-				srv.httpServer.Handler.(*http.ServeMux).HandleFunc(
+				srv.echo.Any(
 					"/slow",
-					func(w http.ResponseWriter, _ *http.Request) {
-						w.WriteHeader(http.StatusOK)
-
-						if f, ok := w.(http.Flusher); ok {
-							f.Flush()
-						}
+					func(c echo.Context) error {
+						c.Response().WriteHeader(http.StatusOK)
+						c.Response().Flush()
 
 						time.Sleep(5 * time.Second)
+
+						return nil
 					},
 				)
 

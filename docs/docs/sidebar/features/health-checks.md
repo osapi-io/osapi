@@ -86,6 +86,23 @@ network address. The controller also performs live connectivity checks against
 NATS and KV, which appear as `controller.nats (connectivity)` and
 `controller.kv (connectivity)` in the response.
 
+## Metrics Server Health Probes
+
+In addition to the controller's REST health endpoints, each component's metrics
+server also exposes lightweight probes on its own port. These are separate from
+the REST API health checks and require no authentication.
+
+| Endpoint        | Port (default)     | Description                              |
+| --------------- | ------------------ | ---------------------------------------- |
+| `/health`       | 9090 / 9091 / 9092 | Liveness — always returns 200            |
+| `/health/ready` | 9090 / 9091 / 9092 | Readiness — 200 when ready, 503 when not |
+
+These probes are useful for monitoring individual components independently of
+the controller API — for example, probing the agent or NATS metrics server
+directly from a Kubernetes pod spec or an external load balancer.
+
+See [Metrics](metrics.md) for probe details and a Kubernetes example.
+
 ## Condition Notifications
 
 The component registry enables an optional condition notification system. When

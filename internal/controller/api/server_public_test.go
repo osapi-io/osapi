@@ -31,6 +31,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/config"
@@ -89,6 +90,21 @@ func (s *ServerPublicTestSuite) TestNew() {
 			},
 			opts: []api.Option{
 				api.WithAuditStore(&serverTestAuditStore{}),
+			},
+		},
+		{
+			name: "creates server with meter provider option",
+			appConfig: config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			},
+			opts: []api.Option{
+				api.WithMeterProvider(sdkmetric.NewMeterProvider()),
 			},
 		},
 		{

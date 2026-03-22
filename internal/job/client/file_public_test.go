@@ -29,6 +29,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
@@ -57,6 +58,8 @@ func (s *FilePublicTestSuite) SetupTest() {
 	var err error
 	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
+
+	s.jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 }
 
 func (s *FilePublicTestSuite) TearDownTest() {

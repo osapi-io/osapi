@@ -529,6 +529,9 @@ agent:
 | `enabled` | bool | Enable the metrics server (default: `true`)        |
 | `port`    | int  | Port the metrics server listens on (default: 9090) |
 
+When enabled, the port also serves `/health` (liveness) and `/health/ready`
+(readiness) probes without authentication.
+
 ### `nats.server`
 
 | Key          | Type   | Description                            |
@@ -547,6 +550,9 @@ agent:
 | --------- | ---- | -------------------------------------------------- |
 | `enabled` | bool | Enable the metrics server (default: `true`)        |
 | `port`    | int  | Port the metrics server listens on (default: 9092) |
+
+When enabled, the port also serves `/health` (liveness) and `/health/ready`
+(readiness) probes without authentication.
 
 ### `nats.stream`
 
@@ -679,3 +685,6 @@ agent:
 | `labels`                                   | map[string]string | Key-value pairs for label-based routing                    |
 | `metrics.enabled`                          | bool              | Enable the metrics server (default: true)                  |
 | `metrics.port`                             | int               | Port the metrics server listens on (default: 9091)         |
+
+When `metrics.enabled` is true, the port also serves `/health` (liveness) and
+`/health/ready` (readiness) probes without authentication.

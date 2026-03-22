@@ -21,20 +21,37 @@
 package metrics
 
 import (
-	"log/slog"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/prometheus/client_golang/prometheus"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-// Server is a per-component HTTP server that serves /metrics, /health,
-// and /health/ready with an isolated Prometheus registry and OTEL MeterProvider.
-type Server struct {
-	echo          *echo.Echo
-	addr          string
-	logger        *slog.Logger
-	registry      *prometheus.Registry
-	meterProvider *sdkmetric.MeterProvider
-	readinessFunc func() error
+// handleHealth handles GET /health and always returns 200 with {"status":"ok"}.
+func (s *Server) handleHealth(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"status": "ok",
+	})
+}
+
+// handleReady handles GET /health/ready. It returns 503 when no readiness
+// func is configured or the readiness func returns an error, and 200 when
+// the readiness func returns nil.
+func (s *Server) handleReady(c echo.Context) error {
+	if s.readinessFunc == nil {
+		return c.JSON(http.StatusServiceUnavailable, map[string]string{
+			"status": "not_ready",
+			"error":  "readiness check not configured",
+		})
+	}
+
+	if err := s.readinessFunc(); err != nil {
+		return c.JSON(http.StatusServiceUnavailable, map[string]string{
+			"status": "not_ready",
+			"error":  err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"status": "ready",
+	})
 }

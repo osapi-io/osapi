@@ -29,6 +29,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
@@ -58,6 +59,8 @@ func (s *ModifyDockerPublicTestSuite) SetupTest() {
 	var err error
 	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
+
+	s.jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 }
 
 func (s *ModifyDockerPublicTestSuite) TearDownTest() {

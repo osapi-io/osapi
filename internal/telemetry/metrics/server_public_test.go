@@ -22,6 +22,7 @@ package metrics_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -62,12 +63,6 @@ func (s *ServerPublicTestSuite) TestNew() {
 			name: "has meter provider",
 			validateFunc: func(srv *metrics.Server) {
 				s.NotNil(srv.MeterProvider())
-			},
-		},
-		{
-			name: "has registry",
-			validateFunc: func(srv *metrics.Server) {
-				s.NotNil(srv.Registry())
 			},
 		},
 	}
@@ -125,6 +120,187 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(port)
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestComponentUpGauge() {
+	scrapeMetrics := func(port int) string {
+		url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
+
+		resp, err := http.Get(url) //nolint:gosec
+		s.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		return string(body)
+	}
+
+	tests := []struct {
+		name          string
+		readinessFunc func() error
+		wantContains  []string
+	}{
+		{
+			name:          "reports 0 when no readiness func set",
+			readinessFunc: nil,
+			wantContains:  []string{"osapi_component_up", "} 0"},
+		},
+		{
+			name:          "reports 1 when readiness func returns nil",
+			readinessFunc: func() error { return nil },
+			wantContains:  []string{"osapi_component_up", "} 1"},
+		},
+		{
+			name:          "reports 0 when readiness func returns error",
+			readinessFunc: func() error { return errors.New("fail") },
+			wantContains:  []string{"osapi_component_up", "} 0"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+
+			if tc.readinessFunc != nil {
+				srv.SetReadinessFunc(tc.readinessFunc)
+			}
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			body := scrapeMetrics(port)
+			for _, want := range tc.wantContains {
+				s.Contains(body, want)
+			}
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestRegisterSubsystems() {
+	scrapeMetrics := func(port int) string {
+		url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
+
+		resp, err := http.Get(url) //nolint:gosec
+		s.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		return string(body)
+	}
+
+	tests := []struct {
+		name         string
+		subsystems   []metrics.SubsystemStatus
+		wantContains []string
+	}{
+		{
+			name: "registers gauges for each subsystem",
+			subsystems: []metrics.SubsystemStatus{
+				{Name: "api", StatusFn: func() string { return "ok" }},
+				{Name: "heartbeat", StatusFn: func() string { return "ok" }},
+				{Name: "notifier", StatusFn: func() string { return "disabled" }},
+			},
+			wantContains: []string{
+				`subsystem="api"} 1`,
+				`subsystem="heartbeat"} 1`,
+				`subsystem="notifier"} 0`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv.RegisterSubsystems(tc.subsystems)
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			body := scrapeMetrics(port)
+			for _, want := range tc.wantContains {
+				s.Contains(body, want)
+			}
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
+	scrapeMetrics := func(port int) string {
+		url := fmt.Sprintf("http://127.0.0.1:%d/metrics", port)
+
+		resp, err := http.Get(url) //nolint:gosec
+		s.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+
+		return string(body)
+	}
+
+	tests := []struct {
+		name         string
+		timeFn       func() time.Time
+		wantContains []string
+	}{
+		{
+			name:         "reports 0 when heartbeat time is zero",
+			timeFn:       func() time.Time { return time.Time{} },
+			wantContains: []string{"osapi_heartbeat_age_seconds", "} 0"},
+		},
+		{
+			name: "reports positive age when heartbeat time is in the past",
+			timeFn: func() time.Time {
+				return time.Now().Add(-5 * time.Second)
+			},
+			wantContains: []string{"osapi_heartbeat_age_seconds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv.RegisterHeartbeatAge(tc.timeFn)
+
+			srv.Start()
+			time.Sleep(100 * time.Millisecond)
+
+			body := scrapeMetrics(port)
+			for _, want := range tc.wantContains {
+				s.Contains(body, want)
+			}
 
 			ctx, cancel := context.WithTimeout(
 				context.Background(),

@@ -29,6 +29,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
@@ -58,6 +59,8 @@ func (s *QueryPublicTestSuite) SetupTest() {
 	var err error
 	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
 	s.Require().NoError(err)
+
+	s.jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 }
 
 func (s *QueryPublicTestSuite) TearDownTest() {
@@ -805,6 +808,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeStatusAll() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -906,6 +910,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeHostnameAll() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -997,6 +1002,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkDNSAll() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -1088,6 +1094,7 @@ func (s *QueryPublicTestSuite) TestQueryNetworkPingAll() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -2035,6 +2042,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeDiskBroadcast() {
 
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -2212,6 +2220,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeMemoryBroadcast() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -2389,6 +2398,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeLoadBroadcast() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -2566,6 +2576,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeOSBroadcast() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,
@@ -2743,6 +2754,7 @@ func (s *QueryPublicTestSuite) TestQueryNodeUptimeBroadcast() {
 			}
 			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
 			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
 
 			setupPublishAndCollectMocks(
 				s.mockCtrl,

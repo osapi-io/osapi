@@ -33,14 +33,16 @@ import (
 	"github.com/retr0h/osapi/internal/provider/process"
 )
 
-// setupAgent connects to NATS, creates providers, and builds the agent
-// Lifecycle. It is used by the standalone agent start and combined start
-// commands.
+// Ensure cli import is used (for BuildFileStateKVConfig etc.)
+var _ = cli.BuildFileStateKVConfig
+
+// setupAgent connects to NATS, creates providers, and builds the agent.
+// It is used by the standalone agent start and combined start commands.
 func setupAgent(
 	ctx context.Context,
 	log *slog.Logger,
 	connCfg config.NATSConnection,
-) (cli.Lifecycle, *natsBundle) {
+) (*agent.Agent, *natsBundle, map[string]job.SubComponentInfo) {
 	namespace := connCfg.Namespace
 	streamName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Stream.Name)
 	kvBucket := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.KV.Bucket)
@@ -83,7 +85,8 @@ func setupAgent(
 		return "disabled"
 	}
 
-	a.SetSubComponents(map[string]job.SubComponentInfo{
+	subComponents := map[string]job.SubComponentInfo{
+		"agent.facts":     {Status: "ok"},
 		"agent.heartbeat": {Status: "ok"},
 		"agent.metrics": {
 			Status: enabledOrDisabled(appConfig.Agent.Metrics.Enabled),
@@ -93,9 +96,10 @@ func setupAgent(
 				appConfig.Agent.Metrics.Port,
 			),
 		},
-	})
+	}
+	a.SetSubComponents(subComponents)
 
-	return a, b
+	return a, b, subComponents
 }
 
 // createFileProvider creates a file provider if Object Store and file-state KV

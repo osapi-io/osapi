@@ -23,6 +23,7 @@ package agent_test
 import (
 	"context"
 	"log/slog"
+	"net"
 	"testing"
 	"time"
 
@@ -43,6 +44,7 @@ import (
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 
 type AgentPublicTestSuite struct {
@@ -53,6 +55,14 @@ type AgentPublicTestSuite struct {
 	appFs         afero.Fs
 	appConfig     config.Config
 	logger        *slog.Logger
+}
+
+func (s *AgentPublicTestSuite) getFreePort() int {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	s.Require().NoError(err)
+	defer func() { _ = l.Close() }()
+
+	return l.Addr().(*net.TCPAddr).Port
 }
 
 func (s *AgentPublicTestSuite) SetupTest() {
@@ -239,6 +249,196 @@ func (s *AgentPublicTestSuite) TestStart() {
 			a := tt.setupFunc()
 			a.Start()
 			tt.stopFunc(a)
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestIsReady() {
+	tests := []struct {
+		name      string
+		setupFunc func() *agent.Agent
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name: "returns error when agent not started",
+			setupFunc: func() *agent.Agent {
+				return agent.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					"test-stream",
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+				)
+			},
+			wantErr: true,
+			errMsg:  "agent not started",
+		},
+		{
+			name: "returns nil when agent is started",
+			setupFunc: func() *agent.Agent {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				a := agent.New(
+					s.appFs,
+					s.appConfig,
+					s.logger,
+					s.mockJobClient,
+					"test-stream",
+					hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+					processMocks.NewDefaultMockProvider(s.mockCtrl),
+					nil,
+					nil,
+				)
+
+				a.Start()
+				s.T().Cleanup(func() {
+					stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+
+					a.Stop(stopCtx)
+				})
+
+				return a
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := tt.setupFunc()
+			err := a.IsReady()
+
+			if tt.wantErr {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errMsg)
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestSetMeterProvider() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "creates OTEL instruments without panic",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := agent.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				"test-stream",
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+				commandMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+				processMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+			)
+
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NotNil(srv)
+
+			s.NotPanics(func() {
+				a.SetMeterProvider(srv.MeterProvider())
+			})
+
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				5*time.Second,
+			)
+			defer cancel()
+
+			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestLastHeartbeatTime() {
+	tests := []struct {
+		name     string
+		wantZero bool
+	}{
+		{
+			name:     "returns zero time before any heartbeat",
+			wantZero: true,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := agent.New(
+				s.appFs,
+				s.appConfig,
+				s.logger,
+				s.mockJobClient,
+				"test-stream",
+				hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+				pingMocks.NewDefaultMockProvider(s.mockCtrl),
+				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+				commandMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+				processMocks.NewDefaultMockProvider(s.mockCtrl),
+				nil,
+				nil,
+			)
+
+			got := a.LastHeartbeatTime()
+			if tt.wantZero {
+				s.True(got.IsZero())
+			}
 		})
 	}
 }

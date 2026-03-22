@@ -25,12 +25,15 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"net"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/telemetry/metrics"
 
 	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
 	"github.com/retr0h/osapi/internal/config"
@@ -140,6 +143,15 @@ func (s *HandlerTestSuite) SetupTest() {
 		nil,
 		nil,
 	)
+
+	// Set up a real MeterProvider so the instrumentation nil-guards are exercised.
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err == nil {
+		port := l.Addr().(*net.TCPAddr).Port
+		_ = l.Close()
+		srv := metrics.New("127.0.0.1", port, slog.Default())
+		s.agent.SetMeterProvider(srv.MeterProvider())
+	}
 }
 
 func (s *HandlerTestSuite) TearDownTest() {

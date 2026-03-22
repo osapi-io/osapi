@@ -133,7 +133,7 @@ func (a *Agent) writeFacts(
 
 	data, err := marshalJSON(reg)
 	if err != nil {
-		a.logger.Warn(
+		a.factsLogger.Warn(
 			"failed to marshal facts",
 			slog.String("hostname", hostname),
 			slog.String("error", err.Error()),
@@ -143,7 +143,7 @@ func (a *Agent) writeFacts(
 
 	key := factsKey(hostname)
 	if _, err := a.factsKV.Put(ctx, key, data); err != nil {
-		a.logger.Warn(
+		a.factsLogger.Warn(
 			"failed to write facts",
 			slog.String("hostname", hostname),
 			slog.String("key", key),
