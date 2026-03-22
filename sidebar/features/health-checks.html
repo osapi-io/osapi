@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Health Checks | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Health Checks | OSAPI"><meta data-rh="true" name="description" content="OSAPI exposes health endpoints for load balancers, monitoring systems, and"><meta data-rh="true" property="og:description" content="OSAPI exposes health endpoints for load balancers, monitoring systems, and"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.56a51dbd.css">
-<script src="/osapi/assets/js/runtime~main.8b018e94.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.ab610ad6.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.605f516a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -57,8 +57,9 @@ this for dashboards and monitoring.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="component-registry">Component Registry<a href="#component-registry" class="hash-link" aria-label="Direct link to Component Registry" title="Direct link to Component Registry">​</a></h2>
 <p>All three runtime components heartbeat into a shared registry KV bucket on a
 regular interval. Each heartbeat writes a JSON record keyed by component type
-and hostname (e.g., <code>agents.web-01</code>, <code>api.api-server</code>, <code>nats.nats-server</code>). The
-records include process metrics collected at heartbeat time:</p>
+and hostname (e.g., <code>agents.web-01</code>, <code>controller.api-server</code>,
+<code>nats.nats-server</code>). The records include process metrics collected at heartbeat
+time:</p>
 
 
 
@@ -84,8 +85,41 @@ records include process metrics collected at heartbeat time:</p>
 <p>The <code>/health/status</code> response includes a <code>components</code> table that aggregates
 these heartbeat records. A component whose registry key has expired (TTL elapsed
 without a fresh heartbeat) is reported as unreachable.</p>
-<p>Example <code>components</code> output:</p>
-<div class="codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">COMPONENT    HOSTNAME      STATUS    CPU    RSS       GOROUTINES</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">api          api-server    ready     0.4%   42.3 MiB  87</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">agent        web-01        ready     0.1%   18.1 MiB  23</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">agent        web-02        ready     0.2%   17.8 MiB  22</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">nats         nats-server   ready     0.3%   31.6 MiB  41</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<p>Example registry output:</p>
+<div class="codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">agent       web-01        Ready   -           7h 6m   1.2%   96 MB</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">agent       web-02        Ready   -           3h 2m   0.8%   82 MB</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">controller  api-server    Ready   -           7h 6m   2.1%   128 MB</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">nats        nats-server   Ready   -           7h 6m   0.3%   64 MB</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="sub-component-health">Sub-Component Health<a href="#sub-component-health" class="hash-link" aria-label="Direct link to Sub-Component Health" title="Direct link to Sub-Component Health">​</a></h2>
+<p>Each component publishes the status of its internal services alongside its
+heartbeat registration. The <code>/health/status</code> endpoint aggregates these
+sub-components from the registry so operators can see the health of every
+internal service across all hosts — even in multi-node deployments.</p>
+<p>Sub-components use a <code>{type}.{name}</code> naming convention. Each component reports
+only its own sub-components:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Component</th><th>Sub-Components</th></tr></thead><tbody><tr><td>controller</td><td><code>controller.api</code>, <code>controller.heartbeat</code>, <code>controller.metrics</code>, <code>controller.notifier</code>, <code>controller.tracing</code></td></tr><tr><td>agent</td><td><code>agent.heartbeat</code>, <code>agent.metrics</code></td></tr><tr><td>nats</td><td><code>nats.server</code>, <code>nats.heartbeat</code>, <code>nats.metrics</code></td></tr></tbody></table>
+<p>Sub-components report a status (<code>ok</code>, <code>disabled</code>, or <code>error</code>) and an optional
+network address. The controller also performs live connectivity checks against
+NATS and KV, which appear as <code>controller.nats (connectivity)</code> and
+<code>controller.kv (connectivity)</code> in the response.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="condition-notifications">Condition Notifications<a href="#condition-notifications" class="hash-link" aria-label="Direct link to Condition Notifications" title="Direct link to Condition Notifications">​</a></h2>
 <p>The component registry enables an optional condition notification system. When
 <code>controller.notifications.enabled</code> is true, a watcher monitors the registry KV
@@ -184,6 +218,6 @@ the REST endpoints.</p>
 <li><a href="/osapi/sidebar/usage/cli/client/health">CLI Reference</a> -- health commands</li>
 <li><a href="/osapi/gen/api/health-check-api-health">API Reference</a> -- REST API documentation</li>
 <li><a href="/osapi/sidebar/architecture">Architecture</a> -- system design overview</li>
-</ul></div></div></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/audit-logging"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Audit Logging</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/system-facts"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">System Facts</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a><ul><li><a href="#liveness-health" class="table-of-contents__link toc-highlight">Liveness (<code>/health</code>)</a></li><li><a href="#readiness-healthready" class="table-of-contents__link toc-highlight">Readiness (<code>/health/ready</code>)</a></li><li><a href="#status-healthstatus" class="table-of-contents__link toc-highlight">Status (<code>/health/status</code>)</a></li></ul></li><li><a href="#component-registry" class="table-of-contents__link toc-highlight">Component Registry</a></li><li><a href="#condition-notifications" class="table-of-contents__link toc-highlight">Condition Notifications</a><ul><li><a href="#conditions-reference" class="table-of-contents__link toc-highlight">Conditions Reference</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/retr0h/osapi" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 <a href="https://github.com/retr0h">@retr0h</a></div></div></div></footer></div>
+</ul></div></div></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/audit-logging"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Audit Logging</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/system-facts"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">System Facts</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a><ul><li><a href="#liveness-health" class="table-of-contents__link toc-highlight">Liveness (<code>/health</code>)</a></li><li><a href="#readiness-healthready" class="table-of-contents__link toc-highlight">Readiness (<code>/health/ready</code>)</a></li><li><a href="#status-healthstatus" class="table-of-contents__link toc-highlight">Status (<code>/health/status</code>)</a></li></ul></li><li><a href="#component-registry" class="table-of-contents__link toc-highlight">Component Registry</a></li><li><a href="#sub-component-health" class="table-of-contents__link toc-highlight">Sub-Component Health</a></li><li><a href="#condition-notifications" class="table-of-contents__link toc-highlight">Condition Notifications</a><ul><li><a href="#conditions-reference" class="table-of-contents__link toc-highlight">Conditions Reference</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/retr0h/osapi" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 <a href="https://github.com/retr0h">@retr0h</a></div></div></div></footer></div>
 </body>
 </html>

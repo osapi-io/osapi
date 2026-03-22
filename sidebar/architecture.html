@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Architecture | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Architecture | OSAPI"><meta data-rh="true" name="description" content="OSAPI turns Linux servers into managed appliances. You install a single binary,"><meta data-rh="true" property="og:description" content="OSAPI turns Linux servers into managed appliances. You install a single binary,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture" hreflang="x-default"><link rel="stylesheet" href="/osapi/assets/css/styles.56a51dbd.css">
-<script src="/osapi/assets/js/runtime~main.8b018e94.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.ab610ad6.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.605f516a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -31,8 +31,10 @@ section in <code>osapi.yaml</code>.</p>
 requests, and translates them into jobs published to NATS. The controller
 never executes system commands directly — it creates a job and returns a job
 ID. Clients poll for results.</li>
-<li><strong>Component heartbeat</strong> — registers the controller in the agent registry so
-<code>health status</code> can report its state.</li>
+<li><strong>Component heartbeat</strong> — registers the controller in the registry KV so
+<code>health status</code> can report its state. The heartbeat includes sub-component
+status (api, metrics, notifier, tracing) so operators can see the health of
+each internal service.</li>
 <li><strong>Condition watcher</strong> — monitors the registry KV for condition transitions and
 dispatches notifications.</li>
 </ul>
@@ -41,7 +43,9 @@ dispatches notifications.</li>
 <p>A background process that subscribes to NATS, picks up jobs, and executes the
 actual system operations (reading hostname, querying DNS, checking disk usage,
 etc.). Agents run with whatever privileges they have — if an agent can&#x27;t read
-something due to permissions, it reports the error rather than failing silently.</p>
+something due to permissions, it reports the error rather than failing silently.
+Each agent publishes its own sub-component status (heartbeat, metrics) via the
+registry heartbeat.</p>
 <p>Start it with <code>osapi agent start</code>.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="deployment-models">Deployment Models<a href="#deployment-models" class="hash-link" aria-label="Direct link to Deployment Models" title="Direct link to Deployment Models">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="single-host">Single Host<a href="#single-host" class="hash-link" aria-label="Direct link to Single Host" title="Direct link to Single Host">​</a></h3>
