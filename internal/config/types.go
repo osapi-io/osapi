@@ -60,20 +60,10 @@ type MetricsConfig struct {
 
 // OpsServer configures the per-component metrics HTTP server.
 type OpsServer struct {
-	// Enabled activates the metrics server (default: true).
-	Enabled *bool `mapstructure:"enabled"`
+	// Enabled activates the metrics server.
+	Enabled bool `mapstructure:"enabled"`
 	// Port the metrics server listens on.
 	Port int `mapstructure:"port"`
-}
-
-// IsEnabled returns true if the ops server is enabled.
-// Defaults to true when Enabled is nil.
-func (o OpsServer) IsEnabled() bool {
-	if o.Enabled == nil {
-		return true
-	}
-
-	return *o.Enabled
 }
 
 // TracingConfig configuration settings for distributed tracing.

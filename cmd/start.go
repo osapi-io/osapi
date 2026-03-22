@@ -97,7 +97,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 		// Start per-component ops servers for /metrics.
 		var opsServers []*ops.Server
 
-		if appConfig.Controller.Metrics.IsEnabled() {
+		if appConfig.Controller.Metrics.Enabled {
 			s := ops.New(
 				appConfig.Controller.Metrics.Port,
 				logger.With("component", "controller-ops"),
@@ -107,7 +107,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			opsServers = append(opsServers, s)
 		}
 
-		if appConfig.Agent.Metrics.IsEnabled() {
+		if appConfig.Agent.Metrics.Enabled {
 			s := ops.New(
 				appConfig.Agent.Metrics.Port,
 				logger.With("component", "agent-ops"),
@@ -117,7 +117,7 @@ start in order (NATS → controller → agent) and shut down gracefully on SIGIN
 			opsServers = append(opsServers, s)
 		}
 
-		if appConfig.NATS.Server.Metrics.IsEnabled() {
+		if appConfig.NATS.Server.Metrics.Enabled {
 			s := ops.New(
 				appConfig.NATS.Server.Metrics.Port,
 				logger.With("component", "nats-ops"),

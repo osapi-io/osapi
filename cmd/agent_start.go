@@ -56,7 +56,7 @@ It processes jobs as they become available.
 		a, b := setupAgent(ctx, log, appConfig.Agent.NATS)
 
 		var opsServer *ops.Server
-		if appConfig.Agent.Metrics.IsEnabled() {
+		if appConfig.Agent.Metrics.Enabled {
 			opsServer = ops.New(
 				appConfig.Agent.Metrics.Port,
 				log.With("subsystem", "ops"),

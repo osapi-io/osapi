@@ -55,7 +55,7 @@ Configures streams, consumers, and KV buckets needed by the job system.
 		)
 
 		var opsServer *ops.Server
-		if appConfig.NATS.Server.Metrics.IsEnabled() {
+		if appConfig.NATS.Server.Metrics.Enabled {
 			opsServer = ops.New(
 				appConfig.NATS.Server.Metrics.Port,
 				log.With("subsystem", "ops"),
