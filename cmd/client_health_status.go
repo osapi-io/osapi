@@ -168,7 +168,6 @@ func displayStatusHealth(
 	cli.PrintKV("Status", data.Status)
 	cli.PrintKV("Version", data.Version)
 	cli.PrintKV("Uptime", data.Uptime)
-	fmt.Println()
 
 	displayComponentTable(data.Registry, "", data.Components)
 	if len(data.Registry) > 0 {
