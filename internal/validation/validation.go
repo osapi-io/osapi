@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	cronparser "github.com/robfig/cron/v3"
 )
 
 var instance = validator.New()
@@ -61,12 +62,28 @@ func init() {
 		}
 		return instance.Var(v, "ip") == nil
 	})
+
+	// cron_schedule validates a standard 5-field cron expression
+	// (minute hour day-of-month month day-of-week).
+	cronParser := cronparser.NewParser(
+		cronparser.Minute | cronparser.Hour | cronparser.Dom | cronparser.Month | cronparser.Dow,
+	)
+	_ = instance.RegisterValidation("cron_schedule", func(fl validator.FieldLevel) bool {
+		_, err := cronParser.Parse(fl.Field().String())
+		return err == nil
+	})
 }
 
 // customHints maps validator tags to a hint appended to the default error.
 var customHints = map[string]func(fe validator.FieldError) string{
 	"valid_target": func(fe validator.FieldError) string {
 		return fmt.Sprintf("target agent %q not found", fe.Value())
+	},
+	"cron_schedule": func(fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid cron expression (expected: minute hour day-of-month month day-of-week)",
+			fe.Value(),
+		)
 	},
 }
 

@@ -256,6 +256,136 @@ func (s *ValidationPublicTestSuite) TestIpOrFact() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestCronSchedule() {
+	tests := []struct {
+		name     string
+		field    string
+		wantOK   bool
+		contains []string
+	}{
+		// Valid expressions
+		{
+			name:   "when every minute",
+			field:  "* * * * *",
+			wantOK: true,
+		},
+		{
+			name:   "when daily at 2am",
+			field:  "0 2 * * *",
+			wantOK: true,
+		},
+		{
+			name:   "when every 5 minutes",
+			field:  "*/5 * * * *",
+			wantOK: true,
+		},
+		{
+			name:   "when weekdays at 9am",
+			field:  "0 9 * * 1-5",
+			wantOK: true,
+		},
+		{
+			name:   "when first of month at midnight",
+			field:  "0 0 1 * *",
+			wantOK: true,
+		},
+		{
+			name:   "when multiple hours",
+			field:  "0 2,14 * * *",
+			wantOK: true,
+		},
+		{
+			name:   "when range with step",
+			field:  "0-30/5 * * * *",
+			wantOK: true,
+		},
+		{
+			name:   "when month and day names",
+			field:  "0 0 * jan-mar mon",
+			wantOK: true,
+		},
+		// Invalid expressions
+		{
+			name:   "when empty string",
+			field:  "",
+			wantOK: false,
+		},
+		{
+			name:   "when random text",
+			field:  "not a cron expression",
+			wantOK: false,
+		},
+		{
+			name:   "when too few fields",
+			field:  "* * *",
+			wantOK: false,
+		},
+		{
+			name:   "when too many fields (6 fields)",
+			field:  "* * * * * *",
+			wantOK: false,
+		},
+		{
+			name:   "when minute out of range",
+			field:  "60 * * * *",
+			wantOK: false,
+		},
+		{
+			name:   "when hour out of range",
+			field:  "0 25 * * *",
+			wantOK: false,
+		},
+		{
+			name:   "when day of month out of range",
+			field:  "0 0 32 * *",
+			wantOK: false,
+		},
+		{
+			name:   "when month out of range",
+			field:  "0 0 * 13 *",
+			wantOK: false,
+		},
+		{
+			name:   "when day of week out of range",
+			field:  "0 0 * * 8",
+			wantOK: false,
+		},
+		{
+			name:   "when invalid character",
+			field:  "0 0 * * abc",
+			wantOK: false,
+		},
+		{
+			name:   "when invalid expression shows hint in struct validation",
+			field:  "bad",
+			wantOK: false,
+			contains: []string{
+				"cron_schedule",
+				"is not a valid cron expression",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if len(tt.contains) > 0 {
+				// Test through Struct() to verify hint formatting.
+				type cronReq struct {
+					Schedule string `validate:"required,cron_schedule"`
+				}
+				errMsg, ok := validation.Struct(cronReq{Schedule: tt.field})
+				s.Equal(tt.wantOK, ok)
+				for _, c := range tt.contains {
+					s.Contains(errMsg, c)
+				}
+			} else {
+				_, ok := validation.Var(tt.field, "cron_schedule")
+				s.Equal(tt.wantOK, ok)
+			}
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestInstance() {
 	tests := []struct {
 		name string
