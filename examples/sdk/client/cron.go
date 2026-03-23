@@ -61,6 +61,18 @@ func main() {
 	}
 	fmt.Printf("Created: %s (changed: %v)\n", createResp.Data.Name, createResp.Data.Changed)
 
+	// Create a periodic entry (interval-based).
+	fmt.Println("\n=== Creating periodic cron entry ===")
+	periodicResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
+		Name:     "logrotate",
+		Interval: "daily",
+		Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
+	})
+	if err != nil {
+		log.Fatalf("create periodic failed: %v", err)
+	}
+	fmt.Printf("Created: %s (changed: %v)\n", periodicResp.Data.Name, periodicResp.Data.Changed)
+
 	// List all cron entries.
 	fmt.Println("\n=== Listing cron entries ===")
 	listResp, err := c.Schedule.CronList(ctx, target)
@@ -99,4 +111,12 @@ func main() {
 		log.Fatalf("delete failed: %v", err)
 	}
 	fmt.Printf("Deleted: %s (changed: %v)\n", deleteResp.Data.Name, deleteResp.Data.Changed)
+
+	// Clean up the periodic entry.
+	fmt.Println("\n=== Cleaning up periodic entry ===")
+	cleanupResp, err := c.Schedule.CronDelete(ctx, target, "logrotate")
+	if err != nil {
+		log.Fatalf("cleanup failed: %v", err)
+	}
+	fmt.Printf("Deleted: %s (changed: %v)\n", cleanupResp.Data.Name, cleanupResp.Data.Changed)
 }

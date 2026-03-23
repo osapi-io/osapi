@@ -60,15 +60,20 @@ var clientNodeScheduleCronListCmd = &cobra.Command{
 
 		rows := make([][]string, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
+			schedule := r.Schedule
+			if r.Interval != "" {
+				schedule = r.Interval
+			}
 			rows = append(rows, []string{
 				r.Name,
-				r.Schedule,
+				r.Source,
+				schedule,
 				r.User,
 				r.Command,
 			})
 		}
 		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"NAME", "SCHEDULE", "USER", "COMMAND"},
+			Headers: []string{"NAME", "SOURCE", "SCHEDULE", "USER", "COMMAND"},
 			Rows:    rows,
 		}})
 	},

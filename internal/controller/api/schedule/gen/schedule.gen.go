@@ -20,6 +20,22 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for CronCreateRequestInterval.
+const (
+	CronCreateRequestIntervalDaily   CronCreateRequestInterval = "daily"
+	CronCreateRequestIntervalHourly  CronCreateRequestInterval = "hourly"
+	CronCreateRequestIntervalMonthly CronCreateRequestInterval = "monthly"
+	CronCreateRequestIntervalWeekly  CronCreateRequestInterval = "weekly"
+)
+
+// Defines values for CronEntryInterval.
+const (
+	CronEntryIntervalDaily   CronEntryInterval = "daily"
+	CronEntryIntervalHourly  CronEntryInterval = "hourly"
+	CronEntryIntervalMonthly CronEntryInterval = "monthly"
+	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
+)
+
 // CronCollectionResponse defines model for CronCollectionResponse.
 type CronCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -32,15 +48,21 @@ type CronCreateRequest struct {
 	// Command Command to execute on schedule.
 	Command string `json:"command" validate:"required,min=1"`
 
-	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/.
+	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+	Interval *CronCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
+
+	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
 	Name string `json:"name" validate:"required,min=1,max=64"`
 
-	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
-	Schedule string `json:"schedule" validate:"required,min=9"`
+	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
+	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
 
-	// User User to run the command as. Defaults to root.
+	// User User to run the command as. Defaults to root. Only applies when using schedule (cron.d entries include a user field). Interval-based entries run as root.
 	User *string `json:"user,omitempty"`
 }
+
+// CronCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+type CronCreateRequestInterval string
 
 // CronCreateResponse defines model for CronCreateResponse.
 type CronCreateResponse struct {
@@ -77,15 +99,24 @@ type CronEntry struct {
 	// Command Command to execute on schedule.
 	Command *string `json:"command,omitempty"`
 
+	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
+	Interval *CronEntryInterval `json:"interval,omitempty"`
+
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
 
-	// Schedule Cron schedule expression.
+	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
 	Schedule *string `json:"schedule,omitempty"`
+
+	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
+	Source *string `json:"source,omitempty"`
 
 	// User User the command runs as.
 	User *string `json:"user,omitempty"`
 }
+
+// CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
+type CronEntryInterval string
 
 // CronEntryResponse A single cron entry with job metadata.
 type CronEntryResponse struct {
@@ -114,7 +145,7 @@ type CronUpdateRequest struct {
 	Command *string `json:"command,omitempty" validate:"omitempty,min=1"`
 
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
-	Schedule *string `json:"schedule,omitempty" validate:"omitempty,min=9"`
+	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
 
 	// User User to run the command as.
 	User *string `json:"user,omitempty"`

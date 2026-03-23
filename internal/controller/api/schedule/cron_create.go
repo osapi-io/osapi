@@ -46,9 +46,14 @@ func (s *Schedule) PostNodeScheduleCron(
 	}
 
 	entry := cronProv.Entry{
-		Name:     request.Body.Name,
-		Schedule: request.Body.Schedule,
-		Command:  request.Body.Command,
+		Name:    request.Body.Name,
+		Command: request.Body.Command,
+	}
+	if request.Body.Schedule != nil {
+		entry.Schedule = *request.Body.Schedule
+	}
+	if request.Body.Interval != nil {
+		entry.Interval = string(*request.Body.Interval)
 	}
 	if request.Body.User != nil {
 		entry.User = *request.Body.User

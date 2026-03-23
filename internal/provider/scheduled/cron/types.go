@@ -18,28 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package cron provides management of /etc/cron.d/ drop-in files.
+// Package cron provides management of cron drop-in files and periodic scripts.
+// Supports /etc/cron.d/ (custom schedules) and /etc/cron.{hourly,daily,weekly,monthly}/
+// (interval-based scripts).
 package cron
 
-// Provider implements the methods to manage /etc/cron.d/ drop-in files.
+// Provider implements the methods to manage cron entries.
 type Provider interface {
-	// List returns all osapi-managed cron entries from /etc/cron.d/.
+	// List returns all osapi-managed cron entries.
 	List() ([]Entry, error)
 	// Get returns a single cron entry by name.
 	Get(name string) (*Entry, error)
-	// Create writes a new cron drop-in file.
+	// Create writes a new cron entry.
 	Create(entry Entry) (*CreateResult, error)
-	// Update overwrites an existing cron drop-in file.
+	// Update overwrites an existing cron entry.
 	Update(entry Entry) (*UpdateResult, error)
-	// Delete removes a cron drop-in file.
+	// Delete removes a cron entry.
 	Delete(name string) (*DeleteResult, error)
 }
 
-// Entry represents a single cron drop-in file.
+// Entry represents a cron entry — either a /etc/cron.d/ drop-in file
+// with a custom schedule or a /etc/cron.{interval}/ periodic script.
 type Entry struct {
 	Name     string `json:"name"`
-	Schedule string `json:"schedule"`
-	User     string `json:"user"`
+	Schedule string `json:"schedule,omitempty"`
+	Interval string `json:"interval,omitempty"`
+	Source   string `json:"source,omitempty"`
+	User     string `json:"user,omitempty"`
 	Command  string `json:"command"`
 }
 

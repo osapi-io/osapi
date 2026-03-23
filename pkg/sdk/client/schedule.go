@@ -99,9 +99,15 @@ func (s *ScheduleService) CronCreate(
 	opts CronCreateOpts,
 ) (*Response[CronMutationResult], error) {
 	body := gen.CronCreateRequest{
-		Name:     opts.Name,
-		Schedule: opts.Schedule,
-		Command:  opts.Command,
+		Name:    opts.Name,
+		Command: opts.Command,
+	}
+	if opts.Schedule != "" {
+		body.Schedule = &opts.Schedule
+	}
+	if opts.Interval != "" {
+		interval := gen.CronCreateRequestInterval(opts.Interval)
+		body.Interval = &interval
 	}
 	if opts.User != "" {
 		body.User = &opts.User

@@ -113,12 +113,26 @@ func responseToCronEntries(
 		schedule := e.Schedule
 		user := e.User
 		command := e.Command
-		results = append(results, gen.CronEntry{
-			Name:     &name,
-			Schedule: &schedule,
-			User:     &user,
-			Command:  &command,
-		})
+		source := e.Source
+
+		entry := gen.CronEntry{
+			Name:    &name,
+			Command: &command,
+			Source:  &source,
+		}
+
+		if schedule != "" {
+			entry.Schedule = &schedule
+		}
+		if user != "" {
+			entry.User = &user
+		}
+		if e.Interval != "" {
+			interval := gen.CronEntryInterval(e.Interval)
+			entry.Interval = &interval
+		}
+
+		results = append(results, entry)
 	}
 
 	return results

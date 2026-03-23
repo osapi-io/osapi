@@ -92,7 +92,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 					Command:  strPtr("/usr/bin/backup-v2.sh"),
 					User:     strPtr("admin"),
 				},
@@ -154,7 +154,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 				},
 			},
 			setupMock: func() {
@@ -201,7 +201,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "",
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 				},
 			},
 			setupMock: func() {},
@@ -218,7 +218,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "nonexistent",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 				},
 			},
 			setupMock: func() {
@@ -243,7 +243,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "missing",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 				},
 			},
 			setupMock: func() {
@@ -268,7 +268,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * * *"),
+					Schedule: strPtr("0 3 * * *"),
 				},
 			},
 			setupMock: func() {
@@ -310,7 +310,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 		{
 			name: "when valid request",
 			path: "/node/server1/schedule/cron/backup",
-			body: `{"schedule":"0 3 * * * *"}`,
+			body: `{"schedule":"0 3 * * *"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -329,7 +329,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 		{
 			name: "when target agent not found",
 			path: "/node/nonexistent/schedule/cron/backup",
-			body: `{"schedule":"0 3 * * * *"}`,
+			body: `{"schedule":"0 3 * * *"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -457,7 +457,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 			req := httptest.NewRequest(
 				http.MethodPut,
 				"/node/server1/schedule/cron/backup",
-				strings.NewReader(`{"schedule":"0 3 * * * *"}`),
+				strings.NewReader(`{"schedule":"0 3 * * *"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
