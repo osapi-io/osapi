@@ -126,8 +126,9 @@ const (
 
 // File operations — manage file deployments and status.
 const (
-	OperationFileDeployExecute = client.OpFileDeploy
-	OperationFileStatusGet     = client.OpFileStatusGet
+	OperationFileDeployExecute   = client.OpFileDeploy
+	OperationFileUndeployExecute = client.OpFileUndeploy
+	OperationFileStatusGet       = client.OpFileStatusGet
 )
 
 // Docker operations.
@@ -341,14 +342,15 @@ type NodeShutdownData struct {
 // FileState represents a deployed file's state in the file-state KV.
 // Keyed by <hostname>.<sha256-of-path>.
 type FileState struct {
-	ObjectName  string `json:"object_name"`
-	Path        string `json:"path"`
-	SHA256      string `json:"sha256"`
-	Mode        string `json:"mode,omitempty"`
-	Owner       string `json:"owner,omitempty"`
-	Group       string `json:"group,omitempty"`
-	DeployedAt  string `json:"deployed_at"`
-	ContentType string `json:"content_type"`
+	ObjectName   string `json:"object_name"`
+	Path         string `json:"path"`
+	SHA256       string `json:"sha256"`
+	Mode         string `json:"mode,omitempty"`
+	Owner        string `json:"owner,omitempty"`
+	Group        string `json:"group,omitempty"`
+	DeployedAt   string `json:"deployed_at"`
+	ContentType  string `json:"content_type"`
+	UndeployedAt string `json:"undeployed_at,omitempty"`
 }
 
 // NetworkInterface represents a network interface with its address.

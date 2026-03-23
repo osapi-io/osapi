@@ -60,7 +60,7 @@ func (p *Service) Deploy(
 	}
 
 	sha := computeSHA256(content)
-	stateKey := buildStateKey(p.hostname, req.Path)
+	stateKey := BuildStateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
 	if err == nil {
@@ -139,9 +139,9 @@ func computeSHA256(
 	return hex.EncodeToString(h[:])
 }
 
-// buildStateKey returns the KV key for a file's deploy state.
+// BuildStateKey returns the KV key for a file's deploy state.
 // Format: <hostname>.<sha256-of-path>.
-func buildStateKey(
+func BuildStateKey(
 	hostname string,
 	path string,
 ) string {

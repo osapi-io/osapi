@@ -24,54 +24,59 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"github.com/spf13/afero"
+	"log/slog"
+	"time"
 
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// Status checks the current state of a deployed file against its expected
-// SHA-256 from the file-state KV. Returns "in-sync" if the file matches,
-// "drifted" if it differs, or "missing" if the file or state entry is absent.
-func (p *Service) Status(
+// Undeploy removes a deployed file from disk. The object store entry
+// is preserved. The file-state KV is updated to record the undeploy
+// timestamp.
+func (p *Service) Undeploy(
 	ctx context.Context,
-	req StatusRequest,
-) (*StatusResult, error) {
+	req UndeployRequest,
+) (*UndeployResult, error) {
+	_, err := p.fs.Stat(req.Path)
+	if err != nil {
+		p.logger.Debug(
+			"file not on disk, nothing to undeploy",
+			slog.String("path", req.Path),
+		)
+
+		return &UndeployResult{
+			Changed: false,
+			Path:    req.Path,
+		}, nil
+	}
+
+	if err := p.fs.Remove(req.Path); err != nil {
+		return nil, fmt.Errorf("failed to remove file %q: %w", req.Path, err)
+	}
+
 	stateKey := BuildStateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
-	if err != nil {
-		return &StatusResult{
-			Path:   req.Path,
-			Status: "missing",
-		}, nil
+	if err == nil {
+		var state job.FileState
+		if unmarshalErr := json.Unmarshal(entry.Value(), &state); unmarshalErr == nil {
+			state.UndeployedAt = time.Now().UTC().Format(time.RFC3339)
+
+			stateBytes, marshalErr := marshalJSON(state)
+			if marshalErr == nil {
+				_, _ = p.stateKV.Put(ctx, stateKey, stateBytes)
+			}
+		}
 	}
 
-	var state job.FileState
-	if err := json.Unmarshal(entry.Value(), &state); err != nil {
-		return nil, fmt.Errorf("failed to parse file state: %w", err)
-	}
+	p.logger.Info(
+		"file undeployed",
+		slog.String("path", req.Path),
+		slog.Bool("changed", true),
+	)
 
-	data, err := afero.ReadFile(p.fs, req.Path)
-	if err != nil {
-		return &StatusResult{
-			Path:   req.Path,
-			Status: "missing",
-		}, nil
-	}
-
-	localSHA := computeSHA256(data)
-	if localSHA == state.SHA256 {
-		return &StatusResult{
-			Path:   req.Path,
-			Status: "in-sync",
-			SHA256: localSHA,
-		}, nil
-	}
-
-	return &StatusResult{
-		Path:   req.Path,
-		Status: "drifted",
-		SHA256: localSHA,
+	return &UndeployResult{
+		Changed: true,
+		Path:    req.Path,
 	}, nil
 }
