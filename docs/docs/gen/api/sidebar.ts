@@ -398,6 +398,46 @@ const sidebar: SidebarsConfig = {
         },
       ],
     },
+    {
+      type: "category",
+      label: "Node/Schedule/Cron",
+      link: {
+        type: "doc",
+        id: "gen/api/schedule-management-api-cron-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-schedule-cron",
+          label: "List all cron entries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-schedule-cron",
+          label: "Create a cron entry",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-schedule-cron-by-name",
+          label: "Get a cron entry",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-schedule-cron",
+          label: "Update a cron entry",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-schedule-cron",
+          label: "Delete a cron entry",
+          className: "api-method delete",
+        },
+      ],
+    },
   ],
 };
 
