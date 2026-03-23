@@ -71,11 +71,17 @@ func (f *File) GetFiles(
 			contentType = obj.Headers.Get("Osapi-Content-Type")
 		}
 
+		source := "user"
+		if strings.HasPrefix(obj.Name, "system/") {
+			source = "system"
+		}
+
 		files = append(files, gen.FileInfo{
 			Name:        obj.Name,
 			Sha256:      sha256Hex,
 			Size:        int(obj.Size),
 			ContentType: contentType,
+			Source:      source,
 		})
 	}
 

@@ -2046,6 +2046,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/file/undeploy:
+    servers: []
+    post:
+      operationId: PostNodeFileUndeploy
+      summary: Remove a deployed file from the host filesystem
+      tags:
+        - Node_Management_API_node_operations
+      security:
+        - BearerAuth:
+            - file:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUndeployRequest'
+      responses:
+        '202':
+          description: File undeploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUndeployResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /node/{hostname}/file/status:
     servers: []
     post:
@@ -3221,11 +3270,16 @@ components:
           description: |
             How the file should be treated during deploy (raw or template).
           example: raw
+        source:
+          type: string
+          description: 'Source of the file: ''system'' or ''user''.'
+          example: user
       required:
         - name
         - sha256
         - size
         - content_type
+        - source
     FileUploadResponse:
       type: object
       properties:
@@ -4267,6 +4321,32 @@ components:
         - hostname
         - path
         - status
+    FileUndeployRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to undeploy.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+      required:
+        - path
+    FileUndeployResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The ID of the created job.
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        changed:
+          type: boolean
+          description: Whether the file was actually removed.
+      required:
+        - job_id
+        - hostname
+        - changed
     CommandExecRequest:
       type: object
       properties:

@@ -37,6 +37,7 @@ type FileItem struct {
 	SHA256      string `json:"sha256"`
 	Size        int    `json:"size"`
 	ContentType string `json:"content_type"`
+	Source      string `json:"source"`
 }
 
 // FileList is a collection of files with total count.
@@ -68,6 +69,13 @@ type FileChanged struct {
 
 // FileDeployResult represents the result of a file deploy operation.
 type FileDeployResult struct {
+	JobID    string `json:"job_id"`
+	Hostname string `json:"hostname"`
+	Changed  bool   `json:"changed"`
+}
+
+// FileUndeployResult represents the result of a file undeploy operation.
+type FileUndeployResult struct {
 	JobID    string `json:"job_id"`
 	Hostname string `json:"hostname"`
 	Changed  bool   `json:"changed"`
@@ -108,6 +116,7 @@ func fileListFromGen(
 			SHA256:      f.Sha256,
 			Size:        f.Size,
 			ContentType: f.ContentType,
+			Source:      f.Source,
 		})
 	}
 
@@ -144,6 +153,17 @@ func fileDeployResultFromGen(
 	g *gen.FileDeployResponse,
 ) FileDeployResult {
 	return FileDeployResult{
+		JobID:    g.JobId,
+		Hostname: g.Hostname,
+		Changed:  g.Changed,
+	}
+}
+
+// fileUndeployResultFromGen converts a gen.FileUndeployResponse to a FileUndeployResult.
+func fileUndeployResultFromGen(
+	g *gen.FileUndeployResponse,
+) FileUndeployResult {
+	return FileUndeployResult{
 		JobID:    g.JobId,
 		Hostname: g.Hostname,
 		Changed:  g.Changed,

@@ -72,6 +72,37 @@ func (c *Client) ModifyFileDeploy(
 	return jobID, resp.Hostname, changed, nil
 }
 
+// ModifyFileUndeploy removes a deployed file from disk on a specific hostname.
+func (c *Client) ModifyFileUndeploy(
+	ctx context.Context,
+	hostname string,
+	path string,
+) (string, string, bool, error) {
+	data, _ := json.Marshal(file.UndeployRequest{
+		Path: path,
+	})
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "file",
+		Operation: job.OperationFileUndeployExecute,
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, hostname)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return "", "", false, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == "failed" {
+		return "", "", false, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	changed := resp.Changed != nil && *resp.Changed
+	return jobID, resp.Hostname, changed, nil
+}
+
 // QueryFileStatus queries the status of a deployed file on a specific hostname.
 func (c *Client) QueryFileStatus(
 	ctx context.Context,

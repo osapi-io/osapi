@@ -58,13 +58,14 @@ var clientFileListCmd = &cobra.Command{
 				f.Name,
 				f.SHA256,
 				fmt.Sprintf("%d", f.Size),
+				f.Source,
 			})
 		}
 
 		sections := []cli.Section{
 			{
 				Title:   fmt.Sprintf("Files (%d)", resp.Data.Total),
-				Headers: []string{"NAME", "SHA256", "SIZE"},
+				Headers: []string{"NAME", "SHA256", "SIZE", "SOURCE"},
 				Rows:    rows,
 			},
 		}

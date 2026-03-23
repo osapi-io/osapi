@@ -232,6 +232,11 @@ type JobClient interface {
 		group string,
 		vars map[string]any,
 	) (string, string, bool, error)
+	ModifyFileUndeploy(
+		ctx context.Context,
+		hostname string,
+		path string,
+	) (string, string, bool, error)
 	QueryFileStatus(
 		ctx context.Context,
 		hostname string,

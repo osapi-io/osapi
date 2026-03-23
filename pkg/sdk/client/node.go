@@ -79,6 +79,16 @@ type FileDeployOpts struct {
 	Target string
 }
 
+// FileUndeployOpts contains parameters for file undeployment.
+type FileUndeployOpts struct {
+	// Path is the filesystem path to remove from the target host (required).
+	Path string
+
+	// Target specifies the host: "_any", "_all", hostname, or
+	// label ("group:web").
+	Target string
+}
+
 // ShellRequest contains parameters for shell command execution.
 type ShellRequest struct {
 	// Command is the shell command string passed to /bin/sh -c (required).
@@ -480,6 +490,34 @@ func (s *NodeService) FileDeploy(
 	}
 
 	return NewResponse(fileDeployResultFromGen(resp.JSON202), resp.Body), nil
+}
+
+// FileUndeploy removes a deployed file from the target host filesystem.
+func (s *NodeService) FileUndeploy(
+	ctx context.Context,
+	req FileUndeployOpts,
+) (*Response[FileUndeployResult], error) {
+	body := gen.FileUndeployRequest{
+		Path: req.Path,
+	}
+
+	resp, err := s.client.PostNodeFileUndeployWithResponse(ctx, req.Target, body)
+	if err != nil {
+		return nil, fmt.Errorf("file undeploy: %w", err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON202 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(fileUndeployResultFromGen(resp.JSON202), resp.Body), nil
 }
 
 // FileStatus checks the deployment status of a file on the target host.

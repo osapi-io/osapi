@@ -107,6 +107,18 @@ func (s *FileDeletePublicTestSuite) TestDeleteFileByName() {
 			},
 		},
 		{
+			name:    "when deleting system file returns 403",
+			request: gen.DeleteFileByNameRequestObject{Name: "system/cron-template.tmpl"},
+			setupMock: func() {
+				// No mock calls expected; protected file check rejects before reaching obj store.
+			},
+			validateFunc: func(resp gen.DeleteFileByNameResponseObject) {
+				r, ok := resp.(gen.DeleteFileByName403JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "cannot delete protected system file")
+			},
+		},
+		{
 			name:    "not found",
 			request: gen.DeleteFileByNameRequestObject{Name: "missing.conf"},
 			setupMock: func() {

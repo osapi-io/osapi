@@ -948,6 +948,9 @@ type FileInfo struct {
 
 	// Size File size in bytes.
 	Size int `json:"size"`
+
+	// Source Source of the file: 'system' or 'user'.
+	Source string `json:"source"`
 }
 
 // FileInfoResponse defines model for FileInfoResponse.
@@ -1002,6 +1005,24 @@ type FileStatusResponse struct {
 
 	// Status File state — "in-sync", "drifted", or "missing".
 	Status string `json:"status"`
+}
+
+// FileUndeployRequest defines model for FileUndeployRequest.
+type FileUndeployRequest struct {
+	// Path Filesystem path to undeploy.
+	Path string `json:"path" validate:"required,min=1"`
+}
+
+// FileUndeployResponse defines model for FileUndeployResponse.
+type FileUndeployResponse struct {
+	// Changed Whether the file was actually removed.
+	Changed bool `json:"changed"`
+
+	// Hostname The agent that processed the job.
+	Hostname string `json:"hostname"`
+
+	// JobId The ID of the created job.
+	JobId string `json:"job_id"`
 }
 
 // FileUploadResponse defines model for FileUploadResponse.
@@ -1619,6 +1640,9 @@ type PostNodeFileDeployJSONRequestBody = FileDeployRequest
 // PostNodeFileStatusJSONRequestBody defines body for PostNodeFileStatus for application/json ContentType.
 type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
+// PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
+type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
+
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 
@@ -1820,6 +1844,11 @@ type ClientInterface interface {
 	PostNodeFileStatusWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeFileUndeployWithBody request with any body
+	PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeHostname request
 	GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2366,6 +2395,30 @@ func (c *Client) PostNodeFileStatusWithBody(ctx context.Context, hostname Hostna
 
 func (c *Client) PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeFileStatusRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeFileUndeployRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeFileUndeployRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4008,6 +4061,53 @@ func NewPostNodeFileStatusRequestWithBody(server string, hostname Hostname, cont
 	return req, nil
 }
 
+// NewPostNodeFileUndeployRequest calls the generic PostNodeFileUndeploy builder with application/json body
+func NewPostNodeFileUndeployRequest(server string, hostname Hostname, body PostNodeFileUndeployJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeFileUndeployRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeFileUndeployRequestWithBody generates requests for PostNodeFileUndeploy with any type of body
+func NewPostNodeFileUndeployRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/file/undeploy", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeHostnameRequest generates requests for GetNodeHostname
 func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -4716,6 +4816,11 @@ type ClientWithResponsesInterface interface {
 	PostNodeFileStatusWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
 
 	PostNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
+
+	// PostNodeFileUndeployWithBodyWithResponse request with any body
+	PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
+
+	PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
 
 	// GetNodeHostnameWithResponse request
 	GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error)
@@ -5632,6 +5737,32 @@ func (r PostNodeFileStatusResponse) StatusCode() int {
 	return 0
 }
 
+type PostNodeFileUndeployResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *FileUndeployResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeFileUndeployResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeFileUndeployResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6359,6 +6490,23 @@ func (c *ClientWithResponses) PostNodeFileStatusWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePostNodeFileStatusResponse(rsp)
+}
+
+// PostNodeFileUndeployWithBodyWithResponse request with arbitrary body returning *PostNodeFileUndeployResponse
+func (c *ClientWithResponses) PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
+	rsp, err := c.PostNodeFileUndeployWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeFileUndeployResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
+	rsp, err := c.PostNodeFileUndeploy(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeFileUndeployResponse(rsp)
 }
 
 // GetNodeHostnameWithResponse request returning *GetNodeHostnameResponse
@@ -8285,6 +8433,60 @@ func ParsePostNodeFileStatusResponse(rsp *http.Response) (*PostNodeFileStatusRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeFileUndeployResponse parses an HTTP response from a PostNodeFileUndeployWithResponse call
+func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeployResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeFileUndeployResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest FileUndeployResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

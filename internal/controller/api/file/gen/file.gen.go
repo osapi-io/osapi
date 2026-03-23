@@ -52,6 +52,9 @@ type FileInfo struct {
 
 	// Size File size in bytes.
 	Size int `json:"size"`
+
+	// Source Source of the file: 'system' or 'user'.
+	Source string `json:"source"`
 }
 
 // FileInfoResponse defines model for FileInfoResponse.

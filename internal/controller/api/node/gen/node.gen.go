@@ -258,6 +258,24 @@ type FileStatusResponse struct {
 	Status string `json:"status"`
 }
 
+// FileUndeployRequest defines model for FileUndeployRequest.
+type FileUndeployRequest struct {
+	// Path Filesystem path to undeploy.
+	Path string `json:"path" validate:"required,min=1"`
+}
+
+// FileUndeployResponse defines model for FileUndeployResponse.
+type FileUndeployResponse struct {
+	// Changed Whether the file was actually removed.
+	Changed bool `json:"changed"`
+
+	// Hostname The agent that processed the job.
+	Hostname string `json:"hostname"`
+
+	// JobId The ID of the created job.
+	JobId string `json:"job_id"`
+}
+
 // HostnameCollectionResponse defines model for HostnameCollectionResponse.
 type HostnameCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -493,6 +511,9 @@ type PostNodeFileDeployJSONRequestBody = FileDeployRequest
 // PostNodeFileStatusJSONRequestBody defines body for PostNodeFileStatus for application/json ContentType.
 type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
+// PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
+type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
+
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 
@@ -519,6 +540,9 @@ type ServerInterface interface {
 	// Check deployment status of a file on the host
 	// (POST /node/{hostname}/file/status)
 	PostNodeFileStatus(ctx echo.Context, hostname Hostname) error
+	// Remove a deployed file from the host filesystem
+	// (POST /node/{hostname}/file/undeploy)
+	PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error
 	// Retrieve node hostname
 	// (GET /node/{hostname}/hostname)
 	GetNodeHostname(ctx echo.Context, hostname Hostname) error
@@ -655,6 +679,24 @@ func (w *ServerInterfaceWrapper) PostNodeFileStatus(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostNodeFileStatus(ctx, hostname)
+	return err
+}
+
+// PostNodeFileUndeploy converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeFileUndeploy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"file:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostNodeFileUndeploy(ctx, hostname)
 	return err
 }
 
@@ -844,6 +886,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/node/:hostname/disk", wrapper.GetNodeDisk)
 	router.POST(baseURL+"/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
 	router.POST(baseURL+"/node/:hostname/file/status", wrapper.PostNodeFileStatus)
+	router.POST(baseURL+"/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
 	router.GET(baseURL+"/node/:hostname/hostname", wrapper.GetNodeHostname)
 	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
 	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
@@ -1171,6 +1214,60 @@ func (response PostNodeFileStatus403JSONResponse) VisitPostNodeFileStatusRespons
 type PostNodeFileStatus500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeFileStatus500JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeFileUndeployRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+	Body     *PostNodeFileUndeployJSONRequestBody
+}
+
+type PostNodeFileUndeployResponseObject interface {
+	VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error
+}
+
+type PostNodeFileUndeploy202JSONResponse FileUndeployResponse
+
+func (response PostNodeFileUndeploy202JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeFileUndeploy400JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeFileUndeploy400JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeFileUndeploy401JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeFileUndeploy401JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeFileUndeploy403JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeFileUndeploy403JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostNodeFileUndeploy500JSONResponse externalRef0.ErrorResponse
+
+func (response PostNodeFileUndeploy500JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1624,6 +1721,9 @@ type StrictServerInterface interface {
 	// Check deployment status of a file on the host
 	// (POST /node/{hostname}/file/status)
 	PostNodeFileStatus(ctx context.Context, request PostNodeFileStatusRequestObject) (PostNodeFileStatusResponseObject, error)
+	// Remove a deployed file from the host filesystem
+	// (POST /node/{hostname}/file/undeploy)
+	PostNodeFileUndeploy(ctx context.Context, request PostNodeFileUndeployRequestObject) (PostNodeFileUndeployResponseObject, error)
 	// Retrieve node hostname
 	// (GET /node/{hostname}/hostname)
 	GetNodeHostname(ctx context.Context, request GetNodeHostnameRequestObject) (GetNodeHostnameResponseObject, error)
@@ -1830,6 +1930,37 @@ func (sh *strictHandler) PostNodeFileStatus(ctx echo.Context, hostname Hostname)
 		return err
 	} else if validResponse, ok := response.(PostNodeFileStatusResponseObject); ok {
 		return validResponse.VisitPostNodeFileStatusResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostNodeFileUndeploy operation middleware
+func (sh *strictHandler) PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error {
+	var request PostNodeFileUndeployRequestObject
+
+	request.Hostname = hostname
+
+	var body PostNodeFileUndeployJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostNodeFileUndeploy(ctx.Request().Context(), request.(PostNodeFileUndeployRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostNodeFileUndeploy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostNodeFileUndeployResponseObject); ok {
+		return validResponse.VisitPostNodeFileUndeployResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
