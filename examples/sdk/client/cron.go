@@ -18,10 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates cron drop-in management: create, list, get,
-// update, and delete cron entries in /etc/cron.d/.
+// Package main demonstrates cron drop-in management: upload a script to the
+// Object Store, then create, list, get, update, and delete cron entries in
+// /etc/cron.d/ using the object-based workflow.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run schedule.go
+// Run with: OSAPI_TOKEN="<jwt>" go run cron.go
 package main
 
 import (
@@ -29,6 +30,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
@@ -48,12 +50,31 @@ func main() {
 	ctx := context.Background()
 	target := "_any"
 
-	// Create a cron entry.
-	fmt.Println("=== Creating cron entry ===")
+	// Upload the backup script to the Object Store first.
+	// The cron entry references the stored object by name.
+	fmt.Println("=== Uploading backup script ===")
+	backupScript := strings.NewReader("#!/bin/sh\n/usr/local/bin/backup.sh --full\n")
+	uploadResp, err := c.File.Upload(ctx, "backup-script", "raw", backupScript, client.FileUploadOpts{})
+	if err != nil {
+		log.Fatalf("upload failed: %v", err)
+	}
+	fmt.Printf("Uploaded: %s (changed: %v)\n", uploadResp.Data.Name, uploadResp.Data.Changed)
+
+	// Upload the logrotate script for the periodic entry.
+	fmt.Println("\n=== Uploading logrotate script ===")
+	logrotateScript := strings.NewReader("#!/bin/sh\n/usr/sbin/logrotate /etc/logrotate.conf\n")
+	_, err = c.File.Upload(ctx, "logrotate-script", "raw", logrotateScript, client.FileUploadOpts{})
+	if err != nil {
+		log.Fatalf("upload logrotate script failed: %v", err)
+	}
+	fmt.Println("Uploaded: logrotate-script")
+
+	// Create a cron entry referencing the uploaded object.
+	fmt.Println("\n=== Creating cron entry ===")
 	createResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
 		Name:     "backup-daily",
 		Schedule: "0 2 * * *",
-		Command:  "/usr/local/bin/backup.sh --full",
+		Object:   "backup-script",
 		User:     "root",
 	})
 	if err != nil {
@@ -61,12 +82,12 @@ func main() {
 	}
 	fmt.Printf("Created: %s (changed: %v)\n", createResp.Data.Name, createResp.Data.Changed)
 
-	// Create a periodic entry (interval-based).
+	// Create a periodic entry (interval-based) referencing an uploaded object.
 	fmt.Println("\n=== Creating periodic cron entry ===")
 	periodicResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
 		Name:     "logrotate",
 		Interval: "daily",
-		Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
+		Object:   "logrotate-script",
 	})
 	if err != nil {
 		log.Fatalf("create periodic failed: %v", err)
@@ -80,7 +101,7 @@ func main() {
 		log.Fatalf("list failed: %v", err)
 	}
 	for _, entry := range listResp.Data.Results {
-		fmt.Printf("  %s: %s %s %s\n", entry.Name, entry.Schedule, entry.User, entry.Command)
+		fmt.Printf("  %s: %s %s %s\n", entry.Name, entry.Schedule, entry.User, entry.Object)
 	}
 
 	// Get a specific entry.
@@ -89,22 +110,33 @@ func main() {
 	if err != nil {
 		log.Fatalf("get failed: %v", err)
 	}
-	fmt.Printf("Name: %s\nSchedule: %s\nUser: %s\nCommand: %s\n",
+	fmt.Printf("Name: %s\nSchedule: %s\nUser: %s\nObject: %s\n",
 		getResp.Data.Name, getResp.Data.Schedule,
-		getResp.Data.User, getResp.Data.Command)
+		getResp.Data.User, getResp.Data.Object)
 
-	// Update the schedule.
+	// Update: upload a new version of the script and redeploy by updating the
+	// cron entry to point at the new object.
+	fmt.Println("\n=== Uploading new backup script version ===")
+	newBackupScript := strings.NewReader("#!/bin/sh\n/usr/local/bin/backup.sh --full --compress\n")
+	_, err = c.File.Upload(ctx, "backup-script-v2", "raw", newBackupScript, client.FileUploadOpts{})
+	if err != nil {
+		log.Fatalf("upload new version failed: %v", err)
+	}
+	fmt.Println("Uploaded: backup-script-v2")
+
 	fmt.Println("\n=== Updating cron entry ===")
 	newSchedule := "0 3 * * *"
 	updateResp, err := c.Schedule.CronUpdate(ctx, target, "backup-daily", client.CronUpdateOpts{
 		Schedule: newSchedule,
+		Object:   "backup-script-v2",
 	})
 	if err != nil {
 		log.Fatalf("update failed: %v", err)
 	}
 	fmt.Printf("Updated: %s (changed: %v)\n", updateResp.Data.Name, updateResp.Data.Changed)
 
-	// Delete the entry.
+	// Delete the entry. The cron file is removed from disk; file-state KV
+	// tracking is preserved so the undeploy is recorded.
 	fmt.Println("\n=== Deleting cron entry ===")
 	deleteResp, err := c.Schedule.CronDelete(ctx, target, "backup-daily")
 	if err != nil {
@@ -119,4 +151,14 @@ func main() {
 		log.Fatalf("cleanup failed: %v", err)
 	}
 	fmt.Printf("Deleted: %s (changed: %v)\n", cleanupResp.Data.Name, cleanupResp.Data.Changed)
+
+	// Clean up uploaded objects from the Object Store.
+	fmt.Println("\n=== Cleaning up uploaded objects ===")
+	for _, name := range []string{"backup-script", "backup-script-v2", "logrotate-script"} {
+		_, err = c.File.Delete(ctx, name)
+		if err != nil {
+			log.Fatalf("delete object %s failed: %v", name, err)
+		}
+		fmt.Printf("Deleted object: %s\n", name)
+	}
 }

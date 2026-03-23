@@ -18,6 +18,7 @@ directly -- agents handle all deployment.
 | Get       | Retrieve metadata for a specific stored file           |
 | Delete    | Remove a file from the Object Store                    |
 | Deploy    | Deploy a file from Object Store to agent filesystem    |
+| Undeploy  | Remove a deployed file from disk (state preserved)     |
 | Status    | Check whether a deployed file is in-sync or drifted    |
 
 **Upload / List / Get / Delete** manage files in the central NATS Object Store.
@@ -28,6 +29,10 @@ are synchronous REST calls -- they do not go through the job system.
 Store and writes it to the target path on the agent's filesystem. Deploy
 supports optional file permissions (mode, owner, group) and Go template
 rendering.
+
+**Undeploy** creates an asynchronous job that removes a previously deployed
+file from the agent's filesystem. The file-state KV record is preserved so the
+undeploy is auditable and a subsequent deploy can detect the change.
 
 **Status** creates an asynchronous job that compares the current file on disk
 against its expected SHA-256 from the file-state KV bucket. It reports one of
@@ -67,6 +72,23 @@ three states: `in-sync`, `drifted`, or `missing`.
 You can target a specific host, broadcast to all hosts with `_all`, or route by
 label.
 
+### File Undeploy Flow
+
+```bash
+osapi client node file undeploy --target HOST --path /etc/app/app.conf
+```
+
+1. The CLI posts an undeploy request specifying the target path.
+2. The API server creates a job and publishes it to NATS.
+3. An agent picks up the job and removes the file from the filesystem.
+4. The file-state KV record is preserved -- it is not deleted. This keeps the
+   undeploy auditable and ensures a subsequent deploy will write the file
+   even if the content has not changed (since the file is now absent).
+5. The result (changed, path) is written back to NATS KV.
+
+If the file does not exist on disk when undeploy runs, the operation returns
+`changed: false`.
+
 ### SHA-Based Idempotency
 
 Every deploy operation computes a SHA-256 of the file content and compares it
@@ -76,6 +98,24 @@ efficient -- only actual changes hit the filesystem.
 
 The file-state KV has no TTL, so deploy state persists indefinitely until
 explicitly removed.
+
+## Protected Objects
+
+Files stored under the `system/` name prefix are protected and cannot be
+deleted via the `DELETE /file/{name}` endpoint. Attempts to delete a protected
+object return **403 Forbidden**.
+
+System objects are reserved for use by meta providers such as the cron
+provider, which fetches script content from the Object Store at deploy time.
+Protecting these objects prevents accidental removal of files that backing
+cron entries depend on.
+
+To replace a system object's content, use `--force` on upload:
+
+```bash
+osapi client node file upload --name system/my-script \
+  --file ./my-script.sh --force
+```
 
 ## Template Rendering
 
@@ -143,14 +183,15 @@ nats:
 
 ## Permissions
 
-| Endpoint                            | Permission   |
-| ----------------------------------- | ------------ |
-| `POST /file` (upload)               | `file:write` |
-| `GET /file` (list)                  | `file:read`  |
-| `GET /file/{name}` (get)            | `file:read`  |
-| `DELETE /file/{name}` (delete)      | `file:write` |
-| `POST /node/{hostname}/file/deploy` | `file:write` |
-| `POST /node/{hostname}/file/status` | `file:read`  |
+| Endpoint                              | Permission   |
+| ------------------------------------- | ------------ |
+| `POST /file` (upload)                 | `file:write` |
+| `GET /file` (list)                    | `file:read`  |
+| `GET /file/{name}` (get)              | `file:read`  |
+| `DELETE /file/{name}` (delete)        | `file:write` |
+| `POST /node/{hostname}/file/deploy`   | `file:write` |
+| `POST /node/{hostname}/file/undeploy` | `file:write` |
+| `POST /node/{hostname}/file/status`   | `file:read`  |
 
 The `admin` and `write` roles include both `file:read` and `file:write`. The
 `read` role includes only `file:read`.
