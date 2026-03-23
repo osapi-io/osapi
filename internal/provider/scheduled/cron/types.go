@@ -18,24 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package cron provides management of /etc/cron.d/ drop-in files.
 package cron
 
 // Provider implements the methods to manage /etc/cron.d/ drop-in files.
 type Provider interface {
 	// List returns all osapi-managed cron entries from /etc/cron.d/.
-	List() ([]CronEntry, error)
+	List() ([]Entry, error)
 	// Get returns a single cron entry by name.
-	Get(name string) (*CronEntry, error)
+	Get(name string) (*Entry, error)
 	// Create writes a new cron drop-in file.
-	Create(entry CronEntry) (*CreateResult, error)
+	Create(entry Entry) (*CreateResult, error)
 	// Update overwrites an existing cron drop-in file.
-	Update(entry CronEntry) (*UpdateResult, error)
+	Update(entry Entry) (*UpdateResult, error)
 	// Delete removes a cron drop-in file.
 	Delete(name string) (*DeleteResult, error)
 }
 
-// CronEntry represents a single cron drop-in file.
-type CronEntry struct {
+// Entry represents a single cron drop-in file.
+type Entry struct {
 	Name     string `json:"name"`
 	Schedule string `json:"schedule"`
 	User     string `json:"user"`

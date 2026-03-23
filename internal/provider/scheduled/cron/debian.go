@@ -54,13 +54,13 @@ func NewDebianProvider(
 }
 
 // List returns all osapi-managed cron entries from /etc/cron.d/.
-func (d *Debian) List() ([]CronEntry, error) {
+func (d *Debian) List() ([]Entry, error) {
 	entries, err := afero.ReadDir(d.fs, cronDir)
 	if err != nil {
 		return nil, fmt.Errorf("list cron entries: %w", err)
 	}
 
-	var result []CronEntry
+	var result []Entry
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -80,7 +80,7 @@ func (d *Debian) List() ([]CronEntry, error) {
 // Get returns a single cron entry by name.
 func (d *Debian) Get(
 	name string,
-) (*CronEntry, error) {
+) (*Entry, error) {
 	if err := validateName(name); err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (d *Debian) Get(
 
 // Create writes a new cron drop-in file.
 func (d *Debian) Create(
-	entry CronEntry,
+	entry Entry,
 ) (*CreateResult, error) {
 	if err := validateName(entry.Name); err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (d *Debian) Create(
 
 // Update overwrites an existing cron drop-in file.
 func (d *Debian) Update(
-	entry CronEntry,
+	entry Entry,
 ) (*UpdateResult, error) {
 	if err := validateName(entry.Name); err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ func (d *Debian) Delete(
 // Returns nil if the file is not managed by osapi.
 func (d *Debian) readCronFile(
 	name string,
-) (*CronEntry, error) {
+) (*Entry, error) {
 	filePath := cronDir + "/" + name
 
 	data, err := afero.ReadFile(d.fs, filePath)
@@ -223,7 +223,7 @@ func (d *Debian) readCronFile(
 	user := parts[5]
 	command := strings.Join(parts[6:], " ")
 
-	return &CronEntry{
+	return &Entry{
 		Name:     name,
 		Schedule: schedule,
 		User:     user,
@@ -250,7 +250,7 @@ func validateName(
 
 // buildFileContent generates the content for a cron drop-in file.
 func buildFileContent(
-	entry CronEntry,
+	entry Entry,
 ) string {
 	user := entry.User
 	if user == "" {

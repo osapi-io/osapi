@@ -480,7 +480,7 @@ func (mr *MockJobClientMockRecorder) ModifyNetworkDNSBroadcast(arg0, arg1, arg2,
 }
 
 // ModifyScheduleCronCreate mocks base method.
-func (m *MockJobClient) ModifyScheduleCronCreate(arg0 context.Context, arg1 string, arg2 cron.CronEntry) (*job.Response, error) {
+func (m *MockJobClient) ModifyScheduleCronCreate(arg0 context.Context, arg1 string, arg2 cron.Entry) (*job.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyScheduleCronCreate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*job.Response)
@@ -510,7 +510,7 @@ func (mr *MockJobClientMockRecorder) ModifyScheduleCronDelete(arg0, arg1, arg2 i
 }
 
 // ModifyScheduleCronUpdate mocks base method.
-func (m *MockJobClient) ModifyScheduleCronUpdate(arg0 context.Context, arg1 string, arg2 cron.CronEntry) (*job.Response, error) {
+func (m *MockJobClient) ModifyScheduleCronUpdate(arg0 context.Context, arg1 string, arg2 cron.Entry) (*job.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyScheduleCronUpdate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*job.Response)

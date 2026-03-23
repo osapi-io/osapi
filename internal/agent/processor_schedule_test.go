@@ -47,31 +47,31 @@ import (
 
 // mockCronProvider implements cron.Provider for testing.
 type mockCronProvider struct {
-	listFn   func() ([]cron.CronEntry, error)
-	getFn    func(string) (*cron.CronEntry, error)
-	createFn func(cron.CronEntry) (*cron.CreateResult, error)
-	updateFn func(cron.CronEntry) (*cron.UpdateResult, error)
+	listFn   func() ([]cron.Entry, error)
+	getFn    func(string) (*cron.Entry, error)
+	createFn func(cron.Entry) (*cron.CreateResult, error)
+	updateFn func(cron.Entry) (*cron.UpdateResult, error)
 	deleteFn func(string) (*cron.DeleteResult, error)
 }
 
-func (m *mockCronProvider) List() ([]cron.CronEntry, error) {
+func (m *mockCronProvider) List() ([]cron.Entry, error) {
 	return m.listFn()
 }
 
 func (m *mockCronProvider) Get(
 	name string,
-) (*cron.CronEntry, error) {
+) (*cron.Entry, error) {
 	return m.getFn(name)
 }
 
 func (m *mockCronProvider) Create(
-	entry cron.CronEntry,
+	entry cron.Entry,
 ) (*cron.CreateResult, error) {
 	return m.createFn(entry)
 }
 
 func (m *mockCronProvider) Update(
-	entry cron.CronEntry,
+	entry cron.Entry,
 ) (*cron.UpdateResult, error) {
 	return m.updateFn(entry)
 }
@@ -155,13 +155,13 @@ func (s *ProcessorScheduleTestSuite) TestProcessScheduleOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					listFn: func() ([]cron.CronEntry, error) {
-						return []cron.CronEntry{}, nil
+					listFn: func() ([]cron.Entry, error) {
+						return []cron.Entry{}, nil
 					},
 				}
 			},
 			validate: func(result json.RawMessage) {
-				var entries []cron.CronEntry
+				var entries []cron.Entry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Empty(entries)
@@ -242,8 +242,8 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					listFn: func() ([]cron.CronEntry, error) {
-						return []cron.CronEntry{
+					listFn: func() ([]cron.Entry, error) {
+						return []cron.Entry{
 							{
 								Name:     "backup",
 								Schedule: "0 2 * * *",
@@ -255,7 +255,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 				}
 			},
 			validate: func(result json.RawMessage) {
-				var entries []cron.CronEntry
+				var entries []cron.Entry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Len(entries, 1)
@@ -273,7 +273,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					listFn: func() ([]cron.CronEntry, error) {
+					listFn: func() ([]cron.Entry, error) {
 						return nil, errors.New("permission denied")
 					},
 				}
@@ -291,9 +291,9 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					getFn: func(name string) (*cron.CronEntry, error) {
+					getFn: func(name string) (*cron.Entry, error) {
 						s.Equal("backup", name)
-						return &cron.CronEntry{
+						return &cron.Entry{
 							Name:     "backup",
 							Schedule: "0 2 * * *",
 							User:     "root",
@@ -303,7 +303,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 				}
 			},
 			validate: func(result json.RawMessage) {
-				var entry cron.CronEntry
+				var entry cron.Entry
 				err := json.Unmarshal(result, &entry)
 				s.NoError(err)
 				s.Equal("backup", entry.Name)
@@ -333,7 +333,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					getFn: func(_ string) (*cron.CronEntry, error) {
+					getFn: func(_ string) (*cron.Entry, error) {
 						return nil, errors.New("not found")
 					},
 				}
@@ -353,7 +353,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					createFn: func(entry cron.CronEntry) (*cron.CreateResult, error) {
+					createFn: func(entry cron.Entry) (*cron.CreateResult, error) {
 						s.Equal("logrotate", entry.Name)
 						return &cron.CreateResult{
 							Name:    "logrotate",
@@ -396,7 +396,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					createFn: func(_ cron.CronEntry) (*cron.CreateResult, error) {
+					createFn: func(_ cron.Entry) (*cron.CreateResult, error) {
 						return nil, errors.New("already exists")
 					},
 				}
@@ -416,7 +416,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					updateFn: func(entry cron.CronEntry) (*cron.UpdateResult, error) {
+					updateFn: func(entry cron.Entry) (*cron.UpdateResult, error) {
 						s.Equal("backup", entry.Name)
 						s.Equal("0 3 * * *", entry.Schedule)
 						return &cron.UpdateResult{
@@ -460,7 +460,7 @@ func (s *ProcessorScheduleTestSuite) TestProcessCronOperation() {
 			},
 			setupMock: func() *mockCronProvider {
 				return &mockCronProvider{
-					updateFn: func(_ cron.CronEntry) (*cron.UpdateResult, error) {
+					updateFn: func(_ cron.Entry) (*cron.UpdateResult, error) {
 						return nil, errors.New("not found")
 					},
 				}
@@ -620,13 +620,13 @@ func (s *ProcessorScheduleTestSuite) TestProcessJobOperationScheduleCategory() {
 			},
 			setupMock: func() cron.Provider {
 				return &mockCronProvider{
-					listFn: func() ([]cron.CronEntry, error) {
-						return []cron.CronEntry{}, nil
+					listFn: func() ([]cron.Entry, error) {
+						return []cron.Entry{}, nil
 					},
 				}
 			},
 			validate: func(result json.RawMessage) {
-				var entries []cron.CronEntry
+				var entries []cron.Entry
 				err := json.Unmarshal(result, &entries)
 				s.NoError(err)
 				s.Empty(entries)

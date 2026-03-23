@@ -114,7 +114,7 @@ func (a *Agent) processCronGet(
 func (a *Agent) processCronCreate(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry cron.CronEntry
+	var entry cron.Entry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal cron create data: %w", err)
 	}
@@ -135,7 +135,7 @@ func (a *Agent) processCronCreate(
 func (a *Agent) processCronUpdate(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	var entry cron.CronEntry
+	var entry cron.Entry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
 		return nil, fmt.Errorf("unmarshal cron update data: %w", err)
 	}

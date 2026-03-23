@@ -88,7 +88,7 @@ func (suite *LinuxPublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(cron.CronEntry{})
+			got, err := suite.provider.Create(cron.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -107,7 +107,7 @@ func (suite *LinuxPublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(cron.CronEntry{})
+			got, err := suite.provider.Update(cron.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

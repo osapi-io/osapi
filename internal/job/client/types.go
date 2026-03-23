@@ -301,12 +301,12 @@ type JobClient interface {
 	ModifyScheduleCronCreate(
 		ctx context.Context,
 		target string,
-		entry cron.CronEntry,
+		entry cron.Entry,
 	) (*job.Response, error)
 	ModifyScheduleCronUpdate(
 		ctx context.Context,
 		target string,
-		entry cron.CronEntry,
+		entry cron.Entry,
 	) (*job.Response, error)
 	ModifyScheduleCronDelete(
 		ctx context.Context,

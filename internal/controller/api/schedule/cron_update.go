@@ -46,7 +46,7 @@ func (s *Schedule) PutNodeScheduleCron(
 		return gen.PutNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
-	entry := cronProv.CronEntry{
+	entry := cronProv.Entry{
 		Name: request.Name,
 	}
 	if request.Body.Schedule != nil {

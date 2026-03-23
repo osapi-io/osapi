@@ -89,7 +89,7 @@ func (c *Client) QueryScheduleCronGet(
 func (c *Client) ModifyScheduleCronCreate(
 	ctx context.Context,
 	target string,
-	entry cron.CronEntry,
+	entry cron.Entry,
 ) (*job.Response, error) {
 	dataBytes, _ := json.Marshal(entry)
 	req := &job.Request{
@@ -118,7 +118,7 @@ func (c *Client) ModifyScheduleCronCreate(
 func (c *Client) ModifyScheduleCronUpdate(
 	ctx context.Context,
 	target string,
-	entry cron.CronEntry,
+	entry cron.Entry,
 ) (*job.Response, error) {
 	dataBytes, _ := json.Marshal(entry)
 	req := &job.Request{

@@ -37,27 +37,27 @@ func NewLinuxProvider() *Linux {
 }
 
 // List returns ErrUnsupported on generic Linux.
-func (l *Linux) List() ([]CronEntry, error) {
+func (l *Linux) List() ([]Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on generic Linux.
 func (l *Linux) Get(
 	_ string,
-) (*CronEntry, error) {
+) (*Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Create returns ErrUnsupported on generic Linux.
 func (l *Linux) Create(
-	_ CronEntry,
+	_ Entry,
 ) (*CreateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Update returns ErrUnsupported on generic Linux.
 func (l *Linux) Update(
-	_ CronEntry,
+	_ Entry,
 ) (*UpdateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }

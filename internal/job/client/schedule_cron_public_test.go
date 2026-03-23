@@ -210,7 +210,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 	tests := []struct {
 		name          string
 		target        string
-		entry         cron.CronEntry
+		entry         cron.Entry
 		responseData  string
 		mockError     error
 		expectError   bool
@@ -219,7 +219,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 		{
 			name:   "success",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "logrotate",
 				Schedule: "0 0 * * *",
 				User:     "root",
@@ -234,7 +234,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 		{
 			name:   "job failed",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "dup",
 				Schedule: "* * * * *",
 				User:     "root",
@@ -250,7 +250,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 		{
 			name:   "publish error",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "logrotate",
 				Schedule: "0 0 * * *",
 				User:     "root",
@@ -297,7 +297,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 	tests := []struct {
 		name          string
 		target        string
-		entry         cron.CronEntry
+		entry         cron.Entry
 		responseData  string
 		mockError     error
 		expectError   bool
@@ -306,7 +306,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 		{
 			name:   "success",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 3 * * *",
 				User:     "root",
@@ -321,7 +321,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 		{
 			name:   "job failed",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "missing",
 				Schedule: "* * * * *",
 				User:     "root",
@@ -337,7 +337,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 		{
 			name:   "publish error",
 			target: "server1",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 3 * * *",
 				User:     "root",

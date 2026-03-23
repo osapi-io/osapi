@@ -121,13 +121,13 @@ func (suite *DebianPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		setup        func()
-		validateFunc func([]cron.CronEntry, error)
+		validateFunc func([]cron.Entry, error)
 	}{
 		{
 			name:  "when directory is empty",
 			setup: func() {},
 			validateFunc: func(
-				entries []cron.CronEntry,
+				entries []cron.Entry,
 				err error,
 			) {
 				suite.NoError(err)
@@ -151,7 +151,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				)
 			},
 			validateFunc: func(
-				entries []cron.CronEntry,
+				entries []cron.Entry,
 				err error,
 			) {
 				suite.NoError(err)
@@ -175,7 +175,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				)
 			},
 			validateFunc: func(
-				entries []cron.CronEntry,
+				entries []cron.Entry,
 				err error,
 			) {
 				suite.NoError(err)
@@ -195,7 +195,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				)
 			},
 			validateFunc: func(
-				entries []cron.CronEntry,
+				entries []cron.Entry,
 				err error,
 			) {
 				suite.NoError(err)
@@ -211,7 +211,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				suite.provider = cron.NewDebianProvider(suite.logger, badFs)
 			},
 			validateFunc: func(
-				entries []cron.CronEntry,
+				entries []cron.Entry,
 				err error,
 			) {
 				suite.Error(err)
@@ -237,7 +237,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		name         string
 		entryName    string
 		setup        func()
-		validateFunc func(*cron.CronEntry, error)
+		validateFunc func(*cron.Entry, error)
 	}{
 		{
 			name:      "when file exists",
@@ -251,7 +251,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				)
 			},
 			validateFunc: func(
-				entry *cron.CronEntry,
+				entry *cron.Entry,
 				err error,
 			) {
 				suite.NoError(err)
@@ -266,7 +266,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			entryName: "nonexistent",
 			setup:     func() {},
 			validateFunc: func(
-				entry *cron.CronEntry,
+				entry *cron.Entry,
 				err error,
 			) {
 				suite.Error(err)
@@ -279,7 +279,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			entryName: "bad name",
 			setup:     func() {},
 			validateFunc: func(
-				entry *cron.CronEntry,
+				entry *cron.Entry,
 				err error,
 			) {
 				suite.Error(err)
@@ -299,7 +299,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				)
 			},
 			validateFunc: func(
-				entry *cron.CronEntry,
+				entry *cron.Entry,
 				err error,
 			) {
 				suite.Error(err)
@@ -319,7 +319,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				)
 			},
 			validateFunc: func(
-				entry *cron.CronEntry,
+				entry *cron.Entry,
 				err error,
 			) {
 				suite.Error(err)
@@ -343,13 +343,13 @@ func (suite *DebianPublicTestSuite) TestGet() {
 func (suite *DebianPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
-		entry        cron.CronEntry
+		entry        cron.Entry
 		setup        func()
 		validateFunc func(*cron.CreateResult, error)
 	}{
 		{
 			name: "when creating a new entry",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -374,7 +374,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when file already exists",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -399,7 +399,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when name contains slash",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "bad/name",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -417,7 +417,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when name contains dot-dot",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "bad..name",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -435,7 +435,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when name has invalid characters",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "bad name",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -453,7 +453,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when user is empty defaults to root",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "",
@@ -474,7 +474,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when Exists check fails",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -498,7 +498,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		},
 		{
 			name: "when WriteFile fails",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -536,13 +536,13 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 func (suite *DebianPublicTestSuite) TestUpdate() {
 	tests := []struct {
 		name         string
-		entry        cron.CronEntry
+		entry        cron.Entry
 		setup        func()
 		validateFunc func(*cron.UpdateResult, error)
 	}{
 		{
 			name: "when content changes",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
 				User:     "root",
@@ -574,7 +574,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when content matches",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -599,7 +599,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when name is invalid",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "bad name",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -617,7 +617,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when file does not exist",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "nonexistent",
 				Schedule: "*/5 * * * *",
 				User:     "root",
@@ -635,7 +635,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when Exists check fails",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
 				User:     "root",
@@ -659,7 +659,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when ReadFile fails",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
 				User:     "root",
@@ -691,7 +691,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 		},
 		{
 			name: "when WriteFile fails on changed content",
-			entry: cron.CronEntry{
+			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "0 3 * * *",
 				User:     "root",

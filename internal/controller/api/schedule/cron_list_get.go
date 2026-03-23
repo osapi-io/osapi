@@ -52,7 +52,7 @@ func (s *Schedule) GetNodeScheduleCron(
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var entries []cronProv.CronEntry
+	var entries []cronProv.Entry
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &entries)
 	}

@@ -45,7 +45,7 @@ func (s *Schedule) PostNodeScheduleCron(
 		return gen.PostNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
-	entry := cronProv.CronEntry{
+	entry := cronProv.Entry{
 		Name:     request.Body.Name,
 		Schedule: request.Body.Schedule,
 		Command:  request.Body.Command,

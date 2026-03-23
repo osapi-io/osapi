@@ -36,27 +36,27 @@ func NewDarwinProvider() *Darwin {
 }
 
 // List returns ErrUnsupported on Darwin.
-func (d *Darwin) List() ([]CronEntry, error) {
+func (d *Darwin) List() ([]Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on Darwin.
 func (d *Darwin) Get(
 	_ string,
-) (*CronEntry, error) {
+) (*Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Create returns ErrUnsupported on Darwin.
 func (d *Darwin) Create(
-	_ CronEntry,
+	_ Entry,
 ) (*CreateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Update returns ErrUnsupported on Darwin.
 func (d *Darwin) Update(
-	_ CronEntry,
+	_ Entry,
 ) (*UpdateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
