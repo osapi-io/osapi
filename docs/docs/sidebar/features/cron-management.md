@@ -77,6 +77,18 @@ osapi client node schedule cron delete --target web-01 --name backup
 
 All commands support `--json` for raw JSON output.
 
+## File Permissions
+
+The provider sets file ownership and modes to match cron requirements:
+
+| Type     | Path                          | Mode | Notes                           |
+| -------- | ----------------------------- | ---- | ------------------------------- |
+| Schedule | `/etc/cron.d/{name}`          | 0644 | Not executable, root-owned      |
+| Interval | `/etc/cron.{interval}/{name}` | 0755 | Executable, `#!/bin/sh` shebang |
+
+Files are created as root (the agent runs as root). Names must not contain dots
+— `run-parts` skips dotfiles.
+
 ## Supported Platforms
 
 | OS Family | Support |
