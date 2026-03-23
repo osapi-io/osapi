@@ -709,6 +709,56 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
+			name: "when name exists in different directory (cron.d vs daily)",
+			entry: cron.Entry{
+				Name:     "backup",
+				Interval: "daily",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi\n0 2 * * * root /usr/bin/backup\n"),
+					0o644,
+				)
+			},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "already exists")
+			},
+		},
+		{
+			name: "when name exists in different directory (daily vs cron.d)",
+			entry: cron.Entry{
+				Name:     "logrotate",
+				Schedule: "0 0 * * *",
+				User:     "root",
+				Command:  "/usr/sbin/logrotate",
+			},
+			setup: func() {
+				_ = suite.fs.MkdirAll("/etc/cron.daily", 0o755)
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.daily/logrotate",
+					[]byte("#!/bin/sh\n# Managed by osapi\n/usr/sbin/logrotate\n"),
+					0o755,
+				)
+			},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "already exists")
+			},
+		},
+		{
 			name: "when name contains slash",
 			entry: cron.Entry{
 				Name:     "bad/name",
@@ -784,7 +834,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when Exists check fails",
+			name: "when WriteFile fails during create",
 			entry: cron.Entry{
 				Name:     "backup",
 				Schedule: "*/5 * * * *",
@@ -792,11 +842,11 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Command:  "/usr/bin/backup",
 			},
 			setup: func() {
-				errFs := &errorStatFs{
-					Fs:      suite.fs,
-					statErr: errors.New("stat error"),
-				}
-				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+				// Use a ReadOnlyFs to make writes fail.
+				base := afero.NewMemMapFs()
+				_ = base.MkdirAll("/etc/cron.d", 0o755)
+				readOnly := afero.NewReadOnlyFs(base)
+				suite.provider = cron.NewDebianProvider(suite.logger, readOnly)
 			},
 			validateFunc: func(
 				result *cron.CreateResult,

@@ -149,15 +149,12 @@ func (d *Debian) Create(
 		return nil, err
 	}
 
-	filePath, perm := d.entryFilePath(entry)
-
-	exists, err := afero.Exists(d.fs, filePath)
-	if err != nil {
-		return nil, fmt.Errorf("create cron entry: %w", err)
-	}
-	if exists {
+	// Check ALL directories — name must be unique across cron.d and periodic dirs.
+	if existingPath, _ := d.findEntryPath(entry.Name); existingPath != "" {
 		return nil, fmt.Errorf("cron entry %q already exists", entry.Name)
 	}
+
+	filePath, perm := d.entryFilePath(entry)
 
 	content := buildFileContent(entry)
 	if err := afero.WriteFile(d.fs, filePath, []byte(content), perm); err != nil {
