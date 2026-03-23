@@ -21,6 +21,7 @@
 package cron
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
@@ -36,12 +37,15 @@ func NewDarwinProvider() *Darwin {
 }
 
 // List returns ErrUnsupported on Darwin.
-func (d *Darwin) List() ([]Entry, error) {
+func (d *Darwin) List(
+	_ context.Context,
+) ([]Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on Darwin.
 func (d *Darwin) Get(
+	_ context.Context,
 	_ string,
 ) (*Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -49,6 +53,7 @@ func (d *Darwin) Get(
 
 // Create returns ErrUnsupported on Darwin.
 func (d *Darwin) Create(
+	_ context.Context,
 	_ Entry,
 ) (*CreateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -56,6 +61,7 @@ func (d *Darwin) Create(
 
 // Update returns ErrUnsupported on Darwin.
 func (d *Darwin) Update(
+	_ context.Context,
 	_ Entry,
 ) (*UpdateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -63,6 +69,7 @@ func (d *Darwin) Update(
 
 // Delete returns ErrUnsupported on Darwin.
 func (d *Darwin) Delete(
+	_ context.Context,
 	_ string,
 ) (*DeleteResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)

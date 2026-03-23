@@ -37,17 +37,19 @@ var clientNodeScheduleCronCreateCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
+		object, _ := cmd.Flags().GetString("object")
 		schedule, _ := cmd.Flags().GetString("schedule")
 		interval, _ := cmd.Flags().GetString("interval")
-		command, _ := cmd.Flags().GetString("command")
 		user, _ := cmd.Flags().GetString("user")
+		contentType, _ := cmd.Flags().GetString("content-type")
 
 		resp, err := sdkClient.Schedule.CronCreate(ctx, host, client.CronCreateOpts{
-			Name:     name,
-			Schedule: schedule,
-			Interval: interval,
-			Command:  command,
-			User:     user,
+			Name:        name,
+			Object:      object,
+			Schedule:    schedule,
+			Interval:    interval,
+			User:        user,
+			ContentType: contentType,
 		})
 		if err != nil {
 			cli.HandleError(err, logger)
@@ -74,14 +76,16 @@ func init() {
 	clientNodeScheduleCronCreateCmd.PersistentFlags().
 		String("name", "", "Name for the cron drop-in entry (required)")
 	clientNodeScheduleCronCreateCmd.PersistentFlags().
+		String("object", "", "Name of the uploaded file in the object store (required)")
+	clientNodeScheduleCronCreateCmd.PersistentFlags().
 		String("schedule", "", "Cron schedule expression, e.g. \"*/5 * * * *\"")
 	clientNodeScheduleCronCreateCmd.PersistentFlags().
 		String("interval", "", "Periodic interval: hourly, daily, weekly, monthly")
 	clientNodeScheduleCronCreateCmd.PersistentFlags().
-		String("command", "", "Command to execute on schedule (required)")
-	clientNodeScheduleCronCreateCmd.PersistentFlags().
 		String("user", "", "User to run the command as (default root)")
+	clientNodeScheduleCronCreateCmd.PersistentFlags().
+		String("content-type", "", "Content type: raw or template")
 
 	_ = clientNodeScheduleCronCreateCmd.MarkPersistentFlagRequired("name")
-	_ = clientNodeScheduleCronCreateCmd.MarkPersistentFlagRequired("command")
+	_ = clientNodeScheduleCronCreateCmd.MarkPersistentFlagRequired("object")
 }

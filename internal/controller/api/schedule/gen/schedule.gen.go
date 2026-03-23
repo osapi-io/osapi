@@ -20,6 +20,12 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for CronCreateRequestContentType.
+const (
+	CronCreateRequestContentTypeRaw      CronCreateRequestContentType = "raw"
+	CronCreateRequestContentTypeTemplate CronCreateRequestContentType = "template"
+)
+
 // Defines values for CronCreateRequestInterval.
 const (
 	CronCreateRequestIntervalDaily   CronCreateRequestInterval = "daily"
@@ -36,6 +42,12 @@ const (
 	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
 )
 
+// Defines values for CronUpdateRequestContentType.
+const (
+	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
+	CronUpdateRequestContentTypeTemplate CronUpdateRequestContentType = "template"
+)
+
 // CronCollectionResponse defines model for CronCollectionResponse.
 type CronCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -45,8 +57,8 @@ type CronCollectionResponse struct {
 
 // CronCreateRequest defines model for CronCreateRequest.
 type CronCreateRequest struct {
-	// Command Command to execute on schedule.
-	Command string `json:"command" validate:"required,min=1"`
+	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+	ContentType *CronCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
 	Interval *CronCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
@@ -54,12 +66,21 @@ type CronCreateRequest struct {
 	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
 	Name string `json:"name" validate:"required,min=1,max=64"`
 
+	// Object Name of the uploaded file in the object store to deploy as the cron entry content.
+	Object string `json:"object" validate:"required,min=1"`
+
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
 	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
 
-	// User User to run the command as. Defaults to root. Only applies when using schedule (cron.d entries include a user field). Interval-based entries run as root.
+	// User User to run the command as. Only applies when using schedule (cron.d entries include a user field).
 	User *string `json:"user,omitempty"`
+
+	// Vars Template variables. Only used when content_type is "template".
+	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
+
+// CronCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+type CronCreateRequestContentType string
 
 // CronCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
 type CronCreateRequestInterval string
@@ -96,14 +117,14 @@ type CronDeleteResponse struct {
 
 // CronEntry A cron drop-in entry.
 type CronEntry struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty"`
-
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
+
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
 
 	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
 	Schedule *string `json:"schedule,omitempty"`
@@ -111,7 +132,7 @@ type CronEntry struct {
 	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
 	Source *string `json:"source,omitempty"`
 
-	// User User the command runs as.
+	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
@@ -120,9 +141,6 @@ type CronEntryInterval string
 
 // CronEntryResponse A single cron entry with job metadata.
 type CronEntryResponse struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty"`
-
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -132,24 +150,36 @@ type CronEntryResponse struct {
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
 
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
+
 	// Schedule Cron schedule expression.
 	Schedule *string `json:"schedule,omitempty"`
 
-	// User User the command runs as.
+	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
 // CronUpdateRequest defines model for CronUpdateRequest.
 type CronUpdateRequest struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty" validate:"omitempty,min=1"`
+	// ContentType Content type: "raw" or "template".
+	ContentType *CronUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// Object New object to deploy (redeploy with updated content).
+	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
 
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
 	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
 
 	// User User to run the command as.
 	User *string `json:"user,omitempty"`
+
+	// Vars Template variables.
+	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
+
+// CronUpdateRequestContentType Content type: "raw" or "template".
+type CronUpdateRequestContentType string
 
 // CronUpdateResponse defines model for CronUpdateResponse.
 type CronUpdateResponse struct {

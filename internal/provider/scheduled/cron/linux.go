@@ -21,6 +21,7 @@
 package cron
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
@@ -37,12 +38,15 @@ func NewLinuxProvider() *Linux {
 }
 
 // List returns ErrUnsupported on generic Linux.
-func (l *Linux) List() ([]Entry, error) {
+func (l *Linux) List(
+	_ context.Context,
+) ([]Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 
 // Get returns ErrUnsupported on generic Linux.
 func (l *Linux) Get(
+	_ context.Context,
 	_ string,
 ) (*Entry, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -50,6 +54,7 @@ func (l *Linux) Get(
 
 // Create returns ErrUnsupported on generic Linux.
 func (l *Linux) Create(
+	_ context.Context,
 	_ Entry,
 ) (*CreateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -57,6 +62,7 @@ func (l *Linux) Create(
 
 // Update returns ErrUnsupported on generic Linux.
 func (l *Linux) Update(
+	_ context.Context,
 	_ Entry,
 ) (*UpdateResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
@@ -64,6 +70,7 @@ func (l *Linux) Update(
 
 // Delete returns ErrUnsupported on generic Linux.
 func (l *Linux) Delete(
+	_ context.Context,
 	_ string,
 ) (*DeleteResult, error) {
 	return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)

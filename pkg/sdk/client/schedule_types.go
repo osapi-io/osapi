@@ -27,11 +27,11 @@ import (
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
 	Name     string `json:"name"`
+	Object   string `json:"object,omitempty"`
 	Schedule string `json:"schedule,omitempty"`
 	Interval string `json:"interval,omitempty"`
 	Source   string `json:"source,omitempty"`
 	User     string `json:"user,omitempty"`
-	Command  string `json:"command"`
 	Error    string `json:"error,omitempty"`
 }
 
@@ -47,25 +47,33 @@ type CronMutationResult struct {
 type CronCreateOpts struct {
 	// Name is the cron drop-in entry name (required).
 	Name string
+	// Object is the name of the uploaded file in the object store (required).
+	Object string
 	// Schedule is the cron expression (mutually exclusive with Interval).
 	Schedule string
 	// Interval is the periodic interval: hourly, daily, weekly, monthly
 	// (mutually exclusive with Schedule).
 	Interval string
-	// Command is the command to execute (required).
-	Command string
-	// User is the user to run the command as (optional, defaults to root).
+	// User is the user to run the command as (optional).
 	User string
+	// ContentType is "raw" or "template" (optional, defaults to raw).
+	ContentType string
+	// Vars contains template variables (optional).
+	Vars map[string]any
 }
 
 // CronUpdateOpts contains options for updating a cron entry.
 type CronUpdateOpts struct {
+	// Object is the new object to deploy (optional).
+	Object string
 	// Schedule is the cron expression (optional).
 	Schedule string
-	// Command is the command to execute (optional).
-	Command string
 	// User is the user to run the command as (optional).
 	User string
+	// ContentType is "raw" or "template" (optional).
+	ContentType string
+	// Vars contains template variables (optional).
+	Vars map[string]any
 }
 
 // cronEntryCollectionFromGen converts a gen.CronCollectionResponse
@@ -82,11 +90,11 @@ func cronEntryCollectionFromGen(
 
 		results = append(results, CronEntryResult{
 			Name:     derefString(r.Name),
+			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
 			Interval: interval,
 			Source:   derefString(r.Source),
 			User:     derefString(r.User),
-			Command:  derefString(r.Command),
 		})
 	}
 
@@ -102,9 +110,9 @@ func cronEntryFromGen(
 ) CronEntryResult {
 	return CronEntryResult{
 		Name:     derefString(g.Name),
+		Object:   derefString(g.Object),
 		Schedule: derefString(g.Schedule),
 		User:     derefString(g.User),
-		Command:  derefString(g.Command),
 		Error:    derefString(g.Error),
 	}
 }

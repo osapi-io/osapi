@@ -50,9 +50,9 @@ var clientNodeScheduleCronGetCmd = &cobra.Command{
 
 		fmt.Println()
 		cli.PrintKV("Name", resp.Data.Name)
+		cli.PrintKV("Object", resp.Data.Object)
 		cli.PrintKV("Schedule", resp.Data.Schedule)
 		cli.PrintKV("User", resp.Data.User)
-		cli.PrintKV("Command", resp.Data.Command)
 	},
 }
 

@@ -37,14 +37,16 @@ var clientNodeScheduleCronUpdateCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
+		object, _ := cmd.Flags().GetString("object")
 		schedule, _ := cmd.Flags().GetString("schedule")
-		command, _ := cmd.Flags().GetString("command")
 		user, _ := cmd.Flags().GetString("user")
+		contentType, _ := cmd.Flags().GetString("content-type")
 
 		resp, err := sdkClient.Schedule.CronUpdate(ctx, host, name, client.CronUpdateOpts{
-			Schedule: schedule,
-			Command:  command,
-			User:     user,
+			Object:      object,
+			Schedule:    schedule,
+			User:        user,
+			ContentType: contentType,
 		})
 		if err != nil {
 			cli.HandleError(err, logger)
@@ -71,12 +73,14 @@ func init() {
 	clientNodeScheduleCronUpdateCmd.PersistentFlags().
 		String("name", "", "Name of the cron entry to update (required)")
 	clientNodeScheduleCronUpdateCmd.PersistentFlags().
+		String("object", "", "New object to deploy")
+	clientNodeScheduleCronUpdateCmd.PersistentFlags().
 		String("schedule", "", "New cron schedule expression")
 	clientNodeScheduleCronUpdateCmd.PersistentFlags().
-		String("command", "", "New command to execute on schedule")
-	clientNodeScheduleCronUpdateCmd.PersistentFlags().
 		String("user", "", "New user to run the command as")
+	clientNodeScheduleCronUpdateCmd.PersistentFlags().
+		String("content-type", "", "Content type: raw or template")
 
 	_ = clientNodeScheduleCronUpdateCmd.MarkPersistentFlagRequired("name")
-	clientNodeScheduleCronUpdateCmd.MarkFlagsOneRequired("schedule", "command", "user")
+	clientNodeScheduleCronUpdateCmd.MarkFlagsOneRequired("object", "schedule", "user")
 }

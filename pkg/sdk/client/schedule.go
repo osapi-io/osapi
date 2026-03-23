@@ -99,8 +99,8 @@ func (s *ScheduleService) CronCreate(
 	opts CronCreateOpts,
 ) (*Response[CronMutationResult], error) {
 	body := gen.CronCreateRequest{
-		Name:    opts.Name,
-		Command: opts.Command,
+		Name:   opts.Name,
+		Object: opts.Object,
 	}
 	if opts.Schedule != "" {
 		body.Schedule = &opts.Schedule
@@ -111,6 +111,13 @@ func (s *ScheduleService) CronCreate(
 	}
 	if opts.User != "" {
 		body.User = &opts.User
+	}
+	if opts.ContentType != "" {
+		ct := gen.CronCreateRequestContentType(opts.ContentType)
+		body.ContentType = &ct
+	}
+	if opts.Vars != nil {
+		body.Vars = &opts.Vars
 	}
 
 	resp, err := s.client.PostNodeScheduleCronWithResponse(ctx, hostname, body)
@@ -146,14 +153,21 @@ func (s *ScheduleService) CronUpdate(
 	opts CronUpdateOpts,
 ) (*Response[CronMutationResult], error) {
 	body := gen.CronUpdateRequest{}
+	if opts.Object != "" {
+		body.Object = &opts.Object
+	}
 	if opts.Schedule != "" {
 		body.Schedule = &opts.Schedule
 	}
-	if opts.Command != "" {
-		body.Command = &opts.Command
-	}
 	if opts.User != "" {
 		body.User = &opts.User
+	}
+	if opts.ContentType != "" {
+		ct := gen.CronUpdateRequestContentType(opts.ContentType)
+		body.ContentType = &ct
+	}
+	if opts.Vars != nil {
+		body.Vars = &opts.Vars
 	}
 
 	resp, err := s.client.PutNodeScheduleCronWithResponse(ctx, hostname, name, body)

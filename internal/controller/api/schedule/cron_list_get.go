@@ -110,21 +110,21 @@ func responseToCronEntries(
 	results := make([]gen.CronEntry, 0, len(entries))
 	for _, e := range entries {
 		name := e.Name
-		schedule := e.Schedule
-		user := e.User
-		command := e.Command
+		object := e.Object
 		source := e.Source
 
 		entry := gen.CronEntry{
-			Name:    &name,
-			Command: &command,
-			Source:  &source,
+			Name:   &name,
+			Object: &object,
+			Source: &source,
 		}
 
-		if schedule != "" {
+		if e.Schedule != "" {
+			schedule := e.Schedule
 			entry.Schedule = &schedule
 		}
-		if user != "" {
+		if e.User != "" {
+			user := e.User
 			entry.User = &user
 		}
 		if e.Interval != "" {

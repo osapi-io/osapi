@@ -68,12 +68,12 @@ var clientNodeScheduleCronListCmd = &cobra.Command{
 				r.Name,
 				r.Source,
 				schedule,
+				r.Object,
 				r.User,
-				r.Command,
 			})
 		}
 		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"NAME", "SOURCE", "SCHEDULE", "USER", "COMMAND"},
+			Headers: []string{"NAME", "SOURCE", "SCHEDULE", "OBJECT", "USER"},
 			Rows:    rows,
 		}})
 	},

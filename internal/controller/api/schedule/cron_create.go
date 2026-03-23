@@ -46,8 +46,8 @@ func (s *Schedule) PostNodeScheduleCron(
 	}
 
 	entry := cronProv.Entry{
-		Name:    request.Body.Name,
-		Command: request.Body.Command,
+		Name:   request.Body.Name,
+		Object: request.Body.Object,
 	}
 	if request.Body.Schedule != nil {
 		entry.Schedule = *request.Body.Schedule
@@ -58,12 +58,19 @@ func (s *Schedule) PostNodeScheduleCron(
 	if request.Body.User != nil {
 		entry.User = *request.Body.User
 	}
+	if request.Body.ContentType != nil {
+		entry.ContentType = string(*request.Body.ContentType)
+	}
+	if request.Body.Vars != nil {
+		entry.Vars = *request.Body.Vars
+	}
 
 	hostname := request.Hostname
 
 	s.logger.Debug("cron create",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
+		slog.String("object", entry.Object),
 	)
 
 	resp, err := s.JobClient.ModifyScheduleCronCreate(ctx, hostname, entry)

@@ -49,14 +49,20 @@ func (s *Schedule) PutNodeScheduleCron(
 	entry := cronProv.Entry{
 		Name: request.Name,
 	}
+	if request.Body.Object != nil {
+		entry.Object = *request.Body.Object
+	}
 	if request.Body.Schedule != nil {
 		entry.Schedule = *request.Body.Schedule
 	}
-	if request.Body.Command != nil {
-		entry.Command = *request.Body.Command
-	}
 	if request.Body.User != nil {
 		entry.User = *request.Body.User
+	}
+	if request.Body.ContentType != nil {
+		entry.ContentType = string(*request.Body.ContentType)
+	}
+	if request.Body.Vars != nil {
+		entry.Vars = *request.Body.Vars
 	}
 
 	hostname := request.Hostname
