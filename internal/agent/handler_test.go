@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"testing"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -563,6 +565,96 @@ func (s *HandlerTestSuite) TestHandleJobMessage() {
 			},
 			expectError: true,
 			errorMsg:    "job processing failed",
+		},
+		{
+			name: "when processor returns ErrUnsupported sets skipped status",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("skip-job"))
+			},
+			setupMocks: func() {
+				// Replace host provider with one that returns ErrUnsupported,
+				// and restore the original after the mock expectations are set.
+				origHost := s.agent.hostProvider
+				unsupportedHost := hostMocks.NewPlainMockProvider(s.mockCtrl)
+				unsupportedHost.EXPECT().
+					GetHostname().
+					DoAndReturn(func() (string, error) {
+						s.agent.hostProvider = origHost
+						return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
+					})
+				s.agent.hostProvider = unsupportedHost
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.skip-job").
+					Return([]byte(`{
+						"id": "skip-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-job", "skipped", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "skip-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			expectError: false,
+		},
+		{
+			name: "when skipped write error logged",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("skip-err-job"))
+			},
+			setupMocks: func() {
+				origHost := s.agent.hostProvider
+				unsupportedHost := hostMocks.NewPlainMockProvider(s.mockCtrl)
+				unsupportedHost.EXPECT().
+					GetHostname().
+					DoAndReturn(func() (string, error) {
+						s.agent.hostProvider = origHost
+						return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
+					})
+				s.agent.hostProvider = unsupportedHost
+
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.skip-err-job").
+					Return([]byte(`{
+						"id": "skip-err-job",
+						"operation": {
+							"type": "node.hostname.get",
+							"data": {}
+						}
+					}`), nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-err-job", "started", gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "skip-err-job", "skipped", gomock.Any(), gomock.Any()).
+					Return(errors.New("skipped write failed"))
+
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "skip-err-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			expectError: false,
 		},
 		{
 			name: "when fact reference resolved in job data",

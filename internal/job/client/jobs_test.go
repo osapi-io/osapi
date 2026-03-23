@@ -210,6 +210,44 @@ func (s *JobsTestSuite) TestComputeStatusFromKeyNames() {
 			expectedOrderIDs: nil,
 			expectedStatuses: map[string]string{},
 		},
+		{
+			name: "single agent skipped",
+			keys: []string{
+				"jobs.job-1",
+				"status.job-1.submitted._api.100",
+				"status.job-1.acknowledged.agent1.101",
+				"status.job-1.started.agent1.102",
+				"status.job-1.skipped.agent1.103",
+			},
+			expectedOrderIDs: []string{"job-1"},
+			expectedStatuses: map[string]string{
+				"job-1": "skipped",
+			},
+		},
+		{
+			name: "multi-agent all skipped",
+			keys: []string{
+				"jobs.job-1",
+				"status.job-1.skipped.agent1.101",
+				"status.job-1.skipped.agent2.102",
+			},
+			expectedOrderIDs: []string{"job-1"},
+			expectedStatuses: map[string]string{
+				"job-1": "skipped",
+			},
+		},
+		{
+			name: "multi-agent skipped and completed shows completed",
+			keys: []string{
+				"jobs.job-1",
+				"status.job-1.skipped.agent1.101",
+				"status.job-1.completed.agent2.102",
+			},
+			expectedOrderIDs: []string{"job-1"},
+			expectedStatuses: map[string]string{
+				"job-1": "completed",
+			},
+		},
 	}
 
 	for _, tt := range tests {

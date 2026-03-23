@@ -766,6 +766,103 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			},
 		},
 		{
+			name:  "single agent skipped sets overall skipped status",
+			jobID: "job-skip",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-skip","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-skip").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-skip.>").
+					Return(newMockKeyLister(s.mockCtrl, []string{
+						"status.job-skip.started.agent1.100",
+						"status.job-skip.skipped.agent1.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-skip.>").
+					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+
+				startEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				startEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-skip","event":"started","hostname":"agent1","timestamp":"%s"}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-skip.started.agent1.100").
+					Return(startEntry, nil)
+
+				skipEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				skipEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-skip","event":"skipped","hostname":"agent1","timestamp":"%s","data":{"error":"operation not supported on this OS family"}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-skip.skipped.agent1.200").
+					Return(skipEntry, nil)
+			},
+			expectedStatus: "skipped",
+			agentCount:     1,
+			validateFunc: func(qj *job.QueuedJob) {
+				ws := qj.AgentStates["agent1"]
+				s.Equal("skipped", ws.Status)
+
+				// Verify timeline includes skipped event with message
+				found := false
+				for _, ev := range qj.Timeline {
+					if ev.Event == "skipped" {
+						found = true
+						s.Contains(ev.Message, "unsupported OS family")
+						s.Equal("operation not supported on this OS family", ev.Error)
+					}
+				}
+				s.True(found, "timeline should contain skipped event")
+			},
+		},
+		{
+			name:  "multi-agent all skipped sets overall skipped",
+			jobID: "job-allskip",
+			setupMocks: func() {
+				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				mockJobEntry.EXPECT().Value().Return([]byte(
+					`{"id":"job-allskip","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockKV.EXPECT().Get(gomock.Any(), "jobs.job-allskip").Return(mockJobEntry, nil)
+
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "status.job-allskip.>").
+					Return(newMockKeyLister(s.mockCtrl, []string{
+						"status.job-allskip.skipped.agent1.100",
+						"status.job-allskip.skipped.agent2.200",
+					}), nil)
+				s.mockKV.EXPECT().
+					ListKeysFiltered(gomock.Any(), "responses.job-allskip.>").
+					Return(newMockKeyLister(s.mockCtrl, nil), nil)
+
+				skip1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				skip1.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-allskip","event":"skipped","hostname":"agent1","timestamp":"%s","data":{"error":"unsupported"}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-allskip.skipped.agent1.100").
+					Return(skip1, nil)
+
+				skip2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				skip2.EXPECT().Value().Return([]byte(fmt.Sprintf(
+					`{"job_id":"job-allskip","event":"skipped","hostname":"agent2","timestamp":"%s","data":{"error":"unsupported"}}`,
+					now,
+				)))
+				s.mockKV.EXPECT().
+					Get(gomock.Any(), "status.job-allskip.skipped.agent2.200").
+					Return(skip2, nil)
+			},
+			expectedStatus: "skipped",
+			agentCount:     2,
+		},
+		{
 			name:  "broadcast aggregates Changed from multiple responses",
 			jobID: "job-bc",
 			setupMocks: func() {
