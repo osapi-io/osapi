@@ -4,22 +4,39 @@ sidebar_position: 9
 
 # Cron Management
 
-OSAPI manages cron drop-in files in `/etc/cron.d/` on target hosts. Each managed
-entry is a separate file with a standardized format, making it easy to audit,
-version, and clean up scheduled tasks across a fleet.
+OSAPI manages cron entries on target hosts. It supports two placement modes:
+
+- **Custom schedule** — writes to `/etc/cron.d/{name}` with a 5-field cron
+  expression
+- **Periodic interval** — writes to `/etc/cron.{hourly,daily,weekly,monthly}/`
+  as executable scripts
 
 ## How It Works
 
-The cron provider writes files to `/etc/cron.d/{name}` with a
-`# Managed by osapi` header. Each file contains a single cron entry:
+### Custom Schedule (`/etc/cron.d/`)
+
+For entries with a `schedule` field, the provider writes a drop-in file:
 
 ```
 # Managed by osapi
 0 2 * * * root /usr/local/bin/backup.sh
 ```
 
+### Periodic Interval (`/etc/cron.{interval}/`)
+
+For entries with an `interval` field, the provider writes an executable script:
+
+```bash
+#!/bin/sh
+# Managed by osapi
+/usr/sbin/logrotate /etc/logrotate.conf
+```
+
+`schedule` and `interval` are mutually exclusive — provide exactly one. The API
+validates this and returns 400 if both or neither are provided.
+
 Only files with the `# Managed by osapi` header are listed and managed. Manually
-created cron files in `/etc/cron.d/` are left untouched.
+created files are left untouched.
 
 ## Operations
 
@@ -34,16 +51,21 @@ created cron files in `/etc/cron.d/` are left untouched.
 ## CLI Usage
 
 ```bash
-# List all managed cron entries
+# List all managed cron entries (from /etc/cron.d/ and /etc/cron.{daily,weekly,...}/)
 osapi client node schedule cron list --target web-01
 
 # Get a specific entry
 osapi client node schedule cron get --target web-01 --name backup
 
-# Create a new entry
+# Create with a custom schedule (/etc/cron.d/)
 osapi client node schedule cron create --target web-01 \
   --name backup --schedule "0 2 * * *" \
   --command "/usr/local/bin/backup.sh" --user root
+
+# Create with an interval (/etc/cron.daily/)
+osapi client node schedule cron create --target web-01 \
+  --name logrotate --interval daily \
+  --command "/usr/sbin/logrotate /etc/logrotate.conf"
 
 # Update the schedule
 osapi client node schedule cron update --target web-01 \

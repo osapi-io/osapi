@@ -20,10 +20,10 @@ etc.
 
 ## Request Types
 
-| Type             | Fields                                   |
-| ---------------- | ---------------------------------------- |
-| `CronCreateOpts` | Name, Schedule, Command, User (optional) |
-| `CronUpdateOpts` | Schedule, Command, User (all optional)   |
+| Type             | Fields                                                        |
+| ---------------- | ------------------------------------------------------------- |
+| `CronCreateOpts` | Name, Schedule\*, Interval\*, Command, User (\* one required) |
+| `CronUpdateOpts` | Schedule, Command, User (all optional)                        |
 
 ## Usage
 
@@ -42,12 +42,19 @@ for _, entry := range resp.Data.Results {
 // Get a specific entry
 resp, err := c.Schedule.CronGet(ctx, "web-01", "backup-daily")
 
-// Create a new entry
+// Create with custom schedule (/etc/cron.d/)
 resp, err := c.Schedule.CronCreate(ctx, "web-01", client.CronCreateOpts{
     Name:     "backup-daily",
     Schedule: "0 2 * * *",
     Command:  "/usr/local/bin/backup.sh",
     User:     "root",
+})
+
+// Create with interval (/etc/cron.daily/)
+resp, err := c.Schedule.CronCreate(ctx, "web-01", client.CronCreateOpts{
+    Name:     "logrotate",
+    Interval: "daily",
+    Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
 })
 
 // Update the schedule

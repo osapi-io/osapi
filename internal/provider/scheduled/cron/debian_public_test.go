@@ -257,7 +257,9 @@ func (suite *DebianPublicTestSuite) TestList() {
 				_ = afero.WriteFile(
 					suite.fs,
 					"/etc/cron.daily/logrotate",
-					[]byte("#!/bin/sh\n# Managed by osapi\n/usr/sbin/logrotate /etc/logrotate.conf\n"),
+					[]byte(
+						"#!/bin/sh\n# Managed by osapi\n/usr/sbin/logrotate /etc/logrotate.conf\n",
+					),
 					0o755,
 				)
 				_ = afero.WriteFile(
@@ -416,7 +418,9 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				_ = afero.WriteFile(
 					suite.fs,
 					"/etc/cron.daily/logrotate",
-					[]byte("#!/bin/sh\n# Managed by osapi\n/usr/sbin/logrotate /etc/logrotate.conf\n"),
+					[]byte(
+						"#!/bin/sh\n# Managed by osapi\n/usr/sbin/logrotate /etc/logrotate.conf\n",
+					),
 					0o755,
 				)
 			},
