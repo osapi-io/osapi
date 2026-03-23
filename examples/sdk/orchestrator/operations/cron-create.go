@@ -57,8 +57,9 @@ func main() {
 
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
+	// Create a cron entry with a custom schedule (/etc/cron.d/).
 	plan.TaskFunc(
-		"create-cron",
+		"create-scheduled",
 		func(
 			ctx context.Context,
 			cc *client.Client,
@@ -68,6 +69,30 @@ func main() {
 				Schedule: "0 2 * * *",
 				Command:  "/usr/local/bin/backup.sh",
 				User:     "root",
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return &orchestrator.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    orchestrator.StructToMap(resp.Data),
+			}, nil
+		},
+	)
+
+	// Create a periodic entry (/etc/cron.daily/).
+	plan.TaskFunc(
+		"create-periodic",
+		func(
+			ctx context.Context,
+			cc *client.Client,
+		) (*orchestrator.Result, error) {
+			resp, err := cc.Schedule.CronCreate(ctx, "_any", client.CronCreateOpts{
+				Name:     "logrotate",
+				Interval: "daily",
+				Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
 			})
 			if err != nil {
 				return nil, err
