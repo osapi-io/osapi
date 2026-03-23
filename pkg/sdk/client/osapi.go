@@ -67,6 +67,10 @@ type Client struct {
 	// inspect, start, stop, remove, exec, pull).
 	Docker *DockerService
 
+	// Schedule provides schedule management operations (cron list, get,
+	// create, update, delete).
+	Schedule *ScheduleService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -133,6 +137,7 @@ func New(
 	c.Audit = &AuditService{client: httpClient}
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
+	c.Schedule = &ScheduleService{client: httpClient}
 
 	return c
 }
