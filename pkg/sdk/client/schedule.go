@@ -37,12 +37,28 @@ func (s *ScheduleService) CronList(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[CronEntryResult]], error) {
-	// TODO: Wire to generated client after combined spec regeneration.
-	// Expected method: s.client.GetNodeScheduleCronWithResponse(ctx, hostname)
-	_ = ctx
-	_ = hostname
+	resp, err := s.client.GetNodeScheduleCronWithResponse(ctx, hostname)
+	if err != nil {
+		return nil, fmt.Errorf("cron list: %w", err)
+	}
 
-	return nil, fmt.Errorf("cron list: %w", fmt.Errorf("SDK client not yet generated — run `just generate` to regenerate the combined spec"))
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(cronEntryCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
 // CronGet retrieves a single cron entry by name on the target host.
@@ -51,13 +67,29 @@ func (s *ScheduleService) CronGet(
 	hostname string,
 	name string,
 ) (*Response[CronEntryResult], error) {
-	// TODO: Wire to generated client after combined spec regeneration.
-	// Expected method: s.client.GetNodeScheduleCronByNameWithResponse(ctx, hostname, name)
-	_ = ctx
-	_ = hostname
-	_ = name
+	resp, err := s.client.GetNodeScheduleCronByNameWithResponse(ctx, hostname, name)
+	if err != nil {
+		return nil, fmt.Errorf("cron get: %w", err)
+	}
 
-	return nil, fmt.Errorf("cron get: %w", fmt.Errorf("SDK client not yet generated — run `just generate` to regenerate the combined spec"))
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(cronEntryFromGen(resp.JSON200), resp.Body), nil
 }
 
 // CronCreate creates a new cron entry on the target host.
@@ -66,22 +98,38 @@ func (s *ScheduleService) CronCreate(
 	hostname string,
 	opts CronCreateOpts,
 ) (*Response[CronMutationResult], error) {
-	// TODO: Wire to generated client after combined spec regeneration.
-	// Expected method: s.client.PostNodeScheduleCronWithResponse(ctx, hostname, body)
-	//
-	// body := gen.CronCreateRequest{
-	//     Name:     opts.Name,
-	//     Schedule: opts.Schedule,
-	//     Command:  opts.Command,
-	// }
-	// if opts.User != "" {
-	//     body.User = &opts.User
-	// }
-	_ = ctx
-	_ = hostname
-	_ = opts
+	body := gen.CronCreateRequest{
+		Name:     opts.Name,
+		Schedule: opts.Schedule,
+		Command:  opts.Command,
+	}
+	if opts.User != "" {
+		body.User = &opts.User
+	}
 
-	return nil, fmt.Errorf("cron create: %w", fmt.Errorf("SDK client not yet generated — run `just generate` to regenerate the combined spec"))
+	resp, err := s.client.PostNodeScheduleCronWithResponse(ctx, hostname, body)
+	if err != nil {
+		return nil, fmt.Errorf("cron create: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(cronMutationFromCreate(resp.JSON200), resp.Body), nil
 }
 
 // CronUpdate updates an existing cron entry on the target host.
@@ -91,25 +139,41 @@ func (s *ScheduleService) CronUpdate(
 	name string,
 	opts CronUpdateOpts,
 ) (*Response[CronMutationResult], error) {
-	// TODO: Wire to generated client after combined spec regeneration.
-	// Expected method: s.client.PutNodeScheduleCronWithResponse(ctx, hostname, name, body)
-	//
-	// body := gen.CronUpdateRequest{}
-	// if opts.Schedule != "" {
-	//     body.Schedule = &opts.Schedule
-	// }
-	// if opts.Command != "" {
-	//     body.Command = &opts.Command
-	// }
-	// if opts.User != "" {
-	//     body.User = &opts.User
-	// }
-	_ = ctx
-	_ = hostname
-	_ = name
-	_ = opts
+	body := gen.CronUpdateRequest{}
+	if opts.Schedule != "" {
+		body.Schedule = &opts.Schedule
+	}
+	if opts.Command != "" {
+		body.Command = &opts.Command
+	}
+	if opts.User != "" {
+		body.User = &opts.User
+	}
 
-	return nil, fmt.Errorf("cron update: %w", fmt.Errorf("SDK client not yet generated — run `just generate` to regenerate the combined spec"))
+	resp, err := s.client.PutNodeScheduleCronWithResponse(ctx, hostname, name, body)
+	if err != nil {
+		return nil, fmt.Errorf("cron update: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(cronMutationFromUpdate(resp.JSON200), resp.Body), nil
 }
 
 // CronDelete deletes a cron entry on the target host.
@@ -118,11 +182,27 @@ func (s *ScheduleService) CronDelete(
 	hostname string,
 	name string,
 ) (*Response[CronMutationResult], error) {
-	// TODO: Wire to generated client after combined spec regeneration.
-	// Expected method: s.client.DeleteNodeScheduleCronWithResponse(ctx, hostname, name)
-	_ = ctx
-	_ = hostname
-	_ = name
+	resp, err := s.client.DeleteNodeScheduleCronWithResponse(ctx, hostname, name)
+	if err != nil {
+		return nil, fmt.Errorf("cron delete: %w", err)
+	}
 
-	return nil, fmt.Errorf("cron delete: %w", fmt.Errorf("SDK client not yet generated — run `just generate` to regenerate the combined spec"))
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(cronMutationFromDelete(resp.JSON200), resp.Body), nil
 }

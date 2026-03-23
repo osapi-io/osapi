@@ -20,6 +20,10 @@
 
 package client
 
+import (
+	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+)
+
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
 	Name     string `json:"name"`
@@ -57,4 +61,74 @@ type CronUpdateOpts struct {
 	Command string
 	// User is the user to run the command as (optional).
 	User string
+}
+
+// cronEntryCollectionFromGen converts a gen.CronCollectionResponse
+// to a Collection[CronEntryResult].
+func cronEntryCollectionFromGen(
+	g *gen.CronCollectionResponse,
+) Collection[CronEntryResult] {
+	results := make([]CronEntryResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, CronEntryResult{
+			Name:     derefString(r.Name),
+			Schedule: derefString(r.Schedule),
+			User:     derefString(r.User),
+			Command:  derefString(r.Command),
+		})
+	}
+
+	return Collection[CronEntryResult]{
+		Results: results,
+		JobID:   jobIDFromGen(g.JobId),
+	}
+}
+
+// cronEntryFromGen converts a gen.CronEntryResponse to a CronEntryResult.
+func cronEntryFromGen(
+	g *gen.CronEntryResponse,
+) CronEntryResult {
+	return CronEntryResult{
+		Name:     derefString(g.Name),
+		Schedule: derefString(g.Schedule),
+		User:     derefString(g.User),
+		Command:  derefString(g.Command),
+		Error:    derefString(g.Error),
+	}
+}
+
+// cronMutationFromCreate converts a gen.CronCreateResponse to a CronMutationResult.
+func cronMutationFromCreate(
+	g *gen.CronCreateResponse,
+) CronMutationResult {
+	return CronMutationResult{
+		JobID:   jobIDFromGen(g.JobId),
+		Name:    derefString(g.Name),
+		Changed: derefBool(g.Changed),
+		Error:   derefString(g.Error),
+	}
+}
+
+// cronMutationFromUpdate converts a gen.CronUpdateResponse to a CronMutationResult.
+func cronMutationFromUpdate(
+	g *gen.CronUpdateResponse,
+) CronMutationResult {
+	return CronMutationResult{
+		JobID:   jobIDFromGen(g.JobId),
+		Name:    derefString(g.Name),
+		Changed: derefBool(g.Changed),
+		Error:   derefString(g.Error),
+	}
+}
+
+// cronMutationFromDelete converts a gen.CronDeleteResponse to a CronMutationResult.
+func cronMutationFromDelete(
+	g *gen.CronDeleteResponse,
+) CronMutationResult {
+	return CronMutationResult{
+		JobID:   jobIDFromGen(g.JobId),
+		Name:    derefString(g.Name),
+		Changed: derefBool(g.Changed),
+		Error:   derefString(g.Error),
+	}
 }

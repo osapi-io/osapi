@@ -1,0 +1,796 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package client_test
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/pkg/sdk/client"
+)
+
+type SchedulePublicTestSuite struct {
+	suite.Suite
+
+	ctx context.Context
+}
+
+func (suite *SchedulePublicTestSuite) SetupTest() {
+	suite.ctx = context.Background()
+}
+
+func (suite *SchedulePublicTestSuite) TestCronList() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.Collection[client.CronEntryResult]], error)
+	}{
+		{
+			name: "when listing cron entries returns results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.Equal("0 2 * * *", resp.Data.Results[0].Schedule)
+				suite.Equal("root", resp.Data.Results[0].User)
+				suite.Equal("/usr/bin/backup.sh", resp.Data.Results[0].Command)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "cron list")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Schedule.CronList(suite.ctx, "_any")
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *SchedulePublicTestSuite) TestCronGet() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.CronEntryResult], error)
+	}{
+		{
+			name: "when getting cron entry returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronEntryResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("backup", resp.Data.Name)
+				suite.Equal("0 2 * * *", resp.Data.Schedule)
+				suite.Equal("root", resp.Data.User)
+				suite.Equal("/usr/bin/backup.sh", resp.Data.Command)
+			},
+		},
+		{
+			name: "when server returns 404 returns NotFoundError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"cron entry not found"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronEntryResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.NotFoundError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusNotFound, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronEntryResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.CronEntryResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "cron get")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronEntryResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Schedule.CronGet(suite.ctx, "_any", "backup")
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *SchedulePublicTestSuite) TestCronCreate() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		opts         client.CronCreateOpts
+		validateFunc func(*client.Response[client.CronMutationResult], error)
+	}{
+		{
+			name: "when creating cron entry returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronCreateOpts{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				Command:  "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Equal("backup", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when creating cron entry with user returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","name":"cleanup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronCreateOpts{
+				Name:     "cleanup",
+				Schedule: "*/5 * * * *",
+				Command:  "/usr/bin/cleanup.sh",
+				User:     "www-data",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
+				suite.Equal("cleanup", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when server returns 400 returns ValidationError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":"invalid schedule"}`))
+			},
+			opts: client.CronCreateOpts{
+				Name:     "bad",
+				Schedule: "invalid",
+				Command:  "echo",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ValidationError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusBadRequest, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			opts: client.CronCreateOpts{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				Command:  "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			opts: client.CronCreateOpts{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				Command:  "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "cron create")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			opts: client.CronCreateOpts{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				Command:  "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Schedule.CronCreate(suite.ctx, "_any", tc.opts)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *SchedulePublicTestSuite) TestCronUpdate() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		opts         client.CronUpdateOpts
+		validateFunc func(*client.Response[client.CronMutationResult], error)
+	}{
+		{
+			name: "when updating cron entry returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Equal("backup", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when updating cron entry with all fields returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","name":"backup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 4 * * *",
+				Command:  "/usr/bin/new-backup.sh",
+				User:     "admin",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when server returns 404 returns NotFoundError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"cron entry not found"}`))
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.NotFoundError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusNotFound, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 400 returns ValidationError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":"invalid schedule"}`))
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "bad",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.ValidationError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusBadRequest, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "cron update")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Schedule.CronUpdate(
+				suite.ctx,
+				"_any",
+				"backup",
+				tc.opts,
+			)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *SchedulePublicTestSuite) TestCronDelete() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.CronMutationResult], error)
+	}{
+		{
+			name: "when deleting cron entry returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Equal("backup", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when server returns 404 returns NotFoundError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"cron entry not found"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.NotFoundError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusNotFound, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "cron delete")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusOK, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Schedule.CronDelete(suite.ctx, "_any", "backup")
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func TestSchedulePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(SchedulePublicTestSuite))
+}
