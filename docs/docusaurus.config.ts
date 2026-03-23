@@ -127,6 +127,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Cron Management',
+              docId: 'sidebar/features/cron-management'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },

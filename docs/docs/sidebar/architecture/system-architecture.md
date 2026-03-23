@@ -66,14 +66,15 @@ The controller is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                           | Responsibility                                                                      |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| `internal/controller/api/node/`   | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
-| `internal/controller/api/docker/` | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
-| `internal/controller/api/job/`    | Job queue endpoints (get, list, delete, retry, status)                              |
-| `internal/controller/api/health/` | Health check endpoints (liveness, readiness, status)                                |
-| `internal/controller/api/common/` | Shared middleware, error handling, collection responses                             |
-| `internal/telemetry/metrics/`     | Per-component Prometheus metrics server with isolated registries                    |
+| Package                             | Responsibility                                                                      |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `internal/controller/api/node/`     | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
+| `internal/controller/api/docker/`   | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
+| `internal/controller/api/schedule/` | Schedule endpoints (cron drop-in list, get, create, update, delete)                 |
+| `internal/controller/api/job/`      | Job queue endpoints (get, list, delete, retry, status)                              |
+| `internal/controller/api/health/`   | Health check endpoints (liveness, readiness, status)                                |
+| `internal/controller/api/common/`   | Shared middleware, error handling, collection responses                             |
+| `internal/telemetry/metrics/`       | Per-component Prometheus metrics server with isolated registries                    |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -111,6 +112,7 @@ provider is selected at runtime through a platform-aware factory pattern.
 | `command/exec`   | Direct command execution                                 |
 | `command/shell`  | Shell command execution                                  |
 | `docker/runtime` | Docker container lifecycle (create, start, stop, remove) |
+| `scheduled/cron` | Cron drop-in file management (`/etc/cron.d/`)            |
 | `process`        | Current process CPU, RSS, and goroutine metrics          |
 
 Providers are stateless and OS-family-specific. OSAPI follows Ansible's OS

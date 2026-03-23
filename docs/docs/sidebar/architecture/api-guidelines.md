@@ -38,13 +38,15 @@ selectors (`key:value`).
 
 Sub-resources represent distinct capabilities of the node:
 
-| Path Pattern                                   | Domain  |
-| ---------------------------------------------- | ------- |
-| `/node/{hostname}`                             | Status  |
-| `/node/{hostname}/disk`                        | Node    |
-| `/node/{hostname}/memory`                      | Node    |
-| `/node/{hostname}/network/dns/{interfaceName}` | Network |
-| `/node/{hostname}/command/exec`                | Command |
+| Path Pattern                                   | Domain   |
+| ---------------------------------------------- | -------- |
+| `/node/{hostname}`                             | Status   |
+| `/node/{hostname}/disk`                        | Node     |
+| `/node/{hostname}/memory`                      | Node     |
+| `/node/{hostname}/network/dns/{interfaceName}` | Network  |
+| `/node/{hostname}/command/exec`                | Command  |
+| `/node/{hostname}/schedule/cron`               | Schedule |
+| `/node/{hostname}/schedule/cron/{name}`        | Schedule |
 
 6. **Path Parameters Over Query Parameters**
 
