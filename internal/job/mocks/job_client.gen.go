@@ -1007,6 +1007,22 @@ func (mr *MockJobClientMockRecorder) QueryScheduleCronList(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryScheduleCronList", reflect.TypeOf((*MockJobClient)(nil).QueryScheduleCronList), arg0, arg1)
 }
 
+// QueryScheduleCronListBroadcast mocks base method.
+func (m *MockJobClient) QueryScheduleCronListBroadcast(arg0 context.Context, arg1 string) (string, map[string]*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryScheduleCronListBroadcast", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// QueryScheduleCronListBroadcast indicates an expected call of QueryScheduleCronListBroadcast.
+func (mr *MockJobClientMockRecorder) QueryScheduleCronListBroadcast(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryScheduleCronListBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryScheduleCronListBroadcast), arg0, arg1)
+}
+
 // RetryJob mocks base method.
 func (m *MockJobClient) RetryJob(arg0 context.Context, arg1, arg2 string) (*client0.CreateJobResult, error) {
 	m.ctrl.T.Helper()

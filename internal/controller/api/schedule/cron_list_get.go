@@ -28,6 +28,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
 
@@ -44,7 +45,12 @@ func (s *Schedule) GetNodeScheduleCron(
 
 	s.logger.Debug("cron list",
 		slog.String("target", hostname),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.getNodeScheduleCronBroadcast(ctx, hostname)
+	}
 
 	resp, err := s.JobClient.QueryScheduleCronList(ctx, hostname)
 	if err != nil {
@@ -52,6 +58,50 @@ func (s *Schedule) GetNodeScheduleCron(
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
+	results := responseToCronEntries(resp)
+	jobUUID := uuid.MustParse(resp.JobID)
+
+	return gen.GetNodeScheduleCron200JSONResponse{
+		JobId:   &jobUUID,
+		Results: results,
+	}, nil
+}
+
+// getNodeScheduleCronBroadcast handles broadcast targets for cron list.
+func (s *Schedule) getNodeScheduleCronBroadcast(
+	ctx context.Context,
+	target string,
+) (gen.GetNodeScheduleCronResponseObject, error) {
+	jobID, responses, err := s.JobClient.QueryScheduleCronListBroadcast(
+		ctx,
+		target,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var allResults []gen.CronEntry
+	for _, resp := range responses {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+			continue
+		}
+
+		allResults = append(allResults, responseToCronEntries(resp)...)
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+
+	return gen.GetNodeScheduleCron200JSONResponse{
+		JobId:   &jobUUID,
+		Results: allResults,
+	}, nil
+}
+
+// responseToCronEntries converts a job response to gen CronEntry slice.
+func responseToCronEntries(
+	resp *job.Response,
+) []gen.CronEntry {
 	var entries []cronProv.Entry
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &entries)
@@ -71,10 +121,5 @@ func (s *Schedule) GetNodeScheduleCron(
 		})
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
-
-	return gen.GetNodeScheduleCron200JSONResponse{
-		JobId:   &jobUUID,
-		Results: results,
-	}, nil
+	return results
 }

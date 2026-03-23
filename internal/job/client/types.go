@@ -293,6 +293,10 @@ type JobClient interface {
 		ctx context.Context,
 		target string,
 	) (*job.Response, error)
+	QueryScheduleCronListBroadcast(
+		ctx context.Context,
+		target string,
+	) (string, map[string]*job.Response, error)
 	QueryScheduleCronGet(
 		ctx context.Context,
 		target string,

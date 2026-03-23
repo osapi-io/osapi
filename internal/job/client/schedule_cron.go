@@ -46,13 +46,33 @@ func (c *Client) QueryScheduleCronList(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
 	resp.JobID = jobID
 
 	return resp, nil
+}
+
+// QueryScheduleCronListBroadcast lists cron entries from multiple agents.
+func (c *Client) QueryScheduleCronListBroadcast(
+	ctx context.Context,
+	target string,
+) (string, map[string]*job.Response, error) {
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "schedule",
+		Operation: job.OperationCronList,
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	return jobID, responses, nil
 }
 
 // QueryScheduleCronGet gets a single cron entry by name on a target.
