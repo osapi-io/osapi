@@ -104,10 +104,10 @@ type Provider interface {
 	) (*StatusResult, error)
 }
 
-// FileDeployer is the narrow interface for providers that deploy files
+// Deployer is the narrow interface for providers that deploy files
 // to well-known paths. Meta providers (cron, systemd, sysctl) depend
 // on this instead of the full Provider interface.
-type FileDeployer interface {
+type Deployer interface {
 	// Deploy writes file content from the object store to the target
 	// path with SHA tracking and idempotency.
 	Deploy(

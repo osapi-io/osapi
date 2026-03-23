@@ -56,7 +56,7 @@ var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 type Debian struct {
 	logger       *slog.Logger
 	fs           afero.Fs
-	fileDeployer file.FileDeployer
+	fileDeployer file.Deployer
 	stateKV      jetstream.KeyValue
 	hostname     string
 }
@@ -65,7 +65,7 @@ type Debian struct {
 func NewDebianProvider(
 	logger *slog.Logger,
 	fs afero.Fs,
-	fileDeployer file.FileDeployer,
+	fileDeployer file.Deployer,
 	stateKV jetstream.KeyValue,
 	hostname string,
 ) *Debian {

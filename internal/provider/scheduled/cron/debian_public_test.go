@@ -65,7 +65,7 @@ type DebianPublicTestSuite struct {
 	ctrl         *gomock.Controller
 	logger       *slog.Logger
 	memFs        afero.Fs
-	mockDeployer *filemocks.MockFileDeployer
+	mockDeployer *filemocks.MockDeployer
 	mockStateKV  *jobmocks.MockKeyValue
 	provider     *cron.Debian
 }
@@ -74,7 +74,7 @@ func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.memFs = afero.NewMemMapFs()
-	suite.mockDeployer = filemocks.NewMockFileDeployer(suite.ctrl)
+	suite.mockDeployer = filemocks.NewMockDeployer(suite.ctrl)
 	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
 
 	_ = suite.memFs.MkdirAll("/etc/cron.d", 0o755)

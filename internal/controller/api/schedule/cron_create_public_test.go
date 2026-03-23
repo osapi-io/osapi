@@ -252,7 +252,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
-					Name:    "backup",
+					Name:   "backup",
 					Object: "/usr/bin/backup.sh",
 				},
 			},
