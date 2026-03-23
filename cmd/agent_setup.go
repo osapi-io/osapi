@@ -144,6 +144,13 @@ func createFileProvider(
 		return nil, nil
 	}
 
+	// Seed system templates into the object store (idempotent).
+	if err := agent.SeedSystemTemplates(ctx, log, objStore); err != nil {
+		log.Warn("failed to seed system templates",
+			slog.String("error", err.Error()),
+		)
+	}
+
 	return fileProv.New(log, appFs, objStore, fileStateKV, hostname), fileStateKV
 }
 
