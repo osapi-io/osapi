@@ -4366,22 +4366,38 @@ components:
       type: object
       required:
         - name
-        - schedule
         - command
       properties:
         name:
           type: string
           description: >
             Name for the cron drop-in entry. Used as the file name under
-            /etc/cron.d/.
+            /etc/cron.d/ or /etc/cron.{interval}/.
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=64
         schedule:
           type: string
-          description: |
-            Cron schedule expression (e.g., "*/5 * * * *").
+          description: >
+            Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive
+            with interval — provide exactly one.
           x-oapi-codegen-extra-tags:
-            validate: required,min=9
+            validate: >-
+              required_without=Interval,excluded_with=Interval,omitempty,cron_schedule
+        interval:
+          type: string
+          description: >
+            Periodic interval (hourly, daily, weekly, monthly). Places the
+            script in /etc/cron.{interval}/. Mutually exclusive with schedule —
+            provide exactly one.
+          enum:
+            - hourly
+            - daily
+            - weekly
+            - monthly
+          x-oapi-codegen-extra-tags:
+            validate: >-
+              required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly
+              daily weekly monthly
         command:
           type: string
           description: Command to execute on schedule.
@@ -4389,7 +4405,10 @@ components:
             validate: required,min=1
         user:
           type: string
-          description: User to run the command as. Defaults to root.
+          description: >
+            User to run the command as. Defaults to root. Only applies when
+            using schedule (cron.d entries include a user field). Interval-based
+            entries run as root.
     CronUpdateRequest:
       type: object
       properties:
@@ -4398,7 +4417,7 @@ components:
           description: |
             Cron schedule expression (e.g., "*/5 * * * *").
           x-oapi-codegen-extra-tags:
-            validate: omitempty,min=9
+            validate: omitempty,cron_schedule
         command:
           type: string
           description: Command to execute on schedule.
@@ -4416,7 +4435,23 @@ components:
           description: Cron entry name.
         schedule:
           type: string
-          description: Cron schedule expression.
+          description: |
+            Cron schedule expression. Present for /etc/cron.d/ entries.
+        interval:
+          type: string
+          description: >
+            Periodic interval (hourly, daily, weekly, monthly). Present for
+            /etc/cron.{interval}/ entries.
+          enum:
+            - hourly
+            - daily
+            - weekly
+            - monthly
+        source:
+          type: string
+          description: >
+            Where the entry lives: "cron.d", "hourly", "daily", "weekly", or
+            "monthly".
         user:
           type: string
           description: User the command runs as.

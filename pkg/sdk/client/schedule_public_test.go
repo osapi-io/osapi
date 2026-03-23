@@ -348,6 +348,33 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			},
 		},
 		{
+			name: "when creating cron entry with interval returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000003","name":"daily-backup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronCreateOpts{
+				Name:     "daily-backup",
+				Interval: "daily",
+				Command:  "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
+				suite.Equal("daily-backup", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
 			name: "when server returns 400 returns ValidationError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")

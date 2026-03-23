@@ -20,6 +20,10 @@
 
 package schedule_test
 
+import (
+	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+)
+
 func strPtr(
 	s string,
 ) *string {
@@ -30,4 +34,10 @@ func boolPtr(
 	b bool,
 ) *bool {
 	return &b
+}
+
+func intervalPtr(
+	i gen.CronCreateRequestInterval,
+) *gen.CronCreateRequestInterval {
+	return &i
 }

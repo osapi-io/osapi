@@ -27,8 +27,10 @@ import (
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
 	Name     string `json:"name"`
-	Schedule string `json:"schedule"`
-	User     string `json:"user"`
+	Schedule string `json:"schedule,omitempty"`
+	Interval string `json:"interval,omitempty"`
+	Source   string `json:"source,omitempty"`
+	User     string `json:"user,omitempty"`
 	Command  string `json:"command"`
 	Error    string `json:"error,omitempty"`
 }
@@ -45,8 +47,11 @@ type CronMutationResult struct {
 type CronCreateOpts struct {
 	// Name is the cron drop-in entry name (required).
 	Name string
-	// Schedule is the cron expression (required).
+	// Schedule is the cron expression (mutually exclusive with Interval).
 	Schedule string
+	// Interval is the periodic interval: hourly, daily, weekly, monthly
+	// (mutually exclusive with Schedule).
+	Interval string
 	// Command is the command to execute (required).
 	Command string
 	// User is the user to run the command as (optional, defaults to root).
@@ -70,9 +75,16 @@ func cronEntryCollectionFromGen(
 ) Collection[CronEntryResult] {
 	results := make([]CronEntryResult, 0, len(g.Results))
 	for _, r := range g.Results {
+		var interval string
+		if r.Interval != nil {
+			interval = string(*r.Interval)
+		}
+
 		results = append(results, CronEntryResult{
 			Name:     derefString(r.Name),
 			Schedule: derefString(r.Schedule),
+			Interval: interval,
+			Source:   derefString(r.Source),
 			User:     derefString(r.User),
 			Command:  derefString(r.Command),
 		})
