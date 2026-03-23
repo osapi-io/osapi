@@ -45,6 +45,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/provider/process"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
 
 // Agent implements job processing with clean lifecycle management.
@@ -76,6 +77,9 @@ type Agent struct {
 
 	// Docker provider
 	dockerProvider dockerProv.Provider
+
+	// Cron provider
+	cronProvider cronProv.Provider
 
 	// Process provider for self-metrics in heartbeat
 	processProvider process.Provider

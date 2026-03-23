@@ -42,8 +42,6 @@ var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "The client subcommand",
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		cli.ValidateDistribution(logger)
-
 		var err error
 		tracerShutdown, err = tracing.InitTracer(
 			cmd.Context(),

@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/spf13/afero"
+
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
@@ -34,6 +36,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
@@ -43,14 +46,17 @@ var factoryDockerNewFn = dockerProv.New
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
+	appFs  afero.Fs
 }
 
 // NewProviderFactory creates a new provider factory.
 func NewProviderFactory(
 	logger *slog.Logger,
+	appFs afero.Fs,
 ) *ProviderFactory {
 	return &ProviderFactory{
 		logger: logger,
+		appFs:  appFs,
 	}
 }
 
@@ -65,6 +71,7 @@ func (f *ProviderFactory) CreateProviders() (
 	netinfo.Provider,
 	command.Provider,
 	dockerProv.Provider,
+	cronProv.Provider,
 ) {
 	plat := platform.Detect()
 
@@ -75,8 +82,8 @@ func (f *ProviderFactory) CreateProviders() (
 	// Create system providers
 	var hostProvider nodeHost.Provider
 	switch plat {
-	case "ubuntu":
-		hostProvider = nodeHost.NewUbuntuProvider()
+	case "debian":
+		hostProvider = nodeHost.NewDebianProvider()
 	case "darwin":
 		hostProvider = nodeHost.NewDarwinProvider()
 	default:
@@ -85,8 +92,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var diskProvider disk.Provider
 	switch plat {
-	case "ubuntu":
-		diskProvider = disk.NewUbuntuProvider(f.logger)
+	case "debian":
+		diskProvider = disk.NewDebianProvider(f.logger)
 	case "darwin":
 		diskProvider = disk.NewDarwinProvider(f.logger)
 	default:
@@ -95,8 +102,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var memProvider mem.Provider
 	switch plat {
-	case "ubuntu":
-		memProvider = mem.NewUbuntuProvider()
+	case "debian":
+		memProvider = mem.NewDebianProvider()
 	case "darwin":
 		memProvider = mem.NewDarwinProvider()
 	default:
@@ -105,8 +112,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var loadProvider load.Provider
 	switch plat {
-	case "ubuntu":
-		loadProvider = load.NewUbuntuProvider()
+	case "debian":
+		loadProvider = load.NewDebianProvider()
 	case "darwin":
 		loadProvider = load.NewDarwinProvider()
 	default:
@@ -117,8 +124,8 @@ func (f *ProviderFactory) CreateProviders() (
 	var dnsProvider dns.Provider
 	execManager := exec.New(f.logger)
 	switch plat {
-	case "ubuntu":
-		dnsProvider = dns.NewUbuntuProvider(f.logger, execManager)
+	case "debian":
+		dnsProvider = dns.NewDebianProvider(f.logger, execManager)
 	case "darwin":
 		dnsProvider = dns.NewDarwinProvider(f.logger, execManager)
 	default:
@@ -127,8 +134,8 @@ func (f *ProviderFactory) CreateProviders() (
 
 	var pingProvider ping.Provider
 	switch plat {
-	case "ubuntu":
-		pingProvider = ping.NewUbuntuProvider()
+	case "debian":
+		pingProvider = ping.NewDebianProvider()
 	case "darwin":
 		pingProvider = ping.NewDarwinProvider()
 	default:
@@ -162,5 +169,16 @@ func (f *ProviderFactory) CreateProviders() (
 			slog.String("error", err.Error()))
 	}
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider
+	// Create cron provider
+	var cronProvider cronProv.Provider
+	switch plat {
+	case "debian":
+		cronProvider = cronProv.NewDebianProvider(f.logger, f.appFs)
+	case "darwin":
+		cronProvider = cronProv.NewDarwinProvider()
+	default:
+		cronProvider = cronProv.NewLinuxProvider()
+	}
+
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider, cronProvider
 }

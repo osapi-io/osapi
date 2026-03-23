@@ -44,6 +44,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 var (
@@ -74,13 +76,13 @@ func Init(
 
 const (
 	// AllHosts is a wildcard for targeting all hosts.
-	AllHosts = "*" // Wildcard for targeting all hosts
+	AllHosts = "*"
 	// AnyHost is load-balanced across available hosts.
-	AnyHost = "_any" // Load-balanced across available hosts
+	AnyHost = client.TargetAny
 	// LocalHost targets the API server's host.
-	LocalHost = "_local" // Target the API server's host
+	LocalHost = "_local"
 	// BroadcastHost broadcasts to all hosts (no queue group).
-	BroadcastHost = "_all" // Broadcast to all hosts (no queue group)
+	BroadcastHost = client.TargetAll
 )
 
 // Subject categories for different operations

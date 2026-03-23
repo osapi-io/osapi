@@ -24,6 +24,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 type LinuxTestSuite struct {
@@ -46,7 +48,7 @@ func (s *LinuxTestSuite) TestGetResolvConfByInterface() {
 
 			s.Error(err)
 			s.Nil(result)
-			s.Contains(err.Error(), "not implemented for LinuxProvider")
+			s.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
@@ -71,7 +73,7 @@ func (s *LinuxTestSuite) TestUpdateResolvConfByInterface() {
 
 			s.Error(err)
 			s.Nil(result)
-			s.Contains(err.Error(), "not implemented for LinuxProvider")
+			s.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

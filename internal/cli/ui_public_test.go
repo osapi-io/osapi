@@ -952,6 +952,28 @@ func (suite *UIPublicTestSuite) TestDisplayJobDetail() {
 				},
 			},
 		},
+		{
+			name: "when agent states contain skipped status",
+			resp: &client.JobDetail{
+				Status: "completed",
+				AgentStates: map[string]client.AgentState{
+					"web-01": {Status: "completed", Duration: "1s"},
+					"web-02": {Status: "skipped", Duration: "0s"},
+					"web-03": {Status: "completed", Duration: "2s"},
+				},
+			},
+		},
+		{
+			name: "when multiple agents skipped shows skipped in summary",
+			resp: &client.JobDetail{
+				Status: "skipped",
+				AgentStates: map[string]client.AgentState{
+					"web-01": {Status: "skipped"},
+					"web-02": {Status: "skipped"},
+					"web-03": {Status: "completed", Duration: "1s"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {

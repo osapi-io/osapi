@@ -20,7 +20,7 @@
 
 // Package platform provides cross-platform detection for OSAPI providers.
 // The agent uses this package to select the correct provider variant
-// (ubuntu, darwin, or generic linux).
+// based on OS family (debian, darwin, or generic linux).
 package platform
 
 import (
@@ -33,8 +33,16 @@ import (
 // Override in tests to simulate different platforms.
 var HostInfoFn = host.Info
 
-// Detect returns the normalized platform name for provider selection.
-// Returns "ubuntu", "darwin", or "" (generic linux/unknown).
+// debianFamily lists distributions that belong to the Debian OS family
+// and share the same provider implementations.
+var debianFamily = map[string]bool{
+	"ubuntu":   true,
+	"debian":   true,
+	"raspbian": true,
+}
+
+// Detect returns the OS family name for provider selection.
+// Returns "debian", "darwin", or "" (generic linux/unknown).
 func Detect() string {
 	info, _ := HostInfoFn()
 	if info == nil {
@@ -44,6 +52,10 @@ func Detect() string {
 	platform := strings.ToLower(info.Platform)
 	if platform == "" && strings.ToLower(info.OS) == "darwin" {
 		return "darwin"
+	}
+
+	if debianFamily[platform] {
+		return "debian"
 	}
 
 	return platform

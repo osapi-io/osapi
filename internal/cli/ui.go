@@ -31,6 +31,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
@@ -531,28 +532,36 @@ func DisplayJobDetail(
 	if len(resp.AgentStates) > 0 {
 		completed := 0
 		failed := 0
+		skipped := 0
 		processing := 0
 
 		for _, state := range resp.AgentStates {
 			switch state.Status {
-			case "completed":
+			case string(job.StatusCompleted):
 				completed++
-			case "failed":
+			case string(job.StatusFailed):
 				failed++
-			case "started":
+			case string(job.StatusSkipped):
+				skipped++
+			case string(job.StatusStarted):
 				processing++
 			}
 		}
 
 		total := len(resp.AgentStates)
 		if total > 1 {
-			PrintKV("Agents", fmt.Sprintf(
-				"%d total (%d completed, %d failed, %d processing)",
+			summary := fmt.Sprintf(
+				"%d total (%d completed, %d failed, %d processing",
 				total,
 				completed,
 				failed,
 				processing,
-			))
+			)
+			if skipped > 0 {
+				summary += fmt.Sprintf(", %d skipped", skipped)
+			}
+			summary += ")"
+			PrintKV("Agents", summary)
 		}
 	}
 

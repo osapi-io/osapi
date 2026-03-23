@@ -45,6 +45,9 @@ tags:
   - name: Node_Management_API_command_operations
     x-displayName: Node/Command
     description: Command execution on a target node.
+  - name: Schedule_Management_API_cron_operations
+    x-displayName: Node/Schedule/Cron
+    description: Cron drop-in file management on a target node.
 paths:
   /agent:
     servers: []
@@ -2198,6 +2201,242 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/schedule/cron:
+    servers: []
+    get:
+      summary: List all cron entries
+      description: |
+        List all cron drop-in entries on the target node.
+      tags:
+        - Schedule_Management_API_cron_operations
+      operationId: GetNodeScheduleCron
+      security:
+        - BearerAuth:
+            - cron:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of cron entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CronCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing cron entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a cron entry
+      description: |
+        Create a new cron drop-in entry on the target node.
+      tags:
+        - Schedule_Management_API_cron_operations
+      operationId: PostNodeScheduleCron
+      security:
+        - BearerAuth:
+            - cron:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Cron entry creation parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CronCreateRequest'
+      responses:
+        '200':
+          description: Cron entry created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CronCreateResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating cron entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/schedule/cron/{name}:
+    servers: []
+    get:
+      summary: Get a cron entry
+      description: |
+        Get a specific cron drop-in entry by name on the target node.
+      tags:
+        - Schedule_Management_API_cron_operations
+      operationId: GetNodeScheduleCronByName
+      security:
+        - BearerAuth:
+            - cron:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CronName'
+      responses:
+        '200':
+          description: Cron entry detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CronEntryResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cron entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving cron entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a cron entry
+      description: |
+        Update an existing cron drop-in entry on the target node.
+      tags:
+        - Schedule_Management_API_cron_operations
+      operationId: PutNodeScheduleCron
+      security:
+        - BearerAuth:
+            - cron:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CronName'
+      requestBody:
+        description: Cron entry update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CronUpdateRequest'
+      responses:
+        '200':
+          description: Cron entry updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CronUpdateResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cron entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating cron entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a cron entry
+      description: |
+        Delete a cron drop-in entry from the target node.
+      tags:
+        - Schedule_Management_API_cron_operations
+      operationId: DeleteNodeScheduleCron
+      security:
+        - BearerAuth:
+            - cron:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CronName'
+      responses:
+        '200':
+          description: Cron entry deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CronDeleteResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cron entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting cron entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     BearerAuth:
@@ -4123,6 +4362,156 @@ components:
             $ref: '#/components/schemas/CommandResultItem'
       required:
         - results
+    CronCreateRequest:
+      type: object
+      required:
+        - name
+        - schedule
+        - command
+      properties:
+        name:
+          type: string
+          description: >
+            Name for the cron drop-in entry. Used as the file name under
+            /etc/cron.d/.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=64
+        schedule:
+          type: string
+          description: |
+            Cron schedule expression (e.g., "*/5 * * * *").
+          x-oapi-codegen-extra-tags:
+            validate: required,min=9
+        command:
+          type: string
+          description: Command to execute on schedule.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+        user:
+          type: string
+          description: User to run the command as. Defaults to root.
+    CronUpdateRequest:
+      type: object
+      properties:
+        schedule:
+          type: string
+          description: |
+            Cron schedule expression (e.g., "*/5 * * * *").
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=9
+        command:
+          type: string
+          description: Command to execute on schedule.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
+        user:
+          type: string
+          description: User to run the command as.
+    CronEntry:
+      type: object
+      description: A cron drop-in entry.
+      properties:
+        name:
+          type: string
+          description: Cron entry name.
+        schedule:
+          type: string
+          description: Cron schedule expression.
+        user:
+          type: string
+          description: User the command runs as.
+        command:
+          type: string
+          description: Command to execute on schedule.
+    CronCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CronEntry'
+      required:
+        - results
+    CronEntryResponse:
+      type: object
+      description: A single cron entry with job metadata.
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: Cron entry name.
+        schedule:
+          type: string
+          description: Cron schedule expression.
+        user:
+          type: string
+          description: User the command runs as.
+        command:
+          type: string
+          description: Command to execute on schedule.
+        error:
+          type: string
+          description: Error message if the agent failed.
+    CronCreateResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: Cron entry name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+    CronUpdateResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: Cron entry name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+    CronDeleteResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: Cron entry name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
   parameters:
     Hostname:
       name: hostname
@@ -4162,6 +4551,19 @@ components:
         type: string
         minLength: 1
         maxLength: 255
+    CronName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Cron entry name. Must contain only alphanumeric characters, underscores,
+        and hyphens.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+        pattern: ^[a-zA-Z0-9_-]+$
 x-tagGroups:
   - name: Agent Management API
     tags:
@@ -4193,3 +4595,6 @@ x-tagGroups:
       - Node_Management_API_network_operations
       - Node_Management_API_dns_operations
       - Node_Management_API_command_operations
+  - name: Schedule Management API
+    tags:
+      - Schedule_Management_API_cron_operations

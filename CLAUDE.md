@@ -33,12 +33,12 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Architecture (Quick Reference)
 
 - **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `controller.api`, `nats server`)
-- **`internal/controller/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
+- **`internal/controller/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `schedule/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `process/` (process metrics)
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `scheduled/cron`, `process/` (process metrics)
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules

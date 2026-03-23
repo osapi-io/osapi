@@ -110,7 +110,7 @@ func (c *Client) CreateJob(
 	statusKey := fmt.Sprintf("status.%s.submitted._api.%d", jobID, time.Now().UnixNano())
 	statusEvent := map[string]interface{}{
 		"job_id":    jobID,
-		"event":     "submitted",
+		"event":     string(job.StatusSubmitted),
 		"hostname":  "_api", // API server hostname could be added here
 		"timestamp": createdTime,
 		"unix_nano": time.Now().UnixNano(),
@@ -160,10 +160,11 @@ func (c *Client) GetQueueSummary(
 		if errors.Is(err, jetstream.ErrNoKeysFound) {
 			return &job.QueueStats{
 				StatusCounts: map[string]int{
-					"submitted":  0,
-					"processing": 0,
-					"completed":  0,
-					"failed":     0,
+					string(job.StatusSubmitted):  0,
+					string(job.StatusProcessing): 0,
+					string(job.StatusCompleted):  0,
+					string(job.StatusFailed):     0,
+					string(job.StatusSkipped):    0,
 				},
 			}, nil
 		}
@@ -173,11 +174,11 @@ func (c *Client) GetQueueSummary(
 	_, jobStatuses := computeStatusFromKeyNames(keys)
 
 	statusCounts := map[string]int{
-		"submitted":       0,
-		"processing":      0,
-		"completed":       0,
-		"failed":          0,
-		"partial_failure": 0,
+		string(job.StatusSubmitted):      0,
+		string(job.StatusProcessing):     0,
+		string(job.StatusCompleted):      0,
+		string(job.StatusFailed):         0,
+		string(job.StatusPartialFailure): 0,
 	}
 
 	for _, info := range jobStatuses {
@@ -320,11 +321,11 @@ func (c *Client) ListJobs(
 
 	// Compute status counts from key-name-derived statuses (free — no extra reads)
 	statusCounts := map[string]int{
-		"submitted":       0,
-		"processing":      0,
-		"completed":       0,
-		"failed":          0,
-		"partial_failure": 0,
+		string(job.StatusSubmitted):      0,
+		string(job.StatusProcessing):     0,
+		string(job.StatusCompleted):      0,
+		string(job.StatusFailed):         0,
+		string(job.StatusPartialFailure): 0,
 	}
 	for _, info := range jobStatuses {
 		statusCounts[info.Status]++
@@ -332,7 +333,7 @@ func (c *Client) ListJobs(
 	// Jobs with no status events are "submitted" but not in jobStatuses
 	submittedOnly := len(orderedJobIDs) - len(jobStatuses)
 	if submittedOnly > 0 {
-		statusCounts["submitted"] += submittedOnly
+		statusCounts[string(job.StatusSubmitted)] += submittedOnly
 	}
 
 	// Filter + count (fast, no reads)
@@ -341,7 +342,7 @@ func (c *Client) ListJobs(
 		if statusFilter != "" {
 			info, exists := jobStatuses[id]
 			if !exists {
-				info = lightJobInfo{Status: "submitted"}
+				info = lightJobInfo{Status: string(job.StatusSubmitted)}
 			}
 			if info.Status != statusFilter {
 				continue
@@ -482,7 +483,7 @@ func (c *Client) computeStatusFromEvents(
 	jobID string,
 ) computedJobStatus {
 	result := computedJobStatus{
-		Status:      "submitted", // Default if no events
+		Status:      string(job.StatusSubmitted), // Default if no events
 		AgentStates: make(map[string]job.AgentState),
 		Timeline:    []job.TimelineEvent{},
 	}
@@ -541,15 +542,27 @@ func (c *Client) computeStatusFromEvents(
 
 		// Set message based on event type
 		switch eventType {
-		case "submitted":
+		case string(job.StatusSubmitted):
 			timelineEvent.Message = "Job submitted to queue"
-		case "acknowledged":
+		case string(job.StatusAcknowledged):
 			timelineEvent.Message = fmt.Sprintf("Job acknowledged by agent %s", hostname)
-		case "started":
+		case string(job.StatusStarted):
 			timelineEvent.Message = fmt.Sprintf("Job processing started on %s", hostname)
-		case "completed":
+		case string(job.StatusCompleted):
 			timelineEvent.Message = fmt.Sprintf("Job completed successfully on %s", hostname)
-		case "failed":
+		case string(job.StatusSkipped):
+			timelineEvent.Message = fmt.Sprintf(
+				"Job skipped on %s (unsupported OS family)",
+				hostname,
+			)
+			if data, ok := event["data"].(map[string]interface{}); ok {
+				if errMsg, ok := data["error"].(string); ok {
+					timelineEvent.Error = errMsg
+					agentErrors[hostname] = errMsg
+					latestError = errMsg
+				}
+			}
+		case string(job.StatusFailed):
 			timelineEvent.Message = fmt.Sprintf("Job failed on %s", hostname)
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if errMsg, ok := data["error"].(string); ok {
@@ -558,7 +571,7 @@ func (c *Client) computeStatusFromEvents(
 					latestError = errMsg
 				}
 			}
-		case "retried":
+		case string(job.StatusRetried):
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if newJobID, ok := data["new_job_id"].(string); ok {
 					timelineEvent.Message = fmt.Sprintf("Job retried as %s", newJobID)
@@ -576,14 +589,14 @@ func (c *Client) computeStatusFromEvents(
 			agentStates[hostname] = eventType
 
 			// Track first start time for duration calculation
-			if eventType == "started" {
+			if eventType == string(job.StatusStarted) {
 				if _, exists := agentStartTimes[hostname]; !exists {
 					agentStartTimes[hostname] = t
 				}
 			}
 
 			// Track last end time for duration calculation
-			if eventType == "completed" || eventType == "failed" {
+			if eventType == string(job.StatusCompleted) || eventType == string(job.StatusFailed) {
 				agentEndTimes[hostname] = t
 				result.Hostname = hostname
 			}
@@ -634,18 +647,21 @@ func (c *Client) computeStatusFromEvents(
 	// Compute overall status based on agent states
 	completed := 0
 	failed := 0
+	skippedCount := 0
 	processing := 0
 	acknowledged := 0
 
 	for _, state := range agentStates {
 		switch state {
-		case "completed":
+		case string(job.StatusCompleted):
 			completed++
-		case "failed":
+		case string(job.StatusFailed):
 			failed++
-		case "started":
+		case string(job.StatusSkipped):
+			skippedCount++
+		case string(job.StatusStarted):
 			processing++
-		case "acknowledged":
+		case string(job.StatusAcknowledged):
 			acknowledged++
 		}
 	}
@@ -654,17 +670,20 @@ func (c *Client) computeStatusFromEvents(
 
 	// Determine overall status
 	if totalAgents == 0 {
-		result.Status = "submitted"
+		result.Status = string(job.StatusSubmitted)
 	} else if processing > 0 || acknowledged > 0 {
-		result.Status = "processing"
-	} else if completed+failed == totalAgents {
+		result.Status = string(job.StatusProcessing)
+	} else if completed+failed+skippedCount == totalAgents {
 		if failed > 0 && completed > 0 {
-			result.Status = "partial_failure"
+			result.Status = string(job.StatusPartialFailure)
 		} else if failed > 0 {
-			result.Status = "failed"
+			result.Status = string(job.StatusFailed)
+			result.Error = latestError
+		} else if skippedCount > 0 && completed == 0 {
+			result.Status = string(job.StatusSkipped)
 			result.Error = latestError
 		} else {
-			result.Status = "completed"
+			result.Status = string(job.StatusCompleted)
 		}
 	}
 
@@ -712,7 +731,7 @@ func (c *Client) RetryJob(
 	retriedKey := fmt.Sprintf("status.%s.retried._api.%d", jobID, time.Now().UnixNano())
 	retriedEvent := map[string]interface{}{
 		"job_id":    jobID,
-		"event":     "retried",
+		"event":     string(job.StatusRetried),
 		"hostname":  "_api",
 		"timestamp": time.Now().Format(time.RFC3339Nano),
 		"unix_nano": time.Now().UnixNano(),
@@ -785,12 +804,13 @@ func computeStatusFromKeyNames(
 
 	// Parse status keys and track highest-priority event per (jobID, hostname)
 	statusPriority := map[string]int{
-		"submitted":    0,
-		"acknowledged": 1,
-		"started":      2,
-		"failed":       3,
-		"completed":    4,
-		"retried":      4,
+		string(job.StatusSubmitted):    0,
+		string(job.StatusAcknowledged): 1,
+		string(job.StatusStarted):      2,
+		string(job.StatusFailed):       3,
+		string(job.StatusSkipped):      3,
+		string(job.StatusCompleted):    4,
+		string(job.StatusRetried):      4,
 	}
 
 	// agentStates[jobID][hostname] = highest-priority event
@@ -824,6 +844,7 @@ func computeStatusFromKeyNames(
 	for jobID, agents := range agentStates {
 		completed := 0
 		failed := 0
+		skipped := 0
 		processing := 0
 		acknowledged := 0
 
@@ -832,31 +853,35 @@ func computeStatusFromKeyNames(
 				continue
 			}
 			switch state {
-			case "completed", "retried":
+			case string(job.StatusCompleted), string(job.StatusRetried):
 				completed++
-			case "failed":
+			case string(job.StatusFailed):
 				failed++
-			case "started":
+			case string(job.StatusSkipped):
+				skipped++
+			case string(job.StatusStarted):
 				processing++
-			case "acknowledged":
+			case string(job.StatusAcknowledged):
 				acknowledged++
 			}
 		}
 
-		totalAgents := completed + failed + processing + acknowledged
+		totalAgents := completed + failed + skipped + processing + acknowledged
 
 		var status string
 		switch {
 		case totalAgents == 0:
-			status = "submitted"
+			status = string(job.StatusSubmitted)
 		case processing > 0 || acknowledged > 0:
-			status = "processing"
+			status = string(job.StatusProcessing)
 		case failed > 0 && completed > 0:
-			status = "partial_failure"
+			status = string(job.StatusPartialFailure)
 		case failed > 0:
-			status = "failed"
+			status = string(job.StatusFailed)
+		case skipped > 0 && completed == 0:
+			status = string(job.StatusSkipped)
 		default:
-			status = "completed"
+			status = string(job.StatusCompleted)
 		}
 
 		jobStatuses[jobID] = lightJobInfo{Status: status}

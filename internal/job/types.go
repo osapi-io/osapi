@@ -28,30 +28,35 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-// Type represents the type of job operation.
-type Type string
+// Type is a type alias for client.JobType.
+type Type = client.JobType
 
+// Job type constants re-exported from the SDK.
 const (
-	// TypeQuery represents read operations that query system state.
-	TypeQuery Type = "query"
-	// TypeModify represents write operations that modify system state.
-	TypeModify Type = "modify"
+	TypeQuery  = client.JobTypeQuery
+	TypeModify = client.JobTypeModify
 )
 
 // Status represents the current status of a job.
-type Status string
+// Status is a type alias for client.JobStatus so internal code and the SDK
+// share the same type. All status constants are defined in pkg/sdk/client/.
+type Status = client.JobStatus
 
+// Job status constants re-exported from the SDK.
 const (
-	// StatusPending indicates the job is queued but not yet processed.
-	StatusPending Status = "pending"
-	// StatusProcessing indicates the job is currently being processed.
-	StatusProcessing Status = "processing"
-	// StatusCompleted indicates the job completed successfully.
-	StatusCompleted Status = "completed"
-	// StatusFailed indicates the job failed during processing.
-	StatusFailed Status = "failed"
+	StatusSubmitted      = client.JobStatusSubmitted
+	StatusAcknowledged   = client.JobStatusAcknowledged
+	StatusStarted        = client.JobStatusStarted
+	StatusPending        = client.JobStatusPending
+	StatusProcessing     = client.JobStatusProcessing
+	StatusCompleted      = client.JobStatusCompleted
+	StatusFailed         = client.JobStatusFailed
+	StatusSkipped        = client.JobStatusSkipped
+	StatusPartialFailure = client.JobStatusPartialFailure
+	StatusRetried        = client.JobStatusRetried
 )
 
 // Request represents a request to perform a job operation.
@@ -63,7 +68,7 @@ type Request struct {
 	// Category specifies the operation category (node, network, etc.).
 	Category string `json:"category"`
 	// Operation specifies the specific operation to perform.
-	Operation string `json:"operation"`
+	Operation OperationType `json:"operation"`
 	// Data contains operation-specific parameters as raw JSON.
 	Data json.RawMessage `json:"data,omitempty"`
 	// Timestamp indicates when the request was created.
@@ -92,57 +97,59 @@ type Response struct {
 // Operation type definitions for hierarchical job routing
 // These support the new dot-notation format used by the jobs CLI
 
-// OperationType represents the specific operation using hierarchical format.
-// This complements the existing JobType (query/modify) with specific operations.
-type OperationType string
+// OperationType is a type alias for client.JobOperation.
+type OperationType = client.JobOperation
 
-// Node operations - read-only operations that query node state
+// Node operations — read-only operations that query node state.
 const (
-	OperationNodeHostnameGet = "node.hostname.get"
-	OperationNodeStatusGet   = "node.status.get"
-	OperationNodeUptimeGet   = "node.uptime.get"
-	OperationNodeLoadGet     = "node.load.get"
-	OperationNodeMemoryGet   = "node.memory.get"
-	OperationNodeDiskGet     = "node.disk.get"
-	OperationNodeOSGet       = "node.os.get"
+	OperationNodeHostnameGet = client.OpNodeHostnameGet
+	OperationNodeStatusGet   = client.OpNodeStatusGet
+	OperationNodeUptimeGet   = client.OpNodeUptimeGet
+	OperationNodeLoadGet     = client.OpNodeLoadGet
+	OperationNodeMemoryGet   = client.OpNodeMemoryGet
+	OperationNodeDiskGet     = client.OpNodeDiskGet
+	OperationNodeOSGet       = client.OpNodeOSGet
 )
 
-// Network operations - operations that can modify network configuration
+// Network operations.
 const (
-	OperationNetworkDNSGet    = "network.dns.get"
-	OperationNetworkDNSUpdate = "network.dns.update"
-	OperationNetworkPingDo    = "network.ping.do"
+	OperationNetworkDNSGet    = client.OpNetworkDNSGet
+	OperationNetworkDNSUpdate = client.OpNetworkDNSUpdate
+	OperationNetworkPingDo    = client.OpNetworkPingDo
 )
 
-// Node operations - operations that can modify node state
+// Command operations — execute arbitrary commands on agents.
 const (
-	OperationNodeShutdown = "node.shutdown.execute"
-	OperationNodeReboot   = "node.reboot.execute"
-)
-
-// Command operations - execute arbitrary commands on agents
-const (
-	OperationCommandExecExecute  = "command.exec.execute"
-	OperationCommandShellExecute = "command.shell.execute"
+	OperationCommandExecExecute  = client.OpCommandExec
+	OperationCommandShellExecute = client.OpCommandShell
 )
 
 // File operations — manage file deployments and status.
 const (
-	OperationFileDeployExecute = "file.deploy.execute"
-	OperationFileStatusGet     = "file.status.get"
+	OperationFileDeployExecute = client.OpFileDeploy
+	OperationFileStatusGet     = client.OpFileStatusGet
 )
 
-// Docker operation types
+// Docker operations.
 const (
-	OperationDockerCreate      = "docker.create.execute"
-	OperationDockerStart       = "docker.start.execute"
-	OperationDockerStop        = "docker.stop.execute"
-	OperationDockerRemove      = "docker.remove.execute"
-	OperationDockerList        = "docker.list.get"
-	OperationDockerInspect     = "docker.inspect.get"
-	OperationDockerExec        = "docker.exec.execute"
-	OperationDockerPull        = "docker.pull.execute"
-	OperationDockerImageRemove = "docker.image-remove.execute"
+	OperationDockerCreate      = client.OpDockerCreate
+	OperationDockerStart       = client.OpDockerStart
+	OperationDockerStop        = client.OpDockerStop
+	OperationDockerRemove      = client.OpDockerRemove
+	OperationDockerList        = client.OpDockerList
+	OperationDockerInspect     = client.OpDockerInspect
+	OperationDockerExec        = client.OpDockerExec
+	OperationDockerPull        = client.OpDockerPull
+	OperationDockerImageRemove = client.OpDockerImageRemove
+)
+
+// Schedule/Cron operations.
+const (
+	OperationCronList   = client.OpCronList
+	OperationCronGet    = client.OpCronGet
+	OperationCronCreate = client.OpCronCreate
+	OperationCronUpdate = client.OpCronUpdate
+	OperationCronDelete = client.OpCronDelete
 )
 
 // Operation represents an operation in the new hierarchical format
@@ -377,18 +384,18 @@ type FactsRegistration struct {
 	Facts            map[string]any     `json:"facts,omitempty"`
 }
 
-// Condition type constants.
+// Condition type constants re-exported from the SDK.
 const (
-	ConditionMemoryPressure = "MemoryPressure"
-	ConditionHighLoad       = "HighLoad"
-	ConditionDiskPressure   = "DiskPressure"
+	ConditionMemoryPressure = client.ConditionMemoryPressure
+	ConditionHighLoad       = client.ConditionHighLoad
+	ConditionDiskPressure   = client.ConditionDiskPressure
 )
 
-// Agent state constants.
+// Agent state constants re-exported from the SDK.
 const (
-	AgentStateReady    = "Ready"
-	AgentStateDraining = "Draining"
-	AgentStateCordoned = "Cordoned"
+	AgentStateReady    = client.AgentReady
+	AgentStateDraining = client.AgentDraining
+	AgentStateCordoned = client.AgentCordoned
 )
 
 // Condition represents a node condition evaluated agent-side.

@@ -154,11 +154,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                                                                                                                    |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute` |
-| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`                                                                   |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`                                                                                                                               |
+| Role    | Permissions                                                                                                                                                                                                                                               |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `cron:read`, `cron:write` |
+| `write` | `agent:read`, `node:read`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `cron:read`, `cron:write`                                                                   |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `cron:read`                                                                                                                                             |
 
 ### Custom Roles
 
@@ -256,7 +256,8 @@ controller:
       # Permissions: agent:read, agent:write, node:read, network:read,
       #              network:write, job:read, job:write, health:read,
       #              audit:read, command:execute, file:read, file:write,
-      #              docker:read, docker:write, docker:execute
+      #              docker:read, docker:write, docker:execute,
+      #              cron:read, cron:write
       # roles:
       #   ops:
       #     permissions:

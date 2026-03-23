@@ -1,0 +1,23 @@
+FROM golang:1.25-bookworm
+
+# Install common Linux tools that providers need to interact with.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    procps \
+    iproute2 \
+    iputils-ping \
+    dnsutils \
+    sysstat \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Pre-download Go modules for faster iteration. The go.mod/go.sum are
+# copied first so module cache is only invalidated when deps change.
+COPY go.mod go.sum ./
+RUN go mod download
+
+# The full workspace is mounted at runtime via docker compose, so no
+# COPY of source code here.
+
+ENTRYPOINT ["go", "run", "main.go"]
+CMD ["agent", "start"]

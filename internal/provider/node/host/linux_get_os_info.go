@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetOSInfo retrieves information about the operating system, including the
 // distribution name and version. It returns the
 func (l *Linux) GetOSInfo() (*Result, error) {
-	return nil, fmt.Errorf("getOSInfo is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

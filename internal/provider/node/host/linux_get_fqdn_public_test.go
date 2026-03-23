@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
@@ -52,7 +53,7 @@ func (suite *LinuxGetFQDNPublicTestSuite) TestGetFQDN() {
 			got, err := linux.GetFQDN()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getFQDN is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

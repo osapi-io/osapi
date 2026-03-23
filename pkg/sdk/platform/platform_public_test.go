@@ -46,11 +46,18 @@ func (suite *PlatformPublicTestSuite) TestDetect() {
 		expected string
 	}{
 		{
-			name: "returns ubuntu when platform is Ubuntu",
+			name: "returns debian family when platform is Ubuntu",
 			infoFn: func() (*host.InfoStat, error) {
 				return &host.InfoStat{Platform: "Ubuntu"}, nil
 			},
-			expected: "ubuntu",
+			expected: "debian",
+		},
+		{
+			name: "returns debian family when platform is debian",
+			infoFn: func() (*host.InfoStat, error) {
+				return &host.InfoStat{Platform: "debian"}, nil
+			},
+			expected: "debian",
 		},
 		{
 			name: "returns darwin when platform is empty and OS is darwin",

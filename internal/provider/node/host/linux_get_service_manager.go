@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetServiceManager detects the system's service manager.
 // It returns an error because it is not implemented for LinuxProvider.
 func (l *Linux) GetServiceManager() (string, error) {
-	return "", fmt.Errorf("getServiceManager is not implemented for LinuxProvider")
+	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

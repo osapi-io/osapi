@@ -289,6 +289,7 @@ stateDiagram-v2
     acknowledged --> started
     started --> completed
     started --> failed
+    started --> skipped
 ```
 
 **State Transitions via Events:**
@@ -298,6 +299,7 @@ stateDiagram-v2
 - `started`: Agent begins processing
 - `completed`: Agent finishes successfully
 - `failed`: Agent encounters error
+- `skipped`: Operation not supported on this agent
 
 **Multi-Agent States:**
 
@@ -305,6 +307,7 @@ stateDiagram-v2
 - `partial_failure`: Some agents completed, others failed
 - `completed`: All agents finished successfully
 - `failed`: All agents failed
+- `skipped`: All agents skipped the operation
 
 ### 3. Job Polling
 

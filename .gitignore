@@ -1,6 +1,7 @@
 .coverage/
 .worktrees/
 configs/osapi.*.yaml
+!configs/osapi.dev.yaml
 database.db*
 dist/
 docs/node_modules/

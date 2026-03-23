@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetCPUCount retrieves the number of logical CPUs available.
 // It returns an error because it is not implemented for LinuxProvider.
 func (l *Linux) GetCPUCount() (int, error) {
-	return 0, fmt.Errorf("getCPUCount is not implemented for LinuxProvider")
+	return 0, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

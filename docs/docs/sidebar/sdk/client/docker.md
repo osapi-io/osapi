@@ -83,6 +83,10 @@ resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
 )
 ```
 
+## Examples
+
+- [`examples/sdk/client/container.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/container.go)
+
 ## Permissions
 
 | Operation   | Permission       |

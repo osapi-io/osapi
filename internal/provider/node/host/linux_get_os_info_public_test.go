@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
@@ -52,7 +53,7 @@ func (suite *LinuxGetOSInfoPublicTestSuite) TestGetOSInfo() {
 			got, err := linux.GetOSInfo()
 
 			suite.Nil(got)
-			suite.EqualError(err, "getOSInfo is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

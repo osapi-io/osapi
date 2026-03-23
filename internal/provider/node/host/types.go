@@ -49,7 +49,7 @@ type Provider interface {
 
 // Result represents the operating system information.
 type Result struct {
-	// The name of the Linux distribution (e.g., Ubuntu, CentOS).
+	// The name of the Linux distribution (e.g., Debian, CentOS).
 	Distribution string
 	// The version of the Linux distribution (e.g., 20.04, 8.3).
 	Version string

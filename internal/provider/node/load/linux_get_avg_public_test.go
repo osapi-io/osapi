@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 )
 
@@ -52,7 +53,7 @@ func (suite *LinuxGetAverageStatsPublicTestSuite) TestGetAverageStats() {
 			got, err := linux.GetAverageStats()
 
 			suite.Nil(got)
-			suite.EqualError(err, "getAverageStats is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

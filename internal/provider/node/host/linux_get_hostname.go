@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetHostname retrieves the hostname of the system.
 // It returns the hostname as a string, and an error if something goes wrong.
 func (dls *Linux) GetHostname() (string, error) {
-	return "", fmt.Errorf("getHostname is not implemented for LinuxProvider")
+	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

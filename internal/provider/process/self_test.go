@@ -22,6 +22,7 @@ package process
 
 import (
 	"errors"
+	"os"
 	"testing"
 
 	gopsutil "github.com/shirou/gopsutil/v4/process"
@@ -40,6 +41,17 @@ func (suite *ProcessTestSuite) TestGetMetrics() {
 		pid          int32
 		validateFunc func(got *Metrics, err error)
 	}{
+		{
+			name: "returns metrics for current process using real functions",
+			pid:  int32(os.Getpid()),
+			validateFunc: func(got *Metrics, err error) {
+				suite.NoError(err)
+				suite.NotNil(got)
+				suite.GreaterOrEqual(got.CPUPercent, float64(0))
+				suite.Greater(got.RSSBytes, int64(0))
+				suite.Greater(got.Goroutines, 0)
+			},
+		},
 		{
 			name: "returns error for invalid pid",
 			pid:  -99999,

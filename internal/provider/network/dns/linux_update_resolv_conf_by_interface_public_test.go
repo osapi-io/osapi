@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
@@ -56,10 +57,7 @@ func (suite *LinuxUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvCo
 			result, err := linux.UpdateResolvConfByInterface(servers, searchDomains, interfaceName)
 
 			suite.Nil(result)
-			suite.EqualError(
-				err,
-				"updateResolvConfByInterface is not implemented for LinuxProvider",
-			)
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

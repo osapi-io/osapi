@@ -22,11 +22,13 @@ package load
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetAverageStats returns the system's load averages over 1, 5, and 15 minutes.
 // It returns a AverageStats struct with load over 1, 5, and 15 minutes,
 // and an error if something goes wrong.
 func (l *Linux) GetAverageStats() (*Result, error) {
-	return nil, fmt.Errorf("getAverageStats is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

@@ -153,6 +153,8 @@ configure them — see the Features section:
 - [File Management](../features/file-management.md) — upload, deploy, templates
 - [Container Management](../features/container-management.md) — Docker
   lifecycle, exec, pull
+- [Cron Management](../features/cron-management.md) — cron drop-in file
+  management
 - [Job System](../features/job-system.md) — async job processing and routing
 - [Audit Logging](../features/audit-logging.md) — API audit trail and export
 - [Health Checks](../features/health-checks.md) — liveness, readiness, status

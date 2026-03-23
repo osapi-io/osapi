@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
@@ -52,7 +53,7 @@ func (suite *LinuxGetKernelVersionPublicTestSuite) TestGetKernelVersion() {
 			got, err := linux.GetKernelVersion()
 
 			suite.Empty(got)
-			suite.EqualError(err, "getKernelVersion is not implemented for LinuxProvider")
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }

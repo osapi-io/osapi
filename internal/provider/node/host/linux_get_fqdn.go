@@ -22,10 +22,12 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetFQDN retrieves the fully qualified domain name of the system.
 // It returns an error because it is not implemented for LinuxProvider.
 func (l *Linux) GetFQDN() (string, error) {
-	return "", fmt.Errorf("getFQDN is not implemented for LinuxProvider")
+	return "", fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }

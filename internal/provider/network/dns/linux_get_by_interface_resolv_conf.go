@@ -22,6 +22,8 @@ package dns
 
 import (
 	"fmt"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
 
 // GetResolvConfByInterface retrieves the DNS configuration for a specific network interface
@@ -30,5 +32,5 @@ import (
 func (l *Linux) GetResolvConfByInterface(
 	_ string,
 ) (*GetResult, error) {
-	return nil, fmt.Errorf("getResolvConfByInterface is not implemented for LinuxProvider")
+	return nil, fmt.Errorf("linux: %w", provider.ErrUnsupported)
 }
