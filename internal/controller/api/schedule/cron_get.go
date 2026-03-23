@@ -52,7 +52,8 @@ func (s *Schedule) GetNodeScheduleCronByName(
 	resp, err := s.JobClient.QueryScheduleCronGet(ctx, hostname, name)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") || strings.Contains(errMsg, "not managed") {
+		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
+			strings.Contains(errMsg, "not managed") {
 			return gen.GetNodeScheduleCronByName404JSONResponse{Error: &errMsg}, nil
 		}
 		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil

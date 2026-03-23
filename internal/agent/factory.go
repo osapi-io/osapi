@@ -30,13 +30,13 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 

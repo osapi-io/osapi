@@ -37,7 +37,7 @@ func (a *Agent) processScheduleOperation(
 		return nil, fmt.Errorf("cron provider not available")
 	}
 
-	// Extract base operation from dotted operation (e.g., "cron.list.get" -> "cron")
+	// Extract base operation from dotted operation (e.g., "cron.list" -> "cron")
 	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
 
 	switch baseOperation {
@@ -52,7 +52,7 @@ func (a *Agent) processScheduleOperation(
 func (a *Agent) processCronOperation(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
-	// Extract sub-operation: "cron.list.get" -> "list"
+	// Extract sub-operation: "cron.list" -> "list"
 	parts := strings.Split(jobRequest.Operation, ".")
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid cron operation: %s", jobRequest.Operation)

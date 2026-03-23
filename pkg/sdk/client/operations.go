@@ -81,11 +81,11 @@ const (
 
 // Schedule/Cron operations.
 const (
-	OpCronList   JobOperation = "cron.list.get"
-	OpCronGet    JobOperation = "cron.get.get"
-	OpCronCreate JobOperation = "cron.create.execute"
-	OpCronUpdate JobOperation = "cron.update.execute"
-	OpCronDelete JobOperation = "cron.delete.execute"
+	OpCronList   JobOperation = "schedule.cron.list"
+	OpCronGet    JobOperation = "schedule.cron.get"
+	OpCronCreate JobOperation = "schedule.cron.create"
+	OpCronUpdate JobOperation = "schedule.cron.update"
+	OpCronDelete JobOperation = "schedule.cron.delete"
 )
 
 // Target constants for job routing.

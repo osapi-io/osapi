@@ -76,12 +76,14 @@ graph LR
 ### KV Buckets
 
 1. **job-queue**: Primary job storage
+
    - Key format: `{status}.{uuid}`
    - Status prefixes: `unprocessed`, `processing`, `completed`, `failed`
    - TTL: 24 hours for completed/failed jobs
    - History: 5 versions
 
 2. **job-responses**: Result storage
+
    - Key format: `{sanitized_job_id}`
    - TTL: 24 hours
    - Used for agent-to-client result passing
@@ -130,6 +132,7 @@ Operations are automatically routed to query or modify subjects based on their
 type suffix:
 
 - **Query operations** (read-only) → `jobs.query.{target}`:
+
   - `.get` - Retrieve current state
   - `.query` - Query information
   - `.read` - Read configuration

@@ -456,7 +456,9 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronRBACHTTP() {
 			req := httptest.NewRequest(
 				http.MethodPost,
 				"/node/server1/schedule/cron",
-				strings.NewReader(`{"name":"backup","schedule":"0 2 * * * *","command":"/usr/bin/backup.sh"}`),
+				strings.NewReader(
+					`{"name":"backup","schedule":"0 2 * * * *","command":"/usr/bin/backup.sh"}`,
+				),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)

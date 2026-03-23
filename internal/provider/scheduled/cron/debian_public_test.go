@@ -109,7 +109,7 @@ type DebianPublicTestSuite struct {
 func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.fs = afero.NewMemMapFs()
-	_ = suite.fs.MkdirAll("/etc/cron.d", 0755)
+	_ = suite.fs.MkdirAll("/etc/cron.d", 0o755)
 	suite.provider = cron.NewDebianProvider(suite.logger, suite.fs)
 }
 
@@ -141,13 +141,13 @@ func (suite *DebianPublicTestSuite) TestList() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 				_ = afero.WriteFile(
 					suite.fs,
 					"/etc/cron.d/cleanup",
 					[]byte("# Managed by osapi\n0 2 * * * nobody /usr/bin/cleanup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -165,13 +165,13 @@ func (suite *DebianPublicTestSuite) TestList() {
 					suite.fs,
 					"/etc/cron.d/managed",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 				_ = afero.WriteFile(
 					suite.fs,
 					"/etc/cron.d/manual",
 					[]byte("*/10 * * * * root /usr/bin/manual\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -186,12 +186,12 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when directories are skipped",
 			setup: func() {
-				_ = suite.fs.MkdirAll("/etc/cron.d/subdir", 0755)
+				_ = suite.fs.MkdirAll("/etc/cron.d/subdir", 0o755)
 				_ = afero.WriteFile(
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -247,7 +247,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -295,7 +295,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -315,7 +315,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n* * * * * root\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -366,7 +366,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 
 				content, readErr := afero.ReadFile(suite.fs, "/etc/cron.d/backup")
 				suite.NoError(readErr)
-				suite.Equal("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n", string(content))
+				suite.Equal(
+					"# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n",
+					string(content),
+				)
 			},
 		},
 		{
@@ -382,7 +385,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -550,7 +553,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -582,7 +585,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -669,7 +672,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 				errFs := &errorReadFileFs{
 					Fs:      suite.fs,
@@ -699,7 +702,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 				errFs := &errorWriteFileFs{
 					Fs:        suite.fs,
@@ -744,7 +747,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 			},
 			validateFunc: func(
@@ -799,7 +802,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 					suite.fs,
 					"/etc/cron.d/backup",
 					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
-					0644,
+					0o644,
 				)
 				errFs := &errorRemoveFs{
 					Fs:        suite.fs,

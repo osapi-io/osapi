@@ -107,7 +107,7 @@ func (d *Debian) Create(
 	}
 
 	content := buildFileContent(entry)
-	if err := afero.WriteFile(d.fs, filePath, []byte(content), 0644); err != nil {
+	if err := afero.WriteFile(d.fs, filePath, []byte(content), 0o644); err != nil {
 		return nil, fmt.Errorf("create cron entry: %w", err)
 	}
 
@@ -149,7 +149,7 @@ func (d *Debian) Update(
 		}, nil
 	}
 
-	if err := afero.WriteFile(d.fs, filePath, []byte(newContent), 0644); err != nil {
+	if err := afero.WriteFile(d.fs, filePath, []byte(newContent), 0o644); err != nil {
 		return nil, fmt.Errorf("update cron entry: %w", err)
 	}
 

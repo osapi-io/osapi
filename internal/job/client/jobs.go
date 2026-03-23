@@ -558,6 +558,8 @@ func (c *Client) computeStatusFromEvents(
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if errMsg, ok := data["error"].(string); ok {
 					timelineEvent.Error = errMsg
+					agentErrors[hostname] = errMsg
+					latestError = errMsg
 				}
 			}
 		case string(job.StatusFailed):

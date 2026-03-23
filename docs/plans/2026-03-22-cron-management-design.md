@@ -45,11 +45,11 @@ SCHEDULE USER COMMAND
 ```
 
 File permissions: 0644 (standard for `/etc/cron.d/` files). The name is
-sanitized to prevent path traversal. Names must be alphanumeric with hyphens
-and underscores only.
+sanitized to prevent path traversal. Names must be alphanumeric with hyphens and
+underscores only.
 
-**Darwin provider:** Returns `provider.ErrUnsupported` for all operations.
-Jobs targeting macOS agents get `StatusSkipped`.
+**Darwin provider:** Returns `provider.ErrUnsupported` for all operations. Jobs
+targeting macOS agents get `StatusSkipped`.
 
 **Linux stub:** Returns `provider.ErrUnsupported`.
 
@@ -60,12 +60,12 @@ Jobs targeting macOS agents get `StatusSkipped`.
 
 **Endpoints:**
 
-| Method | Path | Operation | Permission |
-|--------|------|-----------|------------|
-| GET | `/node/{hostname}/schedule/cron` | `cron.list` | `cron:read` |
-| GET | `/node/{hostname}/schedule/cron/{name}` | `cron.get` | `cron:read` |
-| POST | `/node/{hostname}/schedule/cron` | `cron.create` | `cron:write` |
-| PUT | `/node/{hostname}/schedule/cron/{name}` | `cron.update` | `cron:write` |
+| Method | Path                                    | Operation     | Permission   |
+| ------ | --------------------------------------- | ------------- | ------------ |
+| GET    | `/node/{hostname}/schedule/cron`        | `cron.list`   | `cron:read`  |
+| GET    | `/node/{hostname}/schedule/cron/{name}` | `cron.get`    | `cron:read`  |
+| POST   | `/node/{hostname}/schedule/cron`        | `cron.create` | `cron:write` |
+| PUT    | `/node/{hostname}/schedule/cron/{name}` | `cron.update` | `cron:write` |
 | DELETE | `/node/{hostname}/schedule/cron/{name}` | `cron.delete` | `cron:write` |
 
 **OpenAPI spec:** `internal/controller/api/schedule/gen/api.yaml`
@@ -77,17 +77,16 @@ Jobs targeting macOS agents get `StatusSkipped`.
 - `command` — required
 - `user` — optional, defaults to `root`
 
-**Response format:** Same collection/result pattern as other domains.
-List returns `CronCollectionResponse` with `results` array.
+**Response format:** Same collection/result pattern as other domains. List
+returns `CronCollectionResponse` with `results` array.
 
 ## Job Routing
 
 - Query: `cron.list`, `cron.get`
 - Modify: `cron.create`, `cron.update`, `cron.delete`
 
-**Job category:** `schedule`
-**Job operations:** `cron.list`, `cron.get`, `cron.create`, `cron.update`,
-`cron.delete`
+**Job category:** `schedule` **Job operations:** `cron.list`, `cron.get`,
+`cron.create`, `cron.update`, `cron.delete`
 
 ## SDK
 
@@ -108,8 +107,8 @@ PermCronRead  Permission = "cron:read"
 PermCronWrite Permission = "cron:write"
 ```
 
-Add `cron:read` and `cron:write` to the `admin` and `write` default roles.
-Add `cron:read` to the `read` role.
+Add `cron:read` and `cron:write` to the `admin` and `write` default roles. Add
+`cron:read` to the `read` role.
 
 **New `CronService`** on the SDK client with typed result types in
 `pkg/sdk/client/schedule.go` and `pkg/sdk/client/schedule_types.go`.

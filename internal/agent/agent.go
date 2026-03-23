@@ -36,7 +36,6 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -46,6 +45,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/provider/process"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
 
 // New creates a new agent instance.
