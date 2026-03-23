@@ -81,7 +81,7 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var allResults []gen.CronEntry
+	allResults := make([]gen.CronEntry, 0)
 	for _, resp := range responses {
 		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			continue
@@ -107,7 +107,7 @@ func responseToCronEntries(
 		_ = json.Unmarshal(resp.Data, &entries)
 	}
 
-	var results []gen.CronEntry
+	results := make([]gen.CronEntry, 0, len(entries))
 	for _, e := range entries {
 		name := e.Name
 		schedule := e.Schedule
