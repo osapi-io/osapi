@@ -57,21 +57,12 @@ var clientNodeScheduleCronCreateCmd = &cobra.Command{
 			return
 		}
 
-		if resp.Data.JobID != "" {
-			fmt.Println()
-			cli.PrintKV("Job ID", resp.Data.JobID)
+		fmt.Println()
+		cli.PrintKV("Name", resp.Data.Name)
+		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
+		if resp.Data.Error != "" {
+			cli.PrintKV("Error", resp.Data.Error)
 		}
-
-		changed := resp.Data.Changed
-		changedPtr := &changed
-		results := []cli.MutationResultRow{
-			{
-				Hostname: resp.Data.Name,
-				Changed:  changedPtr,
-			},
-		}
-		headers, rows := cli.BuildMutationTable(results, nil)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 
