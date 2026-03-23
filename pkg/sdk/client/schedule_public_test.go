@@ -76,7 +76,37 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 			},
 		},
 		{
-			name: "when server returns 403 returns AuthError",
+			name: "when response has interval-based entries",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"name":"logrotate","interval":"daily","source":"daily","command":"/usr/sbin/logrotate"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","command":"/usr/bin/backup.sh"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 2)
+
+				suite.Equal("logrotate", resp.Data.Results[0].Name)
+				suite.Equal("daily", resp.Data.Results[0].Interval)
+				suite.Equal("daily", resp.Data.Results[0].Source)
+				suite.Empty(resp.Data.Results[0].Schedule)
+
+				suite.Equal("backup", resp.Data.Results[1].Name)
+				suite.Equal("0 2 * * *", resp.Data.Results[1].Schedule)
+				suite.Equal("cron.d", resp.Data.Results[1].Source)
+				suite.Empty(resp.Data.Results[1].Interval)
+			},
+		},
+		{
+			name: "when CronList server returns 403 returns AuthError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)

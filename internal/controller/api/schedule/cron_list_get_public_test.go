@@ -115,6 +115,45 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 		},
 		{
+			name: "success with interval-based entries",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "server1",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronList(
+						gomock.Any(),
+						"server1",
+					).
+					Return(&job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`[{"name":"logrotate","interval":"daily","source":"daily","command":"/usr/sbin/logrotate"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","command":"/usr/bin/backup.sh"}]`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+
+				// Interval-based entry
+				s.Equal("logrotate", *r.Results[0].Name)
+				s.Nil(r.Results[0].Schedule)
+				s.Require().NotNil(r.Results[0].Interval)
+				s.Equal(gen.CronEntryInterval("daily"), *r.Results[0].Interval)
+				s.Equal("daily", *r.Results[0].Source)
+				s.Equal("/usr/sbin/logrotate", *r.Results[0].Command)
+
+				// Schedule-based entry
+				s.Equal("backup", *r.Results[1].Name)
+				s.Require().NotNil(r.Results[1].Schedule)
+				s.Equal("0 2 * * *", *r.Results[1].Schedule)
+				s.Equal("cron.d", *r.Results[1].Source)
+			},
+		},
+		{
 			name: "success with nil response data",
 			request: gen.GetNodeScheduleCronRequestObject{
 				Hostname: "server1",
