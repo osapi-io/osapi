@@ -102,7 +102,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}`,
+							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 						),
 					}, nil)
 			},
@@ -113,7 +113,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.Equal("backup", *r.Name)
 				s.Equal("0 2 * * *", *r.Schedule)
 				s.Equal("root", *r.User)
-				s.Equal("/usr/bin/backup.sh", *r.Command)
+				s.Equal("backup-script", *r.Object)
 			},
 		},
 		{
@@ -274,7 +274,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByNameValidationHTTP() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}`,
+							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 						),
 					}, nil)
 				return mock
@@ -377,7 +377,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByNameRBACHTTP() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}`,
+							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 						),
 					}, nil)
 				return mock

@@ -57,7 +57,7 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}]}`,
 					),
 				)
 			},
@@ -72,7 +72,7 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				suite.Equal("backup", resp.Data.Results[0].Name)
 				suite.Equal("0 2 * * *", resp.Data.Results[0].Schedule)
 				suite.Equal("root", resp.Data.Results[0].User)
-				suite.Equal("/usr/bin/backup.sh", resp.Data.Results[0].Command)
+				suite.Equal("/usr/bin/backup.sh", resp.Data.Results[0].Object)
 			},
 		},
 		{
@@ -82,7 +82,7 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"name":"logrotate","interval":"daily","source":"daily","command":"/usr/sbin/logrotate"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","command":"/usr/bin/backup.sh"}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"name":"logrotate","interval":"daily","source":"daily","object":"/usr/sbin/logrotate"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","object":"/usr/bin/backup.sh"}]}`,
 					),
 				)
 			},
@@ -199,7 +199,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}`,
 					),
 				)
 			},
@@ -212,7 +212,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				suite.Equal("backup", resp.Data.Name)
 				suite.Equal("0 2 * * *", resp.Data.Schedule)
 				suite.Equal("root", resp.Data.User)
-				suite.Equal("/usr/bin/backup.sh", resp.Data.Command)
+				suite.Equal("/usr/bin/backup.sh", resp.Data.Object)
 			},
 		},
 		{
@@ -336,7 +336,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
-				Command:  "/usr/bin/backup.sh",
+				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -363,7 +363,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "cleanup",
 				Schedule: "*/5 * * * *",
-				Command:  "/usr/bin/cleanup.sh",
+				Object:   "/usr/bin/cleanup.sh",
 				User:     "www-data",
 			},
 			validateFunc: func(
@@ -391,7 +391,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "daily-backup",
 				Interval: "daily",
-				Command:  "/usr/bin/backup.sh",
+				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -414,7 +414,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "bad",
 				Schedule: "invalid",
-				Command:  "echo",
+				Object:   "echo",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -438,7 +438,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
-				Command:  "/usr/bin/backup.sh",
+				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -458,7 +458,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
-				Command:  "/usr/bin/backup.sh",
+				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -477,7 +477,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			opts: client.CronCreateOpts{
 				Name:     "backup",
 				Schedule: "0 2 * * *",
-				Command:  "/usr/bin/backup.sh",
+				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
 				resp *client.Response[client.CronMutationResult],
@@ -569,7 +569,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 			},
 			opts: client.CronUpdateOpts{
 				Schedule: "0 4 * * *",
-				Command:  "/usr/bin/new-backup.sh",
+				Object:   "/usr/bin/new-backup.sh",
 				User:     "admin",
 			},
 			validateFunc: func(

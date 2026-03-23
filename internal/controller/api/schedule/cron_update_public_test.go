@@ -93,7 +93,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
 					Schedule: strPtr("0 3 * * *"),
-					Command:  strPtr("/usr/bin/backup-v2.sh"),
+					Object:   strPtr("/usr/bin/backup-v2.sh"),
 					User:     strPtr("admin"),
 				},
 			},

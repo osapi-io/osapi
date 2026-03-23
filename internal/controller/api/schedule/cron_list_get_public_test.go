@@ -99,7 +99,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]`,
+							`[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}]`,
 						),
 					}, nil)
 			},
@@ -111,7 +111,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				s.Equal("backup", *r.Results[0].Name)
 				s.Equal("0 2 * * *", *r.Results[0].Schedule)
 				s.Equal("root", *r.Results[0].User)
-				s.Equal("/usr/bin/backup.sh", *r.Results[0].Command)
+				s.Equal("backup-script", *r.Results[0].Object)
 			},
 		},
 		{
@@ -129,7 +129,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`[{"name":"logrotate","interval":"daily","source":"daily","command":"/usr/sbin/logrotate"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","command":"/usr/bin/backup.sh"}]`,
+							`[{"name":"logrotate","interval":"daily","source":"daily","object":"logrotate-script"},{"name":"backup","schedule":"0 2 * * *","source":"cron.d","user":"root","object":"backup-script"}]`,
 						),
 					}, nil)
 			},
@@ -144,7 +144,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				s.Require().NotNil(r.Results[0].Interval)
 				s.Equal(gen.CronEntryInterval("daily"), *r.Results[0].Interval)
 				s.Equal("daily", *r.Results[0].Source)
-				s.Equal("/usr/sbin/logrotate", *r.Results[0].Command)
+				s.Equal("logrotate-script", *r.Results[0].Object)
 
 				// Schedule-based entry
 				s.Equal("backup", *r.Results[1].Name)
@@ -227,7 +227,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
 								Data: json.RawMessage(
-									`[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]`,
+									`[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}]`,
 								),
 							},
 							"server2": {
@@ -235,7 +235,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Hostname: "server2",
 								Status:   job.StatusCompleted,
 								Data: json.RawMessage(
-									`[{"name":"cleanup","schedule":"0 3 * * *","user":"root","command":"/usr/bin/cleanup.sh"}]`,
+									`[{"name":"cleanup","schedule":"0 3 * * *","user":"root","object":"cleanup-script"}]`,
 								),
 							},
 						},
@@ -268,7 +268,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
 								Data: json.RawMessage(
-									`[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]`,
+									`[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}]`,
 								),
 							},
 							"server2": {

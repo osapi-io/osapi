@@ -155,7 +155,7 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			}
 
 			factory := NewProviderFactory(slog.Default(), nil)
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider, cronProvider := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)
@@ -169,7 +169,6 @@ func (s *FactoryTestSuite) TestCreateProviders() {
 			if tt.wantContainer {
 				s.NotNil(dockerProvider)
 			}
-			s.NotNil(cronProvider)
 		})
 	}
 }
