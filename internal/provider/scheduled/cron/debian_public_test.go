@@ -568,6 +568,11 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					"# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n",
 					string(content),
 				)
+
+				// Verify non-executable permissions for cron.d entries.
+				info, statErr := suite.fs.Stat("/etc/cron.d/backup")
+				suite.NoError(statErr)
+				suite.Equal(fs.FileMode(0o644), info.Mode().Perm())
 			},
 		},
 		{
