@@ -169,6 +169,128 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast target _all with multiple agents",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronListBroadcast(
+						gomock.Any(),
+						"_all",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]`,
+								),
+							},
+							"server2": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server2",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"cleanup","schedule":"0 3 * * *","user":"root","command":"/usr/bin/cleanup.sh"}]`,
+								),
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast target _all skips failed and skipped agents",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronListBroadcast(
+						gomock.Any(),
+						"_all",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]`,
+								),
+							},
+							"server2": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server2",
+								Status:   job.StatusSkipped,
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 1)
+				s.Equal("backup", *r.Results[0].Name)
+			},
+		},
+		{
+			name: "broadcast target _all with empty responses",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronListBroadcast(
+						gomock.Any(),
+						"_all",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Empty(r.Results)
+			},
+		},
+		{
+			name: "broadcast job client error",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "_all",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronListBroadcast(
+						gomock.Any(),
+						"_all",
+					).
+					Return("", nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				_, ok := resp.(gen.GetNodeScheduleCron500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

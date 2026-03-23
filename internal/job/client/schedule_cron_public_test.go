@@ -134,6 +134,76 @@ func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronList() {
 	}
 }
 
+func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronListBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+	}{
+		{
+			name:    "multiple agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":[{"name":"backup","schedule":"0 2 * * *","user":"root","command":"/usr/bin/backup.sh"}]}`,
+					`{"status":"completed","hostname":"server2","data":[{"name":"cleanup","schedule":"0 3 * * *","user":"root","command":"/usr/bin/cleanup.sh"}]}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, err := jobsClient.QueryScheduleCronListBroadcast(s.ctx, "_all")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
 func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronGet() {
 	tests := []struct {
 		name          string
