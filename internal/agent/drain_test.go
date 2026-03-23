@@ -81,6 +81,7 @@ func (s *DrainTestSuite) SetupTest() {
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,
+		nil,
 		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		s.mockKV,
 		nil,

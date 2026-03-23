@@ -37,6 +37,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -76,6 +77,9 @@ type Agent struct {
 
 	// Docker provider
 	dockerProvider dockerProv.Provider
+
+	// Cron provider
+	cronProvider cronProv.Provider
 
 	// Process provider for self-metrics in heartbeat
 	processProvider process.Provider

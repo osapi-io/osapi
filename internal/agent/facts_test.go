@@ -87,6 +87,7 @@ func (s *FactsTestSuite) SetupTest() {
 		commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,
+		nil,
 		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		s.mockFactsKV,

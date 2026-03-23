@@ -36,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -64,6 +65,7 @@ func New(
 	commandProvider command.Provider,
 	fileProvider fileProv.Provider,
 	dockerProvider dockerProv.Provider,
+	cronProvider cronProv.Provider,
 	processProvider process.Provider,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
@@ -84,6 +86,7 @@ func New(
 		commandProvider: commandProvider,
 		fileProvider:    fileProvider,
 		dockerProvider:  dockerProvider,
+		cronProvider:    cronProvider,
 		processProvider: processProvider,
 		registryKV:      registryKV,
 		factsKV:         factsKV,

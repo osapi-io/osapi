@@ -143,6 +143,15 @@ const (
 	OperationDockerImageRemove = client.OpDockerImageRemove
 )
 
+// Schedule/Cron operations.
+const (
+	OperationCronList   = client.OpCronList
+	OperationCronGet    = client.OpCronGet
+	OperationCronCreate = client.OpCronCreate
+	OperationCronUpdate = client.OpCronUpdate
+	OperationCronDelete = client.OpCronDelete
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

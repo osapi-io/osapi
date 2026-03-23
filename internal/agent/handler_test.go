@@ -141,6 +141,7 @@ func (s *HandlerTestSuite) SetupTest() {
 		commandMock,
 		fMock,
 		nil,
+		nil,
 		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,

@@ -29,6 +29,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/provider/file"
+	"github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -285,6 +286,32 @@ type JobClient interface {
 		ctx context.Context,
 		target string,
 		data *job.DockerImageRemoveData,
+	) (*job.Response, error)
+
+	// Schedule/Cron operations
+	QueryScheduleCronList(
+		ctx context.Context,
+		target string,
+	) (*job.Response, error)
+	QueryScheduleCronGet(
+		ctx context.Context,
+		target string,
+		name string,
+	) (*job.Response, error)
+	ModifyScheduleCronCreate(
+		ctx context.Context,
+		target string,
+		entry cron.CronEntry,
+	) (*job.Response, error)
+	ModifyScheduleCronUpdate(
+		ctx context.Context,
+		target string,
+		entry cron.CronEntry,
+	) (*job.Response, error)
+	ModifyScheduleCronDelete(
+		ctx context.Context,
+		target string,
+		name string,
 	) (*job.Response, error)
 
 	// Agent discovery

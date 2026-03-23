@@ -56,6 +56,8 @@ func (a *Agent) processJobOperation(
 		return a.processFileOperation(jobRequest)
 	case "docker":
 		return a.processDockerOperation(jobRequest)
+	case "schedule":
+		return a.processScheduleOperation(jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported job category: %s", jobRequest.Category)
 	}

@@ -105,6 +105,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 		commandMock,
 		nil,
 		nil,
+		nil,
 		processMocks.NewDefaultMockProvider(s.mockCtrl),
 		nil,
 		nil,

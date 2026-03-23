@@ -79,6 +79,15 @@ const (
 	OpDockerImageRemove JobOperation = "docker.image-remove.execute"
 )
 
+// Schedule/Cron operations.
+const (
+	OpCronList   JobOperation = "cron.list.get"
+	OpCronGet    JobOperation = "cron.get.get"
+	OpCronCreate JobOperation = "cron.create.execute"
+	OpCronUpdate JobOperation = "cron.update.execute"
+	OpCronDelete JobOperation = "cron.delete.execute"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

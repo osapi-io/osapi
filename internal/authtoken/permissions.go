@@ -42,6 +42,8 @@ const (
 	PermDockerRead     = client.PermDockerRead
 	PermDockerWrite    = client.PermDockerWrite
 	PermDockerExecute  = client.PermDockerExecute
+	PermCronRead       = client.PermCronRead
+	PermCronWrite      = client.PermCronWrite
 )
 
 // AllPermissions is the full set of known permissions.
@@ -61,6 +63,8 @@ var AllPermissions = []Permission{
 	PermDockerRead,
 	PermDockerWrite,
 	PermDockerExecute,
+	PermCronRead,
+	PermCronWrite,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -81,6 +85,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermDockerRead,
 		PermDockerWrite,
 		PermDockerExecute,
+		PermCronRead,
+		PermCronWrite,
 	},
 	client.RoleWrite: {
 		PermAgentRead,
@@ -94,6 +100,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermFileWrite,
 		PermDockerRead,
 		PermDockerWrite,
+		PermCronRead,
+		PermCronWrite,
 	},
 	client.RoleRead: {
 		PermAgentRead,
@@ -103,6 +111,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermHealthRead,
 		PermFileRead,
 		PermDockerRead,
+		PermCronRead,
 	},
 }
 

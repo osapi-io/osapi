@@ -44,7 +44,7 @@ func (s *FactoryPublicTestSuite) TestNewProviderFactory() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			factory := agent.NewProviderFactory(slog.Default())
+			factory := agent.NewProviderFactory(slog.Default(), nil)
 
 			s.NotNil(factory)
 		})
@@ -62,9 +62,9 @@ func (s *FactoryPublicTestSuite) TestCreateProviders() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			factory := agent.NewProviderFactory(slog.Default())
+			factory := agent.NewProviderFactory(slog.Default(), nil)
 
-			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, _ := factory.CreateProviders()
+			hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, _, _ := factory.CreateProviders()
 
 			s.NotNil(hostProvider)
 			s.NotNil(diskProvider)

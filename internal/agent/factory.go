@@ -24,10 +24,13 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/spf13/afero"
+
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
 	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
@@ -43,14 +46,17 @@ var factoryDockerNewFn = dockerProv.New
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
+	appFs  afero.Fs
 }
 
 // NewProviderFactory creates a new provider factory.
 func NewProviderFactory(
 	logger *slog.Logger,
+	appFs afero.Fs,
 ) *ProviderFactory {
 	return &ProviderFactory{
 		logger: logger,
+		appFs:  appFs,
 	}
 }
 
@@ -65,6 +71,7 @@ func (f *ProviderFactory) CreateProviders() (
 	netinfo.Provider,
 	command.Provider,
 	dockerProv.Provider,
+	cronProv.Provider,
 ) {
 	plat := platform.Detect()
 
@@ -162,5 +169,16 @@ func (f *ProviderFactory) CreateProviders() (
 			slog.String("error", err.Error()))
 	}
 
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider
+	// Create cron provider
+	var cronProvider cronProv.Provider
+	switch plat {
+	case "debian":
+		cronProvider = cronProv.NewDebianProvider(f.logger, f.appFs)
+	case "darwin":
+		cronProvider = cronProv.NewDarwinProvider()
+	default:
+		cronProvider = cronProv.NewLinuxProvider()
+	}
+
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider, cronProvider
 }
