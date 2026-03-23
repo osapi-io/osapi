@@ -21,6 +21,8 @@
 package cron_test
 
 import (
+	"errors"
+	"io/fs"
 	"log/slog"
 	"os"
 	"testing"
@@ -30,6 +32,71 @@ import (
 
 	"github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
+
+// errorStatFs wraps an afero.Fs and returns a configurable error from Stat.
+type errorStatFs struct {
+	afero.Fs
+	statErr error
+}
+
+func (e *errorStatFs) Stat(
+	_ string,
+) (fs.FileInfo, error) {
+	return nil, e.statErr
+}
+
+// errorRemoveFs wraps an afero.Fs and returns a configurable error from Remove.
+type errorRemoveFs struct {
+	afero.Fs
+	removeErr error
+}
+
+func (e *errorRemoveFs) Remove(
+	_ string,
+) error {
+	return e.removeErr
+}
+
+// errorWriteFileFs wraps an afero.Fs and returns a configurable error from
+// OpenFile with write flags (used by afero.WriteFile internally).
+type errorWriteFileFs struct {
+	afero.Fs
+	createErr error
+}
+
+func (e *errorWriteFileFs) OpenFile(
+	name string,
+	flag int,
+	perm fs.FileMode,
+) (afero.File, error) {
+	// Only fail on write-mode opens; allow read-only opens so Exists works.
+	if flag&os.O_WRONLY != 0 || flag&os.O_RDWR != 0 || flag&os.O_CREATE != 0 {
+		return nil, e.createErr
+	}
+
+	return e.Fs.OpenFile(name, flag, perm)
+}
+
+// errorReadFileFs wraps an afero.Fs and returns a configurable error from Open
+// (used by afero.ReadFile internally), while allowing Stat to succeed.
+type errorReadFileFs struct {
+	afero.Fs
+	openErr error
+}
+
+func (e *errorReadFileFs) Open(
+	_ string,
+) (afero.File, error) {
+	return nil, e.openErr
+}
+
+func (e *errorReadFileFs) OpenFile(
+	_ string,
+	_ int,
+	_ fs.FileMode,
+) (afero.File, error) {
+	return nil, e.openErr
+}
 
 type DebianPublicTestSuite struct {
 	suite.Suite
@@ -136,6 +203,22 @@ func (suite *DebianPublicTestSuite) TestList() {
 				suite.Equal("backup", entries[0].Name)
 			},
 		},
+		{
+			name: "when ReadDir fails",
+			setup: func() {
+				// Replace the provider with one pointing at a non-existent dir.
+				badFs := afero.NewMemMapFs()
+				suite.provider = cron.NewDebianProvider(suite.logger, badFs)
+			},
+			validateFunc: func(
+				entries []cron.CronEntry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entries)
+				suite.Contains(err.Error(), "list cron entries")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -189,6 +272,59 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				suite.Error(err)
 				suite.Nil(entry)
 				suite.Contains(err.Error(), "nonexistent")
+			},
+		},
+		{
+			name:      "when name is invalid",
+			entryName: "bad name",
+			setup:     func() {},
+			validateFunc: func(
+				entry *cron.CronEntry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid cron entry name")
+			},
+		},
+		{
+			name:      "when file has only header line",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi"),
+					0644,
+				)
+			},
+			validateFunc: func(
+				entry *cron.CronEntry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid format")
+			},
+		},
+		{
+			name:      "when cron line has too few fields",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi\n* * * * * root\n"),
+					0644,
+				)
+			},
+			validateFunc: func(
+				entry *cron.CronEntry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid cron line")
 			},
 		},
 	}
@@ -295,6 +431,24 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
+			name: "when name has invalid characters",
+			entry: cron.CronEntry{
+				Name:     "bad name",
+				Schedule: "*/5 * * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "must match")
+			},
+		},
+		{
 			name: "when user is empty defaults to root",
 			entry: cron.CronEntry{
 				Name:     "backup",
@@ -313,6 +467,54 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				content, readErr := afero.ReadFile(suite.fs, "/etc/cron.d/backup")
 				suite.NoError(readErr)
 				suite.Contains(string(content), "root /usr/bin/backup")
+			},
+		},
+		{
+			name: "when Exists check fails",
+			entry: cron.CronEntry{
+				Name:     "backup",
+				Schedule: "*/5 * * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {
+				errFs := &errorStatFs{
+					Fs:      suite.fs,
+					statErr: errors.New("stat error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "create cron entry")
+			},
+		},
+		{
+			name: "when WriteFile fails",
+			entry: cron.CronEntry{
+				Name:     "backup",
+				Schedule: "*/5 * * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {
+				errFs := &errorWriteFileFs{
+					Fs:        suite.fs,
+					createErr: errors.New("write error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "create cron entry")
 			},
 		},
 	}
@@ -393,6 +595,24 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
+			name: "when name is invalid",
+			entry: cron.CronEntry{
+				Name:     "bad name",
+				Schedule: "*/5 * * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid cron entry name")
+			},
+		},
+		{
 			name: "when file does not exist",
 			entry: cron.CronEntry{
 				Name:     "nonexistent",
@@ -408,6 +628,92 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "does not exist")
+			},
+		},
+		{
+			name: "when Exists check fails",
+			entry: cron.CronEntry{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {
+				errFs := &errorStatFs{
+					Fs:      suite.fs,
+					statErr: errors.New("stat error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "update cron entry")
+			},
+		},
+		{
+			name: "when ReadFile fails",
+			entry: cron.CronEntry{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup",
+			},
+			setup: func() {
+				// Write a file through the real fs so Stat/Exists succeeds,
+				// then wrap with a fs that fails Open so ReadFile errors.
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
+					0644,
+				)
+				errFs := &errorReadFileFs{
+					Fs:      suite.fs,
+					openErr: errors.New("read error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "update cron entry")
+			},
+		},
+		{
+			name: "when WriteFile fails on changed content",
+			entry: cron.CronEntry{
+				Name:     "backup",
+				Schedule: "0 3 * * *",
+				User:     "root",
+				Command:  "/usr/bin/backup --new",
+			},
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
+					0644,
+				)
+				errFs := &errorWriteFileFs{
+					Fs:        suite.fs,
+					createErr: errors.New("write error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "update cron entry")
 			},
 		},
 	}
@@ -464,6 +770,63 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 				suite.NoError(err)
 				suite.Equal("nonexistent", result.Name)
 				suite.False(result.Changed)
+			},
+		},
+		{
+			name:      "when Exists check fails",
+			entryName: "backup",
+			setup: func() {
+				errFs := &errorStatFs{
+					Fs:      suite.fs,
+					statErr: errors.New("stat error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "delete cron entry")
+			},
+		},
+		{
+			name:      "when Remove fails",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.fs,
+					"/etc/cron.d/backup",
+					[]byte("# Managed by osapi\n*/5 * * * * root /usr/bin/backup\n"),
+					0644,
+				)
+				errFs := &errorRemoveFs{
+					Fs:        suite.fs,
+					removeErr: errors.New("remove error"),
+				}
+				suite.provider = cron.NewDebianProvider(suite.logger, errFs)
+			},
+			validateFunc: func(
+				result *cron.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "delete cron entry")
+			},
+		},
+		{
+			name:      "when name is invalid",
+			entryName: "bad name",
+			setup:     func() {},
+			validateFunc: func(
+				result *cron.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid cron entry name")
 			},
 		},
 	}
