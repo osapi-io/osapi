@@ -45,7 +45,9 @@ func (suite *SeedTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *SeedTestSuite) TearDownTest() {
+func (suite *SeedTestSuite) TearDownTest() {}
+
+func (suite *SeedTestSuite) TearDownSubTest() {
 	embeddedFS = systemTemplates
 	readEmbeddedFile = func(path string) ([]byte, error) {
 		return systemTemplates.ReadFile(path)
@@ -86,13 +88,6 @@ func (suite *SeedTestSuite) TestSeedSystemTemplates() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			defer func() {
-				embeddedFS = systemTemplates
-				readEmbeddedFile = func(path string) ([]byte, error) {
-					return systemTemplates.ReadFile(path)
-				}
-			}()
-
 			if tc.setupFunc != nil {
 				tc.setupFunc()
 			}
