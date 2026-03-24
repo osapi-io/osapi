@@ -23,9 +23,11 @@ package agent
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
@@ -44,6 +46,7 @@ func (suite *SeedTestSuite) SetupTest() {
 }
 
 func (suite *SeedTestSuite) TearDownTest() {
+	embeddedFS = systemTemplates
 	readEmbeddedFile = func(path string) ([]byte, error) {
 		return systemTemplates.ReadFile(path)
 	}
@@ -57,6 +60,17 @@ func (suite *SeedTestSuite) TestSeedSystemTemplates() {
 		wantErr    bool
 		wantErrMsg string
 	}{
+		{
+			name: "when WalkDir callback receives error",
+			setupFunc: func() {
+				// Create an FS where "templates" exists as a dir but
+				// contains an entry that triggers a walk error.
+				embeddedFS = &errorWalkFS{}
+			},
+			objStore:   &seedStubObjStore{},
+			wantErr:    true,
+			wantErrMsg: "walk error",
+		},
 		{
 			name: "when ReadFile fails returns error",
 			setupFunc: func() {
@@ -72,6 +86,13 @@ func (suite *SeedTestSuite) TestSeedSystemTemplates() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			defer func() {
+				embeddedFS = systemTemplates
+				readEmbeddedFile = func(path string) ([]byte, error) {
+					return systemTemplates.ReadFile(path)
+				}
+			}()
+
 			if tc.setupFunc != nil {
 				tc.setupFunc()
 			}
@@ -91,6 +112,46 @@ func (suite *SeedTestSuite) TestSeedSystemTemplates() {
 func TestSeedTestSuite(t *testing.T) {
 	suite.Run(t, new(SeedTestSuite))
 }
+
+// errorWalkFS is an fs.FS that returns a walk error for the templates dir.
+type errorWalkFS struct{}
+
+func (e *errorWalkFS) Open(
+	name string,
+) (fs.File, error) {
+	if name == "templates" {
+		return &errorDir{}, nil
+	}
+
+	return nil, fmt.Errorf("walk error: %s", name)
+}
+
+// errorDir is an fs.File that is a directory but returns an error on ReadDir.
+type errorDir struct{}
+
+func (d *errorDir) Stat() (fs.FileInfo, error) {
+	return &dirInfo{}, nil
+}
+
+func (d *errorDir) Read(_ []byte) (int, error) {
+	return 0, fmt.Errorf("not a file")
+}
+
+func (d *errorDir) Close() error { return nil }
+
+func (d *errorDir) ReadDir(_ int) ([]fs.DirEntry, error) {
+	return nil, fmt.Errorf("walk error")
+}
+
+// dirInfo satisfies fs.FileInfo for a directory.
+type dirInfo struct{}
+
+func (i *dirInfo) Name() string      { return "templates" }
+func (i *dirInfo) Size() int64       { return 0 }
+func (i *dirInfo) Mode() fs.FileMode { return fs.ModeDir | 0o755 }
+func (i *dirInfo) ModTime() time.Time  { return time.Time{} }
+func (i *dirInfo) IsDir() bool         { return true }
+func (i *dirInfo) Sys() interface{}    { return nil }
 
 // seedStubObjStore is a minimal stub for internal seed tests.
 type seedStubObjStore struct {

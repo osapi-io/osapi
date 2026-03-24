@@ -35,6 +35,10 @@ import (
 //go:embed templates/*
 var systemTemplates embed.FS
 
+// embeddedFS is a package-level variable for the walk filesystem.
+// Swapped in internal tests to inject walk errors.
+var embeddedFS fs.FS = systemTemplates
+
 // readEmbeddedFile is a package-level variable for testing the read error path.
 var readEmbeddedFile = func(path string) ([]byte, error) {
 	return systemTemplates.ReadFile(path)
@@ -53,7 +57,7 @@ func SeedSystemTemplates(
 
 	var seeded int
 
-	err := fs.WalkDir(systemTemplates, "templates", func(
+	err := fs.WalkDir(embeddedFS, "templates", func(
 		path string,
 		d fs.DirEntry,
 		err error,
