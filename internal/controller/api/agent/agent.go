@@ -38,6 +38,6 @@ func New(
 ) *Agent {
 	return &Agent{
 		JobClient: jobClient,
-		logger:    logger,
+		logger:    logger.With(slog.String("subsystem", "api.agent")),
 	}
 }

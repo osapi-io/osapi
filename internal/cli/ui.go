@@ -504,7 +504,7 @@ func HandleError(
 		return
 	}
 
-	logger.Error("error", slog.String("error", err.Error()))
+	logger.Error("unexpected error", slog.String("error", err.Error()))
 }
 
 // DisplayJobDetail displays detailed job information from domain types.

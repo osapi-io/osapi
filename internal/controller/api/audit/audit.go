@@ -38,6 +38,6 @@ func New(
 ) *Audit {
 	return &Audit{
 		Store:  store,
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "api.audit")),
 	}
 }

@@ -56,8 +56,8 @@ $ osapi client node schedule cron create --target web-01 \
 
 The `--user` flag defaults to `root` if omitted.
 
-Use `--content-type template` if the object was uploaded as a Go template
-and should be rendered with agent facts before being written to disk.
+Use `--content-type template` if the object was uploaded as a Go template and
+should be rendered with agent facts before being written to disk.
 
 ## Update
 

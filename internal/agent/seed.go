@@ -41,6 +41,8 @@ func SeedSystemTemplates(
 	logger *slog.Logger,
 	objStore jetstream.ObjectStore,
 ) error {
+	logger = logger.With(slog.String("subsystem", "agent.seed"))
+
 	return fs.WalkDir(systemTemplates, "templates", func(
 		path string,
 		d fs.DirEntry,

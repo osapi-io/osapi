@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -105,7 +106,7 @@ func (a *Agent) processCronGet(
 	}
 
 	a.logger.Debug("executing cron.Get",
-		"name", data.Name,
+		slog.String("name", data.Name),
 	)
 
 	entry, err := a.cronProvider.Get(ctx, data.Name)
@@ -127,7 +128,7 @@ func (a *Agent) processCronCreate(
 	}
 
 	a.logger.Debug("executing cron.Create",
-		"name", entry.Name,
+		slog.String("name", entry.Name),
 	)
 
 	result, err := a.cronProvider.Create(ctx, entry)
@@ -149,7 +150,7 @@ func (a *Agent) processCronUpdate(
 	}
 
 	a.logger.Debug("executing cron.Update",
-		"name", entry.Name,
+		slog.String("name", entry.Name),
 	)
 
 	result, err := a.cronProvider.Update(ctx, entry)
@@ -173,7 +174,7 @@ func (a *Agent) processCronDelete(
 	}
 
 	a.logger.Debug("executing cron.Delete",
-		"name", data.Name,
+		slog.String("name", data.Name),
 	)
 
 	result, err := a.cronProvider.Delete(ctx, data.Name)

@@ -63,7 +63,7 @@ func NewWatcher(
 	return &Watcher{
 		kv:               kv,
 		notifier:         notifier,
-		logger:           logger,
+		logger:           logger.With(slog.String("subsystem", "controller.notify")),
 		prev:             make(map[string]map[string]*conditionState),
 		renotifyInterval: renotifyInterval,
 	}
@@ -74,7 +74,7 @@ func NewWatcher(
 func (w *Watcher) Start(
 	ctx context.Context,
 ) error {
-	w.logger.Info("condition watcher started", slog.String("component", "notifications"))
+	w.logger.Info("condition watcher started")
 
 	watcher, err := w.kv.WatchAll(ctx)
 	if err != nil {

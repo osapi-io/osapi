@@ -57,7 +57,7 @@ func New(
 	hostname string,
 ) *Service {
 	return &Service{
-		logger:   logger,
+		logger:   logger.With(slog.String("subsystem", "provider.file")),
 		fs:       fs,
 		objStore: objStore,
 		stateKV:  stateKV,

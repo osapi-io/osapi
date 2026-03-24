@@ -38,6 +38,6 @@ func New(
 ) *Container {
 	return &Container{
 		JobClient: jobClient,
-		logger:    logger,
+		logger:    logger.With(slog.String("subsystem", "api.docker")),
 	}
 }

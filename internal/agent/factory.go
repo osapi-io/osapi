@@ -54,7 +54,7 @@ func NewProviderFactory(
 	appFs afero.Fs,
 ) *ProviderFactory {
 	return &ProviderFactory{
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "agent.factory")),
 		appFs:  appFs,
 	}
 }

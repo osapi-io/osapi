@@ -1,7 +1,7 @@
 # Undeploy
 
-Remove a deployed file from disk on the target node. The object store entry
-is preserved so the file can be redeployed at any time.
+Remove a deployed file from disk on the target node. The object store entry is
+preserved so the file can be redeployed at any time.
 
 ```bash
 $ osapi client node file undeploy \
@@ -45,7 +45,7 @@ $ osapi client node file undeploy \
 
 :::note
 
-The object store entry is not deleted. Use `osapi client file delete` to
-remove the object from the store once it is no longer needed.
+The object store entry is not deleted. Use `osapi client file delete` to remove
+the object from the store once it is no longer needed.
 
 :::

@@ -70,6 +70,8 @@ func New(
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
+	logger = logger.With(slog.String("subsystem", "agent"))
+
 	a := &Agent{
 		logger:          logger,
 		appConfig:       appConfig,
@@ -90,8 +92,8 @@ func New(
 		processProvider: processProvider,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
-		heartbeatLogger: logger.With("subsystem", "heartbeat"),
-		factsLogger:     logger.With("subsystem", "facts"),
+		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
+		factsLogger:     logger.With(slog.String("subsystem", "facts")),
 	}
 
 	// Wire agent facts into all providers so they can access the latest

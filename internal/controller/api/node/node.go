@@ -38,6 +38,6 @@ func New(
 ) *Node {
 	return &Node{
 		JobClient: jobClient,
-		logger:    logger,
+		logger:    logger.With(slog.String("subsystem", "api.node")),
 	}
 }

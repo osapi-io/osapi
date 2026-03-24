@@ -42,7 +42,7 @@ func NewDebianProvider(
 	logger *slog.Logger,
 ) *Debian {
 	return &Debian{
-		logger:       logger,
+		logger:       logger.With(slog.String("subsystem", "provider.disk")),
 		PartitionsFn: disk.Partitions,
 		UsageFn:      disk.Usage,
 	}

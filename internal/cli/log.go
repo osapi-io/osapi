@@ -37,7 +37,7 @@ func LogFatal(
 	kvPairs ...any,
 ) {
 	if err != nil {
-		kvPairs = append(kvPairs, "error", err)
+		kvPairs = append(kvPairs, slog.Any("error", err))
 	}
 	logger.Error(
 		message,
