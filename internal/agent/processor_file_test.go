@@ -227,6 +227,60 @@ func (s *ProcessorFileTestSuite) TestProcessFileOperation() {
 			expectError: true,
 			errorMsg:    "file status failed",
 		},
+		{
+			name: "successful undeploy operation",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "file",
+				Operation: "undeploy.execute",
+				Data:      json.RawMessage(`{"path":"/etc/cron.d/backup"}`),
+			},
+			setupMock: func(m *fileMocks.MockProvider) {
+				m.EXPECT().
+					Undeploy(gomock.Any(), fileProv.UndeployRequest{
+						Path: "/etc/cron.d/backup",
+					}).
+					Return(&fileProv.UndeployResult{
+						Changed: true,
+						Path:    "/etc/cron.d/backup",
+					}, nil)
+			},
+			validate: func(result json.RawMessage) {
+				var r fileProv.UndeployResult
+				err := json.Unmarshal(result, &r)
+				s.NoError(err)
+				s.True(r.Changed)
+				s.Equal("/etc/cron.d/backup", r.Path)
+			},
+		},
+		{
+			name: "undeploy with invalid JSON data",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "file",
+				Operation: "undeploy.execute",
+				Data:      json.RawMessage(`invalid json`),
+			},
+			setupMock:   func(_ *fileMocks.MockProvider) {},
+			expectError: true,
+			errorMsg:    "failed to parse file undeploy data",
+		},
+		{
+			name: "undeploy provider error",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "file",
+				Operation: "undeploy.execute",
+				Data:      json.RawMessage(`{"path":"/etc/cron.d/backup"}`),
+			},
+			setupMock: func(m *fileMocks.MockProvider) {
+				m.EXPECT().
+					Undeploy(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("state KV unavailable"))
+			},
+			expectError: true,
+			errorMsg:    "file undeploy failed",
+		},
 	}
 
 	for _, tt := range tests {

@@ -1688,6 +1688,156 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 	}
 }
 
+func (suite *NodePublicTestSuite) TestFileUndeploy() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		req          client.FileUndeployOpts
+		validateFunc func(*client.Response[client.FileUndeployResult], error)
+	}{
+		{
+			name: "when undeploy succeeds",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"job-123","hostname":"web-01","changed":true}`,
+					),
+				)
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("job-123", resp.Data.JobID)
+				suite.Equal("web-01", resp.Data.Hostname)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when server returns 401 returns AuthError",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusUnauthorized, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 500 returns error",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal server error"}`))
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+			},
+		},
+		{
+			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusAccepted)
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			req: client.FileUndeployOpts{
+				Path:   "/etc/cron.d/backup",
+				Target: "_any",
+			},
+			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "file undeploy")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Node.FileUndeploy(suite.ctx, tc.req)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func TestNodePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(NodePublicTestSuite))
 }

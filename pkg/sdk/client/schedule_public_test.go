@@ -405,6 +405,35 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 			},
 		},
 		{
+			name: "when creating cron entry with ContentType and Vars returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000004","name":"template-job","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronCreateOpts{
+				Name:        "template-job",
+				Schedule:    "0 1 * * *",
+				Object:      "/usr/bin/template-job.sh",
+				ContentType: "template",
+				Vars:        map[string]any{"env": "prod"},
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000004", resp.Data.JobID)
+				suite.Equal("template-job", resp.Data.Name)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
 			name: "when server returns 400 returns ValidationError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
@@ -579,6 +608,33 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
+				suite.True(resp.Data.Changed)
+			},
+		},
+		{
+			name: "when updating cron entry with Object ContentType and Vars returns result",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000003","name":"backup","changed":true}`,
+					),
+				)
+			},
+			opts: client.CronUpdateOpts{
+				Object:      "/usr/bin/new-template.sh",
+				ContentType: "template",
+				Vars:        map[string]any{"region": "us-east"},
+			},
+			validateFunc: func(
+				resp *client.Response[client.CronMutationResult],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
+				suite.Equal("backup", resp.Data.Name)
 				suite.True(resp.Data.Changed)
 			},
 		},

@@ -135,6 +135,32 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				suite.False(exists, "file should be removed from disk")
 			},
 		},
+		{
+			name: "when file exists but state entry value is invalid JSON",
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockKV *jobmocks.MockKeyValue,
+				appFs afero.Fs,
+			) {
+				_ = afero.WriteFile(appFs, "/etc/cron.d/corrupt", []byte("content"), 0o644)
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return([]byte("not-valid-json"))
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.UndeployRequest{Path: "/etc/cron.d/corrupt"},
+			want: &file.UndeployResult{
+				Changed: true,
+				Path:    "/etc/cron.d/corrupt",
+			},
+			validateFunc: func(appFs afero.Fs) {
+				exists, _ := afero.Exists(appFs, "/etc/cron.d/corrupt")
+				suite.False(exists, "file should be removed from disk")
+			},
+		},
 	}
 
 	for _, tt := range tests {

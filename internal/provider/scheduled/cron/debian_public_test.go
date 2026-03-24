@@ -254,6 +254,22 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
+			name: "when name is invalid",
+			entry: cron.Entry{
+				Name:   "bad name",
+				Object: "some-script",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "invalid cron entry name")
+			},
+		},
+		{
 			name: "when entry does not exist",
 			entry: cron.Entry{
 				Name:   "nonexistent",
@@ -281,6 +297,33 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
+				)
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("deploy error"))
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "update cron entry")
+			},
+		},
+		{
+			name: "when interval entry deploy fails",
+			entry: cron.Entry{
+				Name:     "logrotate",
+				Object:   "logrotate-script",
+				Interval: "daily",
+			},
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.daily/logrotate",
+					[]byte("existing content"),
+					0o755,
 				)
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), gomock.Any()).
@@ -449,6 +492,111 @@ func (suite *DebianPublicTestSuite) TestList() {
 			},
 		},
 		{
+			name: "when periodic directory has managed entry",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.weekly/cleanup",
+					[]byte("content"),
+					0o755,
+				)
+
+				stateData := managedStateJSON("cleanup-script", "/etc/cron.weekly/cleanup")
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
+
+				// isManagedFile + buildEntryFromState = 2 Get calls.
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil).
+					Times(2)
+			},
+			validateFunc: func(
+				entries []cron.Entry,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Len(entries, 1)
+				suite.Equal("cleanup", entries[0].Name)
+				suite.Equal("weekly", entries[0].Interval)
+				suite.Equal("cleanup-script", entries[0].Object)
+			},
+		},
+		{
+			name: "when periodic directory read fails it is skipped",
+			setup: func() {
+				// Use a provider backed by a fresh fs that has cron.d but no
+				// periodic dirs, so ReadDir on the periodic dirs returns an error.
+				noPeriodicFs := afero.NewMemMapFs()
+				_ = noPeriodicFs.MkdirAll("/etc/cron.d", 0o755)
+				suite.provider = cron.NewDebianProvider(
+					suite.logger,
+					noPeriodicFs,
+					suite.mockDeployer,
+					suite.mockStateKV,
+					testHostname,
+				)
+			},
+			validateFunc: func(
+				entries []cron.Entry,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Empty(entries)
+			},
+		},
+		{
+			name: "when cron.d contains a subdirectory entry it is skipped",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/cron.d/subdir", 0o755)
+				// No stateKV calls expected since directories are skipped.
+			},
+			validateFunc: func(
+				entries []cron.Entry,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Empty(entries)
+			},
+		},
+		{
+			name: "when periodic directory contains a subdirectory entry it is skipped",
+			setup: func() {
+				_ = suite.memFs.MkdirAll("/etc/cron.daily/subdir", 0o755)
+				// No stateKV calls expected since directories are skipped.
+			},
+			validateFunc: func(
+				entries []cron.Entry,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Empty(entries)
+			},
+		},
+		{
+			name: "when periodic directory file is not managed it is skipped",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.daily/manual",
+					[]byte("content"),
+					0o755,
+				)
+				// stateKV.Get returns error => not managed.
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found")).
+					AnyTimes()
+			},
+			validateFunc: func(
+				entries []cron.Entry,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Empty(entries)
+			},
+		},
+		{
 			name: "when no managed entries",
 			setup: func() {
 				_ = afero.WriteFile(
@@ -581,6 +729,19 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name:      "when name is empty",
+			entryName: "",
+			setup:     func() {},
+			validateFunc: func(
+				entry *cron.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "invalid cron entry name")
+			},
+		},
+		{
 			name:      "when name is invalid",
 			entryName: "bad name",
 			setup:     func() {},
@@ -591,6 +752,137 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				suite.Error(err)
 				suite.Nil(entry)
 				suite.Contains(err.Error(), "invalid cron entry name")
+			},
+		},
+		{
+			name:      "when isManagedFile unmarshal fails",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.d/backup",
+					[]byte("content"),
+					0o644,
+				)
+				// Return invalid JSON so unmarshal fails inside isManagedFile.
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return([]byte("not-json"))
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			validateFunc: func(
+				entry *cron.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "not managed")
+			},
+		},
+		{
+			name:      "when isManagedFile returns false due to UndeployedAt set",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.d/backup",
+					[]byte("content"),
+					0o644,
+				)
+				undeployedState, _ := json.Marshal(job.FileState{
+					ObjectName:   "backup-script",
+					Path:         "/etc/cron.d/backup",
+					SHA256:       "abc123",
+					DeployedAt:   "2026-01-01T00:00:00Z",
+					UndeployedAt: "2026-02-01T00:00:00Z",
+				})
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(undeployedState)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			validateFunc: func(
+				entry *cron.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "not managed")
+			},
+		},
+		{
+			name:      "when buildEntryFromState stateKV get fails",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.d/backup",
+					[]byte("content"),
+					0o644,
+				)
+				stateData := managedStateJSON("backup-script", "/etc/cron.d/backup")
+				managedEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				managedEntry.EXPECT().Value().Return(stateData)
+
+				gomock.InOrder(
+					// isManagedFile: succeeds.
+					suite.mockStateKV.EXPECT().
+						Get(gomock.Any(), gomock.Any()).
+						Return(managedEntry, nil),
+					// buildEntryFromState: fails.
+					suite.mockStateKV.EXPECT().
+						Get(gomock.Any(), gomock.Any()).
+						Return(nil, errors.New("kv error")),
+				)
+			},
+			validateFunc: func(
+				entry *cron.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "failed to read state")
+			},
+		},
+		{
+			name:      "when buildEntryFromState unmarshal fails",
+			entryName: "backup",
+			setup: func() {
+				_ = afero.WriteFile(
+					suite.memFs,
+					"/etc/cron.d/backup",
+					[]byte("content"),
+					0o644,
+				)
+				stateData := managedStateJSON("backup-script", "/etc/cron.d/backup")
+				managedEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				managedEntry.EXPECT().Value().Return(stateData)
+
+				badEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				badEntry.EXPECT().Value().Return([]byte("not-json"))
+
+				gomock.InOrder(
+					// isManagedFile: succeeds.
+					suite.mockStateKV.EXPECT().
+						Get(gomock.Any(), gomock.Any()).
+						Return(managedEntry, nil),
+					// buildEntryFromState: returns invalid JSON.
+					suite.mockStateKV.EXPECT().
+						Get(gomock.Any(), gomock.Any()).
+						Return(badEntry, nil),
+				)
+			},
+			validateFunc: func(
+				entry *cron.Entry,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(entry)
+				suite.Contains(err.Error(), "failed to read state")
 			},
 		},
 		{
