@@ -66,15 +66,18 @@ The controller is built on [Echo][] with handlers generated from an OpenAPI spec
 via [oapi-codegen][] (`*.gen.go` files). Domain handlers are organized into
 subpackages:
 
-| Package                             | Responsibility                                                                      |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| `internal/controller/api/node/`     | Node endpoints (hostname, status, disk, memory, load, network/dns, command/exec)    |
-| `internal/controller/api/docker/`   | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull) |
-| `internal/controller/api/schedule/` | Schedule endpoints (cron drop-in list, get, create, update, delete)                 |
-| `internal/controller/api/job/`      | Job queue endpoints (get, list, delete, retry, status)                              |
-| `internal/controller/api/health/`   | Health check endpoints (liveness, readiness, status)                                |
-| `internal/controller/api/common/`   | Shared middleware, error handling, collection responses                             |
-| `internal/telemetry/metrics/`       | Per-component Prometheus metrics server with isolated registries                    |
+| Package                             | Responsibility                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `internal/controller/api/node/`     | Node endpoints (hostname, status, disk, memory, load, dns, command, file deploy)     |
+| `internal/controller/api/file/`     | File Object Store endpoints (upload, list, get, delete)                              |
+| `internal/controller/api/docker/`   | Docker container endpoints (create, list, inspect, start, stop, remove, exec, pull)  |
+| `internal/controller/api/schedule/` | Schedule endpoints (cron list, get, create, update, delete)                          |
+| `internal/controller/api/agent/`    | Agent endpoints (list, get, drain, undrain, timeline)                                |
+| `internal/controller/api/audit/`    | Audit log endpoints (list, get, export)                                              |
+| `internal/controller/api/job/`      | Job queue endpoints (get, list, delete, retry, status)                               |
+| `internal/controller/api/health/`   | Health check endpoints (liveness, readiness, status)                                 |
+| `internal/controller/api/common/`   | Shared middleware, error handling, collection responses                              |
+| `internal/telemetry/metrics/`       | Per-component Prometheus metrics server with isolated registries                     |
 
 All state-changing operations are dispatched as jobs through the job client
 layer rather than executed inline. Responses follow a uniform collection
@@ -111,8 +114,9 @@ provider is selected at runtime through a platform-aware factory pattern.
 | `network/ping`   | Ping execution and statistics                            |
 | `command/exec`   | Direct command execution                                 |
 | `command/shell`  | Shell command execution                                  |
+| `file`           | File deploy, undeploy, status (SHA tracking, templates)  |
 | `docker/runtime` | Docker container lifecycle (create, start, stop, remove) |
-| `scheduled/cron` | Cron drop-in file management (`/etc/cron.d/`)            |
+| `scheduled/cron` | Cron drop-in management (meta provider over file)        |
 | `process`        | Current process CPU, RSS, and goroutine metrics          |
 
 Providers are stateless and OS-family-specific. OSAPI follows Ansible's OS
@@ -121,6 +125,38 @@ family naming — the Debian family includes Ubuntu, Debian, and Raspbian. Darwi
 support the current OS family, it returns `provider.ErrUnsupported` and the job
 is marked as `skipped`. Adding a new operation means implementing the provider
 interface and registering it in the agent's processor dispatch.
+
+#### Meta Providers
+
+Some providers don't write files directly — they delegate to the file
+provider. These are called **meta providers**. The cron provider is the
+first example: users upload a script to the Object Store, then
+`cron create` deploys it to the correct path (`/etc/cron.d/` or
+`/etc/cron.{interval}/`) with the correct permissions via the file
+provider's `Deploy()` method.
+
+This gives meta providers SHA tracking, idempotency, drift detection,
+and Go template rendering for free. The `file.Deployer` interface is
+the narrow contract meta providers depend on:
+
+```go
+type Deployer interface {
+    Deploy(ctx, DeployRequest) (*DeployResult, error)
+    Undeploy(ctx, UndeployRequest) (*UndeployResult, error)
+}
+```
+
+The pattern extends to future providers like systemd, sysctl, and apt
+sources — any provider that writes configuration files to well-known
+paths.
+
+#### Protected Objects
+
+Objects in the NATS Object Store with the `osapi/` name prefix are
+protected from user uploads and deletes (403). These are managed
+exclusively by the agent, which seeds embedded templates on startup
+and updates them when a new osapi version ships with changes. Meta
+providers reference these templates at deploy time.
 
 ### Agent Lifecycle (`internal/agent/`)
 
