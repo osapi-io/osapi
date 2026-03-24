@@ -101,21 +101,15 @@ explicitly removed.
 
 ## Protected Objects
 
-Files stored under the `osapi/` name prefix are protected and cannot be deleted
-via the `DELETE /file/{name}` endpoint. Attempts to delete a protected object
-return **403 Forbidden**.
+Files stored under the `osapi/` name prefix are protected. Both uploads
+and deletes to `osapi/*` names return **403 Forbidden**. These objects
+are managed exclusively by osapi itself — the agent seeds them on
+startup from embedded templates and updates them automatically when a
+new osapi version ships with changes.
 
-System objects are reserved for use by meta providers such as the cron provider,
-which fetches script content from the Object Store at deploy time. Protecting
-these objects prevents accidental removal of files that backing cron entries
-depend on.
-
-To replace a system object's content, use `--force` on upload:
-
-```bash
-osapi client node file upload --name osapi/my-script \
-  --file ./my-script.sh --force
-```
+Protected objects are used by meta providers such as the cron provider,
+which references them at deploy time. The `osapi/` prefix is reserved;
+use any other prefix for your own files.
 
 ## Template Rendering
 

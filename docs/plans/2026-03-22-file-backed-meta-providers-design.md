@@ -46,7 +46,7 @@ User                    Meta Provider              File Provider
 | ------------- | --------------------- | -------------------------------- | ---- |
 | cron (sched)  | cron.d formatted line | `/etc/cron.d/{name}`             | 0644 |
 | cron (intv)   | shell script          | `/etc/cron.{interval}/{name}`    | 0755 |
-| systemd       | unit file             | `/etc/systemd/osapi/{name}`     | 0644 |
+| systemd       | unit file             | `/etc/systemd/osapi/{name}`      | 0644 |
 | sysctl        | sysctl conf           | `/etc/sysctl.d/{name}.conf`      | 0644 |
 | apt sources   | repo entry            | `/etc/apt/sources.list.d/{name}` | 0644 |
 
