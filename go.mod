@@ -3,6 +3,7 @@ module github.com/retr0h/osapi
 go 1.25.0
 
 require (
+	github.com/avfs/avfs v0.35.0
 	github.com/caarlos0/go-version v0.2.2
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/docker/docker v28.5.2+incompatible
@@ -25,7 +26,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/slog-echo v1.21.0
 	github.com/shirou/gopsutil/v4 v4.26.2
-	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -264,6 +264,7 @@ require (
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/speakeasy-api/jsonpath v0.6.0 // indirect
 	github.com/speakeasy-api/openapi-overlay v0.10.2 // indirect
+	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra-cli v1.3.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect

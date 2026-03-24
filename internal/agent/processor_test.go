@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -60,7 +60,7 @@ func (s *ProcessorTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	appFs := afero.NewMemMapFs()
+	appFs := memfs.New()
 	appConfig := config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{Name: "test-stream"},
@@ -707,7 +707,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -739,7 +739,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 					GetUptime().
 					Return(time.Duration(0), errors.New("uptime unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -769,7 +769,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -799,7 +799,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
 				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -829,7 +829,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
 				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -859,7 +859,7 @@ func (s *ProcessorTestSuite) TestSystemOperationErrors() {
 				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
 				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -923,7 +923,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					GetResolvConfByInterface("eth0").
 					Return(nil, errors.New("DNS lookup failed"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -957,7 +957,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("DNS update failed"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,
@@ -989,7 +989,7 @@ func (s *ProcessorTestSuite) TestNetworkOperationErrors() {
 				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 				pingMock.EXPECT().Do("8.8.8.8").Return(nil, errors.New("ping timeout"))
 				return New(
-					afero.NewMemMapFs(),
+					memfs.New(),
 					config.Config{},
 					slog.Default(),
 					s.mockJobClient,

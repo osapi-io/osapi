@@ -25,8 +25,8 @@ package file
 import (
 	"log/slog"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/provider"
 )
@@ -40,7 +40,7 @@ type Service struct {
 	provider.FactsAware
 
 	logger   *slog.Logger
-	fs       afero.Fs
+	fs       avfs.VFS
 	objStore jetstream.ObjectStore
 	stateKV  jetstream.KeyValue
 	hostname string
@@ -51,7 +51,7 @@ type Service struct {
 // the agent is initialized to wire template rendering to live facts.
 func New(
 	logger *slog.Logger,
-	fs afero.Fs,
+	fs avfs.VFS,
 	objStore jetstream.ObjectStore,
 	stateKV jetstream.KeyValue,
 	hostname string,

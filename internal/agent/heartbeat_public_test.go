@@ -26,8 +26,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
@@ -50,7 +51,7 @@ type HeartbeatPublicTestSuite struct {
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
 	mockKV        *mocks.MockKeyValue
-	appFs         afero.Fs
+	appFs         avfs.VFS
 	appConfig     config.Config
 	logger        *slog.Logger
 }
@@ -59,7 +60,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 	s.mockKV = mocks.NewMockKeyValue(s.mockCtrl)
-	s.appFs = afero.NewMemMapFs()
+	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
 	s.appConfig = config.Config{

@@ -24,7 +24,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/spf13/afero"
+	"github.com/avfs/avfs"
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
@@ -45,13 +45,13 @@ var factoryDockerNewFn = dockerProv.New
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
-	appFs  afero.Fs
+	appFs  avfs.VFS
 }
 
 // NewProviderFactory creates a new provider factory.
 func NewProviderFactory(
 	logger *slog.Logger,
-	appFs afero.Fs,
+	appFs avfs.VFS,
 ) *ProviderFactory {
 	return &ProviderFactory{
 		logger: logger.With(slog.String("subsystem", "agent.factory")),

@@ -29,8 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -69,7 +69,7 @@ func (s *HeartbeatTestSuite) SetupTest() {
 
 	// Use DefaultMockProviders so provider calls during writeRegistration are satisfied.
 	s.agent = New(
-		afero.NewMemMapFs(),
+		memfs.New(),
 		appConfig,
 		slog.Default(),
 		s.mockJobClient,

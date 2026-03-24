@@ -27,8 +27,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -44,7 +45,7 @@ type StatusPublicTestSuite struct {
 	ctrl    *gomock.Controller
 	logger  *slog.Logger
 	ctx     context.Context
-	appFs   afero.Fs
+	appFs   avfs.VFS
 	mockKV  *jobmocks.MockKeyValue
 	mockObj *filemocks.MockObjectStore
 }
@@ -53,7 +54,7 @@ func (suite *StatusPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	suite.ctx = context.Background()
-	suite.appFs = afero.NewMemMapFs()
+	suite.appFs = memfs.New()
 	suite.mockKV = jobmocks.NewMockKeyValue(suite.ctrl)
 	suite.mockObj = filemocks.NewMockObjectStore(suite.ctrl)
 }
@@ -79,7 +80,8 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 		{
 			name: "when file in sync",
 			setupMock: func() {
-				_ = afero.WriteFile(suite.appFs, "/etc/nginx/nginx.conf", fileContent, 0o644)
+				_ = suite.appFs.MkdirAll("/etc/nginx", 0o755)
+				_ = suite.appFs.WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				existingState := job.FileState{
 					SHA256: fileSHA,
@@ -106,7 +108,8 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 		{
 			name: "when file drifted",
 			setupMock: func() {
-				_ = afero.WriteFile(suite.appFs, "/etc/nginx/nginx.conf", driftedContent, 0o644)
+				_ = suite.appFs.MkdirAll("/etc/nginx", 0o755)
+				_ = suite.appFs.WriteFile("/etc/nginx/nginx.conf", driftedContent, 0o644)
 
 				existingState := job.FileState{
 					SHA256: fileSHA,
@@ -190,7 +193,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			// Reset filesystem for each test case.
-			suite.appFs = afero.NewMemMapFs()
+			suite.appFs = memfs.New()
 
 			if tc.setupMock != nil {
 				tc.setupMock()

@@ -27,8 +27,8 @@ import (
 	"log/slog"
 	"regexp"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/file"
@@ -55,7 +55,7 @@ var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 // file-state KV, not by file content headers.
 type Debian struct {
 	logger       *slog.Logger
-	fs           afero.Fs
+	fs           avfs.VFS
 	fileDeployer file.Deployer
 	stateKV      jetstream.KeyValue
 	hostname     string
@@ -64,7 +64,7 @@ type Debian struct {
 // NewDebianProvider factory to create a new Debian instance.
 func NewDebianProvider(
 	logger *slog.Logger,
-	fs afero.Fs,
+	fs avfs.VFS,
 	fileDeployer file.Deployer,
 	stateKV jetstream.KeyValue,
 	hostname string,
@@ -86,7 +86,7 @@ func (d *Debian) List(
 	var result []Entry
 
 	// Scan /etc/cron.d/ for schedule-based entries.
-	cronDirEntries, err := afero.ReadDir(d.fs, cronDir)
+	cronDirEntries, err := d.fs.ReadDir(cronDir)
 	if err != nil {
 		return nil, fmt.Errorf("list cron entries: %w", err)
 	}
@@ -111,7 +111,7 @@ func (d *Debian) List(
 	for _, interval := range periodicIntervals {
 		dir := periodicDirs[interval]
 
-		dirEntries, err := afero.ReadDir(d.fs, dir)
+		dirEntries, err := d.fs.ReadDir(dir)
 		if err != nil {
 			continue
 		}
@@ -279,7 +279,7 @@ func (d *Debian) findEntryPath(
 ) (string, uint32) {
 	// Check /etc/cron.d/ first.
 	cronPath := cronDir + "/" + name
-	if exists, _ := afero.Exists(d.fs, cronPath); exists {
+	if _, err := d.fs.Stat(cronPath); err == nil {
 		return cronPath, 0o644
 	}
 
@@ -287,7 +287,7 @@ func (d *Debian) findEntryPath(
 	for _, interval := range periodicIntervals {
 		dir := periodicDirs[interval]
 		periodicPath := dir + "/" + name
-		if exists, _ := afero.Exists(d.fs, periodicPath); exists {
+		if _, err := d.fs.Stat(periodicPath); err == nil {
 			return periodicPath, 0o755
 		}
 	}

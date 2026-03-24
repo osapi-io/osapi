@@ -28,8 +28,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -64,7 +65,7 @@ type DebianPublicTestSuite struct {
 
 	ctrl         *gomock.Controller
 	logger       *slog.Logger
-	memFs        afero.Fs
+	memFs        avfs.VFS
 	mockDeployer *filemocks.MockDeployer
 	mockStateKV  *jobmocks.MockKeyValue
 	provider     *cron.Debian
@@ -73,7 +74,7 @@ type DebianPublicTestSuite struct {
 func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	suite.memFs = afero.NewMemMapFs()
+	suite.memFs = memfs.New()
 	suite.mockDeployer = filemocks.NewMockDeployer(suite.ctrl)
 	suite.mockStateKV = jobmocks.NewMockKeyValue(suite.ctrl)
 
@@ -130,8 +131,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Object: "backup-script",
 			},
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
@@ -234,8 +234,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				Object: "backup-script-v2",
 			},
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
@@ -292,8 +291,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				Object: "backup-script",
 			},
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
@@ -319,8 +317,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				Interval: "daily",
 			},
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.daily/logrotate",
 					[]byte("existing content"),
 					0o755,
@@ -362,8 +359,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			name:      "when undeploy succeeds",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
@@ -398,8 +394,7 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			name:      "when undeploy fails",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("existing content"),
 					0o644,
@@ -452,14 +447,12 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when managed entries exist",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
 				)
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.daily/logrotate",
 					[]byte("content"),
 					0o755,
@@ -494,8 +487,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when periodic directory has managed entry",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.weekly/cleanup",
 					[]byte("content"),
 					0o755,
@@ -527,7 +519,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			setup: func() {
 				// Use a provider backed by a fresh fs that has cron.d but no
 				// periodic dirs, so ReadDir on the periodic dirs returns an error.
-				noPeriodicFs := afero.NewMemMapFs()
+				noPeriodicFs := memfs.New()
 				_ = noPeriodicFs.MkdirAll("/etc/cron.d", 0o755)
 				suite.provider = cron.NewDebianProvider(
 					suite.logger,
@@ -576,8 +568,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when periodic directory file is not managed it is skipped",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.daily/manual",
 					[]byte("content"),
 					0o755,
@@ -599,8 +590,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when no managed entries",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/manual",
 					[]byte("content"),
 					0o644,
@@ -623,7 +613,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 			name: "when cron dir read fails",
 			setup: func() {
 				// Replace provider with one pointing at a non-existent cron.d.
-				badFs := afero.NewMemMapFs()
+				badFs := memfs.New()
 				suite.provider = cron.NewDebianProvider(
 					suite.logger,
 					badFs,
@@ -665,8 +655,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when managed entry found",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
@@ -695,8 +684,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when entry not managed",
 			entryName: "manual",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/manual",
 					[]byte("content"),
 					0o644,
@@ -758,8 +746,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when isManagedFile unmarshal fails",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
@@ -785,8 +772,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when isManagedFile returns false due to UndeployedAt set",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
@@ -818,8 +804,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when buildEntryFromState stateKV get fails",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
@@ -852,8 +837,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when buildEntryFromState unmarshal fails",
 			entryName: "backup",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.d/backup",
 					[]byte("content"),
 					0o644,
@@ -889,8 +873,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name:      "when managed entry in periodic directory",
 			entryName: "logrotate",
 			setup: func() {
-				_ = afero.WriteFile(
-					suite.memFs,
+				_ = suite.memFs.WriteFile(
 					"/etc/cron.daily/logrotate",
 					[]byte("content"),
 					0o755,

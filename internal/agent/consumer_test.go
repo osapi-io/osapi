@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
@@ -58,7 +58,7 @@ func (s *ConsumerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	appFs := afero.NewMemMapFs()
+	appFs := memfs.New()
 	appConfig := config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{

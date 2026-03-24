@@ -27,8 +27,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -52,7 +52,7 @@ import (
 type Agent struct {
 	logger     *slog.Logger
 	appConfig  config.Config
-	appFs      afero.Fs
+	appFs      avfs.VFS
 	jobClient  client.JobClient
 	streamName string
 

@@ -26,8 +26,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -64,7 +64,7 @@ func (s *ProcessorCommandTestSuite) newAgentWithCommandMock(
 	cmdMock command.Provider,
 ) *Agent {
 	return New(
-		afero.NewMemMapFs(),
+		memfs.New(),
 		config.Config{},
 		slog.Default(),
 		s.mockJobClient,

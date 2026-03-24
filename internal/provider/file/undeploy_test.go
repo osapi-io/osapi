@@ -28,8 +28,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -55,7 +56,7 @@ func (suite *UndeployTestSuite) TestUndeploy() {
 	tests := []struct {
 		name       string
 		setupFunc  func()
-		setupStubs func() (afero.Fs, jetstream.KeyValue)
+		setupStubs func() (avfs.VFS, jetstream.KeyValue)
 		req        UndeployRequest
 		want       *UndeployResult
 	}{
@@ -66,9 +67,10 @@ func (suite *UndeployTestSuite) TestUndeploy() {
 					return nil, fmt.Errorf("marshal failure")
 				}
 			},
-			setupStubs: func() (afero.Fs, jetstream.KeyValue) {
-				appFs := afero.NewMemMapFs()
-				_ = afero.WriteFile(appFs, "/etc/cron.d/backup", []byte("content"), 0o644)
+			setupStubs: func() (avfs.VFS, jetstream.KeyValue) {
+				appFs := memfs.New()
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/backup", []byte("content"), 0o644)
 
 				stateJSON, _ := json.Marshal(job.FileState{
 					ObjectName: "backup-script",

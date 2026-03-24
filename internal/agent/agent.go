@@ -25,8 +25,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -50,7 +50,7 @@ import (
 
 // New creates a new agent instance.
 func New(
-	appFs afero.Fs,
+	appFs avfs.VFS,
 	appConfig config.Config,
 	logger *slog.Logger,
 	jobClient client.JobClient,

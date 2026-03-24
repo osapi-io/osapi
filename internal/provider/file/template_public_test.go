@@ -26,8 +26,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -176,7 +177,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
 
-			appFs := afero.Fs(afero.NewMemMapFs())
+			var appFs avfs.VFS = memfs.New()
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
 			mockObj := filemocks.NewMockObjectStore(ctrl)
 
@@ -222,7 +223,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 				suite.Equal(tc.wantChanged, got.Changed)
 				suite.Equal("/etc/test.conf", got.Path)
 
-				data, readErr := afero.ReadFile(appFs, "/etc/test.conf")
+				data, readErr := appFs.ReadFile("/etc/test.conf")
 				suite.Require().NoError(readErr)
 				suite.Equal(tc.wantContent, string(data))
 			}

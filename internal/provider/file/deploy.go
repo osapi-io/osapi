@@ -31,8 +31,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/spf13/afero"
-
 	"github.com/retr0h/osapi/internal/job"
 )
 
@@ -92,7 +90,12 @@ func (p *Service) Deploy(
 
 	mode := parseFileMode(req.Mode)
 
-	if err := afero.WriteFile(p.fs, req.Path, content, mode); err != nil {
+	dir := p.fs.Dir(req.Path)
+	if err := p.fs.MkdirAll(dir, 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create directory %q: %w", dir, err)
+	}
+
+	if err := p.fs.WriteFile(req.Path, content, mode); err != nil {
 		return nil, fmt.Errorf("failed to write file %q: %w", req.Path, err)
 	}
 

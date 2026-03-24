@@ -28,8 +28,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -71,6 +71,7 @@ func (suite *DeployTestSuite) TestDeploy() {
 			setupStubs: func() (jetstream.ObjectStore, jetstream.KeyValue) {
 				obj := &stubObjStoreInternal{getBytesData: fileContent}
 				kv := &stubKVInternal{getErr: assert.AnError}
+
 				return obj, kv
 			},
 			req: DeployRequest{
@@ -93,7 +94,7 @@ func (suite *DeployTestSuite) TestDeploy() {
 
 			provider := New(
 				suite.logger,
-				afero.NewMemMapFs(),
+				memfs.New(),
 				objStore,
 				stateKV,
 				"test-host",

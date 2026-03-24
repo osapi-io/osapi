@@ -28,8 +28,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -55,21 +57,23 @@ func (suite *UndeployPublicTestSuite) TearDownTest() {}
 func (suite *UndeployPublicTestSuite) TestUndeploy() {
 	tests := []struct {
 		name         string
-		setupMock    func(*gomock.Controller, *jobmocks.MockKeyValue, afero.Fs)
+		setupMock    func(*gomock.Controller, *jobmocks.MockKeyValue, avfs.VFS)
 		req          file.UndeployRequest
 		want         *file.UndeployResult
 		wantErr      bool
 		wantErrMsg   string
-		validateFunc func(afero.Fs)
+		useFailFs    bool
+		validateFunc func(avfs.VFS)
 	}{
 		{
 			name: "when file exists on disk with state",
 			setupMock: func(
 				ctrl *gomock.Controller,
 				mockKV *jobmocks.MockKeyValue,
-				appFs afero.Fs,
+				appFs avfs.VFS,
 			) {
-				_ = afero.WriteFile(appFs, "/etc/cron.d/backup", []byte("content"), 0o644)
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/backup", []byte("content"), 0o644)
 
 				stateJSON, _ := json.Marshal(job.FileState{
 					ObjectName: "backup-script",
@@ -94,9 +98,9 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				Changed: true,
 				Path:    "/etc/cron.d/backup",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				exists, _ := afero.Exists(appFs, "/etc/cron.d/backup")
-				suite.False(exists, "file should be removed from disk")
+			validateFunc: func(appFs avfs.VFS) {
+				_, err := appFs.Stat("/etc/cron.d/backup")
+				suite.True(err != nil, "file should be removed from disk")
 			},
 		},
 		{
@@ -104,7 +108,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			setupMock: func(
 				_ *gomock.Controller,
 				_ *jobmocks.MockKeyValue,
-				_ afero.Fs,
+				_ avfs.VFS,
 			) {
 			},
 			req: file.UndeployRequest{Path: "/etc/cron.d/nonexistent"},
@@ -118,9 +122,10 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			setupMock: func(
 				_ *gomock.Controller,
 				mockKV *jobmocks.MockKeyValue,
-				appFs afero.Fs,
+				appFs avfs.VFS,
 			) {
-				_ = afero.WriteFile(appFs, "/etc/cron.d/orphan", []byte("content"), 0o644)
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/orphan", []byte("content"), 0o644)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -131,19 +136,35 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				Changed: true,
 				Path:    "/etc/cron.d/orphan",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				exists, _ := afero.Exists(appFs, "/etc/cron.d/orphan")
-				suite.False(exists, "file should be removed from disk")
+			validateFunc: func(appFs avfs.VFS) {
+				_, err := appFs.Stat("/etc/cron.d/orphan")
+				suite.True(err != nil, "file should be removed from disk")
 			},
+		},
+		{
+			name: "when fs remove fails returns error",
+			setupMock: func(
+				_ *gomock.Controller,
+				_ *jobmocks.MockKeyValue,
+				appFs avfs.VFS,
+			) {
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/locked", []byte("content"), 0o644)
+			},
+			req:        file.UndeployRequest{Path: "/etc/cron.d/locked"},
+			wantErr:    true,
+			wantErrMsg: "failed to remove file",
+			useFailFs:  true,
 		},
 		{
 			name: "when file exists but state entry value is invalid JSON",
 			setupMock: func(
 				ctrl *gomock.Controller,
 				mockKV *jobmocks.MockKeyValue,
-				appFs afero.Fs,
+				appFs avfs.VFS,
 			) {
-				_ = afero.WriteFile(appFs, "/etc/cron.d/corrupt", []byte("content"), 0o644)
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/corrupt", []byte("content"), 0o644)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
 				mockEntry.EXPECT().Value().Return([]byte("not-valid-json"))
@@ -157,9 +178,9 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				Changed: true,
 				Path:    "/etc/cron.d/corrupt",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				exists, _ := afero.Exists(appFs, "/etc/cron.d/corrupt")
-				suite.False(exists, "file should be removed from disk")
+			validateFunc: func(appFs avfs.VFS) {
+				_, err := appFs.Stat("/etc/cron.d/corrupt")
+				suite.True(err != nil, "file should be removed from disk")
 			},
 		},
 	}
@@ -169,13 +190,30 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
 
-			appFs := afero.NewMemMapFs()
+			baseFs := memfs.New()
 			mockObj := filemocks.NewMockObjectStore(ctrl)
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
 
-			tt.setupMock(ctrl, mockKV, appFs)
+			tt.setupMock(ctrl, mockKV, baseFs)
 
-			provider := file.New(suite.logger, appFs, mockObj, mockKV, "test-host")
+			var providerFs avfs.VFS = baseFs
+			if tt.useFailFs {
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnRemove {
+						return errors.New("remove failed")
+					}
+
+					return nil
+				})
+				providerFs = vfs
+			}
+
+			provider := file.New(suite.logger, providerFs, mockObj, mockKV, "test-host")
 
 			got, err := provider.Undeploy(suite.ctx, tt.req)
 
@@ -190,7 +228,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 				suite.Equal(tt.want.Path, got.Path)
 
 				if tt.validateFunc != nil {
-					tt.validateFunc(appFs)
+					tt.validateFunc(baseFs)
 				}
 			}
 		})
