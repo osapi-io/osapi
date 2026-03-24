@@ -22,7 +22,9 @@ package agent
 
 import (
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -34,8 +36,9 @@ import (
 var systemTemplates embed.FS
 
 // SeedSystemTemplates uploads embedded system templates to the NATS
-// object store with the "system/" prefix. Existing objects are skipped
-// (idempotent). These templates are protected from user deletion.
+// object store with the "system/" prefix. Templates are updated if
+// the embedded content differs from what's in the store (SHA comparison).
+// These templates are protected from user deletion.
 func SeedSystemTemplates(
 	ctx context.Context,
 	logger *slog.Logger,
@@ -59,18 +62,32 @@ func SeedSystemTemplates(
 		// Convert "templates/system/cron-wrapper.tmpl" → "system/cron-wrapper.tmpl"
 		objectName := path[len("templates/"):]
 
-		// Check if already exists (idempotent).
-		if _, infoErr := objStore.GetInfo(ctx, objectName); infoErr == nil {
-			logger.Debug(
-				"system template already exists, skipping",
-				slog.String("name", objectName),
-			)
-			return nil
-		}
-
 		data, readErr := systemTemplates.ReadFile(path)
 		if readErr != nil {
 			return fmt.Errorf("read embedded template %q: %w", path, readErr)
+		}
+
+		embeddedSHA := computeEmbeddedSHA256(data)
+
+		// Check if the object already exists with the same content.
+		existing, getErr := objStore.GetBytes(ctx, objectName)
+		if getErr == nil {
+			existingSHA := computeEmbeddedSHA256(existing)
+			if existingSHA == embeddedSHA {
+				logger.Debug(
+					"system template unchanged, skipping",
+					slog.String("name", objectName),
+					slog.String("sha256", embeddedSHA),
+				)
+				return nil
+			}
+
+			logger.Info(
+				"system template changed, updating",
+				slog.String("name", objectName),
+				slog.String("old_sha256", existingSHA),
+				slog.String("new_sha256", embeddedSHA),
+			)
 		}
 
 		if _, putErr := objStore.PutBytes(ctx, objectName, data); putErr != nil {
@@ -80,9 +97,19 @@ func SeedSystemTemplates(
 		logger.Info(
 			"seeded system template",
 			slog.String("name", objectName),
+			slog.String("sha256", embeddedSHA),
 			slog.Int("size", len(data)),
 		)
 
 		return nil
 	})
+}
+
+// computeEmbeddedSHA256 returns the hex-encoded SHA-256 hash of data.
+func computeEmbeddedSHA256(
+	data []byte,
+) string {
+	h := sha256.Sum256(data)
+
+	return hex.EncodeToString(h[:])
 }
