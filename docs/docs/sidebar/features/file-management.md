@@ -101,15 +101,15 @@ explicitly removed.
 
 ## Protected Objects
 
-Files stored under the `osapi/` name prefix are protected. Both uploads
-and deletes to `osapi/*` names return **403 Forbidden**. These objects
-are managed exclusively by osapi itself — the agent seeds them on
-startup from embedded templates and updates them automatically when a
-new osapi version ships with changes.
+Files stored under the `osapi/` name prefix are protected. Both uploads and
+deletes to `osapi/*` names return **403 Forbidden**. These objects are managed
+exclusively by osapi itself — the agent seeds them on startup from embedded
+templates and updates them automatically when a new osapi version ships with
+changes.
 
-Protected objects are used by meta providers such as the cron provider,
-which references them at deploy time. The `osapi/` prefix is reserved;
-use any other prefix for your own files.
+Protected objects are used by meta providers such as the cron provider, which
+references them at deploy time. The `osapi/` prefix is reserved; use any other
+prefix for your own files.
 
 ## Template Rendering
 
