@@ -1,8 +1,8 @@
 # File-Backed Meta Providers Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development
-> (if subagents available) or superpowers:executing-plans to implement this plan.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> (if subagents available) or superpowers:executing-plans to implement this
+> plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Refactor the cron provider to delegate file writes to the file
 provider for SHA tracking and idempotency, add file undeploy, and add protected
@@ -23,9 +23,11 @@ oapi-codegen (strict-server), testify/suite
 ### Task 1: Add FileDeployer interface and Undeploy types
 
 **Files:**
+
 - Modify: `internal/provider/file/types.go`
 
-- [ ] **Step 1: Add UndeployRequest, UndeployResult, and FileDeployer interface**
+- [ ] **Step 1: Add UndeployRequest, UndeployResult, and FileDeployer
+      interface**
 
 Add after the existing `Provider` interface:
 
@@ -77,6 +79,7 @@ git commit -m "feat: add FileDeployer interface and Undeploy types to file provi
 ### Task 2: Implement Undeploy method
 
 **Files:**
+
 - Create: `internal/provider/file/undeploy.go`
 - Create: `internal/provider/file/undeploy_public_test.go`
 
@@ -93,6 +96,7 @@ Follow the pattern from `deploy_public_test.go`. Test cases:
 4. "when fs remove fails" — `fs.Remove` returns error → returns error
 
 Each test should:
+
 - Set up afero.MemMapFs with files as needed
 - Set up mock stateKV (or real in-memory KV)
 - Call `provider.Undeploy(ctx, req)`
@@ -100,8 +104,8 @@ Each test should:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./internal/provider/file/... -run TestUndeploy -v`
-Expected: FAIL (method not implemented)
+Run: `go test ./internal/provider/file/... -run TestUndeploy -v` Expected: FAIL
+(method not implemented)
 
 - [ ] **Step 3: Implement Undeploy**
 
@@ -192,8 +196,7 @@ type FileState struct {
 
 - [ ] **Step 5: Run tests**
 
-Run: `go test ./internal/provider/file/... -v`
-Expected: All pass
+Run: `go test ./internal/provider/file/... -v` Expected: All pass
 
 - [ ] **Step 6: Commit**
 
@@ -207,6 +210,7 @@ git commit -m "feat: implement Undeploy method on file provider"
 ### Task 3: Add file undeploy to agent processor
 
 **Files:**
+
 - Modify: `internal/agent/processor_file.go`
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `internal/job/types.go` (operation constant alias)
@@ -284,6 +288,7 @@ git commit -m "feat: add file undeploy operation to agent processor"
 ### Task 4: Add file undeploy API endpoint
 
 **Files:**
+
 - Modify: `internal/controller/api/node/gen/api.yaml`
 - Create: `internal/controller/api/node/file_undeploy_post.go`
 - Create: `internal/controller/api/node/file_undeploy_post_public_test.go`
@@ -298,8 +303,8 @@ In `internal/controller/api/node/gen/api.yaml`, add a new path:
   post:
     summary: Undeploy a file
     description: >
-      Remove a deployed file from disk on the target node. The object
-      stays in the store for redeployment or audit.
+      Remove a deployed file from disk on the target node. The object stays in
+      the store for redeployment or audit.
     tags:
       - file_operations
     operationId: PostNodeFileUndeploy
@@ -344,7 +349,7 @@ FileUndeployRequest:
       type: string
       description: Filesystem path to undeploy.
       x-oapi-codegen-extra-tags:
-        validate: "required,min=1"
+        validate: 'required,min=1'
 
 FileUndeployResponse:
   type: object
@@ -402,6 +407,7 @@ git commit -m "feat: add file undeploy API endpoint"
 ### Task 5: Add file undeploy to SDK and CLI
 
 **Files:**
+
 - Modify: `pkg/sdk/client/node.go` (or `file.go` if separate)
 - Modify: `pkg/sdk/client/file_types.go`
 - Create: `cmd/client_node_file_undeploy.go`
@@ -438,6 +444,7 @@ git commit -m "feat: add file undeploy to SDK and CLI"
 ### Task 6: Add protected object check to file delete handler
 
 **Files:**
+
 - Modify: `internal/controller/api/file/file_delete.go`
 - Modify: `internal/controller/api/file/file_delete_public_test.go`
 - Modify: `internal/controller/api/file/file_list.go` (add source column)
@@ -469,6 +476,7 @@ Update the OpenAPI spec to include `source` field in the file list response.
 - [ ] **Step 3: Write tests**
 
 Add test cases:
+
 - "when deleting system file returns 403"
 - "when deleting user file succeeds"
 - "when listing shows source column"
@@ -500,6 +508,7 @@ git commit -m "feat: add protected object support and source column to file list
 ### Task 7: Update cron provider interface and Entry type
 
 **Files:**
+
 - Modify: `internal/provider/scheduled/cron/types.go`
 
 - [ ] **Step 1: Update Entry struct**
@@ -543,6 +552,7 @@ git commit -m "refactor: update cron Entry type and Provider interface for file-
 ### Task 8: Refactor Debian cron provider to use FileDeployer
 
 **Files:**
+
 - Modify: `internal/provider/scheduled/cron/debian.go`
 - Modify: `internal/provider/scheduled/cron/debian_public_test.go`
 
@@ -768,8 +778,8 @@ func (d *Debian) buildEntryFromState(
 }
 ```
 
-Note: `file.BuildStateKey` needs to be exported (currently `buildStateKey`
-is unexported). Export it in `internal/provider/file/deploy.go`.
+Note: `file.BuildStateKey` needs to be exported (currently `buildStateKey` is
+unexported). Export it in `internal/provider/file/deploy.go`.
 
 - [ ] **Step 6: Refactor Get**
 
@@ -821,6 +831,7 @@ git commit -m "refactor: cron provider uses FileDeployer instead of direct file 
 ### Task 9: Update Darwin and Linux stubs
 
 **Files:**
+
 - Modify: `internal/provider/scheduled/cron/darwin.go`
 - Modify: `internal/provider/scheduled/cron/linux.go`
 
@@ -850,6 +861,7 @@ git commit -m "refactor: update cron provider stubs for context parameter"
 ### Task 10: Update agent processor and wiring
 
 **Files:**
+
 - Modify: `internal/agent/processor_schedule.go`
 - Modify: `internal/agent/factory.go`
 - Modify: `internal/agent/types.go`
@@ -898,6 +910,7 @@ git commit -m "refactor: wire cron provider with file deployer dependency"
 ### Task 11: Update cron OpenAPI spec
 
 **Files:**
+
 - Modify: `internal/controller/api/schedule/gen/api.yaml`
 
 - [ ] **Step 1: Update CronCreateRequest**
@@ -914,29 +927,31 @@ CronCreateRequest:
     name:
       type: string
       x-oapi-codegen-extra-tags:
-        validate: "required,min=1,max=64"
+        validate: 'required,min=1,max=64'
     object:
       type: string
       description: >
         Name of the uploaded file in the object store.
       x-oapi-codegen-extra-tags:
-        validate: "required,min=1"
+        validate: 'required,min=1'
     schedule:
       type: string
       x-oapi-codegen-extra-tags:
-        validate: "required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"
+        validate: 'required_without=Interval,excluded_with=Interval,omitempty,cron_schedule'
     interval:
       type: string
       enum: [hourly, daily, weekly, monthly]
       x-oapi-codegen-extra-tags:
-        validate: "required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"
+        validate:
+          'required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly
+          daily weekly monthly'
     user:
       type: string
     content_type:
       type: string
       enum: [raw, template]
       x-oapi-codegen-extra-tags:
-        validate: "omitempty,oneof=raw template"
+        validate: 'omitempty,oneof=raw template'
     vars:
       type: object
       additionalProperties: true
@@ -964,6 +979,7 @@ git commit -m "feat: update cron OpenAPI spec for file-backed pattern"
 ### Task 12: Update cron handler
 
 **Files:**
+
 - Modify: `internal/controller/api/schedule/cron_create.go`
 - Modify: `internal/controller/api/schedule/cron_update.go`
 - Modify: `internal/controller/api/schedule/cron_get.go`
@@ -1001,6 +1017,7 @@ git commit -m "refactor: update cron handlers for file-backed pattern"
 ### Task 13: Update job client for cron
 
 **Files:**
+
 - Modify: `internal/job/client/schedule_cron.go`
 
 - [ ] **Step 1: Update cron job client methods**
@@ -1028,6 +1045,7 @@ git commit -m "refactor: update cron job client for updated Entry type"
 ### Task 14: Update SDK cron types and methods
 
 **Files:**
+
 - Modify: `pkg/sdk/client/schedule_types.go`
 - Modify: `pkg/sdk/client/schedule.go`
 
@@ -1067,8 +1085,8 @@ type CronEntryResult struct {
 - [ ] **Step 2: Update SDK methods**
 
 In `schedule.go`, update `CronCreate` and `CronUpdate` to map `Object`,
-`ContentType`, `Vars` to the gen request types. Update conversion functions
-to handle new fields.
+`ContentType`, `Vars` to the gen request types. Update conversion functions to
+handle new fields.
 
 - [ ] **Step 3: Regenerate SDK client**
 
@@ -1088,6 +1106,7 @@ git commit -m "refactor: update SDK cron types for file-backed pattern"
 ### Task 15: Update CLI cron commands
 
 **Files:**
+
 - Modify: `cmd/client_node_schedule_cron_create.go`
 - Modify: `cmd/client_node_schedule_cron_update.go`
 - Modify: `cmd/client_node_schedule_cron_get.go`
@@ -1124,6 +1143,7 @@ git commit -m "refactor: update CLI cron commands for file-backed pattern"
 ### Task 16: Update SDK example and docs
 
 **Files:**
+
 - Modify: `examples/sdk/client/cron.go`
 - Modify: `docs/docs/sidebar/features/cron-management.md`
 - Modify: CLI docs for cron commands
@@ -1145,6 +1165,7 @@ createResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
 - [ ] **Step 2: Update cron feature docs**
 
 Update `docs/docs/sidebar/features/cron-management.md` to document:
+
 - Object-based workflow (upload → create)
 - Template support with content_type and vars
 - No `# Managed by osapi` header
@@ -1157,8 +1178,8 @@ Document protected objects with `system/` prefix.
 
 - [ ] **Step 4: Update CLI docs**
 
-Update CLI reference docs for cron create, update, get, list with new flags.
-Add CLI docs for `client node file undeploy`.
+Update CLI reference docs for cron create, update, get, list with new flags. Add
+CLI docs for `client node file undeploy`.
 
 - [ ] **Step 5: Commit**
 
@@ -1174,6 +1195,7 @@ git commit -m "docs: update cron and file docs for file-backed meta provider pat
 ### Task 17: Add system template seeding on agent startup
 
 **Files:**
+
 - Create: `internal/agent/templates/` (embedded templates)
 - Modify: `cmd/agent_setup.go` (seed on startup)
 
@@ -1251,43 +1273,43 @@ Run: `just generate` — verify no diff
 
 ## Files Modified Summary
 
-| File | Change |
-| --- | --- |
-| `internal/provider/file/types.go` | Add FileDeployer, UndeployRequest/Result, update Provider |
-| `internal/provider/file/undeploy.go` | New: Undeploy method |
-| `internal/provider/file/undeploy_public_test.go` | New: Undeploy tests |
-| `internal/provider/file/deploy.go` | Export BuildStateKey |
-| `internal/job/types.go` | Add UndeployedAt to FileState, operation alias |
-| `internal/agent/processor_file.go` | Add undeploy case |
-| `internal/agent/processor_schedule.go` | Pass context to cron calls |
-| `internal/agent/factory.go` | Update cron provider creation |
-| `internal/agent/types.go` | No change if factory handles wiring |
-| `internal/agent/seed.go` | New: system template seeding |
-| `internal/agent/templates/` | New: embedded templates |
-| `internal/controller/api/node/gen/api.yaml` | Add undeploy endpoint |
-| `internal/controller/api/node/file_undeploy_post.go` | New: undeploy handler |
-| `internal/controller/api/node/file_undeploy_post_public_test.go` | New: tests |
-| `internal/controller/api/file/file_delete.go` | Protected object check |
-| `internal/controller/api/file/file_list.go` | Source column |
-| `internal/controller/api/schedule/gen/api.yaml` | command→object, add content_type/vars |
-| `internal/controller/api/schedule/cron_create.go` | Map new fields |
-| `internal/controller/api/schedule/cron_update.go` | Map new fields |
-| `internal/controller/api/schedule/cron_get.go` | Map new fields |
-| `internal/controller/api/schedule/cron_list_get.go` | Map new fields |
-| `internal/provider/scheduled/cron/types.go` | Update Entry, add ctx to interface |
-| `internal/provider/scheduled/cron/debian.go` | Full refactor to FileDeployer |
-| `internal/provider/scheduled/cron/darwin.go` | Add ctx to stubs |
-| `internal/provider/scheduled/cron/linux.go` | Add ctx to stubs |
-| `internal/job/client/file.go` | Add ModifyFileUndeploy |
-| `pkg/sdk/client/operations.go` | Add OpFileUndeploy |
-| `pkg/sdk/client/schedule_types.go` | command→object, add content_type/vars |
-| `pkg/sdk/client/schedule.go` | Map new fields |
-| `pkg/sdk/client/file_types.go` | Add FileUndeployResult, Source to FileItem |
-| `cmd/agent_setup.go` | Cron provider wiring, template seeding |
-| `cmd/client_node_file_undeploy.go` | New: undeploy CLI command |
-| `cmd/client_node_schedule_cron_create.go` | --command→--object, add flags |
-| `cmd/client_node_schedule_cron_update.go` | Same flag changes |
-| `cmd/client_node_schedule_cron_list.go` | OBJECT column |
-| `cmd/client_node_schedule_cron_get.go` | Object field |
-| `examples/sdk/client/cron.go` | Use Object instead of Command |
-| `docs/` | Feature pages, CLI docs |
+| File                                                             | Change                                                    |
+| ---------------------------------------------------------------- | --------------------------------------------------------- |
+| `internal/provider/file/types.go`                                | Add FileDeployer, UndeployRequest/Result, update Provider |
+| `internal/provider/file/undeploy.go`                             | New: Undeploy method                                      |
+| `internal/provider/file/undeploy_public_test.go`                 | New: Undeploy tests                                       |
+| `internal/provider/file/deploy.go`                               | Export BuildStateKey                                      |
+| `internal/job/types.go`                                          | Add UndeployedAt to FileState, operation alias            |
+| `internal/agent/processor_file.go`                               | Add undeploy case                                         |
+| `internal/agent/processor_schedule.go`                           | Pass context to cron calls                                |
+| `internal/agent/factory.go`                                      | Update cron provider creation                             |
+| `internal/agent/types.go`                                        | No change if factory handles wiring                       |
+| `internal/agent/seed.go`                                         | New: system template seeding                              |
+| `internal/agent/templates/`                                      | New: embedded templates                                   |
+| `internal/controller/api/node/gen/api.yaml`                      | Add undeploy endpoint                                     |
+| `internal/controller/api/node/file_undeploy_post.go`             | New: undeploy handler                                     |
+| `internal/controller/api/node/file_undeploy_post_public_test.go` | New: tests                                                |
+| `internal/controller/api/file/file_delete.go`                    | Protected object check                                    |
+| `internal/controller/api/file/file_list.go`                      | Source column                                             |
+| `internal/controller/api/schedule/gen/api.yaml`                  | command→object, add content_type/vars                     |
+| `internal/controller/api/schedule/cron_create.go`                | Map new fields                                            |
+| `internal/controller/api/schedule/cron_update.go`                | Map new fields                                            |
+| `internal/controller/api/schedule/cron_get.go`                   | Map new fields                                            |
+| `internal/controller/api/schedule/cron_list_get.go`              | Map new fields                                            |
+| `internal/provider/scheduled/cron/types.go`                      | Update Entry, add ctx to interface                        |
+| `internal/provider/scheduled/cron/debian.go`                     | Full refactor to FileDeployer                             |
+| `internal/provider/scheduled/cron/darwin.go`                     | Add ctx to stubs                                          |
+| `internal/provider/scheduled/cron/linux.go`                      | Add ctx to stubs                                          |
+| `internal/job/client/file.go`                                    | Add ModifyFileUndeploy                                    |
+| `pkg/sdk/client/operations.go`                                   | Add OpFileUndeploy                                        |
+| `pkg/sdk/client/schedule_types.go`                               | command→object, add content_type/vars                     |
+| `pkg/sdk/client/schedule.go`                                     | Map new fields                                            |
+| `pkg/sdk/client/file_types.go`                                   | Add FileUndeployResult, Source to FileItem                |
+| `cmd/agent_setup.go`                                             | Cron provider wiring, template seeding                    |
+| `cmd/client_node_file_undeploy.go`                               | New: undeploy CLI command                                 |
+| `cmd/client_node_schedule_cron_create.go`                        | --command→--object, add flags                             |
+| `cmd/client_node_schedule_cron_update.go`                        | Same flag changes                                         |
+| `cmd/client_node_schedule_cron_list.go`                          | OBJECT column                                             |
+| `cmd/client_node_schedule_cron_get.go`                           | Object field                                              |
+| `examples/sdk/client/cron.go`                                    | Use Object instead of Command                             |
+| `docs/`                                                          | Feature pages, CLI docs                                   |

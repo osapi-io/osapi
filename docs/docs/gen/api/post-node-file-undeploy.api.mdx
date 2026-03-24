@@ -1,12 +1,12 @@
 ---
-id: get-node-schedule-cron
-title: "List all cron entries"
-description: "List all cron drop-in entries on the target node."
-sidebar_label: "List all cron entries"
+id: post-node-file-undeploy
+title: "Remove a deployed file from the host filesystem"
+description: "Remove a deployed file from the host filesystem"
+sidebar_label: "Remove a deployed file from the host filesystem"
 hide_title: true
 hide_table_of_contents: true
-api: eJztV91v2zYQ/1eIe0oA+iOd020C9uB1bZGh24IuRR/iwKDFi8VEItXjyY1n6H8fjrIdO/bQYFgfBvRJlHRf/N3x7scVWIw5uZpd8JDBOxdZmbJUOQWvLIW657xCz+QwquAVF6jY0BxZ+WCxP/Gggc08QnYNf+YF2qbE6W/GmzlW6Hk6vryYirFpqJGMuIlwo2H7dmEhg7fIvweLG/1XFMRsxLwhx0vIrlfwMxpCGjdciCexmBEaCzftjYbakKmQkWKS9aZCyKAIkdNSg5PN1YYL0ED4qXGEFjKmBvUTBK66zZk5elYbC1oRRqQFWkWhYefnamHKBtXJ1PilVlNTlqdaBVKlmWGpIpaYcyB1co/LLImedlA99IKpXS8PFufoe/jAZHodfitYmNJZwxL7JkhdOf/TmU5/ph3w0GqIeYGVER1e1iIfmZyfg4bK+Xfo5wLTWSvYEMY6+IjJw4vhUB5Hkh5uu5yvc90HDXnwjJ5FwdR16fKUsMFdFK3VYQxhdoc5g4aaJL3sOp93YTZ19list4Eqw5BB0zgLB5koUN2Fmbr4RTURreKgago5xqi4cFEJRBhZIsUHU9Wl2D4/H+IPo+Gwhy9+nPVGZ3bUM9+fveyNRi9fnp+PRsPhcCgAEsam5LgTlSEySykVxioe29V+dOPDI7LsH+y9q8TDne/berUBfqlEoS8Brt1+UfePJKciB8KkrW4DpWNqsS7DEq1a57G/KRw5Ys8MaiOu8KEmjNEF31eXchg8J0cD5HwgSPTtYFs7Ey+unGekhSm/7OoSyQXrcrVRUSdFaKhcamWNk8dnxHt5VsFzUS5P/ymI1cZCuxeNBvRNJY2jsysRiGHQ0FmWg9OZhhtBKTSUPwOjjwUSJrC77JVugTFTE+gQmYBWk7XLbp28dsvOsawDqcnG/QTW6DUR6csBfIjYJTt/LCFqfFQm9qFtNbDjdC4km6/lN7Rtu9sDr7dH4WZf+lUopYm54N+vO4iothpGw7PDHvLBm4aLQO4vtKqnxpcX6h6XauvnP+smSBSeAcxY7bxLc0tJEl3FhWEV8rwhQrvfPd4YV3adhlCKZ4EqsuEmprNjkY0r4zOcW+tkaUq11lFmFhp+DOKoW9uguPbInwPdK3YVhqY7tjIvdvxKlc+RjrbMbpOisOfkfDjcrYfXInWQ2O8OE/sm0MxZi1711IWPze2ty50cvBqpcqkjxG/Z/R9k9/zY6E+CqnQxcZqvRAC+JfUrJbXVUCEXQSi0EEPdUdwMBsLNB6sNfW0HmzmepmSi1rTo2PLNI88W+l11Kdtl29stFMw1rLmnvM+SEOj14s2Gzf368SrNHudvQ1Jfb2CcOPXj3UCmBGiQQDoszvrDfmJndYhcGf/IoJ5cTNY1+hTM1WPF/tubTLdTxgce1KVx3SimxGE6bK9BpEFDtnO92LIqnSa/jFL5K9Kr1cxE/EBl28rnTw3SsoN9YciZmSBzvQLroqwtZLemjE9vJbsbO3m/nqmn6ivfVY6CsWHLXjhTkoYMQMM9LnevXK3QqAKNFRZzvVr/Huc51ryjeNBW5Mayrem3r69Ag9mvwidVl6wfDWq16iSuwj36tt3GyPIuAbbt37agMDI=
-sidebar_class_name: "get api-method"
+api: eJztV01v20YQ/SuLOcUAbclpcyHQg9ImgIt+GI6MHFxBGHHH5NrkLrM7tK0Q/O/FLElJttQmLRygBXwStZzP92a5b1twNXlk4+yZhhTOXeDfnKb3pqRLq6ku3RoSYMwDpFcgr5a/osWcKrK8nJ2fLa2sbaIEWCQQKGu84TWkVy28JfTkZw0XEuHalJTee8MEi26RQI0eK2LyIRpbrAhSKFzg+JiAsZBCjVxAAp4+NcaThpR9QwloCpk3teSFFOboc2KFOVlWY4REeQrk70gr7xo2Nld3WDakXi3RrhO1xLI8SpTzqsQVlSpQSRk7r17d0jqNpkcnf1hI4OHYYW2OM6cpJ3tMD+zxuAemhTssjUaW2scik8rYH06T+GbJsTboEghZQRWKD69rsQ/sjc0hgcrYX8jmgtNpJ9hIJAr81um12D/tPnOWybK8wrouTRYJmNwEQaPdT+RWN5QxJFB7oYsNxdIjtgfKeQyuDERYB6ZKiYNip5phPk7+NTjQdd0uq1d9MYsE2HBJQ9pxDi96OMQpeoXa2dD38Hr6Wn72S94UqW7cSmGWUc2kpeJnQu/GrZZGfxm/eUHq7CflrhUXpDJPyKSlqBMZis28f1WcfsK5QFa1dxmFQDqGHcNlBdqcdqtaOVcS2r1wHwvignz0lq2p7jEozLjBslwrT5W7E7ie0jR0nexu1DHpX7LX8zXQ9/10us/YmY2jooytG35Gksh757+M7Uzt/B+pir492C7LGu/78aEHrOq+STSl4O+UJ/aG7kgFRm5CpEIToynDVyTX2sgjlmrwUbhyDW+LOJhWNySpLfG987eKTUVOsJMpcHp3oIxlyskfnKi+SXF4lOTNdCpcjXS+E6s9Hk/3eby02HDhvPn8rHvthcZvSON3Bz6gzq+M1mRfOPw/cPjm8CeVyUsnm7pfiPxvE9k9DXYRT2GFqj9ISfcn9bV3VWxEzuC41OszUZLEhRM5X7sQmYsSDyYi1SfteGZ3E3GaNFuZH4VyVOI7Iv6DDETP+a6U32BQMNcw6NooNaIRJMPDe+crZEjh54/zqCNk0C62yvbdCMyoREcyO9H+1y5mGsCaReGzvX+o2fkZJCA191CdnkxPpuIpjVcYB3q4UvxzFB+xsGmX6YEndYnGSp7Gl9vKr0AAhgTSHVkkISGBDcqLXjSJdduuMNClL7tOlj815Nc99nfoDa6k56sWtAnyrCG9xjI8vfa02w0Nry4GjXakvvFl6CAYwyJamaVoDSlAAre03r3TdQtRvISafOyvf/1j38XxXIJs3fc+UV0yesyimv9b28XOXjj//cNcpnK4TVVxJ4PHe7lY4n1fqqv7S6xct2SthRJt3mAutn1MmWF8vAWejHzs6iAYbdtbzN0t2a7bYMPyX4Dpuj8BufNqvg==
+sidebar_class_name: "post api-method"
 info_path: gen/api/agent-management-api
 custom_edit_url: null
 ---
@@ -27,21 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"List all cron entries"}
+  children={"Remove a deployed file from the host filesystem"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"get"}
-  path={"/node/{hostname}/schedule/cron"}
+  method={"post"}
+  path={"/node/{hostname}/file/undeploy"}
 >
   
 </MethodEndpoint>
 
 
 
-List all cron drop-in entries on the target node.
-
+Remove a deployed file from the host filesystem
 
 <Heading
   id={"request"}
@@ -75,20 +74,66 @@ List all cron drop-in entries on the target node.
       </ParamsItem>
     </ul>
   </div>
-</details><div>
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
+>
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
+  >
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
+    >
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
+      >
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3><strong
+          className={"openapi-schema__required"}
+        >
+          required
+        </strong>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"path"}
+          required={true}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Filesystem path to undeploy.","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
   <div>
     <ApiTabs
       label={undefined}
       id={undefined}
     >
       <TabItem
-        label={"200"}
-        value={"200"}
+        label={"202"}
+        value={"202"}
       >
         <div>
           
           
-          List of cron entries.
+          File undeploy job accepted.
           
           
         </div><div>
@@ -130,116 +175,30 @@ List all cron drop-in entries on the target node.
                       <SchemaItem
                         collapsible={false}
                         name={"job_id"}
-                        required={false}
-                        schemaName={"uuid"}
+                        required={true}
+                        schemaName={"string"}
                         qualifierMessage={undefined}
-                        schema={{"type":"string","format":"uuid","description":"The job ID used to process this request.","example":"550e8400-e29b-41d4-a716-446655440000"}}
+                        schema={{"type":"string","description":"The ID of the created job."}}
                       >
                         
                       </SchemaItem><SchemaItem
-                        collapsible={true}
-                        className={"schemaItem"}
+                        collapsible={false}
+                        name={"hostname"}
+                        required={true}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The agent that processed the job."}}
                       >
-                        <details
-                          style={{}}
-                          className={"openapi-markdown__details"}
-                        >
-                          <summary
-                            style={{}}
-                          >
-                            <span
-                              className={"openapi-schema__container"}
-                            >
-                              <strong
-                                className={"openapi-schema__property"}
-                              >
-                                results
-                              </strong><span
-                                className={"openapi-schema__name"}
-                              >
-                                 object[]
-                              </span><span
-                                className={"openapi-schema__divider"}
-                              >
-                                
-                              </span><span
-                                className={"openapi-schema__required"}
-                              >
-                                required
-                              </span>
-                            </span>
-                          </summary><div
-                            style={{"marginLeft":"1rem"}}
-                          >
-                            <li>
-                              <div
-                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
-                              >
-                                Array [
-                              </div>
-                            </li><SchemaItem
-                              collapsible={false}
-                              name={"name"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Cron entry name."}}
-                            >
-                              
-                            </SchemaItem><SchemaItem
-                              collapsible={false}
-                              name={"object"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Object store name for the deployed content."}}
-                            >
-                              
-                            </SchemaItem><SchemaItem
-                              collapsible={false}
-                              name={"schedule"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Cron schedule expression. Present for /etc/cron.d/ entries.\n"}}
-                            >
-                              
-                            </SchemaItem><SchemaItem
-                              collapsible={false}
-                              name={"interval"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={"**Possible values:** [`hourly`, `daily`, `weekly`, `monthly`]"}
-                              schema={{"type":"string","description":"Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.\n","enum":["hourly","daily","weekly","monthly"]}}
-                            >
-                              
-                            </SchemaItem><SchemaItem
-                              collapsible={false}
-                              name={"source"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={undefined}
-                              schema={{"type":"string","description":"Where the entry lives: \"cron.d\", \"hourly\", \"daily\", \"weekly\", or \"monthly\".\n"}}
-                            >
-                              
-                            </SchemaItem><SchemaItem
-                              collapsible={false}
-                              name={"user"}
-                              required={false}
-                              schemaName={"string"}
-                              qualifierMessage={undefined}
-                              schema={{"type":"string","description":"User the cron entry runs as."}}
-                            >
-                              
-                            </SchemaItem><li>
-                              <div
-                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
-                              >
-                                ]
-                              </div>
-                            </li>
-                          </div>
-                        </details>
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"changed"}
+                        required={true}
+                        schemaName={"boolean"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"boolean","description":"Whether the file was actually removed."}}
+                      >
+                        
                       </SchemaItem>
                     </ul>
                   </details>
@@ -248,7 +207,98 @@ List all cron drop-in entries on the target node.
                   value={"Example (from schema)"}
                 >
                   <ResponseSamples
-                    responseExample={"{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"name\": \"string\",\n      \"object\": \"string\",\n      \"schedule\": \"string\",\n      \"interval\": \"hourly\",\n      \"source\": \"string\",\n      \"user\": \"string\"\n    }\n  ]\n}"}
+                    responseExample={"{\n  \"job_id\": \"string\",\n  \"hostname\": \"string\",\n  \"changed\": true\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Invalid input.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
                     language={"json"}
                   >
                     
@@ -265,7 +315,7 @@ List all cron drop-in entries on the target node.
         <div>
           
           
-          Unauthorized - API key required
+          Unauthorized.
           
           
         </div><div>
@@ -356,7 +406,7 @@ List all cron drop-in entries on the target node.
         <div>
           
           
-          Forbidden - Insufficient permissions
+          Forbidden.
           
           
         </div><div>
@@ -447,7 +497,7 @@ List all cron drop-in entries on the target node.
         <div>
           
           
-          Error listing cron entries.
+          Internal error.
           
           
         </div><div>

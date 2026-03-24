@@ -42,13 +42,13 @@ User                    Meta Provider              File Provider
 
 ### Examples Across Domains
 
-| Meta Provider | Object Content          | Deploy Path                       | Mode |
-| ------------- | ----------------------- | --------------------------------- | ---- |
-| cron (sched)  | cron.d formatted line   | `/etc/cron.d/{name}`              | 0644 |
-| cron (intv)   | shell script            | `/etc/cron.{interval}/{name}`     | 0755 |
-| systemd       | unit file               | `/etc/systemd/system/{name}`      | 0644 |
-| sysctl        | sysctl conf             | `/etc/sysctl.d/{name}.conf`       | 0644 |
-| apt sources   | repo entry              | `/etc/apt/sources.list.d/{name}`  | 0644 |
+| Meta Provider | Object Content        | Deploy Path                      | Mode |
+| ------------- | --------------------- | -------------------------------- | ---- |
+| cron (sched)  | cron.d formatted line | `/etc/cron.d/{name}`             | 0644 |
+| cron (intv)   | shell script          | `/etc/cron.{interval}/{name}`    | 0755 |
+| systemd       | unit file             | `/etc/systemd/system/{name}`     | 0644 |
+| sysctl        | sysctl conf           | `/etc/sysctl.d/{name}.conf`      | 0644 |
+| apt sources   | repo entry            | `/etc/apt/sources.list.d/{name}` | 0644 |
 
 All meta providers follow the same flow: user uploads content → meta provider
 determines path + permissions + validation → `fileProvider.Deploy()` → SHA
@@ -144,8 +144,8 @@ my-nginx.conf                 → user-managed (deletable)
 `system/` and returns 403 if so.
 
 **Seeding:** The agent seeds system templates into the object store on startup
-(idempotent — skip if already present). Templates are embedded in the binary
-via `go:embed`.
+(idempotent — skip if already present). Templates are embedded in the binary via
+`go:embed`.
 
 **Listing:** `client file list` shows both system and user objects. A `source`
 column indicates `system` vs `user`.
@@ -170,23 +170,23 @@ CronCreateRequest:
     name:
       type: string
       description: >
-        Name for the cron entry. Used as the filename under
-        /etc/cron.d/ or /etc/cron.{interval}/.
+        Name for the cron entry. Used as the filename under /etc/cron.d/ or
+        /etc/cron.{interval}/.
     object:
       type: string
       description: >
-        Name of the uploaded file in the object store to deploy
-        as the cron entry content.
+        Name of the uploaded file in the object store to deploy as the cron
+        entry content.
     schedule:
       type: string
       description: >
-        Cron schedule expression (e.g., "*/5 * * * *"). Mutually
-        exclusive with interval.
+        Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with
+        interval.
     interval:
       type: string
       description: >
-        Periodic interval (hourly, daily, weekly, monthly). Mutually
-        exclusive with schedule.
+        Periodic interval (hourly, daily, weekly, monthly). Mutually exclusive
+        with schedule.
       enum: [hourly, daily, weekly, monthly]
     user:
       type: string
@@ -195,8 +195,8 @@ CronCreateRequest:
     content_type:
       type: string
       description: >
-        "raw" or "template". When "template", the file content is
-        rendered through Go's text/template engine with facts and vars.
+        "raw" or "template". When "template", the file content is rendered
+        through Go's text/template engine with facts and vars.
       enum: [raw, template]
       default: raw
     vars:
@@ -245,20 +245,15 @@ type Debian struct {
 3. Determine path and mode:
    - Schedule → `/etc/cron.d/{name}`, 0644
    - Interval → `/etc/cron.{interval}/{name}`, 0755
-4. Call `fileDeployer.Deploy(ctx, file.DeployRequest{
-       ObjectName: entry.Object,
-       Path: path,
-       Mode: mode,
-       ContentType: entry.ContentType,
-       Vars: entry.Vars,
-   })`
+4. Call
+   `fileDeployer.Deploy(ctx, file.DeployRequest{     ObjectName: entry.Object,     Path: path,     Mode: mode,     ContentType: entry.ContentType,     Vars: entry.Vars, })`
 5. Return `CreateResult{Changed: result.Changed}`
 
 **Update:**
 
 1. Validate name, find existing entry path
-2. Call `fileDeployer.Deploy()` with new object/vars — idempotent, skips if
-   SHA unchanged
+2. Call `fileDeployer.Deploy()` with new object/vars — idempotent, skips if SHA
+   unchanged
 3. Return `UpdateResult{Changed: result.Changed}`
 
 **Delete:**
@@ -330,17 +325,17 @@ creates the file provider first.
 
 ## Scope Summary
 
-| Area              | Change                                                    |
-| ----------------- | --------------------------------------------------------- |
-| File provider     | Add `Undeploy` method, `FileDeployer` interface           |
-| File API          | Add undeploy endpoint                                     |
-| File handler      | Protected object check on delete, undeploy handler        |
-| File SDK/CLI      | `undeploy` command, `source` column in list               |
-| Cron provider     | Refactor to use `FileDeployer`, remove direct file writes |
-| Cron API          | `command` → `object`, add `content_type`/`vars`           |
-| Cron handler      | Pass through new fields                                   |
-| Cron SDK/CLI      | Update opts and flags                                     |
-| Agent wiring      | Pass file provider to cron provider                       |
-| System templates  | `go:embed` + seeding on startup                           |
-| Tests             | All of the above                                          |
-| Docs              | Feature pages, CLI docs, API docs                         |
+| Area             | Change                                                    |
+| ---------------- | --------------------------------------------------------- |
+| File provider    | Add `Undeploy` method, `FileDeployer` interface           |
+| File API         | Add undeploy endpoint                                     |
+| File handler     | Protected object check on delete, undeploy handler        |
+| File SDK/CLI     | `undeploy` command, `source` column in list               |
+| Cron provider    | Refactor to use `FileDeployer`, remove direct file writes |
+| Cron API         | `command` → `object`, add `content_type`/`vars`           |
+| Cron handler     | Pass through new fields                                   |
+| Cron SDK/CLI     | Update opts and flags                                     |
+| Agent wiring     | Pass file provider to cron provider                       |
+| System templates | `go:embed` + seeding on startup                           |
+| Tests            | All of the above                                          |
+| Docs             | Feature pages, CLI docs, API docs                         |

@@ -30,8 +30,8 @@ Store and writes it to the target path on the agent's filesystem. Deploy
 supports optional file permissions (mode, owner, group) and Go template
 rendering.
 
-**Undeploy** creates an asynchronous job that removes a previously deployed
-file from the agent's filesystem. The file-state KV record is preserved so the
+**Undeploy** creates an asynchronous job that removes a previously deployed file
+from the agent's filesystem. The file-state KV record is preserved so the
 undeploy is auditable and a subsequent deploy can detect the change.
 
 **Status** creates an asynchronous job that compares the current file on disk
@@ -82,8 +82,8 @@ osapi client node file undeploy --target HOST --path /etc/app/app.conf
 2. The API server creates a job and publishes it to NATS.
 3. An agent picks up the job and removes the file from the filesystem.
 4. The file-state KV record is preserved -- it is not deleted. This keeps the
-   undeploy auditable and ensures a subsequent deploy will write the file
-   even if the content has not changed (since the file is now absent).
+   undeploy auditable and ensures a subsequent deploy will write the file even
+   if the content has not changed (since the file is now absent).
 5. The result (changed, path) is written back to NATS KV.
 
 If the file does not exist on disk when undeploy runs, the operation returns
@@ -101,14 +101,14 @@ explicitly removed.
 
 ## Protected Objects
 
-Files stored under the `system/` name prefix are protected and cannot be
-deleted via the `DELETE /file/{name}` endpoint. Attempts to delete a protected
-object return **403 Forbidden**.
+Files stored under the `system/` name prefix are protected and cannot be deleted
+via the `DELETE /file/{name}` endpoint. Attempts to delete a protected object
+return **403 Forbidden**.
 
-System objects are reserved for use by meta providers such as the cron
-provider, which fetches script content from the Object Store at deploy time.
-Protecting these objects prevents accidental removal of files that backing
-cron entries depend on.
+System objects are reserved for use by meta providers such as the cron provider,
+which fetches script content from the Object Store at deploy time. Protecting
+these objects prevents accidental removal of files that backing cron entries
+depend on.
 
 To replace a system object's content, use `--force` on upload:
 

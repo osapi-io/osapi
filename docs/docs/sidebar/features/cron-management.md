@@ -11,19 +11,18 @@ OSAPI manages cron entries on target hosts. It supports two placement modes:
 - **Periodic interval** — writes to `/etc/cron.{hourly,daily,weekly,monthly}/`
   as executable scripts
 
-Cron entries reference scripts stored in the NATS Object Store by name.
-Upload a script first with the file management commands, then create a cron
-entry pointing at it. This separates script content from scheduling
-configuration and enables versioned updates.
+Cron entries reference scripts stored in the NATS Object Store by name. Upload a
+script first with the file management commands, then create a cron entry
+pointing at it. This separates script content from scheduling configuration and
+enables versioned updates.
 
 ## How It Works
 
 ### Object-Based Workflow
 
 The cron provider is a **meta provider**: it does not embed script content
-directly. Instead, each cron entry holds an `object` name that references a
-file in the NATS Object Store. When the agent deploys or updates a cron entry,
-it:
+directly. Instead, each cron entry holds an `object` name that references a file
+in the NATS Object Store. When the agent deploys or updates a cron entry, it:
 
 1. Fetches the named object from the Object Store.
 2. Writes the script content to the appropriate path under `/etc/cron.d/` or
@@ -31,8 +30,8 @@ it:
 3. Records the deploy state in the file-state KV bucket (SHA-256, path,
    timestamps).
 
-The file-state KV tracks each deployed cron file, so updates are idempotent:
-if the script content has not changed, the file is not rewritten.
+The file-state KV tracks each deployed cron file, so updates are idempotent: if
+the script content has not changed, the file is not rewritten.
 
 ### Custom Schedule (`/etc/cron.d/`)
 
@@ -59,16 +58,16 @@ object — it should include a `#!/bin/sh` shebang:
 
 The file is written with mode `0755` so `run-parts` can execute it.
 
-`schedule` and `interval` are mutually exclusive — provide exactly one. The
-API validates this and returns 400 if both or neither are provided.
+`schedule` and `interval` are mutually exclusive — provide exactly one. The API
+validates this and returns 400 if both or neither are provided.
 
 ### File-State KV Tracking
 
-Deploy state is recorded in the file-state KV bucket rather than embedded in
-the deployed file as a header comment. This means:
+Deploy state is recorded in the file-state KV bucket rather than embedded in the
+deployed file as a header comment. This means:
 
-- Deployed cron files contain only the script content — no `# Managed by
-  osapi` marker.
+- Deployed cron files contain only the script content — no `# Managed by osapi`
+  marker.
 - The list and get operations query the file-state KV to discover managed
   entries; manually created files are left untouched.
 - State persists in the KV until explicitly removed — deleting a cron entry
@@ -97,13 +96,13 @@ Template variables are merged with the agent's system facts and hostname. See
 
 ## Operations
 
-| Operation | Description                              |
-| --------- | ---------------------------------------- |
-| List      | List all osapi-managed cron entries      |
-| Get       | Get a specific entry by name             |
-| Create    | Upload script, then create cron entry    |
-| Update    | Upload new script version, then update   |
-| Delete    | Undeploy cron file from disk             |
+| Operation | Description                            |
+| --------- | -------------------------------------- |
+| List      | List all osapi-managed cron entries    |
+| Get       | Get a specific entry by name           |
+| Create    | Upload script, then create cron entry  |
+| Update    | Upload new script version, then update |
+| Delete    | Undeploy cron file from disk           |
 
 ## CLI Usage
 
@@ -155,8 +154,8 @@ Files are created as root (the agent runs as root). Names must not contain dots
 
 ## Undeploy Behavior
 
-Deleting a cron entry **undeploys** the file: it is removed from the
-filesystem, but the file-state KV record is preserved. This means:
+Deleting a cron entry **undeploys** the file: it is removed from the filesystem,
+but the file-state KV record is preserved. This means:
 
 - Re-creating the entry with the same name and object will detect the prior
   state and only write the file if the content differs.
@@ -189,8 +188,8 @@ and `write` roles also include `cron:write`.
 ## Naming Rules
 
 Entry names must be alphanumeric with hyphens and underscores only (pattern:
-`^[a-zA-Z0-9_-]+$`). Names like `backup-daily`, `log_rotate`, and
-`health_check` are valid. Names containing `/`, `..`, or spaces are rejected.
+`^[a-zA-Z0-9_-]+$`). Names like `backup-daily`, `log_rotate`, and `health_check`
+are valid. Names containing `/`, `..`, or spaces are rejected.
 
 ## Idempotent Updates
 

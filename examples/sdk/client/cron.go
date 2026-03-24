@@ -54,7 +54,13 @@ func main() {
 	// The cron entry references the stored object by name.
 	fmt.Println("=== Uploading backup script ===")
 	backupScript := strings.NewReader("#!/bin/sh\n/usr/local/bin/backup.sh --full\n")
-	uploadResp, err := c.File.Upload(ctx, "backup-script", "raw", backupScript, client.FileUploadOpts{})
+	uploadResp, err := c.File.Upload(
+		ctx,
+		"backup-script",
+		"raw",
+		backupScript,
+		client.FileUploadOpts{},
+	)
 	if err != nil {
 		log.Fatalf("upload failed: %v", err)
 	}
