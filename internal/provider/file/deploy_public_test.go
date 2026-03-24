@@ -35,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type DeployPublicTestSuite struct {
@@ -59,7 +60,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 
 	tests := []struct {
 		name         string
-		setupMock    func(*gomock.Controller, *stubObjectStore, *jobmocks.MockKeyValue, *afero.Fs)
+		setupMock    func(*gomock.Controller, *filemocks.MockObjectStore, *jobmocks.MockKeyValue, *afero.Fs)
 		req          file.DeployRequest
 		want         *file.DeployResult
 		wantErr      bool
@@ -70,11 +71,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy succeeds (new file)",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -105,11 +108,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy succeeds (changed content)",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				existingState := job.FileState{
 					SHA256: differentSHA,
@@ -149,11 +154,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy skips (unchanged)",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				appFs *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				_ = afero.WriteFile(*appFs, "/etc/nginx/nginx.conf", fileContent, 0o644)
 
@@ -185,11 +192,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file is deleted but state exists redeploys",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				existingState := job.FileState{
 					SHA256: existingSHA,
@@ -229,11 +238,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when Object Store get fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				_ *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesErr = assert.AnError
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
 			},
 			req: file.DeployRequest{
 				ObjectName:  "missing.conf",
@@ -247,11 +258,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when content type is template",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = []byte("server {{ .Vars.host }}")
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("server {{ .Vars.host }}"), nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -282,11 +295,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file write fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				appFs *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -307,11 +322,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when state KV put fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -333,11 +350,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when state KV has corrupt data proceeds to deploy",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
@@ -365,11 +384,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mode is invalid defaults to 0644",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -400,11 +421,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mode is set",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
 				_ *afero.Fs,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -440,7 +463,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 
 			appFs := afero.Fs(afero.NewMemMapFs())
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := &stubObjectStore{}
+			mockObj := filemocks.NewMockObjectStore(ctrl)
 
 			if tc.setupMock != nil {
 				tc.setupMock(ctrl, mockObj, mockKV, &appFs)

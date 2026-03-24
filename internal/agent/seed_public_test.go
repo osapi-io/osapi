@@ -25,160 +25,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"io"
 	"log/slog"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
-
-// seedStubObjectStore is a minimal test stub implementing jetstream.ObjectStore
-// for SeedSystemTemplates tests. Only GetBytes and PutBytes are functional.
-type seedStubObjectStore struct {
-	getBytesFunc func(ctx context.Context, name string) ([]byte, error)
-	putBytesFunc func(ctx context.Context, name string, data []byte) (*jetstream.ObjectInfo, error)
-	putBytesCalls []struct {
-		Name string
-		Data []byte
-	}
-}
-
-func (s *seedStubObjectStore) GetBytes(
-	ctx context.Context,
-	name string,
-	_ ...jetstream.GetObjectOpt,
-) ([]byte, error) {
-	return s.getBytesFunc(ctx, name)
-}
-
-func (s *seedStubObjectStore) PutBytes(
-	ctx context.Context,
-	name string,
-	data []byte,
-) (*jetstream.ObjectInfo, error) {
-	s.putBytesCalls = append(s.putBytesCalls, struct {
-		Name string
-		Data []byte
-	}{Name: name, Data: data})
-
-	return s.putBytesFunc(ctx, name, data)
-}
-
-func (s *seedStubObjectStore) Put(
-	_ context.Context,
-	_ jetstream.ObjectMeta,
-	_ io.Reader,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: Put not implemented")
-}
-
-func (s *seedStubObjectStore) PutString(
-	_ context.Context,
-	_ string,
-	_ string,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: PutString not implemented")
-}
-
-func (s *seedStubObjectStore) PutFile(
-	_ context.Context,
-	_ string,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: PutFile not implemented")
-}
-
-func (s *seedStubObjectStore) Get(
-	_ context.Context,
-	_ string,
-	_ ...jetstream.GetObjectOpt,
-) (jetstream.ObjectResult, error) {
-	panic("seedStubObjectStore: Get not implemented")
-}
-
-func (s *seedStubObjectStore) GetString(
-	_ context.Context,
-	_ string,
-	_ ...jetstream.GetObjectOpt,
-) (string, error) {
-	panic("seedStubObjectStore: GetString not implemented")
-}
-
-func (s *seedStubObjectStore) GetFile(
-	_ context.Context,
-	_ string,
-	_ string,
-	_ ...jetstream.GetObjectOpt,
-) error {
-	panic("seedStubObjectStore: GetFile not implemented")
-}
-
-func (s *seedStubObjectStore) GetInfo(
-	_ context.Context,
-	_ string,
-	_ ...jetstream.GetObjectInfoOpt,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: GetInfo not implemented")
-}
-
-func (s *seedStubObjectStore) UpdateMeta(
-	_ context.Context,
-	_ string,
-	_ jetstream.ObjectMeta,
-) error {
-	panic("seedStubObjectStore: UpdateMeta not implemented")
-}
-
-func (s *seedStubObjectStore) Delete(
-	_ context.Context,
-	_ string,
-) error {
-	panic("seedStubObjectStore: Delete not implemented")
-}
-
-func (s *seedStubObjectStore) AddLink(
-	_ context.Context,
-	_ string,
-	_ *jetstream.ObjectInfo,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: AddLink not implemented")
-}
-
-func (s *seedStubObjectStore) AddBucketLink(
-	_ context.Context,
-	_ string,
-	_ jetstream.ObjectStore,
-) (*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: AddBucketLink not implemented")
-}
-
-func (s *seedStubObjectStore) Seal(
-	_ context.Context,
-) error {
-	panic("seedStubObjectStore: Seal not implemented")
-}
-
-func (s *seedStubObjectStore) Watch(
-	_ context.Context,
-	_ ...jetstream.WatchOpt,
-) (jetstream.ObjectWatcher, error) {
-	panic("seedStubObjectStore: Watch not implemented")
-}
-
-func (s *seedStubObjectStore) List(
-	_ context.Context,
-	_ ...jetstream.ListObjectsOpt,
-) ([]*jetstream.ObjectInfo, error) {
-	panic("seedStubObjectStore: List not implemented")
-}
-
-func (s *seedStubObjectStore) Status(
-	_ context.Context,
-) (jetstream.ObjectStoreStatus, error) {
-	panic("seedStubObjectStore: Status not implemented")
-}
 
 // computeSeedSHA256 returns the hex-encoded SHA-256 hash of data.
 func computeSeedSHA256(
@@ -209,28 +65,35 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 	emptySHA := computeSeedSHA256(emptyData)
 
 	tests := []struct {
-		name           string
-		getBytesFunc   func(ctx context.Context, name string) ([]byte, error)
-		putBytesFunc   func(ctx context.Context, name string, data []byte) (*jetstream.ObjectInfo, error)
-		wantErr        bool
-		errContains    string
-		wantPutCalls   int
-		wantPutName    string
+		name         string
+		setupMock    func(ctrl *gomock.Controller, mockObj *filemocks.MockObjectStore, putNames *[]string)
+		wantErr      bool
+		errContains  string
+		wantPutCalls int
+		wantPutName  string
 	}{
 		{
 			name: "when template not found in store uploads it",
-			getBytesFunc: func(
-				_ context.Context,
-				_ string,
-			) ([]byte, error) {
-				return nil, errors.New("not found")
-			},
-			putBytesFunc: func(
-				_ context.Context,
-				_ string,
-				_ []byte,
-			) (*jetstream.ObjectInfo, error) {
-				return &jetstream.ObjectInfo{}, nil
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				putNames *[]string,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				mockObj.EXPECT().
+					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						name string,
+						_ []byte,
+					) (*jetstream.ObjectInfo, error) {
+						*putNames = append(*putNames, name)
+
+						return &jetstream.ObjectInfo{}, nil
+					})
 			},
 			wantErr:      false,
 			wantPutCalls: 1,
@@ -238,38 +101,42 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 		},
 		{
 			name: "when template unchanged in store skips upload",
-			getBytesFunc: func(
-				_ context.Context,
-				_ string,
-			) ([]byte, error) {
-				// Return same content as embedded — SHA will match.
-				return emptyData, nil
-			},
-			putBytesFunc: func(
-				_ context.Context,
-				_ string,
-				_ []byte,
-			) (*jetstream.ObjectInfo, error) {
-				panic("seedStubObjectStore: PutBytes must not be called when SHA matches")
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				_ *[]string,
+			) {
+				// Return same content as embedded — SHA will match, no PutBytes call.
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(emptyData, nil)
 			},
 			wantErr:      false,
 			wantPutCalls: 0,
 		},
 		{
 			name: "when template changed in store overwrites it",
-			getBytesFunc: func(
-				_ context.Context,
-				_ string,
-			) ([]byte, error) {
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				putNames *[]string,
+			) {
 				// Return different content — SHA will differ.
-				return []byte("old content"), nil
-			},
-			putBytesFunc: func(
-				_ context.Context,
-				_ string,
-				_ []byte,
-			) (*jetstream.ObjectInfo, error) {
-				return &jetstream.ObjectInfo{}, nil
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("old content"), nil)
+
+				mockObj.EXPECT().
+					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						name string,
+						_ []byte,
+					) (*jetstream.ObjectInfo, error) {
+						*putNames = append(*putNames, name)
+
+						return &jetstream.ObjectInfo{}, nil
+					})
 			},
 			wantErr:      false,
 			wantPutCalls: 1,
@@ -277,18 +144,26 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 		},
 		{
 			name: "when PutBytes fails returns wrapped error",
-			getBytesFunc: func(
-				_ context.Context,
-				_ string,
-			) ([]byte, error) {
-				return nil, errors.New("not found")
-			},
-			putBytesFunc: func(
-				_ context.Context,
-				_ string,
-				_ []byte,
-			) (*jetstream.ObjectInfo, error) {
-				return nil, errors.New("object store unavailable")
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				putNames *[]string,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+
+				mockObj.EXPECT().
+					PutBytes(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						name string,
+						_ []byte,
+					) (*jetstream.ObjectInfo, error) {
+						*putNames = append(*putNames, name)
+
+						return nil, errors.New("object store unavailable")
+					})
 			},
 			wantErr:      true,
 			errContains:  "upload osapi template",
@@ -298,12 +173,15 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			stub := &seedStubObjectStore{
-				getBytesFunc: tt.getBytesFunc,
-				putBytesFunc: tt.putBytesFunc,
-			}
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
 
-			err := agent.SeedSystemTemplates(s.ctx, s.logger, stub)
+			mockObj := filemocks.NewMockObjectStore(ctrl)
+			putNames := &[]string{}
+
+			tt.setupMock(ctrl, mockObj, putNames)
+
+			err := agent.SeedSystemTemplates(s.ctx, s.logger, mockObj)
 
 			if tt.wantErr {
 				s.Error(err)
@@ -312,10 +190,10 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 				s.NoError(err)
 			}
 
-			s.Len(stub.putBytesCalls, tt.wantPutCalls)
+			s.Len(*putNames, tt.wantPutCalls)
 
 			if tt.wantPutCalls > 0 && tt.wantPutName != "" {
-				s.Equal(tt.wantPutName, stub.putBytesCalls[0].Name)
+				s.Equal(tt.wantPutName, (*putNames)[0])
 			}
 
 			// The embedded .gitkeep is always empty; verify the SHA is consistent.

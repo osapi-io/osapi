@@ -35,16 +35,18 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type StatusPublicTestSuite struct {
 	suite.Suite
 
-	ctrl   *gomock.Controller
-	logger *slog.Logger
-	ctx    context.Context
-	appFs  afero.Fs
-	mockKV *jobmocks.MockKeyValue
+	ctrl    *gomock.Controller
+	logger  *slog.Logger
+	ctx     context.Context
+	appFs   afero.Fs
+	mockKV  *jobmocks.MockKeyValue
+	mockObj *filemocks.MockObjectStore
 }
 
 func (suite *StatusPublicTestSuite) SetupTest() {
@@ -53,6 +55,7 @@ func (suite *StatusPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 	suite.appFs = afero.NewMemMapFs()
 	suite.mockKV = jobmocks.NewMockKeyValue(suite.ctrl)
+	suite.mockObj = filemocks.NewMockObjectStore(suite.ctrl)
 }
 
 func (suite *StatusPublicTestSuite) TearDownTest() {
@@ -196,7 +199,7 @@ func (suite *StatusPublicTestSuite) TestStatus() {
 			provider := file.New(
 				suite.logger,
 				suite.appFs,
-				&stubObjectStore{},
+				suite.mockObj,
 				suite.mockKV,
 				"test-host",
 			)

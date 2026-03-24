@@ -34,6 +34,7 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type TemplatePublicTestSuite struct {
@@ -177,9 +178,11 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 
 			appFs := afero.Fs(afero.NewMemMapFs())
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := &stubObjectStore{
-				getBytesData: []byte(tc.template),
-			}
+			mockObj := filemocks.NewMockObjectStore(ctrl)
+
+			mockObj.EXPECT().
+				GetBytes(gomock.Any(), gomock.Any()).
+				Return([]byte(tc.template), nil)
 
 			if !tc.wantErr {
 				mockKV.EXPECT().

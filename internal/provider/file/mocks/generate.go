@@ -22,3 +22,4 @@
 package mocks
 
 //go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
+//go:generate go tool github.com/golang/mock/mockgen -destination=object_store.gen.go -package=mocks github.com/nats-io/nats.go/jetstream ObjectStore

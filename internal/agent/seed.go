@@ -35,6 +35,11 @@ import (
 //go:embed templates/*
 var systemTemplates embed.FS
 
+// readEmbeddedFile is a package-level variable for testing the read error path.
+var readEmbeddedFile = func(path string) ([]byte, error) {
+	return systemTemplates.ReadFile(path)
+}
+
 // SeedSystemTemplates uploads embedded osapi templates to the NATS
 // object store with the "osapi/" prefix. Templates are updated if
 // the embedded content differs from what's in the store (SHA comparison).
@@ -64,7 +69,7 @@ func SeedSystemTemplates(
 		// Convert "templates/system/cron-wrapper.tmpl" → "system/cron-wrapper.tmpl"
 		objectName := path[len("templates/"):]
 
-		data, readErr := systemTemplates.ReadFile(path)
+		data, readErr := readEmbeddedFile(path)
 		if readErr != nil {
 			return fmt.Errorf("read embedded template %q: %w", path, readErr)
 		}

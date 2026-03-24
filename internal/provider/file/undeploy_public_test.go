@@ -35,6 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type UndeployPublicTestSuite struct {
@@ -169,7 +170,7 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 			defer ctrl.Finish()
 
 			appFs := afero.NewMemMapFs()
-			mockObj := &stubObjectStore{}
+			mockObj := filemocks.NewMockObjectStore(ctrl)
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
 
 			tt.setupMock(ctrl, mockKV, appFs)
