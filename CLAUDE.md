@@ -284,6 +284,28 @@ Conventions:
 - Unused parameters: rename to `_`
 - Import order: stdlib, third-party, local (blank-line separated)
 
+### Logging
+
+All logging uses Go's `log/slog` structured logger. Follow these rules:
+
+- **Subsystem labels**: Every component that holds a logger MUST wrap it
+  with `logger.With(slog.String("subsystem", "..."))` at construction
+  time. This auto-tags every log line from that component. Examples:
+  `"agent"`, `"agent.factory"`, `"api.schedule"`, `"provider.file"`,
+  `"job.client"`, `"metrics"`, `"controller.heartbeat"`.
+- **Always use typed attributes**: Use `slog.String("key", val)`,
+  `slog.Int("key", val)`, `slog.Bool("key", val)`, `slog.Any("key", val)`.
+  Never use positional pairs like `"key", val` — they compile but
+  bypass type safety and are inconsistent with the codebase.
+- **Standard field names**: `error` for errors, `hostname` for hosts,
+  `path` for file paths, `job_id` for job IDs, `name` for entry names,
+  `addr` for addresses.
+- **Error fields**: Use `slog.String("error", err.Error())` for string
+  context or `slog.Any("error", err)` to preserve the error type.
+- **Log levels**: `Debug` for operation dispatch and idempotency skips,
+  `Info` for lifecycle events and state changes, `Warn` for degraded
+  but functional states, `Error` for failures that need attention.
+
 ### Linting
 
 golangci-lint with: errcheck, errname, goimports, govet, prealloc, predeclared, revive, staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded from formatting.
