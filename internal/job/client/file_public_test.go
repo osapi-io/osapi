@@ -156,6 +156,89 @@ func (s *FilePublicTestSuite) TestModifyFileDeploy() {
 	}
 }
 
+func (s *FilePublicTestSuite) TestModifyFileUndeploy() {
+	tests := []struct {
+		name          string
+		hostname      string
+		responseData  string
+		mockError     error
+		expectError   bool
+		errorContains string
+		expectChanged bool
+	}{
+		{
+			name:     "when undeploy succeeds",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"hostname": "server1",
+				"changed": true,
+				"data": {"changed":true,"path":"/etc/cron.d/backup"}
+			}`,
+			expectChanged: true,
+		},
+		{
+			name:     "when undeploy succeeds unchanged",
+			hostname: "server1",
+			responseData: `{
+				"status": "completed",
+				"hostname": "server1",
+				"changed": false,
+				"data": {"changed":false,"path":"/etc/cron.d/backup"}
+			}`,
+			expectChanged: false,
+		},
+		{
+			name:     "when job failed",
+			hostname: "server1",
+			responseData: `{
+				"status": "failed",
+				"error": "failed to remove file"
+			}`,
+			expectError:   true,
+			errorContains: "job failed",
+		},
+		{
+			name:          "when publish fails",
+			hostname:      "server1",
+			mockError:     errors.New("connection failed"),
+			expectError:   true,
+			errorContains: "failed to publish and wait",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			setupPublishAndWaitMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify.host.server1",
+				tt.responseData,
+				tt.mockError,
+			)
+
+			jobID, hostname, changed, err := s.jobsClient.ModifyFileUndeploy(
+				s.ctx,
+				tt.hostname,
+				"/etc/cron.d/backup",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.NotEmpty(jobID)
+				s.Equal("server1", hostname)
+				s.Equal(tt.expectChanged, changed)
+			}
+		})
+	}
+}
+
 func (s *FilePublicTestSuite) TestQueryFileStatus() {
 	tests := []struct {
 		name          string
