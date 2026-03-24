@@ -54,8 +54,8 @@ func (f *File) PostFile(
 		return errResp, nil
 	}
 
-	if strings.HasPrefix(name, "system/") {
-		errMsg := fmt.Sprintf("cannot overwrite protected system file: %s", name)
+	if strings.HasPrefix(name, "osapi/") {
+		errMsg := fmt.Sprintf("cannot overwrite protected osapi file: %s", name)
 		return gen.PostFile403JSONResponse{Error: &errMsg}, nil
 	}
 

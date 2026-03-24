@@ -35,8 +35,8 @@ import (
 //go:embed templates/*
 var systemTemplates embed.FS
 
-// SeedSystemTemplates uploads embedded system templates to the NATS
-// object store with the "system/" prefix. Templates are updated if
+// SeedSystemTemplates uploads embedded osapi templates to the NATS
+// object store with the "osapi/" prefix. Templates are updated if
 // the embedded content differs from what's in the store (SHA comparison).
 // These templates are protected from user deletion.
 func SeedSystemTemplates(
@@ -46,7 +46,9 @@ func SeedSystemTemplates(
 ) error {
 	logger = logger.With(slog.String("subsystem", "agent.seed"))
 
-	return fs.WalkDir(systemTemplates, "templates", func(
+	var seeded int
+
+	err := fs.WalkDir(systemTemplates, "templates", func(
 		path string,
 		d fs.DirEntry,
 		err error,
@@ -75,7 +77,7 @@ func SeedSystemTemplates(
 			existingSHA := computeEmbeddedSHA256(existing)
 			if existingSHA == embeddedSHA {
 				logger.Debug(
-					"system template unchanged, skipping",
+					"osapi template unchanged, skipping",
 					slog.String("name", objectName),
 					slog.String("sha256", embeddedSHA),
 				)
@@ -83,7 +85,7 @@ func SeedSystemTemplates(
 			}
 
 			logger.Info(
-				"system template changed, updating",
+				"osapi template changed, updating",
 				slog.String("name", objectName),
 				slog.String("old_sha256", existingSHA),
 				slog.String("new_sha256", embeddedSHA),
@@ -91,18 +93,29 @@ func SeedSystemTemplates(
 		}
 
 		if _, putErr := objStore.PutBytes(ctx, objectName, data); putErr != nil {
-			return fmt.Errorf("upload system template %q: %w", objectName, putErr)
+			return fmt.Errorf("upload osapi template %q: %w", objectName, putErr)
 		}
 
 		logger.Info(
-			"seeded system template",
+			"seeded osapi template",
 			slog.String("name", objectName),
 			slog.String("sha256", embeddedSHA),
 			slog.Int("size", len(data)),
 		)
 
+		seeded++
+
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if seeded == 0 {
+		logger.Debug("no osapi templates to seed")
+	}
+
+	return nil
 }
 
 // computeEmbeddedSHA256 returns the hex-encoded SHA-256 hash of data.

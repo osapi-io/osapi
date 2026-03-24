@@ -41,8 +41,8 @@ func (f *File) DeleteFileByName(
 		return gen.DeleteFileByName400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if strings.HasPrefix(request.Name, "system/") {
-		errMsg := fmt.Sprintf("cannot delete protected system file: %s", request.Name)
+	if strings.HasPrefix(request.Name, "osapi/") {
+		errMsg := fmt.Sprintf("cannot delete protected osapi file: %s", request.Name)
 		return gen.DeleteFileByName403JSONResponse{Error: &errMsg}, nil
 	}
 

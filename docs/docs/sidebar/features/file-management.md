@@ -101,7 +101,7 @@ explicitly removed.
 
 ## Protected Objects
 
-Files stored under the `system/` name prefix are protected and cannot be deleted
+Files stored under the `osapi/` name prefix are protected and cannot be deleted
 via the `DELETE /file/{name}` endpoint. Attempts to delete a protected object
 return **403 Forbidden**.
 
@@ -113,7 +113,7 @@ depend on.
 To replace a system object's content, use `--force` on upload:
 
 ```bash
-osapi client node file upload --name system/my-script \
+osapi client node file upload --name osapi/my-script \
   --file ./my-script.sh --force
 ```
 

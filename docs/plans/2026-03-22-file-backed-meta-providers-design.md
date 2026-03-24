@@ -46,7 +46,7 @@ User                    Meta Provider              File Provider
 | ------------- | --------------------- | -------------------------------- | ---- |
 | cron (sched)  | cron.d formatted line | `/etc/cron.d/{name}`             | 0644 |
 | cron (intv)   | shell script          | `/etc/cron.{interval}/{name}`    | 0755 |
-| systemd       | unit file             | `/etc/systemd/system/{name}`     | 0644 |
+| systemd       | unit file             | `/etc/systemd/osapi/{name}`     | 0644 |
 | sysctl        | sysctl conf           | `/etc/sysctl.d/{name}.conf`      | 0644 |
 | apt sources   | repo entry            | `/etc/apt/sources.list.d/{name}` | 0644 |
 
@@ -130,18 +130,18 @@ System-managed templates ship with osapi and cannot be deleted by users. These
 are templates that meta providers reference (e.g., a standard systemd unit
 template).
 
-**Storage:** Objects in the NATS object store with a `system/` name prefix are
+**Storage:** Objects in the NATS object store with a `osapi/` name prefix are
 protected. Convention-based, no metadata changes needed.
 
 ```
-system/systemd-unit.tmpl      → protected (cannot delete)
-system/sysctl-conf.tmpl       → protected (cannot delete)
+osapi/systemd-unit.tmpl      → protected (cannot delete)
+osapi/sysctl-conf.tmpl       → protected (cannot delete)
 backup.sh                     → user-managed (deletable)
 my-nginx.conf                 → user-managed (deletable)
 ```
 
 **Enforcement:** The `file delete` handler checks if the object name starts with
-`system/` and returns 403 if so.
+`osapi/` and returns 403 if so.
 
 **Seeding:** The agent seeds system templates into the object store on startup
 (idempotent — skip if already present). Templates are embedded in the binary via
@@ -321,7 +321,7 @@ creates the file provider first.
 - `client node schedule cron update`: remove `--command`, add `--object`,
   `--content-type`, `--vars`
 - `client node file undeploy`: new command to remove deployed file from disk
-- `client node file list`: add SOURCE column (system/user)
+- `client node file list`: add SOURCE column (osapi/user)
 
 ## Scope Summary
 

@@ -72,8 +72,8 @@ func (f *File) GetFiles(
 		}
 
 		source := "user"
-		if strings.HasPrefix(obj.Name, "system/") {
-			source = "system"
+		if strings.HasPrefix(obj.Name, "osapi/") {
+			source = "osapi"
 		}
 
 		files = append(files, gen.FileInfo{
