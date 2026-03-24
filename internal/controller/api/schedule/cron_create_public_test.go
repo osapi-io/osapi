@@ -90,10 +90,12 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
-					Name:     "backup",
-					Schedule: strPtr("0 2 * * *"),
-					Object:   "/usr/bin/backup.sh",
-					User:     strPtr("root"),
+					Name:        "backup",
+					Schedule:    strPtr("0 2 * * *"),
+					Object:      "backup-script",
+					User:        strPtr("root"),
+					ContentType: (*gen.CronCreateRequestContentType)(strPtr("template")),
+					Vars:        &map[string]interface{}{"region": "us-east"},
 				},
 			},
 			setupMock: func() {
