@@ -155,6 +155,48 @@ Create `internal/controller/api/{domain}/`:
   See existing examples in `internal/controller/api/job/` and
   `internal/controller/api/audit/`.
 
+#### Broadcast Support (MANDATORY for node-targeted operations)
+
+Every operation under `/node/{hostname}/...` MUST support broadcast
+targeting (`_all`, `_any`, hostname, label selectors). The handler
+checks `job.IsBroadcastTarget(hostname)` and routes to a broadcast
+function. Both single-target and broadcast paths return the same
+collection response shape.
+
+**Response pattern** — all node-targeted operations return:
+```json
+{
+  "job_id": "...",
+  "results": [
+    {"hostname": "web-01", "error": "", ...domain fields...},
+    {"hostname": "web-02", "error": "unsupported", ...}
+  ]
+}
+```
+
+Every result item MUST have `hostname` and `error` fields.
+Single-target returns 1 result; broadcast returns N results.
+Failed/skipped agents appear as entries with `error` set.
+
+**Handler pattern:**
+```go
+func (s *Handler) PostOperation(ctx, request) {
+    validate(request)
+    hostname := request.Hostname
+    if job.IsBroadcastTarget(hostname) {
+        return s.postOperationBroadcast(ctx, hostname, ...)
+    }
+    // Single-target: wrap in collection with 1 result.
+}
+```
+
+**Job client** — every operation needs both a single-target method
+and a `*Broadcast` method that calls `publishAndCollect`. Add both
+to the `JobClient` interface in `internal/job/client/types.go`.
+
+See `internal/controller/api/node/node_hostname_get.go` for the
+reference implementation.
+
 ### Step 3: Server Wiring (4 files in `internal/controller/api/`)
 
 - `handler_{domain}.go` — `Get{Domain}Handler()` method that wraps the
