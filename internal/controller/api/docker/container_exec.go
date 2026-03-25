@@ -64,7 +64,12 @@ func (s *Container) PostNodeContainerDockerExec(
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Any("command", data.Command),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeContainerDockerExecBroadcast(ctx, hostname, id, data)
+	}
 
 	resp, err := s.JobClient.ModifyDockerExec(ctx, hostname, id, data)
 	if err != nil {
@@ -72,6 +77,19 @@ func (s *Container) PostNodeContainerDockerExec(
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
+	item := dockerExecItemFromResponse(resp)
+	jobUUID := uuid.MustParse(resp.JobID)
+
+	return gen.PostNodeContainerDockerExec202JSONResponse{
+		JobId:   &jobUUID,
+		Results: []gen.DockerExecResultItem{item},
+	}, nil
+}
+
+// dockerExecItemFromResponse builds a DockerExecResultItem from a job response.
+func dockerExecItemFromResponse(
+	resp *job.Response,
+) gen.DockerExecResultItem {
 	var execResult struct {
 		Stdout   string `json:"stdout"`
 		Stderr   string `json:"stderr"`
@@ -81,22 +99,47 @@ func (s *Container) PostNodeContainerDockerExec(
 		_ = json.Unmarshal(resp.Data, &execResult)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
-	changed := resp.Changed
 	stdout := execResult.Stdout
 	stderr := execResult.Stderr
 	exitCode := execResult.ExitCode
 
+	return gen.DockerExecResultItem{
+		Hostname: resp.Hostname,
+		Stdout:   &stdout,
+		Stderr:   &stderr,
+		ExitCode: &exitCode,
+		Changed:  resp.Changed,
+	}
+}
+
+// postNodeContainerDockerExecBroadcast handles broadcast targets for container exec.
+func (s *Container) postNodeContainerDockerExecBroadcast(
+	ctx context.Context,
+	target string,
+	id string,
+	data *job.DockerExecData,
+) (gen.PostNodeContainerDockerExecResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyDockerExecBroadcast(ctx, target, id, data)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.DockerExecResultItem
+	for _, resp := range results {
+		responses = append(responses, dockerExecItemFromResponse(resp))
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerExecResultItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerExec202JSONResponse{
-		JobId: &jobUUID,
-		Results: []gen.DockerExecResultItem{
-			{
-				Hostname: resp.Hostname,
-				Stdout:   &stdout,
-				Stderr:   &stderr,
-				ExitCode: &exitCode,
-				Changed:  changed,
-			},
-		},
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }

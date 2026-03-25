@@ -249,49 +249,97 @@ type JobClient interface {
 		target string,
 		data *job.DockerCreateData,
 	) (*job.Response, error)
+	ModifyDockerCreateBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerCreateData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerStart(
 		ctx context.Context,
 		target string,
 		id string,
 	) (*job.Response, error)
+	ModifyDockerStartBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerStop(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerStopData,
 	) (*job.Response, error)
+	ModifyDockerStopBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerStopData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerRemove(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerRemoveData,
 	) (*job.Response, error)
+	ModifyDockerRemoveBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerRemoveData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	QueryDockerList(
 		ctx context.Context,
 		target string,
 		data *job.DockerListData,
 	) (*job.Response, error)
+	QueryDockerListBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerListData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	QueryDockerInspect(
 		ctx context.Context,
 		target string,
 		id string,
 	) (*job.Response, error)
+	QueryDockerInspectBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerExec(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerExecData,
 	) (*job.Response, error)
+	ModifyDockerExecBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerExecData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerPull(
 		ctx context.Context,
 		target string,
 		data *job.DockerPullData,
 	) (*job.Response, error)
+	ModifyDockerPullBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerPullData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerImageRemove(
 		ctx context.Context,
 		target string,
 		data *job.DockerImageRemoveData,
 	) (*job.Response, error)
+	ModifyDockerImageRemoveBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerImageRemoveData,
+	) (string, map[string]*job.Response, map[string]string, error)
 
 	// Schedule/Cron operations
 	QueryScheduleCronList(

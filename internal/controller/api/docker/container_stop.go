@@ -61,7 +61,12 @@ func (s *Container) PostNodeContainerDockerStop(
 	s.logger.Debug("container stop",
 		slog.String("target", hostname),
 		slog.String("id", id),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeContainerDockerStopBroadcast(ctx, hostname, id, data)
+	}
 
 	resp, err := s.JobClient.ModifyDockerStop(ctx, hostname, id, data)
 	if err != nil {
@@ -83,5 +88,43 @@ func (s *Container) PostNodeContainerDockerStop(
 				Message:  &msg,
 			},
 		},
+	}, nil
+}
+
+// postNodeContainerDockerStopBroadcast handles broadcast targets for container stop.
+func (s *Container) postNodeContainerDockerStopBroadcast(
+	ctx context.Context,
+	target string,
+	id string,
+	data *job.DockerStopData,
+) (gen.PostNodeContainerDockerStopResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyDockerStopBroadcast(ctx, target, id, data)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
+	}
+
+	msg := "container stopped"
+	var responses []gen.DockerActionResultItem
+	for _, resp := range results {
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: resp.Hostname,
+			Id:       &id,
+			Changed:  resp.Changed,
+			Message:  &msg,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeContainerDockerStop202JSONResponse{
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }

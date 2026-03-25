@@ -28,6 +28,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -50,7 +51,12 @@ func (s *Container) GetNodeContainerDockerByID(
 	s.logger.Debug("container inspect",
 		slog.String("target", hostname),
 		slog.String("id", id),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.getNodeContainerDockerInspectBroadcast(ctx, hostname, id)
+	}
 
 	resp, err := s.JobClient.QueryDockerInspect(ctx, hostname, id)
 	if err != nil {
@@ -58,6 +64,19 @@ func (s *Container) GetNodeContainerDockerByID(
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
+	item := dockerDetailItemFromResponse(resp)
+	jobUUID := uuid.MustParse(resp.JobID)
+
+	return gen.GetNodeContainerDockerByID200JSONResponse{
+		JobId:   &jobUUID,
+		Results: []gen.DockerDetailResponse{item},
+	}, nil
+}
+
+// dockerDetailItemFromResponse builds a DockerDetailResponse from a job response.
+func dockerDetailItemFromResponse(
+	resp *job.Response,
+) gen.DockerDetailResponse {
 	var detail struct {
 		ID              string `json:"id"`
 		Name            string `json:"name"`
@@ -99,26 +118,49 @@ func (s *Container) GetNodeContainerDockerByID(
 		}
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
-	changed := resp.Changed
+	return gen.DockerDetailResponse{
+		Hostname:        resp.Hostname,
+		Id:              stringPtrOrNil(detail.ID),
+		Name:            stringPtrOrNil(detail.Name),
+		Image:           stringPtrOrNil(detail.Image),
+		State:           stringPtrOrNil(detail.State),
+		Created:         stringPtrOrNil(detail.Created),
+		Health:          stringPtrOrNil(detail.Health),
+		Ports:           nilIfEmptyStrSlice(ports),
+		Mounts:          nilIfEmptyStrSlice(mounts),
+		NetworkSettings: networkSettings,
+		Changed:         resp.Changed,
+	}
+}
 
+// getNodeContainerDockerInspectBroadcast handles broadcast targets for container inspect.
+func (s *Container) getNodeContainerDockerInspectBroadcast(
+	ctx context.Context,
+	target string,
+	id string,
+) (gen.GetNodeContainerDockerByIDResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.QueryDockerInspectBroadcast(ctx, target, id)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.DockerDetailResponse
+	for _, resp := range results {
+		responses = append(responses, dockerDetailItemFromResponse(resp))
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerDetailResponse{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeContainerDockerByID200JSONResponse{
-		JobId: &jobUUID,
-		Results: []gen.DockerDetailResponse{
-			{
-				Hostname:        resp.Hostname,
-				Id:              stringPtrOrNil(detail.ID),
-				Name:            stringPtrOrNil(detail.Name),
-				Image:           stringPtrOrNil(detail.Image),
-				State:           stringPtrOrNil(detail.State),
-				Created:         stringPtrOrNil(detail.Created),
-				Health:          stringPtrOrNil(detail.Health),
-				Ports:           nilIfEmptyStrSlice(ports),
-				Mounts:          nilIfEmptyStrSlice(mounts),
-				NetworkSettings: networkSettings,
-				Changed:         changed,
-			},
-		},
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }
 
