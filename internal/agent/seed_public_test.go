@@ -22,8 +22,6 @@ package agent_test
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -39,15 +37,6 @@ import (
 	"github.com/retr0h/osapi/internal/agent"
 	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
-
-// computeSeedSHA256 returns the hex-encoded SHA-256 hash of data.
-func computeSeedSHA256(
-	data []byte,
-) string {
-	h := sha256.Sum256(data)
-
-	return hex.EncodeToString(h[:])
-}
 
 // SeedPublicTestSuite tests the exported SeedSystemTemplates function.
 type SeedPublicTestSuite struct {
