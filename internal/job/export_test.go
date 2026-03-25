@@ -18,19 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+package job
 
-import (
-	"log/slog"
+// SetDefaultHostnameProvider overrides the default hostname provider for testing.
+func SetDefaultHostnameProvider(p HostnameProvider) {
+	defaultHostnameProvider = p
+}
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
-)
-
-// newTestAuditHandler creates an audit handler for integration tests.
-func newTestAuditHandler(
-	logger *slog.Logger,
-	store auditstore.Store,
-) *auditapi.Audit {
-	return auditapi.New(logger, store)
+// ResetDefaultHostnameProvider restores the default hostname provider.
+func ResetDefaultHostnameProvider() {
+	defaultHostnameProvider = gopsutilHostnameProvider{}
 }

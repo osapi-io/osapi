@@ -30,9 +30,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	auditstore "github.com/retr0h/osapi/internal/audit"
+	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
@@ -45,17 +47,23 @@ type AuditExportPublicTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+	mockCtrl  *gomock.Controller
+	mockStore *auditmocks.MockStore
 	handler   *auditapi.Audit
-	store     *fakeStore
 	ctx       context.Context
 }
 
 func (s *AuditExportPublicTestSuite) SetupTest() {
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	s.store = &fakeStore{}
-	s.handler = auditapi.New(s.logger, s.store)
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockStore = auditmocks.NewMockStore(s.mockCtrl)
+	s.handler = auditapi.New(s.logger, s.mockStore)
 	s.ctx = context.Background()
+}
+
+func (s *AuditExportPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
 }
 
 func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
@@ -67,19 +75,21 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 		{
 			name: "returns entries successfully",
 			setupStore: func() {
-				s.store.listAllEntries = []auditstore.Entry{
-					{
-						ID:           "550e8400-e29b-41d4-a716-446655440000",
-						Timestamp:    time.Now(),
-						User:         "user@example.com",
-						Roles:        []string{"admin"},
-						Method:       "GET",
-						Path:         "/node/hostname",
-						SourceIP:     "127.0.0.1",
-						ResponseCode: 200,
-						DurationMs:   42,
-					},
-				}
+				s.mockStore.EXPECT().
+					ListAll(gomock.Any()).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/node/hostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+						},
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetAuditExportResponseObject) {
 				r, ok := resp.(gen.GetAuditExport200JSONResponse)
@@ -92,7 +102,9 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 		{
 			name: "returns empty list",
 			setupStore: func() {
-				s.store.listAllEntries = []auditstore.Entry{}
+				s.mockStore.EXPECT().
+					ListAll(gomock.Any()).
+					Return([]auditstore.Entry{}, nil)
 			},
 			validateFunc: func(resp gen.GetAuditExportResponseObject) {
 				r, ok := resp.(gen.GetAuditExport200JSONResponse)
@@ -104,20 +116,22 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 		{
 			name: "returns entry with operation ID",
 			setupStore: func() {
-				s.store.listAllEntries = []auditstore.Entry{
-					{
-						ID:           "550e8400-e29b-41d4-a716-446655440000",
-						Timestamp:    time.Now(),
-						User:         "user@example.com",
-						Roles:        []string{"admin"},
-						Method:       "GET",
-						Path:         "/node/hostname",
-						OperationID:  "getNodeHostname",
-						SourceIP:     "127.0.0.1",
-						ResponseCode: 200,
-						DurationMs:   42,
-					},
-				}
+				s.mockStore.EXPECT().
+					ListAll(gomock.Any()).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/node/hostname",
+							OperationID:  "getNodeHostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+						},
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetAuditExportResponseObject) {
 				r, ok := resp.(gen.GetAuditExport200JSONResponse)
@@ -130,7 +144,9 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 		{
 			name: "returns 500 on store error",
 			setupStore: func() {
-				s.store.listAllErr = fmt.Errorf("store error")
+				s.mockStore.EXPECT().
+					ListAll(gomock.Any()).
+					Return(nil, fmt.Errorf("store error"))
 			},
 			validateFunc: func(resp gen.GetAuditExportResponseObject) {
 				_, ok := resp.(gen.GetAuditExport500JSONResponse)
@@ -141,7 +157,6 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.store.reset()
 			tt.setupStore()
 			resp, err := s.handler.GetAuditExport(s.ctx, gen.GetAuditExportRequestObject{})
 			s.NoError(err)
@@ -153,26 +168,28 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExport() {
 func (s *AuditExportPublicTestSuite) TestGetAuditExportHTTP() {
 	tests := []struct {
 		name         string
-		store        *fakeStore
+		setupStore   func(mock *auditmocks.MockStore)
 		wantCode     int
 		wantContains []string
 	}{
 		{
 			name: "when valid request returns entries",
-			store: &fakeStore{
-				listAllEntries: []auditstore.Entry{
-					{
-						ID:           "550e8400-e29b-41d4-a716-446655440000",
-						Timestamp:    time.Now(),
-						User:         "user@example.com",
-						Roles:        []string{"admin"},
-						Method:       "GET",
-						Path:         "/node/hostname",
-						SourceIP:     "127.0.0.1",
-						ResponseCode: 200,
-						DurationMs:   42,
-					},
-				},
+			setupStore: func(mock *auditmocks.MockStore) {
+				mock.EXPECT().
+					ListAll(gomock.Any()).
+					Return([]auditstore.Entry{
+						{
+							ID:           "550e8400-e29b-41d4-a716-446655440000",
+							Timestamp:    time.Now(),
+							User:         "user@example.com",
+							Roles:        []string{"admin"},
+							Method:       "GET",
+							Path:         "/node/hostname",
+							SourceIP:     "127.0.0.1",
+							ResponseCode: 200,
+							DurationMs:   42,
+						},
+					}, nil)
 			},
 			wantCode:     http.StatusOK,
 			wantContains: []string{`"total_items":1`},
@@ -181,9 +198,15 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportHTTP() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mock := auditmocks.NewMockStore(ctrl)
+			tc.setupStore(mock)
+
 			a := api.New(s.appConfig, s.logger)
 
-			auditHandler := newTestAuditHandler(s.logger, tc.store)
+			auditHandler := newTestAuditHandler(s.logger, mock)
 			strictHandler := gen.NewStrictHandler(auditHandler, nil)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
@@ -212,6 +235,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 	tests := []struct {
 		name         string
 		setupAuth    func(req *http.Request)
+		setupStore   func(mock *auditmocks.MockStore)
 		wantCode     int
 		wantContains []string
 	}{
@@ -220,6 +244,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 			setupAuth: func(_ *http.Request) {
 				// No auth header set
 			},
+			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusUnauthorized,
 			wantContains: []string{"Bearer token required"},
 		},
@@ -235,6 +260,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
+			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusForbidden,
 			wantContains: []string{"Insufficient permissions"},
 		},
@@ -250,6 +276,11 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
+			setupStore: func(mock *auditmocks.MockStore) {
+				mock.EXPECT().
+					ListAll(gomock.Any()).
+					Return([]auditstore.Entry{}, nil)
+			},
 			wantCode:     http.StatusOK,
 			wantContains: []string{`"total_items":0`},
 		},
@@ -257,9 +288,11 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := &fakeStore{
-				listAllEntries: []auditstore.Entry{},
-			}
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mock := auditmocks.NewMockStore(ctrl)
+			tc.setupStore(mock)
 
 			appConfig := config.Config{
 				Controller: config.Controller{
@@ -272,7 +305,7 @@ func (s *AuditExportPublicTestSuite) TestGetAuditExportRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetAuditHandler(store)
+			handlers := server.GetAuditHandler(mock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

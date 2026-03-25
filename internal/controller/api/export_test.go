@@ -18,19 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+package api
 
 import (
 	"log/slog"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
+	"github.com/labstack/echo/v4"
+
+	"github.com/retr0h/osapi/internal/audit"
 )
 
-// newTestAuditHandler creates an audit handler for integration tests.
-func newTestAuditHandler(
+// ExportAuditMiddleware exposes the private auditMiddleware for testing.
+func ExportAuditMiddleware(
+	store audit.Store,
 	logger *slog.Logger,
-	store auditstore.Store,
-) *auditapi.Audit {
-	return auditapi.New(logger, store)
+) echo.MiddlewareFunc {
+	return auditMiddleware(store, logger)
 }

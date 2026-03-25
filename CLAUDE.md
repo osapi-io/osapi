@@ -266,15 +266,44 @@ Three test layers:
   writes).
 
 Conventions:
-- ALL tests in `internal/job/` MUST use `testify/suite` with table-driven patterns
-- Internal tests: `*_test.go` in same package (e.g., `package job`) for private functions
-- Public tests: `*_public_test.go` in test package (e.g., `package job_test`) for exported functions
-- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`,
-  `*_test.go` → `{Name}TestSuite`
+- ALL tests MUST use `testify/suite` with table-driven patterns
+- Public tests: `*_public_test.go` in test package (e.g.,
+  `package job_test`) for exported functions. This is the default —
+  all new tests should be public tests.
+- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`
 - Table-driven structure with `validateFunc` callbacks
-- One suite method per function under test — all scenarios (success, errors, edge cases) as rows in one table
+- One suite method per function under test — all scenarios (success,
+  errors, edge cases) as rows in one table
 - Avoid generic file names like `helpers.go` or `utils.go` — name
   files after what they contain
+
+#### Mocking
+
+- **Always use gomock** (`go:generate mockgen`) for interface mocks.
+  Generated mocks live in `{package}/mocks/` directories alongside
+  their source interfaces. Never hand-roll mock structs.
+- **export_test.go pattern** for testing unexported internals: create
+  an `export_test.go` file in the production package that exposes
+  unexported variables or functions to the `_test` package:
+  ```go
+  // export_test.go — package file
+  package file
+
+  func SetMarshalJSON(fn func(interface{}) ([]byte, error)) {
+      marshalJSON = fn
+  }
+  func ResetMarshalJSON() { marshalJSON = json.Marshal }
+  ```
+  Public tests then call `file.SetMarshalJSON(...)` and
+  `defer file.ResetMarshalJSON()`. This avoids internal tests,
+  import cycles, and hand-rolled stubs.
+- **TearDownSubTest** — use `suite.TearDownSubTest()` to reset
+  swapped variables between table-driven sub-tests, not `defer`
+  inside the loop.
+- **Filesystem testing** — use `avfs` (`memfs.New()` for in-memory,
+  `failfs.New()` for targeted error injection). Never use
+  `afero`. The only exception for hand-rolled types is stdlib
+  interfaces like `fs.FS` or `net.Conn` where gomock is impractical.
 
 ### Go Patterns
 

@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -53,6 +54,10 @@ func (suite *DeployPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
+func (suite *DeployPublicTestSuite) TearDownSubTest() {
+	file.ResetMarshalJSON()
+}
+
 func (suite *DeployPublicTestSuite) TearDownTest() {}
 
 func (suite *DeployPublicTestSuite) TestDeploy() {
@@ -63,6 +68,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 
 	tests := []struct {
 		name         string
+		setupFunc    func()
 		setupMock    func(*gomock.Controller, *filemocks.MockObjectStore, *jobmocks.MockKeyValue, *avfs.VFS)
 		req          file.DeployRequest
 		want         *file.DeployResult
@@ -70,6 +76,35 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 		wantErrMsg   string
 		validateFunc func(avfs.VFS)
 	}{
+		{
+			name: "when marshal state fails returns error",
+			setupFunc: func() {
+				file.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal failure")
+				})
+			},
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("server { listen 80; }"), nil)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to marshal file state",
+		},
 		{
 			name: "when deploy succeeds (new file)",
 			setupMock: func(
@@ -514,6 +549,10 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 		suite.Run(tc.name, func() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
+
+			if tc.setupFunc != nil {
+				tc.setupFunc()
+			}
 
 			var appFs avfs.VFS = memfs.New()
 			mockKV := jobmocks.NewMockKeyValue(ctrl)

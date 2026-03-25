@@ -45,6 +45,31 @@ func (s *HostnamePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *HostnamePublicTestSuite) TestGetAgentHostnameProviderError() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "falls back to unknown when provider errors",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			mockProvider := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+			mockProvider.EXPECT().Hostname().Return("", errors.New("provider error"))
+
+			job.SetDefaultHostnameProvider(mockProvider)
+			defer job.ResetDefaultHostnameProvider()
+
+			hostname, err := job.GetAgentHostname("")
+
+			s.NoError(err)
+			s.Equal("unknown", hostname)
+		})
+	}
+}
+
 func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 	tests := []struct {
 		name               string

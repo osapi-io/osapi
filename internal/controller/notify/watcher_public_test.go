@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package notify
+package notify_test
 
 import (
 	"context"
@@ -32,39 +32,33 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/controller/notify"
+	notifymocks "github.com/retr0h/osapi/internal/controller/notify/mocks"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
-// recordingNotifier is a hand-rolled test double for Notifier that records
-// all Notify calls for assertion in tests.
-type recordingNotifier struct {
-	events []ConditionEvent
-}
-
-func (r *recordingNotifier) Notify(
-	_ context.Context,
-	event ConditionEvent,
-) error {
-	r.events = append(r.events, event)
-	return nil
-}
-
-type WatcherTestSuite struct {
+type WatcherPublicTestSuite struct {
 	suite.Suite
 
-	notifier *recordingNotifier
-	watcher  *Watcher
+	ctrl         *gomock.Controller
+	mockNotifier *notifymocks.MockNotifier
+	capturedEvts []notify.ConditionEvent
+	watcher      *notify.Watcher
 }
 
-func (s *WatcherTestSuite) SetupTest() {
-	s.notifier = &recordingNotifier{}
-	s.watcher = NewWatcher(nil, s.notifier, slog.Default(), 0)
+func (s *WatcherPublicTestSuite) SetupTest() {
+	s.ctrl = gomock.NewController(s.T())
+	s.mockNotifier = notifymocks.NewMockNotifier(s.ctrl)
+	s.capturedEvts = nil
+	s.watcher = notify.NewWatcher(nil, s.mockNotifier, slog.Default(), 0)
 }
 
-func (s *WatcherTestSuite) TearDownTest() {}
+func (s *WatcherPublicTestSuite) TearDownTest() {
+	s.ctrl.Finish()
+}
 
-func (s *WatcherTestSuite) TestDetectTransitions() {
+func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 	tests := []struct {
 		name          string
 		key           string
@@ -72,7 +66,8 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 		hostname      string
 		conditions    []job.Condition
 		setupPrev     func()
-		validateFunc  func(events []ConditionEvent)
+		wantEvents    int
+		validateFunc  func(events []notify.ConditionEvent)
 	}{
 		{
 			name:          "detects new condition",
@@ -87,8 +82,9 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 					LastTransitionTime: time.Now(),
 				},
 			},
-			setupPrev: func() {},
-			validateFunc: func(events []ConditionEvent) {
+			setupPrev:  func() {},
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
@@ -103,12 +99,16 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 			hostname:      "web-01",
 			conditions:    []job.Condition{},
 			setupPrev: func() {
-				// Seed previous state with an active condition.
-				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
-				}
+				notify.WatcherSetPrevEntry(
+					s.watcher,
+					"agents.web_01",
+					map[string]*notify.ExportConditionState{
+						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					},
+				)
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
@@ -130,14 +130,16 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 				},
 			},
 			setupPrev: func() {
-				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: {
-						active:       true,
-						lastNotified: time.Now(),
+				notify.WatcherSetPrevEntry(
+					s.watcher,
+					"agents.web_01",
+					map[string]*notify.ExportConditionState{
+						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
-				}
+				)
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 0,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Empty(events)
 			},
 		},
@@ -154,15 +156,20 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 				},
 			},
 			setupPrev: func() {
-				s.watcher.renotifyInterval = 1 * time.Millisecond
-				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: {
-						active:       true,
-						lastNotified: time.Now().Add(-1 * time.Second),
+				notify.WatcherSetRenotifyInterval(s.watcher, 1*time.Millisecond)
+				notify.WatcherSetPrevEntry(
+					s.watcher,
+					"agents.web_01",
+					map[string]*notify.ExportConditionState{
+						job.ConditionMemoryPressure: notify.NewConditionState(
+							true,
+							time.Now().Add(-1*time.Second),
+						),
 					},
-				}
+				)
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.True(events[0].Active)
 				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
@@ -181,15 +188,17 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 				},
 			},
 			setupPrev: func() {
-				s.watcher.renotifyInterval = 1 * time.Hour
-				s.watcher.prev["agents.web_01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: {
-						active:       true,
-						lastNotified: time.Now(),
+				notify.WatcherSetRenotifyInterval(s.watcher, 1*time.Hour)
+				notify.WatcherSetPrevEntry(
+					s.watcher,
+					"agents.web_01",
+					map[string]*notify.ExportConditionState{
+						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
-				}
+				)
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 0,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Empty(events)
 			},
 		},
@@ -197,25 +206,42 @@ func (s *WatcherTestSuite) TestDetectTransitions() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			// Reset watcher and notifier state between sub-tests.
-			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]*conditionState)
+			// Reset captured events and watcher state between sub-tests.
+			s.capturedEvts = nil
+			notify.WatcherSetPrev(
+				s.watcher,
+				make(map[string]map[string]*notify.ExportConditionState),
+			)
+
+			if tt.wantEvents > 0 {
+				s.mockNotifier.EXPECT().
+					Notify(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						event notify.ConditionEvent,
+					) error {
+						s.capturedEvts = append(s.capturedEvts, event)
+						return nil
+					}).
+					Times(tt.wantEvents)
+			}
 
 			tt.setupPrev()
 
-			s.watcher.detectTransitions(
+			notify.WatcherDetectTransitions(
+				s.watcher,
 				tt.key,
 				tt.componentType,
 				tt.hostname,
 				tt.conditions,
 			)
 
-			tt.validateFunc(s.notifier.events)
+			tt.validateFunc(s.capturedEvts)
 		})
 	}
 }
 
-func (s *WatcherTestSuite) TestParseRegistryKey() {
+func (s *WatcherPublicTestSuite) TestParseRegistryKey() {
 	tests := []struct {
 		name              string
 		key               string
@@ -262,7 +288,7 @@ func (s *WatcherTestSuite) TestParseRegistryKey() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			componentType, hostname, ok := parseRegistryKey(tt.key)
+			componentType, hostname, ok := notify.ParseRegistryKey(tt.key)
 
 			s.Equal(tt.wantComponentType, componentType)
 			s.Equal(tt.wantHostname, hostname)
@@ -271,7 +297,7 @@ func (s *WatcherTestSuite) TestParseRegistryKey() {
 	}
 }
 
-func (s *WatcherTestSuite) TestExtractConditions() {
+func (s *WatcherPublicTestSuite) TestExtractConditions() {
 	tests := []struct {
 		name          string
 		key           string
@@ -386,7 +412,12 @@ func (s *WatcherTestSuite) TestExtractConditions() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			conditions, ok := s.watcher.extractConditions(tt.key, tt.componentType, tt.value())
+			conditions, ok := notify.WatcherExtractConditions(
+				s.watcher,
+				tt.key,
+				tt.componentType,
+				tt.value(),
+			)
 
 			s.Equal(tt.wantOK, ok)
 			tt.validateFunc(conditions)
@@ -394,11 +425,12 @@ func (s *WatcherTestSuite) TestExtractConditions() {
 	}
 }
 
-func (s *WatcherTestSuite) TestHandleEntry() {
+func (s *WatcherPublicTestSuite) TestHandleEntry() {
 	tests := []struct {
 		name         string
 		setupEntry   func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry
-		validateFunc func(events []ConditionEvent)
+		wantEvents   int
+		validateFunc func(events []notify.ConditionEvent)
 	}{
 		{
 			name: "ignores entry with unrecognized key",
@@ -407,7 +439,8 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 				entry.EXPECT().Key().Return("unknown.host")
 				return entry
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 0,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Empty(events)
 			},
 		},
@@ -419,7 +452,8 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 				entry.EXPECT().Operation().Return(jetstream.KeyValueDelete)
 				return entry
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
@@ -438,7 +472,8 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 				entry.EXPECT().Operation().Return(jetstream.KeyValuePurge).Times(2)
 				return entry
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("nats", events[0].ComponentType)
 				s.Equal("nats-01", events[0].Hostname)
@@ -465,7 +500,8 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 				entry.EXPECT().Value().Return(b)
 				return entry
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 1,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
@@ -483,7 +519,8 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 				entry.EXPECT().Value().Return([]byte("invalid"))
 				return entry
 			},
-			validateFunc: func(events []ConditionEvent) {
+			wantEvents: 0,
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Empty(events)
 			},
 		},
@@ -494,25 +531,41 @@ func (s *WatcherTestSuite) TestHandleEntry() {
 			ctrl := gomock.NewController(s.T())
 			defer ctrl.Finish()
 
-			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]*conditionState)
+			s.capturedEvts = nil
+			notify.WatcherSetPrev(
+				s.watcher,
+				make(map[string]map[string]*notify.ExportConditionState),
+			)
+
+			if tt.wantEvents > 0 {
+				s.mockNotifier.EXPECT().
+					Notify(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						event notify.ConditionEvent,
+					) error {
+						s.capturedEvts = append(s.capturedEvts, event)
+						return nil
+					}).
+					Times(tt.wantEvents)
+			}
 
 			entry := tt.setupEntry(ctrl)
-			s.watcher.handleEntry(context.Background(), entry)
+			notify.WatcherHandleEntry(context.Background(), s.watcher, entry)
 
-			tt.validateFunc(s.notifier.events)
+			tt.validateFunc(s.capturedEvts)
 		})
 	}
 }
 
-func (s *WatcherTestSuite) TestHandleDelete() {
+func (s *WatcherPublicTestSuite) TestHandleDelete() {
 	tests := []struct {
 		name          string
 		key           string
 		componentType string
 		hostname      string
 		setupPrev     func()
-		validateFunc  func(events []ConditionEvent)
+		validateFunc  func(events []notify.ConditionEvent)
 	}{
 		{
 			name:          "emits ComponentUnreachable event",
@@ -520,7 +573,7 @@ func (s *WatcherTestSuite) TestHandleDelete() {
 			componentType: "agent",
 			hostname:      "web-01",
 			setupPrev:     func() {},
-			validateFunc: func(events []ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
@@ -535,33 +588,59 @@ func (s *WatcherTestSuite) TestHandleDelete() {
 			componentType: "agent",
 			hostname:      "web-01",
 			setupPrev: func() {
-				s.watcher.prev["agents.web-01"] = map[string]*conditionState{
-					job.ConditionMemoryPressure: {active: true, lastNotified: time.Now()},
-				}
+				notify.WatcherSetPrevEntry(
+					s.watcher,
+					"agents.web-01",
+					map[string]*notify.ExportConditionState{
+						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					},
+				)
 			},
-			validateFunc: func(events []ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.Equal("ComponentUnreachable", events[0].Condition)
-				s.Nil(s.watcher.prev["agents.web-01"])
+				prev := notify.WatcherGetPrev(s.watcher)
+				s.Nil(prev["agents.web-01"])
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]*conditionState)
+			s.capturedEvts = nil
+			notify.WatcherSetPrev(
+				s.watcher,
+				make(map[string]map[string]*notify.ExportConditionState),
+			)
+
+			// HandleDelete always emits exactly one ComponentUnreachable event.
+			s.mockNotifier.EXPECT().
+				Notify(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(
+					_ context.Context,
+					event notify.ConditionEvent,
+				) error {
+					s.capturedEvts = append(s.capturedEvts, event)
+					return nil
+				}).
+				Times(1)
 
 			tt.setupPrev()
 
-			s.watcher.handleDelete(context.Background(), tt.key, tt.componentType, tt.hostname)
+			notify.WatcherHandleDelete(
+				context.Background(),
+				s.watcher,
+				tt.key,
+				tt.componentType,
+				tt.hostname,
+			)
 
-			tt.validateFunc(s.notifier.events)
+			tt.validateFunc(s.capturedEvts)
 		})
 	}
 }
 
-func (s *WatcherTestSuite) TestStart() {
+func (s *WatcherPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
 		setup        func(ctrl *gomock.Controller, ctx context.Context) *jobmocks.MockKeyValue
@@ -681,14 +760,17 @@ func (s *WatcherTestSuite) TestStart() {
 			ctrl := gomock.NewController(s.T())
 			defer ctrl.Finish()
 
-			s.notifier.events = nil
-			s.watcher.prev = make(map[string]map[string]*conditionState)
+			s.capturedEvts = nil
+			notify.WatcherSetPrev(
+				s.watcher,
+				make(map[string]map[string]*notify.ExportConditionState),
+			)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			kv := tt.setup(ctrl, ctx)
-			s.watcher.kv = kv
+			notify.WatcherSetKV(s.watcher, kv)
 
 			// Cancel context immediately for cases that need context cancellation.
 			// For cases with closed channels, the channel close drives exit.
@@ -713,6 +795,6 @@ func (s *WatcherTestSuite) TestStart() {
 	}
 }
 
-func TestWatcherTestSuite(t *testing.T) {
-	suite.Run(t, new(WatcherTestSuite))
+func TestWatcherPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(WatcherPublicTestSuite))
 }

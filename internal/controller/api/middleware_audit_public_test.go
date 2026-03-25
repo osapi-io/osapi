@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package api_test
 
 import (
 	"context"
@@ -34,16 +34,20 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/audit"
+	"github.com/retr0h/osapi/internal/controller/api"
 )
 
-// fakeAuditStore is a simple in-memory audit store for testing.
-type fakeAuditStore struct {
+// captureStore is a concurrency-safe audit store spy that records Write calls.
+// It is kept as a hand-written spy rather than a gomock mock because the
+// auditMiddleware fires writes in a goroutine after the HTTP response is sent,
+// making gomock's strict call-count semantics impractical.
+type captureStore struct {
 	mu      sync.Mutex
 	entries []audit.Entry
 	err     error
 }
 
-func (f *fakeAuditStore) Write(
+func (f *captureStore) Write(
 	_ context.Context,
 	entry audit.Entry,
 ) error {
@@ -58,14 +62,14 @@ func (f *fakeAuditStore) Write(
 	return nil
 }
 
-func (f *fakeAuditStore) Get(
+func (f *captureStore) Get(
 	_ context.Context,
 	_ string,
 ) (*audit.Entry, error) {
 	return nil, nil
 }
 
-func (f *fakeAuditStore) List(
+func (f *captureStore) List(
 	_ context.Context,
 	_ int,
 	_ int,
@@ -73,13 +77,13 @@ func (f *fakeAuditStore) List(
 	return nil, 0, nil
 }
 
-func (f *fakeAuditStore) ListAll(
+func (f *captureStore) ListAll(
 	_ context.Context,
 ) ([]audit.Entry, error) {
 	return nil, nil
 }
 
-func (f *fakeAuditStore) getEntries() []audit.Entry {
+func (f *captureStore) getEntries() []audit.Entry {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -88,25 +92,25 @@ func (f *fakeAuditStore) getEntries() []audit.Entry {
 	return cp
 }
 
-type AuditMiddlewareTestSuite struct {
+type AuditMiddlewarePublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
+func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 	tests := []struct {
 		name         string
 		path         string
 		subject      string
 		roles        []string
 		storeErr     error
-		validateFunc func(store *fakeAuditStore)
+		validateFunc func(store *captureStore)
 	}{
 		{
 			name:    "authenticated request is logged",
 			path:    "/node/hostname",
 			subject: "user@example.com",
 			roles:   []string{"admin"},
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				// Give goroutine time to write
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
@@ -122,7 +126,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 			name:    "unauthenticated request is skipped",
 			path:    "/node/hostname",
 			subject: "",
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
 				s.Empty(entries)
@@ -132,7 +136,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 			name:    "health path is excluded",
 			path:    "/health",
 			subject: "user@example.com",
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
 				s.Empty(entries)
@@ -142,7 +146,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 			name:    "health ready path is excluded",
 			path:    "/health/ready",
 			subject: "user@example.com",
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
 				s.Empty(entries)
@@ -152,7 +156,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 			name:    "metrics path is excluded",
 			path:    "/metrics",
 			subject: "user@example.com",
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
 				s.Empty(entries)
@@ -164,7 +168,7 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 			subject:  "user@example.com",
 			roles:    []string{"admin"},
 			storeErr: fmt.Errorf("write failed"),
-			validateFunc: func(store *fakeAuditStore) {
+			validateFunc: func(store *captureStore) {
 				// Should not panic; the middleware logs the error
 				time.Sleep(50 * time.Millisecond)
 				entries := store.getEntries()
@@ -175,16 +179,16 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			store := &fakeAuditStore{err: tt.storeErr}
+			store := &captureStore{err: tt.storeErr}
 			logger := slog.Default()
 
 			e := echo.New()
-			e.Use(auditMiddleware(store, logger))
+			e.Use(api.ExportAuditMiddleware(store, logger))
 			e.GET(tt.path, func(c echo.Context) error {
 				// Simulate scopeMiddleware setting context values.
 				if tt.subject != "" {
-					c.Set(ContextKeySubject, tt.subject)
-					c.Set(ContextKeyRoles, tt.roles)
+					c.Set(api.ContextKeySubject, tt.subject)
+					c.Set(api.ContextKeyRoles, tt.roles)
 				}
 				return c.String(http.StatusOK, "ok")
 			})
@@ -199,6 +203,6 @@ func (s *AuditMiddlewareTestSuite) TestAuditMiddleware() {
 	}
 }
 
-func TestAuditMiddlewareTestSuite(t *testing.T) {
-	suite.Run(t, new(AuditMiddlewareTestSuite))
+func TestAuditMiddlewarePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(AuditMiddlewarePublicTestSuite))
 }

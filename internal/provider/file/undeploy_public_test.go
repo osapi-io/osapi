@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -52,11 +53,16 @@ func (suite *UndeployPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
+func (suite *UndeployPublicTestSuite) TearDownSubTest() {
+	file.ResetMarshalJSON()
+}
+
 func (suite *UndeployPublicTestSuite) TearDownTest() {}
 
 func (suite *UndeployPublicTestSuite) TestUndeploy() {
 	tests := []struct {
 		name         string
+		setupFunc    func()
 		setupMock    func(*gomock.Controller, *jobmocks.MockKeyValue, avfs.VFS)
 		req          file.UndeployRequest
 		want         *file.UndeployResult
@@ -65,6 +71,41 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 		useFailFs    bool
 		validateFunc func(avfs.VFS)
 	}{
+		{
+			name: "when marshal state fails still returns changed",
+			setupFunc: func() {
+				file.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal failure")
+				})
+			},
+			setupMock: func(
+				ctrl *gomock.Controller,
+				mockKV *jobmocks.MockKeyValue,
+				appFs avfs.VFS,
+			) {
+				_ = appFs.MkdirAll("/etc/cron.d", 0o755)
+				_ = appFs.WriteFile("/etc/cron.d/backup", []byte("content"), 0o644)
+
+				stateJSON, _ := json.Marshal(job.FileState{
+					ObjectName: "backup-script",
+					Path:       "/etc/cron.d/backup",
+					SHA256:     "abc123",
+					DeployedAt: "2026-03-22T00:00:00Z",
+				})
+
+				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+				mockEntry.EXPECT().Value().Return(stateJSON)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			req: file.UndeployRequest{Path: "/etc/cron.d/backup"},
+			want: &file.UndeployResult{
+				Changed: true,
+				Path:    "/etc/cron.d/backup",
+			},
+		},
 		{
 			name: "when file exists on disk with state",
 			setupMock: func(
@@ -189,6 +230,10 @@ func (suite *UndeployPublicTestSuite) TestUndeploy() {
 		suite.Run(tt.name, func() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
+
+			if tt.setupFunc != nil {
+				tt.setupFunc()
+			}
 
 			baseFs := memfs.New()
 			mockObj := filemocks.NewMockObjectStore(ctrl)

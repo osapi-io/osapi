@@ -24,7 +24,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
 )
@@ -109,34 +108,6 @@ func (s *HostnameTestSuite) TestGopsutilHostnameProviderError() {
 
 			s.Error(err)
 			s.Empty(hostname)
-		})
-	}
-}
-
-func (s *HostnameTestSuite) TestGetAgentHostnameProviderError() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "falls back to unknown when provider errors",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			ctrl := gomock.NewController(s.T())
-			mockProvider := NewMockHostnameProvider(ctrl)
-			mockProvider.EXPECT().Hostname().Return("", errors.New("provider error"))
-
-			original := defaultHostnameProvider
-			defer func() { defaultHostnameProvider = original }()
-
-			defaultHostnameProvider = mockProvider
-
-			hostname, err := GetAgentHostname("")
-
-			s.NoError(err)
-			s.Equal("unknown", hostname)
 		})
 	}
 }

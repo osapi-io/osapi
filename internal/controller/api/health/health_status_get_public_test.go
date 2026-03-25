@@ -30,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/authtoken"
@@ -37,15 +38,8 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	"github.com/retr0h/osapi/internal/controller/api/health"
 	"github.com/retr0h/osapi/internal/controller/api/health/gen"
+	healthmocks "github.com/retr0h/osapi/internal/controller/api/health/mocks"
 )
-
-type stubChecker struct{}
-
-func (s *stubChecker) CheckHealth(
-	_ context.Context,
-) error {
-	return nil
-}
 
 const rbacHealthStatusTestSigningKey = "test-signing-key-for-rbac-integration"
 
@@ -55,18 +49,25 @@ type HealthStatusGetPublicTestSuite struct {
 	ctx       context.Context
 	appConfig config.Config
 	logger    *slog.Logger
+	mockCtrl  *gomock.Controller
 }
 
 func (s *HealthStatusGetPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	s.mockCtrl = gomock.NewController(s.T())
+}
+
+func (s *HealthStatusGetPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
 }
 
 func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 	tests := []struct {
 		name         string
 		checker      health.Checker
+		checkerFn    func() health.Checker
 		metrics      health.MetricsProvider
 		validateFunc func(resp gen.GetHealthStatusResponseObject)
 	}{
@@ -152,8 +153,12 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 		},
 		{
-			name:    "non-NATSChecker returns ok with nil components",
-			checker: &stubChecker{},
+			name: "non-NATSChecker returns ok with nil components",
+			checkerFn: func() health.Checker {
+				// GetHealthStatus type-asserts to *NATSChecker; for any other
+				// implementation it short-circuits without calling CheckHealth.
+				return healthmocks.NewMockChecker(s.mockCtrl)
+			},
 			validateFunc: func(resp gen.GetHealthStatusResponseObject) {
 				r, ok := resp.(gen.GetHealthStatus200JSONResponse)
 				s.True(ok)
@@ -610,7 +615,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handler := health.New(slog.Default(), tt.checker, time.Now(), "0.1.0", tt.metrics, nil)
+			checker := tt.checker
+			if checker == nil && tt.checkerFn != nil {
+				checker = tt.checkerFn()
+			}
+			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", tt.metrics, nil)
 
 			resp, err := handler.GetHealthStatus(s.ctx, gen.GetHealthStatusRequestObject{})
 			s.NoError(err)

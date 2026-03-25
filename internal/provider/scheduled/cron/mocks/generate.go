@@ -18,19 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+// Package mocks provides mock implementations for testing.
+package mocks
 
-import (
-	"log/slog"
-
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
-)
-
-// newTestAuditHandler creates an audit handler for integration tests.
-func newTestAuditHandler(
-	logger *slog.Logger,
-	store auditstore.Store,
-) *auditapi.Audit {
-	return auditapi.New(logger, store)
-}
+//go:generate go tool github.com/golang/mock/mockgen -source=../types.go -destination=provider.gen.go -package=mocks

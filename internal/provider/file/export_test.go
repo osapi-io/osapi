@@ -18,19 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+package file
 
-import (
-	"log/slog"
+import "encoding/json"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
-	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
-)
+// SetMarshalJSON overrides the marshal function for testing.
+func SetMarshalJSON(fn func(interface{}) ([]byte, error)) {
+	marshalJSON = fn
+}
 
-// newTestAuditHandler creates an audit handler for integration tests.
-func newTestAuditHandler(
-	logger *slog.Logger,
-	store auditstore.Store,
-) *auditapi.Audit {
-	return auditapi.New(logger, store)
+// ResetMarshalJSON restores the default marshal function.
+func ResetMarshalJSON() {
+	marshalJSON = json.Marshal
 }

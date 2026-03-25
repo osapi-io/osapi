@@ -21,7 +21,6 @@
 package api_test
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -32,32 +31,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
+	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	fileMocks "github.com/retr0h/osapi/internal/controller/api/file/mocks"
 	"github.com/retr0h/osapi/internal/controller/api/health"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
-
-// fakeAuditStore implements audit.Store for handler wiring tests.
-type fakeAuditStore struct{}
-
-func (f *fakeAuditStore) Write(_ context.Context, _ auditstore.Entry) error {
-	return nil
-}
-
-func (f *fakeAuditStore) Get(_ context.Context, _ string) (*auditstore.Entry, error) {
-	return nil, nil
-}
-
-func (f *fakeAuditStore) List(_ context.Context, _ int, _ int) ([]auditstore.Entry, int, error) {
-	return nil, 0, nil
-}
-
-func (f *fakeAuditStore) ListAll(_ context.Context) ([]auditstore.Entry, error) {
-	return nil, nil
-}
 
 type HandlerPublicTestSuite struct {
 	suite.Suite
@@ -290,7 +270,10 @@ func (s *HandlerPublicTestSuite) TestGetAuditHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			store := &fakeAuditStore{}
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			store := auditmocks.NewMockStore(ctrl)
 			handlers := s.server.GetAuditHandler(store)
 
 			tt.validate(handlers)
