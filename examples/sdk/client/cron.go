@@ -62,7 +62,7 @@ func main() {
 		"backup-script",
 		"raw",
 		backupScript,
-			)
+	)
 	if err != nil {
 		log.Fatalf("upload failed: %v", err)
 	}
