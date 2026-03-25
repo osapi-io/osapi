@@ -68,9 +68,14 @@ func main() {
 				return nil, err
 			}
 
-			return &orchestrator.Result{
-				Data: orchestrator.StructToMap(resp.Data),
-			}, nil
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r client.CronEntryResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 

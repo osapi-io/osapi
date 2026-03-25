@@ -119,8 +119,10 @@ func main() {
 		log.Fatalf("deploy: %v", err)
 	}
 
-	fmt.Printf("\nDeploy: job=%s host=%s changed=%v\n",
-		deploy.Data.JobID, deploy.Data.Hostname, deploy.Data.Changed)
+	fmt.Printf("\nDeploy: job=%s\n", deploy.Data.JobID)
+	for _, r := range deploy.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// Check file status on the agent.
 	status, err := c.Node.FileStatus(ctx, "_all", "/tmp/app.conf")
@@ -128,8 +130,10 @@ func main() {
 		log.Fatalf("status: %v", err)
 	}
 
-	fmt.Printf("Status: path=%s status=%s\n",
-		status.Data.Path, status.Data.Status)
+	fmt.Printf("\nStatus: job=%s\n", status.Data.JobID)
+	for _, r := range status.Data.Results {
+		fmt.Printf("  %s: path=%s status=%s\n", r.Hostname, r.Path, r.Status)
+	}
 
 	// Clean up — delete the file from the Object Store.
 	del, err := c.File.Delete(ctx, "app.conf")
