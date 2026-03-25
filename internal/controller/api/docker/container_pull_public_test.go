@@ -197,13 +197,17 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"image_id":"sha256:abc","tag":"latest","size":2048}`),
+							Data: json.RawMessage(
+								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
+							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server2",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"image_id":"sha256:def","tag":"latest","size":2048}`),
+							Data: json.RawMessage(
+								`{"image_id":"sha256:def","tag":"latest","size":2048}`,
+							),
 						},
 					}, map[string]string{}, nil)
 			},
@@ -234,7 +238,9 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"image_id":"sha256:abc","tag":"latest","size":2048}`),
+							Data: json.RawMessage(
+								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
+							),
 						},
 					}, map[string]string{
 						"server2": "agent unreachable",

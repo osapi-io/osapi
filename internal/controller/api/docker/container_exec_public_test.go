@@ -298,13 +298,17 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"stdout":"file1\n","stderr":"","exit_code":0}`),
+							Data: json.RawMessage(
+								`{"stdout":"file1\n","stderr":"","exit_code":0}`,
+							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server2",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"stdout":"file2\n","stderr":"","exit_code":0}`),
+							Data: json.RawMessage(
+								`{"stdout":"file2\n","stderr":"","exit_code":0}`,
+							),
 						},
 					}, map[string]string{}, nil)
 			},
@@ -337,7 +341,9 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data:     json.RawMessage(`{"stdout":"file1\n","stderr":"","exit_code":0}`),
+							Data: json.RawMessage(
+								`{"stdout":"file1\n","stderr":"","exit_code":0}`,
+							),
 						},
 					}, map[string]string{
 						"server2": "agent unreachable",

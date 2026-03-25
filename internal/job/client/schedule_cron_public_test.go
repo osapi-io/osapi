@@ -519,7 +519,11 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreateBroadcast() {
 				User:     "root",
 				Object:   "/usr/sbin/logrotate",
 			}
-			_, results, errs, err := jobsClient.ModifyScheduleCronCreateBroadcast(s.ctx, "_all", entry)
+			_, results, errs, err := jobsClient.ModifyScheduleCronCreateBroadcast(
+				s.ctx,
+				"_all",
+				entry,
+			)
 
 			if tt.expectError {
 				s.Error(err)
@@ -698,7 +702,11 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdateBroadcast() {
 				User:     "root",
 				Object:   "/usr/local/bin/backup.sh",
 			}
-			_, results, errs, err := jobsClient.ModifyScheduleCronUpdateBroadcast(s.ctx, "_all", entry)
+			_, results, errs, err := jobsClient.ModifyScheduleCronUpdateBroadcast(
+				s.ctx,
+				"_all",
+				entry,
+			)
 
 			if tt.expectError {
 				s.Error(err)
@@ -856,7 +864,11 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronDeleteBroadcast() {
 				tt.opts,
 			)
 
-			_, results, errs, err := jobsClient.ModifyScheduleCronDeleteBroadcast(s.ctx, "_all", "backup")
+			_, results, errs, err := jobsClient.ModifyScheduleCronDeleteBroadcast(
+				s.ctx,
+				"_all",
+				"backup",
+			)
 
 			if tt.expectError {
 				s.Error(err)

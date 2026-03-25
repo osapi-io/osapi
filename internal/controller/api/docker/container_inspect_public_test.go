@@ -187,12 +187,16 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByID() {
 						"server1": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
-							Data:     json.RawMessage(`{"id":"abc123","name":"web","state":"running"}`),
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"running"}`,
+							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server2",
-							Data:     json.RawMessage(`{"id":"abc123","name":"web","state":"stopped"}`),
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"stopped"}`,
+							),
 						},
 					}, map[string]string{}, nil)
 			},
@@ -220,7 +224,9 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByID() {
 						"server1": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
-							Data:     json.RawMessage(`{"id":"abc123","name":"web","state":"running"}`),
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"running"}`,
+							),
 						},
 					}, map[string]string{
 						"server2": "agent unreachable",
