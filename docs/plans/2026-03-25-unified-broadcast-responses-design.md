@@ -3,21 +3,21 @@
 ## Goal
 
 Standardize all node-targeted API responses so every operation supports
-broadcast (`_all`, label selectors) and returns a uniform collection
-response. Every result item carries `hostname` and `error` fields.
-Single-target and broadcast operations return the same response shape.
-Update CLAUDE.md so future providers follow the pattern from day one.
+broadcast (`_all`, label selectors) and returns a uniform collection response.
+Every result item carries `hostname` and `error` fields. Single-target and
+broadcast operations return the same response shape. Update CLAUDE.md so future
+providers follow the pattern from day one.
 
 ## Problem
 
-18 of 29 node-targeted operations lack broadcast support. Docker (9
-ops), File (3 ops), Cron mutations (3 ops), and Cron get have no
-broadcast path — they silently route `_all` through the single-target
-path and return one random agent's response. Users targeting a fleet
-see results from one host with no indication others were skipped.
+18 of 29 node-targeted operations lack broadcast support. Docker (9 ops), File
+(3 ops), Cron mutations (3 ops), and Cron get have no broadcast path — they
+silently route `_all` through the single-target path and return one random
+agent's response. Users targeting a fleet see results from one host with no
+indication others were skipped.
 
-Response types are also inconsistent: some return collections, some
-return flat objects. Some have `hostname` on result items, some don't.
+Response types are also inconsistent: some return collections, some return flat
+objects. Some have `hostname` on result items, some don't.
 
 ## Design
 
@@ -44,8 +44,8 @@ Every node-targeted operation returns:
 
 - Single-target (`_any`, hostname): collection with 1 result
 - Broadcast (`_all`, label): collection with N results
-- Failed/skipped agents: result entry with `hostname` + `error`, empty
-  domain fields
+- Failed/skipped agents: result entry with `hostname` + `error`, empty domain
+  fields
 
 ### Handler Pattern
 
@@ -87,8 +87,8 @@ func (s *Handler) postOperationBroadcast(ctx, target, ...) {
 
 #### Docker (9 operations)
 
-Response types already have `hostname` and `error` on result items.
-Already return collections. Need:
+Response types already have `hostname` and `error` on result items. Already
+return collections. Need:
 
 1. Job client: 9 `*Broadcast` methods
 2. Handlers: 9 `IsBroadcastTarget` checks + broadcast functions
@@ -101,8 +101,8 @@ image-remove.
 
 Deploy and undeploy responses are flat (not collections). Need:
 
-1. Convert `FileDeployResponse` and `FileUndeployResponse` to
-   collection pattern with `job_id` + `results[]`
+1. Convert `FileDeployResponse` and `FileUndeployResponse` to collection pattern
+   with `job_id` + `results[]`
 2. Add `error` field to deploy/undeploy result items
 3. Job client: 3 `*Broadcast` methods
 4. Handlers: 3 `IsBroadcastTarget` checks + broadcast functions
@@ -148,46 +148,44 @@ func (c *Client) ModifyDockerCreateBroadcast(
 }
 ```
 
-Return signature: `(jobID, resultsByHost, errorsByHost, error)`.
-Matches the pattern used by existing broadcast methods like
-`QueryNodeHostnameBroadcast`.
+Return signature: `(jobID, resultsByHost, errorsByHost, error)`. Matches the
+pattern used by existing broadcast methods like `QueryNodeHostnameBroadcast`.
 
 ### SDK Changes
 
 No new types needed for Docker (already have hostname + error).
 
-For File and Cron mutations, add `Hostname` field to existing SDK
-result types where missing. The SDK `Collection[T]` type already
-handles the `job_id` + `results[]` envelope.
+For File and Cron mutations, add `Hostname` field to existing SDK result types
+where missing. The SDK `Collection[T]` type already handles the `job_id` +
+`results[]` envelope.
 
 ### CLI Changes
 
-All CLI commands should use `BuildBroadcastTable` for collection
-responses. Commands that currently use `PrintKV` for single results
-(cron create/update/delete, file deploy/undeploy) switch to table
-output showing HOSTNAME + STATUS + domain fields.
+All CLI commands should use `BuildBroadcastTable` for collection responses.
+Commands that currently use `PrintKV` for single results (cron
+create/update/delete, file deploy/undeploy) switch to table output showing
+HOSTNAME + STATUS + domain fields.
 
 ### CLAUDE.md Update
 
 Add to "Adding a New API Domain" section:
 
-> **Broadcast support (MANDATORY):** Every operation that targets a
-> node (`/node/{hostname}/...`) MUST support broadcast. The handler
-> checks `job.IsBroadcastTarget(hostname)` and routes to a broadcast
-> function. The job client has both a single-target and `*Broadcast`
-> method for each operation. All responses use a collection envelope
-> with `job_id` + `results[]`. Every result item includes `hostname`
-> and `error` fields. Single-target returns 1 result in the
-> collection; broadcast returns N results.
+> **Broadcast support (MANDATORY):** Every operation that targets a node
+> (`/node/{hostname}/...`) MUST support broadcast. The handler checks
+> `job.IsBroadcastTarget(hostname)` and routes to a broadcast function. The job
+> client has both a single-target and `*Broadcast` method for each operation.
+> All responses use a collection envelope with `job_id` + `results[]`. Every
+> result item includes `hostname` and `error` fields. Single-target returns 1
+> result in the collection; broadcast returns N results.
 
 ### Scope
 
-| Domain | Operations | Schema changes | New broadcast methods |
-| ------ | ---------- | -------------- | -------------------- |
-| Docker | 9 | none | 9 |
-| File | 3 | deploy+undeploy → collection | 3 |
-| Cron | 4 | get/create/update/delete → collection | 4 |
-| Total | 16 | 5 schemas | 16 |
+| Domain | Operations | Schema changes                        | New broadcast methods |
+| ------ | ---------- | ------------------------------------- | --------------------- |
+| Docker | 9          | none                                  | 9                     |
+| File   | 3          | deploy+undeploy → collection          | 3                     |
+| Cron   | 4          | get/create/update/delete → collection | 4                     |
+| Total  | 16         | 5 schemas                             | 16                    |
 
 ### What This Does NOT Change
 

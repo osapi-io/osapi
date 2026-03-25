@@ -35,7 +35,6 @@ import (
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
 
-
 type FilePublicTestSuite struct {
 	suite.Suite
 

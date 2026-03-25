@@ -102,7 +102,7 @@ func dockerSummariesFromResponse(
 		_ = json.Unmarshal(resp.Data, &containers)
 	}
 
-	var summaries []gen.DockerSummary
+	summaries := make([]gen.DockerSummary, 0, len(containers))
 	for _, c := range containers {
 		id := c.ID
 		name := c.Name
