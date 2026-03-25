@@ -47,8 +47,63 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 
 ## Adding a New API Domain
 
-When adding a new domain (e.g., `service`, `power`), follow the `health`
-domain as a reference. Read the existing files before creating new ones.
+When adding a new domain (e.g., `service`, `power`), follow existing
+domains as reference. For node-targeted operations that run on agents,
+follow `docker` or `scheduled/cron`. For controller-only operations,
+follow `health` or `audit`. Read the existing files before creating
+new ones.
+
+### Step 0: Provider Implementation
+
+For domains that execute operations on agents (anything under
+`/node/{hostname}/...`), implement the provider first:
+
+**Location:** `internal/provider/{domain}/` or
+`internal/provider/{category}/{domain}/` for sub-categories
+(e.g., `scheduled/cron`, `network/dns`).
+
+**Interface pattern:**
+```go
+// types.go
+type Provider interface {
+    List(ctx context.Context) ([]Entry, error)
+    Create(ctx context.Context, entry Entry) (*Result, error)
+    // ... one method per operation
+}
+```
+
+**Platform-specific implementations:**
+- `debian.go` — Debian-family (Ubuntu, Debian, Raspbian)
+- `darwin.go` — macOS (development)
+- `linux.go` — generic Linux fallback
+- Unsupported platforms return `provider.ErrUnsupported` → job
+  status becomes `skipped`
+- Use `platform.Detect()` to select the implementation at runtime
+
+**Meta providers** (providers that write files to well-known paths):
+- Depend on `file.Deployer` interface (Deploy + Undeploy)
+- Store domain metadata in `FileState.Metadata` map
+- Don't write files directly — delegate to the file provider
+- See `scheduled/cron` as the reference implementation
+
+**FactsAware:** Embed `provider.FactsAware` in the provider struct
+to access agent facts (OS, architecture, hostname) at runtime. The
+agent wires facts via `provider.WireProviderFacts()`.
+
+**Agent wiring:**
+- Create a `processor_{domain}.go` in `internal/agent/` that
+  dispatches job operations to provider methods
+- Register the provider in the agent factory
+  (`internal/agent/factory.go`) or in `cmd/agent_setup.go` if it
+  depends on other providers (e.g., cron depends on file provider)
+- Add the provider field to `internal/agent/types.go`
+
+**Testing:**
+- Use `avfs` (`memfs.New()`) for filesystem, `failfs.New()` for
+  error injection
+- Use gomock for `FileDeployer`, `KeyValue`, and other interfaces
+- Platform stubs (Darwin, Linux) just return `ErrUnsupported` —
+  test that they do
 
 ### Step 1: OpenAPI Spec + Code Generation
 
