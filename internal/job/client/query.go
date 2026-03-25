@@ -49,7 +49,7 @@ func (c *Client) QueryNodeStatus(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -79,7 +79,7 @@ func (c *Client) QueryNodeHostname(
 		return "", "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -121,7 +121,7 @@ func (c *Client) QueryNetworkDNS(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -162,7 +162,7 @@ func (c *Client) QueryNodeStatusBroadcast(
 	var results []*job.NodeStatusResponse
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -211,7 +211,7 @@ func (c *Client) QueryNetworkPing(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -253,7 +253,7 @@ func (c *Client) QueryNodeHostnameBroadcast(
 	results := make(map[string]*job.AgentInfo)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -308,7 +308,7 @@ func (c *Client) QueryNetworkDNSBroadcast(
 	results := make(map[string]*dns.GetResult)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -358,7 +358,7 @@ func (c *Client) QueryNetworkPingBroadcast(
 	results := make(map[string]*ping.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}

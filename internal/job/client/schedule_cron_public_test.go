@@ -204,6 +204,89 @@ func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronListBroadcast() {
 	}
 }
 
+func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronGetBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when multiple agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}}`,
+					`{"status":"completed","hostname":"server2","data":{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when broadcast has failures",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}}`,
+					`{"status":"failed","hostname":"server2","error":"cron entry not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: false,
+		},
+		{
+			name: "when publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, result, err := jobsClient.QueryScheduleCronGetBroadcast(s.ctx, "_all", "backup")
+
+			if tt.expectError {
+				s.Error(err)
+				s.Nil(result)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				s.Len(result, tt.expectedCount)
+			}
+		})
+	}
+}
+
 func (s *ScheduleCronPublicTestSuite) TestQueryScheduleCronGet() {
 	tests := []struct {
 		name          string
@@ -363,6 +446,102 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 	}
 }
 
+func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreateBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when multiple agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"logrotate","changed":true}}`,
+					`{"status":"completed","hostname":"server2","changed":true,"data":{"name":"logrotate","changed":true}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when broadcast has failures",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"logrotate","changed":true}}`,
+					`{"status":"failed","hostname":"server2","error":"entry already exists"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			entry := cron.Entry{
+				Name:     "logrotate",
+				Schedule: "0 0 * * *",
+				User:     "root",
+				Object:   "/usr/sbin/logrotate",
+			}
+			_, results, errs, err := jobsClient.ModifyScheduleCronCreateBroadcast(
+				s.ctx,
+				"_all",
+				entry,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
 func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 	tests := []struct {
 		name          string
@@ -450,6 +629,102 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 	}
 }
 
+func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdateBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when multiple agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"backup","changed":true}}`,
+					`{"status":"completed","hostname":"server2","changed":true,"data":{"name":"backup","changed":true}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when broadcast has failures",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"backup","changed":true}}`,
+					`{"status":"failed","hostname":"server2","error":"entry not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			entry := cron.Entry{
+				Name:     "backup",
+				Schedule: "0 3 * * *",
+				User:     "root",
+				Object:   "/usr/local/bin/backup.sh",
+			}
+			_, results, errs, err := jobsClient.ModifyScheduleCronUpdateBroadcast(
+				s.ctx,
+				"_all",
+				entry,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
 func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronDelete() {
 	tests := []struct {
 		name          string
@@ -517,6 +792,96 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronDelete() {
 				s.NoError(err)
 				s.NotNil(resp)
 				s.Equal("completed", string(resp.Status))
+			}
+		})
+	}
+}
+
+func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronDeleteBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when multiple agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"backup","changed":true}}`,
+					`{"status":"completed","hostname":"server2","changed":true,"data":{"name":"backup","changed":true}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when broadcast has failures",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"name":"backup","changed":true}}`,
+					`{"status":"failed","hostname":"server2","error":"entry not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+			jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyScheduleCronDeleteBroadcast(
+				s.ctx,
+				"_all",
+				"backup",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
 			}
 		})
 	}

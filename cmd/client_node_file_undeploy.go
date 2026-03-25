@@ -59,16 +59,23 @@ The object store entry is preserved; only the file on disk is removed.`,
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		changed := resp.Data.Changed
-		changedPtr := &changed
-		results := []cli.MutationResultRow{
-			{
-				Hostname: resp.Data.Hostname,
-				Changed:  changedPtr,
-			},
+		if len(resp.Data.Results) > 0 {
+			results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
+			for _, r := range resp.Data.Results {
+				var errPtr *string
+				if r.Error != "" {
+					errPtr = &r.Error
+				}
+				changed := r.Changed
+				results = append(results, cli.MutationResultRow{
+					Hostname: r.Hostname,
+					Changed:  &changed,
+					Error:    errPtr,
+				})
+			}
+			headers, rows := cli.BuildMutationTable(results, nil)
+			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 		}
-		headers, rows := cli.BuildMutationTable(results, nil)
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

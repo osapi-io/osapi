@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -49,7 +50,12 @@ func (s *Container) PostNodeContainerDockerStart(
 	s.logger.Debug("container start",
 		slog.String("target", hostname),
 		slog.String("id", id),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeContainerDockerStartBroadcast(ctx, hostname, id)
+	}
 
 	resp, err := s.JobClient.ModifyDockerStart(ctx, hostname, id)
 	if err != nil {
@@ -71,5 +77,42 @@ func (s *Container) PostNodeContainerDockerStart(
 				Message:  &msg,
 			},
 		},
+	}, nil
+}
+
+// postNodeContainerDockerStartBroadcast handles broadcast targets for container start.
+func (s *Container) postNodeContainerDockerStartBroadcast(
+	ctx context.Context,
+	target string,
+	id string,
+) (gen.PostNodeContainerDockerStartResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyDockerStartBroadcast(ctx, target, id)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
+	}
+
+	msg := "container started"
+	var responses []gen.DockerActionResultItem
+	for _, resp := range results {
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: resp.Hostname,
+			Id:       &id,
+			Changed:  resp.Changed,
+			Message:  &msg,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeContainerDockerStart202JSONResponse{
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }

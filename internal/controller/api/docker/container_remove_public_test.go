@@ -195,6 +195,95 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerRemoveBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerRemoveBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.DeleteNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Params:   gen.DeleteNodeContainerDockerByIDParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerRemoveBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerByID500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -213,6 +213,95 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStopBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStopBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStopBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerStop500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

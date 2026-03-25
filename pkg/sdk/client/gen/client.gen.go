@@ -418,36 +418,26 @@ type CronCreateRequestInterval string
 
 // CronCreateResponse defines model for CronCreateResponse.
 type CronCreateResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // CronDeleteResponse defines model for CronDeleteResponse.
 type CronDeleteResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // CronEntry A cron drop-in entry.
 type CronEntry struct {
+	// Error Error message if the agent failed to retrieve this entry.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname *string `json:"hostname,omitempty"`
+
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
 
@@ -470,25 +460,26 @@ type CronEntry struct {
 // CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 type CronEntryInterval string
 
-// CronEntryResponse A single cron entry with job metadata.
-type CronEntryResponse struct {
+// CronGetResponse Collection response for a single cron entry get operation.
+type CronGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []CronEntry         `json:"results"`
+}
+
+// CronMutationResult Result of a cron create, update, or delete operation for one host.
+type CronMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname *string `json:"hostname,omitempty"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
-
-	// Object Object store name for the deployed content.
-	Object *string `json:"object,omitempty"`
-
-	// Schedule Cron schedule expression.
-	Schedule *string `json:"schedule,omitempty"`
-
-	// User User the cron entry runs as.
-	User *string `json:"user,omitempty"`
 }
 
 // CronUpdateRequest defines model for CronUpdateRequest.
@@ -514,17 +505,9 @@ type CronUpdateRequestContentType string
 
 // CronUpdateResponse defines model for CronUpdateResponse.
 type CronUpdateResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
@@ -896,6 +879,13 @@ type FileDeleteResponse struct {
 	Name string `json:"name"`
 }
 
+// FileDeployCollectionResponse defines model for FileDeployCollectionResponse.
+type FileDeployCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []FileDeployResult  `json:"results"`
+}
+
 // FileDeployRequest defines model for FileDeployRequest.
 type FileDeployRequest struct {
 	// ContentType Content type — "raw" or "template".
@@ -923,16 +913,16 @@ type FileDeployRequest struct {
 // FileDeployRequestContentType Content type — "raw" or "template".
 type FileDeployRequestContentType string
 
-// FileDeployResponse defines model for FileDeployResponse.
-type FileDeployResponse struct {
+// FileDeployResult defines model for FileDeployResult.
+type FileDeployResult struct {
 	// Changed Whether the file was actually written.
-	Changed bool `json:"changed"`
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
-
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
 }
 
 // FileInfo defines model for FileInfo.
@@ -977,14 +967,21 @@ type FileListResponse struct {
 	Total int `json:"total"`
 }
 
+// FileStatusCollectionResponse defines model for FileStatusCollectionResponse.
+type FileStatusCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []FileStatusResult  `json:"results"`
+}
+
 // FileStatusRequest defines model for FileStatusRequest.
 type FileStatusRequest struct {
 	// Path Filesystem path to check.
 	Path string `json:"path" validate:"required,min=1"`
 }
 
-// FileStatusResponse defines model for FileStatusResponse.
-type FileStatusResponse struct {
+// FileStatusResult defines model for FileStatusResult.
+type FileStatusResult struct {
 	// Changed Whether the operation modified system state.
 	Changed *bool `json:"changed,omitempty"`
 
@@ -994,17 +991,21 @@ type FileStatusResponse struct {
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
 
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
-
 	// Path The filesystem path.
-	Path string `json:"path"`
+	Path *string `json:"path,omitempty"`
 
 	// Sha256 Current SHA-256 of the file on disk.
 	Sha256 *string `json:"sha256,omitempty"`
 
 	// Status File state — "in-sync", "drifted", or "missing".
-	Status string `json:"status"`
+	Status *string `json:"status,omitempty"`
+}
+
+// FileUndeployCollectionResponse defines model for FileUndeployCollectionResponse.
+type FileUndeployCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []FileUndeployResult `json:"results"`
 }
 
 // FileUndeployRequest defines model for FileUndeployRequest.
@@ -1013,16 +1014,16 @@ type FileUndeployRequest struct {
 	Path string `json:"path" validate:"required,min=1"`
 }
 
-// FileUndeployResponse defines model for FileUndeployResponse.
-type FileUndeployResponse struct {
+// FileUndeployResult defines model for FileUndeployResult.
+type FileUndeployResult struct {
 	// Changed Whether the file was actually removed.
-	Changed bool `json:"changed"`
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
-
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
 }
 
 // FileUploadResponse defines model for FileUploadResponse.
@@ -5688,7 +5689,7 @@ func (r GetNodeDiskResponse) StatusCode() int {
 type PostNodeFileDeployResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *FileDeployResponse
+	JSON202      *FileDeployCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -5714,7 +5715,7 @@ func (r PostNodeFileDeployResponse) StatusCode() int {
 type PostNodeFileStatusResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *FileStatusResponse
+	JSON200      *FileStatusCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -5740,7 +5741,7 @@ func (r PostNodeFileStatusResponse) StatusCode() int {
 type PostNodeFileUndeployResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON202      *FileUndeployResponse
+	JSON202      *FileUndeployCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -6025,7 +6026,7 @@ func (r DeleteNodeScheduleCronResponse) StatusCode() int {
 type GetNodeScheduleCronByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronEntryResponse
+	JSON200      *CronGetResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -8374,7 +8375,7 @@ func ParsePostNodeFileDeployResponse(rsp *http.Response) (*PostNodeFileDeployRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest FileDeployResponse
+		var dest FileDeployCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -8428,7 +8429,7 @@ func ParsePostNodeFileStatusResponse(rsp *http.Response) (*PostNodeFileStatusRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FileStatusResponse
+		var dest FileStatusCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -8482,7 +8483,7 @@ func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeplo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest FileUndeployResponse
+		var dest FileUndeployCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -9069,7 +9070,7 @@ func ParseGetNodeScheduleCronByNameResponse(rsp *http.Response) (*GetNodeSchedul
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronEntryResponse
+		var dest CronGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

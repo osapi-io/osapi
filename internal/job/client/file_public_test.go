@@ -320,6 +320,320 @@ func (s *FilePublicTestSuite) TestQueryFileStatus() {
 	}
 }
 
+func (s *FilePublicTestSuite) TestModifyFileDeployBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when all hosts succeed",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"changed":true,"sha256":"abc123","path":"/etc/app.conf"}}`,
+					`{"status":"completed","hostname":"server2","changed":false,"data":{"changed":false,"sha256":"abc123","path":"/etc/app.conf"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when partial failure",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"changed":true,"sha256":"abc123","path":"/etc/app.conf"}}`,
+					`{"status":"failed","hostname":"server2","error":"failed to deploy file"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "when no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, changed, errs, err := jobsClient.ModifyFileDeployBroadcast(
+				s.ctx,
+				"_all",
+				"app.conf",
+				"/etc/app.conf",
+				"raw",
+				"0644",
+				"root",
+				"root",
+				nil,
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(changed) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *FilePublicTestSuite) TestModifyFileUndeployBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when all hosts succeed",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"changed":true,"path":"/etc/cron.d/backup"}}`,
+					`{"status":"completed","hostname":"server2","changed":false,"data":{"changed":false,"path":"/etc/cron.d/backup"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when partial failure",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","changed":true,"data":{"changed":true,"path":"/etc/cron.d/backup"}}`,
+					`{"status":"failed","hostname":"server2","error":"failed to remove file"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "when no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, changed, errs, err := jobsClient.ModifyFileUndeployBroadcast(
+				s.ctx,
+				"_all",
+				"/etc/cron.d/backup",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(changed) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *FilePublicTestSuite) TestQueryFileStatusBroadcast() {
+	tests := []struct {
+		name          string
+		timeout       time.Duration
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name:    "when all hosts succeed",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"path":"/etc/app.conf","status":"in-sync","sha256":"abc123"}}`,
+					`{"status":"completed","hostname":"server2","data":{"path":"/etc/app.conf","status":"missing"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name:    "when partial failure",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"path":"/etc/app.conf","status":"in-sync","sha256":"abc123"}}`,
+					`{"status":"failed","hostname":"server2","error":"permission denied"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name:    "when unmarshal error in broadcast response",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":"not a valid object"}`,
+				},
+			},
+			expectedCount: 1,
+			expectHostErr: true,
+		},
+		{
+			name: "when publish error",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+		{
+			name:    "when no agents respond",
+			timeout: 50 * time.Millisecond,
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("unused"),
+				errorMode: errorOnTimeout,
+			},
+			expectError:   true,
+			errorContains: "no agents responded",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			timeout := tt.timeout
+			if timeout == 0 {
+				timeout = 30 * time.Second
+			}
+
+			opts := &client.Options{
+				Timeout:  timeout,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.QueryFileStatusBroadcast(
+				s.ctx,
+				"_all",
+				"/etc/app.conf",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
 func TestFilePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(FilePublicTestSuite))
 }

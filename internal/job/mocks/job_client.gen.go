@@ -304,6 +304,23 @@ func (mr *MockJobClientMockRecorder) ModifyDockerCreate(arg0, arg1, arg2 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerCreate", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerCreate), arg0, arg1, arg2)
 }
 
+// ModifyDockerCreateBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerCreateBroadcast(arg0 context.Context, arg1 string, arg2 *job.DockerCreateData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerCreateBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerCreateBroadcast indicates an expected call of ModifyDockerCreateBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerCreateBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerCreateBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerCreateBroadcast), arg0, arg1, arg2)
+}
+
 // ModifyDockerExec mocks base method.
 func (m *MockJobClient) ModifyDockerExec(arg0 context.Context, arg1, arg2 string, arg3 *job.DockerExecData) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -317,6 +334,23 @@ func (m *MockJobClient) ModifyDockerExec(arg0 context.Context, arg1, arg2 string
 func (mr *MockJobClientMockRecorder) ModifyDockerExec(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerExec", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerExec), arg0, arg1, arg2, arg3)
+}
+
+// ModifyDockerExecBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerExecBroadcast(arg0 context.Context, arg1, arg2 string, arg3 *job.DockerExecData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerExecBroadcast", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerExecBroadcast indicates an expected call of ModifyDockerExecBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerExecBroadcast(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerExecBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerExecBroadcast), arg0, arg1, arg2, arg3)
 }
 
 // ModifyDockerImageRemove mocks base method.
@@ -334,6 +368,23 @@ func (mr *MockJobClientMockRecorder) ModifyDockerImageRemove(arg0, arg1, arg2 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerImageRemove", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerImageRemove), arg0, arg1, arg2)
 }
 
+// ModifyDockerImageRemoveBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerImageRemoveBroadcast(arg0 context.Context, arg1 string, arg2 *job.DockerImageRemoveData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerImageRemoveBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerImageRemoveBroadcast indicates an expected call of ModifyDockerImageRemoveBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerImageRemoveBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerImageRemoveBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerImageRemoveBroadcast), arg0, arg1, arg2)
+}
+
 // ModifyDockerPull mocks base method.
 func (m *MockJobClient) ModifyDockerPull(arg0 context.Context, arg1 string, arg2 *job.DockerPullData) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -347,6 +398,23 @@ func (m *MockJobClient) ModifyDockerPull(arg0 context.Context, arg1 string, arg2
 func (mr *MockJobClientMockRecorder) ModifyDockerPull(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerPull", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerPull), arg0, arg1, arg2)
+}
+
+// ModifyDockerPullBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerPullBroadcast(arg0 context.Context, arg1 string, arg2 *job.DockerPullData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerPullBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerPullBroadcast indicates an expected call of ModifyDockerPullBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerPullBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerPullBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerPullBroadcast), arg0, arg1, arg2)
 }
 
 // ModifyDockerRemove mocks base method.
@@ -364,6 +432,23 @@ func (mr *MockJobClientMockRecorder) ModifyDockerRemove(arg0, arg1, arg2, arg3 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerRemove", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerRemove), arg0, arg1, arg2, arg3)
 }
 
+// ModifyDockerRemoveBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerRemoveBroadcast(arg0 context.Context, arg1, arg2 string, arg3 *job.DockerRemoveData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerRemoveBroadcast", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerRemoveBroadcast indicates an expected call of ModifyDockerRemoveBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerRemoveBroadcast(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerRemoveBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerRemoveBroadcast), arg0, arg1, arg2, arg3)
+}
+
 // ModifyDockerStart mocks base method.
 func (m *MockJobClient) ModifyDockerStart(arg0 context.Context, arg1, arg2 string) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -379,6 +464,23 @@ func (mr *MockJobClientMockRecorder) ModifyDockerStart(arg0, arg1, arg2 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerStart", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerStart), arg0, arg1, arg2)
 }
 
+// ModifyDockerStartBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerStartBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerStartBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerStartBroadcast indicates an expected call of ModifyDockerStartBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerStartBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerStartBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerStartBroadcast), arg0, arg1, arg2)
+}
+
 // ModifyDockerStop mocks base method.
 func (m *MockJobClient) ModifyDockerStop(arg0 context.Context, arg1, arg2 string, arg3 *job.DockerStopData) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -392,6 +494,23 @@ func (m *MockJobClient) ModifyDockerStop(arg0 context.Context, arg1, arg2 string
 func (mr *MockJobClientMockRecorder) ModifyDockerStop(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerStop", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerStop), arg0, arg1, arg2, arg3)
+}
+
+// ModifyDockerStopBroadcast mocks base method.
+func (m *MockJobClient) ModifyDockerStopBroadcast(arg0 context.Context, arg1, arg2 string, arg3 *job.DockerStopData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyDockerStopBroadcast", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyDockerStopBroadcast indicates an expected call of ModifyDockerStopBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyDockerStopBroadcast(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyDockerStopBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyDockerStopBroadcast), arg0, arg1, arg2, arg3)
 }
 
 // ModifyFileDeploy mocks base method.
@@ -411,6 +530,23 @@ func (mr *MockJobClientMockRecorder) ModifyFileDeploy(arg0, arg1, arg2, arg3, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileDeploy", reflect.TypeOf((*MockJobClient)(nil).ModifyFileDeploy), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 }
 
+// ModifyFileDeployBroadcast mocks base method.
+func (m *MockJobClient) ModifyFileDeployBroadcast(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string, arg8 map[string]interface{}) (string, map[string]bool, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyFileDeployBroadcast", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]bool)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyFileDeployBroadcast indicates an expected call of ModifyFileDeployBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyFileDeployBroadcast(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileDeployBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyFileDeployBroadcast), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+}
+
 // ModifyFileUndeploy mocks base method.
 func (m *MockJobClient) ModifyFileUndeploy(arg0 context.Context, arg1, arg2 string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
@@ -426,6 +562,23 @@ func (m *MockJobClient) ModifyFileUndeploy(arg0 context.Context, arg1, arg2 stri
 func (mr *MockJobClientMockRecorder) ModifyFileUndeploy(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileUndeploy", reflect.TypeOf((*MockJobClient)(nil).ModifyFileUndeploy), arg0, arg1, arg2)
+}
+
+// ModifyFileUndeployBroadcast mocks base method.
+func (m *MockJobClient) ModifyFileUndeployBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]bool, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyFileUndeployBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]bool)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyFileUndeployBroadcast indicates an expected call of ModifyFileUndeployBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyFileUndeployBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileUndeployBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyFileUndeployBroadcast), arg0, arg1, arg2)
 }
 
 // ModifyNetworkDNS mocks base method.
@@ -511,6 +664,23 @@ func (mr *MockJobClientMockRecorder) ModifyScheduleCronCreate(arg0, arg1, arg2 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronCreate", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronCreate), arg0, arg1, arg2)
 }
 
+// ModifyScheduleCronCreateBroadcast mocks base method.
+func (m *MockJobClient) ModifyScheduleCronCreateBroadcast(arg0 context.Context, arg1 string, arg2 cron.Entry) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyScheduleCronCreateBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyScheduleCronCreateBroadcast indicates an expected call of ModifyScheduleCronCreateBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyScheduleCronCreateBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronCreateBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronCreateBroadcast), arg0, arg1, arg2)
+}
+
 // ModifyScheduleCronDelete mocks base method.
 func (m *MockJobClient) ModifyScheduleCronDelete(arg0 context.Context, arg1, arg2 string) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -524,6 +694,23 @@ func (m *MockJobClient) ModifyScheduleCronDelete(arg0 context.Context, arg1, arg
 func (mr *MockJobClientMockRecorder) ModifyScheduleCronDelete(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronDelete", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronDelete), arg0, arg1, arg2)
+}
+
+// ModifyScheduleCronDeleteBroadcast mocks base method.
+func (m *MockJobClient) ModifyScheduleCronDeleteBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyScheduleCronDeleteBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyScheduleCronDeleteBroadcast indicates an expected call of ModifyScheduleCronDeleteBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyScheduleCronDeleteBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronDeleteBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronDeleteBroadcast), arg0, arg1, arg2)
 }
 
 // ModifyScheduleCronUpdate mocks base method.
@@ -541,6 +728,23 @@ func (mr *MockJobClientMockRecorder) ModifyScheduleCronUpdate(arg0, arg1, arg2 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronUpdate", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronUpdate), arg0, arg1, arg2)
 }
 
+// ModifyScheduleCronUpdateBroadcast mocks base method.
+func (m *MockJobClient) ModifyScheduleCronUpdateBroadcast(arg0 context.Context, arg1 string, arg2 cron.Entry) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyScheduleCronUpdateBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyScheduleCronUpdateBroadcast indicates an expected call of ModifyScheduleCronUpdateBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyScheduleCronUpdateBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyScheduleCronUpdateBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyScheduleCronUpdateBroadcast), arg0, arg1, arg2)
+}
+
 // QueryDockerInspect mocks base method.
 func (m *MockJobClient) QueryDockerInspect(arg0 context.Context, arg1, arg2 string) (*job.Response, error) {
 	m.ctrl.T.Helper()
@@ -554,6 +758,23 @@ func (m *MockJobClient) QueryDockerInspect(arg0 context.Context, arg1, arg2 stri
 func (mr *MockJobClientMockRecorder) QueryDockerInspect(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryDockerInspect", reflect.TypeOf((*MockJobClient)(nil).QueryDockerInspect), arg0, arg1, arg2)
+}
+
+// QueryDockerInspectBroadcast mocks base method.
+func (m *MockJobClient) QueryDockerInspectBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryDockerInspectBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// QueryDockerInspectBroadcast indicates an expected call of QueryDockerInspectBroadcast.
+func (mr *MockJobClientMockRecorder) QueryDockerInspectBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryDockerInspectBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryDockerInspectBroadcast), arg0, arg1, arg2)
 }
 
 // QueryDockerList mocks base method.
@@ -571,6 +792,23 @@ func (mr *MockJobClientMockRecorder) QueryDockerList(arg0, arg1, arg2 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryDockerList", reflect.TypeOf((*MockJobClient)(nil).QueryDockerList), arg0, arg1, arg2)
 }
 
+// QueryDockerListBroadcast mocks base method.
+func (m *MockJobClient) QueryDockerListBroadcast(arg0 context.Context, arg1 string, arg2 *job.DockerListData) (string, map[string]*job.Response, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryDockerListBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// QueryDockerListBroadcast indicates an expected call of QueryDockerListBroadcast.
+func (mr *MockJobClientMockRecorder) QueryDockerListBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryDockerListBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryDockerListBroadcast), arg0, arg1, arg2)
+}
+
 // QueryFileStatus mocks base method.
 func (m *MockJobClient) QueryFileStatus(arg0 context.Context, arg1, arg2 string) (string, *file.StatusResult, string, error) {
 	m.ctrl.T.Helper()
@@ -586,6 +824,23 @@ func (m *MockJobClient) QueryFileStatus(arg0 context.Context, arg1, arg2 string)
 func (mr *MockJobClientMockRecorder) QueryFileStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryFileStatus", reflect.TypeOf((*MockJobClient)(nil).QueryFileStatus), arg0, arg1, arg2)
+}
+
+// QueryFileStatusBroadcast mocks base method.
+func (m *MockJobClient) QueryFileStatusBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*file.StatusResult, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryFileStatusBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*file.StatusResult)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// QueryFileStatusBroadcast indicates an expected call of QueryFileStatusBroadcast.
+func (mr *MockJobClientMockRecorder) QueryFileStatusBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryFileStatusBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryFileStatusBroadcast), arg0, arg1, arg2)
 }
 
 // QueryNetworkDNS mocks base method.
@@ -1007,6 +1262,22 @@ func (m *MockJobClient) QueryScheduleCronGet(arg0 context.Context, arg1, arg2 st
 func (mr *MockJobClientMockRecorder) QueryScheduleCronGet(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryScheduleCronGet", reflect.TypeOf((*MockJobClient)(nil).QueryScheduleCronGet), arg0, arg1, arg2)
+}
+
+// QueryScheduleCronGetBroadcast mocks base method.
+func (m *MockJobClient) QueryScheduleCronGetBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*job.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryScheduleCronGetBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*job.Response)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// QueryScheduleCronGetBroadcast indicates an expected call of QueryScheduleCronGetBroadcast.
+func (mr *MockJobClientMockRecorder) QueryScheduleCronGetBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryScheduleCronGetBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryScheduleCronGetBroadcast), arg0, arg1, arg2)
 }
 
 // QueryScheduleCronList mocks base method.

@@ -119,9 +119,12 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
 				s.True(ok)
-				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId)
-				s.Equal("agent1", r.Hostname)
-				s.True(r.Changed)
+				s.Require().NotNil(r.JobId)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId.String())
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -160,8 +163,10 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
 				s.True(ok)
-				s.Equal("agent1", r.Hostname)
-				s.True(r.Changed)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
 			},
 		},
 		{
@@ -237,6 +242,118 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 		},
 		{
+			name: "when broadcast success",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeployBroadcast(
+						gomock.Any(),
+						"_all",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"",
+						"",
+						"",
+						map[string]any(nil),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]bool{"agent1": true, "agent2": false},
+						map[string]string{},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "when broadcast has errors",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeployBroadcast(
+						gomock.Any(),
+						"_all",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"",
+						"",
+						"",
+						map[string]any(nil),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]bool{"agent1": true},
+						map[string]string{"agent2": "deploy failed"},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("deploy failed", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
+			name: "when broadcast client error",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeployBroadcast(
+						gomock.Any(),
+						"_all",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"",
+						"",
+						"",
+						map[string]any(nil),
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job client error",
 			request: gen.PostNodeFileDeployRequestObject{
 				Hostname: "_any",
@@ -300,7 +417,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"job_id"`, `"agent1"`, `"changed":true`},
+			wantContains: []string{`"job_id"`, `"agent1"`, `"changed":true`, `"results"`},
 		},
 		{
 			name: "when missing object_name",
@@ -442,7 +559,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"job_id"`, `"changed":true`},
+			wantContains: []string{`"job_id"`, `"changed":true`, `"results"`},
 		},
 	}
 

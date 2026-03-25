@@ -57,7 +57,7 @@ func (c *Client) ModifyCommandExec(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -100,7 +100,7 @@ func (c *Client) ModifyCommandExecBroadcast(
 	results := make(map[string]*command.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			var result command.Result
@@ -141,7 +141,7 @@ func (c *Client) ModifyCommandShell(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -182,7 +182,7 @@ func (c *Client) ModifyCommandShellBroadcast(
 	results := make(map[string]*command.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			var result command.Result

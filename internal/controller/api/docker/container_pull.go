@@ -54,7 +54,12 @@ func (s *Container) PostNodeContainerDockerPull(
 	s.logger.Debug("container pull",
 		slog.String("target", hostname),
 		slog.String("image", data.Image),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeContainerDockerPullBroadcast(ctx, hostname, data)
+	}
 
 	resp, err := s.JobClient.ModifyDockerPull(ctx, hostname, data)
 	if err != nil {
@@ -62,6 +67,19 @@ func (s *Container) PostNodeContainerDockerPull(
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
+	item := dockerPullItemFromResponse(resp)
+	jobUUID := uuid.MustParse(resp.JobID)
+
+	return gen.PostNodeContainerDockerPull202JSONResponse{
+		JobId:   &jobUUID,
+		Results: []gen.DockerPullResultItem{item},
+	}, nil
+}
+
+// dockerPullItemFromResponse builds a DockerPullResultItem from a job response.
+func dockerPullItemFromResponse(
+	resp *job.Response,
+) gen.DockerPullResultItem {
 	var pullResult struct {
 		ImageID string `json:"image_id"`
 		Tag     string `json:"tag"`
@@ -71,20 +89,43 @@ func (s *Container) PostNodeContainerDockerPull(
 		_ = json.Unmarshal(resp.Data, &pullResult)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
-	changed := resp.Changed
+	return gen.DockerPullResultItem{
+		Hostname: resp.Hostname,
+		ImageId:  stringPtrOrNil(pullResult.ImageID),
+		Tag:      stringPtrOrNil(pullResult.Tag),
+		Size:     int64PtrOrNil(pullResult.Size),
+		Changed:  resp.Changed,
+	}
+}
 
+// postNodeContainerDockerPullBroadcast handles broadcast targets for container pull.
+func (s *Container) postNodeContainerDockerPullBroadcast(
+	ctx context.Context,
+	target string,
+	data *job.DockerPullData,
+) (gen.PostNodeContainerDockerPullResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyDockerPullBroadcast(ctx, target, data)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.DockerPullResultItem
+	for _, resp := range results {
+		responses = append(responses, dockerPullItemFromResponse(resp))
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerPullResultItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerPull202JSONResponse{
-		JobId: &jobUUID,
-		Results: []gen.DockerPullResultItem{
-			{
-				Hostname: resp.Hostname,
-				ImageId:  stringPtrOrNil(pullResult.ImageID),
-				Tag:      stringPtrOrNil(pullResult.Tag),
-				Size:     int64PtrOrNil(pullResult.Size),
-				Changed:  changed,
-			},
-		},
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }
 

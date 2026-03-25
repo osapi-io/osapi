@@ -58,7 +58,12 @@ func (s *Container) GetNodeContainerDocker(
 	s.logger.Debug("container list",
 		slog.String("target", hostname),
 		slog.String("state", data.State),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.getNodeContainerDockerListBroadcast(ctx, hostname, data)
+	}
 
 	resp, err := s.JobClient.QueryDockerList(ctx, hostname, data)
 	if err != nil {
@@ -66,6 +71,26 @@ func (s *Container) GetNodeContainerDocker(
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
+	summaries := dockerSummariesFromResponse(resp)
+	jobUUID := uuid.MustParse(resp.JobID)
+	changed := resp.Changed
+
+	return gen.GetNodeContainerDocker200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.DockerListItem{
+			{
+				Hostname:   resp.Hostname,
+				Containers: &summaries,
+				Changed:    changed,
+			},
+		},
+	}, nil
+}
+
+// dockerSummariesFromResponse extracts DockerSummary slice from a job response.
+func dockerSummariesFromResponse(
+	resp *job.Response,
+) []gen.DockerSummary {
 	var containers []struct {
 		ID      string `json:"id"`
 		Name    string `json:"name"`
@@ -77,7 +102,7 @@ func (s *Container) GetNodeContainerDocker(
 		_ = json.Unmarshal(resp.Data, &containers)
 	}
 
-	var summaries []gen.DockerSummary
+	summaries := make([]gen.DockerSummary, 0, len(containers))
 	for _, c := range containers {
 		id := c.ID
 		name := c.Name
@@ -93,17 +118,41 @@ func (s *Container) GetNodeContainerDocker(
 		})
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
-	changed := resp.Changed
+	return summaries
+}
 
+// getNodeContainerDockerListBroadcast handles broadcast targets for container list.
+func (s *Container) getNodeContainerDockerListBroadcast(
+	ctx context.Context,
+	target string,
+	data *job.DockerListData,
+) (gen.GetNodeContainerDockerResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.QueryDockerListBroadcast(ctx, target, data)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.DockerListItem
+	for _, resp := range results {
+		summaries := dockerSummariesFromResponse(resp)
+		responses = append(responses, gen.DockerListItem{
+			Hostname:   resp.Hostname,
+			Containers: &summaries,
+			Changed:    resp.Changed,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerListItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeContainerDocker200JSONResponse{
-		JobId: &jobUUID,
-		Results: []gen.DockerListItem{
-			{
-				Hostname:   resp.Hostname,
-				Containers: &summaries,
-				Changed:    changed,
-			},
-		},
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }

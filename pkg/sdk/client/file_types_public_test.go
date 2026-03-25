@@ -171,98 +171,164 @@ func (suite *FileTypesPublicTestSuite) TestFileDeleteFromGen() {
 	}
 }
 
-func (suite *FileTypesPublicTestSuite) TestFileDeployResultFromGen() {
+func (suite *FileTypesPublicTestSuite) TestFileDeployCollectionFromGen() {
+	trueVal := true
+	falseVal := false
+	errMsg := "deploy failed"
+
 	tests := []struct {
 		name         string
-		input        *gen.FileDeployResponse
-		validateFunc func(client.FileDeployResult)
+		input        *gen.FileDeployCollectionResponse
+		validateFunc func(client.Collection[client.FileDeployResult])
 	}{
 		{
-			name: "when all fields populated returns FileDeployResult",
-			input: &gen.FileDeployResponse{
-				JobId:    "job-123",
-				Hostname: "web-01",
-				Changed:  true,
+			name: "when results present returns collection with results",
+			input: &gen.FileDeployCollectionResponse{
+				Results: []gen.FileDeployResult{
+					{Hostname: "web-01", Changed: &trueVal},
+					{Hostname: "web-02", Changed: &falseVal, Error: &errMsg},
+				},
 			},
-			validateFunc: func(result client.FileDeployResult) {
-				suite.Equal("job-123", result.JobID)
-				suite.Equal("web-01", result.Hostname)
-				suite.True(result.Changed)
+			validateFunc: func(result client.Collection[client.FileDeployResult]) {
+				suite.Len(result.Results, 2)
+				suite.Equal("web-01", result.Results[0].Hostname)
+				suite.True(result.Results[0].Changed)
+				suite.Empty(result.Results[0].Error)
+				suite.Equal("web-02", result.Results[1].Hostname)
+				suite.False(result.Results[1].Changed)
+				suite.Equal("deploy failed", result.Results[1].Error)
 			},
 		},
 		{
-			name: "when not changed returns false",
-			input: &gen.FileDeployResponse{
-				JobId:    "job-456",
-				Hostname: "web-02",
-				Changed:  false,
+			name: "when empty results returns empty collection",
+			input: &gen.FileDeployCollectionResponse{
+				Results: []gen.FileDeployResult{},
 			},
-			validateFunc: func(result client.FileDeployResult) {
-				suite.False(result.Changed)
+			validateFunc: func(result client.Collection[client.FileDeployResult]) {
+				suite.Empty(result.Results)
+				suite.Empty(result.JobID)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := client.ExportFileDeployResultFromGen(tc.input)
+			result := client.ExportFileDeployCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}
 }
 
-func (suite *FileTypesPublicTestSuite) TestFileStatusResultFromGen() {
-	sha := "abc123"
-	changed := false
-	errMsg := "deploy failed"
+func (suite *FileTypesPublicTestSuite) TestFileUndeployCollectionFromGen() {
+	trueVal := true
+	errMsg := "undeploy failed"
 
 	tests := []struct {
 		name         string
-		input        *gen.FileStatusResponse
-		validateFunc func(client.FileStatusResult)
+		input        *gen.FileUndeployCollectionResponse
+		validateFunc func(client.Collection[client.FileUndeployResult])
 	}{
 		{
-			name: "when all fields populated returns FileStatusResult",
-			input: &gen.FileStatusResponse{
-				JobId:    "job-789",
-				Hostname: "web-03",
-				Path:     "/etc/nginx/nginx.conf",
-				Status:   "in-sync",
-				Sha256:   &sha,
-				Changed:  &changed,
-				Error:    &errMsg,
+			name: "when results present returns collection with results",
+			input: &gen.FileUndeployCollectionResponse{
+				Results: []gen.FileUndeployResult{
+					{Hostname: "web-01", Changed: &trueVal},
+					{Hostname: "web-02", Error: &errMsg},
+				},
 			},
-			validateFunc: func(result client.FileStatusResult) {
-				suite.Equal("job-789", result.JobID)
-				suite.Equal("web-03", result.Hostname)
-				suite.Equal("/etc/nginx/nginx.conf", result.Path)
-				suite.Equal("in-sync", result.Status)
-				suite.Equal("abc123", result.SHA256)
-				suite.False(result.Changed)
-				suite.Equal("deploy failed", result.Error)
+			validateFunc: func(result client.Collection[client.FileUndeployResult]) {
+				suite.Len(result.Results, 2)
+				suite.Equal("web-01", result.Results[0].Hostname)
+				suite.True(result.Results[0].Changed)
+				suite.Equal("web-02", result.Results[1].Hostname)
+				suite.Equal("undeploy failed", result.Results[1].Error)
 			},
 		},
 		{
-			name: "when sha256 is nil returns empty string",
-			input: &gen.FileStatusResponse{
-				JobId:    "job-000",
-				Hostname: "web-04",
-				Path:     "/etc/missing.conf",
-				Status:   "missing",
-				Sha256:   nil,
+			name: "when empty results returns empty collection",
+			input: &gen.FileUndeployCollectionResponse{
+				Results: []gen.FileUndeployResult{},
 			},
-			validateFunc: func(result client.FileStatusResult) {
-				suite.Equal("missing", result.Status)
-				suite.Empty(result.SHA256)
-				suite.False(result.Changed)
-				suite.Empty(result.Error)
+			validateFunc: func(result client.Collection[client.FileUndeployResult]) {
+				suite.Empty(result.Results)
+				suite.Empty(result.JobID)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := client.ExportFileStatusResultFromGen(tc.input)
+			result := client.ExportFileUndeployCollectionFromGen(tc.input)
+			tc.validateFunc(result)
+		})
+	}
+}
+
+func (suite *FileTypesPublicTestSuite) TestFileStatusCollectionFromGen() {
+	sha := "abc123"
+	changed := false
+	errMsg := "status failed"
+	path := "/etc/nginx/nginx.conf"
+	status := "in-sync"
+	missingPath := "/etc/missing.conf"
+	missingStatus := "missing"
+
+	tests := []struct {
+		name         string
+		input        *gen.FileStatusCollectionResponse
+		validateFunc func(client.Collection[client.FileStatusResult])
+	}{
+		{
+			name: "when all fields populated returns FileStatusResult",
+			input: &gen.FileStatusCollectionResponse{
+				Results: []gen.FileStatusResult{
+					{
+						Hostname: "web-03",
+						Path:     &path,
+						Status:   &status,
+						Sha256:   &sha,
+						Changed:  &changed,
+						Error:    &errMsg,
+					},
+				},
+			},
+			validateFunc: func(result client.Collection[client.FileStatusResult]) {
+				suite.Len(result.Results, 1)
+				r := result.Results[0]
+				suite.Equal("web-03", r.Hostname)
+				suite.Equal("/etc/nginx/nginx.conf", r.Path)
+				suite.Equal("in-sync", r.Status)
+				suite.Equal("abc123", r.SHA256)
+				suite.False(r.Changed)
+				suite.Equal("status failed", r.Error)
+			},
+		},
+		{
+			name: "when sha256 is nil returns empty string",
+			input: &gen.FileStatusCollectionResponse{
+				Results: []gen.FileStatusResult{
+					{
+						Hostname: "web-04",
+						Path:     &missingPath,
+						Status:   &missingStatus,
+						Sha256:   nil,
+					},
+				},
+			},
+			validateFunc: func(result client.Collection[client.FileStatusResult]) {
+				suite.Len(result.Results, 1)
+				r := result.Results[0]
+				suite.Equal("missing", r.Status)
+				suite.Empty(r.SHA256)
+				suite.False(r.Changed)
+				suite.Empty(r.Error)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := client.ExportFileStatusCollectionFromGen(tc.input)
 			tc.validateFunc(result)
 		})
 	}

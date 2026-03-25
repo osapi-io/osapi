@@ -2021,7 +2021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileDeployResponse'
+                $ref: '#/components/schemas/FileDeployCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -2070,7 +2070,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileUndeployResponse'
+                $ref: '#/components/schemas/FileUndeployCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -2119,7 +2119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileStatusResponse'
+                $ref: '#/components/schemas/FileStatusCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -2360,7 +2360,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CronEntryResponse'
+                $ref: '#/components/schemas/CronGetResponse'
         '401':
           description: Unauthorized - API key required
           content:
@@ -4266,22 +4266,34 @@ components:
         - object_name
         - path
         - content_type
-    FileDeployResponse:
+    FileDeployResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
         changed:
           type: boolean
           description: Whether the file was actually written.
+        error:
+          type: string
+          description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - changed
+    FileDeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileDeployResult'
+      required:
+        - results
     FileStatusRequest:
       type: object
       properties:
@@ -4292,12 +4304,9 @@ components:
             validate: required,min=1
       required:
         - path
-    FileStatusResponse:
+    FileStatusResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
@@ -4317,10 +4326,21 @@ components:
           type: string
           description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - path
-        - status
+    FileStatusCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileStatusResult'
+      required:
+        - results
     FileUndeployRequest:
       type: object
       properties:
@@ -4331,22 +4351,34 @@ components:
             validate: required,min=1
       required:
         - path
-    FileUndeployResponse:
+    FileUndeployResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
         changed:
           type: boolean
           description: Whether the file was actually removed.
+        error:
+          type: string
+          description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - changed
+    FileUndeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUndeployResult'
+      required:
+        - results
     CommandExecRequest:
       type: object
       properties:
@@ -4542,6 +4574,9 @@ components:
       type: object
       description: A cron drop-in entry.
       properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
         name:
           type: string
           description: Cron entry name.
@@ -4570,6 +4605,9 @@ components:
         user:
           type: string
           description: User the cron entry runs as.
+        error:
+          type: string
+          description: Error message if the agent failed to retrieve this entry.
     CronCollectionResponse:
       type: object
       properties:
@@ -4584,27 +4622,34 @@ components:
             $ref: '#/components/schemas/CronEntry'
       required:
         - results
-    CronEntryResponse:
+    CronGetResponse:
       type: object
-      description: A single cron entry with job metadata.
+      description: Collection response for a single cron entry get operation.
       properties:
         job_id:
           type: string
           format: uuid
           description: The job ID used to process this request.
           example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CronEntry'
+      required:
+        - results
+    CronMutationResult:
+      type: object
+      description: Result of a cron create, update, or delete operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
         name:
           type: string
           description: Cron entry name.
-        object:
-          type: string
-          description: Object store name for the deployed content.
-        schedule:
-          type: string
-          description: Cron schedule expression.
-        user:
-          type: string
-          description: User the cron entry runs as.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
         error:
           type: string
           description: Error message if the agent failed.
@@ -4616,15 +4661,12 @@ components:
           format: uuid
           description: The job ID used to process this request.
           example: 550e8400-e29b-41d4-a716-446655440000
-        name:
-          type: string
-          description: Cron entry name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CronMutationResult'
+      required:
+        - results
     CronUpdateResponse:
       type: object
       properties:
@@ -4633,15 +4675,12 @@ components:
           format: uuid
           description: The job ID used to process this request.
           example: 550e8400-e29b-41d4-a716-446655440000
-        name:
-          type: string
-          description: Cron entry name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CronMutationResult'
+      required:
+        - results
     CronDeleteResponse:
       type: object
       properties:
@@ -4650,15 +4689,12 @@ components:
           format: uuid
           description: The job ID used to process this request.
           example: 550e8400-e29b-41d4-a716-446655440000
-        name:
-          type: string
-          description: Cron entry name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CronMutationResult'
+      required:
+        - results
   parameters:
     Hostname:
       name: hostname

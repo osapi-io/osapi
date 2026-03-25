@@ -170,6 +170,95 @@ func (s *ContainerInspectPublicTestSuite) TestGetNodeContainerDockerByID() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.GetNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryDockerInspectBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"running"}`,
+							),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"stopped"}`,
+							),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDockerByID200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.GetNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryDockerInspectBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Data: json.RawMessage(
+								`{"id":"abc123","name":"web","state":"running"}`,
+							),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerByIDResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDockerByID200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.GetNodeContainerDockerByIDRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryDockerInspectBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerByIDResponseObject) {
+				_, ok := resp.(gen.GetNodeContainerDockerByID500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

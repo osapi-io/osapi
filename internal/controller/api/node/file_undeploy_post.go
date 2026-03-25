@@ -24,7 +24,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -51,6 +54,10 @@ func (s *Node) PostNodeFileUndeploy(
 		slog.String("target", hostname),
 	)
 
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeFileUndeployBroadcast(ctx, hostname, path)
+	}
+
 	jobID, agentHostname, changed, err := s.JobClient.ModifyFileUndeploy(
 		ctx,
 		hostname,
@@ -63,9 +70,55 @@ func (s *Node) PostNodeFileUndeploy(
 		}, nil
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileUndeploy202JSONResponse{
-		JobId:    jobID,
-		Hostname: agentHostname,
-		Changed:  changed,
+		JobId: &jobUUID,
+		Results: []gen.FileUndeployResult{
+			{
+				Hostname: agentHostname,
+				Changed:  &changed,
+			},
+		},
+	}, nil
+}
+
+// postNodeFileUndeployBroadcast handles broadcast targets for file undeploy.
+func (s *Node) postNodeFileUndeployBroadcast(
+	ctx context.Context,
+	target string,
+	path string,
+) (gen.PostNodeFileUndeployResponseObject, error) {
+	jobID, changed, errs, err := s.JobClient.ModifyFileUndeployBroadcast(
+		ctx,
+		target,
+		path,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeFileUndeploy500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var results []gen.FileUndeployResult
+	for host, c := range changed {
+		c := c
+		results = append(results, gen.FileUndeployResult{
+			Hostname: host,
+			Changed:  &c,
+		})
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		results = append(results, gen.FileUndeployResult{
+			Hostname: host,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeFileUndeploy202JSONResponse{
+		JobId:   &jobUUID,
+		Results: results,
 	}, nil
 }

@@ -48,12 +48,33 @@ var clientNodeScheduleCronDeleteCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Name", resp.Data.Name)
-		cli.PrintKV("Changed", fmt.Sprintf("%v", resp.Data.Changed))
-		if resp.Data.Error != "" {
-			cli.PrintKV("Error", resp.Data.Error)
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
+
+		if len(resp.Data.Results) == 0 {
+			fmt.Println("\n  No results.")
+			return
+		}
+
+		rows := make([][]string, 0, len(resp.Data.Results))
+		for _, r := range resp.Data.Results {
+			errVal := r.Error
+			if errVal == "" {
+				errVal = "-"
+			}
+			rows = append(rows, []string{
+				r.Hostname,
+				r.Name,
+				fmt.Sprintf("%v", r.Changed),
+				errVal,
+			})
+		}
+		cli.PrintCompactTable([]cli.Section{{
+			Headers: []string{"HOSTNAME", "NAME", "CHANGED", "ERROR"},
+			Rows:    rows,
+		}})
 	},
 }
 

@@ -62,7 +62,12 @@ func (s *Container) DeleteNodeContainerDockerByID(
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Bool("force", data.Force),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.deleteNodeContainerDockerRemoveBroadcast(ctx, hostname, id, data)
+	}
 
 	resp, err := s.JobClient.ModifyDockerRemove(ctx, hostname, id, data)
 	if err != nil {
@@ -84,5 +89,43 @@ func (s *Container) DeleteNodeContainerDockerByID(
 				Message:  &msg,
 			},
 		},
+	}, nil
+}
+
+// deleteNodeContainerDockerRemoveBroadcast handles broadcast targets for container remove.
+func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
+	ctx context.Context,
+	target string,
+	id string,
+	data *job.DockerRemoveData,
+) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyDockerRemoveBroadcast(ctx, target, id, data)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+	}
+
+	msg := "container removed"
+	var responses []gen.DockerActionResultItem
+	for _, resp := range results {
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: resp.Hostname,
+			Id:       &id,
+			Changed:  resp.Changed,
+			Message:  &msg,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		responses = append(responses, gen.DockerActionResultItem{
+			Hostname: hostname,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.DeleteNodeContainerDockerByID202JSONResponse{
+		JobId:   &jobUUID,
+		Results: responses,
 	}, nil
 }

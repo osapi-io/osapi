@@ -232,16 +232,37 @@ type JobClient interface {
 		group string,
 		vars map[string]any,
 	) (string, string, bool, error)
+	ModifyFileDeployBroadcast(
+		ctx context.Context,
+		target string,
+		objectName string,
+		path string,
+		contentType string,
+		mode string,
+		owner string,
+		group string,
+		vars map[string]any,
+	) (string, map[string]bool, map[string]string, error)
 	ModifyFileUndeploy(
 		ctx context.Context,
 		hostname string,
 		path string,
 	) (string, string, bool, error)
+	ModifyFileUndeployBroadcast(
+		ctx context.Context,
+		target string,
+		path string,
+	) (string, map[string]bool, map[string]string, error)
 	QueryFileStatus(
 		ctx context.Context,
 		hostname string,
 		path string,
 	) (string, *file.StatusResult, string, error)
+	QueryFileStatusBroadcast(
+		ctx context.Context,
+		target string,
+		path string,
+	) (string, map[string]*file.StatusResult, map[string]string, error)
 
 	// Docker operations
 	ModifyDockerCreate(
@@ -249,49 +270,97 @@ type JobClient interface {
 		target string,
 		data *job.DockerCreateData,
 	) (*job.Response, error)
+	ModifyDockerCreateBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerCreateData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerStart(
 		ctx context.Context,
 		target string,
 		id string,
 	) (*job.Response, error)
+	ModifyDockerStartBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerStop(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerStopData,
 	) (*job.Response, error)
+	ModifyDockerStopBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerStopData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerRemove(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerRemoveData,
 	) (*job.Response, error)
+	ModifyDockerRemoveBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerRemoveData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	QueryDockerList(
 		ctx context.Context,
 		target string,
 		data *job.DockerListData,
 	) (*job.Response, error)
+	QueryDockerListBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerListData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	QueryDockerInspect(
 		ctx context.Context,
 		target string,
 		id string,
 	) (*job.Response, error)
+	QueryDockerInspectBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerExec(
 		ctx context.Context,
 		target string,
 		id string,
 		data *job.DockerExecData,
 	) (*job.Response, error)
+	ModifyDockerExecBroadcast(
+		ctx context.Context,
+		target string,
+		id string,
+		data *job.DockerExecData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerPull(
 		ctx context.Context,
 		target string,
 		data *job.DockerPullData,
 	) (*job.Response, error)
+	ModifyDockerPullBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerPullData,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyDockerImageRemove(
 		ctx context.Context,
 		target string,
 		data *job.DockerImageRemoveData,
 	) (*job.Response, error)
+	ModifyDockerImageRemoveBroadcast(
+		ctx context.Context,
+		target string,
+		data *job.DockerImageRemoveData,
+	) (string, map[string]*job.Response, map[string]string, error)
 
 	// Schedule/Cron operations
 	QueryScheduleCronList(
@@ -307,21 +376,41 @@ type JobClient interface {
 		target string,
 		name string,
 	) (*job.Response, error)
+	QueryScheduleCronGetBroadcast(
+		ctx context.Context,
+		target string,
+		name string,
+	) (string, map[string]*job.Response, error)
 	ModifyScheduleCronCreate(
 		ctx context.Context,
 		target string,
 		entry cron.Entry,
 	) (*job.Response, error)
+	ModifyScheduleCronCreateBroadcast(
+		ctx context.Context,
+		target string,
+		entry cron.Entry,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyScheduleCronUpdate(
 		ctx context.Context,
 		target string,
 		entry cron.Entry,
 	) (*job.Response, error)
+	ModifyScheduleCronUpdateBroadcast(
+		ctx context.Context,
+		target string,
+		entry cron.Entry,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyScheduleCronDelete(
 		ctx context.Context,
 		target string,
 		name string,
 	) (*job.Response, error)
+	ModifyScheduleCronDeleteBroadcast(
+		ctx context.Context,
+		target string,
+		name string,
+	) (string, map[string]*job.Response, map[string]string, error)
 
 	// Agent discovery
 	ListAgents(

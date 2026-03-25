@@ -450,7 +450,7 @@ func (s *NodeService) Shell(
 func (s *NodeService) FileDeploy(
 	ctx context.Context,
 	req FileDeployOpts,
-) (*Response[FileDeployResult], error) {
+) (*Response[Collection[FileDeployResult]], error) {
 	body := gen.FileDeployRequest{
 		ObjectName:  req.ObjectName,
 		Path:        req.Path,
@@ -489,14 +489,14 @@ func (s *NodeService) FileDeploy(
 		}}
 	}
 
-	return NewResponse(fileDeployResultFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(fileDeployCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // FileUndeploy removes a deployed file from the target host filesystem.
 func (s *NodeService) FileUndeploy(
 	ctx context.Context,
 	req FileUndeployOpts,
-) (*Response[FileUndeployResult], error) {
+) (*Response[Collection[FileUndeployResult]], error) {
 	body := gen.FileUndeployRequest{
 		Path: req.Path,
 	}
@@ -517,7 +517,7 @@ func (s *NodeService) FileUndeploy(
 		}}
 	}
 
-	return NewResponse(fileUndeployResultFromGen(resp.JSON202), resp.Body), nil
+	return NewResponse(fileUndeployCollectionFromGen(resp.JSON202), resp.Body), nil
 }
 
 // FileStatus checks the deployment status of a file on the target host.
@@ -525,7 +525,7 @@ func (s *NodeService) FileStatus(
 	ctx context.Context,
 	target string,
 	path string,
-) (*Response[FileStatusResult], error) {
+) (*Response[Collection[FileStatusResult]], error) {
 	body := gen.FileStatusRequest{
 		Path: path,
 	}
@@ -546,5 +546,5 @@ func (s *NodeService) FileStatus(
 		}}
 	}
 
-	return NewResponse(fileStatusResultFromGen(resp.JSON200), resp.Body), nil
+	return NewResponse(fileStatusCollectionFromGen(resp.JSON200), resp.Body), nil
 }

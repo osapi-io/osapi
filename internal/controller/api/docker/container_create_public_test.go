@@ -238,6 +238,98 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDocker() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.PostNodeContainerDockerRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeContainerDockerJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerCreateBroadcast(
+						gomock.Any(),
+						"_all",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"id":"abc123"}`),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"id":"def456"}`),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDocker202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.PostNodeContainerDockerRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeContainerDockerJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerCreateBroadcast(
+						gomock.Any(),
+						"_all",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"id":"abc123"}`),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDocker202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.PostNodeContainerDockerRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeContainerDockerJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerCreateBroadcast(
+						gomock.Any(),
+						"_all",
+						gomock.Any(),
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDocker500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

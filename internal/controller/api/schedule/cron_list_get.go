@@ -84,6 +84,17 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	allResults := make([]gen.CronEntry, 0)
 	for _, resp := range responses {
 		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+			hostname := resp.Hostname
+			errMsg := resp.Error
+			if errMsg == "" {
+				errMsg = string(resp.Status)
+			}
+
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: &hostname,
+				Error:    &errMsg,
+			})
+
 			continue
 		}
 
@@ -107,6 +118,8 @@ func responseToCronEntries(
 		_ = json.Unmarshal(resp.Data, &entries)
 	}
 
+	hostname := resp.Hostname
+
 	results := make([]gen.CronEntry, 0, len(entries))
 	for _, e := range entries {
 		name := e.Name
@@ -114,9 +127,10 @@ func responseToCronEntries(
 		source := e.Source
 
 		entry := gen.CronEntry{
-			Name:   &name,
-			Object: &object,
-			Source: &source,
+			Hostname: &hostname,
+			Name:     &name,
+			Object:   &object,
+			Source:   &source,
 		}
 
 		if e.Schedule != "" {

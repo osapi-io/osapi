@@ -57,7 +57,7 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}]}`,
 					),
 				)
 			},
@@ -69,6 +69,7 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
 				suite.Len(resp.Data.Results, 1)
+				suite.Equal("agent1", resp.Data.Results[0].Hostname)
 				suite.Equal("backup", resp.Data.Results[0].Name)
 				suite.Equal("0 2 * * *", resp.Data.Results[0].Schedule)
 				suite.Equal("root", resp.Data.Results[0].User)
@@ -190,29 +191,75 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.CronEntryResult], error)
+		validateFunc func(*client.Response[client.Collection[client.CronEntryResult]], error)
 	}{
 		{
-			name: "when getting cron entry returns result",
+			name: "when getting cron entry returns result collection",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"backup","schedule":"0 2 * * *","user":"root","object":"/usr/bin/backup.sh"}]}`,
 					),
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronEntryResult],
+				resp *client.Response[client.Collection[client.CronEntryResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("backup", resp.Data.Name)
-				suite.Equal("0 2 * * *", resp.Data.Schedule)
-				suite.Equal("root", resp.Data.User)
-				suite.Equal("/usr/bin/backup.sh", resp.Data.Object)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("agent1", resp.Data.Results[0].Hostname)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.Equal("0 2 * * *", resp.Data.Results[0].Schedule)
+				suite.Equal("root", resp.Data.Results[0].User)
+				suite.Equal("/usr/bin/backup.sh", resp.Data.Results[0].Object)
+			},
+		},
+		{
+			name: "when getting interval-based cron entry returns interval field",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"logrotate","interval":"daily","source":"daily","object":"logrotate-script"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("logrotate", resp.Data.Results[0].Name)
+				suite.Equal("daily", resp.Data.Results[0].Interval)
+				suite.Equal("daily", resp.Data.Results[0].Source)
+			},
+		},
+		{
+			name: "when getting cron entry with broadcast returns multiple results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","name":"backup","schedule":"0 2 * * *"},{"hostname":"server2","name":"backup","schedule":"0 2 * * *"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -223,7 +270,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				_, _ = w.Write([]byte(`{"error":"cron entry not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronEntryResult],
+				resp *client.Response[client.Collection[client.CronEntryResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -242,7 +289,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronEntryResult],
+				resp *client.Response[client.Collection[client.CronEntryResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -257,7 +304,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.CronEntryResult],
+				resp *client.Response[client.Collection[client.CronEntryResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -271,7 +318,7 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronEntryResult],
+				resp *client.Response[client.Collection[client.CronEntryResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -320,16 +367,16 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 		handler      http.HandlerFunc
 		serverURL    string
 		opts         client.CronCreateOpts
-		validateFunc func(*client.Response[client.CronMutationResult], error)
+		validateFunc func(*client.Response[client.Collection[client.CronMutationResult]], error)
 	}{
 		{
-			name: "when creating cron entry returns result",
+			name: "when creating cron entry returns result collection",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"backup","changed":true}]}`,
 					),
 				)
 			},
@@ -339,14 +386,16 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("backup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("agent1", resp.Data.Results[0].Hostname)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -356,7 +405,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","name":"cleanup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"agent1","name":"cleanup","changed":true}]}`,
 					),
 				)
 			},
@@ -367,14 +416,14 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				User:     "www-data",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Equal("cleanup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("cleanup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -384,7 +433,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000003","name":"daily-backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000003","results":[{"hostname":"agent1","name":"daily-backup","changed":true}]}`,
 					),
 				)
 			},
@@ -394,14 +443,14 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
-				suite.Equal("daily-backup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("daily-backup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -411,7 +460,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000004","name":"template-job","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000004","results":[{"hostname":"agent1","name":"template-job","changed":true}]}`,
 					),
 				)
 			},
@@ -423,14 +472,39 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Vars:        map[string]any{"env": "prod"},
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000004", resp.Data.JobID)
-				suite.Equal("template-job", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("template-job", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name: "when broadcast create returns multiple results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000005","results":[{"hostname":"server1","name":"backup","changed":true},{"hostname":"server2","name":"backup","changed":true}]}`,
+					),
+				)
+			},
+			opts: client.CronCreateOpts{
+				Name:     "backup",
+				Schedule: "0 2 * * *",
+				Object:   "/usr/bin/backup.sh",
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronMutationResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -446,7 +520,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "echo",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -470,7 +544,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -490,7 +564,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -509,7 +583,7 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				Object:   "/usr/bin/backup.sh",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -558,16 +632,16 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 		handler      http.HandlerFunc
 		serverURL    string
 		opts         client.CronUpdateOpts
-		validateFunc func(*client.Response[client.CronMutationResult], error)
+		validateFunc func(*client.Response[client.Collection[client.CronMutationResult]], error)
 	}{
 		{
-			name: "when updating cron entry returns result",
+			name: "when updating cron entry returns result collection",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"backup","changed":true}]}`,
 					),
 				)
 			},
@@ -575,14 +649,14 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "0 3 * * *",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("backup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -592,7 +666,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","name":"backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"agent1","name":"backup","changed":true}]}`,
 					),
 				)
 			},
@@ -602,13 +676,13 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				User:     "admin",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.True(resp.Data.Changed)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -618,7 +692,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000003","name":"backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000003","results":[{"hostname":"agent1","name":"backup","changed":true}]}`,
 					),
 				)
 			},
@@ -628,14 +702,37 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Vars:        map[string]any{"region": "us-east"},
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
-				suite.Equal("backup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name: "when broadcast update returns multiple results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000004","results":[{"hostname":"server1","name":"backup","changed":true},{"hostname":"server2","name":"backup","changed":true}]}`,
+					),
+				)
+			},
+			opts: client.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronMutationResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -649,7 +746,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "0 3 * * *",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -671,7 +768,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "bad",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -693,7 +790,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "0 3 * * *",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -711,7 +808,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "0 3 * * *",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -728,7 +825,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				Schedule: "0 3 * * *",
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -781,28 +878,48 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.CronMutationResult], error)
+		validateFunc func(*client.Response[client.Collection[client.CronMutationResult]], error)
 	}{
 		{
-			name: "when deleting cron entry returns result",
+			name: "when deleting cron entry returns result collection",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","name":"backup","changed":true}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"backup","changed":true}]}`,
 					),
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("backup", resp.Data.Name)
-				suite.True(resp.Data.Changed)
+				suite.Equal("backup", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name: "when broadcast delete returns multiple results",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","name":"backup","changed":true},{"hostname":"server2","error":"not found"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronMutationResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -813,7 +930,7 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 				_, _ = w.Write([]byte(`{"error":"cron entry not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -832,7 +949,7 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -847,7 +964,7 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -861,7 +978,7 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.CronMutationResult],
+				resp *client.Response[client.Collection[client.CronMutationResult]],
 				err error,
 			) {
 				suite.Error(err)

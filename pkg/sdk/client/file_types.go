@@ -67,26 +67,28 @@ type FileChanged struct {
 	SHA256  string `json:"sha256"`
 }
 
-// FileDeployResult represents the result of a file deploy operation.
+// FileDeployResult represents the result of a file deploy operation for a
+// single host in a collection response.
 type FileDeployResult struct {
-	JobID    string `json:"job_id"`
 	Hostname string `json:"hostname"`
 	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
-// FileUndeployResult represents the result of a file undeploy operation.
+// FileUndeployResult represents the result of a file undeploy operation for a
+// single host in a collection response.
 type FileUndeployResult struct {
-	JobID    string `json:"job_id"`
 	Hostname string `json:"hostname"`
 	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
-// FileStatusResult represents the result of a file status check.
+// FileStatusResult represents the result of a file status check for a single
+// host in a collection response.
 type FileStatusResult struct {
-	JobID    string `json:"job_id"`
 	Hostname string `json:"hostname"`
-	Path     string `json:"path"`
-	Status   string `json:"status"`
+	Path     string `json:"path,omitempty"`
+	Status   string `json:"status,omitempty"`
 	SHA256   string `json:"sha256,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
@@ -148,44 +150,76 @@ func fileDeleteFromGen(
 	}
 }
 
-// fileDeployResultFromGen converts a gen.FileDeployResponse to a FileDeployResult.
-func fileDeployResultFromGen(
-	g *gen.FileDeployResponse,
-) FileDeployResult {
-	return FileDeployResult{
-		JobID:    g.JobId,
-		Hostname: g.Hostname,
-		Changed:  g.Changed,
+// fileDeployCollectionFromGen converts a gen.FileDeployCollectionResponse to
+// a Collection[FileDeployResult].
+func fileDeployCollectionFromGen(
+	g *gen.FileDeployCollectionResponse,
+) Collection[FileDeployResult] {
+	results := make([]FileDeployResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, FileDeployResult{
+			Hostname: r.Hostname,
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
 	}
+
+	c := Collection[FileDeployResult]{Results: results}
+	if g.JobId != nil {
+		c.JobID = g.JobId.String()
+	}
+
+	return c
 }
 
-// fileUndeployResultFromGen converts a gen.FileUndeployResponse to a FileUndeployResult.
-func fileUndeployResultFromGen(
-	g *gen.FileUndeployResponse,
-) FileUndeployResult {
-	return FileUndeployResult{
-		JobID:    g.JobId,
-		Hostname: g.Hostname,
-		Changed:  g.Changed,
+// fileUndeployCollectionFromGen converts a gen.FileUndeployCollectionResponse
+// to a Collection[FileUndeployResult].
+func fileUndeployCollectionFromGen(
+	g *gen.FileUndeployCollectionResponse,
+) Collection[FileUndeployResult] {
+	results := make([]FileUndeployResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, FileUndeployResult{
+			Hostname: r.Hostname,
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
 	}
+
+	c := Collection[FileUndeployResult]{Results: results}
+	if g.JobId != nil {
+		c.JobID = g.JobId.String()
+	}
+
+	return c
 }
 
-// fileStatusResultFromGen converts a gen.FileStatusResponse to a FileStatusResult.
-func fileStatusResultFromGen(
-	g *gen.FileStatusResponse,
-) FileStatusResult {
-	r := FileStatusResult{
-		JobID:    g.JobId,
-		Hostname: g.Hostname,
-		Path:     g.Path,
-		Status:   g.Status,
-		Changed:  derefBool(g.Changed),
-		Error:    derefString(g.Error),
+// fileStatusCollectionFromGen converts a gen.FileStatusCollectionResponse to a
+// Collection[FileStatusResult].
+func fileStatusCollectionFromGen(
+	g *gen.FileStatusCollectionResponse,
+) Collection[FileStatusResult] {
+	results := make([]FileStatusResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		item := FileStatusResult{
+			Hostname: r.Hostname,
+			Path:     derefString(r.Path),
+			Status:   derefString(r.Status),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		}
+
+		if r.Sha256 != nil {
+			item.SHA256 = *r.Sha256
+		}
+
+		results = append(results, item)
 	}
 
-	if g.Sha256 != nil {
-		r.SHA256 = *g.Sha256
+	c := Collection[FileStatusResult]{Results: results}
+	if g.JobId != nil {
+		c.JobID = g.JobId.String()
 	}
 
-	return r
+	return c
 }
