@@ -41,7 +41,7 @@ func NewDebianProvider(
 	em exec.Manager,
 ) *Debian {
 	return &Debian{
-		logger:      logger,
+		logger:      logger.With(slog.String("subsystem", "provider.dns")),
 		execManager: em,
 	}
 }

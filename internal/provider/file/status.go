@@ -25,8 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/spf13/afero"
-
 	"github.com/retr0h/osapi/internal/job"
 )
 
@@ -37,7 +35,7 @@ func (p *Service) Status(
 	ctx context.Context,
 	req StatusRequest,
 ) (*StatusResult, error) {
-	stateKey := buildStateKey(p.hostname, req.Path)
+	stateKey := BuildStateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
 	if err != nil {
@@ -52,7 +50,7 @@ func (p *Service) Status(
 		return nil, fmt.Errorf("failed to parse file state: %w", err)
 	}
 
-	data, err := afero.ReadFile(p.fs, req.Path)
+	data, err := p.fs.ReadFile(req.Path)
 	if err != nil {
 		return &StatusResult{
 			Path:   req.Path,

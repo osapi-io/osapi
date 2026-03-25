@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -38,6 +39,11 @@ func (f *File) DeleteFileByName(
 ) (gen.DeleteFileByNameResponseObject, error) {
 	if errMsg, ok := validateFileName(request.Name); !ok {
 		return gen.DeleteFileByName400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if strings.HasPrefix(request.Name, "osapi/") {
+		errMsg := fmt.Sprintf("cannot delete protected osapi file: %s", request.Name)
+		return gen.DeleteFileByName403JSONResponse{Error: &errMsg}, nil
 	}
 
 	f.logger.Debug("file delete",

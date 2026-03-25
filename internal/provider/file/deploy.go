@@ -31,8 +31,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/spf13/afero"
-
 	"github.com/retr0h/osapi/internal/job"
 )
 
@@ -60,7 +58,7 @@ func (p *Service) Deploy(
 	}
 
 	sha := computeSHA256(content)
-	stateKey := buildStateKey(p.hostname, req.Path)
+	stateKey := BuildStateKey(p.hostname, req.Path)
 
 	entry, err := p.stateKV.Get(ctx, stateKey)
 	if err == nil {
@@ -92,7 +90,12 @@ func (p *Service) Deploy(
 
 	mode := parseFileMode(req.Mode)
 
-	if err := afero.WriteFile(p.fs, req.Path, content, mode); err != nil {
+	dir := p.fs.Dir(req.Path)
+	if err := p.fs.MkdirAll(dir, 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create directory %q: %w", dir, err)
+	}
+
+	if err := p.fs.WriteFile(req.Path, content, mode); err != nil {
 		return nil, fmt.Errorf("failed to write file %q: %w", req.Path, err)
 	}
 
@@ -105,6 +108,7 @@ func (p *Service) Deploy(
 		Group:       req.Group,
 		DeployedAt:  time.Now().UTC().Format(time.RFC3339),
 		ContentType: req.ContentType,
+		Metadata:    req.Metadata,
 	}
 
 	stateBytes, err := marshalJSON(state)
@@ -139,9 +143,9 @@ func computeSHA256(
 	return hex.EncodeToString(h[:])
 }
 
-// buildStateKey returns the KV key for a file's deploy state.
+// BuildStateKey returns the KV key for a file's deploy state.
 // Format: <hostname>.<sha256-of-path>.
-func buildStateKey(
+func BuildStateKey(
 	hostname string,
 	path string,
 ) string {

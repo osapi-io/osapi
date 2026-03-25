@@ -38,9 +38,8 @@ Command execution follows the same request flow as all OSAPI operations:
 4. The API server collects the result and returns it to the client.
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
-label. When targeting `_all`, the CLI prompts for confirmation before
-proceeding. See [CLI Reference](../usage/cli/client/node/command/command.mdx)
-for usage and examples, or the
+label. See [CLI Reference](../usage/cli/client/node/command/command.mdx) for
+usage and examples, or the
 [API Reference](/gen/api/node-management-api-command-operations) for the REST
 endpoints.
 

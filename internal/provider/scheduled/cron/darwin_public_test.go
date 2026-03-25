@@ -21,6 +21,7 @@
 package cron_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -50,7 +51,7 @@ func (suite *DarwinPublicTestSuite) TestList() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.List()
+			got, err := suite.provider.List(context.Background())
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -69,7 +70,7 @@ func (suite *DarwinPublicTestSuite) TestGet() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Get("test")
+			got, err := suite.provider.Get(context.Background(), "test")
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -88,7 +89,7 @@ func (suite *DarwinPublicTestSuite) TestCreate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Create(cron.Entry{})
+			got, err := suite.provider.Create(context.Background(), cron.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -107,7 +108,7 @@ func (suite *DarwinPublicTestSuite) TestUpdate() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Update(cron.Entry{})
+			got, err := suite.provider.Update(context.Background(), cron.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -126,7 +127,7 @@ func (suite *DarwinPublicTestSuite) TestDelete() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Delete("test")
+			got, err := suite.provider.Delete(context.Background(), "test")
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

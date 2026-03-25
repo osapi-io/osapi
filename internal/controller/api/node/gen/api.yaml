@@ -580,6 +580,55 @@ paths:
               schema:
                 $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+  /node/{hostname}/file/undeploy:
+    post:
+      operationId: PostNodeFileUndeploy
+      summary: Remove a deployed file from the host filesystem
+      tags:
+        - node_operations
+      security:
+        - BearerAuth:
+            - "file:write"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUndeployRequest'
+      responses:
+        '202':
+          description: File undeploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUndeployResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
   /node/{hostname}/file/status:
     post:
       operationId: PostNodeFileStatus
@@ -1350,6 +1399,30 @@ components:
           type: string
           description: Error message if the agent failed.
       required: [job_id, hostname, path, status]
+
+    FileUndeployRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to undeploy.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+      required: [path]
+
+    FileUndeployResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The ID of the created job.
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        changed:
+          type: boolean
+          description: Whether the file was actually removed.
+      required: [job_id, hostname, changed]
 
     # ── Command schemas ────────────────────────────────────
 

@@ -293,7 +293,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 				Name:     "logrotate",
 				Schedule: "0 0 * * *",
 				User:     "root",
-				Command:  "/usr/sbin/logrotate",
+				Object:   "/usr/sbin/logrotate",
 			},
 			responseData: `{
 				"status": "completed",
@@ -308,7 +308,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 				Name:     "dup",
 				Schedule: "* * * * *",
 				User:     "root",
-				Command:  "echo",
+				Object:   "echo",
 			},
 			responseData: `{
 				"status": "failed",
@@ -324,7 +324,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronCreate() {
 				Name:     "logrotate",
 				Schedule: "0 0 * * *",
 				User:     "root",
-				Command:  "/usr/sbin/logrotate",
+				Object:   "/usr/sbin/logrotate",
 			},
 			mockError:     errors.New("connection failed"),
 			expectError:   true,
@@ -380,7 +380,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 				Name:     "backup",
 				Schedule: "0 3 * * *",
 				User:     "root",
-				Command:  "/usr/local/bin/backup.sh",
+				Object:   "/usr/local/bin/backup.sh",
 			},
 			responseData: `{
 				"status": "completed",
@@ -395,7 +395,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 				Name:     "missing",
 				Schedule: "* * * * *",
 				User:     "root",
-				Command:  "echo",
+				Object:   "echo",
 			},
 			responseData: `{
 				"status": "failed",
@@ -411,7 +411,7 @@ func (s *ScheduleCronPublicTestSuite) TestModifyScheduleCronUpdate() {
 				Name:     "backup",
 				Schedule: "0 3 * * *",
 				User:     "root",
-				Command:  "/usr/local/bin/backup.sh",
+				Object:   "/usr/local/bin/backup.sh",
 			},
 			mockError:     errors.New("connection failed"),
 			expectError:   true,

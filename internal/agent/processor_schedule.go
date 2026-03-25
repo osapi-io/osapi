@@ -21,8 +21,10 @@
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -59,27 +61,31 @@ func (a *Agent) processCronOperation(
 	}
 	subOp := parts[1]
 
+	ctx := context.Background()
+
 	switch subOp {
 	case "list":
-		return a.processCronList()
+		return a.processCronList(ctx)
 	case "get":
-		return a.processCronGet(jobRequest)
+		return a.processCronGet(ctx, jobRequest)
 	case "create":
-		return a.processCronCreate(jobRequest)
+		return a.processCronCreate(ctx, jobRequest)
 	case "update":
-		return a.processCronUpdate(jobRequest)
+		return a.processCronUpdate(ctx, jobRequest)
 	case "delete":
-		return a.processCronDelete(jobRequest)
+		return a.processCronDelete(ctx, jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported cron operation: %s", jobRequest.Operation)
 	}
 }
 
 // processCronList lists all cron entries.
-func (a *Agent) processCronList() (json.RawMessage, error) {
+func (a *Agent) processCronList(
+	ctx context.Context,
+) (json.RawMessage, error) {
 	a.logger.Debug("executing cron.List")
 
-	entries, err := a.cronProvider.List()
+	entries, err := a.cronProvider.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list cron entries: %w", err)
 	}
@@ -89,6 +95,7 @@ func (a *Agent) processCronList() (json.RawMessage, error) {
 
 // processCronGet gets a single cron entry by name.
 func (a *Agent) processCronGet(
+	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -99,10 +106,10 @@ func (a *Agent) processCronGet(
 	}
 
 	a.logger.Debug("executing cron.Get",
-		"name", data.Name,
+		slog.String("name", data.Name),
 	)
 
-	entry, err := a.cronProvider.Get(data.Name)
+	entry, err := a.cronProvider.Get(ctx, data.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cron entry: %w", err)
 	}
@@ -112,6 +119,7 @@ func (a *Agent) processCronGet(
 
 // processCronCreate creates a new cron entry.
 func (a *Agent) processCronCreate(
+	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var entry cron.Entry
@@ -120,10 +128,10 @@ func (a *Agent) processCronCreate(
 	}
 
 	a.logger.Debug("executing cron.Create",
-		"name", entry.Name,
+		slog.String("name", entry.Name),
 	)
 
-	result, err := a.cronProvider.Create(entry)
+	result, err := a.cronProvider.Create(ctx, entry)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cron entry: %w", err)
 	}
@@ -133,6 +141,7 @@ func (a *Agent) processCronCreate(
 
 // processCronUpdate updates an existing cron entry.
 func (a *Agent) processCronUpdate(
+	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var entry cron.Entry
@@ -141,10 +150,10 @@ func (a *Agent) processCronUpdate(
 	}
 
 	a.logger.Debug("executing cron.Update",
-		"name", entry.Name,
+		slog.String("name", entry.Name),
 	)
 
-	result, err := a.cronProvider.Update(entry)
+	result, err := a.cronProvider.Update(ctx, entry)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update cron entry: %w", err)
 	}
@@ -154,6 +163,7 @@ func (a *Agent) processCronUpdate(
 
 // processCronDelete deletes a cron entry.
 func (a *Agent) processCronDelete(
+	ctx context.Context,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -164,10 +174,10 @@ func (a *Agent) processCronDelete(
 	}
 
 	a.logger.Debug("executing cron.Delete",
-		"name", data.Name,
+		slog.String("name", data.Name),
 	)
 
-	result, err := a.cronProvider.Delete(data.Name)
+	result, err := a.cronProvider.Delete(ctx, data.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete cron entry: %w", err)
 	}

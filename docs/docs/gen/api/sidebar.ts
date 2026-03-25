@@ -316,6 +316,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/post-node-file-undeploy",
+          label: "Remove a deployed file from the host filesystem",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
           id: "gen/api/post-node-file-status",
           label: "Check deployment status of a file on the host",
           className: "api-method post",

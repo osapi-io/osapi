@@ -82,7 +82,7 @@ func New(
 	}
 
 	return &Client{
-		logger:        logger,
+		logger:        logger.With(slog.String("subsystem", "job.client")),
 		natsClient:    natsClient,
 		kv:            opts.KVBucket,
 		registryKV:    opts.RegistryKV,

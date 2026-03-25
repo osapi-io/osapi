@@ -26,14 +26,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type TemplatePublicTestSuite struct {
@@ -175,11 +177,13 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
 
-			appFs := afero.Fs(afero.NewMemMapFs())
+			var appFs avfs.VFS = memfs.New()
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := &stubObjectStore{
-				getBytesData: []byte(tc.template),
-			}
+			mockObj := filemocks.NewMockObjectStore(ctrl)
+
+			mockObj.EXPECT().
+				GetBytes(gomock.Any(), gomock.Any()).
+				Return([]byte(tc.template), nil)
 
 			if !tc.wantErr {
 				mockKV.EXPECT().
@@ -219,7 +223,7 @@ func (suite *TemplatePublicTestSuite) TestDeployTemplate() {
 				suite.Equal(tc.wantChanged, got.Changed)
 				suite.Equal("/etc/test.conf", got.Path)
 
-				data, readErr := afero.ReadFile(appFs, "/etc/test.conf")
+				data, readErr := appFs.ReadFile("/etc/test.conf")
 				suite.Require().NoError(readErr)
 				suite.Equal(tc.wantContent, string(data))
 			}

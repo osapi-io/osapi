@@ -64,3 +64,71 @@ func (mr *MockProviderMockRecorder) Status(ctx, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockProvider)(nil).Status), ctx, req)
 }
+
+// Undeploy mocks base method.
+func (m *MockProvider) Undeploy(ctx context.Context, req file.UndeployRequest) (*file.UndeployResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Undeploy", ctx, req)
+	ret0, _ := ret[0].(*file.UndeployResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Undeploy indicates an expected call of Undeploy.
+func (mr *MockProviderMockRecorder) Undeploy(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Undeploy", reflect.TypeOf((*MockProvider)(nil).Undeploy), ctx, req)
+}
+
+// MockDeployer is a mock of Deployer interface.
+type MockDeployer struct {
+	ctrl     *gomock.Controller
+	recorder *MockDeployerMockRecorder
+}
+
+// MockDeployerMockRecorder is the mock recorder for MockDeployer.
+type MockDeployerMockRecorder struct {
+	mock *MockDeployer
+}
+
+// NewMockDeployer creates a new mock instance.
+func NewMockDeployer(ctrl *gomock.Controller) *MockDeployer {
+	mock := &MockDeployer{ctrl: ctrl}
+	mock.recorder = &MockDeployerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDeployer) EXPECT() *MockDeployerMockRecorder {
+	return m.recorder
+}
+
+// Deploy mocks base method.
+func (m *MockDeployer) Deploy(ctx context.Context, req file.DeployRequest) (*file.DeployResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deploy", ctx, req)
+	ret0, _ := ret[0].(*file.DeployResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deploy indicates an expected call of Deploy.
+func (mr *MockDeployerMockRecorder) Deploy(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deploy", reflect.TypeOf((*MockDeployer)(nil).Deploy), ctx, req)
+}
+
+// Undeploy mocks base method.
+func (m *MockDeployer) Undeploy(ctx context.Context, req file.UndeployRequest) (*file.UndeployResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Undeploy", ctx, req)
+	ret0, _ := ret[0].(*file.UndeployResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Undeploy indicates an expected call of Undeploy.
+func (mr *MockDeployerMockRecorder) Undeploy(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Undeploy", reflect.TypeOf((*MockDeployer)(nil).Undeploy), ctx, req)
+}

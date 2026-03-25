@@ -21,70 +21,11 @@
 package audit_test
 
 import (
-	"context"
 	"log/slog"
 
 	auditstore "github.com/retr0h/osapi/internal/audit"
 	auditapi "github.com/retr0h/osapi/internal/controller/api/audit"
 )
-
-// fakeStore is a simple in-memory audit store for handler tests.
-type fakeStore struct {
-	// Write
-	writeErr error
-
-	// Get
-	getEntry *auditstore.Entry
-	getErr   error
-
-	// List
-	listEntries []auditstore.Entry
-	listTotal   int
-	listErr     error
-
-	// ListAll
-	listAllEntries []auditstore.Entry
-	listAllErr     error
-}
-
-func (f *fakeStore) Write(
-	_ context.Context,
-	_ auditstore.Entry,
-) error {
-	return f.writeErr
-}
-
-func (f *fakeStore) Get(
-	_ context.Context,
-	_ string,
-) (*auditstore.Entry, error) {
-	return f.getEntry, f.getErr
-}
-
-func (f *fakeStore) List(
-	_ context.Context,
-	_ int,
-	_ int,
-) ([]auditstore.Entry, int, error) {
-	return f.listEntries, f.listTotal, f.listErr
-}
-
-func (f *fakeStore) ListAll(
-	_ context.Context,
-) ([]auditstore.Entry, error) {
-	return f.listAllEntries, f.listAllErr
-}
-
-func (f *fakeStore) reset() {
-	f.writeErr = nil
-	f.getEntry = nil
-	f.getErr = nil
-	f.listEntries = nil
-	f.listTotal = 0
-	f.listErr = nil
-	f.listAllEntries = nil
-	f.listAllErr = nil
-}
 
 // newTestAuditHandler creates an audit handler for integration tests.
 func newTestAuditHandler(

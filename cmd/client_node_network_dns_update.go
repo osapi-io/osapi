@@ -43,15 +43,6 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
-		if host == "_all" {
-			fmt.Print("This will modify DNS on ALL hosts. Continue? [y/N] ")
-			var confirm string
-			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
-				fmt.Println("Aborted.")
-				return
-			}
-		}
-
 		resp, err := sdkClient.Node.UpdateDNS(
 			ctx,
 			host,

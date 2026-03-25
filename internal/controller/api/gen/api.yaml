@@ -2046,6 +2046,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/file/undeploy:
+    servers: []
+    post:
+      operationId: PostNodeFileUndeploy
+      summary: Remove a deployed file from the host filesystem
+      tags:
+        - Node_Management_API_node_operations
+      security:
+        - BearerAuth:
+            - file:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUndeployRequest'
+      responses:
+        '202':
+          description: File undeploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUndeployResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /node/{hostname}/file/status:
     servers: []
     post:
@@ -3221,11 +3270,16 @@ components:
           description: |
             How the file should be treated during deploy (raw or template).
           example: raw
+        source:
+          type: string
+          description: 'Source of the file: ''system'' or ''user''.'
+          example: user
       required:
         - name
         - sha256
         - size
         - content_type
+        - source
     FileUploadResponse:
       type: object
       properties:
@@ -4267,6 +4321,32 @@ components:
         - hostname
         - path
         - status
+    FileUndeployRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to undeploy.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+      required:
+        - path
+    FileUndeployResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The ID of the created job.
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        changed:
+          type: boolean
+          description: Whether the file was actually removed.
+      required:
+        - job_id
+        - hostname
+        - changed
     CommandExecRequest:
       type: object
       properties:
@@ -4366,7 +4446,7 @@ components:
       type: object
       required:
         - name
-        - command
+        - object
       properties:
         name:
           type: string
@@ -4375,6 +4455,13 @@ components:
             /etc/cron.d/ or /etc/cron.{interval}/.
           x-oapi-codegen-extra-tags:
             validate: required,min=1,max=64
+        object:
+          type: string
+          description: >
+            Name of the uploaded file in the object store to deploy as the cron
+            entry content.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
         schedule:
           type: string
           description: >
@@ -4398,34 +4485,59 @@ components:
             validate: >-
               required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly
               daily weekly monthly
-        command:
-          type: string
-          description: Command to execute on schedule.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
         user:
           type: string
           description: >
-            User to run the command as. Defaults to root. Only applies when
-            using schedule (cron.d entries include a user field). Interval-based
-            entries run as root.
+            User to run the command as. Only applies when using schedule (cron.d
+            entries include a user field).
+        content_type:
+          type: string
+          description: >
+            Content type: "raw" or "template". When "template", the file content
+            is rendered through Go text/template with agent facts and
+            user-supplied vars.
+          enum:
+            - raw
+            - template
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=raw template
+        vars:
+          type: object
+          additionalProperties: true
+          description: |
+            Template variables. Only used when content_type is "template".
     CronUpdateRequest:
       type: object
       properties:
+        object:
+          type: string
+          description: |
+            New object to deploy (redeploy with updated content).
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
         schedule:
           type: string
           description: |
             Cron schedule expression (e.g., "*/5 * * * *").
           x-oapi-codegen-extra-tags:
             validate: omitempty,cron_schedule
-        command:
-          type: string
-          description: Command to execute on schedule.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
         user:
           type: string
           description: User to run the command as.
+        content_type:
+          type: string
+          description: |
+            Content type: "raw" or "template".
+          enum:
+            - raw
+            - template
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=raw template
+        vars:
+          type: object
+          additionalProperties: true
+          description: |
+            Template variables.
     CronEntry:
       type: object
       description: A cron drop-in entry.
@@ -4433,6 +4545,9 @@ components:
         name:
           type: string
           description: Cron entry name.
+        object:
+          type: string
+          description: Object store name for the deployed content.
         schedule:
           type: string
           description: |
@@ -4454,10 +4569,7 @@ components:
             "monthly".
         user:
           type: string
-          description: User the command runs as.
-        command:
-          type: string
-          description: Command to execute on schedule.
+          description: User the cron entry runs as.
     CronCollectionResponse:
       type: object
       properties:
@@ -4484,15 +4596,15 @@ components:
         name:
           type: string
           description: Cron entry name.
+        object:
+          type: string
+          description: Object store name for the deployed content.
         schedule:
           type: string
           description: Cron schedule expression.
         user:
           type: string
-          description: User the command runs as.
-        command:
-          type: string
-          description: Command to execute on schedule.
+          description: User the cron entry runs as.
         error:
           type: string
           description: Error message if the agent failed.

@@ -38,6 +38,10 @@ type DeployRequest struct {
 	ContentType string `json:"content_type"`
 	// Vars contains template variables when ContentType is "template".
 	Vars map[string]any `json:"vars,omitempty"`
+	// Metadata contains provider-specific key-value pairs stored alongside
+	// the file state. Meta providers use this to persist domain-specific
+	// fields (e.g., cron schedule, systemd unit type).
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 // DeployResult contains the result of a file deploy operation.
@@ -68,6 +72,20 @@ type StatusResult struct {
 	Changed bool `json:"changed"`
 }
 
+// UndeployRequest contains parameters for removing a deployed file from disk.
+type UndeployRequest struct {
+	// Path is the filesystem path to undeploy.
+	Path string `json:"path"`
+}
+
+// UndeployResult contains the result of a file undeploy operation.
+type UndeployResult struct {
+	// Changed indicates whether the file was removed.
+	Changed bool `json:"changed"`
+	// Path is the filesystem path that was undeployed.
+	Path string `json:"path"`
+}
+
 // Provider defines the interface for file operations.
 type Provider interface {
 	// Deploy writes file content to the target path with the specified
@@ -76,10 +94,34 @@ type Provider interface {
 		ctx context.Context,
 		req DeployRequest,
 	) (*DeployResult, error)
+	// Undeploy removes a deployed file from disk. The object store
+	// entry and file-state KV record are preserved.
+	Undeploy(
+		ctx context.Context,
+		req UndeployRequest,
+	) (*UndeployResult, error)
 	// Status checks the current state of a deployed file against its
 	// expected SHA-256 from the file-state KV.
 	Status(
 		ctx context.Context,
 		req StatusRequest,
 	) (*StatusResult, error)
+}
+
+// Deployer is the narrow interface for providers that deploy files
+// to well-known paths. Meta providers (cron, systemd, sysctl) depend
+// on this instead of the full Provider interface.
+type Deployer interface {
+	// Deploy writes file content from the object store to the target
+	// path with SHA tracking and idempotency.
+	Deploy(
+		ctx context.Context,
+		req DeployRequest,
+	) (*DeployResult, error)
+	// Undeploy removes a deployed file from disk. The object store
+	// entry and file-state KV record are preserved.
+	Undeploy(
+		ctx context.Context,
+		req UndeployRequest,
+	) (*UndeployResult, error)
 }

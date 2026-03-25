@@ -35,6 +35,12 @@ const (
 	AgentInfoStatusReady    AgentInfoStatus = "Ready"
 )
 
+// Defines values for CronCreateRequestContentType.
+const (
+	CronCreateRequestContentTypeRaw      CronCreateRequestContentType = "raw"
+	CronCreateRequestContentTypeTemplate CronCreateRequestContentType = "template"
+)
+
 // Defines values for CronCreateRequestInterval.
 const (
 	CronCreateRequestIntervalDaily   CronCreateRequestInterval = "daily"
@@ -49,6 +55,12 @@ const (
 	CronEntryIntervalHourly  CronEntryInterval = "hourly"
 	CronEntryIntervalMonthly CronEntryInterval = "monthly"
 	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
+)
+
+// Defines values for CronUpdateRequestContentType.
+const (
+	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
+	CronUpdateRequestContentTypeTemplate CronUpdateRequestContentType = "template"
 )
 
 // Defines values for DNSUpdateResultItemStatus.
@@ -376,8 +388,8 @@ type CronCollectionResponse struct {
 
 // CronCreateRequest defines model for CronCreateRequest.
 type CronCreateRequest struct {
-	// Command Command to execute on schedule.
-	Command string `json:"command" validate:"required,min=1"`
+	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+	ContentType *CronCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
 	Interval *CronCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
@@ -385,12 +397,21 @@ type CronCreateRequest struct {
 	// Name Name for the cron drop-in entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
 	Name string `json:"name" validate:"required,min=1,max=64"`
 
+	// Object Name of the uploaded file in the object store to deploy as the cron entry content.
+	Object string `json:"object" validate:"required,min=1"`
+
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
 	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
 
-	// User User to run the command as. Defaults to root. Only applies when using schedule (cron.d entries include a user field). Interval-based entries run as root.
+	// User User to run the command as. Only applies when using schedule (cron.d entries include a user field).
 	User *string `json:"user,omitempty"`
+
+	// Vars Template variables. Only used when content_type is "template".
+	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
+
+// CronCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+type CronCreateRequestContentType string
 
 // CronCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
 type CronCreateRequestInterval string
@@ -427,14 +448,14 @@ type CronDeleteResponse struct {
 
 // CronEntry A cron drop-in entry.
 type CronEntry struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty"`
-
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
+
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
 
 	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
 	Schedule *string `json:"schedule,omitempty"`
@@ -442,7 +463,7 @@ type CronEntry struct {
 	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
 	Source *string `json:"source,omitempty"`
 
-	// User User the command runs as.
+	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
@@ -451,9 +472,6 @@ type CronEntryInterval string
 
 // CronEntryResponse A single cron entry with job metadata.
 type CronEntryResponse struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty"`
-
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
@@ -463,24 +481,36 @@ type CronEntryResponse struct {
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
 
+	// Object Object store name for the deployed content.
+	Object *string `json:"object,omitempty"`
+
 	// Schedule Cron schedule expression.
 	Schedule *string `json:"schedule,omitempty"`
 
-	// User User the command runs as.
+	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
 // CronUpdateRequest defines model for CronUpdateRequest.
 type CronUpdateRequest struct {
-	// Command Command to execute on schedule.
-	Command *string `json:"command,omitempty" validate:"omitempty,min=1"`
+	// ContentType Content type: "raw" or "template".
+	ContentType *CronUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// Object New object to deploy (redeploy with updated content).
+	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
 
 	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
 	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
 
 	// User User to run the command as.
 	User *string `json:"user,omitempty"`
+
+	// Vars Template variables.
+	Vars *map[string]interface{} `json:"vars,omitempty"`
 }
+
+// CronUpdateRequestContentType Content type: "raw" or "template".
+type CronUpdateRequestContentType string
 
 // CronUpdateResponse defines model for CronUpdateResponse.
 type CronUpdateResponse struct {
@@ -918,6 +948,9 @@ type FileInfo struct {
 
 	// Size File size in bytes.
 	Size int `json:"size"`
+
+	// Source Source of the file: 'system' or 'user'.
+	Source string `json:"source"`
 }
 
 // FileInfoResponse defines model for FileInfoResponse.
@@ -972,6 +1005,24 @@ type FileStatusResponse struct {
 
 	// Status File state — "in-sync", "drifted", or "missing".
 	Status string `json:"status"`
+}
+
+// FileUndeployRequest defines model for FileUndeployRequest.
+type FileUndeployRequest struct {
+	// Path Filesystem path to undeploy.
+	Path string `json:"path" validate:"required,min=1"`
+}
+
+// FileUndeployResponse defines model for FileUndeployResponse.
+type FileUndeployResponse struct {
+	// Changed Whether the file was actually removed.
+	Changed bool `json:"changed"`
+
+	// Hostname The agent that processed the job.
+	Hostname string `json:"hostname"`
+
+	// JobId The ID of the created job.
+	JobId string `json:"job_id"`
 }
 
 // FileUploadResponse defines model for FileUploadResponse.
@@ -1589,6 +1640,9 @@ type PostNodeFileDeployJSONRequestBody = FileDeployRequest
 // PostNodeFileStatusJSONRequestBody defines body for PostNodeFileStatus for application/json ContentType.
 type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
+// PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
+type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
+
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 
@@ -1790,6 +1844,11 @@ type ClientInterface interface {
 	PostNodeFileStatusWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeFileUndeployWithBody request with any body
+	PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeHostname request
 	GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2336,6 +2395,30 @@ func (c *Client) PostNodeFileStatusWithBody(ctx context.Context, hostname Hostna
 
 func (c *Client) PostNodeFileStatus(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeFileStatusRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeFileUndeployRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeFileUndeployRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3978,6 +4061,53 @@ func NewPostNodeFileStatusRequestWithBody(server string, hostname Hostname, cont
 	return req, nil
 }
 
+// NewPostNodeFileUndeployRequest calls the generic PostNodeFileUndeploy builder with application/json body
+func NewPostNodeFileUndeployRequest(server string, hostname Hostname, body PostNodeFileUndeployJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeFileUndeployRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeFileUndeployRequestWithBody generates requests for PostNodeFileUndeploy with any type of body
+func NewPostNodeFileUndeployRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/file/undeploy", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeHostnameRequest generates requests for GetNodeHostname
 func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -4686,6 +4816,11 @@ type ClientWithResponsesInterface interface {
 	PostNodeFileStatusWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
 
 	PostNodeFileStatusWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileStatusResponse, error)
+
+	// PostNodeFileUndeployWithBodyWithResponse request with any body
+	PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
+
+	PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
 
 	// GetNodeHostnameWithResponse request
 	GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error)
@@ -5602,6 +5737,32 @@ func (r PostNodeFileStatusResponse) StatusCode() int {
 	return 0
 }
 
+type PostNodeFileUndeployResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *FileUndeployResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeFileUndeployResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeFileUndeployResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6329,6 +6490,23 @@ func (c *ClientWithResponses) PostNodeFileStatusWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePostNodeFileStatusResponse(rsp)
+}
+
+// PostNodeFileUndeployWithBodyWithResponse request with arbitrary body returning *PostNodeFileUndeployResponse
+func (c *ClientWithResponses) PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
+	rsp, err := c.PostNodeFileUndeployWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeFileUndeployResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
+	rsp, err := c.PostNodeFileUndeploy(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeFileUndeployResponse(rsp)
 }
 
 // GetNodeHostnameWithResponse request returning *GetNodeHostnameResponse
@@ -8255,6 +8433,60 @@ func ParsePostNodeFileStatusResponse(rsp *http.Response) (*PostNodeFileStatusRes
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeFileUndeployResponse parses an HTTP response from a PostNodeFileUndeployWithResponse call
+func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeployResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeFileUndeployResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest FileUndeployResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

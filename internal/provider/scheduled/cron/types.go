@@ -20,32 +20,37 @@
 
 // Package cron provides management of cron drop-in files and periodic scripts.
 // Supports /etc/cron.d/ (custom schedules) and /etc/cron.{hourly,daily,weekly,monthly}/
-// (interval-based scripts).
+// (interval-based scripts). Delegates file writes to the file provider for SHA
+// tracking, idempotency, and template rendering.
 package cron
+
+import "context"
 
 // Provider implements the methods to manage cron entries.
 type Provider interface {
 	// List returns all osapi-managed cron entries.
-	List() ([]Entry, error)
+	List(ctx context.Context) ([]Entry, error)
 	// Get returns a single cron entry by name.
-	Get(name string) (*Entry, error)
-	// Create writes a new cron entry.
-	Create(entry Entry) (*CreateResult, error)
-	// Update overwrites an existing cron entry.
-	Update(entry Entry) (*UpdateResult, error)
-	// Delete removes a cron entry.
-	Delete(name string) (*DeleteResult, error)
+	Get(ctx context.Context, name string) (*Entry, error)
+	// Create deploys a new cron entry via the file provider.
+	Create(ctx context.Context, entry Entry) (*CreateResult, error)
+	// Update redeploys an existing cron entry via the file provider.
+	Update(ctx context.Context, entry Entry) (*UpdateResult, error)
+	// Delete undeploys a cron entry via the file provider.
+	Delete(ctx context.Context, name string) (*DeleteResult, error)
 }
 
 // Entry represents a cron entry — either a /etc/cron.d/ drop-in file
 // with a custom schedule or a /etc/cron.{interval}/ periodic script.
 type Entry struct {
-	Name     string `json:"name"`
-	Schedule string `json:"schedule,omitempty"`
-	Interval string `json:"interval,omitempty"`
-	Source   string `json:"source,omitempty"`
-	User     string `json:"user,omitempty"`
-	Command  string `json:"command"`
+	Name        string         `json:"name"`
+	Object      string         `json:"object,omitempty"`
+	Schedule    string         `json:"schedule,omitempty"`
+	Interval    string         `json:"interval,omitempty"`
+	Source      string         `json:"source,omitempty"`
+	User        string         `json:"user,omitempty"`
+	ContentType string         `json:"content_type,omitempty"`
+	Vars        map[string]any `json:"vars,omitempty"`
 }
 
 // CreateResult represents the outcome of a cron entry creation.

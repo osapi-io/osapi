@@ -67,7 +67,7 @@ func main() {
 			resp, err := cc.Schedule.CronCreate(ctx, "_any", client.CronCreateOpts{
 				Name:     "backup-daily",
 				Schedule: "0 2 * * *",
-				Command:  "/usr/local/bin/backup.sh",
+				Object:   "backup-script",
 				User:     "root",
 			})
 			if err != nil {
@@ -92,7 +92,7 @@ func main() {
 			resp, err := cc.Schedule.CronCreate(ctx, "_any", client.CronCreateOpts{
 				Name:     "logrotate",
 				Interval: "daily",
-				Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
+				Object:   "logrotate-script",
 			})
 			if err != nil {
 				return nil, err

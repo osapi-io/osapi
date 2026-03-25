@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -479,6 +480,131 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 			for _, str := range tc.wantContains {
 				s.Contains(rec.Body.String(), str)
 			}
+		})
+	}
+}
+
+func (s *NodeStatusGetPublicTestSuite) TestFormatDuration() {
+	tests := []struct {
+		name  string
+		input time.Duration
+		want  string
+	}{
+		{
+			name:  "0 days, 0 hours, 0 minutes",
+			input: time.Duration(0) * time.Second,
+			want:  "0 days, 0 hours, 0 minutes",
+		},
+		{
+			name:  "0 days, 0 hours, 1 minute",
+			input: time.Duration(60) * time.Second,
+			want:  "0 days, 0 hours, 1 minute",
+		},
+		{
+			name:  "0 days, 1 hour, 0 minutes",
+			input: time.Duration(3600) * time.Second,
+			want:  "0 days, 1 hour, 0 minutes",
+		},
+		{
+			name:  "1 day, 0 hours, 0 minutes",
+			input: time.Duration(24*3600) * time.Second,
+			want:  "1 day, 0 hours, 0 minutes",
+		},
+		{
+			name:  "1 day, 1 hour, 1 minute",
+			input: time.Duration(24*3600+3600+60) * time.Second,
+			want:  "1 day, 1 hour, 1 minute",
+		},
+		{
+			name:  "4 days, 1 hour, 25 minutes",
+			input: time.Duration(int64(math.Trunc(350735.47))) * time.Second,
+			want:  "4 days, 1 hour, 25 minutes",
+		},
+		{
+			name:  "2 days, 2 hours, 2 minutes",
+			input: time.Duration(2*24*3600+2*3600+2*60) * time.Second,
+			want:  "2 days, 2 hours, 2 minutes",
+		},
+		{
+			name:  "0 days, 0 hours, 59 minutes",
+			input: time.Duration(59) * time.Minute,
+			want:  "0 days, 0 hours, 59 minutes",
+		},
+		{
+			name:  "0 days, 23 hours, 59 minutes",
+			input: time.Duration(23*3600+59*60) * time.Second,
+			want:  "0 days, 23 hours, 59 minutes",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := apinode.ExportFormatDuration(tc.input)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func (s *NodeStatusGetPublicTestSuite) TestUint64ToInt() {
+	tests := []struct {
+		name  string
+		input uint64
+		want  int
+	}{
+		{
+			name:  "when within bounds - small value",
+			input: 123,
+			want:  123,
+		},
+		{
+			name:  "when within bounds - max int value",
+			input: uint64(math.MaxInt),
+			want:  math.MaxInt,
+		},
+		{
+			name:  "when overflow value - just above max int",
+			input: uint64(math.MaxInt) + 1,
+			want:  math.MaxInt,
+		},
+		{
+			name:  "when overflow value - large uint64",
+			input: math.MaxUint64,
+			want:  math.MaxInt,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			result := apinode.ExportUint64ToInt(tc.input)
+			s.Equal(tc.want, result)
+		})
+	}
+}
+
+func (s *NodeStatusGetPublicTestSuite) TestDurationToString() {
+	dur := 20 * time.Millisecond
+
+	tests := []struct {
+		name string
+		d    *time.Duration
+		want *string
+	}{
+		{
+			name: "when nil",
+			d:    nil,
+			want: nil,
+		},
+		{
+			name: "when valid duration",
+			d:    &dur,
+			want: func() *string { str := "20.00ms"; return &str }(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := apinode.ExportDurationToString(tc.d)
+			s.Equal(tc.want, got)
 		})
 	}
 }

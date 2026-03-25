@@ -59,7 +59,7 @@ Container operations follow the same request flow as all OSAPI operations:
 4. The API server collects the result and returns it to the client.
 
 You can target a specific host, broadcast to all hosts with `_all`, or route by
-label. See [CLI Reference](../usage/cli/client/container/container.mdx) for
+label. See [CLI Reference](../usage/cli/client/node/container/container.mdx) for
 usage and examples, or the
 [API Reference](/gen/api/docker-management-api-docker-operations) for the REST
 endpoints.
@@ -187,7 +187,7 @@ for a complete working example.
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/container/container.mdx) -- container
+- [CLI Reference](../usage/cli/client/node/container/container.mdx) -- container
   management commands
 - [API Reference](/gen/api/docker-management-api-docker-operations) -- REST API
   documentation

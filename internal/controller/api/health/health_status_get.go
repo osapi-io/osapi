@@ -22,6 +22,7 @@ package health
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -135,7 +136,7 @@ func (h *Health) populateMetrics(
 	collect("nats", func() {
 		info, err := h.Metrics.GetNATSInfo(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get NATS info for status", "error", err)
+			h.logger.Warn("failed to get NATS info for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -146,7 +147,7 @@ func (h *Health) populateMetrics(
 	collect("streams", func() {
 		s, err := h.Metrics.GetStreamInfo(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get stream info for status", "error", err)
+			h.logger.Warn("failed to get stream info for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -157,7 +158,7 @@ func (h *Health) populateMetrics(
 	collect("kv", func() {
 		b, err := h.Metrics.GetKVInfo(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get KV info for status", "error", err)
+			h.logger.Warn("failed to get KV info for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -168,7 +169,7 @@ func (h *Health) populateMetrics(
 	collect("object-stores", func() {
 		o, err := h.Metrics.GetObjectStoreInfo(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get Object Store info for status", "error", err)
+			h.logger.Warn("failed to get Object Store info for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -179,7 +180,7 @@ func (h *Health) populateMetrics(
 	collect("jobs", func() {
 		j, err := h.Metrics.GetJobStats(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get job stats for status", "error", err)
+			h.logger.Warn("failed to get job stats for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -190,7 +191,7 @@ func (h *Health) populateMetrics(
 	collect("agents", func() {
 		a, err := h.Metrics.GetAgentStats(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get agent stats for status", "error", err)
+			h.logger.Warn("failed to get agent stats for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -201,7 +202,7 @@ func (h *Health) populateMetrics(
 	collect("consumers", func() {
 		c, err := h.Metrics.GetConsumerStats(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get consumer stats for status", "error", err)
+			h.logger.Warn("failed to get consumer stats for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()
@@ -212,7 +213,7 @@ func (h *Health) populateMetrics(
 	collect("registry", func() {
 		entries, err := h.Metrics.GetComponentRegistry(ctx)
 		if err != nil {
-			h.logger.Warn("failed to get component registry for status", "error", err)
+			h.logger.Warn("failed to get component registry for status", slog.Any("error", err))
 			return
 		}
 		mu.Lock()

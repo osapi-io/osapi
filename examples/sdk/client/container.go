@@ -46,7 +46,7 @@ func main() {
 
 	c := client.New(url, token)
 	ctx := context.Background()
-	target := "_any"
+	target := "_all"
 
 	// Pull an image.
 	pull, err := c.Docker.Pull(ctx, target, client.DockerPullOpts{

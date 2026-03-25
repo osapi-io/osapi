@@ -308,11 +308,16 @@ components:
             How the file should be treated during deploy (raw or
             template).
           example: "raw"
+        source:
+          type: string
+          description: "Source of the file: 'system' or 'user'."
+          example: "user"
       required:
         - name
         - sha256
         - size
         - content_type
+        - source
 
     FileUploadResponse:
       type: object

@@ -46,7 +46,7 @@ func main() {
 
 	c := client.New(url, token)
 	ctx := context.Background()
-	target := "_any"
+	target := "_all"
 
 	// Direct exec — runs a binary with arguments.
 	exec, err := c.Node.Exec(ctx, client.ExecRequest{

@@ -31,20 +31,6 @@ $ osapi client node command shell \
     --cwd /etc
 ```
 
-When targeting all hosts, the CLI prompts for confirmation:
-
-```bash
-$ osapi client node command shell --command "hostname -f" --target _all
-
-  This will execute shell command on ALL hosts. Continue? [y/N] y
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  CHANGED  STDOUT                 STDERR  EXIT CODE  DURATION
-  server1   false    server1.example.com            0          5ms
-  server2   false    server2.example.com            0          7ms
-```
-
 Target by label to execute on a group of servers:
 
 ```bash
@@ -94,7 +80,7 @@ The CLI exit code matches the remote command's exit code.
 | `--command`    | The shell command to execute (**required**)              |         |
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
 | `--stdout`     | Print only remote stdout                                 |         |
 | `--stderr`     | Print only remote stderr                                 |         |
 | `-j, --json`   | Output raw JSON response                                 |         |

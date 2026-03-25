@@ -92,9 +92,11 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				Hostname: "server1",
 				Name:     "backup",
 				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
-					Command:  strPtr("/usr/bin/backup-v2.sh"),
-					User:     strPtr("admin"),
+					Schedule:    strPtr("0 3 * * *"),
+					Object:      strPtr("backup-v2-script"),
+					User:        strPtr("admin"),
+					ContentType: (*gen.CronUpdateRequestContentType)(strPtr("template")),
+					Vars:        &map[string]interface{}{"region": "us-east"},
 				},
 			},
 			setupMock: func() {

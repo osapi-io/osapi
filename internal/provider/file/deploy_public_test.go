@@ -23,18 +23,23 @@ package file_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/file"
+	filemocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 )
 
 type DeployPublicTestSuite struct {
@@ -49,6 +54,10 @@ func (suite *DeployPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
+func (suite *DeployPublicTestSuite) TearDownSubTest() {
+	file.ResetMarshalJSON()
+}
+
 func (suite *DeployPublicTestSuite) TearDownTest() {}
 
 func (suite *DeployPublicTestSuite) TestDeploy() {
@@ -59,22 +68,54 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 
 	tests := []struct {
 		name         string
-		setupMock    func(*gomock.Controller, *stubObjectStore, *jobmocks.MockKeyValue, *afero.Fs)
+		setupFunc    func()
+		setupMock    func(*gomock.Controller, *filemocks.MockObjectStore, *jobmocks.MockKeyValue, *avfs.VFS)
 		req          file.DeployRequest
 		want         *file.DeployResult
 		wantErr      bool
 		wantErrMsg   string
-		validateFunc func(afero.Fs)
+		validateFunc func(avfs.VFS)
 	}{
+		{
+			name: "when marshal state fails returns error",
+			setupFunc: func() {
+				file.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal failure")
+				})
+			},
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				_ *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("server { listen 80; }"), nil)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to marshal file state",
+		},
 		{
 			name: "when deploy succeeds (new file)",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -95,8 +136,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  existingSHA,
 				Path:    "/etc/nginx/nginx.conf",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+			validateFunc: func(appFs avfs.VFS) {
+				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal(fileContent, data)
 			},
@@ -105,11 +146,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy succeeds (changed content)",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				existingState := job.FileState{
 					SHA256: differentSHA,
@@ -139,8 +182,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  existingSHA,
 				Path:    "/etc/nginx/nginx.conf",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+			validateFunc: func(appFs avfs.VFS) {
+				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal(fileContent, data)
 			},
@@ -149,13 +192,16 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when deploy skips (unchanged)",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				appFs *afero.Fs,
+				appFs *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
-				_ = afero.WriteFile(*appFs, "/etc/nginx/nginx.conf", fileContent, 0o644)
+				_ = (*appFs).MkdirAll("/etc/nginx", 0o755)
+				_ = (*appFs).WriteFile("/etc/nginx/nginx.conf", fileContent, 0o644)
 
 				existingState := job.FileState{
 					SHA256: existingSHA,
@@ -185,11 +231,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file is deleted but state exists redeploys",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				existingState := job.FileState{
 					SHA256: existingSHA,
@@ -219,8 +267,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  existingSHA,
 				Path:    "/etc/nginx/nginx.conf",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+			validateFunc: func(appFs avfs.VFS) {
+				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal(fileContent, data)
 			},
@@ -229,11 +277,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when Object Store get fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				_ *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesErr = assert.AnError
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
 			},
 			req: file.DeployRequest{
 				ObjectName:  "missing.conf",
@@ -247,11 +297,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when content type is template",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = []byte("server {{ .Vars.host }}")
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return([]byte("server {{ .Vars.host }}"), nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -272,8 +324,8 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  computeTestSHA256([]byte("server 10.0.0.1")),
 				Path:    "/etc/nginx/nginx.conf",
 			},
-			validateFunc: func(appFs afero.Fs) {
-				data, err := afero.ReadFile(appFs, "/etc/nginx/nginx.conf")
+			validateFunc: func(appFs avfs.VFS) {
+				data, err := appFs.ReadFile("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal("server 10.0.0.1", string(data))
 			},
@@ -282,18 +334,32 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when file write fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				appFs *afero.Fs,
+				appFs *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
 					Return(nil, assert.AnError)
 
-				// Use a read-only filesystem to trigger write failure.
-				*appFs = afero.NewReadOnlyFs(afero.NewMemMapFs())
+				// Use failfs to block OpenFile (which WriteFile calls internally).
+				vfs := failfs.New(memfs.New())
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnOpenFile {
+						return errors.New("write failed")
+					}
+
+					return nil
+				})
+				*appFs = vfs
 			},
 			req: file.DeployRequest{
 				ObjectName:  "nginx.conf",
@@ -304,14 +370,54 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			wantErrMsg: "failed to write file",
 		},
 		{
+			name: "when mkdir fails",
+			setupMock: func(
+				_ *gomock.Controller,
+				mockObj *filemocks.MockObjectStore,
+				mockKV *jobmocks.MockKeyValue,
+				appFs *avfs.VFS,
+			) {
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
+
+				mockKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, assert.AnError)
+
+				vfs := failfs.New(memfs.New())
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnMkdirAll {
+						return errors.New("mkdir failed")
+					}
+
+					return nil
+				})
+				*appFs = vfs
+			},
+			req: file.DeployRequest{
+				ObjectName:  "nginx.conf",
+				Path:        "/etc/nginx/nginx.conf",
+				ContentType: "raw",
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to create directory",
+		},
+		{
 			name: "when state KV put fails",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -333,11 +439,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when state KV has corrupt data proceeds to deploy",
 			setupMock: func(
 				ctrl *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
 				mockEntry.EXPECT().Value().Return([]byte("not-json"))
@@ -365,11 +473,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mode is invalid defaults to 0644",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -390,7 +500,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  existingSHA,
 				Path:    "/etc/nginx/nginx.conf",
 			},
-			validateFunc: func(appFs afero.Fs) {
+			validateFunc: func(appFs avfs.VFS) {
 				info, err := appFs.Stat("/etc/nginx/nginx.conf")
 				suite.Require().NoError(err)
 				suite.Equal(os.FileMode(0o644), info.Mode())
@@ -400,11 +510,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			name: "when mode is set",
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *stubObjectStore,
+				mockObj *filemocks.MockObjectStore,
 				mockKV *jobmocks.MockKeyValue,
-				_ *afero.Fs,
+				_ *avfs.VFS,
 			) {
-				mockObj.getBytesData = fileContent
+				mockObj.EXPECT().
+					GetBytes(gomock.Any(), gomock.Any()).
+					Return(fileContent, nil)
 
 				mockKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
@@ -425,7 +537,7 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 				SHA256:  existingSHA,
 				Path:    "/usr/local/bin/script.sh",
 			},
-			validateFunc: func(appFs afero.Fs) {
+			validateFunc: func(appFs avfs.VFS) {
 				info, err := appFs.Stat("/usr/local/bin/script.sh")
 				suite.Require().NoError(err)
 				suite.Equal(os.FileMode(0o755), info.Mode())
@@ -438,9 +550,13 @@ func (suite *DeployPublicTestSuite) TestDeploy() {
 			ctrl := gomock.NewController(suite.T())
 			defer ctrl.Finish()
 
-			appFs := afero.Fs(afero.NewMemMapFs())
+			if tc.setupFunc != nil {
+				tc.setupFunc()
+			}
+
+			var appFs avfs.VFS = memfs.New()
 			mockKV := jobmocks.NewMockKeyValue(ctrl)
-			mockObj := &stubObjectStore{}
+			mockObj := filemocks.NewMockObjectStore(ctrl)
 
 			if tc.setupMock != nil {
 				tc.setupMock(ctrl, mockObj, mockKV, &appFs)

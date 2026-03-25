@@ -21,19 +21,20 @@
 package cron
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 	"regexp"
-	"strings"
 
-	"github.com/spf13/afero"
+	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/file"
 )
 
-const (
-	cronDir       = "/etc/cron.d"
-	managedHeader = "# Managed by osapi"
-)
+const cronDir = "/etc/cron.d"
 
 // periodicDirs maps interval names to their directory paths.
 var periodicDirs = map[string]string{
@@ -49,66 +50,86 @@ var periodicIntervals = []string{"hourly", "daily", "weekly", "monthly"}
 var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // Debian implements the Provider interface for Debian-family systems.
+// It delegates file writes to a FileDeployer for SHA tracking and
+// idempotency. Managed files are identified by their presence in the
+// file-state KV, not by file content headers.
 type Debian struct {
-	logger *slog.Logger
-	fs     afero.Fs
+	logger       *slog.Logger
+	fs           avfs.VFS
+	fileDeployer file.Deployer
+	stateKV      jetstream.KeyValue
+	hostname     string
 }
 
 // NewDebianProvider factory to create a new Debian instance.
 func NewDebianProvider(
 	logger *slog.Logger,
-	fs afero.Fs,
+	fs avfs.VFS,
+	fileDeployer file.Deployer,
+	stateKV jetstream.KeyValue,
+	hostname string,
 ) *Debian {
 	return &Debian{
-		logger: logger,
-		fs:     fs,
+		logger:       logger,
+		fs:           fs,
+		fileDeployer: fileDeployer,
+		stateKV:      stateKV,
+		hostname:     hostname,
 	}
 }
 
 // List returns all osapi-managed cron entries from /etc/cron.d/ and
 // /etc/cron.{hourly,daily,weekly,monthly}/.
-func (d *Debian) List() ([]Entry, error) {
+func (d *Debian) List(
+	ctx context.Context,
+) ([]Entry, error) {
 	var result []Entry
 
 	// Scan /etc/cron.d/ for schedule-based entries.
-	cronDirEntries, err := afero.ReadDir(d.fs, cronDir)
+	cronDirEntries, err := d.fs.ReadDir(cronDir)
 	if err != nil {
 		return nil, fmt.Errorf("list cron entries: %w", err)
 	}
 
-	for _, entry := range cronDirEntries {
-		if entry.IsDir() {
+	for _, dirEntry := range cronDirEntries {
+		if dirEntry.IsDir() {
 			continue
 		}
 
-		cronEntry, err := d.readCronFile(entry.Name())
-		if err != nil {
+		path := cronDir + "/" + dirEntry.Name()
+		if !d.isManagedFile(ctx, path) {
 			continue
 		}
 
-		result = append(result, *cronEntry)
+		entry := d.buildEntryFromState(ctx, dirEntry.Name(), path, "cron.d")
+		if entry != nil {
+			result = append(result, *entry)
+		}
 	}
 
 	// Scan periodic directories for interval-based entries.
 	for _, interval := range periodicIntervals {
 		dir := periodicDirs[interval]
 
-		dirEntries, err := afero.ReadDir(d.fs, dir)
+		dirEntries, err := d.fs.ReadDir(dir)
 		if err != nil {
 			continue
 		}
 
-		for _, entry := range dirEntries {
-			if entry.IsDir() {
+		for _, dirEntry := range dirEntries {
+			if dirEntry.IsDir() {
 				continue
 			}
 
-			periodicEntry, err := d.readPeriodicFile(dir, entry.Name(), interval)
-			if err != nil {
+			path := dir + "/" + dirEntry.Name()
+			if !d.isManagedFile(ctx, path) {
 				continue
 			}
 
-			result = append(result, *periodicEntry)
+			entry := d.buildEntryFromState(ctx, dirEntry.Name(), path, interval)
+			if entry != nil {
+				result = append(result, *entry)
+			}
 		}
 	}
 
@@ -117,32 +138,35 @@ func (d *Debian) List() ([]Entry, error) {
 
 // Get returns a single cron entry by name, searching all directories.
 func (d *Debian) Get(
+	ctx context.Context,
 	name string,
 ) (*Entry, error) {
 	if err := validateName(name); err != nil {
 		return nil, err
 	}
 
-	// Check /etc/cron.d/ first.
-	entry, err := d.readCronFile(name)
-	if err == nil {
-		return entry, nil
+	filePath, _ := d.findEntryPath(name)
+	if filePath == "" {
+		return nil, fmt.Errorf("cron entry %q: not found", name)
 	}
 
-	// Check periodic directories.
-	for _, interval := range periodicIntervals {
-		dir := periodicDirs[interval]
-		periodicEntry, err := d.readPeriodicFile(dir, name, interval)
-		if err == nil {
-			return periodicEntry, nil
-		}
+	if !d.isManagedFile(ctx, filePath) {
+		return nil, fmt.Errorf("cron entry %q is not managed by osapi", name)
 	}
 
-	return nil, fmt.Errorf("read cron entry %q: not found", name)
+	source := d.sourceForPath(filePath)
+
+	entry := d.buildEntryFromState(ctx, name, filePath, source)
+	if entry == nil {
+		return nil, fmt.Errorf("cron entry %q: failed to read state", name)
+	}
+
+	return entry, nil
 }
 
-// Create writes a new cron drop-in file or periodic script.
+// Create deploys a new cron entry via the file provider.
 func (d *Debian) Create(
+	ctx context.Context,
 	entry Entry,
 ) (*CreateResult, error) {
 	if err := validateName(entry.Name); err != nil {
@@ -156,19 +180,27 @@ func (d *Debian) Create(
 
 	filePath, perm := d.entryFilePath(entry)
 
-	content := buildFileContent(entry)
-	if err := afero.WriteFile(d.fs, filePath, []byte(content), perm); err != nil {
+	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
+		ObjectName:  entry.Object,
+		Path:        filePath,
+		Mode:        fmt.Sprintf("%04o", perm),
+		ContentType: entry.ContentType,
+		Vars:        entry.Vars,
+		Metadata:    buildCronMetadata(entry),
+	})
+	if err != nil {
 		return nil, fmt.Errorf("create cron entry: %w", err)
 	}
 
 	return &CreateResult{
 		Name:    entry.Name,
-		Changed: true,
+		Changed: result.Changed,
 	}, nil
 }
 
-// Update overwrites an existing cron drop-in file or periodic script.
+// Update redeploys an existing cron entry via the file provider.
 func (d *Debian) Update(
+	ctx context.Context,
 	entry Entry,
 ) (*UpdateResult, error) {
 	if err := validateName(entry.Name); err != nil {
@@ -180,32 +212,27 @@ func (d *Debian) Update(
 		return nil, fmt.Errorf("cron entry %q does not exist", entry.Name)
 	}
 
-	newContent := buildFileContent(entry)
-
-	current, err := afero.ReadFile(d.fs, filePath)
+	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
+		ObjectName:  entry.Object,
+		Path:        filePath,
+		Mode:        fmt.Sprintf("%04o", perm),
+		ContentType: entry.ContentType,
+		Vars:        entry.Vars,
+		Metadata:    buildCronMetadata(entry),
+	})
 	if err != nil {
-		return nil, fmt.Errorf("update cron entry: %w", err)
-	}
-
-	if string(current) == newContent {
-		return &UpdateResult{
-			Name:    entry.Name,
-			Changed: false,
-		}, nil
-	}
-
-	if err := afero.WriteFile(d.fs, filePath, []byte(newContent), perm); err != nil {
 		return nil, fmt.Errorf("update cron entry: %w", err)
 	}
 
 	return &UpdateResult{
 		Name:    entry.Name,
-		Changed: true,
+		Changed: result.Changed,
 	}, nil
 }
 
-// Delete removes a cron drop-in file or periodic script.
+// Delete undeploys a cron entry via the file provider.
 func (d *Debian) Delete(
+	ctx context.Context,
 	name string,
 ) (*DeleteResult, error) {
 	if err := validateName(name); err != nil {
@@ -220,20 +247,23 @@ func (d *Debian) Delete(
 		}, nil
 	}
 
-	if err := d.fs.Remove(filePath); err != nil {
+	result, err := d.fileDeployer.Undeploy(ctx, file.UndeployRequest{
+		Path: filePath,
+	})
+	if err != nil {
 		return nil, fmt.Errorf("delete cron entry: %w", err)
 	}
 
 	return &DeleteResult{
 		Name:    name,
-		Changed: true,
+		Changed: result.Changed,
 	}, nil
 }
 
 // entryFilePath returns the file path and permissions for a new entry.
 func (d *Debian) entryFilePath(
 	entry Entry,
-) (string, os.FileMode) {
+) (string, uint32) {
 	if entry.Interval != "" {
 		dir, ok := periodicDirs[entry.Interval]
 		if ok {
@@ -248,10 +278,10 @@ func (d *Debian) entryFilePath(
 // Returns the file path and permissions, or empty string if not found.
 func (d *Debian) findEntryPath(
 	name string,
-) (string, os.FileMode) {
+) (string, uint32) {
 	// Check /etc/cron.d/ first.
 	cronPath := cronDir + "/" + name
-	if exists, _ := afero.Exists(d.fs, cronPath); exists {
+	if _, err := d.fs.Stat(cronPath); err == nil {
 		return cronPath, 0o644
 	}
 
@@ -259,7 +289,7 @@ func (d *Debian) findEntryPath(
 	for _, interval := range periodicIntervals {
 		dir := periodicDirs[interval]
 		periodicPath := dir + "/" + name
-		if exists, _ := afero.Exists(d.fs, periodicPath); exists {
+		if _, err := d.fs.Stat(periodicPath); err == nil {
 			return periodicPath, 0o755
 		}
 	}
@@ -267,114 +297,104 @@ func (d *Debian) findEntryPath(
 	return "", 0
 }
 
-// readCronFile reads and parses a single cron drop-in file from /etc/cron.d/.
-// Returns nil if the file is not managed by osapi.
-func (d *Debian) readCronFile(
-	name string,
-) (*Entry, error) {
-	filePath := cronDir + "/" + name
-
-	data, err := afero.ReadFile(d.fs, filePath)
+// isManagedFile checks if the file at path has a file-state KV entry,
+// indicating it was deployed by osapi.
+func (d *Debian) isManagedFile(
+	ctx context.Context,
+	path string,
+) bool {
+	stateKey := file.BuildStateKey(d.hostname, path)
+	entry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
-		return nil, fmt.Errorf("read cron entry %q: %w", name, err)
+		return false
 	}
 
-	content := string(data)
-	if !strings.HasPrefix(content, managedHeader) {
-		return nil, fmt.Errorf("cron entry %q is not managed by osapi", name)
+	// Check that the state entry is not undeployed.
+	var state job.FileState
+	if err := json.Unmarshal(entry.Value(), &state); err != nil {
+		return false
 	}
 
-	lines := strings.Split(strings.TrimSpace(content), "\n")
-	if len(lines) < 2 {
-		return nil, fmt.Errorf("cron entry %q has invalid format", name)
-	}
-
-	// Parse the cron line: SCHEDULE USER COMMAND
-	cronLine := lines[1]
-	parts := strings.Fields(cronLine)
-	if len(parts) < 7 {
-		return nil, fmt.Errorf("cron entry %q has invalid cron line", name)
-	}
-
-	schedule := strings.Join(parts[:5], " ")
-	user := parts[5]
-	command := strings.Join(parts[6:], " ")
-
-	return &Entry{
-		Name:     name,
-		Schedule: schedule,
-		Source:   "cron.d",
-		User:     user,
-		Command:  command,
-	}, nil
+	return state.UndeployedAt == ""
 }
 
-// readPeriodicFile reads and parses a periodic script from
-// /etc/cron.{hourly,daily,weekly,monthly}/.
-// Returns nil if the file is not managed by osapi.
-func (d *Debian) readPeriodicFile(
-	dir string,
+// buildEntryFromState creates an Entry from file-state KV metadata.
+func (d *Debian) buildEntryFromState(
+	ctx context.Context,
 	name string,
-	interval string,
-) (*Entry, error) {
-	filePath := dir + "/" + name
+	path string,
+	source string,
+) *Entry {
+	stateKey := file.BuildStateKey(d.hostname, path)
 
-	data, err := afero.ReadFile(d.fs, filePath)
+	kvEntry, err := d.stateKV.Get(ctx, stateKey)
 	if err != nil {
-		return nil, fmt.Errorf("read periodic entry %q: %w", name, err)
+		return nil
 	}
 
-	content := string(data)
-	if !strings.Contains(content, managedHeader) {
-		return nil, fmt.Errorf("periodic entry %q is not managed by osapi", name)
+	var state job.FileState
+	if err := json.Unmarshal(kvEntry.Value(), &state); err != nil {
+		return nil
 	}
 
-	// Periodic scripts: #!/bin/sh\n# Managed by osapi\n{command}\n
-	lines := strings.Split(strings.TrimSpace(content), "\n")
-	if len(lines) < 3 {
-		return nil, fmt.Errorf("periodic entry %q has invalid format", name)
+	entry := &Entry{
+		Name:   name,
+		Object: state.ObjectName,
+		Source: source,
 	}
 
-	// The command is the last line.
-	command := lines[len(lines)-1]
+	// Restore domain-specific fields from metadata.
+	if state.Metadata != nil {
+		entry.Schedule = state.Metadata["schedule"]
+		entry.Interval = state.Metadata["interval"]
+		entry.User = state.Metadata["user"]
+	}
 
-	return &Entry{
-		Name:     name,
-		Interval: interval,
-		Source:   interval,
-		Command:  command,
-	}, nil
+	return entry
+}
+
+// sourceForPath returns the source string for a given file path.
+func (d *Debian) sourceForPath(
+	path string,
+) string {
+	for _, interval := range periodicIntervals {
+		dir := periodicDirs[interval]
+		if len(path) > len(dir) && path[:len(dir)] == dir {
+			return interval
+		}
+	}
+
+	return "cron.d"
+}
+
+// buildCronMetadata returns the metadata map for a cron entry.
+func buildCronMetadata(
+	entry Entry,
+) map[string]string {
+	m := make(map[string]string)
+	if entry.Schedule != "" {
+		m["schedule"] = entry.Schedule
+	}
+	if entry.Interval != "" {
+		m["interval"] = entry.Interval
+	}
+	if entry.User != "" {
+		m["user"] = entry.User
+	}
+
+	return m
 }
 
 // validateName checks that a cron entry name is safe for use as a filename.
 func validateName(
 	name string,
 ) error {
-	if strings.Contains(name, "..") {
-		return fmt.Errorf("invalid cron entry name %q: contains '..'", name)
-	}
-	if strings.Contains(name, "/") {
-		return fmt.Errorf("invalid cron entry name %q: contains '/'", name)
+	if name == "" {
+		return fmt.Errorf("invalid cron entry name: empty")
 	}
 	if !validName.MatchString(name) {
 		return fmt.Errorf("invalid cron entry name %q: must match %s", name, validName.String())
 	}
 
 	return nil
-}
-
-// buildFileContent generates the content for a cron drop-in file or periodic script.
-func buildFileContent(
-	entry Entry,
-) string {
-	if entry.Interval != "" {
-		return fmt.Sprintf("#!/bin/sh\n%s\n%s\n", managedHeader, entry.Command)
-	}
-
-	user := entry.User
-	if user == "" {
-		user = "root"
-	}
-
-	return fmt.Sprintf("%s\n%s %s %s\n", managedHeader, entry.Schedule, user, entry.Command)
 }

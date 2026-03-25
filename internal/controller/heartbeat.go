@@ -65,7 +65,7 @@ func NewComponentHeartbeat(
 	subComponents map[string]job.SubComponentInfo,
 ) *ComponentHeartbeat {
 	return &ComponentHeartbeat{
-		logger:          logger,
+		logger:          logger.With(slog.String("subsystem", "controller.heartbeat")),
 		registryKV:      registryKV,
 		hostname:        hostname,
 		version:         version,

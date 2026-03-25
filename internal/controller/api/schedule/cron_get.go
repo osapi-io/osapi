@@ -66,15 +66,15 @@ func (s *Schedule) GetNodeScheduleCronByName(
 
 	jobUUID := uuid.MustParse(resp.JobID)
 	entryName := entry.Name
+	object := entry.Object
 	schedule := entry.Schedule
 	user := entry.User
-	command := entry.Command
 
 	return gen.GetNodeScheduleCronByName200JSONResponse{
 		JobId:    &jobUUID,
 		Name:     &entryName,
+		Object:   &object,
 		Schedule: &schedule,
 		User:     &user,
-		Command:  &command,
 	}, nil
 }

@@ -1,0 +1,588 @@
+---
+id: post-node-file-undeploy
+title: "Remove a deployed file from the host filesystem"
+description: "Remove a deployed file from the host filesystem"
+sidebar_label: "Remove a deployed file from the host filesystem"
+hide_title: true
+hide_table_of_contents: true
+api: eJztV01v20YQ/SuLOcUAbclpcyHQg9ImgIt+GI6MHFxBGHHH5NrkLrM7tK0Q/O/FLElJttQmLRygBXwStZzP92a5b1twNXlk4+yZhhTOXeDfnKb3pqRLq6ku3RoSYMwDpFcgr5a/osWcKrK8nJ2fLa2sbaIEWCQQKGu84TWkVy28JfTkZw0XEuHalJTee8MEi26RQI0eK2LyIRpbrAhSKFzg+JiAsZBCjVxAAp4+NcaThpR9QwloCpk3teSFFOboc2KFOVlWY4REeQrk70gr7xo2Nld3WDakXi3RrhO1xLI8SpTzqsQVlSpQSRk7r17d0jqNpkcnf1hI4OHYYW2OM6cpJ3tMD+zxuAemhTssjUaW2scik8rYH06T+GbJsTboEghZQRWKD69rsQ/sjc0hgcrYX8jmgtNpJ9hIJAr81um12D/tPnOWybK8wrouTRYJmNwEQaPdT+RWN5QxJFB7oYsNxdIjtgfKeQyuDERYB6ZKiYNip5phPk7+NTjQdd0uq1d9MYsE2HBJQ9pxDi96OMQpeoXa2dD38Hr6Wn72S94UqW7cSmGWUc2kpeJnQu/GrZZGfxm/eUHq7CflrhUXpDJPyKSlqBMZis28f1WcfsK5QFa1dxmFQDqGHcNlBdqcdqtaOVcS2r1wHwvignz0lq2p7jEozLjBslwrT5W7E7ie0jR0nexu1DHpX7LX8zXQ9/10us/YmY2jooytG35Gksh757+M7Uzt/B+pir492C7LGu/78aEHrOq+STSl4O+UJ/aG7kgFRm5CpEIToynDVyTX2sgjlmrwUbhyDW+LOJhWNySpLfG987eKTUVOsJMpcHp3oIxlyskfnKi+SXF4lOTNdCpcjXS+E6s9Hk/3eby02HDhvPn8rHvthcZvSON3Bz6gzq+M1mRfOPw/cPjm8CeVyUsnm7pfiPxvE9k9DXYRT2GFqj9ISfcn9bV3VWxEzuC41OszUZLEhRM5X7sQmYsSDyYi1SfteGZ3E3GaNFuZH4VyVOI7Iv6DDETP+a6U32BQMNcw6NooNaIRJMPDe+crZEjh54/zqCNk0C62yvbdCMyoREcyO9H+1y5mGsCaReGzvX+o2fkZJCA191CdnkxPpuIpjVcYB3q4UvxzFB+xsGmX6YEndYnGSp7Gl9vKr0AAhgTSHVkkISGBDcqLXjSJdduuMNClL7tOlj815Nc99nfoDa6k56sWtAnyrCG9xjI8vfa02w0Nry4GjXakvvFl6CAYwyJamaVoDSlAAre03r3TdQtRvISafOyvf/1j38XxXIJs3fc+UV0yesyimv9b28XOXjj//cNcpnK4TVVxJ4PHe7lY4n1fqqv7S6xct2SthRJt3mAutn1MmWF8vAWejHzs6iAYbdtbzN0t2a7bYMPyX4Dpuj8BufNqvg==
+sidebar_class_name: "post api-method"
+info_path: gen/api/agent-management-api
+custom_edit_url: null
+---
+
+import ApiTabs from "@theme/ApiTabs";
+import DiscriminatorTabs from "@theme/DiscriminatorTabs";
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import SecuritySchemes from "@theme/ApiExplorer/SecuritySchemes";
+import MimeTabs from "@theme/MimeTabs";
+import ParamsItem from "@theme/ParamsItem";
+import ResponseSamples from "@theme/ResponseSamples";
+import SchemaItem from "@theme/SchemaItem";
+import SchemaTabs from "@theme/SchemaTabs";
+import Heading from "@theme/Heading";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a deployed file from the host filesystem"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/node/{hostname}/file/undeploy"}
+>
+  
+</MethodEndpoint>
+
+
+
+Remove a deployed file from the host filesystem
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<details
+  style={{"marginBottom":"1rem"}}
+  className={"openapi-markdown__details"}
+  data-collapsed={false}
+  open={true}
+>
+  <summary
+    style={{}}
+  >
+    <h3
+      className={"openapi-markdown__details-summary-header-params"}
+    >
+      Path Parameters
+    </h3>
+  </summary><div>
+    <ul>
+      <ParamsItem
+        className={"paramsItem"}
+        param={{"name":"hostname","in":"path","required":true,"description":"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"},"schema":{"type":"string","minLength":1}}}
+      >
+        
+      </ParamsItem>
+    </ul>
+  </div>
+</details><MimeTabs
+  className={"openapi-tabs__mime"}
+>
+  <TabItem
+    label={"application/json"}
+    value={"application/json-schema"}
+  >
+    <details
+      style={{}}
+      className={"openapi-markdown__details mime"}
+      data-collapsed={false}
+      open={true}
+    >
+      <summary
+        style={{}}
+        className={"openapi-markdown__details-summary-mime"}
+      >
+        <h3
+          className={"openapi-markdown__details-summary-header-body"}
+        >
+          Body
+        </h3><strong
+          className={"openapi-schema__required"}
+        >
+          required
+        </strong>
+      </summary><div
+        style={{"textAlign":"left","marginLeft":"1rem"}}
+      >
+        
+      </div><ul
+        style={{"marginLeft":"1rem"}}
+      >
+        <SchemaItem
+          collapsible={false}
+          name={"path"}
+          required={true}
+          schemaName={"string"}
+          qualifierMessage={undefined}
+          schema={{"type":"string","description":"Filesystem path to undeploy.","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
+        >
+          
+        </SchemaItem>
+      </ul>
+    </details>
+  </TabItem>
+</MimeTabs><div>
+  <div>
+    <ApiTabs
+      label={undefined}
+      id={undefined}
+    >
+      <TabItem
+        label={"202"}
+        value={"202"}
+      >
+        <div>
+          
+          
+          File undeploy job accepted.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"job_id"}
+                        required={true}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The ID of the created job."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"hostname"}
+                        required={true}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The agent that processed the job."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"changed"}
+                        required={true}
+                        schemaName={"boolean"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"boolean","description":"Whether the file was actually removed."}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"job_id\": \"string\",\n  \"hostname\": \"string\",\n  \"changed\": true\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Invalid input.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"401"}
+        value={"401"}
+      >
+        <div>
+          
+          
+          Unauthorized.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"403"}
+        value={"403"}
+      >
+        <div>
+          
+          
+          Forbidden.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"500"}
+        value={"500"}
+      >
+        <div>
+          
+          
+          Internal error.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem>
+    </ApiTabs>
+  </div>
+</div>
+      

@@ -24,7 +24,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/spf13/afero"
+	"github.com/avfs/avfs"
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
@@ -36,7 +36,6 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
@@ -46,21 +45,23 @@ var factoryDockerNewFn = dockerProv.New
 // ProviderFactory creates platform-specific providers for the agent.
 type ProviderFactory struct {
 	logger *slog.Logger
-	appFs  afero.Fs
+	appFs  avfs.VFS
 }
 
 // NewProviderFactory creates a new provider factory.
 func NewProviderFactory(
 	logger *slog.Logger,
-	appFs afero.Fs,
+	appFs avfs.VFS,
 ) *ProviderFactory {
 	return &ProviderFactory{
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "agent.factory")),
 		appFs:  appFs,
 	}
 }
 
 // CreateProviders creates all providers needed for the agent.
+// The cron provider is not created here because it depends on the file
+// provider, which is initialized separately in agent setup.
 func (f *ProviderFactory) CreateProviders() (
 	nodeHost.Provider,
 	disk.Provider,
@@ -71,7 +72,6 @@ func (f *ProviderFactory) CreateProviders() (
 	netinfo.Provider,
 	command.Provider,
 	dockerProv.Provider,
-	cronProv.Provider,
 ) {
 	plat := platform.Detect()
 
@@ -169,16 +169,5 @@ func (f *ProviderFactory) CreateProviders() (
 			slog.String("error", err.Error()))
 	}
 
-	// Create cron provider
-	var cronProvider cronProv.Provider
-	switch plat {
-	case "debian":
-		cronProvider = cronProv.NewDebianProvider(f.logger, f.appFs)
-	case "darwin":
-		cronProvider = cronProv.NewDarwinProvider()
-	default:
-		cronProvider = cronProv.NewLinuxProvider()
-	}
-
-	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider, cronProvider
+	return hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider
 }

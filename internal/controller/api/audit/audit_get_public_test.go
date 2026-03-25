@@ -30,11 +30,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/stretchr/testify/suite"
 
 	auditstore "github.com/retr0h/osapi/internal/audit"
+	auditmocks "github.com/retr0h/osapi/internal/audit/mocks"
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
@@ -47,17 +49,23 @@ type AuditGetPublicTestSuite struct {
 
 	appConfig config.Config
 	logger    *slog.Logger
+	mockCtrl  *gomock.Controller
+	mockStore *auditmocks.MockStore
 	handler   *auditapi.Audit
-	store     *fakeStore
 	ctx       context.Context
 }
 
 func (s *AuditGetPublicTestSuite) SetupTest() {
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	s.store = &fakeStore{}
-	s.handler = auditapi.New(s.logger, s.store)
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockStore = auditmocks.NewMockStore(s.mockCtrl)
+	s.handler = auditapi.New(s.logger, s.mockStore)
 	s.ctx = context.Background()
+}
+
+func (s *AuditGetPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
 }
 
 func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
@@ -73,17 +81,19 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 			name: "returns entry successfully",
 			id:   testID,
 			setupStore: func() {
-				s.store.getEntry = &auditstore.Entry{
-					ID:           testID.String(),
-					Timestamp:    time.Now(),
-					User:         "user@example.com",
-					Roles:        []string{"admin"},
-					Method:       "GET",
-					Path:         "/node/hostname",
-					SourceIP:     "127.0.0.1",
-					ResponseCode: 200,
-					DurationMs:   42,
-				}
+				s.mockStore.EXPECT().
+					Get(gomock.Any(), testID.String()).
+					Return(&auditstore.Entry{
+						ID:           testID.String(),
+						Timestamp:    time.Now(),
+						User:         "user@example.com",
+						Roles:        []string{"admin"},
+						Method:       "GET",
+						Path:         "/node/hostname",
+						SourceIP:     "127.0.0.1",
+						ResponseCode: 200,
+						DurationMs:   42,
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetAuditLogByIDResponseObject) {
 				r, ok := resp.(gen.GetAuditLogByID200JSONResponse)
@@ -95,7 +105,9 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 			name: "returns 404 when not found",
 			id:   testID,
 			setupStore: func() {
-				s.store.getErr = fmt.Errorf("get audit entry: not found")
+				s.mockStore.EXPECT().
+					Get(gomock.Any(), testID.String()).
+					Return(nil, fmt.Errorf("get audit entry: not found"))
 			},
 			validateFunc: func(resp gen.GetAuditLogByIDResponseObject) {
 				_, ok := resp.(gen.GetAuditLogByID404JSONResponse)
@@ -106,7 +118,9 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 			name: "returns 500 on store error",
 			id:   testID,
 			setupStore: func() {
-				s.store.getErr = fmt.Errorf("connection error")
+				s.mockStore.EXPECT().
+					Get(gomock.Any(), testID.String()).
+					Return(nil, fmt.Errorf("connection error"))
 			},
 			validateFunc: func(resp gen.GetAuditLogByIDResponseObject) {
 				_, ok := resp.(gen.GetAuditLogByID500JSONResponse)
@@ -117,7 +131,6 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByID() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.store.reset()
 			tt.setupStore()
 			resp, err := s.handler.GetAuditLogByID(s.ctx, gen.GetAuditLogByIDRequestObject{
 				Id: tt.id,
@@ -132,25 +145,27 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 	tests := []struct {
 		name         string
 		path         string
-		store        *fakeStore
+		setupStore   func(mock *auditmocks.MockStore)
 		wantCode     int
 		wantContains []string
 	}{
 		{
 			name: "when valid UUID returns entry",
 			path: "/audit/550e8400-e29b-41d4-a716-446655440000",
-			store: &fakeStore{
-				getEntry: &auditstore.Entry{
-					ID:           "550e8400-e29b-41d4-a716-446655440000",
-					Timestamp:    time.Now(),
-					User:         "user@example.com",
-					Roles:        []string{"admin"},
-					Method:       "GET",
-					Path:         "/node/hostname",
-					SourceIP:     "127.0.0.1",
-					ResponseCode: 200,
-					DurationMs:   42,
-				},
+			setupStore: func(mock *auditmocks.MockStore) {
+				mock.EXPECT().
+					Get(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").
+					Return(&auditstore.Entry{
+						ID:           "550e8400-e29b-41d4-a716-446655440000",
+						Timestamp:    time.Now(),
+						User:         "user@example.com",
+						Roles:        []string{"admin"},
+						Method:       "GET",
+						Path:         "/node/hostname",
+						SourceIP:     "127.0.0.1",
+						ResponseCode: 200,
+						DurationMs:   42,
+					}, nil)
 			},
 			wantCode:     http.StatusOK,
 			wantContains: []string{`"user":"user@example.com"`},
@@ -158,7 +173,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 		{
 			name:         "when invalid UUID returns 400",
 			path:         "/audit/not-a-uuid",
-			store:        &fakeStore{},
+			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusBadRequest,
 			wantContains: []string{},
 		},
@@ -166,9 +181,15 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDHTTP() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mock := auditmocks.NewMockStore(ctrl)
+			tc.setupStore(mock)
+
 			a := api.New(s.appConfig, s.logger)
 
-			auditHandler := newTestAuditHandler(s.logger, tc.store)
+			auditHandler := newTestAuditHandler(s.logger, mock)
 			strictHandler := gen.NewStrictHandler(auditHandler, nil)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
@@ -197,6 +218,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 	tests := []struct {
 		name         string
 		setupAuth    func(req *http.Request)
+		setupStore   func(mock *auditmocks.MockStore)
 		wantCode     int
 		wantContains []string
 	}{
@@ -205,6 +227,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 			setupAuth: func(_ *http.Request) {
 				// No auth header set
 			},
+			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusUnauthorized,
 			wantContains: []string{"Bearer token required"},
 		},
@@ -220,6 +243,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
+			setupStore:   func(_ *auditmocks.MockStore) {},
 			wantCode:     http.StatusForbidden,
 			wantContains: []string{"Insufficient permissions"},
 		},
@@ -235,6 +259,21 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
+			setupStore: func(mock *auditmocks.MockStore) {
+				mock.EXPECT().
+					Get(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").
+					Return(&auditstore.Entry{
+						ID:           "550e8400-e29b-41d4-a716-446655440000",
+						Timestamp:    time.Now(),
+						User:         "user@example.com",
+						Roles:        []string{"admin"},
+						Method:       "GET",
+						Path:         "/node/hostname",
+						SourceIP:     "127.0.0.1",
+						ResponseCode: 200,
+						DurationMs:   42,
+					}, nil)
+			},
 			wantCode:     http.StatusOK,
 			wantContains: []string{`"user":"user@example.com"`},
 		},
@@ -242,19 +281,11 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := &fakeStore{
-				getEntry: &auditstore.Entry{
-					ID:           "550e8400-e29b-41d4-a716-446655440000",
-					Timestamp:    time.Now(),
-					User:         "user@example.com",
-					Roles:        []string{"admin"},
-					Method:       "GET",
-					Path:         "/node/hostname",
-					SourceIP:     "127.0.0.1",
-					ResponseCode: 200,
-					DurationMs:   42,
-				},
-			}
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+
+			mock := auditmocks.NewMockStore(ctrl)
+			tc.setupStore(mock)
 
 			appConfig := config.Config{
 				Controller: config.Controller{
@@ -267,7 +298,7 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetAuditHandler(store)
+			handlers := server.GetAuditHandler(mock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

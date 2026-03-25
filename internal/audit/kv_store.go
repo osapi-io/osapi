@@ -50,7 +50,7 @@ func NewKVStore(
 ) *KVStore {
 	return &KVStore{
 		kv:     kv,
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "audit")),
 	}
 }
 

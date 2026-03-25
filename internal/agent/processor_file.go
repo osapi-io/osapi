@@ -44,6 +44,8 @@ func (a *Agent) processFileOperation(
 	switch baseOperation {
 	case "deploy":
 		return a.processFileDeploy(jobRequest)
+	case "undeploy":
+		return a.processFileUndeploy(jobRequest)
 	case "status":
 		return a.processFileStatus(jobRequest)
 	default:
@@ -80,6 +82,23 @@ func (a *Agent) processFileStatus(
 	result, err := a.fileProvider.Status(context.Background(), req)
 	if err != nil {
 		return nil, fmt.Errorf("file status failed: %w", err)
+	}
+
+	return json.Marshal(result)
+}
+
+// processFileUndeploy handles file undeploy operations.
+func (a *Agent) processFileUndeploy(
+	jobRequest job.Request,
+) (json.RawMessage, error) {
+	var req fileProv.UndeployRequest
+	if err := json.Unmarshal(jobRequest.Data, &req); err != nil {
+		return nil, fmt.Errorf("failed to parse file undeploy data: %w", err)
+	}
+
+	result, err := a.fileProvider.Undeploy(context.Background(), req)
+	if err != nil {
+		return nil, fmt.Errorf("file undeploy failed: %w", err)
 	}
 
 	return json.Marshal(result)

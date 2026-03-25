@@ -421,6 +421,18 @@ func (s *FileUploadPublicTestSuite) TestPostFile() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "when uploading system file returns 403",
+			request: gen.PostFileRequestObject{
+				Body: makeMultipartReader("osapi/cron-template.tmpl", "raw", fileContent),
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostFileResponseObject) {
+				r, ok := resp.(gen.PostFile403JSONResponse)
+				s.True(ok)
+				s.Contains(*r.Error, "cannot overwrite protected osapi file")
+			},
+		},
 	}
 
 	for _, tt := range tests {

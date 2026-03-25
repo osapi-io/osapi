@@ -42,7 +42,7 @@ func New(
 	em exec.Manager,
 ) *Executor {
 	return &Executor{
-		logger:      logger,
+		logger:      logger.With(slog.String("subsystem", "provider.command")),
 		execManager: em,
 	}
 }

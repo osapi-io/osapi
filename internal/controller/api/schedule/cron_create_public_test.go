@@ -90,10 +90,12 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
-					Name:     "backup",
-					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
-					User:     strPtr("root"),
+					Name:        "backup",
+					Schedule:    strPtr("0 2 * * *"),
+					Object:      "backup-script",
+					User:        strPtr("root"),
+					ContentType: (*gen.CronCreateRequestContentType)(strPtr("template")),
+					Vars:        &map[string]interface{}{"region": "us-east"},
 				},
 			},
 			setupMock: func() {
@@ -126,7 +128,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -157,7 +159,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "daily-backup",
 					Interval: intervalPtr(gen.CronCreateRequestIntervalDaily),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -188,7 +190,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -219,7 +221,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
@@ -237,7 +239,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
@@ -252,8 +254,8 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
-					Name:    "backup",
-					Command: "/usr/bin/backup.sh",
+					Name:   "backup",
+					Object: "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
@@ -272,7 +274,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
 					Interval: intervalPtr(gen.CronCreateRequestIntervalDaily),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
@@ -289,7 +291,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("not-a-cron"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
@@ -307,7 +309,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "",
+					Object:   "",
 				},
 			},
 			setupMock: func() {},
@@ -324,7 +326,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				Body: &gen.PostNodeScheduleCronJSONRequestBody{
 					Name:     "backup",
 					Schedule: strPtr("0 2 * * *"),
-					Command:  "/usr/bin/backup.sh",
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -366,7 +368,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 		{
 			name: "when valid request",
 			path: "/node/server1/schedule/cron",
-			body: `{"name":"backup","schedule":"0 2 * * *","command":"/usr/bin/backup.sh"}`,
+			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
@@ -385,7 +387,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 		{
 			name: "when missing name",
 			path: "/node/server1/schedule/cron",
-			body: `{"schedule":"0 2 * * *","command":"/usr/bin/backup.sh"}`,
+			body: `{"schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -395,7 +397,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 		{
 			name: "when target agent not found",
 			path: "/node/nonexistent/schedule/cron",
-			body: `{"name":"backup","schedule":"0 2 * * *","command":"/usr/bin/backup.sh"}`,
+			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -524,7 +526,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronRBACHTTP() {
 				http.MethodPost,
 				"/node/server1/schedule/cron",
 				strings.NewReader(
-					`{"name":"backup","schedule":"0 2 * * *","command":"/usr/bin/backup.sh"}`,
+					`{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 				),
 			)
 			req.Header.Set("Content-Type", "application/json")

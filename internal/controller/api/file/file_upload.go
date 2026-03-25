@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -51,6 +52,11 @@ func (f *File) PostFile(
 	name, contentType, fileData, errResp := f.parseMultipart(request)
 	if errResp != nil {
 		return errResp, nil
+	}
+
+	if strings.HasPrefix(name, "osapi/") {
+		errMsg := fmt.Sprintf("cannot overwrite protected osapi file: %s", name)
+		return gen.PostFile403JSONResponse{Error: &errMsg}, nil
 	}
 
 	f.logger.Debug("file upload",

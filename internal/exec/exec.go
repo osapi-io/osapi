@@ -35,7 +35,7 @@ func New(
 	logger *slog.Logger,
 ) *Exec {
 	return &Exec{
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "exec")),
 	}
 }
 

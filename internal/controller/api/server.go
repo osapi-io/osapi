@@ -63,7 +63,7 @@ func New(
 
 	s := &Server{
 		Echo:        e,
-		logger:      logger,
+		logger:      logger.With(slog.String("subsystem", "api.server")),
 		appConfig:   appConfig,
 		customRoles: customRoles,
 	}

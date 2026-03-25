@@ -97,18 +97,6 @@ upstream {{ . }};
 {{ end }}
 ```
 
-When targeting all hosts, the CLI prompts for confirmation:
-
-```bash
-$ osapi client node file deploy --object app.conf --path /etc/app/app.conf --target _all
-
-  This will deploy the file to ALL hosts. Continue? [y/N] y
-
-  Job ID:   550e8400-e29b-41d4-a716-446655440000
-  Hostname: server1
-  Changed:  true
-```
-
 Target by label to deploy to a group of servers:
 
 ```bash
@@ -140,5 +128,5 @@ $ osapi client node file deploy --object app.conf --path /etc/app/app.conf --jso
 | `--owner`        | File owner user                                          |         |
 | `--group`        | File owner group                                         |         |
 | `--var`          | Template variable as `key=value` (repeatable)            | `[]`    |
-| `-T, --target`   | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `-T, --target`   | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
 | `-j, --json`     | Output raw JSON response                                 |         |

@@ -18,11 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit
+package audit_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"testing"
@@ -30,39 +29,58 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
-type KVStoreTestSuite struct {
+type KVStoreMarshalTestSuite struct {
 	suite.Suite
 
 	ctrl   *gomock.Controller
 	mockKV *mocks.MockKeyValue
-	store  *KVStore
+	store  *audit.KVStore
 }
 
-func (s *KVStoreTestSuite) SetupTest() {
+func (s *KVStoreMarshalTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.mockKV = mocks.NewMockKeyValue(s.ctrl)
-	s.store = NewKVStore(slog.Default(), s.mockKV)
+	s.store = audit.NewKVStore(slog.Default(), s.mockKV)
 }
 
-func (s *KVStoreTestSuite) TearDownTest() {
+func (s *KVStoreMarshalTestSuite) TearDownTest() {
 	s.ctrl.Finish()
-	marshalJSON = json.Marshal
+	audit.ResetMarshalJSON()
 }
 
-func (s *KVStoreTestSuite) TestWriteMarshalError() {
-	marshalJSON = func(_ interface{}) ([]byte, error) {
-		return nil, fmt.Errorf("marshal failure")
+func (s *KVStoreMarshalTestSuite) TestWriteMarshalError() {
+	tests := []struct {
+		name         string
+		setupMock    func()
+		validateFunc func(err error)
+	}{
+		{
+			name: "when marshal fails returns wrapped error",
+			setupMock: func() {
+				audit.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, fmt.Errorf("marshal failure")
+				})
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "marshal audit entry")
+			},
+		},
 	}
 
-	err := s.store.Write(context.Background(), Entry{ID: "test-id"})
-
-	s.Error(err)
-	s.Contains(err.Error(), "marshal audit entry")
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+			err := s.store.Write(context.Background(), audit.Entry{ID: "test-id"})
+			tt.validateFunc(err)
+		})
+	}
 }
 
-func TestKVStoreTestSuite(t *testing.T) {
-	suite.Run(t, new(KVStoreTestSuite))
+func TestKVStoreMarshalTestSuite(t *testing.T) {
+	suite.Run(t, new(KVStoreMarshalTestSuite))
 }

@@ -48,15 +48,6 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 		group, _ := cmd.Flags().GetString("group")
 		varFlags, _ := cmd.Flags().GetStringSlice("var")
 
-		if host == "_all" {
-			fmt.Print("This will deploy the file to ALL hosts. Continue? [y/N] ")
-			var confirm string
-			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
-				fmt.Println("Aborted.")
-				return
-			}
-		}
-
 		vars := parseVarFlags(varFlags)
 
 		resp, err := sdkClient.Node.FileDeploy(ctx, client.FileDeployOpts{

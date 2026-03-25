@@ -63,6 +63,7 @@ const (
 // File operations — manage file deployments and status.
 const (
 	OpFileDeploy    JobOperation = "file.deploy.execute"
+	OpFileUndeploy  JobOperation = "file.undeploy.execute"
 	OpFileStatusGet JobOperation = "file.status.get"
 )
 

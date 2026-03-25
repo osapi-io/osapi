@@ -21,8 +21,10 @@
 package config_test
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/config"
@@ -114,6 +116,51 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			} else {
 				s.NoError(err)
 			}
+		})
+	}
+}
+
+func (s *ConfigPublicTestSuite) TestValidateRegisterValidatorsError() {
+	tests := []struct {
+		name         string
+		setupMock    func()
+		validateFunc func(err error)
+	}{
+		{
+			name: "when validator registration fails returns error",
+			setupMock: func() {
+				config.SetRegisterValidatorsFn(func(_ *validator.Validate) error {
+					return errors.New("validator registration failed")
+				})
+			},
+			validateFunc: func(err error) {
+				s.Error(err)
+				s.Contains(err.Error(), "validator registration failed")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+			defer config.ResetRegisterValidatorsFn()
+			c := &config.Config{
+				Controller: config.Controller{
+					Client: config.Client{
+						Security: config.ClientSecurity{
+							BearerToken: "test-token",
+						},
+					},
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: "test-key",
+						},
+					},
+				},
+			}
+
+			err := config.Validate(c)
+			tt.validateFunc(err)
 		})
 	}
 }

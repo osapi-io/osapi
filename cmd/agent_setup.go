@@ -25,12 +25,16 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/process"
+	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
 // Ensure cli import is used (for BuildFileStateKVConfig etc.)
@@ -50,11 +54,14 @@ func setupAgent(
 	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
 
 	providerFactory := agent.NewProviderFactory(log, appFs)
-	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider, cronProvider := providerFactory.CreateProviders()
+	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider := providerFactory.CreateProviders()
 
-	// Create file provider if Object Store and file-state KV are configured
+	// Create file provider if Object Store and file-state KV are configured.
 	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
-	fileProvider := createFileProvider(ctx, log, b, namespace, hostname)
+	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname)
+
+	// Create cron provider — depends on file provider for SHA-tracked deploys.
+	cronProvider := createCronProvider(log, fileProvider, fileStateKV, hostname)
 
 	a := agent.New(
 		appFs,
@@ -104,16 +111,17 @@ func setupAgent(
 }
 
 // createFileProvider creates a file provider if Object Store and file-state KV
-// are configured. Returns nil if either is unavailable.
+// are configured. Returns nil provider and nil KV if either is unavailable.
+// The stateKV is also returned so the cron provider can check managed files.
 func createFileProvider(
 	ctx context.Context,
 	log *slog.Logger,
 	b *natsBundle,
 	namespace string,
 	hostname string,
-) fileProv.Provider {
+) (fileProv.Provider, jetstream.KeyValue) {
 	if appConfig.NATS.Objects.Bucket == "" || appConfig.NATS.FileState.Bucket == "" {
-		return nil
+		return nil, nil
 	}
 
 	objStoreName := job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket)
@@ -123,7 +131,7 @@ func createFileProvider(
 			slog.String("bucket", objStoreName),
 			slog.String("error", err.Error()),
 		)
-		return nil
+		return nil, nil
 	}
 
 	fileStateKVConfig := cli.BuildFileStateKVConfig(namespace, appConfig.NATS.FileState)
@@ -133,8 +141,40 @@ func createFileProvider(
 			slog.String("bucket", fileStateKVConfig.Bucket),
 			slog.String("error", err.Error()),
 		)
-		return nil
+		return nil, nil
 	}
 
-	return fileProv.New(log, appFs, objStore, fileStateKV, hostname)
+	// Seed system templates into the object store (idempotent).
+	if err := agent.SeedSystemTemplates(ctx, log, objStore); err != nil {
+		log.Warn("failed to seed system templates",
+			slog.String("error", err.Error()),
+		)
+	}
+
+	return fileProv.New(log, appFs, objStore, fileStateKV, hostname), fileStateKV
+}
+
+// createCronProvider creates a platform-specific cron provider. On Debian, the
+// cron provider delegates file writes to the file provider. On other platforms,
+// all operations return ErrUnsupported.
+func createCronProvider(
+	log *slog.Logger,
+	fileProvider fileProv.Provider,
+	fileStateKV jetstream.KeyValue,
+	hostname string,
+) cronProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if fileProvider == nil {
+			log.Warn("file provider not available, cron operations disabled")
+			return cronProv.NewLinuxProvider()
+		}
+		return cronProv.NewDebianProvider(log, appFs, fileProvider, fileStateKV, hostname)
+	case "darwin":
+		return cronProv.NewDarwinProvider()
+	default:
+		return cronProv.NewLinuxProvider()
+	}
 }

@@ -27,8 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
@@ -52,7 +53,7 @@ type AgentPublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	appFs         afero.Fs
+	appFs         avfs.VFS
 	appConfig     config.Config
 	logger        *slog.Logger
 }
@@ -68,7 +69,7 @@ func (s *AgentPublicTestSuite) getFreePort() int {
 func (s *AgentPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
-	s.appFs = afero.NewMemMapFs()
+	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
 	s.appConfig = config.Config{
