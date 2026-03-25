@@ -29,6 +29,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -70,7 +71,12 @@ func (s *Schedule) PutNodeScheduleCron(
 	s.logger.Debug("cron update",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.putNodeScheduleCronUpdateBroadcast(ctx, hostname, entry)
+	}
 
 	resp, err := s.JobClient.ModifyScheduleCronUpdate(ctx, hostname, entry)
 	if err != nil {
@@ -89,10 +95,59 @@ func (s *Schedule) PutNodeScheduleCron(
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	name := result.Name
+	agentHostname := resp.Hostname
+
+	return gen.PutNodeScheduleCron200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.CronMutationResult{
+			{
+				Hostname: &agentHostname,
+				Name:     &name,
+				Changed:  changed,
+			},
+		},
+	}, nil
+}
+
+// putNodeScheduleCronUpdateBroadcast handles broadcast targets for cron update.
+func (s *Schedule) putNodeScheduleCronUpdateBroadcast(
+	ctx context.Context,
+	target string,
+	entry cronProv.Entry,
+) (gen.PutNodeScheduleCronResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyScheduleCronUpdateBroadcast(ctx, target, entry)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PutNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.CronMutationResult
+	for _, resp := range results {
+		var result cronProv.UpdateResult
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &result)
+		}
+		name := result.Name
+		agentHostname := resp.Hostname
+		responses = append(responses, gen.CronMutationResult{
+			Hostname: &agentHostname,
+			Name:     &name,
+			Changed:  resp.Changed,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		h := hostname
+		responses = append(responses, gen.CronMutationResult{
+			Hostname: &h,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.PutNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
-		Changed: changed,
-		Name:    &name,
+		Results: responses,
 	}, nil
 }

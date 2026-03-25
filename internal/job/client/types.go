@@ -376,21 +376,41 @@ type JobClient interface {
 		target string,
 		name string,
 	) (*job.Response, error)
+	QueryScheduleCronGetBroadcast(
+		ctx context.Context,
+		target string,
+		name string,
+	) (string, map[string]*job.Response, error)
 	ModifyScheduleCronCreate(
 		ctx context.Context,
 		target string,
 		entry cron.Entry,
 	) (*job.Response, error)
+	ModifyScheduleCronCreateBroadcast(
+		ctx context.Context,
+		target string,
+		entry cron.Entry,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyScheduleCronUpdate(
 		ctx context.Context,
 		target string,
 		entry cron.Entry,
 	) (*job.Response, error)
+	ModifyScheduleCronUpdateBroadcast(
+		ctx context.Context,
+		target string,
+		entry cron.Entry,
+	) (string, map[string]*job.Response, map[string]string, error)
 	ModifyScheduleCronDelete(
 		ctx context.Context,
 		target string,
 		name string,
 	) (*job.Response, error)
+	ModifyScheduleCronDeleteBroadcast(
+		ctx context.Context,
+		target string,
+		name string,
+	) (string, map[string]*job.Response, map[string]string, error)
 
 	// Agent discovery
 	ListAgents(

@@ -418,36 +418,26 @@ type CronCreateRequestInterval string
 
 // CronCreateResponse defines model for CronCreateResponse.
 type CronCreateResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // CronDeleteResponse defines model for CronDeleteResponse.
 type CronDeleteResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // CronEntry A cron drop-in entry.
 type CronEntry struct {
+	// Error Error message if the agent failed to retrieve this entry.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname *string `json:"hostname,omitempty"`
+
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
 
@@ -470,25 +460,26 @@ type CronEntry struct {
 // CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 type CronEntryInterval string
 
-// CronEntryResponse A single cron entry with job metadata.
-type CronEntryResponse struct {
+// CronGetResponse Collection response for a single cron entry get operation.
+type CronGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []CronEntry         `json:"results"`
+}
+
+// CronMutationResult Result of a cron create, update, or delete operation for one host.
+type CronMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname *string `json:"hostname,omitempty"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
-
-	// Object Object store name for the deployed content.
-	Object *string `json:"object,omitempty"`
-
-	// Schedule Cron schedule expression.
-	Schedule *string `json:"schedule,omitempty"`
-
-	// User User the cron entry runs as.
-	User *string `json:"user,omitempty"`
 }
 
 // CronUpdateRequest defines model for CronUpdateRequest.
@@ -514,17 +505,9 @@ type CronUpdateRequestContentType string
 
 // CronUpdateResponse defines model for CronUpdateResponse.
 type CronUpdateResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
 	// JobId The job ID used to process this request.
-	JobId *openapi_types.UUID `json:"job_id,omitempty"`
-
-	// Name Cron entry name.
-	Name *string `json:"name,omitempty"`
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []CronMutationResult `json:"results"`
 }
 
 // DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
@@ -6043,7 +6026,7 @@ func (r DeleteNodeScheduleCronResponse) StatusCode() int {
 type GetNodeScheduleCronByNameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CronEntryResponse
+	JSON200      *CronGetResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
@@ -9087,7 +9070,7 @@ func ParseGetNodeScheduleCronByNameResponse(rsp *http.Response) (*GetNodeSchedul
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CronEntryResponse
+		var dest CronGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

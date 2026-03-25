@@ -29,6 +29,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
 
@@ -47,7 +48,12 @@ func (s *Schedule) DeleteNodeScheduleCron(
 	s.logger.Debug("cron delete",
 		slog.String("target", hostname),
 		slog.String("name", name),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.deleteNodeScheduleCronBroadcast(ctx, hostname, name)
+	}
 
 	resp, err := s.JobClient.ModifyScheduleCronDelete(ctx, hostname, name)
 	if err != nil {
@@ -66,10 +72,59 @@ func (s *Schedule) DeleteNodeScheduleCron(
 	jobUUID := uuid.MustParse(resp.JobID)
 	changed := resp.Changed
 	resultName := result.Name
+	agentHostname := resp.Hostname
+
+	return gen.DeleteNodeScheduleCron200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.CronMutationResult{
+			{
+				Hostname: &agentHostname,
+				Name:     &resultName,
+				Changed:  changed,
+			},
+		},
+	}, nil
+}
+
+// deleteNodeScheduleCronBroadcast handles broadcast targets for cron delete.
+func (s *Schedule) deleteNodeScheduleCronBroadcast(
+	ctx context.Context,
+	target string,
+	name string,
+) (gen.DeleteNodeScheduleCronResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.ModifyScheduleCronDeleteBroadcast(ctx, target, name)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var responses []gen.CronMutationResult
+	for _, resp := range results {
+		var result cronProv.DeleteResult
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &result)
+		}
+		resultName := result.Name
+		agentHostname := resp.Hostname
+		responses = append(responses, gen.CronMutationResult{
+			Hostname: &agentHostname,
+			Name:     &resultName,
+			Changed:  resp.Changed,
+		})
+	}
+	for hostname, errMsg := range errs {
+		e := errMsg
+		h := hostname
+		responses = append(responses, gen.CronMutationResult{
+			Hostname: &h,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.DeleteNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
-		Changed: changed,
-		Name:    &resultName,
+		Results: responses,
 	}, nil
 }

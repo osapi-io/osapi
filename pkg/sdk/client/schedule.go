@@ -66,7 +66,7 @@ func (s *ScheduleService) CronGet(
 	ctx context.Context,
 	hostname string,
 	name string,
-) (*Response[CronEntryResult], error) {
+) (*Response[Collection[CronEntryResult]], error) {
 	resp, err := s.client.GetNodeScheduleCronByNameWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("cron get: %w", err)
@@ -89,7 +89,7 @@ func (s *ScheduleService) CronGet(
 		}}
 	}
 
-	return NewResponse(cronEntryFromGen(resp.JSON200), resp.Body), nil
+	return NewResponse(cronGetCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
 // CronCreate creates a new cron entry on the target host.
@@ -97,7 +97,7 @@ func (s *ScheduleService) CronCreate(
 	ctx context.Context,
 	hostname string,
 	opts CronCreateOpts,
-) (*Response[CronMutationResult], error) {
+) (*Response[Collection[CronMutationResult]], error) {
 	body := gen.CronCreateRequest{
 		Name:   opts.Name,
 		Object: opts.Object,
@@ -142,7 +142,7 @@ func (s *ScheduleService) CronCreate(
 		}}
 	}
 
-	return NewResponse(cronMutationFromCreate(resp.JSON200), resp.Body), nil
+	return NewResponse(cronMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
 }
 
 // CronUpdate updates an existing cron entry on the target host.
@@ -151,7 +151,7 @@ func (s *ScheduleService) CronUpdate(
 	hostname string,
 	name string,
 	opts CronUpdateOpts,
-) (*Response[CronMutationResult], error) {
+) (*Response[Collection[CronMutationResult]], error) {
 	body := gen.CronUpdateRequest{}
 	if opts.Object != "" {
 		body.Object = &opts.Object
@@ -193,7 +193,7 @@ func (s *ScheduleService) CronUpdate(
 		}}
 	}
 
-	return NewResponse(cronMutationFromUpdate(resp.JSON200), resp.Body), nil
+	return NewResponse(cronMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
 }
 
 // CronDelete deletes a cron entry on the target host.
@@ -201,7 +201,7 @@ func (s *ScheduleService) CronDelete(
 	ctx context.Context,
 	hostname string,
 	name string,
-) (*Response[CronMutationResult], error) {
+) (*Response[Collection[CronMutationResult]], error) {
 	resp, err := s.client.DeleteNodeScheduleCronWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("cron delete: %w", err)
@@ -224,5 +224,5 @@ func (s *ScheduleService) CronDelete(
 		}}
 	}
 
-	return NewResponse(cronMutationFromDelete(resp.JSON200), resp.Body), nil
+	return NewResponse(cronMutationCollectionFromDelete(resp.JSON200), resp.Body), nil
 }

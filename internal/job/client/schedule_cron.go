@@ -105,6 +105,30 @@ func (c *Client) QueryScheduleCronGet(
 	return resp, nil
 }
 
+// QueryScheduleCronGetBroadcast gets a cron entry by name from multiple agents.
+func (c *Client) QueryScheduleCronGetBroadcast(
+	ctx context.Context,
+	target string,
+	name string,
+) (string, map[string]*job.Response, error) {
+	data := map[string]string{"name": name}
+	dataBytes, _ := json.Marshal(data)
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "schedule",
+		Operation: job.OperationCronGet,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	return jobID, responses, nil
+}
+
 // ModifyScheduleCronCreate creates a cron entry on a target.
 func (c *Client) ModifyScheduleCronCreate(
 	ctx context.Context,
@@ -132,6 +156,39 @@ func (c *Client) ModifyScheduleCronCreate(
 	resp.JobID = jobID
 
 	return resp, nil
+}
+
+// ModifyScheduleCronCreateBroadcast creates a cron entry on multiple agents.
+func (c *Client) ModifyScheduleCronCreateBroadcast(
+	ctx context.Context,
+	target string,
+	entry cron.Entry,
+) (string, map[string]*job.Response, map[string]string, error) {
+	dataBytes, _ := json.Marshal(entry)
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "schedule",
+		Operation: job.OperationCronCreate,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*job.Response)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == job.StatusFailed {
+			errs[hostname] = resp.Error
+		} else {
+			results[hostname] = resp
+		}
+	}
+
+	return jobID, results, errs, nil
 }
 
 // ModifyScheduleCronUpdate updates a cron entry on a target.
@@ -163,6 +220,39 @@ func (c *Client) ModifyScheduleCronUpdate(
 	return resp, nil
 }
 
+// ModifyScheduleCronUpdateBroadcast updates a cron entry on multiple agents.
+func (c *Client) ModifyScheduleCronUpdateBroadcast(
+	ctx context.Context,
+	target string,
+	entry cron.Entry,
+) (string, map[string]*job.Response, map[string]string, error) {
+	dataBytes, _ := json.Marshal(entry)
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "schedule",
+		Operation: job.OperationCronUpdate,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*job.Response)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == job.StatusFailed {
+			errs[hostname] = resp.Error
+		} else {
+			results[hostname] = resp
+		}
+	}
+
+	return jobID, results, errs, nil
+}
+
 // ModifyScheduleCronDelete deletes a cron entry on a target.
 func (c *Client) ModifyScheduleCronDelete(
 	ctx context.Context,
@@ -191,4 +281,38 @@ func (c *Client) ModifyScheduleCronDelete(
 	resp.JobID = jobID
 
 	return resp, nil
+}
+
+// ModifyScheduleCronDeleteBroadcast deletes a cron entry on multiple agents.
+func (c *Client) ModifyScheduleCronDeleteBroadcast(
+	ctx context.Context,
+	target string,
+	name string,
+) (string, map[string]*job.Response, map[string]string, error) {
+	data := map[string]string{"name": name}
+	dataBytes, _ := json.Marshal(data)
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "schedule",
+		Operation: job.OperationCronDelete,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*job.Response)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == job.StatusFailed {
+			errs[hostname] = resp.Error
+		} else {
+			results[hostname] = resp
+		}
+	}
+
+	return jobID, results, errs, nil
 }

@@ -48,11 +48,35 @@ var clientNodeScheduleCronGetCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println()
-		cli.PrintKV("Name", resp.Data.Name)
-		cli.PrintKV("Object", resp.Data.Object)
-		cli.PrintKV("Schedule", resp.Data.Schedule)
-		cli.PrintKV("User", resp.Data.User)
+		if resp.Data.JobID != "" {
+			fmt.Println()
+			cli.PrintKV("Job ID", resp.Data.JobID)
+		}
+
+		if len(resp.Data.Results) == 0 {
+			fmt.Println("\n  No cron entry found.")
+			return
+		}
+
+		rows := make([][]string, 0, len(resp.Data.Results))
+		for _, r := range resp.Data.Results {
+			errVal := r.Error
+			if errVal == "" {
+				errVal = "-"
+			}
+			rows = append(rows, []string{
+				r.Hostname,
+				r.Name,
+				r.Schedule,
+				r.Object,
+				r.User,
+				errVal,
+			})
+		}
+		cli.PrintCompactTable([]cli.Section{{
+			Headers: []string{"HOSTNAME", "NAME", "SCHEDULE", "OBJECT", "USER", "ERROR"},
+			Rows:    rows,
+		}})
 	},
 }
 

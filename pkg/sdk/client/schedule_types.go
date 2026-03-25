@@ -26,6 +26,7 @@ import (
 
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
+	Hostname string `json:"hostname,omitempty"`
 	Name     string `json:"name"`
 	Object   string `json:"object,omitempty"`
 	Schedule string `json:"schedule,omitempty"`
@@ -37,10 +38,10 @@ type CronEntryResult struct {
 
 // CronMutationResult represents the result of a cron create/update/delete operation.
 type CronMutationResult struct {
-	JobID   string `json:"job_id"`
-	Name    string `json:"name"`
-	Changed bool   `json:"changed"`
-	Error   string `json:"error,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
+	Name     string `json:"name"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
 }
 
 // CronCreateOpts contains options for creating a cron entry.
@@ -89,12 +90,14 @@ func cronEntryCollectionFromGen(
 		}
 
 		results = append(results, CronEntryResult{
+			Hostname: derefString(r.Hostname),
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
 			Interval: interval,
 			Source:   derefString(r.Source),
 			User:     derefString(r.User),
+			Error:    derefString(r.Error),
 		})
 	}
 
@@ -104,51 +107,95 @@ func cronEntryCollectionFromGen(
 	}
 }
 
-// cronEntryFromGen converts a gen.CronEntryResponse to a CronEntryResult.
-func cronEntryFromGen(
-	g *gen.CronEntryResponse,
-) CronEntryResult {
-	return CronEntryResult{
-		Name:     derefString(g.Name),
-		Object:   derefString(g.Object),
-		Schedule: derefString(g.Schedule),
-		User:     derefString(g.User),
-		Error:    derefString(g.Error),
+// cronGetCollectionFromGen converts a gen.CronGetResponse
+// to a Collection[CronEntryResult].
+func cronGetCollectionFromGen(
+	g *gen.CronGetResponse,
+) Collection[CronEntryResult] {
+	results := make([]CronEntryResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		var interval string
+		if r.Interval != nil {
+			interval = string(*r.Interval)
+		}
+
+		results = append(results, CronEntryResult{
+			Hostname: derefString(r.Hostname),
+			Name:     derefString(r.Name),
+			Object:   derefString(r.Object),
+			Schedule: derefString(r.Schedule),
+			Interval: interval,
+			Source:   derefString(r.Source),
+			User:     derefString(r.User),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[CronEntryResult]{
+		Results: results,
+		JobID:   jobIDFromGen(g.JobId),
 	}
 }
 
-// cronMutationFromCreate converts a gen.CronCreateResponse to a CronMutationResult.
-func cronMutationFromCreate(
+// cronMutationCollectionFromCreate converts a gen.CronCreateResponse
+// to a Collection[CronMutationResult].
+func cronMutationCollectionFromCreate(
 	g *gen.CronCreateResponse,
-) CronMutationResult {
-	return CronMutationResult{
+) Collection[CronMutationResult] {
+	results := make([]CronMutationResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, CronMutationResult{
+			Hostname: derefString(r.Hostname),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[CronMutationResult]{
+		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
-		Name:    derefString(g.Name),
-		Changed: derefBool(g.Changed),
-		Error:   derefString(g.Error),
 	}
 }
 
-// cronMutationFromUpdate converts a gen.CronUpdateResponse to a CronMutationResult.
-func cronMutationFromUpdate(
+// cronMutationCollectionFromUpdate converts a gen.CronUpdateResponse
+// to a Collection[CronMutationResult].
+func cronMutationCollectionFromUpdate(
 	g *gen.CronUpdateResponse,
-) CronMutationResult {
-	return CronMutationResult{
+) Collection[CronMutationResult] {
+	results := make([]CronMutationResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, CronMutationResult{
+			Hostname: derefString(r.Hostname),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[CronMutationResult]{
+		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
-		Name:    derefString(g.Name),
-		Changed: derefBool(g.Changed),
-		Error:   derefString(g.Error),
 	}
 }
 
-// cronMutationFromDelete converts a gen.CronDeleteResponse to a CronMutationResult.
-func cronMutationFromDelete(
+// cronMutationCollectionFromDelete converts a gen.CronDeleteResponse
+// to a Collection[CronMutationResult].
+func cronMutationCollectionFromDelete(
 	g *gen.CronDeleteResponse,
-) CronMutationResult {
-	return CronMutationResult{
+) Collection[CronMutationResult] {
+	results := make([]CronMutationResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, CronMutationResult{
+			Hostname: derefString(r.Hostname),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[CronMutationResult]{
+		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
-		Name:    derefString(g.Name),
-		Changed: derefBool(g.Changed),
-		Error:   derefString(g.Error),
 	}
 }

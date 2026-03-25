@@ -29,6 +29,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 )
 
@@ -47,7 +48,12 @@ func (s *Schedule) GetNodeScheduleCronByName(
 	s.logger.Debug("cron get",
 		slog.String("target", hostname),
 		slog.String("name", name),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
+
+	if job.IsBroadcastTarget(hostname) {
+		return s.getNodeScheduleCronByNameBroadcast(ctx, hostname, name)
+	}
 
 	resp, err := s.JobClient.QueryScheduleCronGet(ctx, hostname, name)
 	if err != nil {
@@ -69,12 +75,70 @@ func (s *Schedule) GetNodeScheduleCronByName(
 	object := entry.Object
 	schedule := entry.Schedule
 	user := entry.User
+	agentHostname := resp.Hostname
 
 	return gen.GetNodeScheduleCronByName200JSONResponse{
-		JobId:    &jobUUID,
-		Name:     &entryName,
-		Object:   &object,
-		Schedule: &schedule,
-		User:     &user,
+		JobId: &jobUUID,
+		Results: []gen.CronEntry{
+			{
+				Hostname: &agentHostname,
+				Name:     &entryName,
+				Object:   &object,
+				Schedule: &schedule,
+				User:     &user,
+			},
+		},
+	}, nil
+}
+
+// getNodeScheduleCronByNameBroadcast handles broadcast targets for cron get.
+func (s *Schedule) getNodeScheduleCronByNameBroadcast(
+	ctx context.Context,
+	target string,
+	name string,
+) (gen.GetNodeScheduleCronByNameResponseObject, error) {
+	jobID, responses, err := s.JobClient.QueryScheduleCronGetBroadcast(ctx, target, name)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil
+	}
+
+	allResults := make([]gen.CronEntry, 0)
+	for _, resp := range responses {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+			agentHostname := resp.Hostname
+			errMsg := resp.Error
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: &agentHostname,
+				Error:    &errMsg,
+			})
+			continue
+		}
+
+		var entry cronProv.Entry
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &entry)
+		}
+
+		agentHostname := resp.Hostname
+		entryName := entry.Name
+		object := entry.Object
+		schedule := entry.Schedule
+		user := entry.User
+
+		allResults = append(allResults, gen.CronEntry{
+			Hostname: &agentHostname,
+			Name:     &entryName,
+			Object:   &object,
+			Schedule: &schedule,
+			User:     &user,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+
+	return gen.GetNodeScheduleCronByName200JSONResponse{
+		JobId:   &jobUUID,
+		Results: allResults,
 	}, nil
 }
