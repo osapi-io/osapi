@@ -44,7 +44,6 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		showStdout, _ := cmd.Flags().GetBool("stdout")
 		showStderr, _ := cmd.Flags().GetBool("stderr")
 
-
 		resp, err := sdkClient.Node.Exec(ctx, client.ExecRequest{
 			Command: command,
 			Args:    args,

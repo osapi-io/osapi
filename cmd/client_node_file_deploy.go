@@ -48,7 +48,6 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 		group, _ := cmd.Flags().GetString("group")
 		varFlags, _ := cmd.Flags().GetStringSlice("var")
 
-
 		vars := parseVarFlags(varFlags)
 
 		resp, err := sdkClient.Node.FileDeploy(ctx, client.FileDeployOpts{

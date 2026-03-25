@@ -43,7 +43,6 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 		searchDomains, _ := cmd.Flags().GetStringSlice("search-domains")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
-
 		resp, err := sdkClient.Node.UpdateDNS(
 			ctx,
 			host,

@@ -43,7 +43,6 @@ var clientNodeCommandShellCmd = &cobra.Command{
 		showStdout, _ := cmd.Flags().GetBool("stdout")
 		showStderr, _ := cmd.Flags().GetBool("stderr")
 
-
 		resp, err := sdkClient.Node.Shell(ctx, client.ShellRequest{
 			Command: command,
 			Cwd:     cwd,
