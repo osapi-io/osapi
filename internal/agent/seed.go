@@ -72,7 +72,7 @@ func SeedSystemTemplates(
 		}
 
 		// Skip non-template files (e.g., .gitkeep placeholder required by go:embed).
-		if d.Name() == ".gitkeep" { //nolint:revive // only reachable with real embed
+		if d.Name() == ".gitkeep" {
 			return nil
 		}
 

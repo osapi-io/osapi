@@ -104,6 +104,23 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			errContains: "walk error",
 		},
 		{
+			name: "when directory contains only .gitkeep skips it",
+			setupFunc: func() {
+				agent.SetEmbeddedFS(fstest.MapFS{
+					"templates/.gitkeep": &fstest.MapFile{Data: []byte{}},
+				})
+			},
+			setupMock: func(
+				_ *gomock.Controller,
+				_ *filemocks.MockObjectStore,
+				_ *[]string,
+			) {
+				// No GetBytes or PutBytes calls expected — .gitkeep is skipped.
+			},
+			wantErr:      false,
+			wantPutCalls: 0,
+		},
+		{
 			name: "when ReadFile fails returns error",
 			setupFunc: func() {
 				setupTestTemplateFS()
