@@ -43,7 +43,7 @@ func (s *DockerSmokeSuite) TestDockerPull() {
 		{
 			name: "pulls alpine image and returns image id",
 			args: []string{
-				"client", "container", "docker", "pull",
+				"client", "node", "container", "docker", "pull",
 				"--image", "alpine:latest",
 				"--json",
 			},
@@ -84,7 +84,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Pull the image first so create does not fail.
 	pullOut, _, pullCode := runCLI(
-		"client", "container", "docker", "pull",
+		"client", "node", "container", "docker", "pull",
 		"--image", "alpine:latest",
 		"--json",
 	)
@@ -96,7 +96,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Create
 	createOut, _, createCode := runCLI(
-		"client", "container", "docker", "create",
+		"client", "node", "container", "docker", "create",
 		"--image", "alpine:latest",
 		"--name", "integration-test-container",
 		"--auto-start=false",
@@ -119,7 +119,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// List
 	listOut, _, listCode := runCLI(
-		"client", "container", "docker", "list",
+		"client", "node", "container", "docker", "list",
 		"--state", "all",
 		"--json",
 	)
@@ -139,7 +139,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Inspect
 	inspectOut, _, inspectCode := runCLI(
-		"client", "container", "docker", "inspect",
+		"client", "node", "container", "docker", "inspect",
 		"--id", "integration-test-container",
 		"--json",
 	)
@@ -161,7 +161,7 @@ func (s *DockerSmokeSuite) TestDockerCreateListInspectStopRemove() {
 
 	// Remove (force, in case the container is running)
 	removeOut, _, removeCode := runCLI(
-		"client", "container", "docker", "remove",
+		"client", "node", "container", "docker", "remove",
 		"--id", "integration-test-container",
 		"--force",
 		"--json",
@@ -191,7 +191,7 @@ func (s *DockerSmokeSuite) TestDockerList() {
 		{
 			name: "returns container list with results",
 			args: []string{
-				"client", "container", "docker", "list",
+				"client", "node", "container", "docker", "list",
 				"--state", "all",
 				"--json",
 			},
