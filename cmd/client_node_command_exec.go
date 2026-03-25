@@ -44,14 +44,6 @@ var clientNodeCommandExecCmd = &cobra.Command{
 		showStdout, _ := cmd.Flags().GetBool("stdout")
 		showStderr, _ := cmd.Flags().GetBool("stderr")
 
-		if host == "_all" {
-			fmt.Print("This will execute command on ALL hosts. Continue? [y/N] ")
-			var confirm string
-			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
-				fmt.Println("Aborted.")
-				return
-			}
-		}
 
 		resp, err := sdkClient.Node.Exec(ctx, client.ExecRequest{
 			Command: command,

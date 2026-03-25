@@ -25,20 +25,6 @@ $ osapi client node command exec \
     --timeout 10
 ```
 
-When targeting all hosts, the CLI prompts for confirmation:
-
-```bash
-$ osapi client node command exec --command uptime --target _all
-
-  This will execute command on ALL hosts. Continue? [y/N] y
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  CHANGED  STDOUT                          STDERR  EXIT CODE  DURATION
-  server1   false    13:21:06 up 42 days, 3:15, …            0          8ms
-  server2   false    13:21:06 up 15 days, 1:02, …            0          11ms
-```
-
 Target by label to execute on a group of servers:
 
 ```bash
@@ -107,7 +93,7 @@ exists
 | `--args`       | Command arguments (comma-separated)                      | `[]`    |
 | `--cwd`        | Working directory for the command                        |         |
 | `--timeout`    | Timeout in seconds (max 300)                             | `30`    |
-| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
 | `--stdout`     | Print only remote stdout                                 |         |
 | `--stderr`     | Print only remote stderr                                 |         |
 | `-j, --json`   | Output raw JSON response                                 |         |

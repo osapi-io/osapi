@@ -40,14 +40,6 @@ The object store entry is preserved; only the file on disk is removed.`,
 		host, _ := cmd.Flags().GetString("target")
 		path, _ := cmd.Flags().GetString("path")
 
-		if host == "_all" {
-			fmt.Print("This will undeploy the file from ALL hosts. Continue? [y/N] ")
-			var confirm string
-			if _, err := fmt.Scanln(&confirm); err != nil || (confirm != "y" && confirm != "Y") {
-				fmt.Println("Aborted.")
-				return
-			}
-		}
 
 		resp, err := sdkClient.Node.FileUndeploy(ctx, client.FileUndeployOpts{
 			Target: host,
