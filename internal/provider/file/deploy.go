@@ -108,6 +108,7 @@ func (p *Service) Deploy(
 		Group:       req.Group,
 		DeployedAt:  time.Now().UTC().Format(time.RFC3339),
 		ContentType: req.ContentType,
+		Metadata:    req.Metadata,
 	}
 
 	stateBytes, err := marshalJSON(state)

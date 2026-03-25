@@ -186,6 +186,7 @@ func (d *Debian) Create(
 		Mode:        fmt.Sprintf("%04o", perm),
 		ContentType: entry.ContentType,
 		Vars:        entry.Vars,
+		Metadata:    buildCronMetadata(entry),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create cron entry: %w", err)
@@ -217,6 +218,7 @@ func (d *Debian) Update(
 		Mode:        fmt.Sprintf("%04o", perm),
 		ContentType: entry.ContentType,
 		Vars:        entry.Vars,
+		Metadata:    buildCronMetadata(entry),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("update cron entry: %w", err)
@@ -341,10 +343,11 @@ func (d *Debian) buildEntryFromState(
 		Source: source,
 	}
 
-	if source == "cron.d" {
-		entry.Schedule = d.scheduleFromSource(source)
-	} else {
-		entry.Interval = source
+	// Restore domain-specific fields from metadata.
+	if state.Metadata != nil {
+		entry.Schedule = state.Metadata["schedule"]
+		entry.Interval = state.Metadata["interval"]
+		entry.User = state.Metadata["user"]
 	}
 
 	return entry
@@ -364,12 +367,22 @@ func (d *Debian) sourceForPath(
 	return "cron.d"
 }
 
-// scheduleFromSource returns a placeholder for cron.d entries.
-// The actual schedule is in the file content, not tracked in state.
-func (d *Debian) scheduleFromSource(
-	_ string,
-) string {
-	return ""
+// buildCronMetadata returns the metadata map for a cron entry.
+func buildCronMetadata(
+	entry Entry,
+) map[string]string {
+	m := make(map[string]string)
+	if entry.Schedule != "" {
+		m["schedule"] = entry.Schedule
+	}
+	if entry.Interval != "" {
+		m["interval"] = entry.Interval
+	}
+	if entry.User != "" {
+		m["user"] = entry.User
+	}
+
+	return m
 }
 
 // validateName checks that a cron entry name is safe for use as a filename.

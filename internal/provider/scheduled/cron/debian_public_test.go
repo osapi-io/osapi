@@ -48,11 +48,20 @@ func managedStateJSON(
 	objectName string,
 	path string,
 ) []byte {
+	return managedStateJSONWithMetadata(objectName, path, nil)
+}
+
+func managedStateJSONWithMetadata(
+	objectName string,
+	path string,
+	metadata map[string]string,
+) []byte {
 	state := job.FileState{
 		ObjectName: objectName,
 		Path:       path,
 		SHA256:     "abc123",
 		DeployedAt: "2026-01-01T00:00:00Z",
+		Metadata:   metadata,
 	}
 
 	b, _ := json.Marshal(state)
@@ -191,12 +200,17 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 			setup: func() {
 				suite.mockDeployer.EXPECT().
-					Deploy(gomock.Any(), file.DeployRequest{
-						ObjectName: "logrotate-script",
-						Path:       "/etc/cron.daily/logrotate",
-						Mode:       "0755",
-					}).
-					Return(&file.DeployResult{Changed: true, Path: "/etc/cron.daily/logrotate"}, nil)
+					Deploy(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						req file.DeployRequest,
+					) (*file.DeployResult, error) {
+						suite.Equal("logrotate-script", req.ObjectName)
+						suite.Equal("/etc/cron.daily/logrotate", req.Path)
+						suite.Equal("0755", req.Mode)
+						suite.Equal("daily", req.Metadata["interval"])
+						return &file.DeployResult{Changed: true, Path: "/etc/cron.daily/logrotate"}, nil
+					})
 			},
 			validateFunc: func(
 				result *cron.CreateResult,
@@ -493,7 +507,11 @@ func (suite *DebianPublicTestSuite) TestList() {
 					0o755,
 				)
 
-				stateData := managedStateJSON("cleanup-script", "/etc/cron.weekly/cleanup")
+				stateData := managedStateJSONWithMetadata(
+					"cleanup-script",
+					"/etc/cron.weekly/cleanup",
+					map[string]string{"interval": "weekly"},
+				)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
 
@@ -878,7 +896,11 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					[]byte("content"),
 					0o755,
 				)
-				stateData := managedStateJSON("logrotate-script", "/etc/cron.daily/logrotate")
+				stateData := managedStateJSONWithMetadata(
+					"logrotate-script",
+					"/etc/cron.daily/logrotate",
+					map[string]string{"interval": "daily"},
+				)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
 				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
 

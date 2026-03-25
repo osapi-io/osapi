@@ -38,6 +38,10 @@ type DeployRequest struct {
 	ContentType string `json:"content_type"`
 	// Vars contains template variables when ContentType is "template".
 	Vars map[string]any `json:"vars,omitempty"`
+	// Metadata contains provider-specific key-value pairs stored alongside
+	// the file state. Meta providers use this to persist domain-specific
+	// fields (e.g., cron schedule, systemd unit type).
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 // DeployResult contains the result of a file deploy operation.
