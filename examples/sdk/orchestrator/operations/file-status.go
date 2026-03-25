@@ -68,11 +68,15 @@ func main() {
 				return nil, err
 			}
 
-			return &orchestrator.Result{
-				JobID:   resp.Data.JobID,
-				Changed: resp.Data.Changed,
-				Data:    orchestrator.StructToMap(resp.Data),
-			}, nil
+			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r client.FileStatusResult) orchestrator.HostResult {
+					return orchestrator.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 

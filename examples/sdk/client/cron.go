@@ -22,6 +22,9 @@
 // Object Store, then create, list, get, update, and delete cron entries in
 // /etc/cron.d/ using the object-based workflow.
 //
+// All mutation and query responses return Collection[T] with per-host results.
+// Use .Data.Results to iterate over the per-host entries.
+//
 // Run with: OSAPI_TOKEN="<jwt>" go run cron.go
 package main
 
@@ -59,7 +62,6 @@ func main() {
 		"backup-script",
 		"raw",
 		backupScript,
-		client.FileUploadOpts{},
 	)
 	if err != nil {
 		log.Fatalf("upload failed: %v", err)
@@ -69,13 +71,14 @@ func main() {
 	// Upload the logrotate script for the periodic entry.
 	fmt.Println("\n=== Uploading logrotate script ===")
 	logrotateScript := strings.NewReader("#!/bin/sh\n/usr/sbin/logrotate /etc/logrotate.conf\n")
-	_, err = c.File.Upload(ctx, "logrotate-script", "raw", logrotateScript, client.FileUploadOpts{})
+	_, err = c.File.Upload(ctx, "logrotate-script", "raw", logrotateScript)
 	if err != nil {
 		log.Fatalf("upload logrotate script failed: %v", err)
 	}
 	fmt.Println("Uploaded: logrotate-script")
 
 	// Create a cron entry referencing the uploaded object.
+	// Returns Collection[CronMutationResult] with per-host results.
 	fmt.Println("\n=== Creating cron entry ===")
 	createResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
 		Name:     "backup-daily",
@@ -86,7 +89,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("create failed: %v", err)
 	}
-	fmt.Printf("Created: %s (changed: %v)\n", createResp.Data.Name, createResp.Data.Changed)
+	for _, r := range createResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// Create a periodic entry (interval-based) referencing an uploaded object.
 	fmt.Println("\n=== Creating periodic cron entry ===")
@@ -98,48 +103,62 @@ func main() {
 	if err != nil {
 		log.Fatalf("create periodic failed: %v", err)
 	}
-	fmt.Printf("Created: %s (changed: %v)\n", periodicResp.Data.Name, periodicResp.Data.Changed)
+	for _, r := range periodicResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// List all cron entries.
+	// Returns Collection[CronEntryResult] with per-host entries.
 	fmt.Println("\n=== Listing cron entries ===")
 	listResp, err := c.Schedule.CronList(ctx, target)
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
 	for _, entry := range listResp.Data.Results {
-		fmt.Printf("  %s: %s %s %s\n", entry.Name, entry.Schedule, entry.User, entry.Object)
+		if entry.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", entry.Hostname, entry.Error)
+		} else {
+			fmt.Printf("  %s: %s %s %s %s\n",
+				entry.Hostname, entry.Name, entry.Schedule, entry.User, entry.Object)
+		}
 	}
 
 	// Get a specific entry.
+	// Returns Collection[CronEntryResult] — one result per host.
 	fmt.Println("\n=== Getting cron entry ===")
 	getResp, err := c.Schedule.CronGet(ctx, target, "backup-daily")
 	if err != nil {
 		log.Fatalf("get failed: %v", err)
 	}
-	fmt.Printf("Name: %s\nSchedule: %s\nUser: %s\nObject: %s\n",
-		getResp.Data.Name, getResp.Data.Schedule,
-		getResp.Data.User, getResp.Data.Object)
+	for _, r := range getResp.Data.Results {
+		if r.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
+		} else {
+			fmt.Printf("  %s: name=%s schedule=%s user=%s object=%s\n",
+				r.Hostname, r.Name, r.Schedule, r.User, r.Object)
+		}
+	}
 
-	// Update: upload a new version of the script and redeploy by updating the
-	// cron entry to point at the new object.
+	// Update: upload a new version of the script and redeploy.
 	fmt.Println("\n=== Uploading new backup script version ===")
 	newBackupScript := strings.NewReader("#!/bin/sh\n/usr/local/bin/backup.sh --full --compress\n")
-	_, err = c.File.Upload(ctx, "backup-script-v2", "raw", newBackupScript, client.FileUploadOpts{})
+	_, err = c.File.Upload(ctx, "backup-script-v2", "raw", newBackupScript)
 	if err != nil {
 		log.Fatalf("upload new version failed: %v", err)
 	}
 	fmt.Println("Uploaded: backup-script-v2")
 
 	fmt.Println("\n=== Updating cron entry ===")
-	newSchedule := "0 3 * * *"
 	updateResp, err := c.Schedule.CronUpdate(ctx, target, "backup-daily", client.CronUpdateOpts{
-		Schedule: newSchedule,
+		Schedule: "0 3 * * *",
 		Object:   "backup-script-v2",
 	})
 	if err != nil {
 		log.Fatalf("update failed: %v", err)
 	}
-	fmt.Printf("Updated: %s (changed: %v)\n", updateResp.Data.Name, updateResp.Data.Changed)
+	for _, r := range updateResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// Delete the entry. The cron file is removed from disk; file-state KV
 	// tracking is preserved so the undeploy is recorded.
@@ -148,7 +167,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("delete failed: %v", err)
 	}
-	fmt.Printf("Deleted: %s (changed: %v)\n", deleteResp.Data.Name, deleteResp.Data.Changed)
+	for _, r := range deleteResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// Clean up the periodic entry.
 	fmt.Println("\n=== Cleaning up periodic entry ===")
@@ -156,7 +177,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("cleanup failed: %v", err)
 	}
-	fmt.Printf("Deleted: %s (changed: %v)\n", cleanupResp.Data.Name, cleanupResp.Data.Changed)
+	for _, r := range cleanupResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
 
 	// Clean up uploaded objects from the Object Store.
 	fmt.Println("\n=== Cleaning up uploaded objects ===")
