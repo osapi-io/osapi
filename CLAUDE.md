@@ -55,55 +55,175 @@ new ones.
 
 ### Step 0: Provider Implementation
 
-For domains that execute operations on agents (anything under
-`/node/{hostname}/...`), implement the provider first:
+Providers are the operations layer — they execute the actual work on
+agent hosts. Every operation under `/node/{hostname}/...` is backed
+by a provider. The request flows:
 
-**Location:** `internal/provider/{domain}/` or
-`internal/provider/{category}/{domain}/` for sub-categories
-(e.g., `scheduled/cron`, `network/dns`).
+```
+CLI → SDK → REST API → Job Client → NATS → Agent → Provider
+```
 
-**Interface pattern:**
+The provider runs on the agent, not the controller. It receives
+parameters from the job payload and returns a result.
+
+#### Provider Types
+
+**Direct providers** interact with the system directly:
+- `node/host` — reads hostname, uptime, OS info
+- `node/disk`, `node/mem`, `node/load` — reads system stats
+- `network/dns` — reads/writes resolv.conf via `resolvectl`
+- `network/ping` — executes ICMP ping
+- `command` — executes arbitrary commands
+- `docker` — manages Docker containers via the Docker SDK
+
+Reference: `internal/provider/docker/` or `internal/provider/node/host/`
+
+**Meta providers** don't write files directly — they delegate to
+the file provider. This gives them SHA tracking, idempotency, drift
+detection, and template rendering for free:
+- `scheduled/cron` — deploys cron drop-in files and periodic scripts
+- Future: `systemd`, `sysctl`, `apt sources`
+
+Meta providers depend on `file.Deployer` (the narrow interface):
 ```go
-// types.go
-type Provider interface {
-    List(ctx context.Context) ([]Entry, error)
-    Create(ctx context.Context, entry Entry) (*Result, error)
-    // ... one method per operation
+type Deployer interface {
+    Deploy(ctx context.Context, req DeployRequest) (*DeployResult, error)
+    Undeploy(ctx context.Context, req UndeployRequest) (*UndeployResult, error)
 }
 ```
 
-**Platform-specific implementations:**
-- `debian.go` — Debian-family (Ubuntu, Debian, Raspbian)
-- `darwin.go` — macOS (development)
+Meta providers store domain-specific metadata in the
+`FileState.Metadata` map (e.g., schedule, interval, user for cron).
+The file provider persists this in the file-state KV alongside SHA,
+path, and mode — one KV bucket for all providers.
+
+Reference: `internal/provider/scheduled/cron/`
+
+#### File Structure
+
+```
+internal/provider/{category}/{domain}/
+  types.go        — Provider interface + domain types (Entry, Result)
+  debian.go       — Debian-family implementation
+  darwin.go       — macOS stub (returns ErrUnsupported)
+  linux.go        — Generic Linux stub (returns ErrUnsupported)
+  mocks/          — Generated gomock mocks
+    generate.go   — //go:generate mockgen directive
+```
+
+For top-level providers: `internal/provider/{domain}/` (e.g.,
+`internal/provider/docker/`, `internal/provider/command/`).
+
+#### Provider Interface
+
+```go
+// types.go — package {domain}
+type Provider interface {
+    List(ctx context.Context) ([]Entry, error)
+    Get(ctx context.Context, name string) (*Entry, error)
+    Create(ctx context.Context, entry Entry) (*CreateResult, error)
+    Update(ctx context.Context, entry Entry) (*UpdateResult, error)
+    Delete(ctx context.Context, name string) (*DeleteResult, error)
+}
+```
+
+Every method takes `context.Context` as the first parameter.
+Result types include `Changed bool` for mutations and `Error string`
+for per-operation error reporting.
+
+#### Platform-Specific Implementations
+
+OSAPI follows Ansible's OS family naming. Implementations are
+selected at runtime via `platform.Detect()`:
+
+- `debian.go` — Debian family (Ubuntu, Debian, Raspbian)
+- `darwin.go` — macOS (for development)
 - `linux.go` — generic Linux fallback
-- Unsupported platforms return `provider.ErrUnsupported` → job
-  status becomes `skipped`
-- Use `platform.Detect()` to select the implementation at runtime
 
-**Meta providers** (providers that write files to well-known paths):
-- Depend on `file.Deployer` interface (Deploy + Undeploy)
-- Store domain metadata in `FileState.Metadata` map
-- Don't write files directly — delegate to the file provider
-- See `scheduled/cron` as the reference implementation
+Unsupported platforms return `provider.ErrUnsupported`. The agent
+marks the job as `skipped` (not `failed`) so the caller knows the
+operation isn't available on that host rather than broken.
 
-**FactsAware:** Embed `provider.FactsAware` in the provider struct
-to access agent facts (OS, architecture, hostname) at runtime. The
-agent wires facts via `provider.WireProviderFacts()`.
+```go
+// darwin.go
+func (d *Darwin) List(
+    _ context.Context,
+) ([]Entry, error) {
+    return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
+}
+```
 
-**Agent wiring:**
-- Create a `processor_{domain}.go` in `internal/agent/` that
-  dispatches job operations to provider methods
-- Register the provider in the agent factory
-  (`internal/agent/factory.go`) or in `cmd/agent_setup.go` if it
-  depends on other providers (e.g., cron depends on file provider)
-- Add the provider field to `internal/agent/types.go`
+#### FactsAware
 
-**Testing:**
-- Use `avfs` (`memfs.New()`) for filesystem, `failfs.New()` for
-  error injection
-- Use gomock for `FileDeployer`, `KeyValue`, and other interfaces
-- Platform stubs (Darwin, Linux) just return `ErrUnsupported` —
-  test that they do
+Embed `provider.FactsAware` in the provider struct to access agent
+facts (OS family, architecture, hostname, network interfaces) at
+runtime. The agent wires facts via `provider.WireProviderFacts()`.
+
+```go
+type Debian struct {
+    provider.FactsAware
+    logger *slog.Logger
+    fs     avfs.VFS
+}
+```
+
+Facts are available in template rendering via `{{ .Facts.os_family }}`
+when using the file provider's template support.
+
+#### Agent Wiring
+
+Three files connect a provider to the agent:
+
+1. **`internal/agent/types.go`** — add the provider field:
+   ```go
+   type Agent struct {
+       // ...
+       sysctlProvider sysctl.Provider
+   }
+   ```
+
+2. **`internal/agent/processor_{domain}.go`** — dispatch job
+   operations to provider methods. The processor extracts the
+   sub-operation from the job's dotted operation string
+   (e.g., `"sysctl.list"` → `"list"`) and calls the provider:
+   ```go
+   func (a *Agent) processSysctlOperation(
+       jobRequest job.Request,
+   ) (json.RawMessage, error) {
+       // switch on sub-operation, call provider, marshal result
+   }
+   ```
+
+3. **`internal/agent/factory.go`** or **`cmd/agent_setup.go`** —
+   create the provider instance. Use `factory.go` for providers
+   with simple dependencies (logger, fs). Use `agent_setup.go`
+   for providers that depend on other providers (e.g., cron
+   depends on the file provider):
+   ```go
+   var sysProvider sysctl.Provider
+   switch platform.Detect() {
+   case "debian":
+       sysProvider = sysctl.NewDebianProvider(logger, appFs)
+   case "darwin":
+       sysProvider = sysctl.NewDarwinProvider()
+   default:
+       sysProvider = sysctl.NewLinuxProvider()
+   }
+   ```
+
+#### Provider Testing
+
+- **Filesystem:** Use `avfs` — `memfs.New()` for in-memory,
+  `failfs.New()` for targeted error injection. Never use `afero`.
+- **Mocks:** Use gomock for all interfaces (`FileDeployer`,
+  `KeyValue`, `ObjectStore`). Generated mocks live in
+  `{package}/mocks/`.
+- **Platform stubs:** Test that Darwin and Linux stubs return
+  `ErrUnsupported` for every method.
+- **export_test.go:** Use for testing unexported variable swaps
+  (e.g., `marshalJSON`). Public tests import via the bridge.
+- **Table-driven:** One suite method per provider method, all
+  scenarios as rows.
 
 ### Step 1: OpenAPI Spec + Code Generation
 
