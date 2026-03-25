@@ -32,7 +32,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-//go:embed templates/*
+//go:embed all:templates
 var systemTemplates embed.FS
 
 // embeddedFS is a package-level variable for the walk filesystem.
@@ -70,7 +70,12 @@ func SeedSystemTemplates(
 			return nil
 		}
 
-		// Convert "templates/system/cron-wrapper.tmpl" → "system/cron-wrapper.tmpl"
+		// Skip non-template files (e.g., .gitkeep placeholders).
+		if d.Name() == ".gitkeep" {
+			return nil
+		}
+
+		// Convert "templates/osapi/cron-wrapper.tmpl" → "osapi/cron-wrapper.tmpl"
 		objectName := path[len("templates/"):]
 
 		data, readErr := readEmbeddedFile(path)

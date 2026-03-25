@@ -29,6 +29,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/golang/mock/gomock"
@@ -66,11 +67,29 @@ func (s *SeedPublicTestSuite) TearDownSubTest() {
 	agent.ResetReadEmbeddedFile()
 }
 
+var testTemplateData = []byte("#!/bin/sh\necho hello\n")
+
+// testTemplateFS returns a fake fs.FS with a single template file.
+func testTemplateFS() fstest.MapFS {
+	return fstest.MapFS{
+		"templates/osapi/test.tmpl": &fstest.MapFile{
+			Data: testTemplateData,
+		},
+	}
+}
+
+// setupTestTemplateFS sets both the embedded FS and the read function
+// to use the fake template FS.
+func setupTestTemplateFS() {
+	fakeFS := testTemplateFS()
+	agent.SetEmbeddedFS(fakeFS)
+	agent.SetReadEmbeddedFile(func(path string) ([]byte, error) {
+		return fs.ReadFile(fakeFS, path)
+	})
+}
+
 func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
-	// The embedded templates/ directory contains only .gitkeep (empty file),
-	// so objectName = ".gitkeep" and data = []byte{}.
-	emptyData := []byte{}
-	emptySHA := computeSeedSHA256(emptyData)
+	templateData := testTemplateData
 
 	tests := []struct {
 		name         string
@@ -98,6 +117,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 		{
 			name: "when ReadFile fails returns error",
 			setupFunc: func() {
+				setupTestTemplateFS()
 				agent.SetReadEmbeddedFile(func(_ string) ([]byte, error) {
 					return nil, fmt.Errorf("read failure")
 				})
@@ -113,6 +133,9 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 		},
 		{
 			name: "when template not found in store uploads it",
+			setupFunc: func() {
+				setupTestTemplateFS()
+			},
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *filemocks.MockObjectStore,
@@ -136,10 +159,13 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			wantErr:      false,
 			wantPutCalls: 1,
-			wantPutName:  ".gitkeep",
+			wantPutName:  "osapi/test.tmpl",
 		},
 		{
 			name: "when template unchanged in store skips upload",
+			setupFunc: func() {
+				setupTestTemplateFS()
+			},
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *filemocks.MockObjectStore,
@@ -148,13 +174,16 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 				// Return same content as embedded — SHA will match, no PutBytes call.
 				mockObj.EXPECT().
 					GetBytes(gomock.Any(), gomock.Any()).
-					Return(emptyData, nil)
+					Return(templateData, nil)
 			},
 			wantErr:      false,
 			wantPutCalls: 0,
 		},
 		{
 			name: "when template changed in store overwrites it",
+			setupFunc: func() {
+				setupTestTemplateFS()
+			},
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *filemocks.MockObjectStore,
@@ -179,10 +208,13 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			wantErr:      false,
 			wantPutCalls: 1,
-			wantPutName:  ".gitkeep",
+			wantPutName:  "osapi/test.tmpl",
 		},
 		{
 			name: "when PutBytes fails returns wrapped error",
+			setupFunc: func() {
+				setupTestTemplateFS()
+			},
 			setupMock: func(
 				_ *gomock.Controller,
 				mockObj *filemocks.MockObjectStore,
@@ -240,9 +272,6 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			if tt.wantPutCalls > 0 && tt.wantPutName != "" {
 				s.Equal(tt.wantPutName, (*putNames)[0])
 			}
-
-			// The embedded .gitkeep is always empty; verify the SHA is consistent.
-			_ = emptySHA
 		})
 	}
 }
