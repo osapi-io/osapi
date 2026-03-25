@@ -67,7 +67,7 @@ func (c *Client) ModifyFileDeployBroadcast(
 	changed := make(map[string]bool)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			changed[hostname] = resp.Changed != nil && *resp.Changed
@@ -103,7 +103,7 @@ func (c *Client) ModifyFileUndeployBroadcast(
 	changed := make(map[string]bool)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			changed[hostname] = resp.Changed != nil && *resp.Changed
@@ -139,7 +139,7 @@ func (c *Client) QueryFileStatusBroadcast(
 	results := make(map[string]*file.StatusResult)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			var result file.StatusResult
@@ -189,7 +189,7 @@ func (c *Client) ModifyFileDeploy(
 		return "", "", false, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", "", false, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -220,7 +220,7 @@ func (c *Client) ModifyFileUndeploy(
 		return "", "", false, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", "", false, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -251,7 +251,7 @@ func (c *Client) QueryFileStatus(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 

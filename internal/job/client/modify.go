@@ -54,7 +54,7 @@ func (c *Client) ModifyNetworkDNS(
 		return "", "", true, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", "", true, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -102,7 +102,7 @@ func (c *Client) ModifyNetworkDNSBroadcast(
 	results := make(map[string]error)
 	changedMap := make(map[string]bool)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			results[hostname] = fmt.Errorf("job failed: %s", resp.Error)
 			changedMap[hostname] = true
 		} else {

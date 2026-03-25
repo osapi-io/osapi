@@ -48,7 +48,7 @@ func (c *Client) ModifyDockerCreate(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -78,7 +78,7 @@ func (c *Client) ModifyDockerStart(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -116,7 +116,7 @@ func (c *Client) ModifyDockerStop(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -154,7 +154,7 @@ func (c *Client) ModifyDockerRemove(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -183,7 +183,7 @@ func (c *Client) QueryDockerList(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -213,7 +213,7 @@ func (c *Client) QueryDockerInspect(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -255,7 +255,7 @@ func (c *Client) ModifyDockerExec(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -284,7 +284,7 @@ func (c *Client) ModifyDockerImageRemove(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -313,7 +313,7 @@ func (c *Client) ModifyDockerPull(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -346,7 +346,7 @@ func (c *Client) ModifyDockerCreateBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -381,7 +381,7 @@ func (c *Client) ModifyDockerStartBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -423,7 +423,7 @@ func (c *Client) ModifyDockerStopBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -465,7 +465,7 @@ func (c *Client) ModifyDockerRemoveBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -499,7 +499,7 @@ func (c *Client) QueryDockerListBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -534,7 +534,7 @@ func (c *Client) QueryDockerInspectBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -580,7 +580,7 @@ func (c *Client) ModifyDockerExecBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -614,7 +614,7 @@ func (c *Client) ModifyDockerPullBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -648,7 +648,7 @@ func (c *Client) ModifyDockerImageRemoveBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}

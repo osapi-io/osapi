@@ -49,7 +49,7 @@ func (c *Client) QueryNodeDisk(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -82,7 +82,7 @@ func (c *Client) QueryNodeDiskBroadcast(
 	results := make(map[string]*job.NodeDiskResponse)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -116,7 +116,7 @@ func (c *Client) QueryNodeMemory(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -149,7 +149,7 @@ func (c *Client) QueryNodeMemoryBroadcast(
 	results := make(map[string]*mem.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -183,7 +183,7 @@ func (c *Client) QueryNodeLoad(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -216,7 +216,7 @@ func (c *Client) QueryNodeLoadBroadcast(
 	results := make(map[string]*load.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -250,7 +250,7 @@ func (c *Client) QueryNodeOS(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -283,7 +283,7 @@ func (c *Client) QueryNodeOSBroadcast(
 	results := make(map[string]*host.Result)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}
@@ -317,7 +317,7 @@ func (c *Client) QueryNodeUptime(
 		return "", nil, "", fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return "", nil, "", fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -350,7 +350,7 @@ func (c *Client) QueryNodeUptimeBroadcast(
 	results := make(map[string]*job.NodeUptimeResponse)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == "failed" {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 			continue
 		}

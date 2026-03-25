@@ -250,7 +250,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 		},
 		{
-			name: "broadcast target _all skips failed and skipped agents",
+			name: "broadcast target _all includes failed and skipped agents",
 			request: gen.GetNodeScheduleCronRequestObject{
 				Hostname: "_all",
 			},
@@ -275,6 +275,12 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								JobID:    "550e8400-e29b-41d4-a716-446655440000",
 								Hostname: "server2",
 								Status:   job.StatusSkipped,
+								Error:    "cron: operation not supported on this OS family",
+							},
+							"server3": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server3",
+								Status:   job.StatusFailed,
 							},
 						},
 						nil,
@@ -284,8 +290,24 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
-				s.Len(r.Results, 1)
-				s.Equal("backup", *r.Results[0].Name)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]*gen.CronEntry)
+				for i := range r.Results {
+					if r.Results[i].Hostname != nil {
+						byHost[*r.Results[i].Hostname] = &r.Results[i]
+					}
+				}
+
+				s.Require().Contains(byHost, "server1")
+				s.Equal("backup", *byHost["server1"].Name)
+				s.Nil(byHost["server1"].Error)
+
+				s.Require().Contains(byHost, "server2")
+				s.Contains(*byHost["server2"].Error, "not supported")
+
+				s.Require().Contains(byHost, "server3")
+				s.Equal("failed", *byHost["server3"].Error)
 			},
 		},
 		{

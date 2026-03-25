@@ -46,7 +46,7 @@ func (c *Client) QueryScheduleCronList(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -96,7 +96,7 @@ func (c *Client) QueryScheduleCronGet(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -149,7 +149,7 @@ func (c *Client) ModifyScheduleCronCreate(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -181,7 +181,7 @@ func (c *Client) ModifyScheduleCronCreateBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == job.StatusFailed {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			results[hostname] = resp
@@ -211,7 +211,7 @@ func (c *Client) ModifyScheduleCronUpdate(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -243,7 +243,7 @@ func (c *Client) ModifyScheduleCronUpdateBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == job.StatusFailed {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			results[hostname] = resp
@@ -274,7 +274,7 @@ func (c *Client) ModifyScheduleCronDelete(
 		return nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == "failed" {
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 		return nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -307,7 +307,7 @@ func (c *Client) ModifyScheduleCronDeleteBroadcast(
 	results := make(map[string]*job.Response)
 	errs := make(map[string]string)
 	for hostname, resp := range responses {
-		if resp.Status == job.StatusFailed {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
 			errs[hostname] = resp.Error
 		} else {
 			results[hostname] = resp
