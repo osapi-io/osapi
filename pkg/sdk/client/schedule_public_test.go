@@ -220,6 +220,29 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 			},
 		},
 		{
+			name: "when getting interval-based cron entry returns interval field",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","name":"logrotate","interval":"daily","source":"daily","object":"logrotate-script"}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CronEntryResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("logrotate", resp.Data.Results[0].Name)
+				suite.Equal("daily", resp.Data.Results[0].Interval)
+				suite.Equal("daily", resp.Data.Results[0].Source)
+			},
+		},
+		{
 			name: "when getting cron entry with broadcast returns multiple results",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
