@@ -114,15 +114,24 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 		validateFunc func(*cron.CreateResult, error)
 	}{
 		{
-			name: "when deploy succeeds",
+			name: "when deploy succeeds with schedule and user",
 			entry: cron.Entry{
-				Name:   "backup",
-				Object: "backup-script",
+				Name:     "backup",
+				Object:   "backup-script",
+				Schedule: "0 2 * * *",
+				User:     "root",
 			},
 			setup: func() {
 				suite.mockDeployer.EXPECT().
 					Deploy(gomock.Any(), gomock.Any()).
-					Return(&file.DeployResult{Changed: true, Path: "/etc/cron.d/backup"}, nil)
+					DoAndReturn(func(
+						_ context.Context,
+						req file.DeployRequest,
+					) (*file.DeployResult, error) {
+						suite.Equal("0 2 * * *", req.Metadata["schedule"])
+						suite.Equal("root", req.Metadata["user"])
+						return &file.DeployResult{Changed: true, Path: "/etc/cron.d/backup"}, nil
+					})
 			},
 			validateFunc: func(
 				result *cron.CreateResult,
@@ -209,7 +218,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 						suite.Equal("/etc/cron.daily/logrotate", req.Path)
 						suite.Equal("0755", req.Mode)
 						suite.Equal("daily", req.Metadata["interval"])
-						return &file.DeployResult{Changed: true, Path: "/etc/cron.daily/logrotate"}, nil
+						return &file.DeployResult{
+							Changed: true,
+							Path:    "/etc/cron.daily/logrotate",
+						}, nil
 					})
 			},
 			validateFunc: func(

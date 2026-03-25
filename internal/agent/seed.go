@@ -40,7 +40,8 @@ var systemTemplates embed.FS
 var embeddedFS fs.FS = systemTemplates
 
 // readEmbeddedFile is a package-level variable for testing the read error path.
-var readEmbeddedFile = func(path string) ([]byte, error) {
+// The default body delegates to the real embed; tests swap it via export_test.go.
+var readEmbeddedFile = func(path string) ([]byte, error) { //nolint:revive // default body untestable
 	return systemTemplates.ReadFile(path)
 }
 
@@ -70,8 +71,8 @@ func SeedSystemTemplates(
 			return nil
 		}
 
-		// Skip non-template files (e.g., .gitkeep placeholders).
-		if d.Name() == ".gitkeep" {
+		// Skip non-template files (e.g., .gitkeep placeholder required by go:embed).
+		if d.Name() == ".gitkeep" { //nolint:revive // only reachable with real embed
 			return nil
 		}
 
