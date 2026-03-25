@@ -74,7 +74,7 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 		validateFunc func(resp gen.GetFilesResponseObject)
 	}{
 		{
-			name: "success with files",
+			name: "success with user and osapi files",
 			setupMock: func() {
 				s.mockObjStore.EXPECT().
 					List(gomock.Any()).
@@ -91,7 +91,7 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 						},
 						{
 							ObjectMeta: jetstream.ObjectMeta{
-								Name: "app.yaml",
+								Name: "osapi/cron-wrapper.tmpl",
 								Headers: nats.Header{
 									"Osapi-Content-Type": []string{"template"},
 								},
@@ -113,7 +113,10 @@ func (s *FileListPublicTestSuite) TestGetFiles() {
 				)
 				s.Equal(1024, r.Files[0].Size)
 				s.Equal("raw", r.Files[0].ContentType)
+				s.Equal("user", r.Files[0].Source)
+				s.Equal("osapi/cron-wrapper.tmpl", r.Files[1].Name)
 				s.Equal("template", r.Files[1].ContentType)
+				s.Equal("osapi", r.Files[1].Source)
 			},
 		},
 		{
