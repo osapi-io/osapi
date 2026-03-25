@@ -332,41 +332,87 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareDirectPermissions() {
 func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareInjectsIdentity() {
 	contextKey := "BearerAuthScopes"
 
-	handlerCalled := false
-	var capturedSubject string
-	var capturedRoles []string
-
-	testHandler := strictecho.StrictEchoHandlerFunc(
-		func(ctx echo.Context, _ interface{}) (interface{}, error) {
-			handlerCalled = true
-			capturedSubject, _ = ctx.Get(api.ContextKeySubject).(string)
-			capturedRoles, _ = ctx.Get(api.ContextKeyRoles).([]string)
-			return "ok", nil
+	tests := []struct {
+		name            string
+		tokenRoles      []string
+		authHeader      string
+		requiredScopes  []string
+		expectCalled    bool
+		expectedSubject string
+		expectedRoles   []string
+	}{
+		{
+			name:            "admin token injects subject and roles",
+			tokenRoles:      []string{"admin"},
+			requiredScopes:  []string{"node:read"},
+			expectCalled:    true,
+			expectedSubject: "test-subject",
+			expectedRoles:   []string{"admin"},
 		},
-	)
+		{
+			name:            "read token injects subject and read role",
+			tokenRoles:      []string{"read"},
+			requiredScopes:  []string{"node:read"},
+			expectCalled:    true,
+			expectedSubject: "test-subject",
+			expectedRoles:   []string{"read"},
+		},
+		{
+			name:           "invalid token does not inject identity",
+			authHeader:     "Bearer invalid-token-string",
+			requiredScopes: []string{"node:read"},
+			expectCalled:   false,
+		},
+	}
 
-	token := s.generateToken([]string{"admin"})
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlerCalled := false
+			var capturedSubject string
+			var capturedRoles []string
 
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
-	rec := httptest.NewRecorder()
+			testHandler := strictecho.StrictEchoHandlerFunc(
+				func(ctx echo.Context, _ interface{}) (interface{}, error) {
+					handlerCalled = true
+					capturedSubject, _ = ctx.Get(api.ContextKeySubject).(string)
+					capturedRoles, _ = ctx.Get(api.ContextKeyRoles).([]string)
+					return "ok", nil
+				},
+			)
 
-	ctx := e.NewContext(req, rec)
-	ctx.Set(contextKey, []string{"node:read"})
+			authHeader := tt.authHeader
+			if authHeader == "" && len(tt.tokenRoles) > 0 {
+				authHeader = "Bearer " + s.generateToken(tt.tokenRoles)
+			}
 
-	wrapped := api.ExportScopeMiddleware(
-		testHandler,
-		s.tokenManager,
-		testSigningKey,
-		contextKey,
-		nil,
-	)
-	_, _ = wrapped(ctx, nil)
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			if authHeader != "" {
+				req.Header.Set("Authorization", authHeader)
+			}
+			rec := httptest.NewRecorder()
 
-	s.True(handlerCalled)
-	s.Equal("test-subject", capturedSubject)
-	s.Equal([]string{"admin"}, capturedRoles)
+			ctx := e.NewContext(req, rec)
+			if tt.requiredScopes != nil {
+				ctx.Set(contextKey, tt.requiredScopes)
+			}
+
+			wrapped := api.ExportScopeMiddleware(
+				testHandler,
+				s.tokenManager,
+				testSigningKey,
+				contextKey,
+				nil,
+			)
+			_, _ = wrapped(ctx, nil)
+
+			s.Equal(tt.expectCalled, handlerCalled)
+			if tt.expectCalled {
+				s.Equal(tt.expectedSubject, capturedSubject)
+				s.Equal(tt.expectedRoles, capturedRoles)
+			}
+		})
+	}
 }
 
 func TestMiddlewarePublicTestSuite(t *testing.T) {

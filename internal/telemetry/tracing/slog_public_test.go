@@ -109,40 +109,107 @@ func (s *SlogPublicTestSuite) TestNewTraceHandler() {
 }
 
 func (s *SlogPublicTestSuite) TestTraceHandlerWithAttrs() {
-	var buf bytes.Buffer
-	inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-	handler := tracing.NewTraceHandler(inner)
+	tests := []struct {
+		name         string
+		attrs        []slog.Attr
+		validateFunc func(output string, h slog.Handler)
+	}{
+		{
+			name:  "when attrs set they appear in output with trace fields",
+			attrs: []slog.Attr{slog.String("key", "value")},
+			validateFunc: func(output string, h slog.Handler) {
+				s.NotNil(h)
+				s.Contains(output, "key=value")
+				s.Contains(output, "trace_id=")
+			},
+		},
+	}
 
-	withAttrs := handler.WithAttrs([]slog.Attr{slog.String("key", "value")})
-	s.NotNil(withAttrs)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var buf bytes.Buffer
+			inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
+			handler := tracing.NewTraceHandler(inner)
 
-	logger := slog.New(withAttrs)
-	ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
-	logger.InfoContext(ctx, "test")
-	s.Contains(buf.String(), "key=value")
-	s.Contains(buf.String(), "trace_id=")
+			withAttrs := handler.WithAttrs(tt.attrs)
+
+			logger := slog.New(withAttrs)
+			ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+			logger.InfoContext(ctx, "test")
+
+			tt.validateFunc(buf.String(), withAttrs)
+		})
+	}
 }
 
 func (s *SlogPublicTestSuite) TestTraceHandlerWithGroup() {
-	var buf bytes.Buffer
-	inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
-	handler := tracing.NewTraceHandler(inner)
+	tests := []struct {
+		name         string
+		group        string
+		logField     slog.Attr
+		validateFunc func(output string, h slog.Handler)
+	}{
+		{
+			name:     "when group set attributes are prefixed with group name",
+			group:    "mygroup",
+			logField: slog.String("field", "value"),
+			validateFunc: func(output string, h slog.Handler) {
+				s.NotNil(h)
+				s.Contains(output, "mygroup.field=value")
+			},
+		},
+	}
 
-	withGroup := handler.WithGroup("mygroup")
-	s.NotNil(withGroup)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var buf bytes.Buffer
+			inner := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
+			handler := tracing.NewTraceHandler(inner)
 
-	logger := slog.New(withGroup)
-	ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
-	logger.InfoContext(ctx, "test", slog.String("field", "value"))
-	s.Contains(buf.String(), "mygroup.field=value")
+			withGroup := handler.WithGroup(tt.group)
+
+			logger := slog.New(withGroup)
+			ctx, _ := otel.Tracer("test").Start(s.ctx, "test-span")
+			logger.InfoContext(ctx, "test", tt.logField)
+
+			tt.validateFunc(buf.String(), withGroup)
+		})
+	}
 }
 
 func (s *SlogPublicTestSuite) TestTraceHandlerEnabled() {
-	inner := slog.NewTextHandler(nil, &slog.HandlerOptions{Level: slog.LevelWarn})
-	handler := tracing.NewTraceHandler(inner)
+	tests := []struct {
+		name         string
+		level        slog.Level
+		minLevel     slog.Level
+		validateFunc func(enabled bool)
+	}{
+		{
+			name:     "when level below minimum returns false",
+			level:    slog.LevelDebug,
+			minLevel: slog.LevelWarn,
+			validateFunc: func(enabled bool) {
+				s.False(enabled)
+			},
+		},
+		{
+			name:     "when level at minimum returns true",
+			level:    slog.LevelWarn,
+			minLevel: slog.LevelWarn,
+			validateFunc: func(enabled bool) {
+				s.True(enabled)
+			},
+		},
+	}
 
-	s.False(handler.Enabled(s.ctx, slog.LevelDebug))
-	s.True(handler.Enabled(s.ctx, slog.LevelWarn))
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			inner := slog.NewTextHandler(nil, &slog.HandlerOptions{Level: tt.minLevel})
+			handler := tracing.NewTraceHandler(inner)
+
+			tt.validateFunc(handler.Enabled(s.ctx, tt.level))
+		})
+	}
 }
 
 func TestSlogPublicTestSuite(t *testing.T) {

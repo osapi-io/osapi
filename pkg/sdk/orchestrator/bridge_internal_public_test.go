@@ -34,28 +34,55 @@ type BridgeInternalPublicTestSuite struct {
 }
 
 func (s *BridgeInternalPublicTestSuite) TestStructToMapUnmarshalError() {
-	orchestrator.SetJSONUnmarshalFn(func(
-		_ []byte,
-		_ any,
-	) error {
-		return fmt.Errorf("forced unmarshal error")
-	})
-	defer orchestrator.ResetJSONUnmarshalFn()
-
-	result := orchestrator.StructToMap(struct {
+	type testInput struct {
 		Name string `json:"name"`
-	}{Name: "test"})
+	}
 
-	s.Nil(result)
+	tests := []struct {
+		name         string
+		setupFn      func()
+		teardownFn   func()
+		input        any
+		validateFunc func(result map[string]any)
+	}{
+		{
+			name: "when unmarshal fails returns nil",
+			setupFn: func() {
+				orchestrator.SetJSONUnmarshalFn(func(
+					_ []byte,
+					_ any,
+				) error {
+					return fmt.Errorf("forced unmarshal error")
+				})
+			},
+			teardownFn: orchestrator.ResetJSONUnmarshalFn,
+			input:      testInput{Name: "test"},
+			validateFunc: func(result map[string]any) {
+				s.Nil(result)
+			},
+		},
+		{
+			name:       "when unmarshal succeeds returns populated map",
+			setupFn:    func() {},
+			teardownFn: func() {},
+			input:      testInput{Name: "test"},
+			validateFunc: func(result map[string]any) {
+				s.NotNil(result)
+				s.Equal("test", result["name"])
+			},
+		},
+	}
 
-	// Restore and verify normal behavior.
-	orchestrator.ResetJSONUnmarshalFn()
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupFn()
+			defer tt.teardownFn()
 
-	result = orchestrator.StructToMap(struct {
-		Name string `json:"name"`
-	}{Name: "test"})
-	s.NotNil(result)
-	s.Equal("test", result["name"])
+			result := orchestrator.StructToMap(tt.input)
+
+			tt.validateFunc(result)
+		})
+	}
 }
 
 func TestBridgeInternalPublicTestSuite(t *testing.T) {
