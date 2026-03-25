@@ -276,6 +276,104 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls", "-la"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerExecBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"stdout":"file1\n","stderr":"","exit_code":0}`),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"stdout":"file2\n","stderr":"","exit_code":0}`),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls", "-la"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerExecBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"stdout":"file1\n","stderr":"","exit_code":0}`),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls", "-la"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerExecBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+						gomock.Any(),
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerExec500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

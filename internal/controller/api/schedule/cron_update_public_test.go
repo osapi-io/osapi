@@ -223,6 +223,46 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 			},
 		},
 		{
+			name: "broadcast with error entries",
+			request: gen.PutNodeScheduleCronRequestObject{
+				Hostname: "_all",
+				Name:     "backup",
+				Body: &gen.PutNodeScheduleCronJSONRequestBody{
+					Schedule: strPtr("0 3 * * *"),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyScheduleCronUpdateBroadcast(
+						gomock.Any(),
+						"_all",
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+					}, map[string]string{"server2": "cron entry not found"}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("cron entry not found", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.PutNodeScheduleCronRequestObject{
 				Hostname: "_all",

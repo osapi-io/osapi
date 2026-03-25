@@ -178,6 +178,43 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 			},
 		},
 		{
+			name: "when broadcast has errors",
+			request: gen.PostNodeFileUndeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileUndeployJSONRequestBody{
+					Path: "/etc/cron.d/backup",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileUndeployBroadcast(
+						gomock.Any(),
+						"_all",
+						"/etc/cron.d/backup",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]bool{"agent1": true},
+						map[string]string{"agent2": "undeploy failed"},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileUndeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("undeploy failed", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileUndeployRequestObject{
 				Hostname: "_all",

@@ -184,6 +184,51 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 		},
 		{
+			name: "broadcast with error entries",
+			request: gen.GetNodeScheduleCronByNameRequestObject{
+				Hostname: "_all",
+				Name:     "backup",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryScheduleCronGetBroadcast(
+						gomock.Any(),
+						"_all",
+						"backup",
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Status:   job.StatusCompleted,
+							Data: json.RawMessage(
+								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
+							),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Status:   job.StatusFailed,
+							Error:    "cron entry not found",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("cron entry not found", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeScheduleCronByNameRequestObject{
 				Hostname: "_all",

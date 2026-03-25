@@ -279,6 +279,51 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 		},
 		{
+			name: "when broadcast has errors",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyFileDeployBroadcast(
+						gomock.Any(),
+						"_all",
+						"nginx.conf",
+						"/etc/nginx/nginx.conf",
+						"raw",
+						"",
+						"",
+						"",
+						map[string]any(nil),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]bool{"agent1": true},
+						map[string]string{"agent2": "deploy failed"},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("deploy failed", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileDeployRequestObject{
 				Hostname: "_all",

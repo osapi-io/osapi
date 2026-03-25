@@ -227,6 +227,46 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 		},
 		{
+			name: "when broadcast has errors",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				path := "/etc/nginx/nginx.conf"
+				s.mockJobClient.EXPECT().
+					QueryFileStatusBroadcast(
+						gomock.Any(),
+						"_all",
+						"/etc/nginx/nginx.conf",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*file.StatusResult{
+							"agent1": {Path: path, Status: "in-sync", SHA256: "abc123"},
+						},
+						map[string]string{"agent2": "permission denied"},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+				errCount := 0
+				for _, res := range r.Results {
+					if res.Error != nil {
+						errCount++
+						s.Equal("permission denied", *res.Error)
+					}
+				}
+				s.Equal(1, errCount)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileStatusRequestObject{
 				Hostname: "_all",

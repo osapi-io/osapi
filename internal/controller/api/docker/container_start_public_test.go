@@ -162,6 +162,89 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast success",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStartBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+						"server2": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server2",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with errors",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStartBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "server1",
+							Changed:  boolPtr(true),
+						},
+					}, map[string]string{
+						"server2": "agent unreachable",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast error collecting responses",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyDockerStartBroadcast(
+						gomock.Any(),
+						"_all",
+						"abc123",
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerStart500JSONResponse)
+				s.True(ok)
+			},
+		},
 	}
 
 	for _, tt := range tests {

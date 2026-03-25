@@ -782,6 +782,749 @@ func (s *ModifyDockerPublicTestSuite) TestModifyDockerImageRemove() {
 	}
 }
 
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerCreateBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"id":"abc123","name":"test","image":"nginx:latest","state":"created","created":"2026-03-11T10:00:00Z"}}`,
+					`{"status":"completed","hostname":"server2","data":{"id":"def456","name":"test","image":"nginx:latest","state":"created","created":"2026-03-11T10:00:00Z"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"id":"abc123","name":"test","image":"nginx:latest","state":"created","created":"2026-03-11T10:00:00Z"}}`,
+					`{"status":"failed","hostname":"server2","error":"image not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerCreateBroadcast(
+				s.ctx,
+				"_all",
+				&job.DockerCreateData{
+					Image: "nginx:latest",
+					Name:  "test",
+				},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerStartBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container started successfully"}}`,
+					`{"status":"completed","hostname":"server2","data":{"message":"Container started successfully"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container started successfully"}}`,
+					`{"status":"failed","hostname":"server2","error":"container not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerStartBroadcast(
+				s.ctx,
+				"_all",
+				"abc123",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerStopBroadcast() {
+	timeout := 10
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container stopped successfully"}}`,
+					`{"status":"completed","hostname":"server2","data":{"message":"Container stopped successfully"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container stopped successfully"}}`,
+					`{"status":"failed","hostname":"server2","error":"container not running"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerStopBroadcast(
+				s.ctx,
+				"_all",
+				"abc123",
+				&job.DockerStopData{Timeout: &timeout},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerRemoveBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container removed successfully"}}`,
+					`{"status":"completed","hostname":"server2","data":{"message":"Container removed successfully"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Container removed successfully"}}`,
+					`{"status":"failed","hostname":"server2","error":"container is running"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerRemoveBroadcast(
+				s.ctx,
+				"_all",
+				"abc123",
+				&job.DockerRemoveData{Force: true},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestQueryDockerListBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":[{"id":"abc123","name":"web","state":"running"}]}`,
+					`{"status":"completed","hostname":"server2","data":[{"id":"def456","name":"api","state":"running"}]}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":[{"id":"abc123","name":"web","state":"running"}]}`,
+					`{"status":"failed","hostname":"server2","error":"runtime not available"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.QueryDockerListBroadcast(
+				s.ctx,
+				"_all",
+				&job.DockerListData{State: "running"},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestQueryDockerInspectBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"id":"abc123","name":"web","state":"running"}}`,
+					`{"status":"completed","hostname":"server2","data":{"id":"abc123","name":"web","state":"stopped"}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"id":"abc123","name":"web","state":"running"}}`,
+					`{"status":"failed","hostname":"server2","error":"container not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.query._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.QueryDockerInspectBroadcast(
+				s.ctx,
+				"_all",
+				"abc123",
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerExecBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"stdout":"output","stderr":"","exit_code":0}}`,
+					`{"status":"completed","hostname":"server2","data":{"stdout":"output","stderr":"","exit_code":0}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"stdout":"output","stderr":"","exit_code":0}}`,
+					`{"status":"failed","hostname":"server2","error":"command not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerExecBroadcast(
+				s.ctx,
+				"_all",
+				"abc123",
+				&job.DockerExecData{
+					Command: []string{"ls", "-la"},
+				},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerPullBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"image_id":"sha256:abc","tag":"latest","size":2048}}`,
+					`{"status":"completed","hostname":"server2","data":{"image_id":"sha256:abc","tag":"latest","size":2048}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"image_id":"sha256:abc","tag":"latest","size":2048}}`,
+					`{"status":"failed","hostname":"server2","error":"image not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerPullBroadcast(
+				s.ctx,
+				"_all",
+				&job.DockerPullData{
+					Image: "nginx:latest",
+				},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
+func (s *ModifyDockerPublicTestSuite) TestModifyDockerImageRemoveBroadcast() {
+	tests := []struct {
+		name          string
+		opts          *publishAndCollectMockOpts
+		expectError   bool
+		errorContains string
+		expectedCount int
+		expectHostErr bool
+	}{
+		{
+			name: "all hosts succeed",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Image removed successfully","changed":true}}`,
+					`{"status":"completed","hostname":"server2","data":{"message":"Image removed successfully","changed":true}}`,
+				},
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "partial failure",
+			opts: &publishAndCollectMockOpts{
+				responseEntries: []string{
+					`{"status":"completed","hostname":"server1","data":{"message":"Image removed successfully","changed":true}}`,
+					`{"status":"failed","hostname":"server2","error":"image not found"}`,
+				},
+			},
+			expectedCount: 2,
+			expectHostErr: true,
+		},
+		{
+			name: "publish fails",
+			opts: &publishAndCollectMockOpts{
+				mockError: errors.New("publish error"),
+				errorMode: errorOnPublish,
+			},
+			expectError:   true,
+			errorContains: "failed to collect broadcast responses",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			opts := &client.Options{
+				Timeout:  50 * time.Millisecond,
+				KVBucket: s.mockKV,
+			}
+			jobsClient, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			s.Require().NoError(err)
+
+			setupPublishAndCollectMocks(
+				s.mockCtrl,
+				s.mockKV,
+				s.mockNATSClient,
+				"jobs.modify._all",
+				tt.opts,
+			)
+
+			_, results, errs, err := jobsClient.ModifyDockerImageRemoveBroadcast(
+				s.ctx,
+				"_all",
+				&job.DockerImageRemoveData{
+					Image: "nginx:latest",
+					Force: false,
+				},
+			)
+
+			if tt.expectError {
+				s.Error(err)
+				if tt.errorContains != "" {
+					s.Contains(err.Error(), tt.errorContains)
+				}
+			} else {
+				s.NoError(err)
+				totalCount := len(results) + len(errs)
+				s.Equal(tt.expectedCount, totalCount)
+				if tt.expectHostErr {
+					s.NotEmpty(errs)
+				}
+			}
+		})
+	}
+}
+
 func TestModifyDockerPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ModifyDockerPublicTestSuite))
 }
