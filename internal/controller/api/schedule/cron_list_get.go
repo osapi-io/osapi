@@ -130,7 +130,7 @@ func responseToCronEntries(
 			Hostname: &hostname,
 			Name:     &name,
 			Object:   &object,
-			Source:    &source,
+			Source:   &source,
 		}
 
 		if e.Schedule != "" {
