@@ -31,4 +31,7 @@ var clientContainerCmd = &cobra.Command{
 
 func init() {
 	clientCmd.AddCommand(clientContainerCmd)
+
+	clientContainerCmd.PersistentFlags().
+		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 }

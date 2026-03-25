@@ -77,8 +77,6 @@ func init() {
 
 	clientCmd.PersistentFlags().
 		StringP("url", "", "http://0.0.0.0:8080", "URL the client will connect to")
-	clientCmd.PersistentFlags().
-		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 
 	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
 }

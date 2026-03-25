@@ -32,4 +32,7 @@ var clientNodeCmd = &cobra.Command{
 
 func init() {
 	clientCmd.AddCommand(clientNodeCmd)
+
+	clientNodeCmd.PersistentFlags().
+		StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 }
