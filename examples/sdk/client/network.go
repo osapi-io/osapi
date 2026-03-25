@@ -51,7 +51,7 @@ func main() {
 
 	c := client.New(url, token)
 	ctx := context.Background()
-	target := "_any"
+	target := "_all"
 
 	// Get DNS configuration for an interface.
 	dns, err := c.Node.GetDNS(ctx, target, iface)

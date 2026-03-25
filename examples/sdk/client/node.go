@@ -46,7 +46,7 @@ func main() {
 
 	c := client.New(url, token)
 	ctx := context.Background()
-	target := "_any"
+	target := "_all"
 
 	// Status (aggregated node info).
 	status, err := c.Node.Status(ctx, target)

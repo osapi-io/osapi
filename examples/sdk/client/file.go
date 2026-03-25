@@ -113,7 +113,7 @@ func main() {
 		Path:        "/tmp/app.conf",
 		ContentType: "raw",
 		Mode:        "0644",
-		Target:      "_any",
+		Target:      "_all",
 	})
 	if err != nil {
 		log.Fatalf("deploy: %v", err)
@@ -123,7 +123,7 @@ func main() {
 		deploy.Data.JobID, deploy.Data.Hostname, deploy.Data.Changed)
 
 	// Check file status on the agent.
-	status, err := c.Node.FileStatus(ctx, "_any", "/tmp/app.conf")
+	status, err := c.Node.FileStatus(ctx, "_all", "/tmp/app.conf")
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}

@@ -48,7 +48,7 @@ func main() {
 
 	c := client.New(url, token)
 	ctx := context.Background()
-	target := "_any"
+	target := "_all"
 
 	// Upload the backup script to the Object Store first.
 	// The cron entry references the stored object by name.
