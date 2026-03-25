@@ -3,7 +3,7 @@
 Create a new container on the target node from the specified image:
 
 ```bash
-$ osapi client container docker create --image nginx:latest
+$ osapi client node container docker create --image nginx:latest
 
   Job ID:       550e8400-e29b-41d4-a716-446655440000
 
@@ -18,7 +18,7 @@ Create a named container with environment variables, port mappings, and volume
 mounts:
 
 ```bash
-$ osapi client container docker create \
+$ osapi client node container docker create \
     --image nginx:latest \
     --name my-nginx \
     --env "PORT=8080" --env "DEBUG=true" \
@@ -29,7 +29,7 @@ $ osapi client container docker create \
 Create a container without starting it immediately:
 
 ```bash
-$ osapi client container docker create \
+$ osapi client node container docker create \
     --image alpine:latest \
     --name my-alpine \
     --auto-start=false
@@ -38,7 +38,7 @@ $ osapi client container docker create \
 Target a specific host:
 
 ```bash
-$ osapi client container docker create \
+$ osapi client node container docker create \
     --image redis:7 \
     --name cache \
     --target web-01
@@ -49,7 +49,7 @@ $ osapi client container docker create \
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container docker create --image nginx:latest --json
+$ osapi client node container docker create --image nginx:latest --json
 ```
 
 ## Flags

@@ -3,7 +3,7 @@
 Execute a command inside a running container on the target node:
 
 ```bash
-$ osapi client container docker exec --id my-nginx --command "ls,-la,/"
+$ osapi client node container docker exec --id my-nginx --command "ls,-la,/"
 
   Job ID:    550e8400-e29b-41d4-a716-446655440000
 
@@ -18,7 +18,7 @@ $ osapi client container docker exec --id my-nginx --command "ls,-la,/"
 Execute with environment variables and a working directory:
 
 ```bash
-$ osapi client container docker exec \
+$ osapi client node container docker exec \
     --id my-app \
     --command "python,-c,import os; print(os.environ['MY_VAR'])" \
     --env "MY_VAR=hello" \
@@ -28,7 +28,7 @@ $ osapi client container docker exec \
 Target a specific host:
 
 ```bash
-$ osapi client container docker exec \
+$ osapi client node container docker exec \
     --id my-nginx \
     --command "nginx,-t" \
     --target web-01
@@ -39,7 +39,7 @@ $ osapi client container docker exec \
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container docker exec --id my-nginx --command "ls" --json
+$ osapi client node container docker exec --id my-nginx --command "ls" --json
 ```
 
 ## Flags

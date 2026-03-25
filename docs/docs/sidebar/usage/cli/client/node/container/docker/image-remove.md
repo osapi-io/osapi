@@ -3,7 +3,7 @@
 Remove a container image from the target node:
 
 ```bash
-$ osapi client container docker image-remove --image nginx:latest
+$ osapi client node container docker image-remove --image nginx:latest
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
 
@@ -14,21 +14,21 @@ $ osapi client container docker image-remove --image nginx:latest
 Force remove an image that may be in use:
 
 ```bash
-$ osapi client container docker image-remove \
+$ osapi client node container docker image-remove \
     --image nginx:latest --force
 ```
 
 Target a specific host:
 
 ```bash
-$ osapi client container docker image-remove \
+$ osapi client node container docker image-remove \
     --image redis:7 --target web-01
 ```
 
 Remove on all hosts:
 
 ```bash
-$ osapi client container docker image-remove \
+$ osapi client node container docker image-remove \
     --image nginx:latest --target _all
 ```
 
@@ -37,7 +37,7 @@ $ osapi client container docker image-remove \
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client container docker image-remove --image nginx:latest --json
+$ osapi client node container docker image-remove --image nginx:latest --json
 ```
 
 ## Flags
