@@ -277,6 +277,11 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Status:   job.StatusSkipped,
 								Error:    "cron: operation not supported on this OS family",
 							},
+							"server3": {
+								JobID:    "550e8400-e29b-41d4-a716-446655440000",
+								Hostname: "server3",
+								Status:   job.StatusFailed,
+							},
 						},
 						nil,
 					)
@@ -285,25 +290,28 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
-				s.Len(r.Results, 2)
+				s.Len(r.Results, 3)
 
-				// Find the successful and skipped entries.
-				var success, skipped *gen.CronEntry
+				// Build a map by hostname for easy lookup.
+				byHost := make(map[string]*gen.CronEntry)
 				for i := range r.Results {
-					if r.Results[i].Error != nil {
-						skipped = &r.Results[i]
-					} else {
-						success = &r.Results[i]
+					if r.Results[i].Hostname != nil {
+						byHost[*r.Results[i].Hostname] = &r.Results[i]
 					}
 				}
 
-				s.Require().NotNil(success)
-				s.Equal("server1", *success.Hostname)
-				s.Equal("backup", *success.Name)
+				// Successful agent.
+				s.Require().Contains(byHost, "server1")
+				s.Equal("backup", *byHost["server1"].Name)
+				s.Nil(byHost["server1"].Error)
 
-				s.Require().NotNil(skipped)
-				s.Equal("server2", *skipped.Hostname)
-				s.Contains(*skipped.Error, "not supported")
+				// Skipped agent (with error message).
+				s.Require().Contains(byHost, "server2")
+				s.Contains(*byHost["server2"].Error, "not supported")
+
+				// Failed agent (no error message, falls back to status).
+				s.Require().Contains(byHost, "server3")
+				s.Equal("failed", *byHost["server3"].Error)
 			},
 		},
 		{
