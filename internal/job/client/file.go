@@ -29,6 +29,131 @@ import (
 	"github.com/retr0h/osapi/internal/provider/file"
 )
 
+// ModifyFileDeployBroadcast deploys a file to a broadcast target.
+func (c *Client) ModifyFileDeployBroadcast(
+	ctx context.Context,
+	target string,
+	objectName string,
+	path string,
+	contentType string,
+	mode string,
+	owner string,
+	group string,
+	vars map[string]any,
+) (string, map[string]bool, map[string]string, error) {
+	data, _ := json.Marshal(file.DeployRequest{
+		ObjectName:  objectName,
+		Path:        path,
+		Mode:        mode,
+		Owner:       owner,
+		Group:       group,
+		ContentType: contentType,
+		Vars:        vars,
+	})
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "file",
+		Operation: job.OperationFileDeployExecute,
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	changed := make(map[string]bool)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
+		} else {
+			changed[hostname] = resp.Changed != nil && *resp.Changed
+		}
+	}
+
+	return jobID, changed, errs, nil
+}
+
+// ModifyFileUndeployBroadcast removes a deployed file from a broadcast target.
+func (c *Client) ModifyFileUndeployBroadcast(
+	ctx context.Context,
+	target string,
+	path string,
+) (string, map[string]bool, map[string]string, error) {
+	data, _ := json.Marshal(file.UndeployRequest{
+		Path: path,
+	})
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  "file",
+		Operation: job.OperationFileUndeployExecute,
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	changed := make(map[string]bool)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
+		} else {
+			changed[hostname] = resp.Changed != nil && *resp.Changed
+		}
+	}
+
+	return jobID, changed, errs, nil
+}
+
+// QueryFileStatusBroadcast queries the status of a deployed file on a broadcast target.
+func (c *Client) QueryFileStatusBroadcast(
+	ctx context.Context,
+	target string,
+	path string,
+) (string, map[string]*file.StatusResult, map[string]string, error) {
+	data, _ := json.Marshal(file.StatusRequest{
+		Path: path,
+	})
+
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  "file",
+		Operation: job.OperationFileStatusGet,
+		Data:      json.RawMessage(data),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*file.StatusResult)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == "failed" {
+			errs[hostname] = resp.Error
+		} else {
+			var result file.StatusResult
+			if unmarshalErr := json.Unmarshal(resp.Data, &result); unmarshalErr != nil {
+				errs[hostname] = fmt.Sprintf("failed to unmarshal result: %v", unmarshalErr)
+			} else {
+				results[hostname] = &result
+			}
+		}
+	}
+
+	return jobID, results, errs, nil
+}
+
 // ModifyFileDeploy deploys a file to a specific hostname.
 func (c *Client) ModifyFileDeploy(
 	ctx context.Context,

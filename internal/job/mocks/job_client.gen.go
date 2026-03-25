@@ -530,6 +530,23 @@ func (mr *MockJobClientMockRecorder) ModifyFileDeploy(arg0, arg1, arg2, arg3, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileDeploy", reflect.TypeOf((*MockJobClient)(nil).ModifyFileDeploy), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 }
 
+// ModifyFileDeployBroadcast mocks base method.
+func (m *MockJobClient) ModifyFileDeployBroadcast(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string, arg8 map[string]interface{}) (string, map[string]bool, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyFileDeployBroadcast", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]bool)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyFileDeployBroadcast indicates an expected call of ModifyFileDeployBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyFileDeployBroadcast(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileDeployBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyFileDeployBroadcast), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+}
+
 // ModifyFileUndeploy mocks base method.
 func (m *MockJobClient) ModifyFileUndeploy(arg0 context.Context, arg1, arg2 string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
@@ -545,6 +562,23 @@ func (m *MockJobClient) ModifyFileUndeploy(arg0 context.Context, arg1, arg2 stri
 func (mr *MockJobClientMockRecorder) ModifyFileUndeploy(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileUndeploy", reflect.TypeOf((*MockJobClient)(nil).ModifyFileUndeploy), arg0, arg1, arg2)
+}
+
+// ModifyFileUndeployBroadcast mocks base method.
+func (m *MockJobClient) ModifyFileUndeployBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]bool, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyFileUndeployBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]bool)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// ModifyFileUndeployBroadcast indicates an expected call of ModifyFileUndeployBroadcast.
+func (mr *MockJobClientMockRecorder) ModifyFileUndeployBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyFileUndeployBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyFileUndeployBroadcast), arg0, arg1, arg2)
 }
 
 // ModifyNetworkDNS mocks base method.
@@ -739,6 +773,23 @@ func (m *MockJobClient) QueryFileStatus(arg0 context.Context, arg1, arg2 string)
 func (mr *MockJobClientMockRecorder) QueryFileStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryFileStatus", reflect.TypeOf((*MockJobClient)(nil).QueryFileStatus), arg0, arg1, arg2)
+}
+
+// QueryFileStatusBroadcast mocks base method.
+func (m *MockJobClient) QueryFileStatusBroadcast(arg0 context.Context, arg1, arg2 string) (string, map[string]*file.StatusResult, map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryFileStatusBroadcast", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(map[string]*file.StatusResult)
+	ret2, _ := ret[2].(map[string]string)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// QueryFileStatusBroadcast indicates an expected call of QueryFileStatusBroadcast.
+func (mr *MockJobClientMockRecorder) QueryFileStatusBroadcast(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryFileStatusBroadcast", reflect.TypeOf((*MockJobClient)(nil).QueryFileStatusBroadcast), arg0, arg1, arg2)
 }
 
 // QueryNetworkDNS mocks base method.

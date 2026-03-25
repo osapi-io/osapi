@@ -55,18 +55,22 @@ Reports whether the file is in-sync, drifted, or missing.`,
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		sha := ""
-		if resp.Data.SHA256 != "" {
-			sha = resp.Data.SHA256
+		if len(resp.Data.Results) > 0 {
+			results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+			for _, r := range resp.Data.Results {
+				var errPtr *string
+				if r.Error != "" {
+					errPtr = &r.Error
+				}
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Error:    errPtr,
+					Fields:   []string{r.Path, r.Status, r.SHA256},
+				})
+			}
+			headers, rows := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS", "SHA256"})
+			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 		}
-		results := []cli.ResultRow{
-			{
-				Hostname: resp.Data.Hostname,
-				Fields:   []string{resp.Data.Path, resp.Data.Status, sha},
-			},
-		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{"PATH", "STATUS", "SHA256"})
-		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

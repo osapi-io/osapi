@@ -24,7 +24,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -76,6 +79,20 @@ func (s *Node) PostNodeFileDeploy(
 		slog.String("target", hostname),
 	)
 
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeFileDeployBroadcast(
+			ctx,
+			hostname,
+			objectName,
+			path,
+			contentType,
+			mode,
+			owner,
+			group,
+			vars,
+		)
+	}
+
 	jobID, agentHostname, changed, err := s.JobClient.ModifyFileDeploy(
 		ctx,
 		hostname,
@@ -94,9 +111,67 @@ func (s *Node) PostNodeFileDeploy(
 		}, nil
 	}
 
+	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileDeploy202JSONResponse{
-		JobId:    jobID,
-		Hostname: agentHostname,
-		Changed:  changed,
+		JobId: &jobUUID,
+		Results: []gen.FileDeployResult{
+			{
+				Hostname: agentHostname,
+				Changed:  &changed,
+			},
+		},
+	}, nil
+}
+
+// postNodeFileDeployBroadcast handles broadcast targets for file deploy.
+func (s *Node) postNodeFileDeployBroadcast(
+	ctx context.Context,
+	target string,
+	objectName string,
+	path string,
+	contentType string,
+	mode string,
+	owner string,
+	group string,
+	vars map[string]any,
+) (gen.PostNodeFileDeployResponseObject, error) {
+	jobID, changed, errs, err := s.JobClient.ModifyFileDeployBroadcast(
+		ctx,
+		target,
+		objectName,
+		path,
+		contentType,
+		mode,
+		owner,
+		group,
+		vars,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeFileDeploy500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var results []gen.FileDeployResult
+	for host, c := range changed {
+		c := c
+		results = append(results, gen.FileDeployResult{
+			Hostname: host,
+			Changed:  &c,
+		})
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		results = append(results, gen.FileDeployResult{
+			Hostname: host,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeFileDeploy202JSONResponse{
+		JobId:   &jobUUID,
+		Results: results,
 	}, nil
 }

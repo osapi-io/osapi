@@ -113,14 +113,17 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
 				s.True(ok)
-				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId)
-				s.Equal("agent1", r.Hostname)
-				s.Equal("/etc/nginx/nginx.conf", r.Path)
-				s.Equal("in-sync", r.Status)
-				s.Require().NotNil(r.Sha256)
-				s.Equal("abc123def456", *r.Sha256)
-				s.Require().NotNil(r.Changed)
-				s.False(*r.Changed)
+				s.Require().NotNil(r.JobId)
+				s.Equal("550e8400-e29b-41d4-a716-446655440000", r.JobId.String())
+				s.Require().Len(r.Results, 1)
+				item := r.Results[0]
+				s.Equal("agent1", item.Hostname)
+				s.Require().NotNil(item.Path)
+				s.Equal("/etc/nginx/nginx.conf", *item.Path)
+				s.Require().NotNil(item.Status)
+				s.Equal("in-sync", *item.Status)
+				s.Require().NotNil(item.Sha256)
+				s.Equal("abc123def456", *item.Sha256)
 			},
 		},
 		{
@@ -151,10 +154,11 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
 				s.True(ok)
-				s.Equal("missing", r.Status)
-				s.Nil(r.Sha256)
-				s.Require().NotNil(r.Changed)
-				s.False(*r.Changed)
+				s.Require().Len(r.Results, 1)
+				item := r.Results[0]
+				s.Require().NotNil(item.Status)
+				s.Equal("missing", *item.Status)
+				s.Nil(item.Sha256)
 			},
 		},
 		{
@@ -187,6 +191,61 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "Path")
+			},
+		},
+		{
+			name: "when broadcast succeeds",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				path := "/etc/nginx/nginx.conf"
+				s.mockJobClient.EXPECT().
+					QueryFileStatusBroadcast(
+						gomock.Any(),
+						"_all",
+						"/etc/nginx/nginx.conf",
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*file.StatusResult{
+							"agent1": {Path: path, Status: "in-sync", SHA256: "abc123"},
+							"agent2": {Path: path, Status: "missing"},
+						},
+						map[string]string{},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "when broadcast client error",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryFileStatusBroadcast(
+						gomock.Any(),
+						"_all",
+						"/etc/nginx/nginx.conf",
+					).
+					Return("", nil, nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
+				s.True(ok)
 			},
 		},
 		{
@@ -249,7 +308,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"job_id"`, `"agent1"`, `"in-sync"`, `"sha256"`},
+			wantContains: []string{`"job_id"`, `"agent1"`, `"in-sync"`, `"sha256"`, `"results"`},
 		},
 		{
 			name: "when missing path",
@@ -371,7 +430,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 				return mock
 			},
 			wantCode:     http.StatusOK,
-			wantContains: []string{`"job_id"`, `"in-sync"`},
+			wantContains: []string{`"job_id"`, `"in-sync"`, `"results"`},
 		},
 	}
 

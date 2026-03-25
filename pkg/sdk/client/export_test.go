@@ -289,20 +289,28 @@ func ExportFileDeleteFromGen(
 	return fileDeleteFromGen(input)
 }
 
-// ExportFileDeployResultFromGen exposes the private fileDeployResultFromGen
-// for testing.
-func ExportFileDeployResultFromGen(
-	input *gen.FileDeployResponse,
-) FileDeployResult {
-	return fileDeployResultFromGen(input)
+// ExportFileDeployCollectionFromGen exposes the private
+// fileDeployCollectionFromGen for testing.
+func ExportFileDeployCollectionFromGen(
+	input *gen.FileDeployCollectionResponse,
+) Collection[FileDeployResult] {
+	return fileDeployCollectionFromGen(input)
 }
 
-// ExportFileStatusResultFromGen exposes the private fileStatusResultFromGen
-// for testing.
-func ExportFileStatusResultFromGen(
-	input *gen.FileStatusResponse,
-) FileStatusResult {
-	return fileStatusResultFromGen(input)
+// ExportFileUndeployCollectionFromGen exposes the private
+// fileUndeployCollectionFromGen for testing.
+func ExportFileUndeployCollectionFromGen(
+	input *gen.FileUndeployCollectionResponse,
+) Collection[FileUndeployResult] {
+	return fileUndeployCollectionFromGen(input)
+}
+
+// ExportFileStatusCollectionFromGen exposes the private
+// fileStatusCollectionFromGen for testing.
+func ExportFileStatusCollectionFromGen(
+	input *gen.FileStatusCollectionResponse,
+) Collection[FileStatusResult] {
+	return fileStatusCollectionFromGen(input)
 }
 
 // ExportHealthStatusFromGen exposes the private healthStatusFromGen for

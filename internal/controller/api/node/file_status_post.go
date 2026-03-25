@@ -24,7 +24,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -51,6 +54,10 @@ func (s *Node) PostNodeFileStatus(
 		slog.String("target", hostname),
 	)
 
+	if job.IsBroadcastTarget(hostname) {
+		return s.postNodeFileStatusBroadcast(ctx, hostname, path)
+	}
+
 	jobID, result, agentHostname, err := s.JobClient.QueryFileStatus(
 		ctx,
 		hostname,
@@ -63,19 +70,68 @@ func (s *Node) PostNodeFileStatus(
 		}, nil
 	}
 
-	changed := false
-	resp := gen.PostNodeFileStatus200JSONResponse{
-		JobId:    jobID,
+	item := gen.FileStatusResult{
 		Hostname: agentHostname,
-		Path:     result.Path,
-		Status:   result.Status,
-		Changed:  &changed,
+		Path:     &result.Path,
+		Status:   &result.Status,
 	}
 
 	if result.SHA256 != "" {
 		sha := result.SHA256
-		resp.Sha256 = &sha
+		item.Sha256 = &sha
 	}
 
-	return resp, nil
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeFileStatus200JSONResponse{
+		JobId:   &jobUUID,
+		Results: []gen.FileStatusResult{item},
+	}, nil
+}
+
+// postNodeFileStatusBroadcast handles broadcast targets for file status.
+func (s *Node) postNodeFileStatusBroadcast(
+	ctx context.Context,
+	target string,
+	path string,
+) (gen.PostNodeFileStatusResponseObject, error) {
+	jobID, results, errs, err := s.JobClient.QueryFileStatusBroadcast(
+		ctx,
+		target,
+		path,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeFileStatus500JSONResponse{
+			Error: &errMsg,
+		}, nil
+	}
+
+	var items []gen.FileStatusResult
+	for host, result := range results {
+		item := gen.FileStatusResult{
+			Hostname: host,
+			Path:     &result.Path,
+			Status:   &result.Status,
+		}
+
+		if result.SHA256 != "" {
+			sha := result.SHA256
+			item.Sha256 = &sha
+		}
+
+		items = append(items, item)
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		items = append(items, gen.FileStatusResult{
+			Hostname: host,
+			Error:    &e,
+		})
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	return gen.PostNodeFileStatus200JSONResponse{
+		JobId:   &jobUUID,
+		Results: items,
+	}, nil
 }

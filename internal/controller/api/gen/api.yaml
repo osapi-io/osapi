@@ -2021,7 +2021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileDeployResponse'
+                $ref: '#/components/schemas/FileDeployCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -2070,7 +2070,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileUndeployResponse'
+                $ref: '#/components/schemas/FileUndeployCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -2119,7 +2119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileStatusResponse'
+                $ref: '#/components/schemas/FileStatusCollectionResponse'
         '400':
           description: Invalid input.
           content:
@@ -4266,22 +4266,34 @@ components:
         - object_name
         - path
         - content_type
-    FileDeployResponse:
+    FileDeployResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
         changed:
           type: boolean
           description: Whether the file was actually written.
+        error:
+          type: string
+          description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - changed
+    FileDeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileDeployResult'
+      required:
+        - results
     FileStatusRequest:
       type: object
       properties:
@@ -4292,12 +4304,9 @@ components:
             validate: required,min=1
       required:
         - path
-    FileStatusResponse:
+    FileStatusResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
@@ -4317,10 +4326,21 @@ components:
           type: string
           description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - path
-        - status
+    FileStatusCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileStatusResult'
+      required:
+        - results
     FileUndeployRequest:
       type: object
       properties:
@@ -4331,22 +4351,34 @@ components:
             validate: required,min=1
       required:
         - path
-    FileUndeployResponse:
+    FileUndeployResult:
       type: object
       properties:
-        job_id:
-          type: string
-          description: The ID of the created job.
         hostname:
           type: string
           description: The agent that processed the job.
         changed:
           type: boolean
           description: Whether the file was actually removed.
+        error:
+          type: string
+          description: Error message if the agent failed.
       required:
-        - job_id
         - hostname
-        - changed
+    FileUndeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUndeployResult'
+      required:
+        - results
     CommandExecRequest:
       type: object
       properties:

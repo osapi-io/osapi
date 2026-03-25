@@ -189,6 +189,13 @@ type DisksResponse = []DiskResponse
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
+// FileDeployCollectionResponse defines model for FileDeployCollectionResponse.
+type FileDeployCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []FileDeployResult  `json:"results"`
+}
+
 // FileDeployRequest defines model for FileDeployRequest.
 type FileDeployRequest struct {
 	// ContentType Content type — "raw" or "template".
@@ -216,16 +223,23 @@ type FileDeployRequest struct {
 // FileDeployRequestContentType Content type — "raw" or "template".
 type FileDeployRequestContentType string
 
-// FileDeployResponse defines model for FileDeployResponse.
-type FileDeployResponse struct {
+// FileDeployResult defines model for FileDeployResult.
+type FileDeployResult struct {
 	// Changed Whether the file was actually written.
-	Changed bool `json:"changed"`
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
+}
 
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
+// FileStatusCollectionResponse defines model for FileStatusCollectionResponse.
+type FileStatusCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []FileStatusResult  `json:"results"`
 }
 
 // FileStatusRequest defines model for FileStatusRequest.
@@ -234,8 +248,8 @@ type FileStatusRequest struct {
 	Path string `json:"path" validate:"required,min=1"`
 }
 
-// FileStatusResponse defines model for FileStatusResponse.
-type FileStatusResponse struct {
+// FileStatusResult defines model for FileStatusResult.
+type FileStatusResult struct {
 	// Changed Whether the operation modified system state.
 	Changed *bool `json:"changed,omitempty"`
 
@@ -245,17 +259,21 @@ type FileStatusResponse struct {
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
 
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
-
 	// Path The filesystem path.
-	Path string `json:"path"`
+	Path *string `json:"path,omitempty"`
 
 	// Sha256 Current SHA-256 of the file on disk.
 	Sha256 *string `json:"sha256,omitempty"`
 
 	// Status File state — "in-sync", "drifted", or "missing".
-	Status string `json:"status"`
+	Status *string `json:"status,omitempty"`
+}
+
+// FileUndeployCollectionResponse defines model for FileUndeployCollectionResponse.
+type FileUndeployCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []FileUndeployResult `json:"results"`
 }
 
 // FileUndeployRequest defines model for FileUndeployRequest.
@@ -264,16 +282,16 @@ type FileUndeployRequest struct {
 	Path string `json:"path" validate:"required,min=1"`
 }
 
-// FileUndeployResponse defines model for FileUndeployResponse.
-type FileUndeployResponse struct {
+// FileUndeployResult defines model for FileUndeployResult.
+type FileUndeployResult struct {
 	// Changed Whether the file was actually removed.
-	Changed bool `json:"changed"`
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
-
-	// JobId The ID of the created job.
-	JobId string `json:"job_id"`
 }
 
 // HostnameCollectionResponse defines model for HostnameCollectionResponse.
@@ -1121,7 +1139,7 @@ type PostNodeFileDeployResponseObject interface {
 	VisitPostNodeFileDeployResponse(w http.ResponseWriter) error
 }
 
-type PostNodeFileDeploy202JSONResponse FileDeployResponse
+type PostNodeFileDeploy202JSONResponse FileDeployCollectionResponse
 
 func (response PostNodeFileDeploy202JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -1175,7 +1193,7 @@ type PostNodeFileStatusResponseObject interface {
 	VisitPostNodeFileStatusResponse(w http.ResponseWriter) error
 }
 
-type PostNodeFileStatus200JSONResponse FileStatusResponse
+type PostNodeFileStatus200JSONResponse FileStatusCollectionResponse
 
 func (response PostNodeFileStatus200JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -1229,7 +1247,7 @@ type PostNodeFileUndeployResponseObject interface {
 	VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error
 }
 
-type PostNodeFileUndeploy202JSONResponse FileUndeployResponse
+type PostNodeFileUndeploy202JSONResponse FileUndeployCollectionResponse
 
 func (response PostNodeFileUndeploy202JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

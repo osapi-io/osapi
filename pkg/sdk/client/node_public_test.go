@@ -1400,7 +1400,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 		handler      http.HandlerFunc
 		serverURL    string
 		req          client.FileDeployOpts
-		validateFunc func(*client.Response[client.FileDeployResult], error)
+		validateFunc func(*client.Response[client.Collection[client.FileDeployResult]], error)
 	}{
 		{
 			name: "when deploying file returns result",
@@ -1415,16 +1415,17 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				w.WriteHeader(http.StatusAccepted)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"job-123","hostname":"web-01","changed":true}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
 					),
 				)
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("job-123", resp.Data.JobID)
-				suite.Equal("web-01", resp.Data.Hostname)
-				suite.True(resp.Data.Changed)
+				suite.Equal("550e8400-e29b-41d4-a716-446655440000", resp.Data.JobID)
+				suite.Require().Len(resp.Data.Results, 1)
+				suite.Equal("web-01", resp.Data.Results[0].Hostname)
+				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
@@ -1444,11 +1445,11 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				w.WriteHeader(http.StatusAccepted)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"job-456","hostname":"web-01","changed":true}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440001","results":[{"hostname":"web-01","changed":true}]}`,
 					),
 				)
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
 			},
@@ -1463,7 +1464,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"object_name is required"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1485,7 +1486,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1503,7 +1504,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				ContentType: "raw",
 				Target:      "_any",
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 				suite.Contains(err.Error(), "file deploy")
@@ -1520,7 +1521,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusAccepted)
 			},
-			validateFunc: func(resp *client.Response[client.FileDeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileDeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1568,7 +1569,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 		serverURL    string
 		target       string
 		path         string
-		validateFunc func(*client.Response[client.FileStatusResult], error)
+		validateFunc func(*client.Response[client.Collection[client.FileStatusResult]], error)
 	}{
 		{
 			name:   "when checking file status returns result",
@@ -1579,18 +1580,20 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"job-789","hostname":"web-01","path":"/etc/nginx/nginx.conf","status":"in-sync","sha256":"abc123"}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","path":"/etc/nginx/nginx.conf","status":"in-sync","sha256":"abc123"}]}`,
 					),
 				)
 			},
-			validateFunc: func(resp *client.Response[client.FileStatusResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileStatusResult]], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("job-789", resp.Data.JobID)
-				suite.Equal("web-01", resp.Data.Hostname)
-				suite.Equal("/etc/nginx/nginx.conf", resp.Data.Path)
-				suite.Equal("in-sync", resp.Data.Status)
-				suite.Equal("abc123", resp.Data.SHA256)
+				suite.Equal("550e8400-e29b-41d4-a716-446655440000", resp.Data.JobID)
+				suite.Require().Len(resp.Data.Results, 1)
+				r := resp.Data.Results[0]
+				suite.Equal("web-01", r.Hostname)
+				suite.Equal("/etc/nginx/nginx.conf", r.Path)
+				suite.Equal("in-sync", r.Status)
+				suite.Equal("abc123", r.SHA256)
 			},
 		},
 		{
@@ -1602,7 +1605,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"path is required"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileStatusResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileStatusResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1620,7 +1623,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileStatusResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileStatusResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1634,7 +1637,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 			target:    "_any",
 			path:      "/etc/nginx/nginx.conf",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(resp *client.Response[client.FileStatusResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileStatusResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 				suite.Contains(err.Error(), "file status")
@@ -1647,7 +1650,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			validateFunc: func(resp *client.Response[client.FileStatusResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileStatusResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1694,7 +1697,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 		handler      http.HandlerFunc
 		serverURL    string
 		req          client.FileUndeployOpts
-		validateFunc func(*client.Response[client.FileUndeployResult], error)
+		validateFunc func(*client.Response[client.Collection[client.FileUndeployResult]], error)
 	}{
 		{
 			name: "when undeploy succeeds",
@@ -1707,16 +1710,18 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				w.WriteHeader(http.StatusAccepted)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"job-123","hostname":"web-01","changed":true}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
 					),
 				)
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("job-123", resp.Data.JobID)
-				suite.Equal("web-01", resp.Data.Hostname)
-				suite.True(resp.Data.Changed)
+				suite.Equal("550e8400-e29b-41d4-a716-446655440000", resp.Data.JobID)
+				suite.Require().Len(resp.Data.Results, 1)
+				r := resp.Data.Results[0]
+				suite.Equal("web-01", r.Hostname)
+				suite.True(r.Changed)
 			},
 		},
 		{
@@ -1730,7 +1735,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1750,7 +1755,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1770,7 +1775,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"internal server error"}`))
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 			},
@@ -1784,7 +1789,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusAccepted)
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 
@@ -1801,7 +1806,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				Path:   "/etc/cron.d/backup",
 				Target: "_any",
 			},
-			validateFunc: func(resp *client.Response[client.FileUndeployResult], err error) {
+			validateFunc: func(resp *client.Response[client.Collection[client.FileUndeployResult]], err error) {
 				suite.Error(err)
 				suite.Nil(resp)
 				suite.Contains(err.Error(), "file undeploy")

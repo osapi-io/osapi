@@ -232,16 +232,37 @@ type JobClient interface {
 		group string,
 		vars map[string]any,
 	) (string, string, bool, error)
+	ModifyFileDeployBroadcast(
+		ctx context.Context,
+		target string,
+		objectName string,
+		path string,
+		contentType string,
+		mode string,
+		owner string,
+		group string,
+		vars map[string]any,
+	) (string, map[string]bool, map[string]string, error)
 	ModifyFileUndeploy(
 		ctx context.Context,
 		hostname string,
 		path string,
 	) (string, string, bool, error)
+	ModifyFileUndeployBroadcast(
+		ctx context.Context,
+		target string,
+		path string,
+	) (string, map[string]bool, map[string]string, error)
 	QueryFileStatus(
 		ctx context.Context,
 		hostname string,
 		path string,
 	) (string, *file.StatusResult, string, error)
+	QueryFileStatusBroadcast(
+		ctx context.Context,
+		target string,
+		path string,
+	) (string, map[string]*file.StatusResult, map[string]string, error)
 
 	// Docker operations
 	ModifyDockerCreate(
