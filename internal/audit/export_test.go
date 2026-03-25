@@ -18,33 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package audit
 
-import (
-	"log/slog"
+import "encoding/json"
 
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
-)
-
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// SetMarshalJSON overrides the marshalJSON variable for testing.
+func SetMarshalJSON(
+	fn func(interface{}) ([]byte, error),
+) {
+	marshalJSON = fn
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ResetMarshalJSON restores the marshalJSON variable to its default.
+func ResetMarshalJSON() {
+	marshalJSON = json.Marshal
 }

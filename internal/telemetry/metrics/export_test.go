@@ -18,33 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+// Package metrics provides a lightweight HTTP server for per-component
+// Prometheus metrics with isolated registries.
+package metrics
 
 import (
-	"log/slog"
-
 	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
+	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 )
 
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// SetPrometheusNewFn overrides the prometheusNewFn injectable for testing.
+func SetPrometheusNewFn(
+	fn func(...prometheusExporter.Option) (*prometheusExporter.Exporter, error),
+) {
+	prometheusNewFn = fn
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ResetPrometheusNewFn restores the default prometheusNewFn.
+func ResetPrometheusNewFn() {
+	prometheusNewFn = prometheusExporter.New
+}
+
+// ExportServerAddRoute registers an Any-method route on the server's internal
+// Echo instance. Used in tests to add slow handlers that hold connections open.
+func ExportServerAddRoute(
+	s *Server,
+	path string,
+	handler echo.HandlerFunc,
+) {
+	s.echo.Any(path, handler)
 }

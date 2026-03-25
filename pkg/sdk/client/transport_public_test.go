@@ -18,69 +18,65 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+package client_test
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-type KVStoreMarshalTestSuite struct {
+type failingRoundTripper struct{}
+
+func (f *failingRoundTripper) RoundTrip(
+	_ *http.Request,
+) (*http.Response, error) {
+	return nil, fmt.Errorf("transport error")
+}
+
+type TransportPublicTestSuite struct {
 	suite.Suite
-
-	ctrl   *gomock.Controller
-	mockKV *mocks.MockKeyValue
-	store  *audit.KVStore
 }
 
-func (s *KVStoreMarshalTestSuite) SetupTest() {
-	s.ctrl = gomock.NewController(s.T())
-	s.mockKV = mocks.NewMockKeyValue(s.ctrl)
-	s.store = audit.NewKVStore(slog.Default(), s.mockKV)
-}
-
-func (s *KVStoreMarshalTestSuite) TearDownTest() {
-	s.ctrl.Finish()
-	audit.ResetMarshalJSON()
-}
-
-func (s *KVStoreMarshalTestSuite) TestWriteMarshalError() {
+func (s *TransportPublicTestSuite) TestRoundTripError() {
 	tests := []struct {
 		name         string
-		setupMock    func()
-		validateFunc func(err error)
+		validateFunc func(*http.Response, error)
 	}{
 		{
-			name: "when marshal fails returns wrapped error",
-			setupMock: func() {
-				audit.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
-					return nil, fmt.Errorf("marshal failure")
-				})
-			},
-			validateFunc: func(err error) {
+			name: "when base transport fails returns error",
+			validateFunc: func(resp *http.Response, err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "marshal audit entry")
+				s.Contains(err.Error(), "transport error")
+				s.Nil(resp)
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.setupMock()
-			err := s.store.Write(context.Background(), audit.Entry{ID: "test-id"})
-			tt.validateFunc(err)
+			transport := client.ExportNewAuthTransport(
+				&failingRoundTripper{},
+				"Bearer test-token",
+				slog.Default(),
+			)
+
+			req, err := http.NewRequest(http.MethodGet, "http://example.com/test", nil)
+			s.Require().NoError(err)
+
+			resp, err := transport.RoundTrip(req)
+			tt.validateFunc(resp, err)
+
+			s.Equal("Bearer test-token", req.Header.Get("Authorization"))
 		})
 	}
 }
 
-func TestKVStoreMarshalTestSuite(t *testing.T) {
-	suite.Run(t, new(KVStoreMarshalTestSuite))
+func TestTransportPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(TransportPublicTestSuite))
 }

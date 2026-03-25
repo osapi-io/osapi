@@ -193,6 +193,139 @@ func (s *PropagationPublicTestSuite) TestHeaderInjectExtractRoundtrip() {
 	}
 }
 
+func (s *PropagationPublicTestSuite) TestMapCarrierGet() {
+	tests := []struct {
+		name         string
+		data         map[string]interface{}
+		key          string
+		validateFunc func(string)
+	}{
+		{
+			name: "when key exists returns value",
+			data: map[string]interface{}{
+				"traceparent": "00-abc123-def456-01",
+			},
+			key: "traceparent",
+			validateFunc: func(result string) {
+				s.Equal("00-abc123-def456-01", result)
+			},
+		},
+		{
+			name: "when key does not exist returns empty string",
+			data: map[string]interface{}{},
+			key:  "traceparent",
+			validateFunc: func(result string) {
+				s.Empty(result)
+			},
+		},
+		{
+			name: "when value is not a string returns empty string",
+			data: map[string]interface{}{
+				"count": 42,
+			},
+			key: "count",
+			validateFunc: func(result string) {
+				s.Empty(result)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			c := tracing.ExportNewMapCarrier(tc.data)
+
+			tc.validateFunc(c.Get(tc.key))
+		})
+	}
+}
+
+func (s *PropagationPublicTestSuite) TestMapCarrierSet() {
+	tests := []struct {
+		name         string
+		key          string
+		value        string
+		validateFunc func(map[string]interface{})
+	}{
+		{
+			name:  "when setting a value stores it in data",
+			key:   "traceparent",
+			value: "00-abc123-def456-01",
+			validateFunc: func(data map[string]interface{}) {
+				s.Equal("00-abc123-def456-01", data["traceparent"])
+			},
+		},
+		{
+			name:  "when setting overwrites existing value",
+			key:   "traceparent",
+			value: "00-new-value-01",
+			validateFunc: func(data map[string]interface{}) {
+				s.Equal("00-new-value-01", data["traceparent"])
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			data := map[string]interface{}{
+				"traceparent": "00-old-value-01",
+			}
+			c := tracing.ExportNewMapCarrier(data)
+			c.Set(tc.key, tc.value)
+
+			tc.validateFunc(data)
+		})
+	}
+}
+
+func (s *PropagationPublicTestSuite) TestMapCarrierKeys() {
+	tests := []struct {
+		name         string
+		data         map[string]interface{}
+		validateFunc func([]string)
+	}{
+		{
+			name: "when data has entries returns all keys",
+			data: map[string]interface{}{
+				"traceparent":   "00-abc123-def456-01",
+				"tracestate":    "vendor=opaque",
+				"custom-header": "value",
+			},
+			validateFunc: func(keys []string) {
+				s.Len(keys, 3)
+				s.ElementsMatch(
+					[]string{"traceparent", "tracestate", "custom-header"},
+					keys,
+				)
+			},
+		},
+		{
+			name: "when data is empty returns empty slice",
+			data: map[string]interface{}{},
+			validateFunc: func(keys []string) {
+				s.Empty(keys)
+			},
+		},
+		{
+			name: "when data has single entry returns one key",
+			data: map[string]interface{}{
+				"traceparent": "00-abc123-def456-01",
+			},
+			validateFunc: func(keys []string) {
+				s.Len(keys, 1)
+				s.Equal("traceparent", keys[0])
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			c := tracing.ExportNewMapCarrier(tc.data)
+
+			tc.validateFunc(c.Keys())
+		})
+	}
+}
+
 func TestPropagationPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(PropagationPublicTestSuite))
 }

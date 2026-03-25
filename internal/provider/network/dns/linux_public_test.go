@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,69 +18,67 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package audit_test
+package dns_test
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
-type KVStoreMarshalTestSuite struct {
+type LinuxPublicTestSuite struct {
 	suite.Suite
-
-	ctrl   *gomock.Controller
-	mockKV *mocks.MockKeyValue
-	store  *audit.KVStore
 }
 
-func (s *KVStoreMarshalTestSuite) SetupTest() {
-	s.ctrl = gomock.NewController(s.T())
-	s.mockKV = mocks.NewMockKeyValue(s.ctrl)
-	s.store = audit.NewKVStore(slog.Default(), s.mockKV)
-}
-
-func (s *KVStoreMarshalTestSuite) TearDownTest() {
-	s.ctrl.Finish()
-	audit.ResetMarshalJSON()
-}
-
-func (s *KVStoreMarshalTestSuite) TestWriteMarshalError() {
+func (s *LinuxPublicTestSuite) TestGetResolvConfByInterface() {
 	tests := []struct {
-		name         string
-		setupMock    func()
-		validateFunc func(err error)
+		name string
 	}{
 		{
-			name: "when marshal fails returns wrapped error",
-			setupMock: func() {
-				audit.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
-					return nil, fmt.Errorf("marshal failure")
-				})
-			},
-			validateFunc: func(err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "marshal audit entry")
-			},
+			name: "returns error for linux stub",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.setupMock()
-			err := s.store.Write(context.Background(), audit.Entry{ID: "test-id"})
-			tt.validateFunc(err)
+			l := &dns.Linux{}
+			result, err := l.GetResolvConfByInterface("eth0")
+
+			s.Error(err)
+			s.Nil(result)
+			s.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
 
-func TestKVStoreMarshalTestSuite(t *testing.T) {
-	suite.Run(t, new(KVStoreMarshalTestSuite))
+func (s *LinuxPublicTestSuite) TestUpdateResolvConfByInterface() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error for linux stub",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			l := &dns.Linux{}
+			result, err := l.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"eth0",
+			)
+
+			s.Error(err)
+			s.Nil(result)
+			s.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func TestLinuxPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxPublicTestSuite))
 }

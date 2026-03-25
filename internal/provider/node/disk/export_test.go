@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,33 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+// Package disk provides disk usage statistics.
+package disk
 
-import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
-)
-
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// ExportIsPermissionError exposes the private isPermissionError for testing.
+func ExportIsPermissionError(
+	err error,
+) bool {
+	return isPermissionError(err)
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ExportIsPermissionErrorDarwin exposes the private isPermissionErrorDarwin
+// for testing.
+func ExportIsPermissionErrorDarwin(
+	err error,
+) bool {
+	return isPermissionErrorDarwin(err)
 }

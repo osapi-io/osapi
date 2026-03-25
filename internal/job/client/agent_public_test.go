@@ -444,6 +444,72 @@ func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
 	}
 }
 
+func (s *AgentPublicTestSuite) TestSanitizeKeyForNATS() {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "valid characters only",
+			input:    "validKey123",
+			expected: "validKey123",
+		},
+		{
+			name:     "alphanumeric with underscores and hyphens",
+			input:    "valid_key-123",
+			expected: "valid_key-123",
+		},
+		{
+			name:     "hostname with dots",
+			input:    "server.example.com",
+			expected: "server_example_com",
+		},
+		{
+			name:     "hostname with special characters",
+			input:    "agent.host-name@domain.com",
+			expected: "agent_host-name_domain_com",
+		},
+		{
+			name:     "email-like string",
+			input:    "user@domain.com",
+			expected: "user_domain_com",
+		},
+		{
+			name:     "string with spaces",
+			input:    "agent node 1",
+			expected: "agent_node_1",
+		},
+		{
+			name:     "string with mixed special characters",
+			input:    "agent#1!@#$%^&*()",
+			expected: "agent_1__________",
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "only special characters",
+			input:    "!@#$%^&*()",
+			expected: "__________",
+		},
+		{
+			name:     "path-like string",
+			input:    "/path/to/resource",
+			expected: "_path_to_resource",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			got := client.ExportSanitizeKeyForNATS(tt.input)
+			s.Equal(tt.expected, got)
+		})
+	}
+}
+
 func TestAgentPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(AgentPublicTestSuite))
 }

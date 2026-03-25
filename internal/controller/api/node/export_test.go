@@ -18,33 +18,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package node
 
-import (
-	"log/slog"
+import "time"
 
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
-)
-
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// ExportFormatDuration exposes the private formatDuration for testing.
+func ExportFormatDuration(
+	d time.Duration,
+) string {
+	return formatDuration(d)
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ExportUint64ToInt exposes the private uint64ToInt for testing.
+func ExportUint64ToInt(
+	v uint64,
+) int {
+	return uint64ToInt(v)
+}
+
+// ExportDurationToString exposes the private durationToString for testing.
+func ExportDurationToString(
+	d *time.Duration,
+) *string {
+	return durationToString(d)
 }

@@ -18,33 +18,46 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package orchestrator_test
 
 import (
-	"log/slog"
+	"fmt"
+	"testing"
 
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+type BridgeInternalPublicTestSuite struct {
+	suite.Suite
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+func (s *BridgeInternalPublicTestSuite) TestStructToMapUnmarshalError() {
+	orchestrator.SetJSONUnmarshalFn(func(
+		_ []byte,
+		_ any,
+	) error {
+		return fmt.Errorf("forced unmarshal error")
+	})
+	defer orchestrator.ResetJSONUnmarshalFn()
+
+	result := orchestrator.StructToMap(struct {
+		Name string `json:"name"`
+	}{Name: "test"})
+
+	s.Nil(result)
+
+	// Restore and verify normal behavior.
+	orchestrator.ResetJSONUnmarshalFn()
+
+	result = orchestrator.StructToMap(struct {
+		Name string `json:"name"`
+	}{Name: "test"})
+	s.NotNil(result)
+	s.Equal("test", result["name"])
+}
+
+func TestBridgeInternalPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(BridgeInternalPublicTestSuite))
 }

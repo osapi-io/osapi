@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	hostpkg "github.com/shirou/gopsutil/v4/host"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
@@ -271,6 +272,73 @@ func (s *HostnamePublicTestSuite) TestGetLocalHostnameWithProvider() {
 				s.NoError(err)
 				s.Equal(tt.expectedHostname, hostname)
 			}
+		})
+	}
+}
+
+func (s *HostnamePublicTestSuite) TestGopsutilHostnameProvider() {
+	tests := []struct {
+		name         string
+		validateFunc func(string, error)
+	}{
+		{
+			name: "should return non-empty hostname without error",
+			validateFunc: func(hostname string, err error) {
+				s.NoError(err)
+				s.NotEmpty(hostname)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			provider := job.ExportNewGopsutilHostnameProvider()
+			hostname, err := provider.Hostname()
+
+			tt.validateFunc(hostname, err)
+		})
+	}
+}
+
+func (s *HostnamePublicTestSuite) TestHostnameProviderInterface() {
+	tests := []struct {
+		name     string
+		provider job.HostnameProvider
+	}{
+		{
+			name:     "gopsutilHostnameProvider implements interface",
+			provider: job.ExportNewGopsutilHostnameProvider(),
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_ = tt.provider
+		})
+	}
+}
+
+func (s *HostnamePublicTestSuite) TestGopsutilHostnameProviderError() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns error when host.Info fails",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			job.SetHostInfoFn(func() (*hostpkg.InfoStat, error) {
+				return nil, errors.New("host info failed")
+			})
+			defer job.ResetHostInfoFn()
+
+			provider := job.ExportNewGopsutilHostnameProvider()
+			hostname, err := provider.Hostname()
+
+			s.Error(err)
+			s.Empty(hostname)
 		})
 	}
 }

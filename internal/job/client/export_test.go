@@ -18,33 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package client
 
-import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
-)
-
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// ExportSanitizeKeyForNATS exposes the private sanitizeKeyForNATS for testing.
+func ExportSanitizeKeyForNATS(
+	s string,
+) string {
+	return sanitizeKeyForNATS(s)
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ExportComputeStatusFromKeyNames exposes the private computeStatusFromKeyNames
+// for testing, returning the ordered IDs and a simplified map[jobID]status.
+func ExportComputeStatusFromKeyNames(
+	keys []string,
+) ([]string, map[string]string) {
+	orderedIDs, jobStatuses := computeStatusFromKeyNames(keys)
+	statuses := make(map[string]string, len(jobStatuses))
+	for id, info := range jobStatuses {
+		statuses[id] = info.Status
+	}
+	return orderedIDs, statuses
 }

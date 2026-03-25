@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -497,6 +498,44 @@ func (s *AgentListPublicTestSuite) TestGetAgentRBACHTTP() {
 			for _, str := range tc.wantContains {
 				s.Contains(rec.Body.String(), str)
 			}
+		})
+	}
+}
+
+func (s *AgentListPublicTestSuite) TestUint64ToInt() {
+	maxInt := int(^uint(0) >> 1)
+
+	tests := []struct {
+		name string
+		val  uint64
+		want int
+	}{
+		{
+			name: "when zero",
+			val:  0,
+			want: 0,
+		},
+		{
+			name: "when normal value",
+			val:  42,
+			want: 42,
+		},
+		{
+			name: "when max int value",
+			val:  uint64(maxInt),
+			want: maxInt,
+		},
+		{
+			name: "when overflow",
+			val:  math.MaxUint64,
+			want: maxInt,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			got := apiagent.ExportUint64ToInt(tt.val)
+			s.Equal(tt.want, got)
 		})
 	}
 }

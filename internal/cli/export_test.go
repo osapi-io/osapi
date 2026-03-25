@@ -18,33 +18,34 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package cli
 
 import (
-	"log/slog"
+	"os"
 
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/shirou/gopsutil/v4/host"
 )
 
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
-	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+// SetOsExit overrides the osExit variable for testing.
+func SetOsExit(
+	fn func(int),
+) {
+	osExit = fn
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
-	signingKey string,
-	contextKey string,
-	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+// ResetOsExit restores the osExit variable to its default.
+func ResetOsExit() {
+	osExit = os.Exit
+}
+
+// SetHostInfoFn overrides the hostInfoFn variable for testing.
+func SetHostInfoFn(
+	fn func() (*host.InfoStat, error),
+) {
+	hostInfoFn = fn
+}
+
+// ResetHostInfoFn restores the hostInfoFn variable to its default.
+func ResetHostInfoFn() {
+	hostInfoFn = host.Info
 }

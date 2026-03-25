@@ -21,8 +21,11 @@
 package process_test
 
 import (
+	"errors"
+	"os"
 	"testing"
 
+	gopsutil "github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/process"
@@ -80,6 +83,98 @@ func (suite *ProcessPublicTestSuite) TestGetMetrics() {
 
 			got, err := p.GetMetrics()
 
+			tc.validateFunc(got, err)
+		})
+	}
+}
+
+func (suite *ProcessPublicTestSuite) TestGetMetricsWithInjection() {
+	tests := []struct {
+		name         string
+		pid          int32
+		setup        func()
+		teardown     func()
+		validateFunc func(got *process.Metrics, err error)
+	}{
+		{
+			name: "returns metrics for current process using real functions",
+			pid:  int32(os.Getpid()),
+			validateFunc: func(got *process.Metrics, err error) {
+				suite.NoError(err)
+				suite.NotNil(got)
+				suite.GreaterOrEqual(got.CPUPercent, float64(0))
+				suite.Greater(got.RSSBytes, int64(0))
+				suite.Greater(got.Goroutines, 0)
+			},
+		},
+		{
+			name: "returns error for invalid pid",
+			pid:  -99999,
+			validateFunc: func(got *process.Metrics, err error) {
+				suite.Nil(got)
+				suite.Error(err)
+				suite.Contains(err.Error(), "get process")
+			},
+		},
+		{
+			name: "returns error when CPUPercent fails",
+			pid:  0,
+			setup: func() {
+				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
+					return &gopsutil.Process{}, nil
+				})
+				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
+					return 0, errors.New("cpu error")
+				})
+			},
+			teardown: func() {
+				process.ResetNewProcessFn()
+				process.ResetCPUPercentFn()
+			},
+			validateFunc: func(got *process.Metrics, err error) {
+				suite.Nil(got)
+				suite.Error(err)
+				suite.Contains(err.Error(), "get cpu percent")
+			},
+		},
+		{
+			name: "returns error when MemoryInfo fails",
+			pid:  0,
+			setup: func() {
+				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
+					return &gopsutil.Process{}, nil
+				})
+				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
+					return 1.5, nil
+				})
+				process.SetMemoryInfoFn(func(_ *gopsutil.Process) (uint64, error) {
+					return 0, errors.New("memory error")
+				})
+			},
+			teardown: func() {
+				process.ResetNewProcessFn()
+				process.ResetCPUPercentFn()
+				process.ResetMemoryInfoFn()
+			},
+			validateFunc: func(got *process.Metrics, err error) {
+				suite.Nil(got)
+				suite.Error(err)
+				suite.Contains(err.Error(), "get memory info")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			if tc.teardown != nil {
+				defer tc.teardown()
+			}
+
+			p := process.ExportNewProviderWithPID(tc.pid)
+			got, err := p.GetMetrics()
 			tc.validateFunc(got, err)
 		})
 	}

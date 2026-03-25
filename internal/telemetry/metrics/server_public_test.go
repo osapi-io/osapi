@@ -31,7 +31,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
+	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
@@ -334,6 +336,122 @@ func (s *ServerPublicTestSuite) TestStartListenError() {
 				time.Sleep(100 * time.Millisecond)
 
 				_ = l.Close()
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc()
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestNewPrometheusError() {
+	tests := []struct {
+		name         string
+		validateFunc func(*metrics.Server)
+	}{
+		{
+			name: "when prometheus exporter fails returns nil",
+			validateFunc: func(srv *metrics.Server) {
+				s.Nil(srv)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			metrics.SetPrometheusNewFn(func(
+				_ ...prometheusExporter.Option,
+			) (*prometheusExporter.Exporter, error) {
+				return nil, errors.New("exporter error")
+			})
+			defer metrics.ResetPrometheusNewFn()
+
+			port := s.getFreePort()
+			srv := metrics.New("127.0.0.1", port, slog.Default())
+			tc.validateFunc(srv)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStopErrors() {
+	tests := []struct {
+		name         string
+		validateFunc func()
+	}{
+		{
+			name: "handles shutdown after already stopped",
+			validateFunc: func() {
+				port := s.getFreePort()
+				srv := metrics.New("127.0.0.1", port, slog.Default())
+				s.Require().NotNil(srv)
+
+				srv.Start()
+				time.Sleep(100 * time.Millisecond)
+
+				ctx, cancel := context.WithTimeout(
+					context.Background(),
+					5*time.Second,
+				)
+				defer cancel()
+
+				// First stop succeeds.
+				srv.Stop(ctx)
+
+				// Second stop exercises the error paths since
+				// the server and meter provider are already shut down.
+				srv.Stop(ctx)
+			},
+		},
+		{
+			name: "logs error when shutdown cannot close active connections",
+			validateFunc: func() {
+				port := s.getFreePort()
+
+				// Add a slow handler that holds the connection open.
+				srv := metrics.New("127.0.0.1", port, slog.Default())
+				s.Require().NotNil(srv)
+
+				metrics.ExportServerAddRoute(
+					srv,
+					"/slow",
+					func(c echo.Context) error {
+						c.Response().WriteHeader(http.StatusOK)
+						c.Response().Flush()
+
+						time.Sleep(5 * time.Second)
+
+						return nil
+					},
+				)
+
+				srv.Start()
+				time.Sleep(100 * time.Millisecond)
+
+				// Start a request that holds a connection open.
+				go func() {
+					//nolint:gosec
+					resp, err := http.Get(
+						fmt.Sprintf("http://127.0.0.1:%d/slow", port),
+					)
+					if err == nil {
+						_ = resp.Body.Close()
+					}
+				}()
+
+				time.Sleep(50 * time.Millisecond)
+
+				// Stop with an already-expired context so Shutdown
+				// can't wait for the active connection to close.
+				ctx, cancel := context.WithDeadline(
+					context.Background(),
+					time.Now().Add(-time.Second),
+				)
+				defer cancel()
+
+				srv.Stop(ctx)
 			},
 		},
 	}

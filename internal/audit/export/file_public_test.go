@@ -228,6 +228,51 @@ func (suite *FileExporterPublicTestSuite) TestWrite() {
 	}
 }
 
+func (suite *FileExporterPublicTestSuite) TestWriteNewlineError() {
+	entry := client.AuditEntry{
+		ID:           "550e8400-e29b-41d4-a716-446655440000",
+		Timestamp:    time.Date(2026, 2, 21, 10, 30, 0, 0, time.UTC),
+		User:         "user@example.com",
+		Roles:        []string{"admin"},
+		Method:       "GET",
+		Path:         "/node/hostname",
+		SourceIP:     "127.0.0.1",
+		ResponseCode: 200,
+		DurationMs:   42,
+	}
+
+	tests := []struct {
+		name         string
+		validateFunc func(err error)
+	}{
+		{
+			name: "when WriteByte triggers flush failure returns newline error",
+			validateFunc: func(err error) {
+				suite.Error(err)
+				suite.Contains(err.Error(), "writing newline")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			// Marshal to get the exact byte size of the JSON data.
+			data, err := json.Marshal(entry)
+			suite.Require().NoError(err)
+
+			// Create a bufio.Writer with a buffer sized exactly to the
+			// JSON data. Write(data) fills the buffer completely, then
+			// WriteByte('\n') finds Available()==0 and calls Flush(),
+			// which hits the failing underlying writer.
+			fw := &failWriter{}
+			e := export.NewFileExporterWithWriter(bufio.NewWriterSize(fw, len(data)))
+
+			err = e.Write(suite.ctx, entry)
+			tt.validateFunc(err)
+		})
+	}
+}
+
 func (suite *FileExporterPublicTestSuite) TestClose() {
 	tests := []struct {
 		name         string
