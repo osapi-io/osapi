@@ -58,24 +58,30 @@ var clientNodeScheduleCronListCmd = &cobra.Command{
 			return
 		}
 
-		rows := make([][]string, 0, len(resp.Data.Results))
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
+			}
+
 			schedule := r.Schedule
 			if r.Interval != "" {
 				schedule = r.Interval
 			}
-			rows = append(rows, []string{
-				r.Name,
-				r.Source,
-				schedule,
-				r.Object,
-				r.User,
+
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Error:    errPtr,
+				Fields:   []string{r.Name, r.Source, schedule, r.Object, r.User},
 			})
 		}
-		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"NAME", "SOURCE", "SCHEDULE", "OBJECT", "USER"},
-			Rows:    rows,
-		}})
+
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"NAME", "SOURCE", "SCHEDULE", "OBJECT", "USER"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

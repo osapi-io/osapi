@@ -423,6 +423,13 @@ components:
       type: object
       description: A cron drop-in entry.
       properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that returned this entry.
+        error:
+          type: string
+          description: >
+            Error message if the agent failed or was skipped.
         name:
           type: string
           description: Cron entry name.

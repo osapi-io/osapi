@@ -26,6 +26,7 @@ import (
 
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
+	Hostname string `json:"hostname,omitempty"`
 	Name     string `json:"name"`
 	Object   string `json:"object,omitempty"`
 	Schedule string `json:"schedule,omitempty"`
@@ -89,12 +90,14 @@ func cronEntryCollectionFromGen(
 		}
 
 		results = append(results, CronEntryResult{
+			Hostname: derefString(r.Hostname),
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
 			Interval: interval,
 			Source:   derefString(r.Source),
 			User:     derefString(r.User),
+			Error:    derefString(r.Error),
 		})
 	}
 

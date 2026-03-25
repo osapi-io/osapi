@@ -448,6 +448,12 @@ type CronDeleteResponse struct {
 
 // CronEntry A cron drop-in entry.
 type CronEntry struct {
+	// Error Error message if the agent failed or was skipped.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that returned this entry.
+	Hostname *string `json:"hostname,omitempty"`
+
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
 
