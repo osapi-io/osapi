@@ -22,12 +22,14 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -58,11 +60,8 @@ func (s *Node) PostNodeFileStatus(
 		return s.postNodeFileStatusBroadcast(ctx, hostname, path)
 	}
 
-	jobID, result, agentHostname, err := s.JobClient.QueryFileStatus(
-		ctx,
-		hostname,
-		path,
-	)
+	data := file.StatusRequest{Path: path}
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "file", job.OperationFileStatusGet, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileStatus500JSONResponse{
@@ -70,8 +69,13 @@ func (s *Node) PostNodeFileStatus(
 		}, nil
 	}
 
+	var result file.StatusResult
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &result)
+	}
+
 	item := gen.FileStatusResult{
-		Hostname: agentHostname,
+		Hostname: rawResp.Hostname,
 		Path:     &result.Path,
 		Status:   &result.Status,
 	}
@@ -94,11 +98,8 @@ func (s *Node) postNodeFileStatusBroadcast(
 	target string,
 	path string,
 ) (gen.PostNodeFileStatusResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryFileStatusBroadcast(
-		ctx,
-		target,
-		path,
-	)
+	data := file.StatusRequest{Path: path}
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "file", job.OperationFileStatusGet, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileStatus500JSONResponse{
@@ -107,18 +108,20 @@ func (s *Node) postNodeFileStatusBroadcast(
 	}
 
 	var items []gen.FileStatusResult
-	for host, result := range results {
+	for host, resp := range results {
+		var result file.StatusResult
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &result)
+		}
 		item := gen.FileStatusResult{
 			Hostname: host,
 			Path:     &result.Path,
 			Status:   &result.Status,
 		}
-
 		if result.SHA256 != "" {
 			sha := result.SHA256
 			item.Sha256 = &sha
 		}
-
 		items = append(items, item)
 	}
 	for host, errMsg := range errs {

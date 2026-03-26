@@ -22,12 +22,14 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
 // GetNodeNetworkDNSByInterface get the node network dns get API endpoint.
@@ -54,16 +56,18 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		return s.getNodeNetworkDNSBroadcast(ctx, hostname, request.InterfaceName)
 	}
 
-	jobID, dnsConfig, agentHostname, err := s.JobClient.QueryNetworkDNS(
-		ctx,
-		hostname,
-		request.InterfaceName,
-	)
+	data := map[string]any{"interface": request.InterfaceName}
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "network", job.OperationNetworkDNSGet, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeNetworkDNSByInterface500JSONResponse{
 			Error: &errMsg,
 		}, nil
+	}
+
+	var dnsConfig dns.GetResult
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &dnsConfig)
 	}
 
 	searchDomains := dnsConfig.SearchDomains
@@ -75,7 +79,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		JobId: &jobUUID,
 		Results: []gen.DNSConfigResponse{
 			{
-				Hostname:      agentHostname,
+				Hostname:      rawResp.Hostname,
 				Servers:       &servers,
 				SearchDomains: &searchDomains,
 				Changed:       &changed,
@@ -90,7 +94,8 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 	target string,
 	iface string,
 ) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNetworkDNSBroadcast(ctx, target, iface)
+	data := map[string]any{"interface": iface}
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "network", job.OperationNetworkDNSGet, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeNetworkDNSByInterface500JSONResponse{
@@ -100,7 +105,11 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 
 	changed := false
 	var responses []gen.DNSConfigResponse
-	for host, cfg := range results {
+	for host, resp := range results {
+		var cfg dns.GetResult
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &cfg)
+		}
 		servers := cfg.DNSServers
 		searchDomains := cfg.SearchDomains
 		responses = append(responses, gen.DNSConfigResponse{

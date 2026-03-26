@@ -96,12 +96,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
@@ -162,12 +164,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
@@ -198,12 +202,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data:     nil,
@@ -228,12 +234,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
@@ -260,12 +268,14 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
 				_, ok := resp.(gen.GetNodeContainerDocker500JSONResponse)
@@ -280,9 +290,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -317,9 +329,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -349,9 +363,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryDockerListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerList,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
@@ -388,8 +404,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDockerValidationHTTP(
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryDockerList(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
+					Query(gomock.Any(), "server1", "docker", job.OperationDockerList, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data:     json.RawMessage(`[]`),
@@ -489,8 +505,8 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDockerRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryDockerList(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
+					Query(gomock.Any(), "server1", "docker", job.OperationDockerList, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data:     json.RawMessage(`[]`),

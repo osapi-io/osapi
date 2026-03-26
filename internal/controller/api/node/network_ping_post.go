@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -62,11 +63,8 @@ func (s *Node) PostNodeNetworkPing(
 		return s.postNodeNetworkPingBroadcast(ctx, hostname, request.Body.Address)
 	}
 
-	jobID, pingResult, agentHostname, err := s.JobClient.QueryNetworkPing(
-		ctx,
-		hostname,
-		request.Body.Address,
-	)
+	data := map[string]any{"address": request.Body.Address}
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "network", job.OperationNetworkPingDo, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeNetworkPing500JSONResponse{
@@ -74,11 +72,16 @@ func (s *Node) PostNodeNetworkPing(
 		}, nil
 	}
 
+	var pingResult ping.Result
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &pingResult)
+	}
+
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeNetworkPing200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.PingResponse{
-			buildPingResponse(agentHostname, pingResult),
+			buildPingResponse(rawResp.Hostname, &pingResult),
 		},
 	}, nil
 }
@@ -89,7 +92,8 @@ func (s *Node) postNodeNetworkPingBroadcast(
 	target string,
 	address string,
 ) (gen.PostNodeNetworkPingResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNetworkPingBroadcast(ctx, target, address)
+	data := map[string]any{"address": address}
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "network", job.OperationNetworkPingDo, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeNetworkPing500JSONResponse{
@@ -98,8 +102,12 @@ func (s *Node) postNodeNetworkPingBroadcast(
 	}
 
 	var responses []gen.PingResponse
-	for host, r := range results {
-		responses = append(responses, buildPingResponse(host, r))
+	for host, resp := range results {
+		var pingResult ping.Result
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &pingResult)
+		}
+		responses = append(responses, buildPingResponse(host, &pingResult))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

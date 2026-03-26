@@ -92,14 +92,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -126,14 +126,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -182,13 +182,14 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
 				_, ok := resp.(gen.DeleteNodeContainerDockerByID500JSONResponse)
@@ -204,10 +205,11 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -239,10 +241,11 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -271,10 +274,11 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerRemove,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
@@ -311,9 +315,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDValida
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerRemove(gomock.Any(), "server1", "abc123", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerRemove, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -412,9 +415,8 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByIDRBACHT
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerRemove(gomock.Any(), "server1", "abc123", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerRemove, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)

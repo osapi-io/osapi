@@ -46,6 +46,37 @@ const (
 
 // JobClient defines the interface for interacting with the jobs system.
 type JobClient interface {
+	// Generic dispatch operations — used by API handlers to submit jobs
+	// without importing typed wrapper methods.
+	Query(
+		ctx context.Context,
+		target string,
+		category string,
+		operation job.OperationType,
+		data any,
+	) (string, *job.Response, error)
+	QueryBroadcast(
+		ctx context.Context,
+		target string,
+		category string,
+		operation job.OperationType,
+		data any,
+	) (string, map[string]*job.Response, map[string]string, error)
+	Modify(
+		ctx context.Context,
+		target string,
+		category string,
+		operation job.OperationType,
+		data any,
+	) (string, *job.Response, error)
+	ModifyBroadcast(
+		ctx context.Context,
+		target string,
+		category string,
+		operation job.OperationType,
+		data any,
+	) (string, map[string]*job.Response, map[string]string, error)
+
 	// Job queue management operations
 	GetQueueSummary(
 		ctx context.Context,

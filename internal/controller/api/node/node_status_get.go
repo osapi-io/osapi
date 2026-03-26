@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -46,7 +47,7 @@ func (s *Node) GetNodeStatus(
 		return s.getNodeStatusBroadcast(ctx, hostname)
 	}
 
-	jobID, status, err := s.JobClient.QueryNodeStatus(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeStatusGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeStatus500JSONResponse{
@@ -54,7 +55,12 @@ func (s *Node) GetNodeStatus(
 		}, nil
 	}
 
-	resp := buildNodeStatusResponse(status)
+	var status job.NodeStatusResponse
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &status)
+	}
+
+	resp := buildNodeStatusResponse(&status)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeStatus200JSONResponse{
@@ -68,7 +74,7 @@ func (s *Node) getNodeStatusBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeStatusResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeStatusBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeStatusGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeStatus500JSONResponse{
@@ -77,8 +83,15 @@ func (s *Node) getNodeStatusBroadcast(
 	}
 
 	var responses []gen.NodeStatusResponse
-	for _, status := range results {
-		responses = append(responses, *buildNodeStatusResponse(status))
+	for host, resp := range results {
+		var status job.NodeStatusResponse
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &status)
+		}
+		if status.Hostname == "" {
+			status.Hostname = host
+		}
+		responses = append(responses, *buildNodeStatusResponse(&status))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

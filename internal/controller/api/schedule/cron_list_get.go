@@ -52,14 +52,14 @@ func (s *Schedule) GetNodeScheduleCron(
 		return s.getNodeScheduleCronBroadcast(ctx, hostname)
 	}
 
-	resp, err := s.JobClient.QueryScheduleCronList(ctx, hostname)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "schedule", job.OperationCronList, nil)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
 	results := responseToCronEntries(resp)
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
@@ -72,10 +72,7 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeScheduleCronResponseObject, error) {
-	jobID, responses, err := s.JobClient.QueryScheduleCronListBroadcast(
-		ctx,
-		target,
-	)
+	jobID, responses, errs, err := s.JobClient.QueryBroadcast(ctx, target, "schedule", job.OperationCronList, nil)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
@@ -83,22 +80,15 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 
 	allResults := make([]gen.CronEntry, 0)
 	for _, resp := range responses {
-		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			hostname := resp.Hostname
-			errMsg := resp.Error
-			if errMsg == "" {
-				errMsg = string(resp.Status)
-			}
-
-			allResults = append(allResults, gen.CronEntry{
-				Hostname: &hostname,
-				Error:    &errMsg,
-			})
-
-			continue
-		}
-
 		allResults = append(allResults, responseToCronEntries(resp)...)
+	}
+	for hostname, errMsg := range errs {
+		h := hostname
+		e := errMsg
+		allResults = append(allResults, gen.CronEntry{
+			Hostname: &h,
+			Error:    &e,
+		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)

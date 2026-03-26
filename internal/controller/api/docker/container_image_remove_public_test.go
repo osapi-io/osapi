@@ -94,13 +94,14 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -129,13 +130,14 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -186,12 +188,14 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
 				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
@@ -207,12 +211,14 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemove(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
 				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
@@ -228,9 +234,11 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -262,9 +270,11 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -293,9 +303,11 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerImageRemoveBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"docker",
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
@@ -332,9 +344,8 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerImageRemove(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerImageRemove, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -445,9 +456,8 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerImageRemove(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerImageRemove, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)

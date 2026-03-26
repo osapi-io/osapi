@@ -93,13 +93,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data: json.RawMessage(
 							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
@@ -126,13 +127,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data:     nil,
 					}, nil)
@@ -154,10 +156,12 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGetBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
-						"backup",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -174,7 +178,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 							),
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
@@ -191,10 +195,12 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGetBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
-						"backup",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -211,7 +217,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 							Status:   job.StatusFailed,
 							Error:    "cron entry not found",
 						},
-					}, nil)
+					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
@@ -241,7 +247,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						"_all",
 						"backup",
 					).
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCronByName500JSONResponse)
@@ -270,12 +276,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"nonexistent",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "nonexistent"},
 					).
-					Return(nil, errors.New("cron entry not found"))
+					Return("", nil, errors.New("cron entry not found"))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)
@@ -292,12 +300,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"unmanaged",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "unmanaged"},
 					).
-					Return(nil, errors.New("cron entry not managed"))
+					Return("", nil, errors.New("cron entry not managed"))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)
@@ -314,12 +324,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"missing",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "missing"},
 					).
-					Return(nil, errors.New("cron entry does not exist"))
+					Return("", nil, errors.New("cron entry does not exist"))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName404JSONResponse)
@@ -336,12 +348,14 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronGet(
+					Query(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCronByName500JSONResponse)
@@ -375,9 +389,8 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByNameValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryScheduleCronGet(gomock.Any(), "server1", "backup").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Query(gomock.Any(), "server1", "schedule", job.OperationCronGet, map[string]string{"name": "backup"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data: json.RawMessage(
 							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
@@ -478,9 +491,8 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByNameRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryScheduleCronGet(gomock.Any(), "server1", "backup").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Query(gomock.Any(), "server1", "schedule", job.OperationCronGet, map[string]string{"name": "backup"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data: json.RawMessage(
 							`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,

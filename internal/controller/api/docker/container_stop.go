@@ -68,13 +68,20 @@ func (s *Container) PostNodeContainerDockerStop(
 		return s.postNodeContainerDockerStopBroadcast(ctx, hostname, id, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerStop(ctx, hostname, id, data)
+	stopData := struct {
+		ID      string `json:"id"`
+		Timeout *int   `json:"timeout,omitempty"`
+	}{
+		ID:      id,
+		Timeout: data.Timeout,
+	}
+	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerStop, stopData)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "container stopped"
 
@@ -98,7 +105,14 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 	id string,
 	data *job.DockerStopData,
 ) (gen.PostNodeContainerDockerStopResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerStopBroadcast(ctx, target, id, data)
+	stopData := struct {
+		ID      string `json:"id"`
+		Timeout *int   `json:"timeout,omitempty"`
+	}{
+		ID:      id,
+		Timeout: data.Timeout,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerStop, stopData)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil

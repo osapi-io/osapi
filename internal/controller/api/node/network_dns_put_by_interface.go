@@ -22,7 +22,6 @@ package node
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -73,13 +72,12 @@ func (s *Node) PutNodeNetworkDNS(
 		return s.putNodeNetworkDNSBroadcast(ctx, hostname, servers, searchDomains, interfaceName)
 	}
 
-	jobID, agentHostname, changed, err := s.JobClient.ModifyNetworkDNS(
-		ctx,
-		hostname,
-		servers,
-		searchDomains,
-		interfaceName,
-	)
+	data := map[string]any{
+		"servers":        servers,
+		"search_domains": searchDomains,
+		"interface":      interfaceName,
+	}
+	jobID, rawResp, err := s.JobClient.Modify(ctx, hostname, "network", job.OperationNetworkDNSUpdate, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNodeNetworkDNS500JSONResponse{
@@ -87,12 +85,13 @@ func (s *Node) PutNodeNetworkDNS(
 		}, nil
 	}
 
+	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeNetworkDNS202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DNSUpdateResultItem{
 			{
-				Hostname: agentHostname,
+				Hostname: rawResp.Hostname,
 				Status:   gen.Ok,
 				Changed:  &changed,
 			},
@@ -108,13 +107,12 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 	searchDomains []string,
 	interfaceName string,
 ) (gen.PutNodeNetworkDNSResponseObject, error) {
-	jobID, results, changedMap, err := s.JobClient.ModifyNetworkDNSBroadcast(
-		ctx,
-		target,
-		servers,
-		searchDomains,
-		interfaceName,
-	)
+	data := map[string]any{
+		"servers":        servers,
+		"search_domains": searchDomains,
+		"interface":      interfaceName,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "network", job.OperationNetworkDNSUpdate, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNodeNetworkDNS500JSONResponse{
@@ -123,19 +121,23 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 	}
 
 	var responses []gen.DNSUpdateResultItem
-	for host, hostErr := range results {
-		c := changedMap[host]
-		item := gen.DNSUpdateResultItem{
+	for host, resp := range results {
+		changed := resp.Changed == nil || *resp.Changed
+		responses = append(responses, gen.DNSUpdateResultItem{
 			Hostname: host,
 			Status:   gen.Ok,
-			Changed:  &c,
-		}
-		if hostErr != nil {
-			item.Status = gen.Failed
-			errStr := fmt.Sprintf("%v", hostErr)
-			item.Error = &errStr
-		}
-		responses = append(responses, item)
+			Changed:  &changed,
+		})
+	}
+	for host, errMsg := range errs {
+		e := errMsg
+		falsVal := false
+		responses = append(responses, gen.DNSUpdateResultItem{
+			Hostname: host,
+			Status:   gen.Failed,
+			Error:    &e,
+			Changed:  &falsVal,
+		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)

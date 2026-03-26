@@ -215,6 +215,52 @@ type NATSKV struct {
 	Replicas       int    `mapstructure:"replicas"`
 }
 
+// KVBucketInfo holds a KV bucket's human-readable name and its configured
+// bucket name. It is returned by NATS.AllKVBuckets so callers can iterate
+// all KV buckets without manually listing every sub-config field.
+type KVBucketInfo struct {
+	// Name is a human-readable label for the bucket (e.g. "job-queue").
+	Name string
+	// Bucket is the bucket name from the config field.
+	Bucket string
+}
+
+// ObjectStoreBucketInfo holds an Object Store bucket's human-readable name
+// and its configured bucket name. It is returned by
+// NATS.AllObjectStoreBuckets so callers can iterate all Object Store buckets
+// without manually listing every sub-config field.
+type ObjectStoreBucketInfo struct {
+	// Name is a human-readable label for the bucket (e.g. "file-objects").
+	Name string
+	// Bucket is the bucket name from the config field.
+	Bucket string
+}
+
+// AllKVBuckets returns all KV bucket configurations declared in the NATS
+// config. Each entry carries a human-readable name and the bucket name from
+// config. Entries with an empty Bucket field are still included so that
+// callers can filter by their own policy.
+func (n NATS) AllKVBuckets() []KVBucketInfo {
+	return []KVBucketInfo{
+		{Name: "job-queue", Bucket: n.KV.Bucket},
+		{Name: "job-responses", Bucket: n.KV.ResponseBucket},
+		{Name: "audit", Bucket: n.Audit.Bucket},
+		{Name: "registry", Bucket: n.Registry.Bucket},
+		{Name: "facts", Bucket: n.Facts.Bucket},
+		{Name: "state", Bucket: n.State.Bucket},
+		{Name: "file-state", Bucket: n.FileState.Bucket},
+	}
+}
+
+// AllObjectStoreBuckets returns all Object Store bucket configurations
+// declared in the NATS config. Entries with an empty Bucket field are still
+// included so that callers can filter by their own policy.
+func (n NATS) AllObjectStoreBuckets() []ObjectStoreBucketInfo {
+	return []ObjectStoreBucketInfo{
+		{Name: "file-objects", Bucket: n.Objects.Bucket},
+	}
+}
+
 // NATSDLQ configuration for Dead Letter Queue stream settings.
 type NATSDLQ struct {
 	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"

@@ -39,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -77,6 +78,8 @@ func (s *FileDeployPostPublicTestSuite) TearDownTest() {
 }
 
 func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
+	changedTrue := true
+
 	tests := []struct {
 		name         string
 		request      gen.PostNodeFileDeployRequestObject
@@ -98,21 +101,19 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyFileDeploy(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"nginx.conf",
-						"/etc/nginx/nginx.conf",
-						"raw",
-						"0644",
-						"root",
-						"root",
-						map[string]any(nil),
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"agent1",
-						true,
+						&job.Response{
+							Hostname: "agent1",
+							Changed:  &changedTrue,
+						},
 						nil,
 					)
 			},
@@ -142,21 +143,19 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyFileDeploy(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"app.conf.tmpl",
-						"/etc/app/app.conf",
-						"template",
-						"",
-						"",
-						"",
-						map[string]any{"port": float64(8080)},
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"agent1",
-						true,
+						&job.Response{
+							Hostname: "agent1",
+							Changed:  &changedTrue,
+						},
 						nil,
 					)
 			},
@@ -252,21 +251,21 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 				},
 			},
 			setupMock: func() {
+				changedFalse := false
 				s.mockJobClient.EXPECT().
-					ModifyFileDeployBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"nginx.conf",
-						"/etc/nginx/nginx.conf",
-						"raw",
-						"",
-						"",
-						"",
-						map[string]any(nil),
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]bool{"agent1": true, "agent2": false},
+						map[string]*job.Response{
+							"agent1": {Hostname: "agent1", Changed: &changedTrue},
+							"agent2": {Hostname: "agent2", Changed: &changedFalse},
+						},
 						map[string]string{},
 						nil,
 					)
@@ -290,20 +289,18 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyFileDeployBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"nginx.conf",
-						"/etc/nginx/nginx.conf",
-						"raw",
-						"",
-						"",
-						"",
-						map[string]any(nil),
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]bool{"agent1": true},
+						map[string]*job.Response{
+							"agent1": {Hostname: "agent1", Changed: &changedTrue},
+						},
 						map[string]string{"agent2": "deploy failed"},
 						nil,
 					)
@@ -335,16 +332,12 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyFileDeployBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"nginx.conf",
-						"/etc/nginx/nginx.conf",
-						"raw",
-						"",
-						"",
-						"",
-						map[string]any(nil),
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -365,18 +358,14 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyFileDeploy(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"nginx.conf",
-						"/etc/nginx/nginx.conf",
-						"raw",
-						"",
-						"",
-						"",
-						map[string]any(nil),
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
 					).
-					Return("", "", false, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)
@@ -397,6 +386,8 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 }
 
 func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
+	changedTrue := true
+
 	tests := []struct {
 		name         string
 		path         string
@@ -412,8 +403,11 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
+					Modify(gomock.Any(), "server1", "file", job.OperationFileDeployExecute, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  &changedTrue,
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -446,8 +440,8 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("", "", false, assert.AnError)
+					Modify(gomock.Any(), "server1", "file", job.OperationFileDeployExecute, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode:     http.StatusInternalServerError,
@@ -496,6 +490,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 const rbacFileDeployTestSigningKey = "test-signing-key-for-file-deploy-rbac"
 
 func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
+	changedTrue := true
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -549,11 +544,13 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyFileDeploy(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Modify(gomock.Any(), "server1", "file", job.OperationFileDeployExecute, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"agent1",
-						true,
+						&job.Response{
+							Hostname: "agent1",
+							Changed:  &changedTrue,
+						},
 						nil,
 					)
 				return mock

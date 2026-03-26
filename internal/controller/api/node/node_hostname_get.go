@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -50,7 +51,7 @@ func (s *Node) GetNodeHostname(
 		return s.getNodeHostnameBroadcast(ctx, hostname)
 	}
 
-	jobID, result, agent, err := s.JobClient.QueryNodeHostname(ctx, hostname)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeHostnameGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeHostname500JSONResponse{
@@ -58,24 +59,32 @@ func (s *Node) GetNodeHostname(
 		}, nil
 	}
 
-	displayHostname := result
-	if displayHostname == "" && agent != nil {
-		displayHostname = agent.Hostname
+	var result struct {
+		Hostname string            `json:"hostname"`
+		Labels   map[string]string `json:"labels,omitempty"`
+	}
+	if resp.Data != nil {
+		_ = json.Unmarshal(resp.Data, &result)
+	}
+
+	displayHostname := result.Hostname
+	if displayHostname == "" {
+		displayHostname = resp.Hostname
 	}
 
 	changed := false
-	resp := gen.HostnameResponse{
+	apiResp := gen.HostnameResponse{
 		Hostname: displayHostname,
 		Changed:  &changed,
 	}
-	if agent != nil && len(agent.Labels) > 0 {
-		resp.Labels = &agent.Labels
+	if len(result.Labels) > 0 {
+		apiResp.Labels = &result.Labels
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeHostname200JSONResponse{
 		JobId:   &jobUUID,
-		Results: []gen.HostnameResponse{resp},
+		Results: []gen.HostnameResponse{apiResp},
 	}, nil
 }
 
@@ -84,7 +93,7 @@ func (s *Node) getNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeHostnameResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeHostnameBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeHostnameGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeHostname500JSONResponse{
@@ -94,13 +103,20 @@ func (s *Node) getNodeHostnameBroadcast(
 
 	changed := false
 	var responses []gen.HostnameResponse
-	for _, w := range results {
+	for _, resp := range results {
+		var result struct {
+			Hostname string            `json:"hostname"`
+			Labels   map[string]string `json:"labels,omitempty"`
+		}
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &result)
+		}
 		r := gen.HostnameResponse{
-			Hostname: w.Hostname,
+			Hostname: result.Hostname,
 			Changed:  &changed,
 		}
-		if len(w.Labels) > 0 {
-			r.Labels = &w.Labels
+		if len(result.Labels) > 0 {
+			r.Labels = &result.Labels
 		}
 		responses = append(responses, r)
 	}

@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -51,7 +52,7 @@ func (s *Node) GetNodeOS(
 		return s.getNodeOSBroadcast(ctx, hostname)
 	}
 
-	jobID, osInfo, agentHostname, err := s.JobClient.QueryNodeOS(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeOSGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeOS500JSONResponse{
@@ -59,7 +60,12 @@ func (s *Node) GetNodeOS(
 		}, nil
 	}
 
-	resp := buildOSInfoResultItem(agentHostname, osInfo)
+	var osInfo host.Result
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &osInfo)
+	}
+
+	resp := buildOSInfoResultItem(rawResp.Hostname, &osInfo)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeOS200JSONResponse{
@@ -73,7 +79,7 @@ func (s *Node) getNodeOSBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeOSResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeOSBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeOSGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeOS500JSONResponse{
@@ -82,13 +88,17 @@ func (s *Node) getNodeOSBroadcast(
 	}
 
 	var responses []gen.OSInfoResultItem
-	for host, osInfo := range results {
-		responses = append(responses, *buildOSInfoResultItem(host, osInfo))
+	for hostname, resp := range results {
+		var osInfo host.Result
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &osInfo)
+		}
+		responses = append(responses, *buildOSInfoResultItem(hostname, &osInfo))
 	}
-	for host, errMsg := range errs {
+	for hostname, errMsg := range errs {
 		e := errMsg
 		responses = append(responses, gen.OSInfoResultItem{
-			Hostname: host,
+			Hostname: hostname,
 			Error:    &e,
 		})
 	}

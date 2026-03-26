@@ -105,6 +105,160 @@ func (c *Client) SetMeterProvider(
 	)
 }
 
+// Query publishes a query job to a single target and waits for the response.
+func (c *Client) Query(
+	ctx context.Context,
+	target string,
+	category string,
+	operation job.OperationType,
+	data any,
+) (string, *job.Response, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", nil, fmt.Errorf("marshal data: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  category,
+		Operation: operation,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	resp.JobID = jobID
+	return jobID, resp, nil
+}
+
+// QueryBroadcast publishes a query job to a broadcast target and collects all responses.
+func (c *Client) QueryBroadcast(
+	ctx context.Context,
+	target string,
+	category string,
+	operation job.OperationType,
+	data any,
+) (string, map[string]*job.Response, map[string]string, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeQuery,
+		Category:  category,
+		Operation: operation,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*job.Response)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+			errMsg := resp.Error
+			if errMsg == "" {
+				errMsg = string(resp.Status)
+			}
+			errs[hostname] = errMsg
+		} else {
+			results[hostname] = resp
+		}
+	}
+
+	return jobID, results, errs, nil
+}
+
+// Modify publishes a modify job to a single target and waits for the response.
+func (c *Client) Modify(
+	ctx context.Context,
+	target string,
+	category string,
+	operation job.OperationType,
+	data any,
+) (string, *job.Response, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", nil, fmt.Errorf("marshal data: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  category,
+		Operation: operation,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, resp, err := c.publishAndWait(ctx, subject, req)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
+	}
+
+	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
+	}
+
+	resp.JobID = jobID
+	return jobID, resp, nil
+}
+
+// ModifyBroadcast publishes a modify job to a broadcast target and collects all responses.
+func (c *Client) ModifyBroadcast(
+	ctx context.Context,
+	target string,
+	category string,
+	operation job.OperationType,
+	data any,
+) (string, map[string]*job.Response, map[string]string, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
+	}
+
+	req := &job.Request{
+		Type:      job.TypeModify,
+		Category:  category,
+		Operation: operation,
+		Data:      json.RawMessage(dataBytes),
+	}
+
+	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
+	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+	}
+
+	results := make(map[string]*job.Response)
+	errs := make(map[string]string)
+	for hostname, resp := range responses {
+		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+			errMsg := resp.Error
+			if errMsg == "" {
+				errMsg = string(resp.Status)
+			}
+			errs[hostname] = errMsg
+		} else {
+			results[hostname] = resp
+		}
+	}
+
+	return jobID, results, errs, nil
+}
+
 // publishAndWait stores a job in KV, publishes a notification, and waits for the agent response.
 // Returns the job ID, response, and any error.
 func (c *Client) publishAndWait(

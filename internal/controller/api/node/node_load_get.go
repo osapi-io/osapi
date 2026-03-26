@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -51,7 +52,7 @@ func (s *Node) GetNodeLoad(
 		return s.getNodeLoadBroadcast(ctx, hostname)
 	}
 
-	jobID, loadStats, agentHostname, err := s.JobClient.QueryNodeLoad(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeLoadGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLoad500JSONResponse{
@@ -59,7 +60,12 @@ func (s *Node) GetNodeLoad(
 		}, nil
 	}
 
-	resp := buildLoadResultItem(agentHostname, loadStats)
+	var loadStats load.Result
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &loadStats)
+	}
+
+	resp := buildLoadResultItem(rawResp.Hostname, &loadStats)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeLoad200JSONResponse{
@@ -73,7 +79,7 @@ func (s *Node) getNodeLoadBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeLoadResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeLoadBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeLoadGet, struct{}{})
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLoad500JSONResponse{
@@ -82,8 +88,12 @@ func (s *Node) getNodeLoadBroadcast(
 	}
 
 	var responses []gen.LoadResultItem
-	for host, loadStats := range results {
-		responses = append(responses, *buildLoadResultItem(host, loadStats))
+	for host, resp := range results {
+		var loadStats load.Result
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &loadStats)
+		}
+		responses = append(responses, *buildLoadResultItem(host, &loadStats))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

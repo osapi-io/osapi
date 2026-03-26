@@ -91,11 +91,14 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
@@ -121,11 +124,14 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
@@ -160,11 +166,14 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
-					Return(&job.Response{
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data:     nil,
@@ -197,11 +206,14 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronList(
+					Query(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCron500JSONResponse)
@@ -215,9 +227,12 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
@@ -239,6 +254,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								),
 							},
 						},
+						map[string]string{},
 						nil,
 					)
 			},
@@ -256,9 +272,12 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
@@ -283,6 +302,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Status:   job.StatusFailed,
 							},
 						},
+						map[string]string{},
 						nil,
 					)
 			},
@@ -317,9 +337,12 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryScheduleCronListBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronList,
+						nil,
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
@@ -345,7 +368,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 						gomock.Any(),
 						"_all",
 					).
-					Return("", nil, assert.AnError)
+					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCron500JSONResponse)
@@ -379,9 +402,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryScheduleCronList(gomock.Any(), "server1").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Query(gomock.Any(), "server1", "schedule", job.OperationCronList, nil).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data:     json.RawMessage(`[]`),
 					}, nil)
@@ -480,9 +502,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryScheduleCronList(gomock.Any(), "server1").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Query(gomock.Any(), "server1", "schedule", job.OperationCronList, nil).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data:     json.RawMessage(`[]`),
 					}, nil)

@@ -91,13 +91,14 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStart(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -150,12 +151,14 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStart(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerStart500JSONResponse)
@@ -170,10 +173,12 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStartBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -203,10 +208,12 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStartBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -233,10 +240,12 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStartBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -272,9 +281,8 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartValidati
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerStart(gomock.Any(), "server1", "abc123").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerStart, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -373,9 +381,8 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStartRBACHTTP
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerStart(gomock.Any(), "server1", "abc123").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerStart, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
