@@ -31,6 +31,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/file"
 )
 
@@ -49,11 +50,15 @@ var periodicIntervals = []string{"hourly", "daily", "weekly", "monthly"}
 
 var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
+// Compile-time check: Debian must satisfy FactsSetter.
+var _ provider.FactsSetter = (*Debian)(nil)
+
 // Debian implements the Provider interface for Debian-family systems.
 // It delegates file writes to a FileDeployer for SHA tracking and
 // idempotency. Managed files are identified by their presence in the
 // file-state KV, not by file content headers.
 type Debian struct {
+	provider.FactsAware
 	logger       *slog.Logger
 	fs           avfs.VFS
 	fileDeployer file.Deployer

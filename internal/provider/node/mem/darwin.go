@@ -26,6 +26,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+var _ provider.FactsSetter = (*Darwin)(nil)
+
 // Darwin implements the Mem interface for Darwin (macOS).
 type Darwin struct {
 	provider.FactsAware

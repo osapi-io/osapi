@@ -27,6 +27,9 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+// Compile-time check: Debian must satisfy FactsSetter.
+var _ provider.FactsSetter = (*Debian)(nil)
+
 // Debian implements the DNS interface for Debian.
 type Debian struct {
 	provider.FactsAware

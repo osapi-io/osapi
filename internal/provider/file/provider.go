@@ -34,6 +34,9 @@ import (
 // Compile-time interface check.
 var _ Provider = (*Service)(nil)
 
+// Compile-time check: Service must satisfy FactsSetter.
+var _ provider.FactsSetter = (*Service)(nil)
+
 // Service implements the Provider interface for file deploy and status
 // operations using NATS Object Store for content and KV for state tracking.
 type Service struct {

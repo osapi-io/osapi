@@ -135,6 +135,23 @@ Every method takes `context.Context` as the first parameter.
 Result types include `Changed bool` for mutations and `Error string`
 for per-operation error reporting.
 
+Every concrete provider struct MUST embed `provider.FactsAware` and
+include a compile-time check:
+
+```go
+// Compile-time check: Debian must satisfy FactsSetter.
+var _ provider.FactsSetter = (*Debian)(nil)
+
+type Debian struct {
+    provider.FactsAware
+    logger *slog.Logger
+    // ...
+}
+```
+
+The provider must also be passed to `provider.WireProviderFacts()`
+in `internal/agent/agent.go` so facts are injected at startup.
+
 #### Platform-Specific Implementations
 
 OSAPI follows Ansible's OS family naming. Implementations are

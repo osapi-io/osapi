@@ -26,7 +26,10 @@ import (
 	"strings"
 
 	"github.com/retr0h/osapi/internal/exec"
+	"github.com/retr0h/osapi/internal/provider"
 )
+
+var _ provider.FactsSetter = (*Darwin)(nil)
 
 // Darwin implements the Provider interface for macOS systems.
 type Darwin struct {
