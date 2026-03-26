@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -166,111 +165,80 @@ func (c *Client) CreateOrUpdateConsumer(
 	return c.natsClient.CreateOrUpdateConsumerWithConfig(ctx, streamName, consumerConfig)
 }
 
-// WriteAgentTimelineEvent writes an append-only timeline event
-// for an agent state transition.
-func (c *Client) WriteAgentTimelineEvent(
+// ListAgents reads the agent registry KV bucket and returns all registered
+// agents. Agents register via heartbeat, so only live agents appear.
+func (c *Client) ListAgents(
 	ctx context.Context,
-	hostname, event, message string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
+) ([]job.AgentInfo, error) {
+	if c.registryKV == nil {
+		return nil, fmt.Errorf("agent registry not configured")
 	}
 
-	now := time.Now()
-	key := fmt.Sprintf(
-		"timeline.%s.%s.%d",
-		job.SanitizeHostname(hostname),
-		event,
-		now.UnixNano(),
-	)
-
-	data, err := c.JSONMarshalFn(job.TimelineEvent{
-		Timestamp: now,
-		Event:     event,
-		Hostname:  hostname,
-		Message:   message,
-	})
+	keys, err := c.registryKV.Keys(ctx)
 	if err != nil {
-		return fmt.Errorf("marshal timeline event: %w", err)
+		// Keys returns jetstream.ErrNoKeysFound when the bucket is empty.
+		if err.Error() == "nats: no keys found" {
+			return []job.AgentInfo{}, nil
+		}
+		return nil, fmt.Errorf("failed to list registry keys: %w", err)
 	}
 
-	_, err = c.stateKV.Put(ctx, key, data)
-	if err != nil {
-		return fmt.Errorf("write timeline event: %w", err)
-	}
-
-	c.logger.Debug("wrote agent timeline event",
-		slog.String("hostname", hostname),
-		slog.String("event", event),
-		slog.String("key", key),
-	)
-
-	return nil
-}
-
-// GetAgentTimeline returns sorted timeline events for a hostname.
-func (c *Client) GetAgentTimeline(
-	ctx context.Context,
-	hostname string,
-) ([]job.TimelineEvent, error) {
-	if c.stateKV == nil {
-		return nil, fmt.Errorf("agent state bucket not configured")
-	}
-
-	prefix := "timeline." + job.SanitizeHostname(hostname) + "."
-
-	keys, err := c.stateKV.Keys(ctx)
-	if err != nil {
-		// No keys found is not an error for timeline
-		return []job.TimelineEvent{}, nil
-	}
-
-	var events []job.TimelineEvent
+	agents := make([]job.AgentInfo, 0, len(keys))
 	for _, key := range keys {
-		if !strings.HasPrefix(key, prefix) {
+		if !strings.HasPrefix(key, "agents.") {
 			continue
 		}
 
-		entry, err := c.stateKV.Get(ctx, key)
+		entry, err := c.registryKV.Get(ctx, key)
 		if err != nil {
 			continue
 		}
 
-		var te job.TimelineEvent
-		if err := json.Unmarshal(entry.Value(), &te); err != nil {
+		var reg job.AgentRegistration
+		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
 			continue
 		}
 
-		events = append(events, te)
+		info := agentInfoFromRegistration(&reg)
+		c.mergeFacts(ctx, &info)
+		c.overlayDrainState(ctx, &info)
+
+		agents = append(agents, info)
 	}
 
-	// Sort by timestamp
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Timestamp.Before(events[j].Timestamp)
-	})
-
-	return events, nil
+	return agents, nil
 }
 
-// ComputeAgentState returns the current state from timeline events.
-func ComputeAgentState(
-	events []job.TimelineEvent,
-) string {
-	if len(events) == 0 {
-		return job.AgentStateReady
+// GetAgent reads a single agent's registration from the KV registry by hostname.
+func (c *Client) GetAgent(
+	ctx context.Context,
+	hostname string,
+) (*job.AgentInfo, error) {
+	if c.registryKV == nil {
+		return nil, fmt.Errorf("agent registry not configured")
 	}
 
-	latest := events[len(events)-1]
-	switch latest.Event {
-	case "drain":
-		return job.AgentStateDraining
-	case "cordoned":
-		return job.AgentStateCordoned
-	case "undrain", "ready":
-		return job.AgentStateReady
-	default:
-		return job.AgentStateReady
+	key := "agents." + job.SanitizeHostname(hostname)
+	entry, err := c.registryKV.Get(ctx, key)
+	if err != nil {
+		return nil, fmt.Errorf("agent not found: %s", hostname)
 	}
+
+	var reg job.AgentRegistration
+	if err := json.Unmarshal(entry.Value(), &reg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal agent registration: %w", err)
+	}
+
+	info := agentInfoFromRegistration(&reg)
+	c.mergeFacts(ctx, &info)
+	c.overlayDrainState(ctx, &info)
+
+	timeline, err := c.GetAgentTimeline(ctx, hostname)
+	if err == nil && len(timeline) > 0 {
+		info.Timeline = timeline
+	}
+
+	return &info, nil
 }
 
 // overlayDrainState checks if a drain flag exists for the agent and
@@ -292,66 +260,56 @@ func (c *Client) overlayDrainState(
 	}
 }
 
-// CheckDrainFlag returns true if the drain flag exists for the hostname.
-func (c *Client) CheckDrainFlag(
+// mergeFacts reads facts from the facts KV bucket and merges them into the
+// AgentInfo. If factsKV is nil or the read fails, this is a no-op.
+func (c *Client) mergeFacts(
 	ctx context.Context,
-	hostname string,
-) bool {
-	if c.stateKV == nil {
-		return false
+	info *job.AgentInfo,
+) {
+	if c.factsKV == nil {
+		return
 	}
 
-	key := "drain." + job.SanitizeHostname(hostname)
-	_, err := c.stateKV.Get(ctx, key)
-	return err == nil
+	key := "facts." + job.SanitizeHostname(info.Hostname)
+	entry, err := c.factsKV.Get(ctx, key)
+	if err != nil {
+		return
+	}
+
+	var facts job.FactsRegistration
+	if err := json.Unmarshal(entry.Value(), &facts); err != nil {
+		return
+	}
+
+	info.Architecture = facts.Architecture
+	info.KernelVersion = facts.KernelVersion
+	info.CPUCount = facts.CPUCount
+	info.FQDN = facts.FQDN
+	info.ServiceMgr = facts.ServiceMgr
+	info.PackageMgr = facts.PackageMgr
+	info.Interfaces = facts.Interfaces
+	info.PrimaryInterface = facts.PrimaryInterface
+	info.Routes = facts.Routes
+	info.Facts = facts.Facts
 }
 
-// SetDrainFlag writes the drain flag for an agent in the state KV bucket.
-// The agent detects this flag on heartbeat and stops accepting jobs.
-func (c *Client) SetDrainFlag(
-	ctx context.Context,
-	hostname string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
+// agentInfoFromRegistration maps an AgentRegistration to an AgentInfo.
+func agentInfoFromRegistration(
+	reg *job.AgentRegistration,
+) job.AgentInfo {
+	return job.AgentInfo{
+		Hostname:     reg.Hostname,
+		Labels:       reg.Labels,
+		RegisteredAt: reg.RegisteredAt,
+		StartedAt:    reg.StartedAt,
+		OSInfo:       reg.OSInfo,
+		Uptime:       reg.Uptime,
+		LoadAverages: reg.LoadAverages,
+		MemoryStats:  reg.MemoryStats,
+		AgentVersion: reg.AgentVersion,
+		Conditions:   reg.Conditions,
+		State:        reg.State,
 	}
-
-	key := "drain." + job.SanitizeHostname(hostname)
-	_, err := c.stateKV.Put(ctx, key, []byte("1"))
-	if err != nil {
-		return fmt.Errorf("set drain flag: %w", err)
-	}
-
-	c.logger.Debug("set drain flag",
-		slog.String("hostname", hostname),
-		slog.String("key", key),
-	)
-
-	return nil
-}
-
-// DeleteDrainFlag removes the drain flag for an agent from the state KV bucket.
-// The agent detects this on heartbeat and resumes accepting jobs.
-func (c *Client) DeleteDrainFlag(
-	ctx context.Context,
-	hostname string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
-	}
-
-	key := "drain." + job.SanitizeHostname(hostname)
-	err := c.stateKV.Delete(ctx, key)
-	if err != nil {
-		return fmt.Errorf("delete drain flag: %w", err)
-	}
-
-	c.logger.Debug("deleted drain flag",
-		slog.String("hostname", hostname),
-		slog.String("key", key),
-	)
-
-	return nil
 }
 
 // sanitizeKeyForNATS sanitizes a string for use as a NATS key.

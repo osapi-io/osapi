@@ -55,7 +55,13 @@ func (s *Schedule) DeleteNodeScheduleCron(
 		return s.deleteNodeScheduleCronBroadcast(ctx, hostname, name)
 	}
 
-	resp, err := s.JobClient.ModifyScheduleCronDelete(ctx, hostname, name)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"schedule",
+		job.OperationCronDelete,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
@@ -69,7 +75,7 @@ func (s *Schedule) DeleteNodeScheduleCron(
 		_ = json.Unmarshal(resp.Data, &result)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	resultName := result.Name
 	agentHostname := resp.Hostname
@@ -92,7 +98,13 @@ func (s *Schedule) deleteNodeScheduleCronBroadcast(
 	target string,
 	name string,
 ) (gen.DeleteNodeScheduleCronResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyScheduleCronDeleteBroadcast(ctx, target, name)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronDelete,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil

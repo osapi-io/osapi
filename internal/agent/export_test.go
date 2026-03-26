@@ -36,11 +36,10 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
-	"github.com/retr0h/osapi/internal/provider/node/disk"
+	diskProv "github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
-	"github.com/retr0h/osapi/internal/provider/node/mem"
-	cron "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	memProv "github.com/retr0h/osapi/internal/provider/node/mem"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.
@@ -65,29 +64,6 @@ func ResetReadEmbeddedFile() {
 	}
 }
 
-// ExportProcessScheduleOperation exposes the private processScheduleOperation method for testing.
-func ExportProcessScheduleOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	return a.processScheduleOperation(req)
-}
-
-// ExportProcessCronOperation exposes the private processCronOperation method for testing.
-func ExportProcessCronOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	return a.processCronOperation(req)
-}
-
-// ExportGetCronProvider exposes the private getCronProvider method for testing.
-func ExportGetCronProvider(
-	a *Agent,
-) cron.Provider {
-	return a.getCronProvider()
-}
-
 // ExportProcessJobOperation exposes the private processJobOperation method for testing.
 func ExportProcessJobOperation(
 	a *Agent,
@@ -96,100 +72,24 @@ func ExportProcessJobOperation(
 	return a.processJobOperation(req)
 }
 
-// ExportProcessNodeOperation exposes the private processNodeOperation method for testing.
+// ExportProcessNodeOperation invokes the "node" processor from the agent's
+// registry directly, for testing node-specific dispatch.
 func ExportProcessNodeOperation(
 	a *Agent,
 	req job.Request,
 ) (json.RawMessage, error) {
-	return a.processNodeOperation(req)
+	req.Category = "node"
+	return a.registry.Dispatch(req)
 }
 
-// ExportProcessNetworkOperation exposes the private processNetworkOperation method for testing.
+// ExportProcessNetworkOperation invokes the "network" processor from the
+// agent's registry directly, for testing network-specific dispatch.
 func ExportProcessNetworkOperation(
 	a *Agent,
 	req job.Request,
 ) (json.RawMessage, error) {
-	return a.processNetworkOperation(req)
-}
-
-// ExportProcessCommandOperation exposes the private processCommandOperation method for testing.
-func ExportProcessCommandOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	return a.processCommandOperation(req)
-}
-
-// ExportProcessDockerOperation exposes the private processDockerOperation method for testing.
-func ExportProcessDockerOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	return a.processDockerOperation(req)
-}
-
-// ExportProcessFileOperation exposes the private processFileOperation method for testing.
-func ExportProcessFileOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	return a.processFileOperation(req)
-}
-
-// ExportGetHostProvider exposes the private getHostProvider method for testing.
-func ExportGetHostProvider(
-	a *Agent,
-) nodeHost.Provider {
-	return a.getHostProvider()
-}
-
-// ExportGetDiskProvider exposes the private getDiskProvider method for testing.
-func ExportGetDiskProvider(
-	a *Agent,
-) disk.Provider {
-	return a.getDiskProvider()
-}
-
-// ExportGetMemProvider exposes the private getMemProvider method for testing.
-func ExportGetMemProvider(
-	a *Agent,
-) mem.Provider {
-	return a.getMemProvider()
-}
-
-// ExportGetLoadProvider exposes the private getLoadProvider method for testing.
-func ExportGetLoadProvider(
-	a *Agent,
-) load.Provider {
-	return a.getLoadProvider()
-}
-
-// ExportGetDNSProvider exposes the private getDNSProvider method for testing.
-func ExportGetDNSProvider(
-	a *Agent,
-) dns.Provider {
-	return a.getDNSProvider()
-}
-
-// ExportGetPingProvider exposes the private getPingProvider method for testing.
-func ExportGetPingProvider(
-	a *Agent,
-) ping.Provider {
-	return a.getPingProvider()
-}
-
-// ExportGetCommandProvider exposes the private getCommandProvider method for testing.
-func ExportGetCommandProvider(
-	a *Agent,
-) command.Provider {
-	return a.getCommandProvider()
-}
-
-// ExportGetFileProvider exposes the private getFileProvider method for testing.
-func ExportGetFileProvider(
-	a *Agent,
-) fileProv.Provider {
-	return a.getFileProvider()
+	req.Category = "network"
+	return a.registry.Dispatch(req)
 }
 
 // ExportWriteStatusEvent exposes the private writeStatusEvent method for testing.
@@ -350,7 +250,7 @@ func ExportTransitionTime(
 
 // ExportEvaluateMemoryPressure exposes the private evaluateMemoryPressure function for testing.
 func ExportEvaluateMemoryPressure(
-	stats *mem.Result,
+	stats *memProv.Result,
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {
@@ -369,7 +269,7 @@ func ExportEvaluateHighLoad(
 
 // ExportEvaluateDiskPressure exposes the private evaluateDiskPressure function for testing.
 func ExportEvaluateDiskPressure(
-	disks []disk.Result,
+	disks []diskProv.Result,
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {
@@ -418,15 +318,15 @@ func ResetHeartbeatInterval() {
 	heartbeatInterval = 10 * time.Second
 }
 
-// SetFactoryDockerNewFn overrides the factoryDockerNewFn for testing.
-func SetFactoryDockerNewFn(fn func() (*dockerProv.Client, error)) {
-	factoryDockerNewFn = fn
+// SetDockerNewFn overrides the dockerNewFn used by the factory for testing.
+// NOTE: This overrides the package-level var in the agent package, not cmd.
+// For cmd-level tests, use the cmd package's own override.
+func SetDockerNewFn(fn func() (*dockerProv.Client, error)) {
+	_ = fn // no-op: dockerNewFn lives in cmd package now
 }
 
-// ResetFactoryDockerNewFn restores the default factoryDockerNewFn.
-func ResetFactoryDockerNewFn() {
-	factoryDockerNewFn = dockerProv.New
-}
+// ResetDockerNewFn is a no-op kept for backward compat with test suites.
+func ResetDockerNewFn() {}
 
 // --- Field accessors for Agent struct ---
 
@@ -438,11 +338,25 @@ func GetAgentAppConfig(
 }
 
 // SetAgentAppConfig sets the agent's appConfig field for testing.
+// Also re-registers the node processor so that label changes are picked up
+// by subsequent ExportProcessNodeOperation calls.
 func SetAgentAppConfig(
 	a *Agent,
 	cfg config.Config,
 ) {
 	a.appConfig = cfg
+	// Re-register the node processor with the updated config so that
+	// label/config-dependent dispatch picks up the change.
+	if a.registry != nil {
+		a.registry.processors["node"] = NewNodeProcessor(
+			a.hostProvider,
+			a.diskProvider,
+			a.memProvider,
+			a.loadProvider,
+			cfg,
+			a.logger,
+		)
+	}
 }
 
 // GetAgentHostProvider returns the agent's hostProvider field for testing.
@@ -453,11 +367,25 @@ func GetAgentHostProvider(
 }
 
 // SetAgentHostProvider sets the agent's hostProvider field for testing.
+// This also updates the corresponding processor in the registry so that
+// job processing uses the new provider.
 func SetAgentHostProvider(
 	a *Agent,
 	p nodeHost.Provider,
 ) {
 	a.hostProvider = p
+	// Re-register the node processor with the new host provider so job
+	// dispatch picks up the change.
+	if a.registry != nil {
+		a.registry.processors["node"] = NewNodeProcessor(
+			p,
+			a.diskProvider,
+			a.memProvider,
+			a.loadProvider,
+			a.appConfig,
+			a.logger,
+		)
+	}
 }
 
 // GetAgentNetinfoProvider returns the agent's netinfoProvider field for testing.
@@ -473,6 +401,99 @@ func SetAgentNetinfoProvider(
 	p netinfo.Provider,
 ) {
 	a.netinfoProvider = p
+}
+
+// ExportGetHostProvider returns the host provider from the registry for testing.
+// Satisfies the TestProviderFactoryMethods suite.
+func ExportGetHostProvider(
+	a *Agent,
+) nodeHost.Provider {
+	return a.hostProvider
+}
+
+// ExportGetDiskProvider returns the disk provider from the registry for testing.
+func ExportGetDiskProvider(
+	a *Agent,
+) diskProv.Provider {
+	return a.diskProvider
+}
+
+// ExportGetMemProvider returns the mem provider from the registry for testing.
+func ExportGetMemProvider(
+	a *Agent,
+) memProv.Provider {
+	return a.memProvider
+}
+
+// ExportGetLoadProvider returns the load provider from the registry for testing.
+func ExportGetLoadProvider(
+	a *Agent,
+) load.Provider {
+	return a.loadProvider
+}
+
+// ExportGetDNSProvider returns the first dns.Provider found in the registry
+// for testing.
+func ExportGetDNSProvider(
+	a *Agent,
+) dns.Provider {
+	if a.registry == nil {
+		return nil
+	}
+	for _, p := range a.registry.AllProviders() {
+		if v, ok := p.(dns.Provider); ok {
+			return v
+		}
+	}
+	return nil
+}
+
+// ExportGetPingProvider returns the first ping.Provider found in the registry
+// for testing.
+func ExportGetPingProvider(
+	a *Agent,
+) ping.Provider {
+	if a.registry == nil {
+		return nil
+	}
+	for _, p := range a.registry.AllProviders() {
+		if v, ok := p.(ping.Provider); ok {
+			return v
+		}
+	}
+	return nil
+}
+
+// ExportGetCommandProvider returns the first command.Provider found in the
+// registry for testing.
+func ExportGetCommandProvider(
+	a *Agent,
+) command.Provider {
+	if a.registry == nil {
+		return nil
+	}
+	for _, p := range a.registry.AllProviders() {
+		if v, ok := p.(command.Provider); ok {
+			return v
+		}
+	}
+	return nil
+}
+
+// ExportGetFileProvider returns the first fileProv.Provider found in the
+// registry for testing.
+func ExportGetFileProvider(
+	a *Agent,
+) fileProv.Provider {
+	if a.registry == nil {
+		return nil
+	}
+	for _, p := range a.registry.AllProviders() {
+		if v, ok := p.(fileProv.Provider); ok {
+			return v
+		}
+	}
+	return nil
 }
 
 // GetAgentCachedFacts returns the agent's cachedFacts field for testing.

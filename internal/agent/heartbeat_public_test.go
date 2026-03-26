@@ -134,27 +134,23 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					Return(context.Canceled).
 					Times(8)
 
-				return agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					processMocks.NewDefaultMockProvider(s.mockCtrl),
-					s.mockKV,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           s.appFs,
+					appConfig:       s.appConfig,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+					registryKV:      s.mockKV,
+				})
 			},
 			stopFunc: func(a *agent.Agent) {
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -177,27 +173,21 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					Return(context.Canceled).
 					Times(8)
 
-				return agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           s.appFs,
+					appConfig:       s.appConfig,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+				})
 			},
 			stopFunc: func(a *agent.Agent) {
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -243,27 +233,21 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 	}
 
 	// Use DefaultMockProviders so provider calls during writeRegistration are satisfied.
-	s.testAgent = agent.New(
-		memfs.New(),
-		appConfig,
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewDefaultMockProvider(s.mockCtrl),
-		diskMocks.NewDefaultMockProvider(s.mockCtrl),
-		memMocks.NewDefaultMockProvider(s.mockCtrl),
-		loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-		pingMocks.NewDefaultMockProvider(s.mockCtrl),
-		netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-		commandMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-		nil,
-		processMocks.NewDefaultMockProvider(s.mockCtrl),
-		s.mockKV,
-		nil,
-	)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		appConfig:       appConfig,
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+		registryKV:      s.mockKV,
+	})
 	agent.SetAgentState(s.testAgent, job.AgentStateReady)
 
 	// writeRegistration now calls handleDrainDetection which checks drain flag.

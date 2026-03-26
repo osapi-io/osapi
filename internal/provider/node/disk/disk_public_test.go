@@ -93,60 +93,6 @@ func (suite *DiskPublicTestSuite) TestIsPermissionError() {
 	}
 }
 
-func (suite *DiskPublicTestSuite) TestIsPermissionErrorDarwin() {
-	tests := []struct {
-		name string
-		err  error
-		want bool
-	}{
-		{
-			name: "when error is EACCES wrapped in os.PathError",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/restricted",
-				Err:  syscall.EACCES,
-			},
-			want: true,
-		},
-		{
-			name: "when error is a different syscall errno",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/file",
-				Err:  syscall.EPERM, // Not EACCES.
-			},
-			want: false,
-		},
-		{
-			name: "when error is not a PathError",
-			err:  errors.New("some other error"),
-			want: false,
-		},
-		{
-			name: "when PathError contains non-syscall error",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/file",
-				Err:  errors.New("some random error"),
-			},
-			want: false,
-		},
-		{
-			name: "when error is nil",
-			err:  nil,
-			want: false,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			got := disk.ExportIsPermissionErrorDarwin(tc.err)
-
-			suite.Equal(tc.want, got)
-		})
-	}
-}
-
 func TestDiskPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(DiskPublicTestSuite))
 }

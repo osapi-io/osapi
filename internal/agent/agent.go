@@ -34,17 +34,11 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/command"
-	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
-	fileProv "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
-	"github.com/retr0h/osapi/internal/provider/node/host"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
@@ -55,18 +49,13 @@ func New(
 	logger *slog.Logger,
 	jobClient client.JobClient,
 	streamName string,
-	hostProvider host.Provider,
+	hostProvider nodeHost.Provider,
 	diskProvider disk.Provider,
 	memProvider mem.Provider,
 	loadProvider load.Provider,
-	dnsProvider dns.Provider,
-	pingProvider ping.Provider,
 	netinfoProvider netinfo.Provider,
-	commandProvider command.Provider,
-	fileProvider fileProv.Provider,
-	dockerProvider dockerProv.Provider,
-	cronProvider cronProv.Provider,
 	processProvider process.Provider,
+	registry *ProviderRegistry,
 	registryKV jetstream.KeyValue,
 	factsKV jetstream.KeyValue,
 ) *Agent {
@@ -82,14 +71,9 @@ func New(
 		diskProvider:    diskProvider,
 		memProvider:     memProvider,
 		loadProvider:    loadProvider,
-		dnsProvider:     dnsProvider,
-		pingProvider:    pingProvider,
 		netinfoProvider: netinfoProvider,
-		commandProvider: commandProvider,
-		fileProvider:    fileProvider,
-		dockerProvider:  dockerProvider,
-		cronProvider:    cronProvider,
 		processProvider: processProvider,
+		registry:        registry,
 		registryKV:      registryKV,
 		factsKV:         factsKV,
 		heartbeatLogger: logger.With(slog.String("subsystem", "heartbeat")),
@@ -98,20 +82,9 @@ func New(
 
 	// Wire agent facts into all providers so they can access the latest
 	// facts at execution time (e.g., for template rendering).
-	provider.WireProviderFacts(
-		a.GetFacts,
-		hostProvider,
-		diskProvider,
-		memProvider,
-		loadProvider,
-		dnsProvider,
-		pingProvider,
-		netinfoProvider,
-		commandProvider,
-		fileProvider,
-		dockerProvider,
-		cronProvider,
-	)
+	if registry != nil {
+		provider.WireProviderFacts(a.GetFacts, registry.AllProviders()...)
+	}
 
 	return a
 }

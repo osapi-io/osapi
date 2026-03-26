@@ -27,11 +27,3 @@ func ExportIsPermissionError(
 ) bool {
 	return isPermissionError(err)
 }
-
-// ExportIsPermissionErrorDarwin exposes the private isPermissionErrorDarwin
-// for testing.
-func ExportIsPermissionErrorDarwin(
-	err error,
-) bool {
-	return isPermissionErrorDarwin(err)
-}

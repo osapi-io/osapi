@@ -71,13 +71,19 @@ func (s *Container) DeleteNodeContainerDockerImage(
 		return s.deleteNodeContainerDockerImageRemoveBroadcast(ctx, hostname, imageName, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerImageRemove(ctx, hostname, data)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerImageRemove,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "image removed"
 
@@ -101,7 +107,13 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	imageName string,
 	data *job.DockerImageRemoveData,
 ) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerImageRemoveBroadcast(ctx, target, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerImageRemove,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil

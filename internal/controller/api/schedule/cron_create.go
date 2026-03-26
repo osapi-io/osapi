@@ -79,7 +79,13 @@ func (s *Schedule) PostNodeScheduleCron(
 		return s.postNodeScheduleCronCreateBroadcast(ctx, hostname, entry)
 	}
 
-	resp, err := s.JobClient.ModifyScheduleCronCreate(ctx, hostname, entry)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"schedule",
+		job.OperationCronCreate,
+		entry,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
@@ -90,7 +96,7 @@ func (s *Schedule) PostNodeScheduleCron(
 		_ = json.Unmarshal(resp.Data, &result)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	name := result.Name
 	agentHostname := resp.Hostname
@@ -113,7 +119,13 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 	target string,
 	entry cronProv.Entry,
 ) (gen.PostNodeScheduleCronResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyScheduleCronCreateBroadcast(ctx, target, entry)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronCreate,
+		entry,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil

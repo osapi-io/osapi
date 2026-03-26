@@ -71,14 +71,31 @@ func (s *Container) PostNodeContainerDockerExec(
 		return s.postNodeContainerDockerExecBroadcast(ctx, hostname, id, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerExec(ctx, hostname, id, data)
+	execData := struct {
+		ID         string            `json:"id"`
+		Command    []string          `json:"command"`
+		Env        map[string]string `json:"env,omitempty"`
+		WorkingDir string            `json:"working_dir,omitempty"`
+	}{
+		ID:         id,
+		Command:    data.Command,
+		Env:        data.Env,
+		WorkingDir: data.WorkingDir,
+	}
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerExec,
+		execData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
 	item := dockerExecItemFromResponse(resp)
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.PostNodeContainerDockerExec202JSONResponse{
 		JobId:   &jobUUID,
@@ -119,7 +136,24 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 	id string,
 	data *job.DockerExecData,
 ) (gen.PostNodeContainerDockerExecResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerExecBroadcast(ctx, target, id, data)
+	execData := struct {
+		ID         string            `json:"id"`
+		Command    []string          `json:"command"`
+		Env        map[string]string `json:"env,omitempty"`
+		WorkingDir string            `json:"working_dir,omitempty"`
+	}{
+		ID:         id,
+		Command:    data.Command,
+		Env:        data.Env,
+		WorkingDir: data.WorkingDir,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerExec,
+		execData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil

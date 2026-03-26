@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
@@ -77,6 +79,11 @@ func (s *FileStatusPostPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func marshalStatusResult(r file.StatusResult) json.RawMessage {
+	b, _ := json.Marshal(r)
+	return b
+}
+
 func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 	tests := []struct {
 		name         string
@@ -94,19 +101,23 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryFileStatus(
+					Query(
 						gomock.Any(),
 						"_any",
-						"/etc/nginx/nginx.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&file.StatusResult{
-							Path:   "/etc/nginx/nginx.conf",
-							Status: "in-sync",
-							SHA256: "abc123def456",
+						&job.Response{
+							Hostname: "agent1",
+							Data: marshalStatusResult(file.StatusResult{
+								Path:   "/etc/nginx/nginx.conf",
+								Status: "in-sync",
+								SHA256: "abc123def456",
+							}),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -136,18 +147,22 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryFileStatus(
+					Query(
 						gomock.Any(),
 						"_any",
-						"/etc/missing.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&file.StatusResult{
-							Path:   "/etc/missing.conf",
-							Status: "missing",
+						&job.Response{
+							Hostname: "agent1",
+							Data: marshalStatusResult(file.StatusResult{
+								Path:   "/etc/missing.conf",
+								Status: "missing",
+							}),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -202,18 +217,29 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 				},
 			},
 			setupMock: func() {
-				path := "/etc/nginx/nginx.conf"
 				s.mockJobClient.EXPECT().
-					QueryFileStatusBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
-						"/etc/nginx/nginx.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*file.StatusResult{
-							"agent1": {Path: path, Status: "in-sync", SHA256: "abc123"},
-							"agent2": {Path: path, Status: "missing"},
+						map[string]*job.Response{
+							"agent1": {
+								Hostname: "agent1",
+								Data: marshalStatusResult(file.StatusResult{
+									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
+								}),
+							},
+							"agent2": {
+								Hostname: "agent2",
+								Data: marshalStatusResult(file.StatusResult{
+									Path: "/etc/nginx/nginx.conf", Status: "missing",
+								}),
+							},
 						},
 						map[string]string{},
 						nil,
@@ -235,17 +261,23 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 				},
 			},
 			setupMock: func() {
-				path := "/etc/nginx/nginx.conf"
 				s.mockJobClient.EXPECT().
-					QueryFileStatusBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
-						"/etc/nginx/nginx.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*file.StatusResult{
-							"agent1": {Path: path, Status: "in-sync", SHA256: "abc123"},
+						map[string]*job.Response{
+							"agent1": {
+								Hostname: "agent1",
+								Data: marshalStatusResult(file.StatusResult{
+									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
+								}),
+							},
 						},
 						map[string]string{"agent2": "permission denied"},
 						nil,
@@ -276,10 +308,12 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryFileStatusBroadcast(
+					QueryBroadcast(
 						gomock.Any(),
 						"_all",
-						"/etc/nginx/nginx.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -298,12 +332,14 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryFileStatus(
+					Query(
 						gomock.Any(),
 						"_any",
-						"/etc/nginx/nginx.conf",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
 					).
-					Return("", nil, "", assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
@@ -339,12 +375,15 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryFileStatus(gomock.Any(), "server1", "/etc/nginx/nginx.conf").
-					Return("550e8400-e29b-41d4-a716-446655440000", &file.StatusResult{
-						Path:   "/etc/nginx/nginx.conf",
-						Status: "in-sync",
-						SHA256: "abc123",
-					}, "agent1", nil)
+					Query(gomock.Any(), "server1", "file", job.OperationFileStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data: marshalStatusResult(file.StatusResult{
+							Path:   "/etc/nginx/nginx.conf",
+							Status: "in-sync",
+							SHA256: "abc123",
+						}),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -456,15 +495,17 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryFileStatus(gomock.Any(), "server1", "/etc/nginx/nginx.conf").
+					Query(gomock.Any(), "server1", "file", job.OperationFileStatusGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&file.StatusResult{
-							Path:   "/etc/nginx/nginx.conf",
-							Status: "in-sync",
-							SHA256: "abc123",
+						&job.Response{
+							Hostname: "agent1",
+							Data: marshalStatusResult(file.StatusResult{
+								Path:   "/etc/nginx/nginx.conf",
+								Status: "in-sync",
+								SHA256: "abc123",
+							}),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

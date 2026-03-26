@@ -26,19 +26,12 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
-	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
-	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
-	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
-	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
@@ -61,32 +54,6 @@ func (s *ProcessorSchedulePublicTestSuite) SetupTest() {
 
 func (s *ProcessorSchedulePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-}
-
-func (s *ProcessorSchedulePublicTestSuite) newAgentWithCronMock(
-	cronProvider cron.Provider,
-) *agent.Agent {
-	return agent.New(
-		memfs.New(),
-		config.Config{},
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewPlainMockProvider(s.mockCtrl),
-		diskMocks.NewPlainMockProvider(s.mockCtrl),
-		memMocks.NewPlainMockProvider(s.mockCtrl),
-		loadMocks.NewPlainMockProvider(s.mockCtrl),
-		dnsMocks.NewPlainMockProvider(s.mockCtrl),
-		pingMocks.NewPlainMockProvider(s.mockCtrl),
-		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-		commandMocks.NewPlainMockProvider(s.mockCtrl),
-		fileMocks.NewPlainMockProvider(s.mockCtrl),
-		nil,
-		cronProvider,
-		nil,
-		nil,
-		nil,
-	)
 }
 
 func (s *ProcessorSchedulePublicTestSuite) TestProcessScheduleOperation() {
@@ -148,14 +115,13 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessScheduleOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var a *agent.Agent
+			var cronProvider cron.Provider
 			if tt.setupMock != nil {
-				a = s.newAgentWithCronMock(tt.setupMock())
-			} else {
-				a = s.newAgentWithCronMock(nil)
+				cronProvider = tt.setupMock()
 			}
 
-			result, err := agent.ExportProcessScheduleOperation(a, tt.jobRequest)
+			processor := agent.NewScheduleProcessor(cronProvider, slog.Default())
+			result, err := processor(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -496,9 +462,8 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := s.newAgentWithCronMock(tt.setupMock())
-
-			result, err := agent.ExportProcessCronOperation(a, tt.jobRequest)
+			processor := agent.NewScheduleProcessor(tt.setupMock(), slog.Default())
+			result, err := processor(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -510,43 +475,6 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				if tt.validate != nil {
 					tt.validate(result)
 				}
-			}
-		})
-	}
-}
-
-func (s *ProcessorSchedulePublicTestSuite) TestGetCronProvider() {
-	tests := []struct {
-		name      string
-		setupMock func() cron.Provider
-		expectNil bool
-	}{
-		{
-			name: "returns injected provider",
-			setupMock: func() cron.Provider {
-				return cronMocks.NewMockProvider(s.mockCtrl)
-			},
-			expectNil: false,
-		},
-		{
-			name: "returns nil when no provider",
-			setupMock: func() cron.Provider {
-				return nil
-			},
-			expectNil: true,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			a := s.newAgentWithCronMock(tt.setupMock())
-
-			provider := agent.ExportGetCronProvider(a)
-
-			if tt.expectNil {
-				s.Nil(provider)
-			} else {
-				s.NotNil(provider)
 			}
 		})
 	}
@@ -599,7 +527,14 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessJobOperationScheduleCatego
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := s.newAgentWithCronMock(tt.setupMock())
+			a := newTestAgent(newTestAgentParams{
+				jobClient:    s.mockJobClient,
+				hostProvider: hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskProvider: diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memProvider:  memMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadProvider: loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				cronProvider: tt.setupMock(),
+			})
 
 			result, err := agent.ExportProcessJobOperation(a, tt.jobRequest)
 

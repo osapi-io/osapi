@@ -210,6 +210,32 @@ const config: Config = {
               docId: 'sidebar/sdk/client/node'
             },
             {
+              type: 'doc',
+              label: 'Cron',
+              docId: 'sidebar/sdk/client/cron'
+            },
+            {
+              type: 'doc',
+              label: 'Docker',
+              docId: 'sidebar/sdk/client/docker'
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.3rem 0;">',
+              className: 'dropdown-separator'
+            },
+            {
+              type: 'html',
+              value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Platform</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Detection',
+              docId: 'sidebar/sdk/platform/detection'
+            },
+            {
               type: 'html',
               value: '<hr style="margin: 0.3rem 0;">',
               className: 'dropdown-separator'

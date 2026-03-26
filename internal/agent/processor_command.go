@@ -23,31 +23,36 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/command"
 )
 
-// processCommandOperation handles command-related operations.
-func (a *Agent) processCommandOperation(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	// Extract base operation from dotted operation (e.g., "exec.execute" -> "exec")
-	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
+// NewCommandProcessor returns a ProcessorFunc that handles command-related operations.
+func NewCommandProcessor(
+	commandProvider command.Provider,
+	_ *slog.Logger,
+) ProcessorFunc {
+	return func(req job.Request) (json.RawMessage, error) {
+		// Extract base operation from dotted operation (e.g., "exec.execute" -> "exec")
+		baseOperation := strings.Split(req.Operation, ".")[0]
 
-	switch baseOperation {
-	case "exec":
-		return a.processCommandExec(jobRequest)
-	case "shell":
-		return a.processCommandShell(jobRequest)
-	default:
-		return nil, fmt.Errorf("unsupported command operation: %s", jobRequest.Operation)
+		switch baseOperation {
+		case "exec":
+			return processCommandExec(commandProvider, req)
+		case "shell":
+			return processCommandShell(commandProvider, req)
+		default:
+			return nil, fmt.Errorf("unsupported command operation: %s", req.Operation)
+		}
 	}
 }
 
 // processCommandExec handles direct command execution.
-func (a *Agent) processCommandExec(
+func processCommandExec(
+	commandProvider command.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var execData job.CommandExecData
@@ -55,7 +60,6 @@ func (a *Agent) processCommandExec(
 		return nil, fmt.Errorf("failed to parse command exec data: %w", err)
 	}
 
-	commandProvider := a.getCommandProvider()
 	result, err := commandProvider.Exec(command.ExecParams{
 		Command: execData.Command,
 		Args:    execData.Args,
@@ -70,7 +74,8 @@ func (a *Agent) processCommandExec(
 }
 
 // processCommandShell handles shell command execution.
-func (a *Agent) processCommandShell(
+func processCommandShell(
+	commandProvider command.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var shellData job.CommandShellData
@@ -78,7 +83,6 @@ func (a *Agent) processCommandShell(
 		return nil, fmt.Errorf("failed to parse command shell data: %w", err)
 	}
 
-	commandProvider := a.getCommandProvider()
 	result, err := commandProvider.Shell(command.ShellParams{
 		Command: shellData.Command,
 		Cwd:     shellData.Cwd,

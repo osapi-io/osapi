@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -87,11 +88,15 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			name:    "success",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				data, _ := json.Marshal(map[string]any{
+					"hostname": "my-hostname",
+					"labels":   map[string]string{"group": "web"},
+				})
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", "my-hostname", &job.AgentInfo{
+					Query(gomock.Any(), "_any", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Labels:   map[string]string{"group": "web"},
+						Data:     json.RawMessage(data),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -109,10 +114,14 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			name:    "empty hostname falls back to agent hostname",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				data, _ := json.Marshal(map[string]any{
+					"hostname": "",
+				})
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", "", &job.AgentInfo{
+					Query(gomock.Any(), "_any", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
+						Data:     json.RawMessage(data),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -138,8 +147,8 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostname(gomock.Any(), "_any").
-					Return("", "", nil, assert.AnError)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
 				_, ok := resp.(gen.GetNodeHostname500JSONResponse)
@@ -150,11 +159,18 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			name:    "broadcast all success",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				data1, _ := json.Marshal(map[string]any{
+					"hostname": "host1",
+					"labels":   map[string]string{"group": "web"},
+				})
+				data2, _ := json.Marshal(map[string]any{
+					"hostname": "host2",
+				})
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
-						"server1": {Hostname: "host1", Labels: map[string]string{"group": "web"}},
-						"server2": {Hostname: "host2"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -171,10 +187,13 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				data1, _ := json.Marshal(map[string]any{
+					"hostname": "host1",
+				})
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
-						"server1": {Hostname: "host1"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "interface not found",
 					}, nil)
@@ -199,7 +218,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -243,10 +262,14 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 			path: "/node/server1/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(map[string]any{
+					"hostname": "default-hostname",
+				})
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), "server1").
-					Return("550e8400-e29b-41d4-a716-446655440000", "default-hostname", &job.AgentInfo{
+					Query(gomock.Any(), "server1", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
+						Data:     json.RawMessage(data),
 					}, nil)
 				return mock
 			},
@@ -259,8 +282,8 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), "server1").
-					Return("", "", nil, assert.AnError)
+					Query(gomock.Any(), "server1", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -271,11 +294,13 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 			path: "/node/_all/hostname",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data1, _ := json.Marshal(map[string]any{"hostname": "host1"})
+				data2, _ := json.Marshal(map[string]any{"hostname": "host2"})
 				mock.EXPECT().
-					QueryNodeHostnameBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.AgentInfo{
-						"server1": {Hostname: "host1"},
-						"server2": {Hostname: "host2"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 				return mock
 			},
@@ -365,12 +390,15 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(map[string]any{"hostname": "test-host"})
 				mock.EXPECT().
-					QueryNodeHostname(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeHostnameGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"test-host",
-						&job.AgentInfo{Hostname: "agent1"},
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock

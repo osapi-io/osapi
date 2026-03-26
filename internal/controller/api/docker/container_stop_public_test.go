@@ -93,14 +93,14 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStop(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -129,14 +129,14 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStop(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -200,13 +200,14 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStop(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerStop500JSONResponse)
@@ -222,10 +223,11 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStopBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -257,10 +259,11 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStopBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -289,10 +292,11 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyDockerStopBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"abc123",
+						"docker",
+						job.OperationDockerStop,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
@@ -331,9 +335,8 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopValidation
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerStop(gomock.Any(), "server1", "abc123", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerStop, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)
@@ -448,9 +451,8 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStopRBACHTTP()
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyDockerStop(gomock.Any(), "server1", "abc123", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerStop, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
 					}, nil)

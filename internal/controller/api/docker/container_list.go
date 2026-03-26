@@ -65,14 +65,14 @@ func (s *Container) GetNodeContainerDocker(
 		return s.getNodeContainerDockerListBroadcast(ctx, hostname, data)
 	}
 
-	resp, err := s.JobClient.QueryDockerList(ctx, hostname, data)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "docker", job.OperationDockerList, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
 	summaries := dockerSummariesFromResponse(resp)
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 
 	return gen.GetNodeContainerDocker200JSONResponse{
@@ -127,7 +127,13 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 	target string,
 	data *job.DockerListData,
 ) (gen.GetNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryDockerListBroadcast(ctx, target, data)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerList,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil

@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -50,7 +51,13 @@ func (s *Node) GetNodeUptime(
 		return s.getNodeUptimeBroadcast(ctx, hostname)
 	}
 
-	jobID, uptimeResp, agentHostname, err := s.JobClient.QueryNodeUptime(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeUptimeGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeUptime500JSONResponse{
@@ -58,7 +65,12 @@ func (s *Node) GetNodeUptime(
 		}, nil
 	}
 
-	resp := buildUptimeResponse(agentHostname, uptimeResp)
+	var uptimeResp job.NodeUptimeResponse
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &uptimeResp)
+	}
+
+	resp := buildUptimeResponse(rawResp.Hostname, &uptimeResp)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeUptime200JSONResponse{
@@ -72,7 +84,13 @@ func (s *Node) getNodeUptimeBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeUptimeResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeUptimeBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeUptimeGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeUptime500JSONResponse{
@@ -81,8 +99,12 @@ func (s *Node) getNodeUptimeBroadcast(
 	}
 
 	var responses []gen.UptimeResponse
-	for host, uptimeResp := range results {
-		responses = append(responses, *buildUptimeResponse(host, uptimeResp))
+	for host, resp := range results {
+		var uptimeResp job.NodeUptimeResponse
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &uptimeResp)
+		}
+		responses = append(responses, *buildUptimeResponse(host, &uptimeResp))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

@@ -22,7 +22,6 @@ package node_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -40,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
 )
@@ -78,6 +78,9 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TearDownTest() {
 }
 
 func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
+	trueVal := true
+	falseVal := false
+
 	tests := []struct {
 		name         string
 		request      gen.PutNodeNetworkDNSRequestObject
@@ -96,17 +99,19 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNS(
+					Modify(
 						gomock.Any(),
 						"_any",
-						[]string{"1.1.1.1"},
-						[]string{"example.com"},
-						"eth0",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"agent1",
-						true,
+						&job.Response{
+							Hostname: "agent1",
+							Changed:  &trueVal,
+						},
 						nil,
 					)
 			},
@@ -164,14 +169,14 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNS(
+					Modify(
 						gomock.Any(),
 						"_any",
-						[]string{"1.1.1.1"},
-						[]string(nil),
-						"eth0",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
 					).
-					Return("", "", false, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNodeNetworkDNS500JSONResponse)
@@ -190,23 +195,20 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						[]string{"1.1.1.1"},
-						[]string{"example.com"},
-						"eth0",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]error{
-							"server1": nil,
-							"server2": nil,
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Changed: &trueVal},
+							"server2": {Hostname: "server2", Changed: &falseVal},
 						},
-						map[string]bool{
-							"server1": true,
-							"server2": false,
-						},
+						map[string]string{},
 						nil,
 					)
 			},
@@ -226,22 +228,20 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						[]string{"1.1.1.1"},
-						[]string{"example.com"},
-						"eth0",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]error{
-							"server1": nil,
-							"server2": errors.New("permission denied"),
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Changed: &trueVal},
 						},
-						map[string]bool{
-							"server1": true,
-							"server2": false,
+						map[string]string{
+							"server2": "permission denied",
 						},
 						nil,
 					)
@@ -272,12 +272,12 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyNetworkDNSBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						[]string{"1.1.1.1"},
-						[]string(nil),
-						"eth0",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -300,6 +300,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 }
 
 func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTTP() {
+	trueVal := true
+
 	tests := []struct {
 		name         string
 		path         string
@@ -315,8 +317,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyNetworkDNS(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
+					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  &trueVal,
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -339,8 +344,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyNetworkDNS(gomock.Any(), "server1", gomock.Any(), gomock.Any(), "@fact.interface.primary").
-					Return("550e8400-e29b-41d4-a716-446655440000", "agent1", true, nil)
+					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  &trueVal,
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -413,12 +421,10 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyNetworkDNSBroadcast(gomock.Any(), "_all", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]error{
-						"server1": nil,
-					}, map[string]bool{
-						"server1": true,
-					}, nil)
+					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Changed: &trueVal},
+					}, map[string]string{}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -458,6 +464,7 @@ const rbacDNSPutTestSigningKey = "test-signing-key-for-dns-put-rbac"
 
 func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
+	trueVal := true
 
 	tests := []struct {
 		name         string
@@ -510,11 +517,13 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyNetworkDNS(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						"agent1",
-						true,
+						&job.Response{
+							Hostname: "agent1",
+							Changed:  &trueVal,
+						},
 						nil,
 					)
 				return mock

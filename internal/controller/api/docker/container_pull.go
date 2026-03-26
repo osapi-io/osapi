@@ -61,14 +61,14 @@ func (s *Container) PostNodeContainerDockerPull(
 		return s.postNodeContainerDockerPullBroadcast(ctx, hostname, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerPull(ctx, hostname, data)
+	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerPull, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
 	item := dockerPullItemFromResponse(resp)
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 
 	return gen.PostNodeContainerDockerPull202JSONResponse{
 		JobId:   &jobUUID,
@@ -104,7 +104,13 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 	target string,
 	data *job.DockerPullData,
 ) (gen.PostNodeContainerDockerPullResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerPullBroadcast(ctx, target, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerPull,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil

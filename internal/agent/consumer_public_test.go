@@ -23,11 +23,9 @@ package agent_test
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"testing"
 	"time"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
@@ -59,7 +57,6 @@ func (s *ConsumerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	appFs := memfs.New()
 	appConfig := config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{
@@ -80,27 +77,20 @@ func (s *ConsumerPublicTestSuite) SetupTest() {
 		},
 	}
 
-	s.testAgent = agent.New(
-		appFs,
-		appConfig,
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewDefaultMockProvider(s.mockCtrl),
-		diskMocks.NewDefaultMockProvider(s.mockCtrl),
-		memMocks.NewDefaultMockProvider(s.mockCtrl),
-		loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-		pingMocks.NewDefaultMockProvider(s.mockCtrl),
-		netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-		commandMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-		nil,
-		processMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-	)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		appConfig:       appConfig,
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+	})
 }
 
 func (s *ConsumerPublicTestSuite) TearDownTest() {

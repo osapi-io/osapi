@@ -69,13 +69,26 @@ func (s *Container) DeleteNodeContainerDockerByID(
 		return s.deleteNodeContainerDockerRemoveBroadcast(ctx, hostname, id, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerRemove(ctx, hostname, id, data)
+	removeData := struct {
+		ID    string `json:"id"`
+		Force bool   `json:"force,omitempty"`
+	}{
+		ID:    id,
+		Force: data.Force,
+	}
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerRemove,
+		removeData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "container removed"
 
@@ -99,7 +112,20 @@ func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 	id string,
 	data *job.DockerRemoveData,
 ) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerRemoveBroadcast(ctx, target, id, data)
+	removeData := struct {
+		ID    string `json:"id"`
+		Force bool   `json:"force,omitempty"`
+	}{
+		ID:    id,
+		Force: data.Force,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerRemove,
+		removeData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil

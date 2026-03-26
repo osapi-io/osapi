@@ -28,6 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -93,16 +94,21 @@ func (s *Node) PostNodeFileDeploy(
 		)
 	}
 
-	jobID, agentHostname, changed, err := s.JobClient.ModifyFileDeploy(
+	data := file.DeployRequest{
+		ObjectName:  objectName,
+		Path:        path,
+		ContentType: contentType,
+		Mode:        mode,
+		Owner:       owner,
+		Group:       group,
+		Vars:        vars,
+	}
+	jobID, rawResp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
-		objectName,
-		path,
-		contentType,
-		mode,
-		owner,
-		group,
-		vars,
+		"file",
+		job.OperationFileDeployExecute,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
@@ -111,12 +117,13 @@ func (s *Node) PostNodeFileDeploy(
 		}, nil
 	}
 
+	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileDeploy202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.FileDeployResult{
 			{
-				Hostname: agentHostname,
+				Hostname: rawResp.Hostname,
 				Changed:  &changed,
 			},
 		},
@@ -135,16 +142,21 @@ func (s *Node) postNodeFileDeployBroadcast(
 	group string,
 	vars map[string]any,
 ) (gen.PostNodeFileDeployResponseObject, error) {
-	jobID, changed, errs, err := s.JobClient.ModifyFileDeployBroadcast(
+	data := file.DeployRequest{
+		ObjectName:  objectName,
+		Path:        path,
+		ContentType: contentType,
+		Mode:        mode,
+		Owner:       owner,
+		Group:       group,
+		Vars:        vars,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
-		objectName,
-		path,
-		contentType,
-		mode,
-		owner,
-		group,
-		vars,
+		"file",
+		job.OperationFileDeployExecute,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
@@ -153,17 +165,17 @@ func (s *Node) postNodeFileDeployBroadcast(
 		}, nil
 	}
 
-	var results []gen.FileDeployResult
-	for host, c := range changed {
-		c := c
-		results = append(results, gen.FileDeployResult{
+	var fileResults []gen.FileDeployResult
+	for host, resp := range results {
+		changed := resp.Changed == nil || *resp.Changed
+		fileResults = append(fileResults, gen.FileDeployResult{
 			Hostname: host,
-			Changed:  &c,
+			Changed:  &changed,
 		})
 	}
 	for host, errMsg := range errs {
 		e := errMsg
-		results = append(results, gen.FileDeployResult{
+		fileResults = append(fileResults, gen.FileDeployResult{
 			Hostname: host,
 			Error:    &e,
 		})
@@ -172,6 +184,6 @@ func (s *Node) postNodeFileDeployBroadcast(
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileDeploy202JSONResponse{
 		JobId:   &jobUUID,
-		Results: results,
+		Results: fileResults,
 	}, nil
 }

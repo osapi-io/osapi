@@ -215,6 +215,27 @@ type NATSKV struct {
 	Replicas       int    `mapstructure:"replicas"`
 }
 
+// KVBucketInfo holds a KV bucket's human-readable name and its configured
+// bucket name. It is returned by NATS.AllKVBuckets so callers can iterate
+// all KV buckets without manually listing every sub-config field.
+type KVBucketInfo struct {
+	// Name is a human-readable label for the bucket (e.g. "job-queue").
+	Name string
+	// Bucket is the bucket name from the config field.
+	Bucket string
+}
+
+// ObjectStoreBucketInfo holds an Object Store bucket's human-readable name
+// and its configured bucket name. It is returned by
+// NATS.AllObjectStoreBuckets so callers can iterate all Object Store buckets
+// without manually listing every sub-config field.
+type ObjectStoreBucketInfo struct {
+	// Name is a human-readable label for the bucket (e.g. "file-objects").
+	Name string
+	// Bucket is the bucket name from the config field.
+	Bucket string
+}
+
 // NATSDLQ configuration for Dead Letter Queue stream settings.
 type NATSDLQ struct {
 	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"

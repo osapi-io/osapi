@@ -27,67 +27,27 @@ import (
 	"testing"
 	"time"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/mocks"
-	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	dockerMocks "github.com/retr0h/osapi/internal/provider/container/docker/mocks"
-	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
-	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
-	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
-	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
 type ProcessorDockerPublicTestSuite struct {
 	suite.Suite
 
-	mockCtrl      *gomock.Controller
-	mockJobClient *mocks.MockJobClient
+	mockCtrl *gomock.Controller
 }
 
 func (s *ProcessorDockerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 }
 
 func (s *ProcessorDockerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-}
-
-func (s *ProcessorDockerPublicTestSuite) newAgentWithContainerMock(
-	containerMock dockerProv.Provider,
-) *agent.Agent {
-	return agent.New(
-		memfs.New(),
-		config.Config{},
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewPlainMockProvider(s.mockCtrl),
-		diskMocks.NewPlainMockProvider(s.mockCtrl),
-		memMocks.NewPlainMockProvider(s.mockCtrl),
-		loadMocks.NewPlainMockProvider(s.mockCtrl),
-		dnsMocks.NewPlainMockProvider(s.mockCtrl),
-		pingMocks.NewPlainMockProvider(s.mockCtrl),
-		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-		commandMocks.NewPlainMockProvider(s.mockCtrl),
-		fileMocks.NewPlainMockProvider(s.mockCtrl),
-		containerMock,
-		nil,
-		nil,
-		nil,
-		nil,
-	)
 }
 
 func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
@@ -679,17 +639,16 @@ func (s *ProcessorDockerPublicTestSuite) TestProcessDockerOperation() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var a *agent.Agent
+			var containerMock dockerProv.Provider
 			if tt.setupMock != nil {
-				containerMock := dockerMocks.NewMockProvider(s.mockCtrl)
-				tt.setupMock(containerMock)
-				a = s.newAgentWithContainerMock(containerMock)
-			} else {
-				// nil provider case
-				a = s.newAgentWithContainerMock(nil)
+				m := dockerMocks.NewMockProvider(s.mockCtrl)
+				tt.setupMock(m)
+				containerMock = m
 			}
+			// nil provider case uses nil containerMock
 
-			result, err := agent.ExportProcessDockerOperation(a, tt.jobRequest)
+			processor := agent.NewDockerProcessor(containerMock, slog.Default())
+			result, err := processor(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)

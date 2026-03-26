@@ -55,7 +55,13 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		return s.getNodeScheduleCronByNameBroadcast(ctx, hostname, name)
 	}
 
-	resp, err := s.JobClient.QueryScheduleCronGet(ctx, hostname, name)
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"schedule",
+		job.OperationCronGet,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
@@ -70,7 +76,7 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		_ = json.Unmarshal(resp.Data, &entry)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	entryName := entry.Name
 	object := entry.Object
 	schedule := entry.Schedule
@@ -97,7 +103,13 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 	target string,
 	name string,
 ) (gen.GetNodeScheduleCronByNameResponseObject, error) {
-	jobID, responses, err := s.JobClient.QueryScheduleCronGetBroadcast(ctx, target, name)
+	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronGet,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil
@@ -105,16 +117,6 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 
 	allResults := make([]gen.CronEntry, 0)
 	for _, resp := range responses {
-		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			agentHostname := resp.Hostname
-			errMsg := resp.Error
-			allResults = append(allResults, gen.CronEntry{
-				Hostname: &agentHostname,
-				Error:    &errMsg,
-			})
-			continue
-		}
-
 		var entry cronProv.Entry
 		if resp.Data != nil {
 			_ = json.Unmarshal(resp.Data, &entry)
@@ -132,6 +134,14 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 			Object:   &object,
 			Schedule: &schedule,
 			User:     &user,
+		})
+	}
+	for hostname, errMsg := range errs {
+		h := hostname
+		e := errMsg
+		allResults = append(allResults, gen.CronEntry{
+			Hostname: &h,
+			Error:    &e,
 		})
 	}
 

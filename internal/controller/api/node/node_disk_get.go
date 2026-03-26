@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -50,7 +51,13 @@ func (s *Node) GetNodeDisk(
 		return s.getNodeDiskBroadcast(ctx, hostname)
 	}
 
-	jobID, diskResp, agentHostname, err := s.JobClient.QueryNodeDisk(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeDiskGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeDisk500JSONResponse{
@@ -58,7 +65,12 @@ func (s *Node) GetNodeDisk(
 		}, nil
 	}
 
-	resp := buildDiskResultItem(agentHostname, diskResp)
+	var diskResp job.NodeDiskResponse
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &diskResp)
+	}
+
+	resp := buildDiskResultItem(rawResp.Hostname, &diskResp)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeDisk200JSONResponse{
@@ -72,7 +84,13 @@ func (s *Node) getNodeDiskBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeDiskResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeDiskBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeDiskGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeDisk500JSONResponse{
@@ -81,8 +99,12 @@ func (s *Node) getNodeDiskBroadcast(
 	}
 
 	var responses []gen.DiskResultItem
-	for host, diskResp := range results {
-		responses = append(responses, *buildDiskResultItem(host, diskResp))
+	for host, resp := range results {
+		var diskResp job.NodeDiskResponse
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &diskResp)
+		}
+		responses = append(responses, *buildDiskResultItem(host, &diskResp))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

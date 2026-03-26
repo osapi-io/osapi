@@ -18,50 +18,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package dns_test
+package api
 
 import (
-	"testing"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/audit"
 )
 
-type LinuxGetResolvConfByInterfacePublicTestSuite struct {
-	suite.Suite
-}
-
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) SetupTest() {
-}
-
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TearDownTest() {}
-
-func (suite *LinuxGetResolvConfByInterfacePublicTestSuite) TestGetResolvConfByInterface() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "returns not implemented error",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			linux := dns.NewLinuxProvider()
-
-			interfaceName := ""
-			got, err := linux.GetResolvConfByInterface(interfaceName)
-
-			suite.Nil(got)
-			suite.ErrorIs(err, provider.ErrUnsupported)
-		})
+// WithAuditStore sets the audit store for audit middleware.
+func WithAuditStore(
+	store audit.Store,
+) Option {
+	return func(s *Server) {
+		s.auditStore = store
 	}
 }
 
-// In order for `go test` to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run.
-func TestLinuxGetResolvConfByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxGetResolvConfByInterfacePublicTestSuite))
+// WithMeterProvider sets the OTEL MeterProvider for HTTP metrics.
+// When set, the otelecho middleware routes metrics to this provider
+// instead of the global provider.
+func WithMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) Option {
+	return func(s *Server) {
+		s.meterProvider = mp
+	}
 }

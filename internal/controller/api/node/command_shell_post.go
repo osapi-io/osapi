@@ -22,12 +22,14 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -69,18 +71,28 @@ func (s *Node) PostNodeCommandShell(
 		return s.postNodeCommandShellBroadcast(ctx, hostname, cmdStr, cwd, timeout)
 	}
 
-	jobID, result, agentHostname, err := s.JobClient.ModifyCommandShell(
+	data := job.CommandShellData{
+		Command: cmdStr,
+		Cwd:     cwd,
+		Timeout: timeout,
+	}
+	jobID, rawResp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
-		cmdStr,
-		cwd,
-		timeout,
+		"command",
+		job.OperationCommandShellExecute,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeCommandShell500JSONResponse{
 			Error: &errMsg,
 		}, nil
+	}
+
+	var result command.Result
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &result)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
@@ -94,7 +106,7 @@ func (s *Node) PostNodeCommandShell(
 		JobId: &jobUUID,
 		Results: []gen.CommandResultItem{
 			{
-				Hostname:   agentHostname,
+				Hostname:   rawResp.Hostname,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,
@@ -113,12 +125,17 @@ func (s *Node) postNodeCommandShellBroadcast(
 	cwd string,
 	timeout int,
 ) (gen.PostNodeCommandShellResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyCommandShellBroadcast(
+	data := job.CommandShellData{
+		Command: cmdStr,
+		Cwd:     cwd,
+		Timeout: timeout,
+	}
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
-		cmdStr,
-		cwd,
-		timeout,
+		"command",
+		job.OperationCommandShellExecute,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
@@ -128,7 +145,11 @@ func (s *Node) postNodeCommandShellBroadcast(
 	}
 
 	var responses []gen.CommandResultItem
-	for host, result := range results {
+	for host, resp := range results {
+		var result command.Result
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &result)
+		}
 		stdout := result.Stdout
 		stderr := result.Stderr
 		exitCode := result.ExitCode

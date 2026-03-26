@@ -20,12 +20,6 @@
 
 package client
 
-import (
-	"fmt"
-
-	"github.com/retr0h/osapi/pkg/sdk/client/gen"
-)
-
 // Response wraps a domain type with raw JSON for CLI --json mode.
 type Response[T any] struct {
 	Data    T
@@ -46,50 +40,4 @@ func NewResponse[T any](
 // RawJSON returns the raw HTTP response body.
 func (r *Response[T]) RawJSON() []byte {
 	return r.rawJSON
-}
-
-// checkError inspects the HTTP status code and returns the appropriate
-// typed error. For success codes (200, 201, 202, 204) it returns nil.
-// The variadic responses are the parsed error body pointers from the
-// generated response struct (e.g., resp.JSON400, resp.JSON401, etc.).
-func checkError(
-	statusCode int,
-	responses ...*gen.ErrorResponse,
-) error {
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		return nil
-	}
-
-	msg := extractErrorMessage(statusCode, responses...)
-
-	switch statusCode {
-	case 400:
-		return &ValidationError{APIError{StatusCode: statusCode, Message: msg}}
-	case 401, 403:
-		return &AuthError{APIError{StatusCode: statusCode, Message: msg}}
-	case 404:
-		return &NotFoundError{APIError{StatusCode: statusCode, Message: msg}}
-	case 409:
-		return &ConflictError{APIError{StatusCode: statusCode, Message: msg}}
-	case 500:
-		return &ServerError{APIError{StatusCode: statusCode, Message: msg}}
-	default:
-		return &UnexpectedStatusError{APIError{StatusCode: statusCode, Message: msg}}
-	}
-}
-
-// extractErrorMessage finds the first non-nil error message from the
-// response pointers, or falls back to a generic message.
-func extractErrorMessage(
-	statusCode int,
-	responses ...*gen.ErrorResponse,
-) string {
-	for _, r := range responses {
-		if r != nil && r.Error != nil {
-			return *r.Error
-		}
-	}
-
-	return fmt.Sprintf("unexpected status %d", statusCode)
 }

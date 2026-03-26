@@ -23,9 +23,6 @@ package disk
 import (
 	"fmt"
 	"log/slog"
-	"os"
-	"strings"
-	"syscall"
 
 	"github.com/shirou/gopsutil/v4/disk"
 )
@@ -52,7 +49,7 @@ func (d *Darwin) GetLocalUsageStats() ([]Result, error) {
 
 		usage, err := d.UsageFn(partition.Mountpoint)
 		if err != nil {
-			if isPermissionErrorDarwin(err) {
+			if isPermissionError(err) {
 				d.logger.Warn(
 					"skipping partiion due to permission error",
 					slog.String("mount", partition.Mountpoint),
@@ -72,27 +69,6 @@ func (d *Darwin) GetLocalUsageStats() ([]Result, error) {
 	}
 
 	return diskSpaces, nil
-}
-
-// isPermissionErrorDarwin checks if an error is related to permission issues.
-func isPermissionErrorDarwin(
-	err error,
-) bool {
-	if err == nil {
-		return false
-	}
-
-	if pathErr, ok := err.(*os.PathError); ok {
-		if errno, ok := pathErr.Err.(syscall.Errno); ok && errno == syscall.EACCES {
-			return true
-		}
-	}
-
-	if strings.Contains(err.Error(), "permission denied") {
-		return true
-	}
-
-	return false
 }
 
 // isLocalPartitionDarwin determines if a partition is a local disk on macOS.

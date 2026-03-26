@@ -93,17 +93,23 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDelete(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron200JSONResponse)
@@ -124,17 +130,23 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDelete(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     nil,
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     nil,
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron200JSONResponse)
@@ -153,10 +165,12 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDeleteBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -188,10 +202,12 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDeleteBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -219,10 +235,12 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDeleteBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -253,12 +271,14 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDelete(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"nonexistent",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
-					Return(nil, errors.New("cron entry not found"))
+					Return("", nil, errors.New("cron entry not found"))
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron404JSONResponse)
@@ -275,12 +295,14 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDelete(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"missing",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
-					Return(nil, errors.New("cron entry does not exist"))
+					Return("", nil, errors.New("cron entry does not exist"))
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron404JSONResponse)
@@ -297,12 +319,14 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronDelete(
+					Modify(
 						gomock.Any(),
 						"server1",
-						"backup",
+						"schedule",
+						job.OperationCronDelete,
+						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.DeleteNodeScheduleCron500JSONResponse)
@@ -336,13 +360,17 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCronValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyScheduleCronDelete(gomock.Any(), "server1", "backup").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronDelete, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -438,13 +466,17 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCronRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyScheduleCronDelete(gomock.Any(), "server1", "backup").
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronDelete, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 				return mock
 			},
 			wantCode:     http.StatusOK,

@@ -26,65 +26,27 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
-	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
-	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
-	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
 type ProcessorCommandPublicTestSuite struct {
 	suite.Suite
 
-	mockCtrl      *gomock.Controller
-	mockJobClient *mocks.MockJobClient
+	mockCtrl *gomock.Controller
 }
 
 func (s *ProcessorCommandPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 }
 
 func (s *ProcessorCommandPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-}
-
-func (s *ProcessorCommandPublicTestSuite) newAgentWithCommandMock(
-	cmdMock command.Provider,
-) *agent.Agent {
-	return agent.New(
-		memfs.New(),
-		config.Config{},
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewPlainMockProvider(s.mockCtrl),
-		diskMocks.NewPlainMockProvider(s.mockCtrl),
-		memMocks.NewPlainMockProvider(s.mockCtrl),
-		loadMocks.NewPlainMockProvider(s.mockCtrl),
-		dnsMocks.NewPlainMockProvider(s.mockCtrl),
-		pingMocks.NewPlainMockProvider(s.mockCtrl),
-		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-		cmdMock,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-	)
 }
 
 func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
@@ -235,8 +197,8 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 			cmdMock := commandMocks.NewMockProvider(s.mockCtrl)
 			tt.setupMock(cmdMock)
 
-			a := s.newAgentWithCommandMock(cmdMock)
-			result, err := agent.ExportProcessCommandOperation(a, tt.jobRequest)
+			processor := agent.NewCommandProcessor(cmdMock, slog.Default())
+			result, err := processor(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -249,27 +211,6 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 					tt.validate(result)
 				}
 			}
-		})
-	}
-}
-
-func (s *ProcessorCommandPublicTestSuite) TestGetCommandProvider() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "returns command provider",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			cmdMock := commandMocks.NewPlainMockProvider(s.mockCtrl)
-			a := s.newAgentWithCommandMock(cmdMock)
-
-			provider := agent.ExportGetCommandProvider(a)
-
-			s.NotNil(provider)
 		})
 	}
 }

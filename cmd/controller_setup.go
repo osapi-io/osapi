@@ -344,19 +344,11 @@ func newHealthChecker(
 // declared in osapi.yaml. Only non-empty bucket configs are included.
 func configuredKVBuckets(namespace string) []string {
 	var buckets []string
-	add := func(name string) {
-		if name != "" {
-			buckets = append(buckets, job.ApplyNamespaceToInfraName(namespace, name))
+	for _, info := range appConfig.NATS.AllKVBuckets() {
+		if info.Bucket != "" {
+			buckets = append(buckets, job.ApplyNamespaceToInfraName(namespace, info.Bucket))
 		}
 	}
-
-	add(appConfig.NATS.KV.Bucket)
-	add(appConfig.NATS.KV.ResponseBucket)
-	add(appConfig.NATS.Audit.Bucket)
-	add(appConfig.NATS.Registry.Bucket)
-	add(appConfig.NATS.Facts.Bucket)
-	add(appConfig.NATS.State.Bucket)
-	add(appConfig.NATS.FileState.Bucket)
 
 	return buckets
 }
@@ -365,11 +357,13 @@ func configuredKVBuckets(namespace string) []string {
 // buckets declared in osapi.yaml.
 func configuredObjectBuckets(namespace string) []string {
 	var buckets []string
-	if appConfig.NATS.Objects.Bucket != "" {
-		buckets = append(
-			buckets,
-			job.ApplyNamespaceToInfraName(namespace, appConfig.NATS.Objects.Bucket),
-		)
+	for _, info := range appConfig.NATS.AllObjectStoreBuckets() {
+		if info.Bucket != "" {
+			buckets = append(
+				buckets,
+				job.ApplyNamespaceToInfraName(namespace, info.Bucket),
+			)
+		}
 	}
 
 	return buckets

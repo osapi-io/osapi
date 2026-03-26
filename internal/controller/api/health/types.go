@@ -132,66 +132,6 @@ type ClosureMetricsProvider struct {
 	ComponentRegistryFn func(ctx context.Context) ([]ComponentEntry, error)
 }
 
-// GetNATSInfo delegates to the NATSInfoFn closure.
-func (p *ClosureMetricsProvider) GetNATSInfo(
-	ctx context.Context,
-) (*NATSMetrics, error) {
-	return p.NATSInfoFn(ctx)
-}
-
-// GetStreamInfo delegates to the StreamInfoFn closure.
-func (p *ClosureMetricsProvider) GetStreamInfo(
-	ctx context.Context,
-) ([]StreamMetrics, error) {
-	return p.StreamInfoFn(ctx)
-}
-
-// GetKVInfo delegates to the KVInfoFn closure.
-func (p *ClosureMetricsProvider) GetKVInfo(
-	ctx context.Context,
-) ([]KVMetrics, error) {
-	return p.KVInfoFn(ctx)
-}
-
-// GetObjectStoreInfo delegates to the ObjectStoreInfoFn closure.
-func (p *ClosureMetricsProvider) GetObjectStoreInfo(
-	ctx context.Context,
-) ([]ObjectStoreMetrics, error) {
-	return p.ObjectStoreInfoFn(ctx)
-}
-
-// GetConsumerStats delegates to the ConsumerStatsFn closure.
-func (p *ClosureMetricsProvider) GetConsumerStats(
-	ctx context.Context,
-) (*ConsumerMetrics, error) {
-	return p.ConsumerStatsFn(ctx)
-}
-
-// GetJobStats delegates to the JobStatsFn closure.
-func (p *ClosureMetricsProvider) GetJobStats(
-	ctx context.Context,
-) (*JobMetrics, error) {
-	return p.JobStatsFn(ctx)
-}
-
-// GetAgentStats delegates to the AgentStatsFn closure.
-func (p *ClosureMetricsProvider) GetAgentStats(
-	ctx context.Context,
-) (*AgentMetrics, error) {
-	return p.AgentStatsFn(ctx)
-}
-
-// GetComponentRegistry delegates to the ComponentRegistryFn closure.
-// Returns nil, nil when the closure is not configured.
-func (p *ClosureMetricsProvider) GetComponentRegistry(
-	ctx context.Context,
-) ([]ComponentEntry, error) {
-	if p.ComponentRegistryFn == nil {
-		return nil, nil
-	}
-	return p.ComponentRegistryFn(ctx)
-}
-
 // SubComponentInfo holds the status and optional address of a sub-component.
 type SubComponentInfo struct {
 	Status  string

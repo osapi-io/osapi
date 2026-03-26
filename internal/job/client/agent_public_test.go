@@ -22,7 +22,9 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -33,6 +35,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 )
@@ -506,6 +509,520 @@ func (s *AgentPublicTestSuite) TestSanitizeKeyForNATS() {
 		s.Run(tt.name, func() {
 			got := client.ExportSanitizeKeyForNATS(tt.input)
 			s.Equal(tt.expected, got)
+		})
+	}
+}
+
+// newClientWithAllKVs creates a client with registry, facts, and state KV buckets wired.
+func (s *AgentPublicTestSuite) newClientWithAllKVs(
+	registryKV jetstream.KeyValue,
+	factsKV jetstream.KeyValue,
+	stateKV jetstream.KeyValue,
+) *client.Client {
+	opts := &client.Options{
+		Timeout:    30 * time.Second,
+		KVBucket:   s.mockKV,
+		RegistryKV: registryKV,
+		FactsKV:    factsKV,
+		StateKV:    stateKV,
+	}
+	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	s.Require().NoError(err)
+	return c
+}
+
+// agentRegistrationJSON returns valid agent registration JSON for the given hostname.
+func agentRegistrationJSON(hostname string) []byte {
+	return []byte(fmt.Sprintf(
+		`{"hostname":%q,"registered_at":"2026-01-01T00:00:00Z"}`,
+		hostname,
+	))
+}
+
+// factsRegistrationJSON returns valid facts registration JSON with sample data.
+func factsRegistrationJSON() []byte {
+	facts := job.FactsRegistration{
+		Architecture:     "x86_64",
+		KernelVersion:    "5.15.0",
+		CPUCount:         4,
+		FQDN:             "server1.example.com",
+		ServiceMgr:       "systemd",
+		PackageMgr:       "apt",
+		PrimaryInterface: "eth0",
+		Facts:            map[string]any{"os_family": "debian"},
+	}
+	data, _ := json.Marshal(facts)
+	return data
+}
+
+func (s *AgentPublicTestSuite) TestListAgents() {
+	tests := []struct {
+		name         string
+		setupClient  func() *client.Client
+		expectedErr  string
+		validateFunc func([]job.AgentInfo)
+	}{
+		{
+			name: "when registryKV is nil returns error",
+			setupClient: func() *client.Client {
+				// s.jobsClient has no registryKV configured
+				return s.jobsClient
+			},
+			expectedErr: "agent registry not configured",
+		},
+		{
+			name: "when Keys returns non-empty error returns error",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("connection refused"))
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			expectedErr: "failed to list registry keys",
+		},
+		{
+			name: "when Keys returns nats no keys found returns empty slice",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Empty(agents)
+			},
+		},
+		{
+			name: "when key does not start with agents. prefix skips it",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"controllers.api", "agents.server1"}, nil)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal("server1", agents[0].Hostname)
+			},
+		},
+		{
+			name: "when Get fails for a key continues to next",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1", "agents.server2"}, nil)
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(nil, errors.New("key not found"))
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server2"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server2").
+					Return(entry, nil)
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal("server2", agents[0].Hostname)
+			},
+		},
+		{
+			name: "when unmarshal fails for a key continues to next",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1", "agents.server2"}, nil)
+				badEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				badEntry.EXPECT().Value().Return([]byte("not-valid-json"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(badEntry, nil)
+				goodEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				goodEntry.EXPECT().Value().Return(agentRegistrationJSON("server2"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server2").
+					Return(goodEntry, nil)
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal("server2", agents[0].Hostname)
+			},
+		},
+		{
+			name: "when drain flag set overlays state to Cordoned",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(jobmocks.NewMockKeyValueEntry(s.mockCtrl), nil)
+
+				return s.newClientWithAllKVs(registryKV, nil, stateKV)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal(job.AgentStateCordoned, agents[0].State)
+			},
+		},
+		{
+			name: "when facts available merges into agent info",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"agents.server1"}, nil)
+				regEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				regEntry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(regEntry, nil)
+
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return(factsRegistrationJSON())
+				factsKV.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+
+				return s.newClientWithAllKVs(registryKV, factsKV, nil)
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal("x86_64", agents[0].Architecture)
+				s.Equal("5.15.0", agents[0].KernelVersion)
+				s.Equal(4, agents[0].CPUCount)
+				s.Equal("server1.example.com", agents[0].FQDN)
+				s.Equal("systemd", agents[0].ServiceMgr)
+				s.Equal("apt", agents[0].PackageMgr)
+				s.Equal("eth0", agents[0].PrimaryInterface)
+				s.NotNil(agents[0].Facts)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c := tt.setupClient()
+
+			agents, err := c.ListAgents(s.ctx)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+				s.Nil(agents)
+			} else {
+				s.NoError(err)
+				if tt.validateFunc != nil {
+					tt.validateFunc(agents)
+				}
+			}
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestGetAgent() {
+	tests := []struct {
+		name         string
+		hostname     string
+		setupClient  func() *client.Client
+		expectedErr  string
+		validateFunc func(*job.AgentInfo)
+	}{
+		{
+			name:     "when registryKV is nil returns error",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				return s.jobsClient
+			},
+			expectedErr: "agent registry not configured",
+		},
+		{
+			name:     "when Get fails returns error",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(nil, errors.New("key not found"))
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			expectedErr: "agent not found: server1",
+		},
+		{
+			name:     "when unmarshal fails returns error",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return([]byte("not-valid-json"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+				return s.newClientWithAllKVs(registryKV, nil, nil)
+			},
+			expectedErr: "failed to unmarshal agent registration",
+		},
+		{
+			name:     "when timeline available sets timeline on info",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				timelineEvent, _ := json.Marshal(job.TimelineEvent{
+					Timestamp: time.Now(),
+					Event:     "drain",
+					Hostname:  "server1",
+					Message:   "drain requested",
+				})
+				timelineEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				timelineEntry.EXPECT().Value().Return(timelineEvent)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				// overlayDrainState: no drain flag
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				// GetAgentTimeline: returns one key
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return([]string{"timeline.server1.drain.1000000000"}, nil)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "timeline.server1.drain.1000000000").
+					Return(timelineEntry, nil)
+
+				return s.newClientWithAllKVs(registryKV, nil, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Equal("server1", info.Hostname)
+				s.Len(info.Timeline, 1)
+				s.Equal("drain", info.Timeline[0].Event)
+			},
+		},
+		{
+			name:     "when drain flag set state is Cordoned",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(jobmocks.NewMockKeyValueEntry(s.mockCtrl), nil)
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+
+				return s.newClientWithAllKVs(registryKV, nil, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Equal(job.AgentStateCordoned, info.State)
+			},
+		},
+		{
+			name:     "when facts available merges into agent info",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return(factsRegistrationJSON())
+				factsKV.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+
+				return s.newClientWithAllKVs(registryKV, factsKV, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Equal("x86_64", info.Architecture)
+				s.Equal("5.15.0", info.KernelVersion)
+				s.Equal(4, info.CPUCount)
+				s.Equal("server1.example.com", info.FQDN)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c := tt.setupClient()
+
+			info, err := c.GetAgent(s.ctx, tt.hostname)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+				s.Nil(info)
+			} else {
+				s.NoError(err)
+				if tt.validateFunc != nil {
+					tt.validateFunc(info)
+				}
+			}
+		})
+	}
+}
+
+func (s *AgentPublicTestSuite) TestMergeFacts() {
+	tests := []struct {
+		name         string
+		setupClient  func() *client.Client
+		hostname     string
+		expectedErr  string
+		validateFunc func(*job.AgentInfo)
+	}{
+		{
+			name:     "when factsKV is nil does nothing",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				// No factsKV: mergeFacts is a no-op.
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+				return s.newClientWithAllKVs(registryKV, nil, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Empty(info.Architecture)
+				s.Empty(info.KernelVersion)
+			},
+		},
+		{
+			name:     "when factsKV Get fails does nothing",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				factsKV.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(nil, errors.New("key not found"))
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+
+				return s.newClientWithAllKVs(registryKV, factsKV, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Empty(info.Architecture)
+			},
+		},
+		{
+			name:     "when factsKV returns invalid JSON does nothing",
+			hostname: "server1",
+			setupClient: func() *client.Client {
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				registryKV.EXPECT().
+					Get(gomock.Any(), "agents.server1").
+					Return(entry, nil)
+
+				factsKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				factsEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				factsEntry.EXPECT().Value().Return([]byte("not-valid-json"))
+				factsKV.EXPECT().
+					Get(gomock.Any(), "facts.server1").
+					Return(factsEntry, nil)
+
+				stateKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				stateKV.EXPECT().
+					Get(gomock.Any(), "drain.server1").
+					Return(nil, errors.New("key not found"))
+				stateKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("nats: no keys found"))
+
+				return s.newClientWithAllKVs(registryKV, factsKV, stateKV)
+			},
+			validateFunc: func(info *job.AgentInfo) {
+				s.NotNil(info)
+				s.Empty(info.Architecture)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c := tt.setupClient()
+
+			info, err := c.GetAgent(s.ctx, tt.hostname)
+
+			if tt.expectedErr != "" {
+				s.Error(err)
+				s.Contains(err.Error(), tt.expectedErr)
+			} else {
+				s.NoError(err)
+				if tt.validateFunc != nil {
+					tt.validateFunc(info)
+				}
+			}
 		})
 	}
 }

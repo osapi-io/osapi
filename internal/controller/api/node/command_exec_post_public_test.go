@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
@@ -107,25 +109,27 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 				},
 			},
 			setupMock: func() {
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "file1\nfile2",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 12,
+					Changed:    false,
+				})
 				s.mockJobClient.EXPECT().
-					ModifyCommandExec(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"ls",
-						[]string{"-la"},
-						"",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "file1\nfile2",
-							Stderr:     "",
-							ExitCode:   0,
-							DurationMs: 12,
-							Changed:    false,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -154,23 +158,25 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 				},
 			},
 			setupMock: func() {
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "file1\nfile2",
+					ExitCode:   0,
+					DurationMs: 12,
+				})
 				s.mockJobClient.EXPECT().
-					ModifyCommandExec(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"ls",
-						[]string{"-la"},
-						"/tmp",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "file1\nfile2",
-							ExitCode:   0,
-							DurationMs: 12,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -224,15 +230,14 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyCommandExec(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"ls",
-						[]string{"-la"},
-						"",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
-					Return("", nil, "", assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
 				_, ok := resp.(gen.PostNodeCommandExec500JSONResponse)
@@ -250,26 +255,21 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 				},
 			},
 			setupMock: func() {
+				data1, _ := json.Marshal(command.Result{Stdout: "file1", ExitCode: 0})
+				data2, _ := json.Marshal(command.Result{Stdout: "file2", ExitCode: 0})
 				s.mockJobClient.EXPECT().
-					ModifyCommandExecBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"ls",
-						[]string{"-la"},
-						"",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*command.Result{
-							"server1": {
-								Stdout:   "file1",
-								ExitCode: 0,
-							},
-							"server2": {
-								Stdout:   "file2",
-								ExitCode: 0,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
 						map[string]string{},
 						nil,
@@ -290,22 +290,19 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 				},
 			},
 			setupMock: func() {
+				data1, _ := json.Marshal(command.Result{Stdout: "file1", ExitCode: 0})
 				s.mockJobClient.EXPECT().
-					ModifyCommandExecBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"ls",
-						[]string{"-la"},
-						"",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*command.Result{
-							"server1": {
-								Stdout:   "file1",
-								ExitCode: 0,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						},
 						map[string]string{
 							"server2": "command not found",
@@ -340,13 +337,12 @@ func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyCommandExecBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"ls",
-						[]string{"-la"},
-						"",
-						30,
+						"command",
+						job.OperationCommandExecExecute,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -383,15 +379,19 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecValidationHTTP() {
 			body: `{"command":"ls","args":["-la"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "file1\nfile2",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 42,
+					Changed:    true,
+				})
 				mock.EXPECT().
-					ModifyCommandExec(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", &command.Result{
-						Stdout:     "file1\nfile2",
-						Stderr:     "",
-						ExitCode:   0,
-						DurationMs: 42,
-						Changed:    true,
-					}, "agent1", nil)
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandExecExecute, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -512,18 +512,21 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "output",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 10,
+					Changed:    true,
+				})
 				mock.EXPECT().
-					ModifyCommandExec(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandExecExecute, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "output",
-							Stderr:     "",
-							ExitCode:   0,
-							DurationMs: 10,
-							Changed:    true,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

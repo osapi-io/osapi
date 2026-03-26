@@ -34,17 +34,11 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/provider/command"
-	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
-	fileProv "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
-	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
@@ -56,38 +50,25 @@ type Agent struct {
 	jobClient  client.JobClient
 	streamName string
 
-	// System providers
-	hostProvider host.Provider
-	diskProvider disk.Provider
-	memProvider  mem.Provider
-	loadProvider load.Provider
+	// registry dispatches job requests to the appropriate processor.
+	registry *ProviderRegistry
 
-	// Network providers
-	dnsProvider  dns.Provider
-	pingProvider ping.Provider
-
-	// Network info provider
+	// Providers used directly by the heartbeat and facts collection.
+	// These must remain as direct fields so the heartbeat can read
+	// system info independently of job processing.
+	hostProvider    host.Provider
+	diskProvider    disk.Provider
+	memProvider     mem.Provider
+	loadProvider    load.Provider
 	netinfoProvider netinfo.Provider
 
-	// Command provider
-	commandProvider command.Provider
-
-	// File provider
-	fileProvider fileProv.Provider
-
-	// Docker provider
-	dockerProvider dockerProv.Provider
-
-	// Cron provider
-	cronProvider cronProv.Provider
-
-	// Process provider for self-metrics in heartbeat
+	// Process provider for self-metrics in heartbeat.
 	processProvider process.Provider
 
-	// Registry KV for heartbeat registration
+	// Registry KV for heartbeat registration.
 	registryKV jetstream.KeyValue
 
-	// Facts KV for system facts collection
+	// Facts KV for system facts collection.
 	factsKV jetstream.KeyValue
 
 	// startedAt records when the agent process started.
@@ -111,7 +92,7 @@ type Agent struct {
 	// hostname cached from Start for drain/undrain resubscribe.
 	hostname string
 
-	// Lifecycle management
+	// Lifecycle management.
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
@@ -128,7 +109,7 @@ type Agent struct {
 	heartbeatLogger *slog.Logger
 	factsLogger     *slog.Logger
 
-	// OTEL instruments for job metrics
+	// OTEL instruments for job metrics.
 	jobsProcessed metric.Int64Counter
 	jobsActive    metric.Int64UpDownCounter
 	jobDuration   metric.Float64Histogram

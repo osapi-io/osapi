@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -87,11 +88,16 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			name:    "success",
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				uptimeResp := job.NodeUptimeResponse{
+					Uptime: "3 days, 2 hours, 15 minutes",
+				}
+				data, _ := json.Marshal(uptimeResp)
 				s.mockJobClient.EXPECT().
-					QueryNodeUptime(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &job.NodeUptimeResponse{
-						Uptime: "3 days, 2 hours, 15 minutes",
-					}, "agent1", nil)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
 				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
@@ -117,8 +123,8 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeUptime(gomock.Any(), "_any").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
 				_, ok := resp.(gen.GetNodeUptime500JSONResponse)
@@ -129,11 +135,15 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			name:    "broadcast all success",
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				uptime1 := job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"}
+				uptime2 := job.NodeUptimeResponse{Uptime: "1 day, 5 hours, 30 minutes"}
+				data1, _ := json.Marshal(uptime1)
+				data2, _ := json.Marshal(uptime2)
 				s.mockJobClient.EXPECT().
-					QueryNodeUptimeBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeUptimeResponse{
-						"server1": {Uptime: "3 days, 2 hours, 15 minutes"},
-						"server2": {Uptime: "1 day, 5 hours, 30 minutes"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
@@ -150,10 +160,12 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				uptime1 := job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"}
+				data1, _ := json.Marshal(uptime1)
 				s.mockJobClient.EXPECT().
-					QueryNodeUptimeBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeUptimeResponse{
-						"server1": {Uptime: "3 days, 2 hours, 15 minutes"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "some error",
 					}, nil)
@@ -178,7 +190,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeUptimeBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
@@ -212,12 +224,16 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeValidationHTTP() {
 			path: "/node/server1/uptime",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				uptimeResp := job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"}
+				data, _ := json.Marshal(uptimeResp)
 				mock.EXPECT().
-					QueryNodeUptime(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeUptimeGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock
@@ -239,8 +255,8 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeUptime(gomock.Any(), "server1").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "server1", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -325,12 +341,16 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				uptimeResp := job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"}
+				data, _ := json.Marshal(uptimeResp)
 				mock.EXPECT().
-					QueryNodeUptime(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeUptimeGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&job.NodeUptimeResponse{Uptime: "3 days, 2 hours, 15 minutes"},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock

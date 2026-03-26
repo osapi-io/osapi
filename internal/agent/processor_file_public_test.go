@@ -26,66 +26,27 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/job/mocks"
-	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
-	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
-	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
-	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
-	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
-	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
-	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
-	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
 )
 
 type ProcessorFilePublicTestSuite struct {
 	suite.Suite
 
-	mockCtrl      *gomock.Controller
-	mockJobClient *mocks.MockJobClient
+	mockCtrl *gomock.Controller
 }
 
 func (s *ProcessorFilePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 }
 
 func (s *ProcessorFilePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
-}
-
-func (s *ProcessorFilePublicTestSuite) newAgentWithFileMock(
-	fMock fileProv.Provider,
-) *agent.Agent {
-	return agent.New(
-		memfs.New(),
-		config.Config{},
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMocks.NewPlainMockProvider(s.mockCtrl),
-		diskMocks.NewPlainMockProvider(s.mockCtrl),
-		memMocks.NewPlainMockProvider(s.mockCtrl),
-		loadMocks.NewPlainMockProvider(s.mockCtrl),
-		dnsMocks.NewPlainMockProvider(s.mockCtrl),
-		pingMocks.NewPlainMockProvider(s.mockCtrl),
-		netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-		commandMocks.NewPlainMockProvider(s.mockCtrl),
-		fMock,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-	)
 }
 
 func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
@@ -289,8 +250,8 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
 			fMock := fileMocks.NewMockProvider(s.mockCtrl)
 			tt.setupMock(fMock)
 
-			a := s.newAgentWithFileMock(fMock)
-			result, err := agent.ExportProcessFileOperation(a, tt.jobRequest)
+			processor := agent.NewFileProcessor(fMock, slog.Default())
+			result, err := processor(tt.jobRequest)
 
 			if tt.expectError {
 				s.Error(err)
@@ -320,8 +281,8 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperationNilProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := s.newAgentWithFileMock(nil)
-			result, err := agent.ExportProcessFileOperation(a, job.Request{
+			processor := agent.NewFileProcessor(nil, slog.Default())
+			result, err := processor(job.Request{
 				Type:      job.TypeModify,
 				Category:  "file",
 				Operation: "deploy.execute",
@@ -331,27 +292,6 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperationNilProvider() {
 			s.Error(err)
 			s.Contains(err.Error(), tt.errorMsg)
 			s.Nil(result)
-		})
-	}
-}
-
-func (s *ProcessorFilePublicTestSuite) TestGetFileProvider() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "returns file provider",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			fMock := fileMocks.NewPlainMockProvider(s.mockCtrl)
-			a := s.newAgentWithFileMock(fMock)
-
-			provider := agent.ExportGetFileProvider(a)
-
-			s.NotNil(provider)
 		})
 	}
 }

@@ -73,7 +73,7 @@ func (s *Container) PostNodeContainerDocker(
 		return s.postNodeContainerDockerCreateBroadcast(ctx, hostname, data)
 	}
 
-	resp, err := s.JobClient.ModifyDockerCreate(ctx, hostname, data)
+	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerCreate, data)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
@@ -86,7 +86,7 @@ func (s *Container) PostNodeContainerDocker(
 		_ = json.Unmarshal(resp.Data, &containerResp)
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	id := containerResp.ID
 	changed := resp.Changed
 
@@ -109,7 +109,13 @@ func (s *Container) postNodeContainerDockerCreateBroadcast(
 	target string,
 	data *job.DockerCreateData,
 ) (gen.PostNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerCreateBroadcast(ctx, target, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerCreate,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil

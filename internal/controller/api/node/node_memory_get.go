@@ -22,6 +22,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -51,7 +52,13 @@ func (s *Node) GetNodeMemory(
 		return s.getNodeMemoryBroadcast(ctx, hostname)
 	}
 
-	jobID, memStats, agentHostname, err := s.JobClient.QueryNodeMemory(ctx, hostname)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeMemoryGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeMemory500JSONResponse{
@@ -59,7 +66,12 @@ func (s *Node) GetNodeMemory(
 		}, nil
 	}
 
-	resp := buildMemoryResultItem(agentHostname, memStats)
+	var memStats mem.Result
+	if rawResp.Data != nil {
+		_ = json.Unmarshal(rawResp.Data, &memStats)
+	}
+
+	resp := buildMemoryResultItem(rawResp.Hostname, &memStats)
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeMemory200JSONResponse{
@@ -73,7 +85,13 @@ func (s *Node) getNodeMemoryBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeMemoryResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryNodeMemoryBroadcast(ctx, target)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeMemoryGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeMemory500JSONResponse{
@@ -82,8 +100,12 @@ func (s *Node) getNodeMemoryBroadcast(
 	}
 
 	var responses []gen.MemoryResultItem
-	for host, memStats := range results {
-		responses = append(responses, *buildMemoryResultItem(host, memStats))
+	for host, resp := range results {
+		var memStats mem.Result
+		if resp.Data != nil {
+			_ = json.Unmarshal(resp.Data, &memStats)
+		}
+		responses = append(responses, *buildMemoryResultItem(host, &memStats))
 	}
 	for host, errMsg := range errs {
 		e := errMsg

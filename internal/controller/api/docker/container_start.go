@@ -57,13 +57,19 @@ func (s *Container) PostNodeContainerDockerStart(
 		return s.postNodeContainerDockerStartBroadcast(ctx, hostname, id)
 	}
 
-	resp, err := s.JobClient.ModifyDockerStart(ctx, hostname, id)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerStart,
+		map[string]string{"id": id},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
 	}
 
-	jobUUID := uuid.MustParse(resp.JobID)
+	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "container started"
 
@@ -86,7 +92,13 @@ func (s *Container) postNodeContainerDockerStartBroadcast(
 	target string,
 	id string,
 ) (gen.PostNodeContainerDockerStartResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyDockerStartBroadcast(ctx, target, id)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerStart,
+		map[string]string{"id": id},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
