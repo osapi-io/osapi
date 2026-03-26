@@ -30,6 +30,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
@@ -118,10 +119,30 @@ func (s *ClientPublicTestSuite) TestQuery() {
 	tests := []struct {
 		name         string
 		data         any
+		withMeter    bool
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
+		{
+			name:      "when succeeds with meter provider",
+			data:      nil,
+			withMeter: true,
+			setupMocks: func() {
+				setupPublishAndWaitMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					successResp,
+					nil,
+				)
+			},
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+			},
+		},
 		{
 			name: "when succeeds",
 			data: nil,
@@ -285,6 +306,10 @@ func (s *ClientPublicTestSuite) TestQuery() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.withMeter {
+				s.jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+			}
+
 			tt.setupMocks()
 
 			jobID, resp, err := s.jobsClient.Query(
@@ -324,10 +349,35 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 	tests := []struct {
 		name         string
 		data         any
+		withMeter    bool
 		setupMocks   func() *client.Client
 		expectedErr  string
 		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
 	}{
+		{
+			name:      "when succeeds with meter provider",
+			data:      nil,
+			withMeter: true,
+			setupMocks: func() *client.Client {
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				c := s.newClientWithRegistry(registryKV)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Len(results, 1)
+			},
+		},
 		{
 			name: "when succeeds",
 			data: nil,
@@ -642,11 +692,40 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.Contains(results, "unknown")
 			},
 		},
+		{
+			name: "when broadcast times out with no responses returns error",
+			data: nil,
+			setupMocks: func() *client.Client {
+				opts := &client.Options{
+					Timeout:    50 * time.Millisecond,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+				}
+				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						mockError: errors.New("timeout"),
+						errorMode: errorOnTimeout,
+					},
+				)
+				return c
+			},
+			expectedErr: "timeout waiting for broadcast responses: no agents responded",
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			c := tt.setupMocks()
+			if tt.withMeter {
+				c.SetMeterProvider(sdkmetric.NewMeterProvider())
+			}
 
 			jobID, results, errs, err := c.QueryBroadcast(
 				s.ctx,
@@ -687,10 +766,30 @@ func (s *ClientPublicTestSuite) TestModify() {
 	tests := []struct {
 		name         string
 		data         any
+		withMeter    bool
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
+		{
+			name:      "when succeeds with meter provider",
+			data:      nil,
+			withMeter: true,
+			setupMocks: func() {
+				setupPublishAndWaitMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					successResp,
+					nil,
+				)
+			},
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+			},
+		},
 		{
 			name: "when succeeds",
 			data: nil,
@@ -765,6 +864,10 @@ func (s *ClientPublicTestSuite) TestModify() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.withMeter {
+				s.jobsClient.SetMeterProvider(sdkmetric.NewMeterProvider())
+			}
+
 			tt.setupMocks()
 
 			jobID, resp, err := s.jobsClient.Modify(
@@ -804,10 +907,35 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 	tests := []struct {
 		name         string
 		data         any
+		withMeter    bool
 		setupMocks   func() *client.Client
 		expectedErr  string
 		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
 	}{
+		{
+			name:      "when succeeds with meter provider",
+			data:      nil,
+			withMeter: true,
+			setupMocks: func() *client.Client {
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				c := s.newClientWithRegistry(registryKV)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Len(results, 1)
+			},
+		},
 		{
 			name: "when succeeds",
 			data: nil,
@@ -945,6 +1073,9 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			c := tt.setupMocks()
+			if tt.withMeter {
+				c.SetMeterProvider(sdkmetric.NewMeterProvider())
+			}
 
 			jobID, results, errs, err := c.ModifyBroadcast(
 				s.ctx,
