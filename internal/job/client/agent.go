@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -166,194 +165,6 @@ func (c *Client) CreateOrUpdateConsumer(
 	return c.natsClient.CreateOrUpdateConsumerWithConfig(ctx, streamName, consumerConfig)
 }
 
-// WriteAgentTimelineEvent writes an append-only timeline event
-// for an agent state transition.
-func (c *Client) WriteAgentTimelineEvent(
-	ctx context.Context,
-	hostname, event, message string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
-	}
-
-	now := time.Now()
-	key := fmt.Sprintf(
-		"timeline.%s.%s.%d",
-		job.SanitizeHostname(hostname),
-		event,
-		now.UnixNano(),
-	)
-
-	data, err := c.JSONMarshalFn(job.TimelineEvent{
-		Timestamp: now,
-		Event:     event,
-		Hostname:  hostname,
-		Message:   message,
-	})
-	if err != nil {
-		return fmt.Errorf("marshal timeline event: %w", err)
-	}
-
-	_, err = c.stateKV.Put(ctx, key, data)
-	if err != nil {
-		return fmt.Errorf("write timeline event: %w", err)
-	}
-
-	c.logger.Debug("wrote agent timeline event",
-		slog.String("hostname", hostname),
-		slog.String("event", event),
-		slog.String("key", key),
-	)
-
-	return nil
-}
-
-// GetAgentTimeline returns sorted timeline events for a hostname.
-func (c *Client) GetAgentTimeline(
-	ctx context.Context,
-	hostname string,
-) ([]job.TimelineEvent, error) {
-	if c.stateKV == nil {
-		return nil, fmt.Errorf("agent state bucket not configured")
-	}
-
-	prefix := "timeline." + job.SanitizeHostname(hostname) + "."
-
-	keys, err := c.stateKV.Keys(ctx)
-	if err != nil {
-		// No keys found is not an error for timeline
-		return []job.TimelineEvent{}, nil
-	}
-
-	var events []job.TimelineEvent
-	for _, key := range keys {
-		if !strings.HasPrefix(key, prefix) {
-			continue
-		}
-
-		entry, err := c.stateKV.Get(ctx, key)
-		if err != nil {
-			continue
-		}
-
-		var te job.TimelineEvent
-		if err := json.Unmarshal(entry.Value(), &te); err != nil {
-			continue
-		}
-
-		events = append(events, te)
-	}
-
-	// Sort by timestamp
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Timestamp.Before(events[j].Timestamp)
-	})
-
-	return events, nil
-}
-
-// ComputeAgentState returns the current state from timeline events.
-func ComputeAgentState(
-	events []job.TimelineEvent,
-) string {
-	if len(events) == 0 {
-		return job.AgentStateReady
-	}
-
-	latest := events[len(events)-1]
-	switch latest.Event {
-	case "drain":
-		return job.AgentStateDraining
-	case "cordoned":
-		return job.AgentStateCordoned
-	case "undrain", "ready":
-		return job.AgentStateReady
-	default:
-		return job.AgentStateReady
-	}
-}
-
-// overlayDrainState checks if a drain flag exists for the agent and
-// overrides the reported state. The agent always reports its own view
-// (Ready), but the operator may have drained it via the API. Drain
-// flags are stored in the agent-state KV bucket (no TTL).
-func (c *Client) overlayDrainState(
-	ctx context.Context,
-	info *job.AgentInfo,
-) {
-	if c.stateKV == nil {
-		return
-	}
-
-	key := "drain." + job.SanitizeHostname(info.Hostname)
-	_, err := c.stateKV.Get(ctx, key)
-	if err == nil {
-		info.State = job.AgentStateCordoned
-	}
-}
-
-// CheckDrainFlag returns true if the drain flag exists for the hostname.
-func (c *Client) CheckDrainFlag(
-	ctx context.Context,
-	hostname string,
-) bool {
-	if c.stateKV == nil {
-		return false
-	}
-
-	key := "drain." + job.SanitizeHostname(hostname)
-	_, err := c.stateKV.Get(ctx, key)
-	return err == nil
-}
-
-// SetDrainFlag writes the drain flag for an agent in the state KV bucket.
-// The agent detects this flag on heartbeat and stops accepting jobs.
-func (c *Client) SetDrainFlag(
-	ctx context.Context,
-	hostname string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
-	}
-
-	key := "drain." + job.SanitizeHostname(hostname)
-	_, err := c.stateKV.Put(ctx, key, []byte("1"))
-	if err != nil {
-		return fmt.Errorf("set drain flag: %w", err)
-	}
-
-	c.logger.Debug("set drain flag",
-		slog.String("hostname", hostname),
-		slog.String("key", key),
-	)
-
-	return nil
-}
-
-// DeleteDrainFlag removes the drain flag for an agent from the state KV bucket.
-// The agent detects this on heartbeat and resumes accepting jobs.
-func (c *Client) DeleteDrainFlag(
-	ctx context.Context,
-	hostname string,
-) error {
-	if c.stateKV == nil {
-		return fmt.Errorf("agent state bucket not configured")
-	}
-
-	key := "drain." + job.SanitizeHostname(hostname)
-	err := c.stateKV.Delete(ctx, key)
-	if err != nil {
-		return fmt.Errorf("delete drain flag: %w", err)
-	}
-
-	c.logger.Debug("deleted drain flag",
-		slog.String("hostname", hostname),
-		slog.String("key", key),
-	)
-
-	return nil
-}
-
 // ListAgents reads the agent registry KV bucket and returns all registered
 // agents. Agents register via heartbeat, so only live agents appear.
 func (c *Client) ListAgents(
@@ -428,6 +239,25 @@ func (c *Client) GetAgent(
 	}
 
 	return &info, nil
+}
+
+// overlayDrainState checks if a drain flag exists for the agent and
+// overrides the reported state. The agent always reports its own view
+// (Ready), but the operator may have drained it via the API. Drain
+// flags are stored in the agent-state KV bucket (no TTL).
+func (c *Client) overlayDrainState(
+	ctx context.Context,
+	info *job.AgentInfo,
+) {
+	if c.stateKV == nil {
+		return
+	}
+
+	key := "drain." + job.SanitizeHostname(info.Hostname)
+	_, err := c.stateKV.Get(ctx, key)
+	if err == nil {
+		info.State = job.AgentStateCordoned
+	}
 }
 
 // mergeFacts reads facts from the facts KV bucket and merges them into the

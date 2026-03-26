@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2025 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -20,25 +20,18 @@
 
 package client
 
-// Response wraps a domain type with raw JSON for CLI --json mode.
-type Response[T any] struct {
-	Data    T
-	rawJSON []byte
-}
+import (
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+)
 
-// NewResponse creates a Response with the given data and raw JSON body.
-func NewResponse[T any](
-	data T,
-	rawJSON []byte,
-) *Response[T] {
-	return &Response[T]{
-		Data:    data,
-		rawJSON: rawJSON,
-	}
+// SetMeterProvider creates OTEL instruments for job metrics.
+func (c *Client) SetMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) {
+	meter := mp.Meter("osapi-controller")
+	c.jobsCreated, _ = meter.Int64Counter(
+		"jobs_created_total",
+		metric.WithDescription("Total jobs submitted via API"),
+	)
 }
-
-// RawJSON returns the raw HTTP response body.
-func (r *Response[T]) RawJSON() []byte {
-	return r.rawJSON
-}
-

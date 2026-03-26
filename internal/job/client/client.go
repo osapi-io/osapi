@@ -31,7 +31,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/metric"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/job"
 )
@@ -92,17 +91,6 @@ func New(
 		timeout:       opts.Timeout,
 		JSONMarshalFn: json.Marshal,
 	}, nil
-}
-
-// SetMeterProvider creates OTEL instruments for job metrics.
-func (c *Client) SetMeterProvider(
-	mp *sdkmetric.MeterProvider,
-) {
-	meter := mp.Meter("osapi-controller")
-	c.jobsCreated, _ = meter.Int64Counter(
-		"jobs_created_total",
-		metric.WithDescription("Total jobs submitted via API"),
-	)
 }
 
 // Query publishes a query job to a single target and waits for the response.
