@@ -16,7 +16,7 @@ require (
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/lmittmann/tint v1.1.3
 	github.com/nats-io/nats-server/v2 v2.12.6
-	github.com/nats-io/nats.go v1.49.0
+	github.com/nats-io/nats.go v1.50.0
 	github.com/oapi-codegen/runtime v1.3.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/osapi-io/nats-client v0.0.0-20260322200309-c8bab331f583
@@ -180,7 +180,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.10.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.6 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/kulti/thelper v0.7.1 // indirect
 	github.com/kunwardeep/paralleltest v1.0.15 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
