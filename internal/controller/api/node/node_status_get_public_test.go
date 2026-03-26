@@ -193,6 +193,26 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			},
 		},
 		{
+			name:    "broadcast result with empty hostname falls back to map key",
+			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				// Response data has no hostname field so the fallback `status.Hostname = host` fires.
+				emptyHostnameStatus := job.NodeStatusResponse{Uptime: time.Hour}
+				data, _ := json.Marshal(emptyHostnameStatus)
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
+					}, map[string]string{}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
+				r, ok := resp.(gen.GetNodeStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+			},
+		},
+		{
 			name:    "broadcast all error",
 			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {

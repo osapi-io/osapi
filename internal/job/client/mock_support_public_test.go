@@ -39,6 +39,10 @@ const (
 	errorOnWatch
 	// errorOnTimeout simulates a timeout by providing a channel that never sends.
 	errorOnTimeout
+	// errorOnTimeoutWithPartialResponse sends one valid response then blocks,
+	// simulating a timeout after partial collection. Only valid for
+	// publishAndCollect (broadcast) flows.
+	errorOnTimeoutWithPartialResponse
 )
 
 // publishAndWaitMockOpts configures the mock behavior for publishAndWait tests.
@@ -123,6 +127,28 @@ func setupPublishAndCollectMocks(
 	if opts.mockError != nil && opts.errorMode == errorOnTimeout {
 		// Return a channel that never sends anything, causing timeout with 0 responses
 		ch := make(chan jetstream.KeyValueEntry)
+
+		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
+		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()
+		mockWatcher.EXPECT().Stop().Return(nil)
+
+		mockKV.EXPECT().
+			Watch(gomock.Any(), gomock.Any()).
+			Return(mockWatcher, nil)
+		return
+	}
+
+	if opts.mockError != nil && opts.errorMode == errorOnTimeoutWithPartialResponse {
+		// Send one valid response then block so the timeout fires with partial results.
+		// The first responseEntry provides the partial response data.
+		ch := make(chan jetstream.KeyValueEntry, 1)
+		mockEntry := jobmocks.NewMockKeyValueEntry(ctrl)
+		responseData := ""
+		if len(opts.responseEntries) > 0 {
+			responseData = opts.responseEntries[0]
+		}
+		mockEntry.EXPECT().Value().Return([]byte(responseData))
+		ch <- mockEntry
 
 		mockWatcher := jobmocks.NewMockKeyWatcher(ctrl)
 		mockWatcher.EXPECT().Updates().Return(ch).AnyTimes()

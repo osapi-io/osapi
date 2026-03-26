@@ -117,12 +117,14 @@ func (s *ClientPublicTestSuite) TestQuery() {
 
 	tests := []struct {
 		name         string
+		data         any
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
 		{
 			name: "when succeeds",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -141,6 +143,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 		},
 		{
 			name: "when job failed",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -155,6 +158,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 		},
 		{
 			name: "when job skipped",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -168,7 +172,15 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			expectedErr: "job failed: unsupported",
 		},
 		{
+			name: "when data marshal fails",
+			// A channel cannot be marshaled to JSON.
+			data:        make(chan int),
+			setupMocks:  func() {},
+			expectedErr: "marshal data",
+		},
+		{
 			name: "when publish error",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -177,6 +189,94 @@ func (s *ClientPublicTestSuite) TestQuery() {
 					subject,
 					"",
 					errors.New("kv put failed"),
+				)
+			},
+			expectedErr: "failed to publish and wait",
+		},
+		{
+			name: "when nats publish error",
+			data: nil,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{
+						mockError: errors.New("nats publish failed"),
+						errorMode: errorOnPublish,
+					},
+				)
+			},
+			expectedErr: "failed to publish and wait",
+		},
+		{
+			name: "when watch error",
+			data: nil,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{
+						mockError: errors.New("watch failed"),
+						errorMode: errorOnWatch,
+					},
+				)
+			},
+			expectedErr: "failed to publish and wait",
+		},
+		{
+			name: "when timeout waiting for response",
+			data: nil,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{
+						mockError: errors.New("timeout"),
+						errorMode: errorOnTimeout,
+					},
+				)
+			},
+			expectedErr: "failed to publish and wait",
+		},
+		{
+			name: "when nil entry received before real entry succeeds",
+			data: nil,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{
+						responseData: successResp,
+						sendNilFirst: true,
+					},
+				)
+			},
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+				s.Equal(job.StatusCompleted, resp.Status)
+			},
+		},
+		{
+			name: "when unmarshal error on response",
+			data: nil,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{
+						responseData: "not-valid-json",
+					},
 				)
 			},
 			expectedErr: "failed to publish and wait",
@@ -192,7 +292,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 				target,
 				category,
 				operation,
-				nil,
+				tt.data,
 			)
 
 			if tt.expectedErr != "" {
@@ -223,12 +323,14 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 
 	tests := []struct {
 		name         string
+		data         any
 		setupMocks   func() *client.Client
 		expectedErr  string
 		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
 	}{
 		{
 			name: "when succeeds",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -252,7 +354,17 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			},
 		},
 		{
+			name: "when data marshal fails in broadcast",
+			// A channel cannot be marshaled to JSON.
+			data: make(chan int),
+			setupMocks: func() *client.Client {
+				return s.jobsClient
+			},
+			expectedErr: "marshal data",
+		},
+		{
 			name: "when job failed",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -279,6 +391,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 		},
 		{
 			name: "when job skipped",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -305,6 +418,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 		},
 		{
 			name: "when publish error",
+			data: nil,
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
@@ -322,6 +436,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 		},
 		{
 			name: "when partial failure",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
 				c := s.newClientWithRegistry(registryKV)
@@ -345,6 +460,188 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.Equal("provider error", errs["server2"])
 			},
 		},
+		{
+			name: "when ListAgents fails falls back to full timeout and collects responses",
+			data: nil,
+			setupMocks: func() *client.Client {
+				// registryKV returns error so ListAgents fails — warn path is exercised.
+				registryKV := jobmocks.NewMockKeyValue(s.mockCtrl)
+				registryKV.EXPECT().
+					Keys(gomock.Any()).
+					Return(nil, errors.New("registry unavailable"))
+				c := s.newClientWithRegistry(registryKV)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Len(results, 1)
+			},
+		},
+		{
+			name: "when nats publish error in broadcast",
+			data: nil,
+			setupMocks: func() *client.Client {
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						mockError: errors.New("nats publish failed"),
+						errorMode: errorOnPublish,
+					},
+				)
+				return s.jobsClient
+			},
+			expectedErr: "failed to collect broadcast responses",
+		},
+		{
+			name: "when watch error in broadcast",
+			data: nil,
+			setupMocks: func() *client.Client {
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						mockError: errors.New("watch failed"),
+						errorMode: errorOnWatch,
+					},
+				)
+				return s.jobsClient
+			},
+			expectedErr: "failed to collect broadcast responses",
+		},
+		{
+			name: "when nil entry received before real entry succeeds",
+			data: nil,
+			setupMocks: func() *client.Client {
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				c := s.newClientWithRegistry(registryKV)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+						sendNilFirst:    true,
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Len(results, 1)
+			},
+		},
+		{
+			name: "when broadcast response has invalid JSON skips entry then collects valid",
+			data: nil,
+			setupMocks: func() *client.Client {
+				// Two agents in registry: expectedCount=2. Send bad JSON first,
+				// then one valid response; the bad one is skipped, the valid one
+				// counts as 1 of 2 and the second slot stays open until timeout.
+				// Use a tiny timeout so this doesn't wait 30s.
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				opts := &client.Options{
+					Timeout:    50 * time.Millisecond,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+					RegistryKV: registryKV,
+				}
+				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						// bad JSON followed by valid JSON; bad is skipped,
+						// valid gives us 1 response which satisfies expectedCount=1.
+						responseEntries: []string{"not-valid-json", host1Resp},
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				// The valid response was collected after skipping the bad one.
+				s.Len(results, 1)
+			},
+		},
+		{
+			name: "when broadcast times out after partial responses returns what was collected",
+			data: nil,
+			setupMocks: func() *client.Client {
+				// No registry so expectedCount=0 (full timeout path).
+				// Send one valid response then block. Timeout fires with
+				// len(responses)>0 so the non-error timeout branch executes.
+				opts := &client.Options{
+					Timeout:    50 * time.Millisecond,
+					KVBucket:   s.mockKV,
+					StreamName: "JOBS",
+				}
+				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				s.Require().NoError(err)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+						mockError:       errors.New("partial"),
+						errorMode:       errorOnTimeoutWithPartialResponse,
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Len(results, 1)
+			},
+		},
+		{
+			name: "when broadcast response has empty hostname uses unknown",
+			data: nil,
+			setupMocks: func() *client.Client {
+				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
+				c := s.newClientWithRegistry(registryKV)
+
+				// Response has no hostname field — falls back to "unknown" key.
+				noHostnameResp := `{"status":"completed"}`
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockKV,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{noHostnameResp},
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+				s.NotEmpty(jobID)
+				s.Contains(results, "unknown")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -356,7 +653,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				target,
 				category,
 				operation,
-				nil,
+				tt.data,
 			)
 
 			if tt.expectedErr != "" {
@@ -389,12 +686,14 @@ func (s *ClientPublicTestSuite) TestModify() {
 
 	tests := []struct {
 		name         string
+		data         any
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
 		{
 			name: "when succeeds",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -413,6 +712,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 		},
 		{
 			name: "when job failed",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -427,6 +727,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 		},
 		{
 			name: "when job skipped",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -440,7 +741,14 @@ func (s *ClientPublicTestSuite) TestModify() {
 			expectedErr: "job failed: unsupported",
 		},
 		{
+			name:        "when data marshal fails",
+			data:        make(chan int),
+			setupMocks:  func() {},
+			expectedErr: "marshal data",
+		},
+		{
 			name: "when publish error",
+			data: nil,
 			setupMocks: func() {
 				setupPublishAndWaitMocks(
 					s.mockCtrl,
@@ -464,7 +772,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 				target,
 				category,
 				operation,
-				nil,
+				tt.data,
 			)
 
 			if tt.expectedErr != "" {
@@ -495,12 +803,14 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 
 	tests := []struct {
 		name         string
+		data         any
 		setupMocks   func() *client.Client
 		expectedErr  string
 		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
 	}{
 		{
 			name: "when succeeds",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -524,7 +834,17 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			},
 		},
 		{
+			name: "when data marshal fails in modify broadcast",
+			// A channel cannot be marshaled to JSON.
+			data: make(chan int),
+			setupMocks: func() *client.Client {
+				return s.jobsClient
+			},
+			expectedErr: "marshal data",
+		},
+		{
 			name: "when job failed",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -551,6 +871,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 		},
 		{
 			name: "when job skipped",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1"})
 				c := s.newClientWithRegistry(registryKV)
@@ -577,6 +898,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 		},
 		{
 			name: "when publish error",
+			data: nil,
 			setupMocks: func() *client.Client {
 				setupPublishAndCollectMocks(
 					s.mockCtrl,
@@ -594,6 +916,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 		},
 		{
 			name: "when partial failure",
+			data: nil,
 			setupMocks: func() *client.Client {
 				registryKV := setupRegistryKV(s.mockCtrl, []string{"server1", "server2"})
 				c := s.newClientWithRegistry(registryKV)
@@ -628,7 +951,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				target,
 				category,
 				operation,
-				nil,
+				tt.data,
 			)
 
 			if tt.expectedErr != "" {
