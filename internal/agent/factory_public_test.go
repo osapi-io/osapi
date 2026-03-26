@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
-	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 

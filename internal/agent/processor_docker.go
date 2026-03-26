@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/retr0h/osapi/internal/job"
-	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 )
 
 // processDockerOperation handles docker-related operations.

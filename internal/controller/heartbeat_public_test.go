@@ -34,8 +34,8 @@ import (
 	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/job"
 	jobMocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/process"
-	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
+	"github.com/retr0h/osapi/internal/telemetry/process"
+	processMocks "github.com/retr0h/osapi/internal/telemetry/process/mocks"
 )
 
 type HeartbeatPublicTestSuite struct {

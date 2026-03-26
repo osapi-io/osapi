@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/process"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 type ConditionPublicTestSuite struct {

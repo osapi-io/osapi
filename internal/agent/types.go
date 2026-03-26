@@ -35,7 +35,7 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/client"
 	"github.com/retr0h/osapi/internal/provider/command"
-	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
@@ -44,8 +44,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
-	"github.com/retr0h/osapi/internal/provider/process"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // Agent implements job processing with clean lifecycle management.

@@ -23,8 +23,8 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/suite"
 
-	dockerprov "github.com/retr0h/osapi/internal/provider/docker"
-	dockermocks "github.com/retr0h/osapi/internal/provider/docker/mocks"
+	dockerprov "github.com/retr0h/osapi/internal/provider/container/docker"
+	dockermocks "github.com/retr0h/osapi/internal/provider/container/docker/mocks"
 )
 
 // newHijackedResponse creates a HijackedResponse with the given content
