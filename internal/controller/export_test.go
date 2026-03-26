@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/process"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // ExportWriteRegistration exposes the private writeRegistration method for testing.

@@ -31,7 +31,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/command"
-	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"

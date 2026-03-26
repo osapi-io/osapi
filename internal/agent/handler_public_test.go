@@ -51,7 +51,7 @@ import (
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
-	processMocks "github.com/retr0h/osapi/internal/provider/process/mocks"
+	processMocks "github.com/retr0h/osapi/internal/telemetry/process/mocks"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
 )
 

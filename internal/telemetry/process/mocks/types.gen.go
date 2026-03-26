@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	process "github.com/retr0h/osapi/internal/provider/process"
+	process "github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // MockProvider is a mock of Provider interface.

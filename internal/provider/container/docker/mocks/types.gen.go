@@ -10,7 +10,7 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-	docker "github.com/retr0h/osapi/internal/provider/docker"
+	docker "github.com/retr0h/osapi/internal/provider/container/docker"
 )
 
 // MockProvider is a mock of Provider interface.

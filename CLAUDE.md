@@ -38,7 +38,8 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `scheduled/cron`, `process/` (process metrics)
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
+- **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
 - **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
@@ -76,7 +77,7 @@ parameters from the job payload and returns a result.
 - `command` — executes arbitrary commands
 - `docker` — manages Docker containers via the Docker SDK
 
-Reference: `internal/provider/docker/` or `internal/provider/node/host/`
+Reference: `internal/provider/container/docker/` or `internal/provider/node/host/`
 
 **Meta providers** don't write files directly — they delegate to
 the file provider. This gives them SHA tracking, idempotency, drift
@@ -112,7 +113,10 @@ internal/provider/{category}/{domain}/
 ```
 
 For top-level providers: `internal/provider/{domain}/` (e.g.,
-`internal/provider/docker/`, `internal/provider/command/`).
+`internal/provider/command/`, `internal/provider/file/`).
+For categorized providers: `internal/provider/{category}/{domain}/`
+(e.g., `internal/provider/container/docker/`,
+`internal/provider/scheduled/cron/`).
 
 #### Provider Interface
 

@@ -28,7 +28,7 @@ import (
 
 	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider/command"
-	dockerProv "github.com/retr0h/osapi/internal/provider/docker"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/provider/network/netinfo"
 	"github.com/retr0h/osapi/internal/provider/network/ping"

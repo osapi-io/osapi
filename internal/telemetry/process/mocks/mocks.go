@@ -23,7 +23,7 @@ package mocks
 import (
 	"github.com/golang/mock/gomock"
 
-	"github.com/retr0h/osapi/internal/provider/process"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // NewPlainMockProvider creates a Mock without defaults.

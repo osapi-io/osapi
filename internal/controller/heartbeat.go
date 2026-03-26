@@ -30,7 +30,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/process"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // heartbeatMarshalFn is the JSON marshal function (injectable for testing).
