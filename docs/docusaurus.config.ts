@@ -232,8 +232,8 @@ const config: Config = {
             },
             {
               type: 'doc',
-              label: 'Platform',
-              docId: 'sidebar/sdk/platform/platform'
+              label: 'Detection',
+              docId: 'sidebar/sdk/platform/detection'
             },
             {
               type: 'html',
