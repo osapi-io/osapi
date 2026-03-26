@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,12 +18,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package disk provides disk usage statistics.
 package disk
 
-// ExportIsPermissionError exposes the private isPermissionError for testing.
-func ExportIsPermissionError(
+import (
+	"os"
+	"strings"
+	"syscall"
+)
+
+// isPermissionError checks if an error is a filesystem permission error.
+// Used by platform-specific providers to skip inaccessible mount points.
+func isPermissionError(
 	err error,
 ) bool {
-	return isPermissionError(err)
+	if err == nil {
+		return false
+	}
+
+	if pathErr, ok := err.(*os.PathError); ok {
+		if errno, ok := pathErr.Err.(syscall.Errno); ok && errno == syscall.EACCES {
+			return true
+		}
+	}
+
+	if strings.Contains(err.Error(), "permission denied") {
+		return true
+	}
+
+	return false
 }

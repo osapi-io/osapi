@@ -23,9 +23,6 @@ package disk
 import (
 	"fmt"
 	"log/slog"
-	"os"
-	"strings"
-	"syscall"
 
 	"github.com/shirou/gopsutil/v4/disk"
 )
@@ -77,31 +74,6 @@ func (u *Debian) GetLocalUsageStats() ([]Result, error) {
 // isPermissionError checks if an error is related to permission issues.
 // Note: This function checks for syscall.EACCES, which represents "permission
 // denied" errors at the system call level, as well as the string "permission
-// denied" in the error message.
-// This is not an ideal approach. We resort to this due to limitations in the
-// gopsutil library, which does not provide a more explicit way of classifying
-// permission-related errors.
-func isPermissionError(
-	err error,
-) bool {
-	if err == nil {
-		return false
-	}
-
-	// Check if the error is related to EACCES or permission denied.
-	if pathErr, ok := err.(*os.PathError); ok {
-		if errno, ok := pathErr.Err.(syscall.Errno); ok && errno == syscall.EACCES {
-			return true
-		}
-	}
-
-	// Additionally, some errors might be plain "permission denied" strings
-	if strings.Contains(err.Error(), "permission denied") {
-		return true
-	}
-
-	return false
-}
 
 // isLocalPartition determines if a partition is a local disk (not network or special filesystems).
 func isLocalPartition(
