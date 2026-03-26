@@ -517,6 +517,15 @@ Conventions:
   errors, edge cases) as rows in one table
 - Avoid generic file names like `helpers.go` or `utils.go` — name
   files after what they contain
+- **Test file naming**: every test file MUST have a corresponding
+  production file with a matching name. `foo_public_test.go` tests
+  `foo.go`. Never create test files with names that don't match a
+  production file (e.g., don't create `check_error_public_test.go`
+  if the code lives in `response.go` — name it
+  `response_public_test.go`). If a production file is too large and
+  you want to split tests by concern, split the production file
+  first (e.g., `agent.go` → `agent.go` + `agent_drain.go` +
+  `agent_timeline.go`), then create matching test files.
 
 #### Mocking
 
