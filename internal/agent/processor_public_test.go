@@ -109,27 +109,23 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	s.testAgent = agent.New(
-		appFs,
-		appConfig,
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMock,
-		diskMock,
-		memMock,
-		loadMock,
-		dnsMock,
-		pingMock,
-		netinfoMock,
-		commandMock,
-		fMock,
-		nil,
-		nil,
-		processMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-	)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		appFs:           appFs,
+		appConfig:       appConfig,
+		logger:          slog.Default(),
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMock,
+		diskProvider:    diskMock,
+		memProvider:     memMock,
+		loadProvider:    loadMock,
+		dnsProvider:     dnsMock,
+		pingProvider:    pingMock,
+		netinfoProvider: netinfoMock,
+		commandProvider: commandMock,
+		fileProvider:    fMock,
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+	})
 }
 
 func (s *ProcessorPublicTestSuite) TearDownTest() {
@@ -709,27 +705,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			createAgent: func() *agent.Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMock,
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMock,
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -741,27 +729,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 				hostMock.EXPECT().
 					GetUptime().
 					Return(time.Duration(0), errors.New("uptime unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMock,
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMock,
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -771,27 +751,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			createAgent: func() *agent.Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMock,
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMock,
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -801,27 +773,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			createAgent: func() *agent.Agent {
 				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
 				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMock,
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMock,
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -831,27 +795,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			createAgent: func() *agent.Agent {
 				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
 				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMock,
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMock,
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -861,27 +817,19 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 			createAgent: func() *agent.Agent {
 				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
 				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMock,
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMock,
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 	}
@@ -925,27 +873,19 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 				dnsMock.EXPECT().
 					GetResolvConfByInterface("eth0").
 					Return(nil, errors.New("DNS lookup failed"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMock,
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMock,
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -959,27 +899,19 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 				dnsMock.EXPECT().
 					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("DNS update failed"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMock,
-					pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMock,
+					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 		{
@@ -991,27 +923,19 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			createAgent: func() *agent.Agent {
 				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 				pingMock.EXPECT().Do("8.8.8.8").Return(nil, errors.New("ping timeout"))
-				return agent.New(
-					memfs.New(),
-					config.Config{},
-					slog.Default(),
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memMocks.NewPlainMockProvider(s.mockCtrl),
-					loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingMock,
-					netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandMocks.NewPlainMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-				)
+				return newTestAgent(newTestAgentParams{
+					appFs:           memfs.New(),
+					appConfig:       config.Config{},
+					jobClient:       s.mockJobClient,
+					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memProvider:     memMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
+					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:    pingMock,
+					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
+					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+				})
 			},
 		},
 	}

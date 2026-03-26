@@ -24,37 +24,42 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/retr0h/osapi/internal/job"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
 )
 
-// processFileOperation handles file-related operations.
-func (a *Agent) processFileOperation(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	if a.fileProvider == nil {
-		return nil, fmt.Errorf("file provider not configured")
-	}
+// NewFileProcessor returns a ProcessorFunc that handles file-related operations.
+func NewFileProcessor(
+	fileProvider fileProv.Provider,
+	_ *slog.Logger,
+) ProcessorFunc {
+	return func(req job.Request) (json.RawMessage, error) {
+		if fileProvider == nil {
+			return nil, fmt.Errorf("file provider not configured")
+		}
 
-	// Extract base operation from dotted operation (e.g., "deploy.execute" -> "deploy")
-	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
+		// Extract base operation from dotted operation (e.g., "deploy.execute" -> "deploy")
+		baseOperation := strings.Split(req.Operation, ".")[0]
 
-	switch baseOperation {
-	case "deploy":
-		return a.processFileDeploy(jobRequest)
-	case "undeploy":
-		return a.processFileUndeploy(jobRequest)
-	case "status":
-		return a.processFileStatus(jobRequest)
-	default:
-		return nil, fmt.Errorf("unsupported file operation: %s", jobRequest.Operation)
+		switch baseOperation {
+		case "deploy":
+			return processFileDeploy(fileProvider, req)
+		case "undeploy":
+			return processFileUndeploy(fileProvider, req)
+		case "status":
+			return processFileStatus(fileProvider, req)
+		default:
+			return nil, fmt.Errorf("unsupported file operation: %s", req.Operation)
+		}
 	}
 }
 
 // processFileDeploy handles file deploy operations.
-func (a *Agent) processFileDeploy(
+func processFileDeploy(
+	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var req fileProv.DeployRequest
@@ -62,7 +67,7 @@ func (a *Agent) processFileDeploy(
 		return nil, fmt.Errorf("failed to parse file deploy data: %w", err)
 	}
 
-	result, err := a.fileProvider.Deploy(context.Background(), req)
+	result, err := fileProvider.Deploy(context.Background(), req)
 	if err != nil {
 		return nil, fmt.Errorf("file deploy failed: %w", err)
 	}
@@ -71,7 +76,8 @@ func (a *Agent) processFileDeploy(
 }
 
 // processFileStatus handles file status operations.
-func (a *Agent) processFileStatus(
+func processFileStatus(
+	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var req fileProv.StatusRequest
@@ -79,7 +85,7 @@ func (a *Agent) processFileStatus(
 		return nil, fmt.Errorf("failed to parse file status data: %w", err)
 	}
 
-	result, err := a.fileProvider.Status(context.Background(), req)
+	result, err := fileProvider.Status(context.Background(), req)
 	if err != nil {
 		return nil, fmt.Errorf("file status failed: %w", err)
 	}
@@ -88,7 +94,8 @@ func (a *Agent) processFileStatus(
 }
 
 // processFileUndeploy handles file undeploy operations.
-func (a *Agent) processFileUndeploy(
+func processFileUndeploy(
+	fileProvider fileProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var req fileProv.UndeployRequest
@@ -96,15 +103,10 @@ func (a *Agent) processFileUndeploy(
 		return nil, fmt.Errorf("failed to parse file undeploy data: %w", err)
 	}
 
-	result, err := a.fileProvider.Undeploy(context.Background(), req)
+	result, err := fileProvider.Undeploy(context.Background(), req)
 	if err != nil {
 		return nil, fmt.Errorf("file undeploy failed: %w", err)
 	}
 
 	return json.Marshal(result)
-}
-
-// getFileProvider returns the file provider.
-func (a *Agent) getFileProvider() fileProv.Provider {
-	return a.fileProvider
 }

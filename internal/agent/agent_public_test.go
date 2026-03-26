@@ -95,6 +95,25 @@ func (s *AgentPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
+func (s *AgentPublicTestSuite) buildAgent() *agent.Agent {
+	return newTestAgent(newTestAgentParams{
+		appFs:           s.appFs,
+		appConfig:       s.appConfig,
+		logger:          s.logger,
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+	})
+}
+
 func (s *AgentPublicTestSuite) TestNew() {
 	tests := []struct {
 		name string
@@ -106,27 +125,7 @@ func (s *AgentPublicTestSuite) TestNew() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := agent.New(
-				s.appFs,
-				s.appConfig,
-				s.logger,
-				s.mockJobClient,
-				"test-stream",
-				hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-				pingMocks.NewDefaultMockProvider(s.mockCtrl),
-				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-				commandMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-				nil,
-				processMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-			)
+			a := s.buildAgent()
 
 			s.NotNil(a)
 
@@ -156,27 +155,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					Return(context.Canceled).
 					Times(6)
 
-				return agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					processMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-				)
+				return s.buildAgent()
 			},
 			stopFunc: func(a *agent.Agent) {
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -209,27 +188,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					}).
 					Times(6)
 
-				a := agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					processMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-				)
+				a := s.buildAgent()
 
 				// Schedule cleanup after Stop returns
 				s.T().Cleanup(func() {
@@ -267,27 +226,7 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 		{
 			name: "returns error when agent not started",
 			setupFunc: func() *agent.Agent {
-				return agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					processMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-				)
+				return s.buildAgent()
 			},
 			wantErr: true,
 			errMsg:  "agent not started",
@@ -305,28 +244,7 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 					Return(context.Canceled).
 					Times(6)
 
-				a := agent.New(
-					s.appFs,
-					s.appConfig,
-					s.logger,
-					s.mockJobClient,
-					"test-stream",
-					hostMocks.NewDefaultMockProvider(s.mockCtrl),
-					diskMocks.NewDefaultMockProvider(s.mockCtrl),
-					memMocks.NewDefaultMockProvider(s.mockCtrl),
-					loadMocks.NewDefaultMockProvider(s.mockCtrl),
-					dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-					pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-					commandMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-					nil,
-					processMocks.NewDefaultMockProvider(s.mockCtrl),
-					nil,
-					nil,
-				)
-
+				a := s.buildAgent()
 				a.Start()
 				s.T().Cleanup(func() {
 					stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -367,27 +285,7 @@ func (s *AgentPublicTestSuite) TestSetMeterProvider() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := agent.New(
-				s.appFs,
-				s.appConfig,
-				s.logger,
-				s.mockJobClient,
-				"test-stream",
-				hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-				pingMocks.NewDefaultMockProvider(s.mockCtrl),
-				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-				commandMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-				nil,
-				processMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-			)
+			a := s.buildAgent()
 
 			port := s.getFreePort()
 			srv := metrics.New("127.0.0.1", port, slog.Default())
@@ -421,27 +319,7 @@ func (s *AgentPublicTestSuite) TestLastHeartbeatTime() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a := agent.New(
-				s.appFs,
-				s.appConfig,
-				s.logger,
-				s.mockJobClient,
-				"test-stream",
-				hostMocks.NewDefaultMockProvider(s.mockCtrl),
-				diskMocks.NewDefaultMockProvider(s.mockCtrl),
-				memMocks.NewDefaultMockProvider(s.mockCtrl),
-				loadMocks.NewDefaultMockProvider(s.mockCtrl),
-				dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-				pingMocks.NewDefaultMockProvider(s.mockCtrl),
-				netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
-				commandMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-				nil,
-				processMocks.NewDefaultMockProvider(s.mockCtrl),
-				nil,
-				nil,
-			)
+			a := s.buildAgent()
 
 			got := a.LastHeartbeatTime()
 			if tt.wantZero {

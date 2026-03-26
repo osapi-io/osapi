@@ -25,11 +25,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"testing"
 	"time"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -72,27 +70,21 @@ func (s *FactsPublicTestSuite) SetupTest() {
 		},
 	}
 
-	s.testAgent = agent.New(
-		memfs.New(),
-		appConfig,
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		s.mockHostProvider,
-		diskMocks.NewDefaultMockProvider(s.mockCtrl),
-		memMocks.NewDefaultMockProvider(s.mockCtrl),
-		loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		dnsMocks.NewDefaultMockProvider(s.mockCtrl),
-		pingMocks.NewDefaultMockProvider(s.mockCtrl),
-		s.mockNetinfo,
-		commandMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-		nil,
-		processMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		s.mockFactsKV,
-	)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		appConfig:       appConfig,
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    s.mockHostProvider,
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
+		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
+		netinfoProvider: s.mockNetinfo,
+		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+		factsKV:         s.mockFactsKV,
+	})
 }
 
 func (s *FactsPublicTestSuite) TearDownTest() {

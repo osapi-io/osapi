@@ -30,8 +30,18 @@ import (
 	"github.com/retr0h/osapi/internal/agent"
 	"github.com/retr0h/osapi/internal/cli"
 	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/provider/command"
+	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
+	"github.com/retr0h/osapi/internal/provider/network/dns"
+	"github.com/retr0h/osapi/internal/provider/network/netinfo"
+	"github.com/retr0h/osapi/internal/provider/network/ping"
+	"github.com/retr0h/osapi/internal/provider/node/disk"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
+	"github.com/retr0h/osapi/internal/provider/node/load"
+	"github.com/retr0h/osapi/internal/provider/node/mem"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -39,6 +49,9 @@ import (
 
 // Ensure cli import is used (for BuildFileStateKVConfig etc.)
 var _ = cli.BuildFileStateKVConfig
+
+// dockerNewFn is injectable for testing.
+var dockerNewFn = dockerProv.New
 
 // setupAgent connects to NATS, creates providers, and builds the agent.
 // It is used by the standalone agent start and combined start commands.
@@ -53,15 +66,151 @@ func setupAgent(
 
 	b := connectNATSBundle(ctx, log, connCfg, kvBucket, namespace, streamName)
 
-	providerFactory := agent.NewProviderFactory(log, appFs)
-	hostProvider, diskProvider, memProvider, loadProvider, dnsProvider, pingProvider, netinfoProvider, commandProvider, dockerProvider := providerFactory.CreateProviders()
+	plat := platform.Detect()
+	if plat == "darwin" {
+		log.Info("running on darwin")
+	}
 
-	// Create file provider if Object Store and file-state KV are configured.
+	execManager := exec.New(log)
+
+	// --- Node providers ---
+	var hostProvider nodeHost.Provider
+	switch plat {
+	case "debian":
+		hostProvider = nodeHost.NewDebianProvider()
+	case "darwin":
+		hostProvider = nodeHost.NewDarwinProvider()
+	default:
+		hostProvider = nodeHost.NewLinuxProvider()
+	}
+
+	var diskProvider disk.Provider
+	switch plat {
+	case "debian":
+		diskProvider = disk.NewDebianProvider(log)
+	case "darwin":
+		diskProvider = disk.NewDarwinProvider(log)
+	default:
+		diskProvider = disk.NewLinuxProvider()
+	}
+
+	var memProvider mem.Provider
+	switch plat {
+	case "debian":
+		memProvider = mem.NewDebianProvider()
+	case "darwin":
+		memProvider = mem.NewDarwinProvider()
+	default:
+		memProvider = mem.NewLinuxProvider()
+	}
+
+	var loadProvider load.Provider
+	switch plat {
+	case "debian":
+		loadProvider = load.NewDebianProvider()
+	case "darwin":
+		loadProvider = load.NewDarwinProvider()
+	default:
+		loadProvider = load.NewLinuxProvider()
+	}
+
+	// --- Network providers ---
+	var dnsProvider dns.Provider
+	switch plat {
+	case "debian":
+		dnsProvider = dns.NewDebianProvider(log, execManager)
+	case "darwin":
+		dnsProvider = dns.NewDarwinProvider(log, execManager)
+	default:
+		dnsProvider = dns.NewLinuxProvider()
+	}
+
+	var pingProvider ping.Provider
+	switch plat {
+	case "debian":
+		pingProvider = ping.NewDebianProvider()
+	case "darwin":
+		pingProvider = ping.NewDarwinProvider()
+	default:
+		pingProvider = ping.NewLinuxProvider()
+	}
+
+	var netinfoProvider netinfo.Provider
+	switch plat {
+	case "darwin":
+		netinfoProvider = netinfo.NewDarwinProvider(execManager)
+	default:
+		netinfoProvider = netinfo.NewLinuxProvider()
+	}
+
+	// --- Command provider ---
+	commandProvider := command.New(log, execManager)
+
+	// --- Docker provider ---
+	var dockerProvider dockerProv.Provider
+	dockerClient, err := dockerNewFn()
+	if err == nil {
+		if pingErr := dockerClient.Ping(ctx); pingErr == nil {
+			dockerProvider = dockerClient
+		} else {
+			log.Info("Docker not available, docker operations disabled",
+				slog.String("error", pingErr.Error()))
+		}
+	} else {
+		log.Info("Docker client creation failed, docker operations disabled",
+			slog.String("error", err.Error()))
+	}
+
+	// --- File provider ---
 	hostname, _ := job.GetAgentHostname(appConfig.Agent.Hostname)
 	fileProvider, fileStateKV := createFileProvider(ctx, log, b, namespace, hostname)
 
-	// Create cron provider — depends on file provider for SHA-tracked deploys.
+	// --- Cron provider ---
 	cronProvider := createCronProvider(log, fileProvider, fileStateKV, hostname)
+
+	// --- Build registry ---
+	registry := agent.NewProviderRegistry()
+
+	registry.Register(
+		"node",
+		agent.NewNodeProcessor(
+			hostProvider,
+			diskProvider,
+			memProvider,
+			loadProvider,
+			appConfig,
+			log,
+		),
+		hostProvider,
+		diskProvider,
+		memProvider,
+		loadProvider,
+	)
+
+	registry.Register("network",
+		agent.NewNetworkProcessor(dnsProvider, pingProvider, log),
+		dnsProvider, pingProvider, netinfoProvider,
+	)
+
+	registry.Register("command",
+		agent.NewCommandProcessor(commandProvider, log),
+		commandProvider,
+	)
+
+	registry.Register("file",
+		agent.NewFileProcessor(fileProvider, log),
+		fileProvider,
+	)
+
+	registry.Register("docker",
+		agent.NewDockerProcessor(dockerProvider, log),
+		dockerProvider,
+	)
+
+	registry.Register("schedule",
+		agent.NewScheduleProcessor(cronProvider, log),
+		cronProvider,
+	)
 
 	a := agent.New(
 		appFs,
@@ -73,14 +222,9 @@ func setupAgent(
 		diskProvider,
 		memProvider,
 		loadProvider,
-		dnsProvider,
-		pingProvider,
 		netinfoProvider,
-		commandProvider,
-		fileProvider,
-		dockerProvider,
-		cronProvider,
 		process.New(),
+		registry,
 		b.registryKV,
 		b.factsKV,
 	)

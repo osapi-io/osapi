@@ -29,14 +29,12 @@ import (
 	"net"
 	"testing"
 
-	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/agent"
 	agentmocks "github.com/retr0h/osapi/internal/agent/mocks"
-	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider"
@@ -82,26 +80,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	appFs := memfs.New()
-	appConfig := config.Config{
-		NATS: config.NATS{
-			Stream: config.NATSStream{
-				Name: "test-stream",
-			},
-		},
-		Agent: config.AgentConfig{
-			Hostname:   "test-agent",
-			QueueGroup: "test-queue",
-			MaxJobs:    5,
-		},
-	}
-
-	// Create mock providers using the same pattern as processor tests
-	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
-	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
-	memMock := memMocks.NewDefaultMockProvider(s.mockCtrl)
-	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
-
 	// Use plain DNS mock with appropriate expectations
 	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any()).Return(&dns.GetResult{
@@ -121,31 +99,20 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		PacketLoss:      0,
 	}, nil).AnyTimes()
 
-	netinfoMock := netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
-	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
-	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
-
-	s.testAgent = agent.New(
-		appFs,
-		appConfig,
-		slog.Default(),
-		s.mockJobClient,
-		"test-stream",
-		hostMock,
-		diskMock,
-		memMock,
-		loadMock,
-		dnsMock,
-		pingMock,
-		netinfoMock,
-		commandMock,
-		fMock,
-		nil,
-		nil,
-		processMocks.NewDefaultMockProvider(s.mockCtrl),
-		nil,
-		nil,
-	)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memProvider:     memMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		dnsProvider:     dnsMock,
+		pingProvider:    pingMock,
+		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
+		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
+		fileProvider:    fileMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+	})
 
 	// Set up a real MeterProvider so the instrumentation nil-guards are exercised.
 	l, err := net.Listen("tcp", "127.0.0.1:0")

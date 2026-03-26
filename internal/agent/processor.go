@@ -26,10 +26,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/command"
-	"github.com/retr0h/osapi/internal/provider/network/dns"
-	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
@@ -45,72 +43,51 @@ func (a *Agent) processJobOperation(
 		slog.String("operation", jobRequest.Operation),
 	)
 
-	switch jobRequest.Category {
-	case "node":
-		return a.processNodeOperation(jobRequest)
-	case "network":
-		return a.processNetworkOperation(jobRequest)
-	case "command":
-		return a.processCommandOperation(jobRequest)
-	case "file":
-		return a.processFileOperation(jobRequest)
-	case "docker":
-		return a.processDockerOperation(jobRequest)
-	case "schedule":
-		return a.processScheduleOperation(jobRequest)
-	default:
-		return nil, fmt.Errorf("unsupported job category: %s", jobRequest.Category)
-	}
+	return a.registry.Dispatch(jobRequest)
 }
 
-// processNodeOperation handles system-related operations.
-func (a *Agent) processNodeOperation(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
-	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
+// NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
+func NewNodeProcessor(
+	hostProvider nodeHost.Provider,
+	diskProvider disk.Provider,
+	memProvider mem.Provider,
+	loadProvider load.Provider,
+	appConfig config.Config,
+	logger *slog.Logger,
+) ProcessorFunc {
+	return func(req job.Request) (json.RawMessage, error) {
+		// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
+		baseOperation := strings.Split(req.Operation, ".")[0]
 
-	switch baseOperation {
-	case "hostname":
-		return a.getNodeHostname()
-	case "status":
-		return a.getNodeStatus()
-	case "uptime":
-		return a.getNodeUptime()
-	case "os", "osinfo":
-		return a.getNodeOSInfo()
-	case "disk":
-		return a.getNodeDisk()
-	case "memory", "mem":
-		return a.getNodeMemory()
-	case "load":
-		return a.getNodeLoad()
-	default:
-		return nil, fmt.Errorf("unsupported node operation: %s", jobRequest.Operation)
-	}
-}
-
-// processNetworkOperation handles network-related operations.
-func (a *Agent) processNetworkOperation(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
-	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
-
-	switch baseOperation {
-	case "dns":
-		return a.processNetworkDNS(jobRequest)
-	case "ping":
-		return a.processNetworkPing(jobRequest)
-	default:
-		return nil, fmt.Errorf("unsupported network operation: %s", jobRequest.Operation)
+		switch baseOperation {
+		case "hostname":
+			return getNodeHostname(hostProvider, appConfig, logger)
+		case "status":
+			return getNodeStatus(hostProvider, diskProvider, memProvider, loadProvider, logger)
+		case "uptime":
+			return getNodeUptime(hostProvider, logger)
+		case "os", "osinfo":
+			return getNodeOSInfo(hostProvider, logger)
+		case "disk":
+			return getNodeDisk(diskProvider, logger)
+		case "memory", "mem":
+			return getNodeMemory(memProvider, logger)
+		case "load":
+			return getNodeLoad(loadProvider, logger)
+		default:
+			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
+		}
 	}
 }
 
 // getNodeHostname retrieves the node hostname and agent labels.
-func (a *Agent) getNodeHostname() (json.RawMessage, error) {
-	a.logger.Debug("executing host.GetHostname")
-	hostProvider := a.getHostProvider()
+func getNodeHostname(
+	hostProvider nodeHost.Provider,
+	appConfig config.Config,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing host.GetHostname")
+
 	hostname, err := hostProvider.GetHostname()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hostname: %w", err)
@@ -121,22 +98,23 @@ func (a *Agent) getNodeHostname() (json.RawMessage, error) {
 		"changed":  false,
 	}
 
-	if len(a.appConfig.Agent.Labels) > 0 {
-		result["labels"] = a.appConfig.Agent.Labels
+	if len(appConfig.Agent.Labels) > 0 {
+		result["labels"] = appConfig.Agent.Labels
 	}
 
 	return json.Marshal(result)
 }
 
 // getNodeStatus retrieves comprehensive node status.
-func (a *Agent) getNodeStatus() (json.RawMessage, error) {
-	a.logger.Debug("executing node.GetStatus")
-	hostProvider := a.getHostProvider()
-	diskProvider := a.getDiskProvider()
-	memProvider := a.getMemProvider()
-	loadProvider := a.getLoadProvider()
+func getNodeStatus(
+	hostProvider nodeHost.Provider,
+	diskProvider disk.Provider,
+	memProvider mem.Provider,
+	loadProvider load.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing node.GetStatus")
 
-	// Get all node information
 	hostname, _ := hostProvider.GetHostname()
 	osInfo, _ := hostProvider.GetOSInfo()
 	uptime, _ := hostProvider.GetUptime()
@@ -158,9 +136,12 @@ func (a *Agent) getNodeStatus() (json.RawMessage, error) {
 }
 
 // getNodeUptime retrieves the system uptime.
-func (a *Agent) getNodeUptime() (json.RawMessage, error) {
-	a.logger.Debug("executing host.GetUptime")
-	hostProvider := a.getHostProvider()
+func getNodeUptime(
+	hostProvider nodeHost.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing host.GetUptime")
+
 	uptime, err := hostProvider.GetUptime()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get uptime: %w", err)
@@ -176,9 +157,12 @@ func (a *Agent) getNodeUptime() (json.RawMessage, error) {
 }
 
 // getNodeOSInfo retrieves the operating system information.
-func (a *Agent) getNodeOSInfo() (json.RawMessage, error) {
-	a.logger.Debug("executing host.GetOSInfo")
-	hostProvider := a.getHostProvider()
+func getNodeOSInfo(
+	hostProvider nodeHost.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing host.GetOSInfo")
+
 	osInfo, err := hostProvider.GetOSInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OS info: %w", err)
@@ -188,9 +172,12 @@ func (a *Agent) getNodeOSInfo() (json.RawMessage, error) {
 }
 
 // getNodeDisk retrieves disk usage statistics.
-func (a *Agent) getNodeDisk() (json.RawMessage, error) {
-	a.logger.Debug("executing disk.GetLocalUsageStats")
-	diskProvider := a.getDiskProvider()
+func getNodeDisk(
+	diskProvider disk.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing disk.GetLocalUsageStats")
+
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get disk usage: %w", err)
@@ -205,9 +192,12 @@ func (a *Agent) getNodeDisk() (json.RawMessage, error) {
 }
 
 // getNodeMemory retrieves memory statistics.
-func (a *Agent) getNodeMemory() (json.RawMessage, error) {
-	a.logger.Debug("executing mem.GetStats")
-	memProvider := a.getMemProvider()
+func getNodeMemory(
+	memProvider mem.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing mem.GetStats")
+
 	memInfo, err := memProvider.GetStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get memory stats: %w", err)
@@ -217,138 +207,16 @@ func (a *Agent) getNodeMemory() (json.RawMessage, error) {
 }
 
 // getNodeLoad retrieves load average statistics.
-func (a *Agent) getNodeLoad() (json.RawMessage, error) {
-	a.logger.Debug("executing load.GetAverageStats")
-	loadProvider := a.getLoadProvider()
+func getNodeLoad(
+	loadProvider load.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing load.GetAverageStats")
+
 	loadAvg, err := loadProvider.GetAverageStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get load averages: %w", err)
 	}
 
 	return json.Marshal(loadAvg)
-}
-
-// processNetworkDNS handles DNS configuration operations.
-func (a *Agent) processNetworkDNS(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	var dnsData map[string]interface{}
-	if err := json.Unmarshal(jobRequest.Data, &dnsData); err != nil {
-		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
-	}
-
-	if jobRequest.Type == job.TypeQuery {
-		// Get DNS configuration
-		interfaceName, _ := dnsData["interface"].(string)
-		if interfaceName == "" {
-			interfaceName = "eth0" // Default interface
-		}
-
-		a.logger.Debug("executing dns.GetResolvConfByInterface",
-			slog.String("interface", interfaceName),
-		)
-		dnsProvider := a.getDNSProvider()
-		config, err := dnsProvider.GetResolvConfByInterface(interfaceName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get DNS config: %w", err)
-		}
-
-		return json.Marshal(config)
-	}
-
-	// Set DNS configuration
-	servers, _ := dnsData["servers"].([]interface{})
-	searchDomains, _ := dnsData["search_domains"].([]interface{})
-	interfaceName, _ := dnsData["interface"].(string)
-
-	var serverStrings []string
-	for _, s := range servers {
-		if str, ok := s.(string); ok {
-			serverStrings = append(serverStrings, str)
-		}
-	}
-
-	var searchStrings []string
-	for _, s := range searchDomains {
-		if str, ok := s.(string); ok {
-			searchStrings = append(searchStrings, str)
-		}
-	}
-
-	a.logger.Debug("executing dns.UpdateResolvConfByInterface",
-		slog.String("interface", interfaceName),
-		slog.Int("servers", len(serverStrings)),
-	)
-	dnsProvider := a.getDNSProvider()
-	dnsResult, err := dnsProvider.UpdateResolvConfByInterface(
-		serverStrings,
-		searchStrings,
-		interfaceName,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to set DNS config: %w", err)
-	}
-
-	result := map[string]interface{}{
-		"success": true,
-		"changed": dnsResult.Changed,
-		"message": "DNS configuration updated successfully",
-	}
-
-	return json.Marshal(result)
-}
-
-// processNetworkPing handles ping operations.
-func (a *Agent) processNetworkPing(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	var pingData map[string]interface{}
-	if err := json.Unmarshal(jobRequest.Data, &pingData); err != nil {
-		return nil, fmt.Errorf("failed to parse ping data: %w", err)
-	}
-
-	address, ok := pingData["address"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing ping address")
-	}
-
-	a.logger.Debug("executing ping.Do",
-		slog.String("address", address),
-	)
-	pingProvider := a.getPingProvider()
-	result, err := pingProvider.Do(address)
-	if err != nil {
-		return nil, fmt.Errorf("ping failed: %w", err)
-	}
-
-	return json.Marshal(result)
-}
-
-// Provider accessor methods that return the injected providers
-func (a *Agent) getHostProvider() nodeHost.Provider {
-	return a.hostProvider
-}
-
-func (a *Agent) getDiskProvider() disk.Provider {
-	return a.diskProvider
-}
-
-func (a *Agent) getMemProvider() mem.Provider {
-	return a.memProvider
-}
-
-func (a *Agent) getLoadProvider() load.Provider {
-	return a.loadProvider
-}
-
-func (a *Agent) getDNSProvider() dns.Provider {
-	return a.dnsProvider
-}
-
-func (a *Agent) getPingProvider() ping.Provider {
-	return a.pingProvider
-}
-
-func (a *Agent) getCommandProvider() command.Provider {
-	return a.commandProvider
 }

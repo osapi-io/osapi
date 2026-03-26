@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -31,46 +32,50 @@ import (
 	dockerProv "github.com/retr0h/osapi/internal/provider/container/docker"
 )
 
-// processDockerOperation handles docker-related operations.
-func (a *Agent) processDockerOperation(
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	if a.dockerProvider == nil {
-		return nil, fmt.Errorf("docker runtime not available")
-	}
+// NewDockerProcessor returns a ProcessorFunc that handles docker-related operations.
+func NewDockerProcessor(
+	dockerProvider dockerProv.Provider,
+	_ *slog.Logger,
+) ProcessorFunc {
+	return func(req job.Request) (json.RawMessage, error) {
+		if dockerProvider == nil {
+			return nil, fmt.Errorf("docker runtime not available")
+		}
 
-	ctx := context.Background()
+		ctx := context.Background()
 
-	// Extract base operation from dotted operation (e.g., "create.execute" -> "create")
-	baseOperation := strings.Split(jobRequest.Operation, ".")[0]
+		// Extract base operation from dotted operation (e.g., "create.execute" -> "create")
+		baseOperation := strings.Split(req.Operation, ".")[0]
 
-	switch baseOperation {
-	case "create":
-		return a.processDockerCreate(ctx, jobRequest)
-	case "start":
-		return a.processDockerStart(ctx, jobRequest)
-	case "stop":
-		return a.processDockerStop(ctx, jobRequest)
-	case "remove":
-		return a.processDockerRemove(ctx, jobRequest)
-	case "list":
-		return a.processDockerList(ctx, jobRequest)
-	case "inspect":
-		return a.processDockerInspect(ctx, jobRequest)
-	case "exec":
-		return a.processDockerExec(ctx, jobRequest)
-	case "pull":
-		return a.processDockerPull(ctx, jobRequest)
-	case "image-remove":
-		return a.processDockerImageRemove(ctx, jobRequest)
-	default:
-		return nil, fmt.Errorf("unsupported docker operation: %s", jobRequest.Operation)
+		switch baseOperation {
+		case "create":
+			return processDockerCreate(ctx, dockerProvider, req)
+		case "start":
+			return processDockerStart(ctx, dockerProvider, req)
+		case "stop":
+			return processDockerStop(ctx, dockerProvider, req)
+		case "remove":
+			return processDockerRemove(ctx, dockerProvider, req)
+		case "list":
+			return processDockerList(ctx, dockerProvider, req)
+		case "inspect":
+			return processDockerInspect(ctx, dockerProvider, req)
+		case "exec":
+			return processDockerExec(ctx, dockerProvider, req)
+		case "pull":
+			return processDockerPull(ctx, dockerProvider, req)
+		case "image-remove":
+			return processDockerImageRemove(ctx, dockerProvider, req)
+		default:
+			return nil, fmt.Errorf("unsupported docker operation: %s", req.Operation)
+		}
 	}
 }
 
 // processDockerCreate handles docker container creation.
-func (a *Agent) processDockerCreate(
+func processDockerCreate(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data job.DockerCreateData
@@ -89,7 +94,7 @@ func (a *Agent) processDockerCreate(
 		volumes = append(volumes, dockerProv.VolumeMapping{Host: v.Host, Container: v.Container})
 	}
 
-	result, err := a.dockerProvider.Create(ctx, dockerProv.CreateParams{
+	result, err := dockerProvider.Create(ctx, dockerProv.CreateParams{
 		Image:     data.Image,
 		Name:      data.Name,
 		Command:   data.Command,
@@ -106,8 +111,9 @@ func (a *Agent) processDockerCreate(
 }
 
 // processDockerStart handles starting a docker container.
-func (a *Agent) processDockerStart(
+func processDockerStart(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -117,7 +123,7 @@ func (a *Agent) processDockerStart(
 		return nil, fmt.Errorf("unmarshal start data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Start(ctx, data.ID)
+	result, err := dockerProvider.Start(ctx, data.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +132,9 @@ func (a *Agent) processDockerStart(
 }
 
 // processDockerStop handles stopping a docker container.
-func (a *Agent) processDockerStop(
+func processDockerStop(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -144,7 +151,7 @@ func (a *Agent) processDockerStop(
 		timeout = &d
 	}
 
-	result, err := a.dockerProvider.Stop(ctx, data.ID, timeout)
+	result, err := dockerProvider.Stop(ctx, data.ID, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +160,9 @@ func (a *Agent) processDockerStop(
 }
 
 // processDockerRemove handles removing a docker container.
-func (a *Agent) processDockerRemove(
+func processDockerRemove(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -165,7 +173,7 @@ func (a *Agent) processDockerRemove(
 		return nil, fmt.Errorf("unmarshal remove data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Remove(ctx, data.ID, data.Force)
+	result, err := dockerProvider.Remove(ctx, data.ID, data.Force)
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +182,9 @@ func (a *Agent) processDockerRemove(
 }
 
 // processDockerList handles listing docker containers.
-func (a *Agent) processDockerList(
+func processDockerList(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data job.DockerListData
@@ -183,7 +192,7 @@ func (a *Agent) processDockerList(
 		return nil, fmt.Errorf("unmarshal list data: %w", err)
 	}
 
-	result, err := a.dockerProvider.List(ctx, dockerProv.ListParams{
+	result, err := dockerProvider.List(ctx, dockerProv.ListParams{
 		State: data.State,
 		Limit: data.Limit,
 	})
@@ -195,8 +204,9 @@ func (a *Agent) processDockerList(
 }
 
 // processDockerInspect handles inspecting a docker container.
-func (a *Agent) processDockerInspect(
+func processDockerInspect(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -206,7 +216,7 @@ func (a *Agent) processDockerInspect(
 		return nil, fmt.Errorf("unmarshal inspect data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Inspect(ctx, data.ID)
+	result, err := dockerProvider.Inspect(ctx, data.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -215,8 +225,9 @@ func (a *Agent) processDockerInspect(
 }
 
 // processDockerExec handles executing a command in a docker container.
-func (a *Agent) processDockerExec(
+func processDockerExec(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -229,7 +240,7 @@ func (a *Agent) processDockerExec(
 		return nil, fmt.Errorf("unmarshal exec data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
+	result, err := dockerProvider.Exec(ctx, data.ID, dockerProv.ExecParams{
 		Command:    data.Command,
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
@@ -242,8 +253,9 @@ func (a *Agent) processDockerExec(
 }
 
 // processDockerPull handles pulling a docker image.
-func (a *Agent) processDockerPull(
+func processDockerPull(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
@@ -253,7 +265,7 @@ func (a *Agent) processDockerPull(
 		return nil, fmt.Errorf("unmarshal pull data: %w", err)
 	}
 
-	result, err := a.dockerProvider.Pull(ctx, data.Image)
+	result, err := dockerProvider.Pull(ctx, data.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -262,8 +274,9 @@ func (a *Agent) processDockerPull(
 }
 
 // processDockerImageRemove handles removing a docker image.
-func (a *Agent) processDockerImageRemove(
+func processDockerImageRemove(
 	ctx context.Context,
+	dockerProvider dockerProv.Provider,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data job.DockerImageRemoveData
@@ -271,7 +284,7 @@ func (a *Agent) processDockerImageRemove(
 		return nil, fmt.Errorf("unmarshal image-remove data: %w", err)
 	}
 
-	result, err := a.dockerProvider.ImageRemove(ctx, data.Image, data.Force)
+	result, err := dockerProvider.ImageRemove(ctx, data.Image, data.Force)
 	if err != nil {
 		return nil, err
 	}
