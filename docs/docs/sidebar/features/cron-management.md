@@ -172,8 +172,8 @@ entry via the file management API after removing the cron entry.
 | Darwin    | Skipped |
 
 On unsupported platforms, cron operations return `status: skipped` instead of
-failing. See [Platform Detection](../sdk/platform.md) for details on OS family
-detection.
+failing. See [Platform Detection](../sdk/platform/detection.md) for details on
+OS family detection.
 
 ## Permissions
 
@@ -214,5 +214,5 @@ and `/node/{hostname}/schedule/timer`.
 - [File Management](file-management.md) — uploading scripts and template
   rendering
 - [CLI Reference](../usage/cli/client/node/schedule/cron.md) — cron commands
-- [Platform Detection](../sdk/platform.md) — OS family detection
+- [Platform Detection](../sdk/platform/detection.md) — OS family detection
 - [Configuration](../usage/configuration.md) — full configuration reference
