@@ -227,7 +227,7 @@ const config: Config = {
             {
               type: 'html',
               value:
-                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Utilities</small>',
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Platform</small>',
               className: 'dropdown-header'
             },
             {
