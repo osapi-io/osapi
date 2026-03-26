@@ -41,4 +41,3 @@ func NewResponse[T any](
 func (r *Response[T]) RawJSON() []byte {
 	return r.rawJSON
 }
-

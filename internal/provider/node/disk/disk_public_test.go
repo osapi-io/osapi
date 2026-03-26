@@ -93,7 +93,6 @@ func (suite *DiskPublicTestSuite) TestIsPermissionError() {
 	}
 }
 
-
 func TestDiskPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(DiskPublicTestSuite))
 }
