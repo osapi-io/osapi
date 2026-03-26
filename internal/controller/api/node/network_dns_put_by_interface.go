@@ -77,7 +77,13 @@ func (s *Node) PutNodeNetworkDNS(
 		"search_domains": searchDomains,
 		"interface":      interfaceName,
 	}
-	jobID, rawResp, err := s.JobClient.Modify(ctx, hostname, "network", job.OperationNetworkDNSUpdate, data)
+	jobID, rawResp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"network",
+		job.OperationNetworkDNSUpdate,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNodeNetworkDNS500JSONResponse{
@@ -112,7 +118,13 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 		"search_domains": searchDomains,
 		"interface":      interfaceName,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "network", job.OperationNetworkDNSUpdate, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"network",
+		job.OperationNetworkDNSUpdate,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNodeNetworkDNS500JSONResponse{

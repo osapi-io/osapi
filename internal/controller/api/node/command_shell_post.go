@@ -76,7 +76,13 @@ func (s *Node) PostNodeCommandShell(
 		Cwd:     cwd,
 		Timeout: timeout,
 	}
-	jobID, rawResp, err := s.JobClient.Modify(ctx, hostname, "command", job.OperationCommandShellExecute, data)
+	jobID, rawResp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"command",
+		job.OperationCommandShellExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeCommandShell500JSONResponse{
@@ -124,7 +130,13 @@ func (s *Node) postNodeCommandShellBroadcast(
 		Cwd:     cwd,
 		Timeout: timeout,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "command", job.OperationCommandShellExecute, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"command",
+		job.OperationCommandShellExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeCommandShell500JSONResponse{

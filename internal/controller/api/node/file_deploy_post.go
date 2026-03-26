@@ -103,7 +103,13 @@ func (s *Node) PostNodeFileDeploy(
 		Group:       group,
 		Vars:        vars,
 	}
-	jobID, rawResp, err := s.JobClient.Modify(ctx, hostname, "file", job.OperationFileDeployExecute, data)
+	jobID, rawResp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"file",
+		job.OperationFileDeployExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileDeploy500JSONResponse{
@@ -145,7 +151,13 @@ func (s *Node) postNodeFileDeployBroadcast(
 		Group:       group,
 		Vars:        vars,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "file", job.OperationFileDeployExecute, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"file",
+		job.OperationFileDeployExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileDeploy500JSONResponse{

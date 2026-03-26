@@ -64,7 +64,13 @@ func (s *Node) PostNodeNetworkPing(
 	}
 
 	data := map[string]any{"address": request.Body.Address}
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "network", job.OperationNetworkPingDo, data)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"network",
+		job.OperationNetworkPingDo,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeNetworkPing500JSONResponse{
@@ -93,7 +99,13 @@ func (s *Node) postNodeNetworkPingBroadcast(
 	address string,
 ) (gen.PostNodeNetworkPingResponseObject, error) {
 	data := map[string]any{"address": address}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "network", job.OperationNetworkPingDo, data)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"network",
+		job.OperationNetworkPingDo,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeNetworkPing500JSONResponse{

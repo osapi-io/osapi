@@ -52,7 +52,13 @@ func (s *Node) GetNodeLoad(
 		return s.getNodeLoadBroadcast(ctx, hostname)
 	}
 
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeLoadGet, struct{}{})
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeLoadGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLoad500JSONResponse{
@@ -79,7 +85,13 @@ func (s *Node) getNodeLoadBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeLoadResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeLoadGet, struct{}{})
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeLoadGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeLoad500JSONResponse{

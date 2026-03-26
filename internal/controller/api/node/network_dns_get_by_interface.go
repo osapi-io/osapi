@@ -57,7 +57,13 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 	}
 
 	data := map[string]any{"interface": request.InterfaceName}
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "network", job.OperationNetworkDNSGet, data)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"network",
+		job.OperationNetworkDNSGet,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeNetworkDNSByInterface500JSONResponse{
@@ -95,7 +101,13 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 	iface string,
 ) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error) {
 	data := map[string]any{"interface": iface}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "network", job.OperationNetworkDNSGet, data)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"network",
+		job.OperationNetworkDNSGet,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeNetworkDNSByInterface500JSONResponse{

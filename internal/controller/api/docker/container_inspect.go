@@ -58,7 +58,13 @@ func (s *Container) GetNodeContainerDockerByID(
 		return s.getNodeContainerDockerInspectBroadcast(ctx, hostname, id)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "docker", job.OperationDockerInspect, map[string]string{"id": id})
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerInspect,
+		map[string]string{"id": id},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
@@ -139,7 +145,13 @@ func (s *Container) getNodeContainerDockerInspectBroadcast(
 	target string,
 	id string,
 ) (gen.GetNodeContainerDockerByIDResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "docker", job.OperationDockerInspect, map[string]string{"id": id})
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerInspect,
+		map[string]string{"id": id},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil

@@ -127,7 +127,13 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 	target string,
 	data *job.DockerListData,
 ) (gen.GetNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "docker", job.OperationDockerList, data)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerList,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil

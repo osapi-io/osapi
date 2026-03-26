@@ -60,7 +60,13 @@ func (s *Node) PostNodeFileUndeploy(
 	}
 
 	data := file.UndeployRequest{Path: path}
-	jobID, rawResp, err := s.JobClient.Modify(ctx, hostname, "file", job.OperationFileUndeployExecute, data)
+	jobID, rawResp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"file",
+		job.OperationFileUndeployExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileUndeploy500JSONResponse{
@@ -88,7 +94,13 @@ func (s *Node) postNodeFileUndeployBroadcast(
 	path string,
 ) (gen.PostNodeFileUndeployResponseObject, error) {
 	data := file.UndeployRequest{Path: path}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "file", job.OperationFileUndeployExecute, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"file",
+		job.OperationFileUndeployExecute,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileUndeploy500JSONResponse{

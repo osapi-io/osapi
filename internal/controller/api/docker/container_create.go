@@ -109,7 +109,13 @@ func (s *Container) postNodeContainerDockerCreateBroadcast(
 	target string,
 	data *job.DockerCreateData,
 ) (gen.PostNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerCreate, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerCreate,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil

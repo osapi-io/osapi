@@ -51,7 +51,13 @@ func (s *Node) GetNodeDisk(
 		return s.getNodeDiskBroadcast(ctx, hostname)
 	}
 
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeDiskGet, struct{}{})
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeDiskGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeDisk500JSONResponse{
@@ -78,7 +84,13 @@ func (s *Node) getNodeDiskBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeDiskResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeDiskGet, struct{}{})
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeDiskGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeDisk500JSONResponse{

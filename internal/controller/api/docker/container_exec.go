@@ -82,7 +82,13 @@ func (s *Container) PostNodeContainerDockerExec(
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
 	}
-	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerExec, execData)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerExec,
+		execData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
@@ -141,7 +147,13 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerExec, execData)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerExec,
+		execData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil

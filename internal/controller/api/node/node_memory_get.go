@@ -52,7 +52,13 @@ func (s *Node) GetNodeMemory(
 		return s.getNodeMemoryBroadcast(ctx, hostname)
 	}
 
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeMemoryGet, struct{}{})
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeMemoryGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeMemory500JSONResponse{
@@ -79,7 +85,13 @@ func (s *Node) getNodeMemoryBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeMemoryResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeMemoryGet, struct{}{})
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeMemoryGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeMemory500JSONResponse{

@@ -34,9 +34,9 @@ type NATSPublicTestSuite struct {
 
 func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 	tests := []struct {
-		name           string
-		nats           config.NATS
-		expectedNames  []string
+		name            string
+		nats            config.NATS
+		expectedNames   []string
 		expectedBuckets []string
 	}{
 		{

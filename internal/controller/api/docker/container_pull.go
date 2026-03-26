@@ -104,7 +104,13 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 	target string,
 	data *job.DockerPullData,
 ) (gen.PostNodeContainerDockerPullResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerPull, data)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerPull,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil

@@ -72,7 +72,13 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeScheduleCronResponseObject, error) {
-	jobID, responses, errs, err := s.JobClient.QueryBroadcast(ctx, target, "schedule", job.OperationCronList, nil)
+	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronList,
+		nil,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil

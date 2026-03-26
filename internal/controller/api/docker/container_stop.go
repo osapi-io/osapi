@@ -75,7 +75,13 @@ func (s *Container) PostNodeContainerDockerStop(
 		ID:      id,
 		Timeout: data.Timeout,
 	}
-	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerStop, stopData)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerStop,
+		stopData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
@@ -112,7 +118,13 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 		ID:      id,
 		Timeout: data.Timeout,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerStop, stopData)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerStop,
+		stopData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil

@@ -61,7 +61,13 @@ func (s *Node) PostNodeFileStatus(
 	}
 
 	data := file.StatusRequest{Path: path}
-	jobID, rawResp, err := s.JobClient.Query(ctx, hostname, "file", job.OperationFileStatusGet, data)
+	jobID, rawResp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"file",
+		job.OperationFileStatusGet,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileStatus500JSONResponse{
@@ -99,7 +105,13 @@ func (s *Node) postNodeFileStatusBroadcast(
 	path string,
 ) (gen.PostNodeFileStatusResponseObject, error) {
 	data := file.StatusRequest{Path: path}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "file", job.OperationFileStatusGet, data)
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"file",
+		job.OperationFileStatusGet,
+		data,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileStatus500JSONResponse{

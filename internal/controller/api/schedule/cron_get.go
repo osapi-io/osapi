@@ -55,7 +55,13 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		return s.getNodeScheduleCronByNameBroadcast(ctx, hostname, name)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "schedule", job.OperationCronGet, map[string]string{"name": name})
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"schedule",
+		job.OperationCronGet,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
@@ -97,7 +103,13 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 	target string,
 	name string,
 ) (gen.GetNodeScheduleCronByNameResponseObject, error) {
-	jobID, responses, errs, err := s.JobClient.QueryBroadcast(ctx, target, "schedule", job.OperationCronGet, map[string]string{"name": name})
+	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronGet,
+		map[string]string{"name": name},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil

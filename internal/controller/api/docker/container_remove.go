@@ -76,7 +76,13 @@ func (s *Container) DeleteNodeContainerDockerByID(
 		ID:    id,
 		Force: data.Force,
 	}
-	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "docker", job.OperationDockerRemove, removeData)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"docker",
+		job.OperationDockerRemove,
+		removeData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
@@ -113,7 +119,13 @@ func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 		ID:    id,
 		Force: data.Force,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "docker", job.OperationDockerRemove, removeData)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"docker",
+		job.OperationDockerRemove,
+		removeData,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil

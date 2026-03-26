@@ -51,7 +51,13 @@ func (s *Node) GetNodeHostname(
 		return s.getNodeHostnameBroadcast(ctx, hostname)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationNodeHostnameGet, struct{}{})
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationNodeHostnameGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeHostname500JSONResponse{
@@ -93,7 +99,13 @@ func (s *Node) getNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeHostnameResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(ctx, target, "node", job.OperationNodeHostnameGet, struct{}{})
+	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+		ctx,
+		target,
+		"node",
+		job.OperationNodeHostnameGet,
+		struct{}{},
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeHostname500JSONResponse{

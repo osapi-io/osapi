@@ -78,7 +78,13 @@ func (s *Schedule) PutNodeScheduleCron(
 		return s.putNodeScheduleCronUpdateBroadcast(ctx, hostname, entry)
 	}
 
-	jobID, resp, err := s.JobClient.Modify(ctx, hostname, "schedule", job.OperationCronUpdate, entry)
+	jobID, resp, err := s.JobClient.Modify(
+		ctx,
+		hostname,
+		"schedule",
+		job.OperationCronUpdate,
+		entry,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
@@ -115,7 +121,13 @@ func (s *Schedule) putNodeScheduleCronUpdateBroadcast(
 	target string,
 	entry cronProv.Entry,
 ) (gen.PutNodeScheduleCronResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(ctx, target, "schedule", job.OperationCronUpdate, entry)
+	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"schedule",
+		job.OperationCronUpdate,
+		entry,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PutNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
