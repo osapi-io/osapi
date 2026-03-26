@@ -18,10 +18,16 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
+
+// Compile-time check: Client must satisfy FactsSetter.
+var _ provider.FactsSetter = (*Client)(nil)
 
 // Client implements Driver using the Docker Engine API.
 type Client struct {
+	provider.FactsAware
 	client APIClient
 }
 

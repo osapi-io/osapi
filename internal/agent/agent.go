@@ -110,6 +110,7 @@ func New(
 		commandProvider,
 		fileProvider,
 		dockerProvider,
+		cronProvider,
 	)
 
 	return a
