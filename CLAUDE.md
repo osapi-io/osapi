@@ -517,6 +517,11 @@ Conventions:
   errors, edge cases) as rows in one table
 - Avoid generic file names like `helpers.go` or `utils.go` — name
   files after what they contain
+- **`types.go` is for types only**: `types.go` files MUST contain
+  only type definitions (structs, interfaces, constants, type
+  aliases). Never put functions or methods in `types.go` — put
+  them in a file named after what they do (e.g., `nats.go` for
+  NATS config methods, `options.go` for option functions).
 - **Test file naming**: every test file MUST have a corresponding
   production file with a matching name. `foo_public_test.go` tests
   `foo.go`. Never create test files with names that don't match a
