@@ -193,44 +193,42 @@ when using the file provider's template support.
 
 #### Agent Wiring
 
-Three files connect a provider to the agent:
+Two files connect a provider to the agent:
 
-1. **`internal/agent/types.go`** — add the provider field:
+1. **`internal/agent/processor_{domain}.go`** — create a
+   `NewXxxProcessor` factory function that returns a
+   `ProcessorFunc` closure capturing the provider:
    ```go
-   type Agent struct {
-       // ...
-       sysctlProvider sysctl.Provider
+   func NewSysctlProcessor(
+       provider sysctl.Provider,
+       logger *slog.Logger,
+   ) ProcessorFunc {
+       return func(req job.Request) (json.RawMessage, error) {
+           // switch on sub-operation, call provider, marshal result
+       }
    }
    ```
 
-2. **`internal/agent/processor_{domain}.go`** — dispatch job
-   operations to provider methods. The processor extracts the
-   sub-operation from the job's dotted operation string
-   (e.g., `"sysctl.list"` → `"list"`) and calls the provider:
+2. **`cmd/agent_setup.go`** — create the provider and register it
+   with the `ProviderRegistry` in ONE call:
    ```go
-   func (a *Agent) processSysctlOperation(
-       jobRequest job.Request,
-   ) (json.RawMessage, error) {
-       // switch on sub-operation, call provider, marshal result
-   }
-   ```
-
-3. **`internal/agent/factory.go`** or **`cmd/agent_setup.go`** —
-   create the provider instance. Use `factory.go` for providers
-   with simple dependencies (logger, fs). Use `agent_setup.go`
-   for providers that depend on other providers (e.g., cron
-   depends on the file provider):
-   ```go
-   var sysProvider sysctl.Provider
+   var sysctlProv sysctl.Provider
    switch platform.Detect() {
    case "debian":
-       sysProvider = sysctl.NewDebianProvider(logger, appFs)
+       sysctlProv = sysctl.NewDebianProvider(logger, appFs)
    case "darwin":
-       sysProvider = sysctl.NewDarwinProvider()
+       sysctlProv = sysctl.NewDarwinProvider()
    default:
-       sysProvider = sysctl.NewLinuxProvider()
+       sysctlProv = sysctl.NewLinuxProvider()
    }
+   registry.Register("sysctl",
+       agent.NewSysctlProcessor(sysctlProv, log),
+       sysctlProv)
    ```
+
+That's it. No changes to `agent/types.go`, `agent/agent.go`, or
+the `JobClient` interface. The registry handles dispatch and
+FactsAware wiring automatically.
 
 #### Provider Testing
 
@@ -386,9 +384,14 @@ func (s *Handler) PostOperation(ctx, request) {
 }
 ```
 
-**Job client** — every operation needs both a single-target method
-and a `*Broadcast` method that calls `publishAndCollect`. Add both
-to the `JobClient` interface in `internal/job/client/types.go`.
+**Job client** — the `JobClient` interface has 4 generic methods:
+`Query`, `QueryBroadcast`, `Modify`, `ModifyBroadcast`. Handlers
+call these with a category string and operation constant. No new
+methods are needed when adding operations. Example:
+```go
+jobID, resp, err := s.JobClient.Modify(
+    ctx, hostname, "sysctl", job.OperationSysctlSet, data)
+```
 
 See `internal/controller/api/node/node_hostname_get.go` for the
 reference implementation.
@@ -558,7 +561,7 @@ All logging uses Go's `log/slog` structured logger. Follow these rules:
 - **Subsystem labels**: Every component that holds a logger MUST wrap it
   with `logger.With(slog.String("subsystem", "..."))` at construction
   time. This auto-tags every log line from that component. Examples:
-  `"agent"`, `"agent.factory"`, `"api.schedule"`, `"provider.file"`,
+  `"agent"`, `"agent.seed"`, `"api.schedule"`, `"provider.file"`,
   `"job.client"`, `"metrics"`, `"controller.heartbeat"`.
 - **Always use typed attributes**: Use `slog.String("key", val)`,
   `slog.Int("key", val)`, `slog.Bool("key", val)`, `slog.Any("key", val)`.
