@@ -21,24 +21,27 @@
 package api
 
 import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/config"
 )
 
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	customRoles   map[string][]string
-	auditStore    audit.Store
-	meterProvider *sdkmetric.MeterProvider
+// WithAuditStore sets the audit store for audit middleware.
+func WithAuditStore(
+	store audit.Store,
+) Option {
+	return func(s *Server) {
+		s.auditStore = store
+	}
 }
 
-// Option is a functional option for configuring the Server.
-type Option func(*Server)
+// WithMeterProvider sets the OTEL MeterProvider for HTTP metrics.
+// When set, the otelecho middleware routes metrics to this provider
+// instead of the global provider.
+func WithMeterProvider(
+	mp *sdkmetric.MeterProvider,
+) Option {
+	return func(s *Server) {
+		s.meterProvider = mp
+	}
+}

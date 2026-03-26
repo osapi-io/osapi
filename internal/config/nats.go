@@ -18,27 +18,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package config
 
-import (
-	"log/slog"
-
-	"github.com/labstack/echo/v4"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-
-	"github.com/retr0h/osapi/internal/audit"
-	"github.com/retr0h/osapi/internal/config"
-)
-
-// Server implementation of the Server's API operations.
-type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	customRoles   map[string][]string
-	auditStore    audit.Store
-	meterProvider *sdkmetric.MeterProvider
+// AllKVBuckets returns all KV bucket configurations declared in the NATS
+// config. Each entry carries a human-readable name and the bucket name from
+// config. Entries with an empty Bucket field are still included so that
+// callers can filter by their own policy.
+func (n NATS) AllKVBuckets() []KVBucketInfo {
+	return []KVBucketInfo{
+		{Name: "job-queue", Bucket: n.KV.Bucket},
+		{Name: "job-responses", Bucket: n.KV.ResponseBucket},
+		{Name: "audit", Bucket: n.Audit.Bucket},
+		{Name: "registry", Bucket: n.Registry.Bucket},
+		{Name: "facts", Bucket: n.Facts.Bucket},
+		{Name: "state", Bucket: n.State.Bucket},
+		{Name: "file-state", Bucket: n.FileState.Bucket},
+	}
 }
 
-// Option is a functional option for configuring the Server.
-type Option func(*Server)
+// AllObjectStoreBuckets returns all Object Store bucket configurations
+// declared in the NATS config. Entries with an empty Bucket field are still
+// included so that callers can filter by their own policy.
+func (n NATS) AllObjectStoreBuckets() []ObjectStoreBucketInfo {
+	return []ObjectStoreBucketInfo{
+		{Name: "file-objects", Bucket: n.Objects.Bucket},
+	}
+}

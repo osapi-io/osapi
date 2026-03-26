@@ -236,31 +236,6 @@ type ObjectStoreBucketInfo struct {
 	Bucket string
 }
 
-// AllKVBuckets returns all KV bucket configurations declared in the NATS
-// config. Each entry carries a human-readable name and the bucket name from
-// config. Entries with an empty Bucket field are still included so that
-// callers can filter by their own policy.
-func (n NATS) AllKVBuckets() []KVBucketInfo {
-	return []KVBucketInfo{
-		{Name: "job-queue", Bucket: n.KV.Bucket},
-		{Name: "job-responses", Bucket: n.KV.ResponseBucket},
-		{Name: "audit", Bucket: n.Audit.Bucket},
-		{Name: "registry", Bucket: n.Registry.Bucket},
-		{Name: "facts", Bucket: n.Facts.Bucket},
-		{Name: "state", Bucket: n.State.Bucket},
-		{Name: "file-state", Bucket: n.FileState.Bucket},
-	}
-}
-
-// AllObjectStoreBuckets returns all Object Store bucket configurations
-// declared in the NATS config. Entries with an empty Bucket field are still
-// included so that callers can filter by their own policy.
-func (n NATS) AllObjectStoreBuckets() []ObjectStoreBucketInfo {
-	return []ObjectStoreBucketInfo{
-		{Name: "file-objects", Bucket: n.Objects.Bucket},
-	}
-}
-
 // NATSDLQ configuration for Dead Letter Queue stream settings.
 type NATSDLQ struct {
 	MaxAge   string `mapstructure:"max_age"` // e.g. "7d", "24h"
