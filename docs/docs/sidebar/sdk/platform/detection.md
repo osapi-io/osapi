@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# Platform Detection
+# Detection
 
 The `platform` package detects the OS family of the running system. The agent
 uses it to select the correct provider implementation (Debian, Darwin, or

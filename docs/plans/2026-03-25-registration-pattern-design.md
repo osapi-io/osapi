@@ -2,9 +2,9 @@
 
 ## Goal
 
-Eliminate centralized lists that grow with each new component. Adding
-a new provider, operation, or infrastructure bucket should require
-changing 1-2 files, not 5-10.
+Eliminate centralized lists that grow with each new component. Adding a new
+provider, operation, or infrastructure bucket should require changing 1-2 files,
+not 5-10.
 
 ## Problem
 
@@ -19,16 +19,16 @@ Adding a new provider today touches:
 7. `job/client/*.go` — implement methods
 8. Regenerate mocks
 
-The JobClient interface has 60+ methods that are thin wrappers around
-2 internal functions. KV bucket creation manually lists every bucket
-name even though they're all in osapi.yaml.
+The JobClient interface has 60+ methods that are thin wrappers around 2 internal
+functions. KV bucket creation manually lists every bucket name even though
+they're all in osapi.yaml.
 
 ## Design
 
 ### 1. Agent Provider Registry
 
-Replace individual provider fields, parameters, and switch dispatch
-with a registry that providers register into at construction time.
+Replace individual provider fields, parameters, and switch dispatch with a
+registry that providers register into at construction time.
 
 **Registry type:**
 
@@ -71,8 +71,8 @@ func (r *ProviderRegistry) AllProviders() []any {
 }
 ```
 
-**Processor functions become standalone closures**, not Agent methods.
-They capture their provider dependency:
+**Processor functions become standalone closures**, not Agent methods. They
+capture their provider dependency:
 
 ```go
 // internal/agent/processor_schedule.go
@@ -135,9 +135,9 @@ registry.Register("schedule", agent.NewScheduleProcessor(
 agent.New(..., registry, ...)
 ```
 
-Wait — `Register` takes one provider but some categories have multiple
-(node has host, disk, mem, load). The registry needs to accept
-multiple providers for FactsAware wiring:
+Wait — `Register` takes one provider but some categories have multiple (node has
+host, disk, mem, load). The registry needs to accept multiple providers for
+FactsAware wiring:
 
 ```go
 func (r *ProviderRegistry) Register(
@@ -151,6 +151,7 @@ func (r *ProviderRegistry) Register(
 ```
 
 **What this eliminates:**
+
 - `agent/types.go` — no more provider fields (registry holds them)
 - `agent/agent.go` — no more 15-parameter constructor
 - `agent/factory.go` — deleted (providers created in setup)
@@ -158,8 +159,9 @@ func (r *ProviderRegistry) Register(
 - Each `processor_*.go` — methods on Agent → standalone functions
 
 **What remains:**
-- `cmd/agent_setup.go` — still creates providers and registers them
-  (this is the ONE place you add a new provider)
+
+- `cmd/agent_setup.go` — still creates providers and registers them (this is the
+  ONE place you add a new provider)
 - Each `processor_*.go` — still exists as a standalone function
 
 ### 2. JobClient Interface Simplification
@@ -203,27 +205,31 @@ type JobClient interface {
 ```
 
 **API handlers change from:**
+
 ```go
 resp, err := s.JobClient.ModifyDockerCreate(ctx, hostname, data)
 ```
 
 **To:**
+
 ```go
 resp, err := s.JobClient.Modify(
     ctx, hostname, "docker", job.OperationDockerCreate, data)
 ```
 
-The operation constants remain typed — `job.OperationDockerCreate` is
-still a constant string. Typos are caught by tests, not the compiler.
+The operation constants remain typed — `job.OperationDockerCreate` is still a
+constant string. Typos are caught by tests, not the compiler.
 
 **What this eliminates:**
+
 - `job/client/types.go` — 60 methods → 4
-- `job/client/modify_docker.go`, `query_node.go`, etc. — deleted
-  (the generic methods handle all operations)
+- `job/client/modify_docker.go`, `query_node.go`, etc. — deleted (the generic
+  methods handle all operations)
 - Mock regeneration — only 4 methods to mock, never changes
 - `job/client/schedule_cron.go`, `modify_command.go`, etc. — deleted
 
 **What remains:**
+
 - `job/client/client.go` — implements the 4 generic methods
 - Operation constants — still needed for the string arguments
 
@@ -257,21 +263,23 @@ for _, cfg := range appConfig.NATS.AllKVBucketConfigs() {
 ```
 
 **What this eliminates:**
+
 - Manual `add(appConfig.NATS.Xxx.Bucket)` calls in setup
 - Forgetting to add new buckets to the creation list
 
 **What remains:**
+
 - The config struct still has named fields (needed for typed access)
-- `AllKVBucketConfigs()` method needs updating when new buckets are
-  added (but it's ONE place, not scattered across setup code)
+- `AllKVBucketConfigs()` method needs updating when new buckets are added (but
+  it's ONE place, not scattered across setup code)
 
 ## Scope
 
-| Change | Files eliminated | Files simplified | New files |
-| ------ | --------------- | ---------------- | --------- |
-| Provider registry | factory.go deleted | agent.go, types.go, processor.go, setup.go | registry.go |
-| JobClient simplification | ~8 typed method files | types.go (60→4 methods), all handler files | None |
-| Config iteration | None | controller_setup.go | None |
+| Change                   | Files eliminated      | Files simplified                           | New files   |
+| ------------------------ | --------------------- | ------------------------------------------ | ----------- |
+| Provider registry        | factory.go deleted    | agent.go, types.go, processor.go, setup.go | registry.go |
+| JobClient simplification | ~8 typed method files | types.go (60→4 methods), all handler files | None        |
+| Config iteration         | None                  | controller_setup.go                        | None        |
 
 ## What This Does NOT Change
 
@@ -279,12 +287,11 @@ for _, cfg := range appConfig.NATS.AllKVBucketConfigs() {
 - OpenAPI specs — response schemas unchanged
 - CLI commands — unchanged
 - Operation/permission constants — still explicit declarations
-- Provider implementations — unchanged (they don't know about the
-  registry)
+- Provider implementations — unchanged (they don't know about the registry)
 
 ## Migration Order
 
 1. **Provider registry** first — biggest win, self-contained
-2. **JobClient simplification** second — touches many handler files
-   but is mechanical (replace method name with generic call)
+2. **JobClient simplification** second — touches many handler files but is
+   mechanical (replace method name with generic call)
 3. **Config iteration** third — smallest, independent
