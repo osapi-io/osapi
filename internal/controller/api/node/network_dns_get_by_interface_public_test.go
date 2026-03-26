@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	"github.com/retr0h/osapi/internal/validation"
@@ -90,15 +92,19 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 				InterfaceName: "eth0",
 			},
 			setupMock: func() {
+				dnsResult := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				data, _ := json.Marshal(dnsResult)
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNS(gomock.Any(), "_any", "eth0").
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&dns.GetResult{
-							DNSServers:    []string{"8.8.8.8"},
-							SearchDomains: []string{"example.com"},
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -151,8 +157,8 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNS(gomock.Any(), "_any", "eth0").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
 				_, ok := resp.(gen.GetNodeNetworkDNSByInterface500JSONResponse)
@@ -166,19 +172,23 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 				InterfaceName: "eth0",
 			},
 			setupMock: func() {
+				dns1 := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				dns2 := dns.GetResult{
+					DNSServers:    []string{"1.1.1.1"},
+					SearchDomains: []string{"test.com"},
+				}
+				data1, _ := json.Marshal(dns1)
+				data2, _ := json.Marshal(dns2)
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*dns.GetResult{
-							"server1": {
-								DNSServers:    []string{"8.8.8.8"},
-								SearchDomains: []string{"example.com"},
-							},
-							"server2": {
-								DNSServers:    []string{"1.1.1.1"},
-								SearchDomains: []string{"test.com"},
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
 						map[string]string{},
 						nil,
@@ -201,15 +211,17 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 				InterfaceName: "eth0",
 			},
 			setupMock: func() {
+				dns1 := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				data1, _ := json.Marshal(dns1)
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*dns.GetResult{
-							"server1": {
-								DNSServers:    []string{"8.8.8.8"},
-								SearchDomains: []string{"example.com"},
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						},
 						map[string]string{
 							"server2": "interface not found",
@@ -240,7 +252,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
@@ -274,12 +286,17 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 			path: "/node/server1/network/dns/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				dnsResult := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				data, _ := json.Marshal(dnsResult)
 				mock.EXPECT().
-					QueryNetworkDNS(gomock.Any(), "server1", "eth0").
-					Return("550e8400-e29b-41d4-a716-446655440000", &dns.GetResult{
-						DNSServers:    []string{"8.8.8.8"},
-						SearchDomains: []string{"example.com"},
-					}, "agent1", nil)
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode: http.StatusOK,
@@ -296,11 +313,16 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 			path: "/node/server1/network/dns/@fact.interface.primary",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				dnsResult := dns.GetResult{
+					DNSServers: []string{"8.8.8.8"},
+				}
+				data, _ := json.Marshal(dnsResult)
 				mock.EXPECT().
-					QueryNetworkDNS(gomock.Any(), "server1", "@fact.interface.primary").
-					Return("550e8400-e29b-41d4-a716-446655440000", &dns.GetResult{
-						DNSServers: []string{"8.8.8.8"},
-					}, "agent1", nil)
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -338,13 +360,15 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 			path: "/node/_all/network/dns/eth0",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				dnsResult := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				data, _ := json.Marshal(dnsResult)
 				mock.EXPECT().
-					QueryNetworkDNSBroadcast(gomock.Any(), "_all", "eth0").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*dns.GetResult{
-						"server1": {
-							DNSServers:    []string{"8.8.8.8"},
-							SearchDomains: []string{"example.com"},
-						},
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
 					}, map[string]string{}, nil)
 				return mock
 			},
@@ -431,15 +455,19 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceRB
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				dnsResult := dns.GetResult{
+					DNSServers:    []string{"8.8.8.8"},
+					SearchDomains: []string{"example.com"},
+				}
+				data, _ := json.Marshal(dnsResult)
 				mock.EXPECT().
-					QueryNetworkDNS(gomock.Any(), "server1", "eth0").
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&dns.GetResult{
-							DNSServers:    []string{"8.8.8.8"},
-							SearchDomains: []string{"example.com"},
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

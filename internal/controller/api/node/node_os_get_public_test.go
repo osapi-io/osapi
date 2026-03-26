@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/validation"
@@ -87,12 +89,17 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			name:    "success",
 			request: gen.GetNodeOSRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				osResult := host.Result{
+					Distribution: "Ubuntu",
+					Version:      "22.04",
+				}
+				data, _ := json.Marshal(osResult)
 				s.mockJobClient.EXPECT().
-					QueryNodeOS(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &host.Result{
-						Distribution: "Ubuntu",
-						Version:      "22.04",
-					}, "agent1", nil)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
 				r, ok := resp.(gen.GetNodeOS200JSONResponse)
@@ -118,8 +125,8 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			request: gen.GetNodeOSRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeOS(gomock.Any(), "_any").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
 				_, ok := resp.(gen.GetNodeOS500JSONResponse)
@@ -130,11 +137,15 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			name:    "broadcast all success",
 			request: gen.GetNodeOSRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				os1 := host.Result{Distribution: "Ubuntu", Version: "22.04"}
+				os2 := host.Result{Distribution: "CentOS", Version: "8.3"}
+				data1, _ := json.Marshal(os1)
+				data2, _ := json.Marshal(os2)
 				s.mockJobClient.EXPECT().
-					QueryNodeOSBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.Result{
-						"server1": {Distribution: "Ubuntu", Version: "22.04"},
-						"server2": {Distribution: "CentOS", Version: "8.3"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
@@ -151,10 +162,12 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeOSRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				os1 := host.Result{Distribution: "Ubuntu", Version: "22.04"}
+				data1, _ := json.Marshal(os1)
 				s.mockJobClient.EXPECT().
-					QueryNodeOSBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*host.Result{
-						"server1": {Distribution: "Ubuntu", Version: "22.04"},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "some error",
 					}, nil)
@@ -179,7 +192,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			request: gen.GetNodeOSRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeOSBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
@@ -213,12 +226,16 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSValidationHTTP() {
 			path: "/node/server1/os",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				osResult := host.Result{Distribution: "Ubuntu", Version: "22.04"}
+				data, _ := json.Marshal(osResult)
 				mock.EXPECT().
-					QueryNodeOS(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeOSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&host.Result{Distribution: "Ubuntu", Version: "22.04"},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock
@@ -240,8 +257,8 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeOS(gomock.Any(), "server1").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "server1", "node", job.OperationNodeOSGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -326,12 +343,16 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				osResult := host.Result{Distribution: "Ubuntu", Version: "22.04"}
+				data, _ := json.Marshal(osResult)
 				mock.EXPECT().
-					QueryNodeOS(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeOSGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&host.Result{Distribution: "Ubuntu", Version: "22.04"},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock

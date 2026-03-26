@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math"
@@ -40,7 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
-	jobtypes "github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
 	"github.com/retr0h/osapi/internal/provider/node/host"
@@ -93,11 +94,16 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			name:    "success",
 			request: gen.GetNodeStatusRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				statusResp := job.NodeStatusResponse{
+					Hostname: "test-host",
+					Uptime:   time.Hour,
+				}
+				data, _ := json.Marshal(statusResp)
 				s.mockJobClient.EXPECT().
-					QueryNodeStatus(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.NodeStatusResponse{
+					Query(gomock.Any(), "_any", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "test-host",
-						Uptime:   time.Hour,
+						Data:     json.RawMessage(data),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -124,7 +130,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			request: gen.GetNodeStatusRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatus(gomock.Any(), "_any").
+					Query(gomock.Any(), "_any", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -136,11 +142,15 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			name:    "broadcast all success",
 			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				status1 := job.NodeStatusResponse{Hostname: "server1", Uptime: time.Hour}
+				status2 := job.NodeStatusResponse{Hostname: "server2", Uptime: 2 * time.Hour}
+				data1, _ := json.Marshal(status1)
+				data2, _ := json.Marshal(status2)
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
-						{Hostname: "server1", Uptime: time.Hour},
-						{Hostname: "server2", Uptime: 2 * time.Hour},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -157,10 +167,12 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				status1 := job.NodeStatusResponse{Hostname: "server1", Uptime: time.Hour}
+				data1, _ := json.Marshal(status1)
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
-						{Hostname: "server1", Uptime: time.Hour},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "disk full",
 					}, nil)
@@ -185,7 +197,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			request: gen.GetNodeStatusRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -229,34 +241,43 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 			path: "/node/server1",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				statusResp := job.NodeStatusResponse{
+					Hostname: "default-hostname",
+					Uptime:   5 * time.Hour,
+					OSInfo: &host.Result{
+						Distribution: "Ubuntu",
+						Version:      "24.04",
+					},
+					LoadAverages: &load.Result{
+						Load1:  1,
+						Load5:  0.5,
+						Load15: 0.2,
+					},
+					MemoryStats: &mem.Result{
+						Total:  8388608,
+						Free:   4194304,
+						Cached: 2097152,
+					},
+					DiskUsage: []disk.Result{
+						{
+							Name:  "/dev/disk1",
+							Total: 500000000000,
+							Used:  250000000000,
+							Free:  250000000000,
+						},
+					},
+				}
+				data, _ := json.Marshal(statusResp)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), "server1").
-					Return("550e8400-e29b-41d4-a716-446655440000", &jobtypes.NodeStatusResponse{
-						Hostname: "default-hostname",
-						Uptime:   5 * time.Hour,
-						OSInfo: &host.Result{
-							Distribution: "Ubuntu",
-							Version:      "24.04",
+					Query(gomock.Any(), "server1", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Hostname: "default-hostname",
+							Data:     json.RawMessage(data),
 						},
-						LoadAverages: &load.Result{
-							Load1:  1,
-							Load5:  0.5,
-							Load15: 0.2,
-						},
-						MemoryStats: &mem.Result{
-							Total:  8388608,
-							Free:   4194304,
-							Cached: 2097152,
-						},
-						DiskUsage: []disk.Result{
-							{
-								Name:  "/dev/disk1",
-								Total: 500000000000,
-								Used:  250000000000,
-								Free:  250000000000,
-							},
-						},
-					}, nil)
+						nil,
+					)
 				return mock
 			},
 			wantCode: http.StatusOK,
@@ -301,7 +322,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return("", nil, assert.AnError)
 				return mock
 			},
@@ -313,17 +334,15 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 			path: "/node/_all",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				status1 := job.NodeStatusResponse{Hostname: "server1", Uptime: time.Hour}
+				status2 := job.NodeStatusResponse{Hostname: "server2", Uptime: 2 * time.Hour}
+				data1, _ := json.Marshal(status1)
+				data2, _ := json.Marshal(status2)
 				mock.EXPECT().
-					QueryNodeStatusBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", []*jobtypes.NodeStatusResponse{
-						{
-							Hostname: "server1",
-							Uptime:   time.Hour,
-						},
-						{
-							Hostname: "server2",
-							Uptime:   2 * time.Hour,
-						},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 				return mock
 			},
@@ -413,35 +432,40 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				statusResp := job.NodeStatusResponse{
+					Hostname: "default-hostname",
+					Uptime:   5 * time.Hour,
+					OSInfo: &host.Result{
+						Distribution: "Ubuntu",
+						Version:      "24.04",
+					},
+					LoadAverages: &load.Result{
+						Load1:  1,
+						Load5:  0.5,
+						Load15: 0.2,
+					},
+					MemoryStats: &mem.Result{
+						Total:  8388608,
+						Free:   4194304,
+						Cached: 2097152,
+					},
+					DiskUsage: []disk.Result{
+						{
+							Name:  "/dev/disk1",
+							Total: 500000000000,
+							Used:  250000000000,
+							Free:  250000000000,
+						},
+					},
+				}
+				data, _ := json.Marshal(statusResp)
 				mock.EXPECT().
-					QueryNodeStatus(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&jobtypes.NodeStatusResponse{
+						&job.Response{
 							Hostname: "default-hostname",
-							Uptime:   5 * time.Hour,
-							OSInfo: &host.Result{
-								Distribution: "Ubuntu",
-								Version:      "24.04",
-							},
-							LoadAverages: &load.Result{
-								Load1:  1,
-								Load5:  0.5,
-								Load15: 0.2,
-							},
-							MemoryStats: &mem.Result{
-								Total:  8388608,
-								Free:   4194304,
-								Cached: 2097152,
-							},
-							DiskUsage: []disk.Result{
-								{
-									Name:  "/dev/disk1",
-									Total: 500000000000,
-									Used:  250000000000,
-									Free:  250000000000,
-								},
-							},
+							Data:     json.RawMessage(data),
 						},
 						nil,
 					)

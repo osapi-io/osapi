@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
@@ -94,24 +96,27 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 				},
 			},
 			setupMock: func() {
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "hello",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 5,
+					Changed:    false,
+				})
 				s.mockJobClient.EXPECT().
-					ModifyCommandShell(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"echo hello",
-						"",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "hello",
-							Stderr:     "",
-							ExitCode:   0,
-							DurationMs: 5,
-							Changed:    false,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -139,22 +144,25 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 				},
 			},
 			setupMock: func() {
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "hello",
+					ExitCode:   0,
+					DurationMs: 5,
+				})
 				s.mockJobClient.EXPECT().
-					ModifyCommandShell(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"echo hello",
-						"/tmp",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "hello",
-							ExitCode:   0,
-							DurationMs: 5,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -207,14 +215,14 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyCommandShell(
+					Modify(
 						gomock.Any(),
 						"_any",
-						"echo hello",
-						"",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
-					Return("", nil, "", assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
 				_, ok := resp.(gen.PostNodeCommandShell500JSONResponse)
@@ -231,25 +239,21 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 				},
 			},
 			setupMock: func() {
+				data1, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
+				data2, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
 				s.mockJobClient.EXPECT().
-					ModifyCommandShellBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"echo hello",
-						"",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*command.Result{
-							"server1": {
-								Stdout:   "hello",
-								ExitCode: 0,
-							},
-							"server2": {
-								Stdout:   "hello",
-								ExitCode: 0,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
 						map[string]string{},
 						nil,
@@ -269,21 +273,19 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 				},
 			},
 			setupMock: func() {
+				data1, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
 				s.mockJobClient.EXPECT().
-					ModifyCommandShellBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"echo hello",
-						"",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*command.Result{
-							"server1": {
-								Stdout:   "hello",
-								ExitCode: 0,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						},
 						map[string]string{
 							"server2": "shell not available",
@@ -317,12 +319,12 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyCommandShellBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"echo hello",
-						"",
-						30,
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
@@ -359,15 +361,19 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 			body: `{"command":"echo hello"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "hello",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 15,
+					Changed:    true,
+				})
 				mock.EXPECT().
-					ModifyCommandShell(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", &command.Result{
-						Stdout:     "hello",
-						Stderr:     "",
-						ExitCode:   0,
-						DurationMs: 15,
-						Changed:    true,
-					}, "agent1", nil)
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandShellExecute, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
@@ -488,18 +494,21 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				data, _ := json.Marshal(command.Result{
+					Stdout:     "hello",
+					Stderr:     "",
+					ExitCode:   0,
+					DurationMs: 10,
+					Changed:    true,
+				})
 				mock.EXPECT().
-					ModifyCommandShell(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandShellExecute, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&command.Result{
-							Stdout:     "hello",
-							Stderr:     "",
-							ExitCode:   0,
-							DurationMs: 10,
-							Changed:    true,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

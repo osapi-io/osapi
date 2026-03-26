@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -88,13 +89,18 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 			name:    "success",
 			request: gen.GetNodeDiskRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				diskResp := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
+					},
+				}
+				data, _ := json.Marshal(diskResp)
 				s.mockJobClient.EXPECT().
-					QueryNodeDisk(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &job.NodeDiskResponse{
-						Disks: []disk.Result{
-							{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
-						},
-					}, "agent1", nil)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeDiskGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
 				r, ok := resp.(gen.GetNodeDisk200JSONResponse)
@@ -120,8 +126,8 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 			request: gen.GetNodeDiskRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeDisk(gomock.Any(), "_any").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeDiskGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
 				_, ok := resp.(gen.GetNodeDisk500JSONResponse)
@@ -132,19 +138,23 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 			name:    "broadcast all success",
 			request: gen.GetNodeDiskRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				diskResp1 := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
+					},
+				}
+				diskResp2 := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 2000, Used: 1000, Free: 1000},
+					},
+				}
+				data1, _ := json.Marshal(diskResp1)
+				data2, _ := json.Marshal(diskResp2)
 				s.mockJobClient.EXPECT().
-					QueryNodeDiskBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeDiskResponse{
-						"server1": {
-							Disks: []disk.Result{
-								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
-							},
-						},
-						"server2": {
-							Disks: []disk.Result{
-								{Name: "/dev/sda1", Total: 2000, Used: 1000, Free: 1000},
-							},
-						},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeDiskGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
@@ -161,14 +171,16 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeDiskRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				diskResp1 := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
+					},
+				}
+				data1, _ := json.Marshal(diskResp1)
 				s.mockJobClient.EXPECT().
-					QueryNodeDiskBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.NodeDiskResponse{
-						"server1": {
-							Disks: []disk.Result{
-								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
-							},
-						},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeDiskGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "some error",
 					}, nil)
@@ -193,7 +205,7 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDisk() {
 			request: gen.GetNodeDiskRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeDiskBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeDiskGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeDiskResponseObject) {
@@ -227,16 +239,20 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskValidationHTTP() {
 			path: "/node/server1/disk",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				diskResp := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
+					},
+				}
+				data, _ := json.Marshal(diskResp)
 				mock.EXPECT().
-					QueryNodeDisk(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeDiskGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&job.NodeDiskResponse{
-							Disks: []disk.Result{
-								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
-							},
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock
@@ -258,8 +274,8 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeDisk(gomock.Any(), "server1").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "server1", "node", job.OperationNodeDiskGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -344,16 +360,20 @@ func (s *NodeDiskGetPublicTestSuite) TestGetNodeDiskRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				diskResp := job.NodeDiskResponse{
+					Disks: []disk.Result{
+						{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
+					},
+				}
+				data, _ := json.Marshal(diskResp)
 				mock.EXPECT().
-					QueryNodeDisk(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeDiskGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&job.NodeDiskResponse{
-							Disks: []disk.Result{
-								{Name: "/dev/sda1", Total: 1000, Used: 500, Free: 500},
-							},
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

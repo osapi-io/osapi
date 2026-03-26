@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -40,6 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/validation"
@@ -94,19 +96,23 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				},
 			},
 			setupMock: func() {
+				pingResult := ping.Result{
+					AvgRTT:          20 * time.Millisecond,
+					MaxRTT:          25 * time.Millisecond,
+					MinRTT:          15 * time.Millisecond,
+					PacketLoss:      0,
+					PacketsReceived: 3,
+					PacketsSent:     3,
+				}
+				data, _ := json.Marshal(pingResult)
 				s.mockJobClient.EXPECT().
-					QueryNetworkPing(gomock.Any(), "_any", "8.8.8.8").
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&ping.Result{
-							AvgRTT:          20 * time.Millisecond,
-							MaxRTT:          25 * time.Millisecond,
-							MinRTT:          15 * time.Millisecond,
-							PacketLoss:      0,
-							PacketsReceived: 3,
-							PacketsSent:     3,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 			},
@@ -164,8 +170,8 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkPing(gomock.Any(), "_any", "8.8.8.8").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "network", job.OperationNetworkPingDo, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNodeNetworkPing500JSONResponse)
@@ -181,21 +187,25 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				},
 			},
 			setupMock: func() {
+				ping1 := ping.Result{
+					AvgRTT:          20 * time.Millisecond,
+					PacketsSent:     3,
+					PacketsReceived: 3,
+				}
+				ping2 := ping.Result{
+					AvgRTT:          30 * time.Millisecond,
+					PacketsSent:     3,
+					PacketsReceived: 3,
+				}
+				data1, _ := json.Marshal(ping1)
+				data2, _ := json.Marshal(ping2)
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingBroadcast(gomock.Any(), "_all", "8.8.8.8").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*ping.Result{
-							"server1": {
-								AvgRTT:          20 * time.Millisecond,
-								PacketsSent:     3,
-								PacketsReceived: 3,
-							},
-							"server2": {
-								AvgRTT:          30 * time.Millisecond,
-								PacketsSent:     3,
-								PacketsReceived: 3,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
 						map[string]string{},
 						nil,
@@ -220,16 +230,18 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				},
 			},
 			setupMock: func() {
+				ping1 := ping.Result{
+					AvgRTT:          20 * time.Millisecond,
+					PacketsSent:     3,
+					PacketsReceived: 3,
+				}
+				data1, _ := json.Marshal(ping1)
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingBroadcast(gomock.Any(), "_all", "8.8.8.8").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						map[string]*ping.Result{
-							"server1": {
-								AvgRTT:          20 * time.Millisecond,
-								PacketsSent:     3,
-								PacketsReceived: 3,
-							},
+						map[string]*job.Response{
+							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						},
 						map[string]string{
 							"server2": "host unreachable",
@@ -262,7 +274,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNetworkPingBroadcast(gomock.Any(), "_all", "8.8.8.8").
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeNetworkPingResponseObject) {
@@ -298,16 +310,21 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 			body: `{"address":"1.1.1.1"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				pingResult := ping.Result{
+					PacketsSent:     3,
+					PacketsReceived: 3,
+					PacketLoss:      0,
+					MinRTT:          10 * time.Millisecond,
+					AvgRTT:          15 * time.Millisecond,
+					MaxRTT:          20 * time.Millisecond,
+				}
+				data, _ := json.Marshal(pingResult)
 				mock.EXPECT().
-					QueryNetworkPing(gomock.Any(), "server1", "1.1.1.1").
-					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
-						PacketsSent:     3,
-						PacketsReceived: 3,
-						PacketLoss:      0,
-						MinRTT:          10 * time.Millisecond,
-						AvgRTT:          15 * time.Millisecond,
-						MaxRTT:          20 * time.Millisecond,
-					}, "agent1", nil)
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkPingDo, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -339,16 +356,21 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 			body: `{"address":"@fact.custom.gateway"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				pingResult := ping.Result{
+					PacketsSent:     3,
+					PacketsReceived: 3,
+					PacketLoss:      0,
+					MinRTT:          10 * time.Millisecond,
+					AvgRTT:          15 * time.Millisecond,
+					MaxRTT:          20 * time.Millisecond,
+				}
+				data, _ := json.Marshal(pingResult)
 				mock.EXPECT().
-					QueryNetworkPing(gomock.Any(), "server1", "@fact.custom.gateway").
-					Return("550e8400-e29b-41d4-a716-446655440000", &ping.Result{
-						PacketsSent:     3,
-						PacketsReceived: 3,
-						PacketLoss:      0,
-						MinRTT:          10 * time.Millisecond,
-						AvgRTT:          15 * time.Millisecond,
-						MaxRTT:          20 * time.Millisecond,
-					}, "agent1", nil)
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkPingDo, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -380,17 +402,19 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 			body: `{"address":"1.1.1.1"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				pingResult := ping.Result{
+					PacketsSent:     3,
+					PacketsReceived: 3,
+					PacketLoss:      0,
+					MinRTT:          10 * time.Millisecond,
+					AvgRTT:          15 * time.Millisecond,
+					MaxRTT:          20 * time.Millisecond,
+				}
+				data, _ := json.Marshal(pingResult)
 				mock.EXPECT().
-					QueryNetworkPingBroadcast(gomock.Any(), "_all", "1.1.1.1").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*ping.Result{
-						"server1": {
-							PacketsSent:     3,
-							PacketsReceived: 3,
-							PacketLoss:      0,
-							MinRTT:          10 * time.Millisecond,
-							AvgRTT:          15 * time.Millisecond,
-							MaxRTT:          20 * time.Millisecond,
-						},
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
 					}, map[string]string{}, nil)
 				return mock
 			},
@@ -482,19 +506,23 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				pingResult := ping.Result{
+					PacketsSent:     3,
+					PacketsReceived: 3,
+					PacketLoss:      0,
+					MinRTT:          10 * time.Millisecond,
+					AvgRTT:          15 * time.Millisecond,
+					MaxRTT:          20 * time.Millisecond,
+				}
+				data, _ := json.Marshal(pingResult)
 				mock.EXPECT().
-					QueryNetworkPing(gomock.Any(), "server1", "8.8.8.8").
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&ping.Result{
-							PacketsSent:     3,
-							PacketsReceived: 3,
-							PacketLoss:      0,
-							MinRTT:          10 * time.Millisecond,
-							AvgRTT:          15 * time.Millisecond,
-							MaxRTT:          20 * time.Millisecond,
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
 						},
-						"agent1",
 						nil,
 					)
 				return mock

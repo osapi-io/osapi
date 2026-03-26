@@ -227,6 +227,22 @@ const config: Config = {
             {
               type: 'html',
               value:
+                '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Utilities</small>',
+              className: 'dropdown-header'
+            },
+            {
+              type: 'doc',
+              label: 'Platform',
+              docId: 'sidebar/sdk/platform/platform'
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.3rem 0;">',
+              className: 'dropdown-separator'
+            },
+            {
+              type: 'html',
+              value:
                 '<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">Orchestrator</small>',
               className: 'dropdown-header'
             },

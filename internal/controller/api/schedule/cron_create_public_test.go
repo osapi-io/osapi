@@ -100,17 +100,23 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreate(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -135,17 +141,23 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreate(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -167,17 +179,23 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreate(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"daily-backup","changed":true}`),
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"daily-backup","changed":true}`),
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -199,17 +217,23 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreate(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     nil,
-					}, nil)
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     nil,
+						},
+						nil,
+					)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -231,9 +255,11 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreateBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -270,9 +296,11 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreateBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -305,9 +333,11 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreateBroadcast(
+					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
@@ -434,12 +464,14 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					ModifyScheduleCronCreate(
+					Modify(
 						gomock.Any(),
 						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return(nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.PostNodeScheduleCron500JSONResponse)
@@ -475,13 +507,17 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyScheduleCronCreate(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronCreate, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 				return mock
 			},
 			wantCode:     http.StatusOK,
@@ -593,13 +629,17 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					ModifyScheduleCronCreate(gomock.Any(), "server1", gomock.Any()).
-					Return(&job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Changed:  boolPtr(true),
-						Data:     json.RawMessage(`{"name":"backup","changed":true}`),
-					}, nil)
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronCreate, gomock.Any()).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
 				return mock
 			},
 			wantCode:     http.StatusOK,

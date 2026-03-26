@@ -22,6 +22,7 @@ package node_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/retr0h/osapi/internal/controller/api"
 	apinode "github.com/retr0h/osapi/internal/controller/api/node"
 	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/validation"
@@ -87,13 +89,18 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "success",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_any"},
 			setupMock: func() {
+				memResult := mem.Result{
+					Total:  8192,
+					Free:   4096,
+					Cached: 2048,
+				}
+				data, _ := json.Marshal(memResult)
 				s.mockJobClient.EXPECT().
-					QueryNodeMemory(gomock.Any(), "_any").
-					Return("550e8400-e29b-41d4-a716-446655440000", &mem.Result{
-						Total:  8192,
-						Free:   4096,
-						Cached: 2048,
-					}, "agent1", nil)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeMemoryGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data:     json.RawMessage(data),
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeMemoryResponseObject) {
 				r, ok := resp.(gen.GetNodeMemory200JSONResponse)
@@ -119,8 +126,8 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_any"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeMemory(gomock.Any(), "_any").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "_any", "node", job.OperationNodeMemoryGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeMemoryResponseObject) {
 				_, ok := resp.(gen.GetNodeMemory500JSONResponse)
@@ -131,11 +138,15 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "broadcast all success",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				mem1 := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				mem2 := mem.Result{Total: 16384, Free: 8192, Cached: 4096}
+				data1, _ := json.Marshal(mem1)
+				data2, _ := json.Marshal(mem2)
 				s.mockJobClient.EXPECT().
-					QueryNodeMemoryBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Result{
-						"server1": {Total: 8192, Free: 4096, Cached: 2048},
-						"server2": {Total: 16384, Free: 8192, Cached: 4096},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeMemoryGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
+						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 					}, map[string]string{}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeMemoryResponseObject) {
@@ -152,10 +163,12 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			name:    "broadcast all with errors",
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_all"},
 			setupMock: func() {
+				mem1 := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				data1, _ := json.Marshal(mem1)
 				s.mockJobClient.EXPECT().
-					QueryNodeMemoryBroadcast(gomock.Any(), "_all").
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*mem.Result{
-						"server1": {Total: 8192, Free: 4096, Cached: 2048},
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeMemoryGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 					}, map[string]string{
 						"server2": "some error",
 					}, nil)
@@ -180,7 +193,7 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemory() {
 			request: gen.GetNodeMemoryRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
-					QueryNodeMemoryBroadcast(gomock.Any(), "_all").
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeMemoryGet, gomock.Any()).
 					Return("", nil, nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeMemoryResponseObject) {
@@ -214,12 +227,16 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 			path: "/node/server1/memory",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				memResult := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				data, _ := json.Marshal(memResult)
 				mock.EXPECT().
-					QueryNodeMemory(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeMemoryGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&mem.Result{Total: 8192, Free: 4096, Cached: 2048},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock
@@ -241,8 +258,8 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryValidationHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					QueryNodeMemory(gomock.Any(), "server1").
-					Return("", nil, "", assert.AnError)
+					Query(gomock.Any(), "server1", "node", job.OperationNodeMemoryGet, gomock.Any()).
+					Return("", nil, assert.AnError)
 				return mock
 			},
 			wantCode: http.StatusInternalServerError,
@@ -327,12 +344,16 @@ func (s *NodeMemoryGetPublicTestSuite) TestGetNodeMemoryRBACHTTP() {
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				memResult := mem.Result{Total: 8192, Free: 4096, Cached: 2048}
+				data, _ := json.Marshal(memResult)
 				mock.EXPECT().
-					QueryNodeMemory(gomock.Any(), "server1").
+					Query(gomock.Any(), "server1", "node", job.OperationNodeMemoryGet, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
-						&mem.Result{Total: 8192, Free: 4096, Cached: 2048},
-						"agent1",
+						&job.Response{
+							Hostname: "agent1",
+							Data:     json.RawMessage(data),
+						},
 						nil,
 					)
 				return mock
