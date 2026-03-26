@@ -210,6 +210,16 @@ const config: Config = {
               docId: 'sidebar/sdk/client/node'
             },
             {
+              type: 'doc',
+              label: 'Cron',
+              docId: 'sidebar/sdk/client/cron'
+            },
+            {
+              type: 'doc',
+              label: 'Docker',
+              docId: 'sidebar/sdk/client/docker'
+            },
+            {
               type: 'html',
               value: '<hr style="margin: 0.3rem 0;">',
               className: 'dropdown-separator'
