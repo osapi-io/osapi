@@ -27,6 +27,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+var _ provider.FactsSetter = (*Netinfo)(nil)
+
 // Netinfo provides cross-platform network interface information.
 // Platform-specific types (Linux, Darwin) embed this for shared
 // interface enumeration and add their own route implementations.

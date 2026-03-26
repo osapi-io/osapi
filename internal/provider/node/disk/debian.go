@@ -28,6 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+var _ provider.FactsSetter = (*Debian)(nil)
+
 // Debian implements the Mem interface for Debian.
 type Debian struct {
 	provider.FactsAware

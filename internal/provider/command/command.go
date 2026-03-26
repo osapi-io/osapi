@@ -28,6 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+var _ provider.FactsSetter = (*Executor)(nil)
+
 // Executor implements the Provider interface for command execution.
 type Executor struct {
 	provider.FactsAware

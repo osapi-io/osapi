@@ -25,6 +25,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+var _ provider.FactsSetter = (*Linux)(nil)
+
 // Linux implements the Ping interface for Linux.
 type Linux struct {
 	provider.FactsAware

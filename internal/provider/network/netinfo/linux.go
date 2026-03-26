@@ -24,7 +24,11 @@ import (
 	"io"
 	"net"
 	"os"
+
+	"github.com/retr0h/osapi/internal/provider"
 )
+
+var _ provider.FactsSetter = (*Linux)(nil)
 
 // Linux implements the Provider interface for Linux systems.
 type Linux struct {
