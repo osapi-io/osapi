@@ -28,9 +28,9 @@ import (
 
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/node/disk"
-	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // heartbeatInterval is the interval between heartbeat refreshes.

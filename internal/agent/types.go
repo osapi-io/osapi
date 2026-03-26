@@ -44,8 +44,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
-	"github.com/retr0h/osapi/internal/telemetry/process"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 )
 
 // Agent implements job processing with clean lifecycle management.

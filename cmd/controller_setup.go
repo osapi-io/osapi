@@ -44,8 +44,8 @@ import (
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
-	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/internal/telemetry/metrics"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/internal/validation"
 )
 

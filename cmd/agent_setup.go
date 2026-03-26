@@ -32,8 +32,8 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	fileProv "github.com/retr0h/osapi/internal/provider/file"
-	"github.com/retr0h/osapi/internal/telemetry/process"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
