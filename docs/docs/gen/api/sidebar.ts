@@ -170,6 +170,22 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Facts",
+      link: {
+        type: "doc",
+        id: "gen/api/facts-api-facts",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-fact-keys",
+          label: "List available fact keys",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "File",
       link: {
         type: "doc",
