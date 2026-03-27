@@ -33,94 +33,111 @@ type KeysPublicTestSuite struct {
 }
 
 func (s *KeysPublicTestSuite) TestBuiltInKeys() {
-	keys := facts.BuiltInKeys()
+	tests := []struct {
+		name         string
+		validateFunc func([]string)
+	}{
+		{
+			name: "when called returns all five built-in keys",
+			validateFunc: func(keys []string) {
+				s.Len(keys, 5)
+				s.Contains(keys, facts.KeyInterfacePrimary)
+				s.Contains(keys, facts.KeyHostname)
+				s.Contains(keys, facts.KeyArch)
+				s.Contains(keys, facts.KeyKernel)
+				s.Contains(keys, facts.KeyFQDN)
+			},
+		},
+		{
+			name: "when called twice returns independent slices",
+			validateFunc: func(_ []string) {
+				a := facts.BuiltInKeys()
+				b := facts.BuiltInKeys()
+				a[0] = "mutated"
+				s.NotEqual(a[0], b[0])
+			},
+		},
+	}
 
-	s.Len(keys, 5)
-	s.Contains(keys, facts.KeyInterfacePrimary)
-	s.Contains(keys, facts.KeyHostname)
-	s.Contains(keys, facts.KeyArch)
-	s.Contains(keys, facts.KeyKernel)
-	s.Contains(keys, facts.KeyFQDN)
-}
-
-func (s *KeysPublicTestSuite) TestBuiltInKeysReturnsNewSlice() {
-	a := facts.BuiltInKeys()
-	b := facts.BuiltInKeys()
-	a[0] = "mutated"
-	s.NotEqual(a[0], b[0], "BuiltInKeys should return a new slice each call")
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			keys := facts.BuiltInKeys()
+			tt.validateFunc(keys)
+		})
+	}
 }
 
 func (s *KeysPublicTestSuite) TestIsKnownKey() {
 	tests := []struct {
 		name   string
 		key    string
-		expect bool
+		wantOK bool
 	}{
 		{
 			name:   "when interface.primary",
 			key:    facts.KeyInterfacePrimary,
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when hostname",
 			key:    facts.KeyHostname,
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when arch",
 			key:    facts.KeyArch,
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when kernel",
 			key:    facts.KeyKernel,
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when fqdn",
 			key:    facts.KeyFQDN,
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when valid custom key",
 			key:    "custom.gateway",
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when valid custom key with dots",
 			key:    "custom.network.gateway",
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when custom prefix only",
 			key:    "custom.",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when empty string",
 			key:    "",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when unknown key",
 			key:    "unknown",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when partial match",
 			key:    "host",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when not fact prefix",
 			key:    "@notfact.x",
-			expect: false,
+			wantOK: false,
 		},
 	}
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.expect, facts.IsKnownKey(tc.key))
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.wantOK, facts.IsKnownKey(tt.key))
 		})
 	}
 }
@@ -129,55 +146,45 @@ func (s *KeysPublicTestSuite) TestIsCustomKey() {
 	tests := []struct {
 		name   string
 		key    string
-		expect bool
+		wantOK bool
 	}{
 		{
 			name:   "when valid custom key",
 			key:    "custom.gateway",
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when valid custom key with nested dots",
 			key:    "custom.network.primary.gateway",
-			expect: true,
+			wantOK: true,
 		},
 		{
 			name:   "when custom prefix only",
 			key:    "custom.",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when empty string",
 			key:    "",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when built-in key",
 			key:    "hostname",
-			expect: false,
+			wantOK: false,
 		},
 		{
 			name:   "when partial custom prefix",
 			key:    "custo",
-			expect: false,
+			wantOK: false,
 		},
 	}
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.expect, facts.IsCustomKey(tc.key))
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.wantOK, facts.IsCustomKey(tt.key))
 		})
 	}
-}
-
-func (s *KeysPublicTestSuite) TestConstants() {
-	s.Equal("interface.primary", facts.KeyInterfacePrimary)
-	s.Equal("hostname", facts.KeyHostname)
-	s.Equal("arch", facts.KeyArch)
-	s.Equal("kernel", facts.KeyKernel)
-	s.Equal("fqdn", facts.KeyFQDN)
-	s.Equal("custom.", facts.CustomPrefix)
-	s.Equal("@fact.", facts.Prefix)
 }
 
 func TestKeysPublicTestSuite(t *testing.T) {

@@ -84,7 +84,11 @@ func (s *FactsKeysGetPublicTestSuite) TestGetFactKeys() {
 				jsonResp := resp.(gen.GetFactKeys200JSONResponse)
 				for _, entry := range jsonResp.Keys {
 					s.NotNil(entry.Description, "key %s should have a description", entry.Key)
-					s.NotEmpty(*entry.Description, "key %s description should not be empty", entry.Key)
+					s.NotEmpty(
+						*entry.Description,
+						"key %s description should not be empty",
+						entry.Key,
+					)
 				}
 			},
 		},
