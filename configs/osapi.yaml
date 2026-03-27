@@ -15,6 +15,7 @@ controller:
         allow_origins:
           - http://localhost:3001
           - https://osapi-io.github.io
+          - http://localhost:5173
       # Custom roles with fine-grained permissions.
       # Built-in roles (admin, write, read) expand to default permissions
       # unless overridden here. Permissions use resource:verb format.
