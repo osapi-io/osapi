@@ -30,6 +30,11 @@
       "name": "osapi-orchestrator",
       "description": "A Go package for orchestrating operations across OSAPI-managed hosts.",
       "topics": ["configuration-management", "dag", "golang", "orchestration", "osapi"]
+    },
+    {
+      "name": "osapi-ui",
+      "description": "React management dashboard for OSAPI with health monitoring and runlist builder.",
+      "topics": ["dashboard", "osapi", "react", "tailwindcss", "typescript", "vite"]
     }
   ],
   "security": {
