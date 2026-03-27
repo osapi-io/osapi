@@ -21,6 +21,9 @@ tags:
   - name: Docker_Management_API_docker_image
     x-displayName: Node/Docker/Image
     description: Docker image operations on a target node.
+  - name: Facts_API_facts
+    x-displayName: Facts
+    description: Fact key discovery for @fact. references.
   - name: File_Management_API_file_operations
     x-displayName: File
     description: Object Store file management operations.
@@ -959,6 +962,44 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error pulling image.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /facts/keys:
+    servers: []
+    get:
+      summary: List available fact keys
+      description: >
+        Returns the list of fact keys that can be used in @fact. references.
+        Includes built-in keys and any custom keys registered by agents.
+      operationId: GetFactKeys
+      tags:
+        - Facts_API_facts
+      security:
+        - BearerAuth:
+            - agent:read
+      responses:
+        '200':
+          description: List of available fact keys.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactKeysResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
           content:
             application/json:
               schema:
@@ -3250,6 +3291,30 @@ components:
             $ref: '#/components/schemas/DockerPullResultItem'
       required:
         - results
+    FactKeysResponse:
+      type: object
+      required:
+        - keys
+      properties:
+        keys:
+          type: array
+          description: Available fact keys for @fact. references.
+          items:
+            $ref: '#/components/schemas/FactKeyEntry'
+    FactKeyEntry:
+      type: object
+      required:
+        - key
+      properties:
+        key:
+          type: string
+          description: The fact key (e.g. "interface.primary").
+        description:
+          type: string
+          description: Human-readable description of the fact.
+        builtin:
+          type: boolean
+          description: Whether this is a built-in fact key.
     FileInfo:
       type: object
       properties:
@@ -4762,6 +4827,9 @@ x-tagGroups:
       - Docker_Management_API_docker_operations
       - Docker_Management_API_docker_exec
       - Docker_Management_API_docker_image
+  - name: Facts API
+    tags:
+      - Facts_API_facts
   - name: File Management API
     tags:
       - File_Management_API_file_operations

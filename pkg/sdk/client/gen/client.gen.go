@@ -870,6 +870,24 @@ type ErrorResponse struct {
 	Error *string `json:"error,omitempty"`
 }
 
+// FactKeyEntry defines model for FactKeyEntry.
+type FactKeyEntry struct {
+	// Builtin Whether this is a built-in fact key.
+	Builtin *bool `json:"builtin,omitempty"`
+
+	// Description Human-readable description of the fact.
+	Description *string `json:"description,omitempty"`
+
+	// Key The fact key (e.g. "interface.primary").
+	Key string `json:"key"`
+}
+
+// FactKeysResponse defines model for FactKeysResponse.
+type FactKeysResponse struct {
+	// Keys Available fact keys for @fact. references.
+	Keys []FactKeyEntry `json:"keys"`
+}
+
 // FileDeleteResponse defines model for FileDeleteResponse.
 type FileDeleteResponse struct {
 	// Deleted Whether the file was deleted.
@@ -1750,6 +1768,9 @@ type ClientInterface interface {
 	// GetAuditLogByID request
 	GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetFactKeys request
+	GetFactKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetFiles request
 	GetFiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1976,6 +1997,18 @@ func (c *Client) GetAuditExport(ctx context.Context, reqEditors ...RequestEditor
 
 func (c *Client) GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAuditLogByIDRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFactKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFactKeysRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2884,6 +2917,33 @@ func NewGetAuditLogByIDRequest(server string, id openapi_types.UUID) (*http.Requ
 	}
 
 	operationPath := fmt.Sprintf("/audit/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetFactKeysRequest generates requests for GetFactKeys
+func NewGetFactKeysRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/facts/keys")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4722,6 +4782,9 @@ type ClientWithResponsesInterface interface {
 	// GetAuditLogByIDWithResponse request
 	GetAuditLogByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAuditLogByIDResponse, error)
 
+	// GetFactKeysWithResponse request
+	GetFactKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFactKeysResponse, error)
+
 	// GetFilesWithResponse request
 	GetFilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFilesResponse, error)
 
@@ -5055,6 +5118,31 @@ func (r GetAuditLogByIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetAuditLogByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFactKeysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *FactKeysResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFactKeysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFactKeysResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6187,6 +6275,15 @@ func (c *ClientWithResponses) GetAuditLogByIDWithResponse(ctx context.Context, i
 	return ParseGetAuditLogByIDResponse(rsp)
 }
 
+// GetFactKeysWithResponse request returning *GetFactKeysResponse
+func (c *ClientWithResponses) GetFactKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFactKeysResponse, error) {
+	rsp, err := c.GetFactKeys(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFactKeysResponse(rsp)
+}
+
 // GetFilesWithResponse request returning *GetFilesResponse
 func (c *ClientWithResponses) GetFilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFilesResponse, error) {
 	rsp, err := c.GetFiles(ctx, reqEditors...)
@@ -7044,6 +7141,53 @@ func ParseGetAuditLogByIDResponse(rsp *http.Response) (*GetAuditLogByIDResponse,
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFactKeysResponse parses an HTTP response from a GetFactKeysWithResponse call
+func ParseGetFactKeysResponse(rsp *http.Response) (*GetFactKeysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFactKeysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FactKeysResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

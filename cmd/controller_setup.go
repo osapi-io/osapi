@@ -74,6 +74,8 @@ type ServerManager interface {
 	GetScheduleHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetFileHandler returns file handler for registration.
 	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
+	// GetFactsHandler returns facts handler for registration.
+	GetFactsHandler() []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -712,6 +714,7 @@ func registerControllerHandlers(
 	if objStore != nil {
 		handlers = append(handlers, sm.GetFileHandler(objStore)...)
 	}
+	handlers = append(handlers, sm.GetFactsHandler()...)
 
 	sm.RegisterHandlers(handlers)
 }
