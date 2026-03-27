@@ -342,7 +342,8 @@ const config: Config = {
       disableSwitch: false
     },
     prism: {
-      theme: prismThemes.palenight,
+      theme: prismThemes.github,
+      darkTheme: prismThemes.palenight,
       prism: {
         additionalLanguages: [
           'ruby',
