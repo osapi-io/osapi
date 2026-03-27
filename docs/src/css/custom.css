@@ -4,29 +4,179 @@
  * work well for content-centric websites.
  */
 
+/* Sparkle dots + geometric shapes background */
+@keyframes sparkle-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+[data-theme='dark'] html {
+  background-image:
+    /* Sparkle dots */ radial-gradient(
+      1px 1px at 10% 20%,
+      rgba(103, 234, 148, 0.4) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 30% 65%,
+      rgba(124, 58, 237, 0.3) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1.5px 1.5px at 55% 15%,
+      rgba(103, 234, 148, 0.3) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 70% 45%,
+      rgba(124, 58, 237, 0.25) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 85% 75%,
+      rgba(103, 234, 148, 0.35) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1.5px 1.5px at 20% 80%,
+      rgba(124, 58, 237, 0.2) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 45% 40%,
+      rgba(103, 234, 148, 0.25) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 92% 25%,
+      rgba(124, 58, 237, 0.3) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1.5px 1.5px at 5% 50%,
+      rgba(103, 234, 148, 0.3) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      1px 1px at 65% 90%,
+      rgba(124, 58, 237, 0.25) 50%,
+      transparent 50%
+    );
+  background-size: 300px 300px;
+  background-repeat: repeat;
+}
+
+/* Floating geometric shapes overlay */
+[data-theme='dark'] body::before,
+[data-theme='dark'] body::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+}
+
+[data-theme='dark'] body::before {
+  top: 15%;
+  right: 10%;
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(103, 234, 148, 0.6);
+  transform: rotate(35deg);
+  animation: float-slow 12s ease-in-out infinite;
+}
+
+[data-theme='dark'] body::after {
+  bottom: 20%;
+  left: 5%;
+  width: 200px;
+  height: 200px;
+  border: 1px solid rgba(124, 58, 237, 0.6);
+  border-radius: 50%;
+  animation: float-slow 16s ease-in-out infinite reverse;
+}
+
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #1a8a50;
+  --ifm-color-primary-dark: #167a47;
+  --ifm-color-primary-darker: #146d3f;
+  --ifm-color-primary-darkest: #0f5a34;
+  --ifm-color-primary-light: #1e9a59;
+  --ifm-color-primary-lighter: #22aa62;
+  --ifm-color-primary-lightest: #2fc476;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-background-color: #0a0a0a;
+  --ifm-background-surface-color: #0a0a0a;
+  --ifm-color-primary: #67ea94;
+  --ifm-color-primary-dark: #4de57f;
+  --ifm-color-primary-darker: #33e06a;
+  --ifm-color-primary-darkest: #1fd85a;
+  --ifm-color-primary-light: #81efa9;
+  --ifm-color-primary-lighter: #9bf4be;
+  --ifm-color-primary-lightest: #b5f9d3;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Navbar — dark background, taller, purple accent bevel, backdrop blur */
+.navbar {
+  background-color: #000000;
+  border-bottom: 2px solid #7c3aed;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(12px);
+}
+
+.navbar .navbar__link {
+  color: #e2e8f0;
+}
+
+.navbar .navbar__link:hover,
+.navbar .navbar__link--active {
+  color: #67ea94;
+}
+
+.navbar .navbar__title {
+  color: #ffffff;
+}
+
+[data-theme='light'] .navbar {
+  background-color: #000000;
+}
+
+[data-theme='light'] .navbar .header-github-link::before {
+  background-color: #e2e8f0;
+}
+
+[data-theme='light'] .navbar button[class*='toggle'] svg,
+[data-theme='light'] .navbar .clean-btn svg {
+  color: #e2e8f0;
+  fill: #e2e8f0;
+}
+
+[data-theme='light'] .navbar .dropdown__link {
+  color: #1a1a2e;
 }
 
 /* Sidebar Method labels */
@@ -93,12 +243,206 @@
   background-color: var(--ifm-navbar-link-hover-color);
 }
 
+/* Dark card styling for DocCardList and category cards */
+[data-theme='dark'] .card {
+  background-color: #000000;
+  border: 1px solid rgba(103, 234, 148, 0.15);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+[data-theme='dark'] .card:hover {
+  border-color: rgba(103, 234, 148, 0.4);
+  box-shadow:
+    0 4px 16px rgba(103, 234, 148, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='light'] .card {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+[data-theme='light'] .card:hover {
+  border-color: #1a8a50;
+  box-shadow: 0 2px 8px rgba(26, 138, 80, 0.15);
+}
+
+/* Code blocks — black background, 3D bevel, green accent */
+[data-theme='dark'] pre {
+  background-color: #000000 !important;
+  border: 1px solid rgba(103, 234, 148, 0.15);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] code {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .token.comment,
+[data-theme='dark'] .token.prolog,
+[data-theme='dark'] .token.doctype {
+  color: #6b7280;
+}
+
+[data-theme='dark'] .token.keyword {
+  color: #7c3aed;
+}
+
+[data-theme='dark'] .token.string,
+[data-theme='dark'] .token.attr-value {
+  color: #67ea94;
+}
+
+[data-theme='dark'] .token.function {
+  color: #81efa9;
+}
+
+[data-theme='dark'] .token.number,
+[data-theme='dark'] .token.boolean {
+  color: #9bf4be;
+}
+
+[data-theme='dark'] .token.operator,
+[data-theme='dark'] .token.punctuation {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .token.class-name,
+[data-theme='dark'] .token.builtin {
+  color: #b5f9d3;
+}
+
+[data-theme='light'] pre {
+  background-color: #1a1a2e !important;
+  border: 1px solid rgba(103, 234, 148, 0.15);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='light'] pre code {
+  color: #e2e8f0;
+}
+
+/* Code title bar (filename) */
+[data-theme='dark'] div[class^='codeBlockTitle'] {
+  background-color: #000000 !important;
+  border-bottom: 1px solid rgba(103, 234, 148, 0.15);
+  color: #67ea94;
+}
+
+/* Admonitions — dark card style with colored left border */
+[data-theme='dark'] .alert {
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-left: 4px solid;
+  border-radius: 0.5rem;
+  color: #e2e8f0;
+  padding: 1rem 1.25rem;
+}
+
+[data-theme='dark'] .alert div[class*='admonitionHeading'] {
+  background: transparent;
+}
+
+[data-theme='dark'] .alert--secondary {
+  background-color: rgba(124, 58, 237, 0.08);
+  border-left-color: #7c3aed;
+}
+
+[data-theme='dark'] .alert--info {
+  background-color: rgba(103, 234, 148, 0.08);
+  border-color: rgba(103, 234, 148, 0.2);
+  border-left-color: #67ea94;
+}
+
+[data-theme='dark'] .alert--success {
+  background-color: rgba(34, 170, 98, 0.08);
+  border-color: rgba(34, 170, 98, 0.2);
+  border-left-color: #22aa62;
+}
+
+[data-theme='dark'] .alert--warning {
+  background-color: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+  border-left-color: #f59e0b;
+}
+
+[data-theme='dark'] .alert--danger {
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  border-left-color: #ef4444;
+}
+
+[data-theme='dark'] .alert--secondary div[class*='admonitionHeading'] {
+  color: #a78bfa;
+}
+
+[data-theme='dark'] .alert--info div[class*='admonitionHeading'] {
+  color: #67ea94;
+}
+
+[data-theme='dark'] .alert--success div[class*='admonitionHeading'] {
+  color: #22aa62;
+}
+
+[data-theme='dark'] .alert--warning div[class*='admonitionHeading'] {
+  color: #f59e0b;
+}
+
+[data-theme='dark'] .alert--danger div[class*='admonitionHeading'] {
+  color: #ef4444;
+}
+
+[data-theme='dark'] .alert a {
+  color: #67ea94;
+  text-decoration: none;
+}
+
+[data-theme='dark'] .alert a:hover {
+  color: #9bf4be;
+  text-decoration: none;
+}
+
+/* OpenAPI docs — button and label fixes */
+[data-theme='dark'] .openapi-explorer__request-btn {
+  background-color: #67ea94 !important;
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .openapi-explorer__request-btn:hover {
+  background-color: #4de57f !important;
+  color: #000000 !important;
+}
+
+[data-theme='light'] .alert {
+  border-left: 4px solid;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 /* Taken from docusaurus' website. */
 div[class^='announcementBar_'] {
   font-size: 20px;
 
-  --site-announcement-bar-stripe-color1: #e8d7ff;
-  --site-announcement-bar-stripe-color2: #ffe9d1;
+  --site-announcement-bar-stripe-color1: #d1ffe0;
+  --site-announcement-bar-stripe-color2: #e8fff0;
 
   background: repeating-linear-gradient(
     35deg,
