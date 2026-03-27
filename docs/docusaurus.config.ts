@@ -329,10 +329,6 @@ const config: Config = {
           to: '/category/api'
         },
         {
-          type: 'docsVersionDropdown',
-          position: 'right'
-        },
-        {
           href: 'https://github.com/retr0h/osapi',
           position: 'right',
           className: 'header-github-link',
@@ -340,21 +336,7 @@ const config: Config = {
         }
       ]
     },
-    footer: {
-      style: 'dark',
-      links: [
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'GitHub',
-              href: 'https://github.com/retr0h/osapi'
-            }
-          ]
-        }
-      ],
-      copyright: `Copyright © ${new Date().getFullYear()} <a href="https://github.com/retr0h">@retr0h</a>`
-    },
+    footer: undefined,
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false
