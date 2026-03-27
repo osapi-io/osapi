@@ -69,7 +69,7 @@ func processFileDeploy(
 
 	result, err := fileProvider.Deploy(context.Background(), req)
 	if err != nil {
-		return nil, fmt.Errorf("file deploy failed: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
@@ -87,7 +87,7 @@ func processFileStatus(
 
 	result, err := fileProvider.Status(context.Background(), req)
 	if err != nil {
-		return nil, fmt.Errorf("file status failed: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
@@ -105,7 +105,7 @@ func processFileUndeploy(
 
 	result, err := fileProvider.Undeploy(context.Background(), req)
 	if err != nil {
-		return nil, fmt.Errorf("file undeploy failed: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)

@@ -171,7 +171,7 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
 					Return(nil, errors.New("object not found"))
 			},
 			expectError: true,
-			errorMsg:    "file deploy failed",
+			errorMsg:    "object not found",
 		},
 		{
 			name: "status provider error",
@@ -187,7 +187,7 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
 					Return(nil, errors.New("state KV unavailable"))
 			},
 			expectError: true,
-			errorMsg:    "file status failed",
+			errorMsg:    "state KV unavailable",
 		},
 		{
 			name: "successful undeploy operation",
@@ -241,7 +241,7 @@ func (s *ProcessorFilePublicTestSuite) TestProcessFileOperation() {
 					Return(nil, errors.New("state KV unavailable"))
 			},
 			expectError: true,
-			errorMsg:    "file undeploy failed",
+			errorMsg:    "state KV unavailable",
 		},
 	}
 

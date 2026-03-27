@@ -90,7 +90,7 @@ func getNodeHostname(
 
 	hostname, err := hostProvider.GetHostname()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get hostname: %w", err)
+		return nil, err
 	}
 
 	result := map[string]interface{}{
@@ -144,7 +144,7 @@ func getNodeUptime(
 
 	uptime, err := hostProvider.GetUptime()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get uptime: %w", err)
+		return nil, err
 	}
 
 	result := map[string]interface{}{
@@ -165,7 +165,7 @@ func getNodeOSInfo(
 
 	osInfo, err := hostProvider.GetOSInfo()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get OS info: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(osInfo)
@@ -180,7 +180,7 @@ func getNodeDisk(
 
 	diskUsage, err := diskProvider.GetLocalUsageStats()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get disk usage: %w", err)
+		return nil, err
 	}
 
 	result := map[string]interface{}{
@@ -200,7 +200,7 @@ func getNodeMemory(
 
 	memInfo, err := memProvider.GetStats()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get memory stats: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(memInfo)
@@ -215,7 +215,7 @@ func getNodeLoad(
 
 	loadAvg, err := loadProvider.GetAverageStats()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get load averages: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(loadAvg)

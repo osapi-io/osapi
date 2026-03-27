@@ -701,7 +701,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "hostname provider error",
 			operation: "hostname.get",
-			errorMsg:  "failed to get hostname",
+			errorMsg:  "hostname unavailable",
 			createAgent: func() *agent.Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
@@ -723,7 +723,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "uptime provider error",
 			operation: "uptime.get",
-			errorMsg:  "failed to get uptime",
+			errorMsg:  "uptime unavailable",
 			createAgent: func() *agent.Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().
@@ -747,7 +747,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "OS info provider error",
 			operation: "os.get",
-			errorMsg:  "failed to get OS info",
+			errorMsg:  "os info unavailable",
 			createAgent: func() *agent.Agent {
 				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
 				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
@@ -769,7 +769,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "disk provider error",
 			operation: "disk.get",
-			errorMsg:  "failed to get disk usage",
+			errorMsg:  "disk unavailable",
 			createAgent: func() *agent.Agent {
 				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
 				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
@@ -791,7 +791,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "memory provider error",
 			operation: "memory.get",
-			errorMsg:  "failed to get memory stats",
+			errorMsg:  "memory unavailable",
 			createAgent: func() *agent.Agent {
 				memMock := memMocks.NewPlainMockProvider(s.mockCtrl)
 				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
@@ -813,7 +813,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperationErrors() {
 		{
 			name:      "load provider error",
 			operation: "load.get",
-			errorMsg:  "failed to get load averages",
+			errorMsg:  "load unavailable",
 			createAgent: func() *agent.Agent {
 				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
 				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
@@ -867,7 +867,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			operation: "dns.get",
 			jobType:   job.TypeQuery,
 			data:      `{"interface": "eth0"}`,
-			errorMsg:  "failed to get DNS config",
+			errorMsg:  "DNS lookup failed",
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().
@@ -893,7 +893,7 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperationErrors() {
 			operation: "dns.update",
 			jobType:   job.TypeModify,
 			data:      `{"servers": ["8.8.8.8"], "search_domains": ["example.com"], "interface": "eth0"}`,
-			errorMsg:  "failed to set DNS config",
+			errorMsg:  "DNS update failed",
 			createAgent: func() *agent.Agent {
 				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
 				dnsMock.EXPECT().

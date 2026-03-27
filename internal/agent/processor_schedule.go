@@ -94,7 +94,7 @@ func processCronList(
 
 	entries, err := cronProvider.List(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list cron entries: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(entries)
@@ -120,7 +120,7 @@ func processCronGet(
 
 	entry, err := cronProvider.Get(ctx, data.Name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get cron entry: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(entry)
@@ -144,7 +144,7 @@ func processCronCreate(
 
 	result, err := cronProvider.Create(ctx, entry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create cron entry: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
@@ -168,7 +168,7 @@ func processCronUpdate(
 
 	result, err := cronProvider.Update(ctx, entry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update cron entry: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
@@ -194,7 +194,7 @@ func processCronDelete(
 
 	result, err := cronProvider.Delete(ctx, data.Name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete cron entry: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
