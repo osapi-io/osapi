@@ -741,7 +741,7 @@ func (suite *UIPublicTestSuite) TestPrintCompactTable() {
 				{
 					Headers: []string{"A", "B"},
 					Rows: [][]string{{
-						strings.Repeat("x", 60),
+						strings.Repeat("x", 90),
 						"short",
 					}},
 				},
@@ -754,7 +754,7 @@ func (suite *UIPublicTestSuite) TestPrintCompactTable() {
 				{
 					Headers: []string{"A"},
 					Rows: [][]string{
-						{strings.Repeat("x", 60)},
+						{strings.Repeat("x", 90)},
 					},
 				},
 			},

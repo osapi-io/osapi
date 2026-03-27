@@ -76,7 +76,7 @@ func processNetworkDNS(
 
 		config, err := dnsProvider.GetResolvConfByInterface(interfaceName)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get DNS config: %w", err)
+			return nil, err
 		}
 
 		return json.Marshal(config)
@@ -112,7 +112,7 @@ func processNetworkDNS(
 		interfaceName,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set DNS config: %w", err)
+		return nil, err
 	}
 
 	result := map[string]interface{}{

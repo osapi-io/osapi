@@ -204,7 +204,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				return m
 			},
 			expectError: true,
-			errorMsg:    "failed to list cron entries",
+			errorMsg:    "permission denied",
 		},
 		{
 			name: "successful cron get",
@@ -259,7 +259,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				return m
 			},
 			expectError: true,
-			errorMsg:    "failed to get cron entry",
+			errorMsg:    "not found",
 		},
 		{
 			name: "successful cron create",
@@ -324,7 +324,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				return m
 			},
 			expectError: true,
-			errorMsg:    "failed to create cron entry",
+			errorMsg:    "already exists",
 		},
 		{
 			name: "successful cron update",
@@ -388,7 +388,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				return m
 			},
 			expectError: true,
-			errorMsg:    "failed to update cron entry",
+			errorMsg:    "not found",
 		},
 		{
 			name: "successful cron delete",
@@ -442,7 +442,7 @@ func (s *ProcessorSchedulePublicTestSuite) TestProcessCronOperation() {
 				return m
 			},
 			expectError: true,
-			errorMsg:    "failed to delete cron entry",
+			errorMsg:    "not found",
 		},
 		{
 			name: "unsupported cron sub-operation",

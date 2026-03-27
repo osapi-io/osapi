@@ -67,7 +67,7 @@ func processCommandExec(
 		Timeout: execData.Timeout,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("command exec failed: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)
@@ -89,7 +89,7 @@ func processCommandShell(
 		Timeout: shellData.Timeout,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("command shell failed: %w", err)
+		return nil, err
 	}
 
 	return json.Marshal(result)

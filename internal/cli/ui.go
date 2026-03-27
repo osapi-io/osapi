@@ -176,7 +176,7 @@ func BoolToSafeString(
 }
 
 // compactMaxColWidth is the maximum column width before truncation.
-const compactMaxColWidth = 50
+const compactMaxColWidth = 79
 
 // printJSONBlock prints a titled JSON block without truncation.
 func printJSONBlock(

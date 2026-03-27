@@ -172,7 +172,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 					Return(nil, errors.New("execution failed"))
 			},
 			expectError: true,
-			errorMsg:    "command exec failed",
+			errorMsg:    "execution failed",
 		},
 		{
 			name: "shell provider error",
@@ -188,7 +188,7 @@ func (s *ProcessorCommandPublicTestSuite) TestProcessCommandOperation() {
 					Return(nil, errors.New("shell failed"))
 			},
 			expectError: true,
-			errorMsg:    "command shell failed",
+			errorMsg:    "shell failed",
 		},
 	}
 
