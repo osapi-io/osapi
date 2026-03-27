@@ -24,17 +24,16 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/retr0h/osapi/internal/facts"
 	"github.com/retr0h/osapi/internal/job"
 )
-
-const factPrefix = "@fact."
 
 // ResolveFacts walks all string values in params and replaces @fact.X
 // references with values from the agent's cached facts. Returns a new
 // map with resolved values, or an error if any reference cannot be resolved.
 func ResolveFacts(
 	params map[string]any,
-	facts *job.FactsRegistration,
+	fr *job.FactsRegistration,
 	hostname string,
 ) (map[string]any, error) {
 	if params == nil {
@@ -43,7 +42,7 @@ func ResolveFacts(
 
 	result := make(map[string]any, len(params))
 	for k, v := range params {
-		resolved, err := resolveValue(v, facts, hostname)
+		resolved, err := resolveValue(v, fr, hostname)
 		if err != nil {
 			return nil, err
 		}
@@ -56,16 +55,16 @@ func ResolveFacts(
 // resolveValue resolves @fact.X references in a single value.
 func resolveValue(
 	v any,
-	facts *job.FactsRegistration,
+	fr *job.FactsRegistration,
 	hostname string,
 ) (any, error) {
 	switch val := v.(type) {
 	case string:
-		return resolveString(val, facts, hostname)
+		return resolveString(val, fr, hostname)
 	case map[string]any:
-		return ResolveFacts(val, facts, hostname)
+		return ResolveFacts(val, fr, hostname)
 	case []any:
-		return resolveSlice(val, facts, hostname)
+		return resolveSlice(val, fr, hostname)
 	default:
 		return v, nil
 	}
@@ -74,12 +73,12 @@ func resolveValue(
 // resolveSlice resolves @fact.X references in each element of a slice.
 func resolveSlice(
 	s []any,
-	facts *job.FactsRegistration,
+	fr *job.FactsRegistration,
 	hostname string,
 ) ([]any, error) {
 	result := make([]any, len(s))
 	for i, v := range s {
-		resolved, err := resolveValue(v, facts, hostname)
+		resolved, err := resolveValue(v, fr, hostname)
 		if err != nil {
 			return nil, err
 		}
@@ -91,19 +90,19 @@ func resolveSlice(
 // resolveString replaces all @fact.X references in a string.
 func resolveString(
 	s string,
-	facts *job.FactsRegistration,
+	fr *job.FactsRegistration,
 	hostname string,
 ) (string, error) {
-	if !strings.Contains(s, factPrefix) {
+	if !strings.Contains(s, facts.Prefix) {
 		return s, nil
 	}
 
 	result := s
-	for strings.Contains(result, factPrefix) {
-		start := strings.Index(result, factPrefix)
+	for strings.Contains(result, facts.Prefix) {
+		start := strings.Index(result, facts.Prefix)
 		// Find the end of the reference (next space, quote, or end of string)
 		end := len(result)
-		for i := start + len(factPrefix); i < len(result); i++ {
+		for i := start + len(facts.Prefix); i < len(result); i++ {
 			c := result[i]
 			if c == ' ' || c == '"' || c == '\'' || c == ',' || c == ';' {
 				end = i
@@ -112,9 +111,9 @@ func resolveString(
 		}
 
 		ref := result[start:end]
-		key := result[start+len(factPrefix) : end]
+		key := result[start+len(facts.Prefix) : end]
 
-		replacement, err := lookupFact(key, facts, hostname)
+		replacement, err := lookupFact(key, fr, hostname)
 		if err != nil {
 			return "", fmt.Errorf("unresolvable fact reference %q: %w", ref, err)
 		}
@@ -128,49 +127,49 @@ func resolveString(
 // lookupFact resolves a fact key to its value.
 func lookupFact(
 	key string,
-	facts *job.FactsRegistration,
+	f *job.FactsRegistration,
 	hostname string,
 ) (string, error) {
-	if facts == nil {
+	if f == nil {
 		return "", fmt.Errorf("facts not available")
 	}
 
 	switch key {
-	case "interface.primary":
-		if facts.PrimaryInterface == "" {
+	case facts.KeyInterfacePrimary:
+		if f.PrimaryInterface == "" {
 			return "", fmt.Errorf("primary interface not set")
 		}
-		return facts.PrimaryInterface, nil
-	case "hostname":
+		return f.PrimaryInterface, nil
+	case facts.KeyHostname:
 		if hostname == "" {
 			return "", fmt.Errorf("hostname not set")
 		}
 		return hostname, nil
-	case "arch":
-		if facts.Architecture == "" {
+	case facts.KeyArch:
+		if f.Architecture == "" {
 			return "", fmt.Errorf("architecture not set")
 		}
-		return facts.Architecture, nil
+		return f.Architecture, nil
 	case "os":
 		return "", fmt.Errorf("os fact not available in FactsRegistration")
-	case "kernel":
-		if facts.KernelVersion == "" {
+	case facts.KeyKernel:
+		if f.KernelVersion == "" {
 			return "", fmt.Errorf("kernel version not set")
 		}
-		return facts.KernelVersion, nil
-	case "fqdn":
-		if facts.FQDN == "" {
+		return f.KernelVersion, nil
+	case facts.KeyFQDN:
+		if f.FQDN == "" {
 			return "", fmt.Errorf("fqdn not set")
 		}
-		return facts.FQDN, nil
+		return f.FQDN, nil
 	default:
 		// Check @fact.custom.X pattern
-		if strings.HasPrefix(key, "custom.") {
-			customKey := key[len("custom."):]
-			if facts.Facts == nil {
+		if facts.IsCustomKey(key) {
+			customKey := key[len(facts.CustomPrefix):]
+			if f.Facts == nil {
 				return "", fmt.Errorf("custom fact %q not found", customKey)
 			}
-			val, ok := facts.Facts[customKey]
+			val, ok := f.Facts[customKey]
 			if !ok {
 				return "", fmt.Errorf("custom fact %q not found", customKey)
 			}
