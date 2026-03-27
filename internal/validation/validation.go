@@ -27,28 +27,19 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	cronparser "github.com/robfig/cron/v3"
+
+	"github.com/retr0h/osapi/internal/facts"
 )
 
 var instance = validator.New()
-
-// isKnownFactKey reports whether key is a recognized fact key.
-// Known keys: interface.primary, hostname, arch, kernel, fqdn, custom.*.
-func isKnownFactKey(key string) bool {
-	switch key {
-	case "interface.primary", "hostname", "arch", "kernel", "fqdn":
-		return true
-	default:
-		return strings.HasPrefix(key, "custom.") && len(key) > len("custom.")
-	}
-}
 
 func init() {
 	// alphanum_or_fact accepts alphanumeric values or @fact. prefixed references
 	// with a known fact key. Fact references are resolved agent-side.
 	_ = instance.RegisterValidation("alphanum_or_fact", func(fl validator.FieldLevel) bool {
 		v := fl.Field().String()
-		if strings.HasPrefix(v, "@fact.") {
-			return isKnownFactKey(v[len("@fact."):])
+		if strings.HasPrefix(v, facts.Prefix) {
+			return facts.IsKnownKey(v[len(facts.Prefix):])
 		}
 		return instance.Var(v, "alphanum") == nil
 	})
@@ -57,8 +48,8 @@ func init() {
 	// with a known fact key. Fact references are resolved agent-side.
 	_ = instance.RegisterValidation("ip_or_fact", func(fl validator.FieldLevel) bool {
 		v := fl.Field().String()
-		if strings.HasPrefix(v, "@fact.") {
-			return isKnownFactKey(v[len("@fact."):])
+		if strings.HasPrefix(v, facts.Prefix) {
+			return facts.IsKnownKey(v[len(facts.Prefix):])
 		}
 		return instance.Var(v, "ip") == nil
 	})
