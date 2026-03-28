@@ -61,6 +61,9 @@ func NewNodeProcessor(
 
 		switch baseOperation {
 		case "hostname":
+			if req.Operation == job.OperationNodeHostnameUpdate {
+				return setNodeHostname(hostProvider, req, logger)
+			}
 			return getNodeHostname(hostProvider, appConfig, logger)
 		case "status":
 			return getNodeStatus(hostProvider, diskProvider, memProvider, loadProvider, logger)
@@ -103,6 +106,34 @@ func getNodeHostname(
 	}
 
 	return json.Marshal(result)
+}
+
+// setNodeHostname sets the node hostname via the host provider.
+func setNodeHostname(
+	hostProvider nodeHost.Provider,
+	req job.Request,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing host.SetHostname")
+
+	var data struct {
+		Hostname string `json:"hostname"`
+	}
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		return nil, fmt.Errorf("invalid hostname update data: %w", err)
+	}
+
+	result, err := hostProvider.SetHostname(data.Hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := map[string]interface{}{
+		"hostname": data.Hostname,
+		"changed":  result.Changed,
+	}
+
+	return json.Marshal(resp)
 }
 
 // getNodeStatus retrieves comprehensive node status.
