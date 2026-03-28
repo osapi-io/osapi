@@ -3,7 +3,7 @@
 Get the node's hostname:
 
 ```bash
-$ osapi client node hostname
+$ osapi client node hostname get
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -14,7 +14,7 @@ $ osapi client node hostname
 When targeting all hosts:
 
 ```bash
-$ osapi client node hostname --target _all
+$ osapi client node hostname get --target _all
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
@@ -26,7 +26,7 @@ $ osapi client node hostname --target _all
 Target by label to query a group of servers:
 
 ```bash
-$ osapi client node hostname --target group:web
+$ osapi client node hostname get --target group:web
 ```
 
 ## Flags
