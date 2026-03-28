@@ -72,6 +72,7 @@ func (s *Node) GetNodeOS(
 	}
 
 	resp := buildOSInfoResultItem(rawResp.Hostname, &osInfo)
+	resp.Status = gen.OSInfoResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeOS200JSONResponse{

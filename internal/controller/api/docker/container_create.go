@@ -95,6 +95,7 @@ func (s *Container) PostNodeContainerDocker(
 		Results: []gen.DockerResponse{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerResponseStatusOk,
 				Id:       stringPtrOrNil(id),
 				Image:    &data.Image,
 				Changed:  changed,

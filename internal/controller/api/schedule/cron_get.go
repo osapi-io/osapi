@@ -88,6 +88,7 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		Results: []gen.CronEntry{
 			{
 				Hostname: agentHostname,
+				Status:   gen.CronEntryStatusOk,
 				Name:     &entryName,
 				Object:   &object,
 				Schedule: &schedule,

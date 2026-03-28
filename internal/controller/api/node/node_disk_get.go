@@ -71,6 +71,7 @@ func (s *Node) GetNodeDisk(
 	}
 
 	resp := buildDiskResultItem(rawResp.Hostname, &diskResp)
+	resp.Status = gen.DiskResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeDisk200JSONResponse{

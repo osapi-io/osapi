@@ -124,6 +124,7 @@ func (s *Node) PostNodeFileDeploy(
 		Results: []gen.FileDeployResult{
 			{
 				Hostname: rawResp.Hostname,
+				Status:   gen.FileDeployResultStatusOk,
 				Changed:  &changed,
 			},
 		},

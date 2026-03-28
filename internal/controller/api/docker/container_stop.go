@@ -96,6 +96,7 @@ func (s *Container) PostNodeContainerDockerStop(
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerActionResultItemStatusOk,
 				Id:       &id,
 				Changed:  changed,
 				Message:  &msg,

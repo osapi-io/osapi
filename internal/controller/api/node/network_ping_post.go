@@ -161,6 +161,7 @@ func buildPingResponse(
 
 	return gen.PingResponse{
 		Hostname:        hostname,
+		Status:          gen.PingResponseStatusOk,
 		AvgRtt:          durationToString(&r.AvgRTT),
 		MaxRtt:          durationToString(&r.MaxRTT),
 		MinRtt:          durationToString(&r.MinRTT),

@@ -108,6 +108,7 @@ func (s *Schedule) PutNodeScheduleCron(
 		Results: []gen.CronMutationResult{
 			{
 				Hostname: agentHostname,
+				Status:   gen.CronMutationResultStatusOk,
 				Name:     &name,
 				Changed:  changed,
 			},

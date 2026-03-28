@@ -91,6 +91,7 @@ func dockerPullItemFromResponse(
 
 	return gen.DockerPullResultItem{
 		Hostname: resp.Hostname,
+		Status:   gen.DockerPullResultItemStatusOk,
 		ImageId:  stringPtrOrNil(pullResult.ImageID),
 		Tag:      stringPtrOrNil(pullResult.Tag),
 		Size:     int64PtrOrNil(pullResult.Size),

@@ -86,6 +86,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		Results: []gen.DNSConfigResponse{
 			{
 				Hostname:      rawResp.Hostname,
+				Status:        gen.DNSConfigResponseStatusOk,
 				Servers:       &servers,
 				SearchDomains: &searchDomains,
 				Changed:       &changed,

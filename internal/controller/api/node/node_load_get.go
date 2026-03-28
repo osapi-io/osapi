@@ -72,6 +72,7 @@ func (s *Node) GetNodeLoad(
 	}
 
 	resp := buildLoadResultItem(rawResp.Hostname, &loadStats)
+	resp.Status = gen.LoadResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeLoad200JSONResponse{

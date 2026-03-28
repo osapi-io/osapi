@@ -72,6 +72,7 @@ func (s *Node) GetNodeMemory(
 	}
 
 	resp := buildMemoryResultItem(rawResp.Hostname, &memStats)
+	resp.Status = gen.MemoryResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeMemory200JSONResponse{

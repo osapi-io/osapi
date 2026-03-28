@@ -71,6 +71,7 @@ func (s *Node) GetNodeUptime(
 	}
 
 	resp := buildUptimeResponse(rawResp.Hostname, &uptimeResp)
+	resp.Status = gen.UptimeResponseStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeUptime200JSONResponse{

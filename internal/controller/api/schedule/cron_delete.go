@@ -85,6 +85,7 @@ func (s *Schedule) DeleteNodeScheduleCron(
 		Results: []gen.CronMutationResult{
 			{
 				Hostname: agentHostname,
+				Status:   gen.CronMutationResultStatusOk,
 				Name:     &resultName,
 				Changed:  changed,
 			},

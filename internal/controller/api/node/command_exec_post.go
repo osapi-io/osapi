@@ -114,6 +114,7 @@ func (s *Node) PostNodeCommandExec(
 		Results: []gen.CommandResultItem{
 			{
 				Hostname:   rawResp.Hostname,
+				Status:     gen.CommandResultItemStatusOk,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,

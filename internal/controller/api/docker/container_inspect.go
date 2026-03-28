@@ -126,6 +126,7 @@ func dockerDetailItemFromResponse(
 
 	return gen.DockerDetailResponse{
 		Hostname:        resp.Hostname,
+		Status:          gen.DockerDetailResponseStatusOk,
 		Id:              stringPtrOrNil(detail.ID),
 		Name:            stringPtrOrNil(detail.Name),
 		Image:           stringPtrOrNil(detail.Image),

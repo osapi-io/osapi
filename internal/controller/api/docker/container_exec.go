@@ -122,6 +122,7 @@ func dockerExecItemFromResponse(
 
 	return gen.DockerExecResultItem{
 		Hostname: resp.Hostname,
+		Status:   gen.DockerExecResultItemStatusOk,
 		Stdout:   &stdout,
 		Stderr:   &stderr,
 		ExitCode: &exitCode,

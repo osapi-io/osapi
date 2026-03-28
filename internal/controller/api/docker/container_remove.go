@@ -97,6 +97,7 @@ func (s *Container) DeleteNodeContainerDockerByID(
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerActionResultItemStatusOk,
 				Id:       &id,
 				Changed:  changed,
 				Message:  &msg,

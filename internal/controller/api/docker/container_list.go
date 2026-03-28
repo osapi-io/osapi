@@ -80,6 +80,7 @@ func (s *Container) GetNodeContainerDocker(
 		Results: []gen.DockerListItem{
 			{
 				Hostname:   resp.Hostname,
+				Status:     gen.DockerListItemStatusOk,
 				Containers: &summaries,
 				Changed:    changed,
 			},

@@ -78,6 +78,7 @@ func (s *Container) PostNodeContainerDockerStart(
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerActionResultItemStatusOk,
 				Id:       &id,
 				Changed:  changed,
 				Message:  &msg,
