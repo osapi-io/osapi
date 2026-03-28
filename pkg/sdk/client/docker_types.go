@@ -87,6 +87,7 @@ type DockerExecOpts struct {
 // DockerResult represents a docker container create result from a single agent.
 type DockerResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	ID       string `json:"id,omitempty"`
 	Name     string `json:"name,omitempty"`
 	Image    string `json:"image,omitempty"`
@@ -99,6 +100,7 @@ type DockerResult struct {
 // DockerListResult represents a docker container list result from a single agent.
 type DockerListResult struct {
 	Hostname   string              `json:"hostname"`
+	Status     string              `json:"status"`
 	Containers []DockerSummaryItem `json:"containers,omitempty"`
 	Changed    bool                `json:"changed"`
 	Error      string              `json:"error,omitempty"`
@@ -116,6 +118,7 @@ type DockerSummaryItem struct {
 // DockerDetailResult represents a docker container inspect result from a single agent.
 type DockerDetailResult struct {
 	Hostname        string            `json:"hostname"`
+	Status          string            `json:"status"`
 	ID              string            `json:"id,omitempty"`
 	Name            string            `json:"name,omitempty"`
 	Image           string            `json:"image,omitempty"`
@@ -133,6 +136,7 @@ type DockerDetailResult struct {
 // DockerActionResult represents a docker container lifecycle action result from a single agent.
 type DockerActionResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	ID       string `json:"id,omitempty"`
 	Message  string `json:"message,omitempty"`
 	Changed  bool   `json:"changed"`
@@ -142,6 +146,7 @@ type DockerActionResult struct {
 // DockerExecResult represents a docker container exec result from a single agent.
 type DockerExecResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Stdout   string `json:"stdout,omitempty"`
 	Stderr   string `json:"stderr,omitempty"`
 	ExitCode int    `json:"exit_code"`
@@ -152,6 +157,7 @@ type DockerExecResult struct {
 // DockerPullResult represents a docker image pull result from a single agent.
 type DockerPullResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	ImageID  string `json:"image_id,omitempty"`
 	Tag      string `json:"tag,omitempty"`
 	Size     int64  `json:"size"`
@@ -168,6 +174,7 @@ func dockerResultCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, DockerResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			ID:       derefString(r.Id),
 			Name:     derefString(r.Name),
 			Image:    derefString(r.Image),
@@ -193,6 +200,7 @@ func dockerListCollectionFromGen(
 	for _, r := range g.Results {
 		item := DockerListResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		}
@@ -230,6 +238,7 @@ func dockerDetailCollectionFromGen(
 	for _, r := range g.Results {
 		item := DockerDetailResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			ID:       derefString(r.Id),
 			Name:     derefString(r.Name),
 			Image:    derefString(r.Image),
@@ -274,6 +283,7 @@ func dockerActionCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, DockerActionResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			ID:       derefString(r.Id),
 			Message:  derefString(r.Message),
 			Changed:  derefBool(r.Changed),
@@ -296,6 +306,7 @@ func dockerExecCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, DockerExecResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Stdout:   derefString(r.Stdout),
 			Stderr:   derefString(r.Stderr),
 			ExitCode: derefInt(r.ExitCode),
@@ -319,6 +330,7 @@ func dockerPullCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, DockerPullResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			ImageID:  derefString(r.ImageId),
 			Tag:      derefString(r.Tag),
 			Size:     derefInt64(r.Size),

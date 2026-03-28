@@ -55,6 +55,7 @@ type Disk struct {
 // HostnameResult represents a hostname query result from a single agent.
 type HostnameResult struct {
 	Hostname string            `json:"hostname"`
+	Status   string            `json:"status"`
 	Error    string            `json:"error,omitempty"`
 	Changed  bool              `json:"changed"`
 	Labels   map[string]string `json:"labels,omitempty"`
@@ -63,6 +64,7 @@ type HostnameResult struct {
 // NodeStatus represents full node status from a single agent.
 type NodeStatus struct {
 	Hostname    string       `json:"hostname"`
+	Status      string       `json:"status"`
 	Uptime      string       `json:"uptime,omitempty"`
 	Error       string       `json:"error,omitempty"`
 	Changed     bool         `json:"changed"`
@@ -75,6 +77,7 @@ type NodeStatus struct {
 // DiskResult represents disk query result from a single agent.
 type DiskResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
 	Changed  bool   `json:"changed"`
 	Disks    []Disk `json:"disks,omitempty"`
@@ -83,6 +86,7 @@ type DiskResult struct {
 // MemoryResult represents memory query result from a single agent.
 type MemoryResult struct {
 	Hostname string  `json:"hostname"`
+	Status   string  `json:"status"`
 	Error    string  `json:"error,omitempty"`
 	Changed  bool    `json:"changed"`
 	Memory   *Memory `json:"memory,omitempty"`
@@ -91,6 +95,7 @@ type MemoryResult struct {
 // LoadResult represents load average query result from a single agent.
 type LoadResult struct {
 	Hostname    string       `json:"hostname"`
+	Status      string       `json:"status"`
 	Error       string       `json:"error,omitempty"`
 	Changed     bool         `json:"changed"`
 	LoadAverage *LoadAverage `json:"load_average,omitempty"`
@@ -99,6 +104,7 @@ type LoadResult struct {
 // OSInfoResult represents OS info query result from a single agent.
 type OSInfoResult struct {
 	Hostname string  `json:"hostname"`
+	Status   string  `json:"status"`
 	Error    string  `json:"error,omitempty"`
 	Changed  bool    `json:"changed"`
 	OSInfo   *OSInfo `json:"os_info,omitempty"`
@@ -107,6 +113,7 @@ type OSInfoResult struct {
 // UptimeResult represents uptime query result from a single agent.
 type UptimeResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Uptime   string `json:"uptime,omitempty"`
 	Error    string `json:"error,omitempty"`
 	Changed  bool   `json:"changed"`
@@ -115,6 +122,7 @@ type UptimeResult struct {
 // DNSConfig represents DNS configuration from a single agent.
 type DNSConfig struct {
 	Hostname      string   `json:"hostname"`
+	Status        string   `json:"status"`
 	Error         string   `json:"error,omitempty"`
 	Changed       bool     `json:"changed"`
 	Servers       []string `json:"servers,omitempty"`
@@ -140,6 +148,7 @@ type HostnameUpdateResult struct {
 // PingResult represents ping result from a single agent.
 type PingResult struct {
 	Hostname        string  `json:"hostname"`
+	Status          string  `json:"status"`
 	Error           string  `json:"error,omitempty"`
 	Changed         bool    `json:"changed"`
 	PacketsSent     int     `json:"packets_sent"`
@@ -153,6 +162,7 @@ type PingResult struct {
 // CommandResult represents command execution result from a single agent.
 type CommandResult struct {
 	Hostname   string `json:"hostname"`
+	Status     string `json:"status"`
 	Stdout     string `json:"stdout,omitempty"`
 	Stderr     string `json:"stderr,omitempty"`
 	Error      string `json:"error,omitempty"`
@@ -300,6 +310,7 @@ func hostnameCollectionFromGen(
 	for _, r := range g.Results {
 		hr := HostnameResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
 		}
@@ -325,6 +336,7 @@ func nodeStatusCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, NodeStatus{
 			Hostname:    r.Hostname,
+			Status:      string(r.Status),
 			Uptime:      derefString(r.Uptime),
 			Error:       derefString(r.Error),
 			Changed:     derefBool(r.Changed),
@@ -349,6 +361,7 @@ func diskCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, DiskResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
 			Disks:    disksFromGen(r.Disks),
@@ -369,6 +382,7 @@ func memoryCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, MemoryResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
 			Memory:   memoryFromGen(r.Memory),
@@ -389,6 +403,7 @@ func loadCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, LoadResult{
 			Hostname:    r.Hostname,
+			Status:      string(r.Status),
 			Error:       derefString(r.Error),
 			Changed:     derefBool(r.Changed),
 			LoadAverage: loadAverageFromGen(r.LoadAverage),
@@ -409,6 +424,7 @@ func osInfoCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, OSInfoResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
 			OSInfo:   osInfoFromGen(r.OsInfo),
@@ -429,6 +445,7 @@ func uptimeCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, UptimeResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Uptime:   derefString(r.Uptime),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
@@ -449,6 +466,7 @@ func dnsConfigCollectionFromGen(
 	for _, r := range g.Results {
 		dc := DNSConfig{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Error:    derefString(r.Error),
 			Changed:  derefBool(r.Changed),
 		}
@@ -498,6 +516,7 @@ func pingCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, PingResult{
 			Hostname:        r.Hostname,
+			Status:          string(r.Status),
 			Error:           derefString(r.Error),
 			Changed:         derefBool(r.Changed),
 			PacketsSent:     derefInt(r.PacketsSent),
@@ -544,6 +563,7 @@ func commandCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, CommandResult{
 			Hostname:   r.Hostname,
+			Status:     string(r.Status),
 			Stdout:     derefString(r.Stdout),
 			Stderr:     derefString(r.Stderr),
 			Error:      derefString(r.Error),

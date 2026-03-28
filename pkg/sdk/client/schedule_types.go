@@ -27,6 +27,7 @@ import (
 // CronEntryResult represents a cron entry from a single agent.
 type CronEntryResult struct {
 	Hostname string `json:"hostname,omitempty"`
+	Status   string `json:"status"`
 	Name     string `json:"name"`
 	Object   string `json:"object,omitempty"`
 	Schedule string `json:"schedule,omitempty"`
@@ -39,6 +40,7 @@ type CronEntryResult struct {
 // CronMutationResult represents the result of a cron create/update/delete operation.
 type CronMutationResult struct {
 	Hostname string `json:"hostname,omitempty"`
+	Status   string `json:"status"`
 	Name     string `json:"name"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
@@ -91,6 +93,7 @@ func cronEntryCollectionFromGen(
 
 		results = append(results, CronEntryResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
@@ -121,6 +124,7 @@ func cronGetCollectionFromGen(
 
 		results = append(results, CronEntryResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
@@ -146,6 +150,7 @@ func cronMutationCollectionFromCreate(
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
@@ -167,6 +172,7 @@ func cronMutationCollectionFromUpdate(
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
@@ -188,6 +194,7 @@ func cronMutationCollectionFromDelete(
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
