@@ -300,6 +300,44 @@ func (s *NodeService) GetDNS(
 	return NewResponse(dnsConfigCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
+// SetHostname updates the hostname on the target node.
+func (s *NodeService) SetHostname(
+	ctx context.Context,
+	target string,
+	name string,
+) (*Response[Collection[HostnameUpdateResult]], error) {
+	body := gen.HostnameUpdateRequest{
+		Hostname: name,
+	}
+
+	resp, err := s.client.PutNodeHostnameWithResponse(ctx, target, body)
+	if err != nil {
+		return nil, fmt.Errorf("set hostname: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON202 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(
+		hostnameUpdateCollectionFromGen(resp.JSON202),
+		resp.Body,
+	), nil
+}
+
 // UpdateDNS updates DNS configuration for a network interface on the
 // target host.
 func (s *NodeService) UpdateDNS(

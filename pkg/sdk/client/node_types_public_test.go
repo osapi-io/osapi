@@ -702,6 +702,72 @@ func (suite *NodeTypesPublicTestSuite) TestDNSConfigCollectionFromGen() {
 	}
 }
 
+func (suite *NodeTypesPublicTestSuite) TestHostnameUpdateCollectionFromGen() {
+	tests := []struct {
+		name         string
+		input        *gen.HostnameUpdateCollectionResponse
+		validateFunc func(client.Collection[client.HostnameUpdateResult])
+	}{
+		{
+			name: "when all fields are populated",
+			input: func() *gen.HostnameUpdateCollectionResponse {
+				changed := true
+
+				return &gen.HostnameUpdateCollectionResponse{
+					Results: []gen.HostnameUpdateResultItem{
+						{
+							Hostname: "web-01",
+							Status:   gen.HostnameUpdateResultItemStatusOk,
+							Changed:  &changed,
+						},
+					},
+				}
+			}(),
+			validateFunc: func(c client.Collection[client.HostnameUpdateResult]) {
+				suite.Require().Len(c.Results, 1)
+
+				r := c.Results[0]
+				suite.Equal("web-01", r.Hostname)
+				suite.Equal("ok", r.Status)
+				suite.True(r.Changed)
+				suite.Empty(r.Error)
+			},
+		},
+		{
+			name: "when error is set",
+			input: func() *gen.HostnameUpdateCollectionResponse {
+				errMsg := "unsupported"
+
+				return &gen.HostnameUpdateCollectionResponse{
+					Results: []gen.HostnameUpdateResultItem{
+						{
+							Hostname: "web-02",
+							Status:   gen.HostnameUpdateResultItemStatusFailed,
+							Error:    &errMsg,
+						},
+					},
+				}
+			}(),
+			validateFunc: func(c client.Collection[client.HostnameUpdateResult]) {
+				suite.Require().Len(c.Results, 1)
+
+				r := c.Results[0]
+				suite.Equal("web-02", r.Hostname)
+				suite.Equal("failed", r.Status)
+				suite.False(r.Changed)
+				suite.Equal("unsupported", r.Error)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := client.ExportHostnameUpdateCollectionFromGen(tc.input)
+			tc.validateFunc(result)
+		})
+	}
+}
+
 func (suite *NodeTypesPublicTestSuite) TestDNSUpdateCollectionFromGen() {
 	tests := []struct {
 		name         string

@@ -145,6 +145,115 @@ func (suite *NodePublicTestSuite) TestHostname() {
 	}
 }
 
+func (suite *NodePublicTestSuite) TestSetHostname() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		target       string
+		hostname     string
+		validateFunc func(*client.Response[client.Collection[client.HostnameUpdateResult]], error)
+	}{
+		{
+			name:     "when updating hostname returns results",
+			target:   "_any",
+			hostname: "new-host",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"new-host","status":"ok","changed":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.HostnameUpdateResult]], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("new-host", resp.Data.Results[0].Hostname)
+				suite.Equal("ok", resp.Data.Results[0].Status)
+				suite.True(resp.Data.Results[0].Changed)
+			},
+		},
+		{
+			name:     "when server returns 403 returns AuthError",
+			target:   "_any",
+			hostname: "new-host",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.HostnameUpdateResult]], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusForbidden, target.StatusCode)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			target:    "_any",
+			hostname:  "new-host",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(resp *client.Response[client.Collection[client.HostnameUpdateResult]], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "set hostname")
+			},
+		},
+		{
+			name:     "when server returns 202 with no JSON body returns UnexpectedStatusError",
+			target:   "_any",
+			hostname: "new-host",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusAccepted)
+			},
+			validateFunc: func(resp *client.Response[client.Collection[client.HostnameUpdateResult]], err error) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.True(errors.As(err, &target))
+				suite.Equal(http.StatusAccepted, target.StatusCode)
+				suite.Equal("nil response body", target.Message)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Node.SetHostname(suite.ctx, tc.target, tc.hostname)
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func (suite *NodePublicTestSuite) TestStatus() {
 	tests := []struct {
 		name         string

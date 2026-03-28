@@ -129,6 +129,14 @@ type DNSUpdateResult struct {
 	Changed  bool   `json:"changed"`
 }
 
+// HostnameUpdateResult represents a hostname update result from a single agent.
+type HostnameUpdateResult struct {
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Changed  bool   `json:"changed"`
+}
+
 // PingResult represents ping result from a single agent.
 type PingResult struct {
 	Hostname        string  `json:"hostname"`
@@ -504,6 +512,27 @@ func pingCollectionFromGen(
 	return Collection[PingResult]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
+	}
+}
+
+// hostnameUpdateCollectionFromGen converts a gen.HostnameUpdateCollectionResponse to a Collection[HostnameUpdateResult].
+func hostnameUpdateCollectionFromGen(
+	r *gen.HostnameUpdateCollectionResponse,
+) Collection[HostnameUpdateResult] {
+	results := make([]HostnameUpdateResult, 0, len(r.Results))
+	for _, item := range r.Results {
+		result := HostnameUpdateResult{
+			Hostname: item.Hostname,
+			Status:   string(item.Status),
+			Changed:  derefBool(item.Changed),
+			Error:    derefString(item.Error),
+		}
+		results = append(results, result)
+	}
+
+	return Collection[HostnameUpdateResult]{
+		Results: results,
+		JobID:   jobIDFromGen(r.JobId),
 	}
 }
 
