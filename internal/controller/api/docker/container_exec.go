@@ -163,8 +163,8 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 	for _, resp := range results {
 		responses = append(responses, dockerExecItemFromResponse(resp))
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerExecResultItem{
 			Hostname: hostname,
 			Error:    &e,

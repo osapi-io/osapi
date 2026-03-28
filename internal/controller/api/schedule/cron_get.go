@@ -136,9 +136,9 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 			User:     &user,
 		})
 	}
-	for hostname, errMsg := range errs {
+	for hostname, errResp := range errs {
 		h := hostname
-		e := errMsg
+		e := errResp.Error
 		allResults = append(allResults, gen.CronEntry{
 			Hostname: &h,
 			Error:    &e,

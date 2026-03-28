@@ -121,8 +121,8 @@ func (s *Node) postNodeNetworkPingBroadcast(
 		}
 		responses = append(responses, buildPingResponse(host, &pingResult))
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.PingResponse{
 			Hostname: host,
 			Error:    &e,

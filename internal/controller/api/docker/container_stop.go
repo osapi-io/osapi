@@ -140,8 +140,8 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 			Message:  &msg,
 		})
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerActionResultItem{
 			Hostname: hostname,
 			Error:    &e,

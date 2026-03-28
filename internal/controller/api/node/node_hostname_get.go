@@ -132,8 +132,8 @@ func (s *Node) getNodeHostnameBroadcast(
 		}
 		responses = append(responses, r)
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.HostnameResponse{
 			Hostname: host,
 			Error:    &e,

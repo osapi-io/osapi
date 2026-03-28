@@ -141,8 +141,8 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 			Changed:  &changed,
 		})
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		falsVal := false
 		responses = append(responses, gen.DNSUpdateResultItem{
 			Hostname: host,

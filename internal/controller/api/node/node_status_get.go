@@ -105,8 +105,8 @@ func (s *Node) getNodeStatusBroadcast(
 		}
 		responses = append(responses, *buildNodeStatusResponse(&status))
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.NodeStatusResponse{
 			Hostname: host,
 			Error:    &e,

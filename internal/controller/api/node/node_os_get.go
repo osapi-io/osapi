@@ -107,8 +107,8 @@ func (s *Node) getNodeOSBroadcast(
 		}
 		responses = append(responses, *buildOSInfoResultItem(hostname, &osInfo))
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.OSInfoResultItem{
 			Hostname: hostname,
 			Error:    &e,

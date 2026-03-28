@@ -120,8 +120,8 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 	for _, resp := range results {
 		responses = append(responses, dockerPullItemFromResponse(resp))
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerPullResultItem{
 			Hostname: hostname,
 			Error:    &e,

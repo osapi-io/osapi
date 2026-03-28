@@ -136,8 +136,8 @@ func (s *Node) postNodeFileStatusBroadcast(
 		}
 		items = append(items, item)
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		items = append(items, gen.FileStatusResult{
 			Hostname: host,
 			Error:    &e,

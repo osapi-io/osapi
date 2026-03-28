@@ -96,8 +96,8 @@ task := plan.TaskFunc("set-hostname",
 
 ### Idempotency
 
-**Idempotent.** If the hostname is already set to the requested value,
-returns `Changed: false` without modifying the system.
+**Idempotent.** If the hostname is already set to the requested value, returns
+`Changed: false` without modifying the system.
 
 ### Permissions
 

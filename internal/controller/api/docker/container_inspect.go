@@ -161,8 +161,8 @@ func (s *Container) getNodeContainerDockerInspectBroadcast(
 	for _, resp := range results {
 		responses = append(responses, dockerDetailItemFromResponse(resp))
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerDetailResponse{
 			Hostname: hostname,
 			Error:    &e,

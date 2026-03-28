@@ -60,14 +60,11 @@ var clientNodeHostnameUpdateCmd = &cobra.Command{
 			if r.Error != "" {
 				errPtr = &r.Error
 			}
-			var changedPtr *bool
-			if r.Changed {
-				changedPtr = &r.Changed
-			}
+			changed := r.Changed
 			results = append(results, cli.MutationResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
-				Changed:  changedPtr,
+				Changed:  &changed,
 				Error:    errPtr,
 			})
 		}

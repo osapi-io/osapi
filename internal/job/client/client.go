@@ -134,7 +134,7 @@ func (c *Client) QueryBroadcast(
 	category string,
 	operation job.OperationType,
 	data any,
-) (string, map[string]*job.Response, map[string]string, error) {
+) (string, map[string]*job.Response, map[string]*job.Response, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
@@ -154,14 +154,10 @@ func (c *Client) QueryBroadcast(
 	}
 
 	results := make(map[string]*job.Response)
-	errs := make(map[string]string)
+	errs := make(map[string]*job.Response)
 	for hostname, resp := range responses {
 		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			errMsg := resp.Error
-			if errMsg == "" {
-				errMsg = string(resp.Status)
-			}
-			errs[hostname] = errMsg
+			errs[hostname] = resp
 		} else {
 			results[hostname] = resp
 		}
@@ -211,7 +207,7 @@ func (c *Client) ModifyBroadcast(
 	category string,
 	operation job.OperationType,
 	data any,
-) (string, map[string]*job.Response, map[string]string, error) {
+) (string, map[string]*job.Response, map[string]*job.Response, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
@@ -231,14 +227,10 @@ func (c *Client) ModifyBroadcast(
 	}
 
 	results := make(map[string]*job.Response)
-	errs := make(map[string]string)
+	errs := make(map[string]*job.Response)
 	for hostname, resp := range responses {
 		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			errMsg := resp.Error
-			if errMsg == "" {
-				errMsg = string(resp.Status)
-			}
-			errs[hostname] = errMsg
+			errs[hostname] = resp
 		} else {
 			results[hostname] = resp
 		}

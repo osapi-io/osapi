@@ -137,8 +137,8 @@ func (s *Container) postNodeContainerDockerCreateBroadcast(
 			Changed:  resp.Changed,
 		})
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerResponse{
 			Hostname: hostname,
 			Error:    &e,

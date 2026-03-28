@@ -5,8 +5,8 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a full-stack `hostname update` feature — from provider through API,
-SDK, CLI, and docs — so operators can change a node's hostname via
+**Goal:** Add a full-stack `hostname update` feature — from provider through
+API, SDK, CLI, and docs — so operators can change a node's hostname via
 `hostnamectl set-hostname`.
 
 **Architecture:** The Debian provider calls `hostnamectl set-hostname` via
@@ -48,8 +48,8 @@ SetHostname(name string) (*SetHostnameResult, error)
 
 - [ ] **Step 2: Verify build fails**
 
-Run: `go build ./...`
-Expected: FAIL — all Provider implementations missing `SetHostname`.
+Run: `go build ./...` Expected: FAIL — all Provider implementations missing
+`SetHostname`.
 
 - [ ] **Step 3: Commit**
 
@@ -267,7 +267,8 @@ Note: add `"fmt"` to imports for the test.
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `go test -run TestDebianSetHostnamePublicTestSuite -v ./internal/provider/node/host/...`
+Run:
+`go test -run TestDebianSetHostnamePublicTestSuite -v ./internal/provider/node/host/...`
 Expected: FAIL — `SetHostname` not defined.
 
 - [ ] **Step 4: Write implementation**
@@ -307,7 +308,8 @@ func (u *Debian) SetHostname(
 
 - [ ] **Step 5: Run tests**
 
-Run: `go test -run TestDebianSetHostnamePublicTestSuite -v ./internal/provider/node/host/...`
+Run:
+`go test -run TestDebianSetHostnamePublicTestSuite -v ./internal/provider/node/host/...`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -331,10 +333,10 @@ The container check happens at agent_setup time — if `platform.IsContainer()`,
 pass a nil `execManager` or use the existing pattern where the Debian provider
 is still used but `hostnamectl` will fail naturally inside Docker. The cleaner
 approach: since `hostnamectl` won't exist in Docker containers, the Debian
-provider's `SetHostname` will return an error from `RunCmd`. This is acceptable —
-the error message will be clear (`failed to get current hostname: exec:
-"hostnamectl": executable file not found`). No separate DebianDocker host
-provider is needed.
+provider's `SetHostname` will return an error from `RunCmd`. This is acceptable
+— the error message will be clear
+(`failed to get current hostname: exec: "hostnamectl": executable file not found`).
+No separate DebianDocker host provider is needed.
 
 - [ ] **Step 1: Create Darwin stub**
 
@@ -381,15 +383,15 @@ func (l *Linux) SetHostname(
 
 - [ ] **Step 3: Add tests for both stubs**
 
-Add `TestSetHostname` methods to the existing Darwin and Linux test suites
-(in their respective `*_public_test.go` files). Follow the pattern in
-`internal/provider/network/dns/linux_public_test.go` — single-row table
-testing `ErrUnsupported`.
+Add `TestSetHostname` methods to the existing Darwin and Linux test suites (in
+their respective `*_public_test.go` files). Follow the pattern in
+`internal/provider/network/dns/linux_public_test.go` — single-row table testing
+`ErrUnsupported`.
 
 - [ ] **Step 4: Verify build and tests**
 
-Run: `go build ./... && go test -v ./internal/provider/node/host/...`
-Expected: PASS
+Run: `go build ./... && go test -v ./internal/provider/node/host/...` Expected:
+PASS
 
 - [ ] **Step 5: Commit**
 
@@ -467,8 +469,7 @@ func setNodeHostname(
 
 - [ ] **Step 3: Run tests**
 
-Run: `go build ./... && go test -v ./internal/agent/...`
-Expected: PASS
+Run: `go build ./... && go test -v ./internal/agent/...` Expected: PASS
 
 - [ ] **Step 4: Commit**
 
@@ -490,103 +491,103 @@ In `internal/controller/api/node/gen/api.yaml`, add `put:` under the existing
 `/node/{hostname}/hostname` path (after the `get:` block, before the next path):
 
 ```yaml
-    put:
-      summary: Update node hostname
-      description: Set the system hostname on the target node.
-      tags:
-        - node_operations
-      operationId: PutNodeHostname
-      security:
-        - BearerAuth:
-            - node:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HostnameUpdateRequest'
-      responses:
-        '202':
-          description: Hostname update accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HostnameUpdateCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+put:
+  summary: Update node hostname
+  description: Set the system hostname on the target node.
+  tags:
+    - node_operations
+  operationId: PutNodeHostname
+  security:
+    - BearerAuth:
+        - node:write
+  parameters:
+    - $ref: '#/components/parameters/Hostname'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/HostnameUpdateRequest'
+  responses:
+    '202':
+      description: Hostname update accepted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HostnameUpdateCollectionResponse'
+    '400':
+      description: Invalid input.
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    '401':
+      description: Unauthorized - API key required
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    '403':
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    '500':
+      description: Error updating hostname.
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 ```
 
 Add the request and response schemas to `components/schemas`:
 
 ```yaml
-    HostnameUpdateRequest:
-      type: object
-      properties:
-        hostname:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=253
-          description: The new hostname to set.
-          example: "web-01"
-      required:
-        - hostname
+HostnameUpdateRequest:
+  type: object
+  properties:
+    hostname:
+      type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,max=253
+      description: The new hostname to set.
+      example: 'web-01'
+  required:
+    - hostname
 
-    HostnameUpdateResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum: [ok, failed]
-        changed:
-          type: boolean
-          description: Whether the hostname was actually modified.
-        error:
-          type: string
-      required:
-        - hostname
-        - status
+HostnameUpdateResultItem:
+  type: object
+  properties:
+    hostname:
+      type: string
+      description: The hostname of the agent.
+    status:
+      type: string
+      enum: [ok, failed]
+    changed:
+      type: boolean
+      description: Whether the hostname was actually modified.
+    error:
+      type: string
+  required:
+    - hostname
+    - status
 
-    HostnameUpdateCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/HostnameUpdateResultItem'
-      required:
-        - results
+HostnameUpdateCollectionResponse:
+  type: object
+  properties:
+    job_id:
+      type: string
+      format: uuid
+      description: The job ID used to process this request.
+      example: '550e8400-e29b-41d4-a716-446655440000'
+    results:
+      type: array
+      items:
+        $ref: '#/components/schemas/HostnameUpdateResultItem'
+  required:
+    - results
 ```
 
 - [ ] **Step 2: Regenerate code**
@@ -595,9 +596,8 @@ Run: `just generate`
 
 - [ ] **Step 3: Verify generated code compiles**
 
-Run: `go build ./...`
-Expected: FAIL — new `PutNodeHostname` method required by `StrictServerInterface`
-but not implemented yet.
+Run: `go build ./...` Expected: FAIL — new `PutNodeHostname` method required by
+`StrictServerInterface` but not implemented yet.
 
 - [ ] **Step 4: Commit**
 
@@ -643,13 +643,12 @@ validation error (empty hostname), bad target hostname, and job client error.
 Follow the existing test patterns in
 `internal/controller/api/node/node_hostname_get_public_test.go`.
 
-Include `TestPutNodeHostnameHTTP` and `TestPutNodeHostnameRBACHTTP` methods
-for wiring tests through the full Echo middleware stack.
+Include `TestPutNodeHostnameHTTP` and `TestPutNodeHostnameRBACHTTP` methods for
+wiring tests through the full Echo middleware stack.
 
 - [ ] **Step 3: Run tests**
 
-Run: `go test -v ./internal/controller/api/node/...`
-Expected: PASS
+Run: `go test -v ./internal/controller/api/node/...` Expected: PASS
 
 - [ ] **Step 4: Commit**
 
@@ -683,8 +682,7 @@ configuration or in `internal/config/`). Add `node:write` to the `admin` and
 
 - [ ] **Step 3: Verify build and tests**
 
-Run: `go build ./... && go test -v ./internal/controller/api/...`
-Expected: PASS
+Run: `go build ./... && go test -v ./internal/controller/api/...` Expected: PASS
 
 - [ ] **Step 4: Commit**
 
@@ -776,8 +774,7 @@ func (s *NodeService) SetHostname(
 
 - [ ] **Step 4: Run tests**
 
-Run: `go build ./... && go test -v ./pkg/sdk/client/...`
-Expected: PASS
+Run: `go build ./... && go test -v ./pkg/sdk/client/...` Expected: PASS
 
 - [ ] **Step 5: Commit**
 
@@ -882,19 +879,15 @@ after the existing get examples:
 
 Set the hostname on the target node:
 
-\`\`\`bash
-$ osapi client node hostname update --name web-01
+\`\`\`bash $ osapi client node hostname update --name web-01
 
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
+Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  CHANGED
-  web-01    true
-\`\`\`
+HOSTNAME CHANGED web-01 true \`\`\`
 
 When targeting all hosts:
 
-\`\`\`bash
-$ osapi client node hostname update --name web-01 --target _all
+\`\`\`bash $ osapi client node hostname update --name web-01 --target \_all
 \`\`\`
 
 ### Flags
@@ -915,8 +908,8 @@ section for `node.hostname.update`.
 
 - [ ] **Step 3: Update SDK example**
 
-In `examples/sdk/client/node.go`, add a `SetHostname` example after the
-Hostname get block:
+In `examples/sdk/client/node.go`, add a `SetHostname` example after the Hostname
+get block:
 
 ```go
 // Set hostname (uncomment to run — this mutates the system)
@@ -981,13 +974,11 @@ Run: `just go::fmt`
 
 - [ ] **Step 2: Lint**
 
-Run: `just go::vet`
-Expected: 0 issues
+Run: `just go::vet` Expected: 0 issues
 
 - [ ] **Step 3: Full test suite**
 
-Run: `just go::unit`
-Expected: PASS
+Run: `just go::unit` Expected: PASS
 
 - [ ] **Step 4: Commit any formatting changes**
 

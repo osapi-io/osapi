@@ -173,8 +173,8 @@ func (s *Node) postNodeFileDeployBroadcast(
 			Changed:  &changed,
 		})
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		fileResults = append(fileResults, gen.FileDeployResult{
 			Hostname: host,
 			Error:    &e,

@@ -145,8 +145,8 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 			Changed:  resp.Changed,
 		})
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		h := hostname
 		responses = append(responses, gen.CronMutationResult{
 			Hostname: &h,

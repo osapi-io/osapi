@@ -148,8 +148,8 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 			Changed:    resp.Changed,
 		})
 	}
-	for hostname, errMsg := range errs {
-		e := errMsg
+	for hostname, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DockerListItem{
 			Hostname: hostname,
 			Error:    &e,

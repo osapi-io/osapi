@@ -230,12 +230,12 @@ func (mr *MockJobClientMockRecorder) Modify(arg0, arg1, arg2, arg3, arg4 interfa
 }
 
 // ModifyBroadcast mocks base method.
-func (m *MockJobClient) ModifyBroadcast(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}) (string, map[string]*job.Response, map[string]string, error) {
+func (m *MockJobClient) ModifyBroadcast(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}) (string, map[string]*job.Response, map[string]*job.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyBroadcast", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(map[string]*job.Response)
-	ret2, _ := ret[2].(map[string]string)
+	ret2, _ := ret[2].(map[string]*job.Response)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }
@@ -263,12 +263,12 @@ func (mr *MockJobClientMockRecorder) Query(arg0, arg1, arg2, arg3, arg4 interfac
 }
 
 // QueryBroadcast mocks base method.
-func (m *MockJobClient) QueryBroadcast(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}) (string, map[string]*job.Response, map[string]string, error) {
+func (m *MockJobClient) QueryBroadcast(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}) (string, map[string]*job.Response, map[string]*job.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryBroadcast", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(map[string]*job.Response)
-	ret2, _ := ret[2].(map[string]string)
+	ret2, _ := ret[2].(map[string]*job.Response)
 	ret3, _ := ret[3].(error)
 	return ret0, ret1, ret2, ret3
 }

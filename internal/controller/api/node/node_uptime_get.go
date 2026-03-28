@@ -106,8 +106,8 @@ func (s *Node) getNodeUptimeBroadcast(
 		}
 		responses = append(responses, *buildUptimeResponse(host, &uptimeResp))
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.UptimeResponse{
 			Hostname: host,
 			Error:    &e,

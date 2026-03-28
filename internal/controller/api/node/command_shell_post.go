@@ -164,8 +164,8 @@ func (s *Node) postNodeCommandShellBroadcast(
 			Changed:    &changed,
 		})
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.CommandResultItem{
 			Hostname: host,
 			Error:    &e,

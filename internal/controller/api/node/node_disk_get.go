@@ -106,8 +106,8 @@ func (s *Node) getNodeDiskBroadcast(
 		}
 		responses = append(responses, *buildDiskResultItem(host, &diskResp))
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.DiskResultItem{
 			Hostname: host,
 			Error:    &e,

@@ -107,8 +107,8 @@ func (s *Node) getNodeMemoryBroadcast(
 		}
 		responses = append(responses, *buildMemoryResultItem(host, &memStats))
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		responses = append(responses, gen.MemoryResultItem{
 			Hostname: host,
 			Error:    &e,

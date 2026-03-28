@@ -12,16 +12,16 @@ all target a specific host.
 
 ### Node Info
 
-| Method                          | Description                               |
-| ------------------------------- | ----------------------------------------- |
-| `Status(ctx, target)`           | Full node status (OS, disk, memory, load) |
-| `Hostname(ctx, target)`         | Get system hostname                       |
-| `SetHostname(ctx, target, name)` | Set system hostname                      |
-| `Disk(ctx, target)`             | Get disk usage                            |
-| `Memory(ctx, target)`           | Get memory statistics                     |
-| `Load(ctx, target)`             | Get load averages                         |
-| `OS(ctx, target)`               | Get operating system info                 |
-| `Uptime(ctx, target)`           | Get uptime                                |
+| Method                           | Description                               |
+| -------------------------------- | ----------------------------------------- |
+| `Status(ctx, target)`            | Full node status (OS, disk, memory, load) |
+| `Hostname(ctx, target)`          | Get system hostname                       |
+| `SetHostname(ctx, target, name)` | Set system hostname                       |
+| `Disk(ctx, target)`              | Get disk usage                            |
+| `Memory(ctx, target)`            | Get memory statistics                     |
+| `Load(ctx, target)`              | Get load averages                         |
+| `OS(ctx, target)`                | Get operating system info                 |
+| `Uptime(ctx, target)`            | Get uptime                                |
 
 ### Network
 

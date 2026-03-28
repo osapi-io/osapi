@@ -122,8 +122,8 @@ func (s *Node) putNodeHostnameBroadcast(
 			Changed:  &changed,
 		})
 	}
-	for host, errMsg := range errs {
-		e := errMsg
+	for host, errResp := range errs {
+		e := errResp.Error
 		falseVal := false
 		responses = append(responses, gen.HostnameUpdateResultItem{
 			Hostname: host,
