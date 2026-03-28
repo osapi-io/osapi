@@ -34,6 +34,7 @@ var builtInDescriptions = map[string]string{
 	factskeys.KeyArch:             "CPU architecture",
 	factskeys.KeyKernel:           "Kernel version",
 	factskeys.KeyFQDN:             "Fully qualified domain name",
+	factskeys.KeyContainerized:    "Whether the agent is running inside a container",
 }
 
 // GetFactKeys returns the list of available fact keys.

@@ -381,6 +381,7 @@ type FactsRegistration struct {
 	FQDN             string             `json:"fqdn,omitempty"`
 	ServiceMgr       string             `json:"service_mgr,omitempty"`
 	PackageMgr       string             `json:"package_mgr,omitempty"`
+	Containerized    bool               `json:"containerized"`
 	Interfaces       []NetworkInterface `json:"interfaces,omitempty"`
 	PrimaryInterface string             `json:"primary_interface,omitempty"`
 	Routes           []Route            `json:"routes,omitempty"`

@@ -32,6 +32,7 @@ const (
 	KeyArch             = "arch"
 	KeyKernel           = "kernel"
 	KeyFQDN             = "fqdn"
+	KeyContainerized    = "containerized"
 )
 
 // CustomPrefix is the prefix for user-defined fact keys.
@@ -48,6 +49,7 @@ func BuiltInKeys() []string {
 		KeyArch,
 		KeyKernel,
 		KeyFQDN,
+		KeyContainerized,
 	}
 }
 
@@ -56,7 +58,7 @@ func BuiltInKeys() []string {
 // prefix followed by at least one character.
 func IsKnownKey(key string) bool {
 	switch key {
-	case KeyInterfacePrimary, KeyHostname, KeyArch, KeyKernel, KeyFQDN:
+	case KeyInterfacePrimary, KeyHostname, KeyArch, KeyKernel, KeyFQDN, KeyContainerized:
 		return true
 	default:
 		return IsCustomKey(key)

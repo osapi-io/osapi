@@ -107,6 +107,32 @@ func (s *FactRefPublicTestSuite) TestResolveFacts() {
 			},
 		},
 		{
+			name: "when containerized is true",
+			params: map[string]any{
+				"in_container": "@fact.containerized",
+			},
+			facts: &job.FactsRegistration{
+				Containerized: true,
+			},
+			hostname: "web-01",
+			validateFunc: func(result map[string]any) {
+				s.Equal("true", result["in_container"])
+			},
+		},
+		{
+			name: "when containerized is false",
+			params: map[string]any{
+				"in_container": "@fact.containerized",
+			},
+			facts: &job.FactsRegistration{
+				Containerized: false,
+			},
+			hostname: "web-01",
+			validateFunc: func(result map[string]any) {
+				s.Equal("false", result["in_container"])
+			},
+		},
+		{
 			name:        "when os substitution returns error",
 			params:      map[string]any{"os": "@fact.os"},
 			facts:       &job.FactsRegistration{},

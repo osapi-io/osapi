@@ -115,6 +115,7 @@ func (s *FactsKeysGetPublicTestSuite) TestGetFactKeys() {
 				s.Contains(keyMap, factskeys.KeyArch)
 				s.Contains(keyMap, factskeys.KeyKernel)
 				s.Contains(keyMap, factskeys.KeyFQDN)
+				s.Contains(keyMap, factskeys.KeyContainerized)
 			},
 		},
 	}

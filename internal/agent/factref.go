@@ -162,6 +162,11 @@ func lookupFact(
 			return "", fmt.Errorf("fqdn not set")
 		}
 		return f.FQDN, nil
+	case facts.KeyContainerized:
+		if f.Containerized {
+			return "true", nil
+		}
+		return "false", nil
 	default:
 		// Check @fact.custom.X pattern
 		if facts.IsCustomKey(key) {

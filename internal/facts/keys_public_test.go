@@ -38,14 +38,15 @@ func (s *KeysPublicTestSuite) TestBuiltInKeys() {
 		validateFunc func([]string)
 	}{
 		{
-			name: "when called returns all five built-in keys",
+			name: "when called returns all six built-in keys",
 			validateFunc: func(keys []string) {
-				s.Len(keys, 5)
+				s.Len(keys, 6)
 				s.Contains(keys, facts.KeyInterfacePrimary)
 				s.Contains(keys, facts.KeyHostname)
 				s.Contains(keys, facts.KeyArch)
 				s.Contains(keys, facts.KeyKernel)
 				s.Contains(keys, facts.KeyFQDN)
+				s.Contains(keys, facts.KeyContainerized)
 			},
 		},
 		{
@@ -96,6 +97,11 @@ func (s *KeysPublicTestSuite) TestIsKnownKey() {
 		{
 			name:   "when fqdn",
 			key:    facts.KeyFQDN,
+			wantOK: true,
+		},
+		{
+			name:   "when containerized",
+			key:    facts.KeyContainerized,
 			wantOK: true,
 		},
 		{
