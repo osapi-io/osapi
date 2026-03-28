@@ -310,6 +310,86 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 		},
 		{
+			name: "broadcast with skipped host",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: intPtr(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.CommandResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "broadcast with failed host",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: intPtr(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.CommandResultItemStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name: "broadcast all error",
 			request: gen.PostNodeCommandShellRequestObject{
 				Hostname: "_all",

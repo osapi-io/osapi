@@ -217,6 +217,54 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			},
 		},
 		{
+			name:    "broadcast with skipped host",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "host: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
+				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.HostnameResponseStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name:    "broadcast with failed host",
+			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
+				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.HostnameResponseStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name:    "broadcast all error",
 			request: gen.GetNodeHostnameRequestObject{Hostname: "_all"},
 			setupMock: func() {

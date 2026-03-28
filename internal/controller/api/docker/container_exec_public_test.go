@@ -363,6 +363,42 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 			},
 		},
 		{
+			name: "broadcast with skipped host",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "_all",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls", "-la"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"docker",
+						job.OperationDockerExec,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "docker: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 1)
+				s.Equal(gen.DockerExecResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("docker: operation not supported on this OS family", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "_all",

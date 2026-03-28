@@ -302,6 +302,82 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileStatusRequestObject{
 				Hostname: "_all",

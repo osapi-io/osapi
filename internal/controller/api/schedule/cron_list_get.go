@@ -135,6 +135,7 @@ func responseToCronEntries(
 
 		entry := gen.CronEntry{
 			Hostname: hostname,
+			Status:   gen.CronEntryStatusOk,
 			Name:     &name,
 			Object:   &object,
 			Source:   &source,

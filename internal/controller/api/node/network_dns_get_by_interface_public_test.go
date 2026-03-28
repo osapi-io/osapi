@@ -246,6 +246,60 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
+				Hostname:      "_all",
+				InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "host: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkDNSByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.DNSConfigResponseStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
+				Hostname:      "_all",
+				InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkDNSByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.DNSConfigResponseStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast all error",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",

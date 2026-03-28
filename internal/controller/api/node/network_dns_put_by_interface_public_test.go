@@ -263,6 +263,86 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast all error",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",
