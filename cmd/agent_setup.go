@@ -118,7 +118,11 @@ func setupAgent(
 	var dnsProvider dns.Provider
 	switch plat {
 	case "debian":
-		dnsProvider = dns.NewDebianProvider(log, execManager)
+		if platform.IsContainer() {
+			dnsProvider = dns.NewDebianDockerProvider(log, appFs)
+		} else {
+			dnsProvider = dns.NewDebianProvider(log, execManager)
+		}
 	case "darwin":
 		dnsProvider = dns.NewDarwinProvider(log, execManager)
 	default:
