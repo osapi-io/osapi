@@ -20,11 +20,32 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for CommandResultItemStatus.
+const (
+	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
+	CommandResultItemStatusOk      CommandResultItemStatus = "ok"
+	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
+)
+
+// Defines values for DNSConfigResponseStatus.
+const (
+	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
+	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
+	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
+)
+
 // Defines values for DNSUpdateResultItemStatus.
 const (
 	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
 	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
 	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
+)
+
+// Defines values for DiskResultItemStatus.
+const (
+	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
+	DiskResultItemStatusOk      DiskResultItemStatus = "ok"
+	DiskResultItemStatusSkipped DiskResultItemStatus = "skipped"
 )
 
 // Defines values for FileDeployRequestContentType.
@@ -33,11 +54,74 @@ const (
 	Template FileDeployRequestContentType = "template"
 )
 
+// Defines values for FileDeployResultStatus.
+const (
+	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
+	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
+	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
+)
+
+// Defines values for FileUndeployResultStatus.
+const (
+	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
+	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
+	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
+)
+
+// Defines values for HostnameResponseStatus.
+const (
+	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
+	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
+	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
+)
+
 // Defines values for HostnameUpdateResultItemStatus.
 const (
 	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
 	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
 	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
+)
+
+// Defines values for LoadResultItemStatus.
+const (
+	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
+	LoadResultItemStatusOk      LoadResultItemStatus = "ok"
+	LoadResultItemStatusSkipped LoadResultItemStatus = "skipped"
+)
+
+// Defines values for MemoryResultItemStatus.
+const (
+	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
+	MemoryResultItemStatusOk      MemoryResultItemStatus = "ok"
+	MemoryResultItemStatusSkipped MemoryResultItemStatus = "skipped"
+)
+
+// Defines values for NodeStatusResponseStatus.
+const (
+	NodeStatusResponseStatusFailed  NodeStatusResponseStatus = "failed"
+	NodeStatusResponseStatusOk      NodeStatusResponseStatus = "ok"
+	NodeStatusResponseStatusSkipped NodeStatusResponseStatus = "skipped"
+)
+
+// Defines values for OSInfoResultItemStatus.
+const (
+	OSInfoResultItemStatusFailed  OSInfoResultItemStatus = "failed"
+	OSInfoResultItemStatusOk      OSInfoResultItemStatus = "ok"
+	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
+)
+
+// Defines values for PingResponseStatus.
+const (
+	PingResponseStatusFailed  PingResponseStatus = "failed"
+	PingResponseStatusOk      PingResponseStatus = "ok"
+	PingResponseStatusSkipped PingResponseStatus = "skipped"
+)
+
+// Defines values for UptimeResponseStatus.
+const (
+	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
+	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
+	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
 )
 
 // CommandExecRequest defines model for CommandExecRequest.
@@ -79,12 +163,18 @@ type CommandResultItem struct {
 	// Hostname The hostname of the agent that executed the command.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status CommandResultItemStatus `json:"status"`
+
 	// Stderr Standard error output of the command.
 	Stderr *string `json:"stderr,omitempty"`
 
 	// Stdout Standard output of the command.
 	Stdout *string `json:"stdout,omitempty"`
 }
+
+// CommandResultItemStatus The status of the operation for this host.
+type CommandResultItemStatus string
 
 // CommandShellRequest defines model for CommandShellRequest.
 type CommandShellRequest struct {
@@ -121,7 +211,13 @@ type DNSConfigResponse struct {
 
 	// Servers List of configured DNS servers.
 	Servers *[]string `json:"servers,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DNSConfigResponseStatus `json:"status"`
 }
+
+// DNSConfigResponseStatus The status of the operation for this host.
+type DNSConfigResponseStatus string
 
 // DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
 type DNSConfigUpdateRequest struct {
@@ -189,7 +285,13 @@ type DiskResultItem struct {
 
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status DiskResultItemStatus `json:"status"`
 }
+
+// DiskResultItemStatus The status of the operation for this host.
+type DiskResultItemStatus string
 
 // DisksResponse List of local disk usage information.
 type DisksResponse = []DiskResponse
@@ -241,7 +343,13 @@ type FileDeployResult struct {
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status FileDeployResultStatus `json:"status"`
 }
+
+// FileDeployResultStatus The status of the operation for this host.
+type FileDeployResultStatus string
 
 // FileStatusCollectionResponse defines model for FileStatusCollectionResponse.
 type FileStatusCollectionResponse struct {
@@ -300,7 +408,13 @@ type FileUndeployResult struct {
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status FileUndeployResultStatus `json:"status"`
 }
+
+// FileUndeployResultStatus The status of the operation for this host.
+type FileUndeployResultStatus string
 
 // HostnameCollectionResponse defines model for HostnameCollectionResponse.
 type HostnameCollectionResponse struct {
@@ -322,7 +436,13 @@ type HostnameResponse struct {
 
 	// Labels Key-value labels configured on the agent.
 	Labels *map[string]string `json:"labels,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status HostnameResponseStatus `json:"status"`
 }
+
+// HostnameResponseStatus The status of the operation for this host.
+type HostnameResponseStatus string
 
 // HostnameUpdateCollectionResponse defines model for HostnameUpdateCollectionResponse.
 type HostnameUpdateCollectionResponse struct {
@@ -383,7 +503,13 @@ type LoadResultItem struct {
 
 	// LoadAverage The system load averages for 1, 5, and 15 minutes.
 	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status LoadResultItemStatus `json:"status"`
 }
+
+// LoadResultItemStatus The status of the operation for this host.
+type LoadResultItemStatus string
 
 // MemoryCollectionResponse defines model for MemoryCollectionResponse.
 type MemoryCollectionResponse struct {
@@ -417,7 +543,13 @@ type MemoryResultItem struct {
 
 	// Memory Memory usage information.
 	Memory *MemoryResponse `json:"memory,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status MemoryResultItemStatus `json:"status"`
 }
+
+// MemoryResultItemStatus The status of the operation for this host.
+type MemoryResultItemStatus string
 
 // NodeStatusCollectionResponse defines model for NodeStatusCollectionResponse.
 type NodeStatusCollectionResponse struct {
@@ -449,9 +581,15 @@ type NodeStatusResponse struct {
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status NodeStatusResponseStatus `json:"status"`
+
 	// Uptime The uptime of the system.
 	Uptime *string `json:"uptime,omitempty"`
 }
+
+// NodeStatusResponseStatus The status of the operation for this host.
+type NodeStatusResponseStatus string
 
 // OSInfoCollectionResponse defines model for OSInfoCollectionResponse.
 type OSInfoCollectionResponse struct {
@@ -482,7 +620,13 @@ type OSInfoResultItem struct {
 
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status OSInfoResultItemStatus `json:"status"`
 }
+
+// OSInfoResultItemStatus The status of the operation for this host.
+type OSInfoResultItemStatus string
 
 // PingCollectionResponse defines model for PingCollectionResponse.
 type PingCollectionResponse struct {
@@ -519,7 +663,13 @@ type PingResponse struct {
 
 	// PacketsSent Number of packets sent.
 	PacketsSent *int `json:"packets_sent,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status PingResponseStatus `json:"status"`
 }
+
+// PingResponseStatus The status of the operation for this host.
+type PingResponseStatus string
 
 // UptimeCollectionResponse defines model for UptimeCollectionResponse.
 type UptimeCollectionResponse struct {
@@ -539,9 +689,15 @@ type UptimeResponse struct {
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status UptimeResponseStatus `json:"status"`
+
 	// Uptime The uptime of the system.
 	Uptime *string `json:"uptime,omitempty"`
 }
+
+// UptimeResponseStatus The status of the operation for this host.
+type UptimeResponseStatus string
 
 // Hostname defines model for Hostname.
 type Hostname = string
