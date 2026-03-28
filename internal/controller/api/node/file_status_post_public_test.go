@@ -241,7 +241,6 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 								}),
 							},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -278,8 +277,12 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
 								}),
 							},
+							"agent2": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent2",
+							},
 						},
-						map[string]string{"agent2": "permission denied"},
 						nil,
 					)
 			},
@@ -315,7 +318,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						job.OperationFileStatusGet,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)

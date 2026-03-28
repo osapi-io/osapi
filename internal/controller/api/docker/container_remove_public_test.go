@@ -223,7 +223,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 							Hostname: "server2",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
 				r, ok := resp.(gen.DeleteNodeContainerDockerByID202JSONResponse)
@@ -254,8 +254,11 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 							Hostname: "server1",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
@@ -281,7 +284,7 @@ func (s *ContainerRemovePublicTestSuite) TestDeleteNodeContainerDockerByID() {
 						job.OperationDockerRemove,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerByIDResponseObject) {
 				_, ok := resp.(gen.DeleteNodeContainerDockerByID500JSONResponse)

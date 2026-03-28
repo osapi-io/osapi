@@ -312,7 +312,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 								`{"stdout":"file2\n","stderr":"","exit_code":0}`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
 				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
@@ -348,8 +348,11 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 								`{"stdout":"file1\n","stderr":"","exit_code":0}`,
 							),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
@@ -377,7 +380,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 						job.OperationDockerExec,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerExec500JSONResponse)

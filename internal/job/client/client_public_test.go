@@ -352,7 +352,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 		withMeter    bool
 		setupMocks   func() *client.Client
 		expectedErr  string
-		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
+		validateFunc func(jobID string, results map[string]*job.Response)
 	}{
 		{
 			name:      "when succeeds with meter provider",
@@ -373,7 +373,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 			},
@@ -396,11 +396,11 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Empty(errs)
 				s.Contains(results, "server1")
+				s.Equal(job.StatusCompleted, results["server1"].Status)
 			},
 		},
 		{
@@ -432,11 +432,11 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Empty(results)
-				s.Len(errs, 1)
-				s.Equal("provider error", errs["server1"])
+				s.Len(results, 1)
+				s.Equal(job.StatusFailed, results["server1"].Status)
+				s.Equal("provider error", results["server1"].Error)
 			},
 		},
 		{
@@ -459,11 +459,10 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Empty(results)
-				s.Len(errs, 1)
-				s.Equal("skipped", errs["server1"])
+				s.Len(results, 1)
+				s.Equal(job.StatusSkipped, results["server1"].Status)
 			},
 		},
 		{
@@ -502,12 +501,14 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Len(results, 1)
+				s.Len(results, 2)
 				s.Contains(results, "server1")
-				s.Len(errs, 1)
-				s.Equal("provider error", errs["server2"])
+				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Contains(results, "server2")
+				s.Equal(job.StatusFailed, results["server2"].Status)
+				s.Equal("provider error", results["server2"].Error)
 			},
 		},
 		{
@@ -532,7 +533,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 			},
@@ -592,7 +593,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 			},
@@ -628,7 +629,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				// The valid response was collected after skipping the bad one.
 				s.Len(results, 1)
@@ -662,7 +663,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 			},
@@ -687,7 +688,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Contains(results, "unknown")
 			},
@@ -727,7 +728,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				c.SetMeterProvider(sdkmetric.NewMeterProvider())
 			}
 
-			jobID, results, errs, err := c.QueryBroadcast(
+			jobID, results, err := c.QueryBroadcast(
 				s.ctx,
 				target,
 				category,
@@ -740,11 +741,10 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.Contains(err.Error(), tt.expectedErr)
 				s.Empty(jobID)
 				s.Nil(results)
-				s.Nil(errs)
 			} else {
 				s.NoError(err)
 				if tt.validateFunc != nil {
-					tt.validateFunc(jobID, results, errs)
+					tt.validateFunc(jobID, results)
 				}
 			}
 		})
@@ -910,7 +910,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 		withMeter    bool
 		setupMocks   func() *client.Client
 		expectedErr  string
-		validateFunc func(jobID string, results map[string]*job.Response, errs map[string]string)
+		validateFunc func(jobID string, results map[string]*job.Response)
 	}{
 		{
 			name:      "when succeeds with meter provider",
@@ -931,7 +931,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, _ map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 			},
@@ -954,11 +954,11 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Empty(errs)
 				s.Contains(results, "server1")
+				s.Equal(job.StatusCompleted, results["server1"].Status)
 			},
 		},
 		{
@@ -990,11 +990,11 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Empty(results)
-				s.Len(errs, 1)
-				s.Equal("permission denied", errs["server1"])
+				s.Len(results, 1)
+				s.Equal(job.StatusFailed, results["server1"].Status)
+				s.Equal("permission denied", results["server1"].Error)
 			},
 		},
 		{
@@ -1017,11 +1017,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Empty(results)
-				s.Len(errs, 1)
-				s.Equal("skipped", errs["server1"])
+				s.Len(results, 1)
+				s.Equal(job.StatusSkipped, results["server1"].Status)
 			},
 		},
 		{
@@ -1060,12 +1059,14 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				)
 				return c
 			},
-			validateFunc: func(jobID string, results map[string]*job.Response, errs map[string]string) {
+			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
-				s.Len(results, 1)
+				s.Len(results, 2)
 				s.Contains(results, "server1")
-				s.Len(errs, 1)
-				s.Equal("permission denied", errs["server2"])
+				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Contains(results, "server2")
+				s.Equal(job.StatusFailed, results["server2"].Status)
+				s.Equal("permission denied", results["server2"].Error)
 			},
 		},
 	}
@@ -1077,7 +1078,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				c.SetMeterProvider(sdkmetric.NewMeterProvider())
 			}
 
-			jobID, results, errs, err := c.ModifyBroadcast(
+			jobID, results, err := c.ModifyBroadcast(
 				s.ctx,
 				target,
 				category,
@@ -1090,11 +1091,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				s.Contains(err.Error(), tt.expectedErr)
 				s.Empty(jobID)
 				s.Nil(results)
-				s.Nil(errs)
 			} else {
 				s.NoError(err)
 				if tt.validateFunc != nil {
-					tt.validateFunc(jobID, results, errs)
+					tt.validateFunc(jobID, results)
 				}
 			}
 		})

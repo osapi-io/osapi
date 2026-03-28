@@ -252,7 +252,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 							Hostname: "server2",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
 				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
@@ -283,8 +283,11 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 							Hostname: "server1",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
@@ -310,7 +313,7 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
 				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)

@@ -151,7 +151,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
 				r, ok := resp.(gen.GetNodeStatus200JSONResponse)
@@ -173,8 +173,11 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-					}, map[string]string{
-						"server2": "disk full",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "disk full",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
@@ -203,7 +206,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
 				r, ok := resp.(gen.GetNodeStatus200JSONResponse)
@@ -218,7 +221,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatus() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeStatusGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeStatusResponseObject) {
 				_, ok := resp.(gen.GetNodeStatus500JSONResponse)
@@ -330,6 +333,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
         "distribution": "Ubuntu",
         "version": "24.04"
       },
+      "status": "ok",
       "uptime": "0 days, 5 hours, 0 minutes"
     }
   ]
@@ -363,7 +367,7 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

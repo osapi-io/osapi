@@ -147,7 +147,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeLoadResponseObject) {
 				r, ok := resp.(gen.GetNodeLoad200JSONResponse)
@@ -169,8 +169,11 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeLoadGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-					}, map[string]string{
-						"server2": "some error",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "some error",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeLoadResponseObject) {
@@ -194,7 +197,7 @@ func (s *NodeLoadGetPublicTestSuite) TestGetNodeLoad() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeLoadGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeLoadResponseObject) {
 				_, ok := resp.(gen.GetNodeLoad500JSONResponse)

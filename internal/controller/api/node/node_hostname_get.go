@@ -82,6 +82,7 @@ func (s *Node) GetNodeHostname(
 	apiResp := gen.HostnameResponse{
 		Hostname: displayHostname,
 		Changed:  &changed,
+		Status:   gen.HostnameResponseStatusOk,
 	}
 	if len(result.Labels) > 0 {
 		apiResp.Labels = &result.Labels

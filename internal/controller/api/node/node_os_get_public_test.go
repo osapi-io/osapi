@@ -146,7 +146,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
 				r, ok := resp.(gen.GetNodeOS200JSONResponse)
@@ -168,8 +168,11 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-					}, map[string]string{
-						"server2": "some error",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "some error",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
@@ -193,7 +196,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOS() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeOSGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeOSResponseObject) {
 				_, ok := resp.(gen.GetNodeOS500JSONResponse)

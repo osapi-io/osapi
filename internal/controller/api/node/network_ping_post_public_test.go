@@ -207,7 +207,6 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -242,9 +241,11 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-						},
-						map[string]string{
-							"server2": "host unreachable",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "host unreachable",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -275,7 +276,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeNetworkPingResponseObject) {
 				_, ok := resp.(gen.PostNodeNetworkPing500JSONResponse)
@@ -415,7 +416,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkPingDo, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

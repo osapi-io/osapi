@@ -171,7 +171,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
 				r, ok := resp.(gen.GetNodeHostname200JSONResponse)
@@ -194,8 +194,11 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-					}, map[string]string{
-						"server2": "interface not found",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "interface not found",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
@@ -219,7 +222,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostname() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeHostnameGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeHostnameResponseObject) {
 				_, ok := resp.(gen.GetNodeHostname500JSONResponse)
@@ -274,7 +277,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 				return mock
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"changed":false,"hostname":"default-hostname"}]}`,
+			wantBody: `{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"changed":false,"hostname":"default-hostname","status":"ok"}]}`,
 		},
 		{
 			name: "when job client errors",
@@ -301,7 +304,7 @@ func (s *NodeHostnameGetPublicTestSuite) TestGetNodeHostnameValidationHTTP() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

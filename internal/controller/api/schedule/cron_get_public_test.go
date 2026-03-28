@@ -112,7 +112,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal("backup", *r.Results[0].Name)
 				s.Equal("0 2 * * *", *r.Results[0].Schedule)
 				s.Equal("root", *r.Results[0].User)
@@ -144,7 +144,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal("", *r.Results[0].Name)
 			},
 		},
@@ -178,7 +178,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
@@ -211,8 +211,11 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 							),
 						},
-					}, map[string]string{
-						"server2": "cron entry not found",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "cron entry not found",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
@@ -245,7 +248,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						job.OperationCronGet,
 						map[string]string{"name": "backup"},
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCronByName500JSONResponse)

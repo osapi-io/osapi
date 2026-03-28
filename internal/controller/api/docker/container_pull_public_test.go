@@ -214,7 +214,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 								`{"image_id":"sha256:def","tag":"latest","size":2048}`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
 				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
@@ -249,8 +249,11 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
 							),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
@@ -277,7 +280,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						job.OperationDockerPull,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerPull500JSONResponse)

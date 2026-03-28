@@ -146,7 +146,6 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 							"server1": {Hostname: "server1", Changed: &trueVal},
 							"server2": {Hostname: "server2", Changed: &falseVal},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -233,9 +232,11 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Changed: &trueVal},
-						},
-						map[string]string{
-							"server2": "permission denied",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -272,7 +273,7 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 						job.OperationNodeHostnameUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
 				_, ok := resp.(gen.PutNodeHostname500JSONResponse)

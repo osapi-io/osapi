@@ -276,7 +276,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDocker() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"id":"def456"}`),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
 				r, ok := resp.(gen.PostNodeContainerDocker202JSONResponse)
@@ -309,8 +309,11 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDocker() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"id":"abc123"}`),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
@@ -337,7 +340,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDocker() {
 						job.OperationDockerCreate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDocker500JSONResponse)

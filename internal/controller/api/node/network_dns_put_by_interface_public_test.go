@@ -208,7 +208,6 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 							"server1": {Hostname: "server1", Changed: &trueVal},
 							"server2": {Hostname: "server2", Changed: &falseVal},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -239,9 +238,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Changed: &trueVal},
-						},
-						map[string]string{
-							"server2": "permission denied",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -279,7 +280,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						job.OperationNetworkDNSUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNodeNetworkDNS500JSONResponse)
@@ -424,7 +425,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Changed: &trueVal},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,

@@ -266,7 +266,6 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
 							"agent2": {Hostname: "agent2", Changed: &changedFalse},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -300,8 +299,12 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
+							"agent2": {
+								Status:   job.StatusFailed,
+								Error:    "deploy failed",
+								Hostname: "agent2",
+							},
 						},
-						map[string]string{"agent2": "deploy failed"},
 						nil,
 					)
 			},
@@ -339,7 +342,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 						job.OperationFileDeployExecute,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)

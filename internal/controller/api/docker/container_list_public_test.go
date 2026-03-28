@@ -312,7 +312,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 								`[{"id":"def456","name":"api","state":"running"}]`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
 				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
@@ -344,8 +344,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 								`[{"id":"abc123","name":"web","state":"running"}]`,
 							),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
@@ -370,7 +373,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
 				_, ok := resp.(gen.GetNodeContainerDocker500JSONResponse)

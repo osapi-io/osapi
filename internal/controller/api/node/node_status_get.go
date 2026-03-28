@@ -67,6 +67,7 @@ func (s *Node) GetNodeStatus(
 	}
 
 	resp := buildNodeStatusResponse(&status)
+	resp.Status = gen.NodeStatusResponseStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeStatus200JSONResponse{

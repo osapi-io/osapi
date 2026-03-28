@@ -123,7 +123,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 				s.Equal("backup", *r.Results[0].Name)
@@ -275,7 +275,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -310,8 +310,11 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
@@ -340,7 +343,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.PostNodeScheduleCron500JSONResponse)

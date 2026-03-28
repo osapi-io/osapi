@@ -255,7 +255,6 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -286,9 +285,11 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-						},
-						map[string]string{
-							"server2": "shell not available",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "shell not available",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -326,7 +327,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						job.OperationCommandShellExecute,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
 				_, ok := resp.(gen.PostNodeCommandShell500JSONResponse)

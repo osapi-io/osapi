@@ -241,7 +241,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 							Hostname: "server2",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
 				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
@@ -272,8 +272,11 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 							Hostname: "server1",
 							Changed:  boolPtr(true),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
@@ -299,7 +302,7 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 						job.OperationDockerStop,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerStop500JSONResponse)

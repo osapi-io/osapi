@@ -190,7 +190,6 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -222,9 +221,11 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-						},
-						map[string]string{
-							"server2": "interface not found",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "interface not found",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -253,7 +254,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
 				_, ok := resp.(gen.GetNodeNetworkDNSByInterface500JSONResponse)
@@ -369,7 +370,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 					QueryBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data)},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusOK,

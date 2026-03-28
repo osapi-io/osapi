@@ -116,7 +116,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 				s.Equal("backup", *r.Results[0].Name)
@@ -153,7 +153,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal("", *r.Results[0].Name)
 			},
 		},
@@ -185,7 +185,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.DeleteNodeScheduleCron200JSONResponse)
@@ -216,8 +216,11 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{
-						"server2": "cron entry not found",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "cron entry not found",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
@@ -242,7 +245,7 @@ func (s *CronDeletePublicTestSuite) TestDeleteNodeScheduleCron() {
 						job.OperationCronDelete,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.DeleteNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.DeleteNodeScheduleCron500JSONResponse)

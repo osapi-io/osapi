@@ -124,7 +124,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 				s.Equal("backup", *r.Results[0].Name)
@@ -233,7 +233,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
@@ -267,7 +267,12 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{"server2": "cron entry not found"}, nil)
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "cron entry not found",
+							Hostname: "server2",
+						},
+					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
@@ -302,7 +307,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						job.OperationCronUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.PutNodeScheduleCron500JSONResponse)
