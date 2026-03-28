@@ -26,8 +26,6 @@ import (
 	"strings"
 )
 
-const resolvConfPath = "/etc/resolv.conf"
-
 // GetResolvConfByInterface reads DNS configuration from /etc/resolv.conf.
 // The interfaceName parameter is accepted but ignored — containers have
 // a single global DNS configuration managed by the container runtime.
@@ -38,7 +36,7 @@ func (d *DebianDocker) GetResolvConfByInterface(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s: %w", resolvConfPath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	result := &GetResult{}
 

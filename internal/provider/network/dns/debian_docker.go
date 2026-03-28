@@ -28,6 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider"
 )
 
+const resolvConfPath = "/etc/resolv.conf"
+
 // Compile-time check: DebianDocker must satisfy Provider and FactsSetter.
 var _ Provider = (*DebianDocker)(nil)
 var _ provider.FactsSetter = (*DebianDocker)(nil)
