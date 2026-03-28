@@ -61,7 +61,7 @@ func NewNodeProcessor(
 
 		switch baseOperation {
 		case "hostname":
-			if req.Operation == job.OperationNodeHostnameUpdate {
+			if req.Type == job.TypeModify {
 				return setNodeHostname(hostProvider, req, logger)
 			}
 			return getNodeHostname(hostProvider, appConfig, logger)
