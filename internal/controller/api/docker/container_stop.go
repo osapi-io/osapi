@@ -118,7 +118,7 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 		ID:      id,
 		Timeout: data.Timeout,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -131,26 +131,32 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 	}
 
 	msg := "container stopped"
-	var responses []gen.DockerActionResultItem
-	for _, resp := range results {
-		responses = append(responses, gen.DockerActionResultItem{
-			Hostname: resp.Hostname,
+	var items []gen.DockerActionResultItem
+	for host, resp := range responses {
+		item := gen.DockerActionResultItem{
+			Hostname: host,
 			Id:       &id,
-			Changed:  resp.Changed,
-			Message:  &msg,
-		})
-	}
-	for hostname, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.DockerActionResultItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerActionResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerActionResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerActionResultItemStatusOk
+			item.Changed = resp.Changed
+			item.Message = &msg
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerStop202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

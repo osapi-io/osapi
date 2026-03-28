@@ -72,7 +72,7 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeScheduleCronResponseObject, error) {
-	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"schedule",
@@ -85,16 +85,27 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	}
 
 	allResults := make([]gen.CronEntry, 0)
-	for _, resp := range responses {
-		allResults = append(allResults, responseToCronEntries(resp)...)
-	}
-	for hostname, errResp := range errs {
-		h := hostname
-		e := errResp.Error
-		allResults = append(allResults, gen.CronEntry{
-			Hostname: &h,
-			Error:    &e,
-		})
+	for host, resp := range responses {
+		switch resp.Status {
+		case job.StatusFailed:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: h,
+				Status:   gen.CronEntryStatusFailed,
+				Error:    &e,
+			})
+		case job.StatusSkipped:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: h,
+				Status:   gen.CronEntryStatusSkipped,
+				Error:    &e,
+			})
+		default:
+			allResults = append(allResults, responseToCronEntries(resp)...)
+		}
 	}
 
 	jobUUID := uuid.MustParse(jobID)
@@ -123,7 +134,7 @@ func responseToCronEntries(
 		source := e.Source
 
 		entry := gen.CronEntry{
-			Hostname: &hostname,
+			Hostname: hostname,
 			Name:     &name,
 			Object:   &object,
 			Source:   &source,

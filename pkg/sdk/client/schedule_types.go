@@ -90,7 +90,7 @@ func cronEntryCollectionFromGen(
 		}
 
 		results = append(results, CronEntryResult{
-			Hostname: derefString(r.Hostname),
+			Hostname: r.Hostname,
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
@@ -120,7 +120,7 @@ func cronGetCollectionFromGen(
 		}
 
 		results = append(results, CronEntryResult{
-			Hostname: derefString(r.Hostname),
+			Hostname: r.Hostname,
 			Name:     derefString(r.Name),
 			Object:   derefString(r.Object),
 			Schedule: derefString(r.Schedule),
@@ -145,7 +145,7 @@ func cronMutationCollectionFromCreate(
 	results := make([]CronMutationResult, 0, len(g.Results))
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
-			Hostname: derefString(r.Hostname),
+			Hostname: r.Hostname,
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
@@ -166,7 +166,7 @@ func cronMutationCollectionFromUpdate(
 	results := make([]CronMutationResult, 0, len(g.Results))
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
-			Hostname: derefString(r.Hostname),
+			Hostname: r.Hostname,
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
@@ -187,7 +187,7 @@ func cronMutationCollectionFromDelete(
 	results := make([]CronMutationResult, 0, len(g.Results))
 	for _, r := range g.Results {
 		results = append(results, CronMutationResult{
-			Hostname: derefString(r.Hostname),
+			Hostname: r.Hostname,
 			Name:     derefString(r.Name),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),

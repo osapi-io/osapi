@@ -84,7 +84,7 @@ func (s *Node) getNodeDiskBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeDiskResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -98,26 +98,37 @@ func (s *Node) getNodeDiskBroadcast(
 		}, nil
 	}
 
-	var responses []gen.DiskResultItem
-	for host, resp := range results {
-		var diskResp job.NodeDiskResponse
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &diskResp)
-		}
-		responses = append(responses, *buildDiskResultItem(host, &diskResp))
-	}
-	for host, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.DiskResultItem{
+	var apiResponses []gen.DiskResultItem
+	for host, resp := range responses {
+		item := gen.DiskResultItem{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DiskResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DiskResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DiskResultItemStatusOk
+			var diskResp job.NodeDiskResponse
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &diskResp)
+			}
+			built := buildDiskResultItem(host, &diskResp)
+			item.Disks = built.Disks
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeDisk200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

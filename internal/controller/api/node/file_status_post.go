@@ -105,7 +105,7 @@ func (s *Node) postNodeFileStatusBroadcast(
 	path string,
 ) (gen.PostNodeFileStatusResponseObject, error) {
 	data := file.StatusRequest{Path: path}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"file",
@@ -120,28 +120,30 @@ func (s *Node) postNodeFileStatusBroadcast(
 	}
 
 	var items []gen.FileStatusResult
-	for host, resp := range results {
-		var result file.StatusResult
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &result)
-		}
+	for host, resp := range responses {
 		item := gen.FileStatusResult{
 			Hostname: host,
-			Path:     &result.Path,
-			Status:   &result.Status,
 		}
-		if result.SHA256 != "" {
-			sha := result.SHA256
-			item.Sha256 = &sha
+		switch resp.Status {
+		case job.StatusFailed:
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			e := resp.Error
+			item.Error = &e
+		default:
+			var result file.StatusResult
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &result)
+			}
+			item.Path = &result.Path
+			item.Status = &result.Status
+			if result.SHA256 != "" {
+				sha := result.SHA256
+				item.Sha256 = &sha
+			}
 		}
 		items = append(items, item)
-	}
-	for host, errResp := range errs {
-		e := errResp.Error
-		items = append(items, gen.FileStatusResult{
-			Hostname: host,
-			Error:    &e,
-		})
 	}
 
 	jobUUID := uuid.MustParse(jobID)

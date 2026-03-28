@@ -99,7 +99,7 @@ func (s *Node) putNodeHostnameBroadcast(
 	data := map[string]any{
 		"hostname": newHostname,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"node",
@@ -113,29 +113,35 @@ func (s *Node) putNodeHostnameBroadcast(
 		}, nil
 	}
 
-	var responses []gen.HostnameUpdateResultItem
-	for host, resp := range results {
-		changed := resp.Changed == nil || *resp.Changed
-		responses = append(responses, gen.HostnameUpdateResultItem{
+	var apiResponses []gen.HostnameUpdateResultItem
+	for host, resp := range responses {
+		item := gen.HostnameUpdateResultItem{
 			Hostname: host,
-			Status:   gen.HostnameUpdateResultItemStatusOk,
-			Changed:  &changed,
-		})
-	}
-	for host, errResp := range errs {
-		e := errResp.Error
-		falseVal := false
-		responses = append(responses, gen.HostnameUpdateResultItem{
-			Hostname: host,
-			Status:   gen.HostnameUpdateResultItemStatusFailed,
-			Error:    &e,
-			Changed:  &falseVal,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.HostnameUpdateResultItemStatusFailed
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
+		case job.StatusSkipped:
+			item.Status = gen.HostnameUpdateResultItemStatusSkipped
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
+		default:
+			item.Status = gen.HostnameUpdateResultItemStatusOk
+			changed := resp.Changed == nil || *resp.Changed
+			item.Changed = &changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeHostname202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }

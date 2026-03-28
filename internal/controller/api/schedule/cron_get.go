@@ -87,7 +87,7 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		JobId: &jobUUID,
 		Results: []gen.CronEntry{
 			{
-				Hostname: &agentHostname,
+				Hostname: agentHostname,
 				Name:     &entryName,
 				Object:   &object,
 				Schedule: &schedule,
@@ -103,7 +103,7 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 	target string,
 	name string,
 ) (gen.GetNodeScheduleCronByNameResponseObject, error) {
-	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"schedule",
@@ -116,33 +116,35 @@ func (s *Schedule) getNodeScheduleCronByNameBroadcast(
 	}
 
 	allResults := make([]gen.CronEntry, 0)
-	for _, resp := range responses {
-		var entry cronProv.Entry
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &entry)
+	for host, resp := range responses {
+		item := gen.CronEntry{
+			Hostname: host,
 		}
-
-		agentHostname := resp.Hostname
-		entryName := entry.Name
-		object := entry.Object
-		schedule := entry.Schedule
-		user := entry.User
-
-		allResults = append(allResults, gen.CronEntry{
-			Hostname: &agentHostname,
-			Name:     &entryName,
-			Object:   &object,
-			Schedule: &schedule,
-			User:     &user,
-		})
-	}
-	for hostname, errResp := range errs {
-		h := hostname
-		e := errResp.Error
-		allResults = append(allResults, gen.CronEntry{
-			Hostname: &h,
-			Error:    &e,
-		})
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.CronEntryStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.CronEntryStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.CronEntryStatusOk
+			var entry cronProv.Entry
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &entry)
+			}
+			entryName := entry.Name
+			object := entry.Object
+			schedule := entry.Schedule
+			user := entry.User
+			item.Name = &entryName
+			item.Object = &object
+			item.Schedule = &schedule
+			item.User = &user
+		}
+		allResults = append(allResults, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)

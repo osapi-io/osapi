@@ -105,7 +105,7 @@ func (s *Schedule) PostNodeScheduleCron(
 		JobId: &jobUUID,
 		Results: []gen.CronMutationResult{
 			{
-				Hostname: &agentHostname,
+				Hostname: agentHostname,
 				Name:     &name,
 				Changed:  changed,
 			},
@@ -119,7 +119,7 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 	target string,
 	entry cronProv.Entry,
 ) (gen.PostNodeScheduleCronResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"schedule",
@@ -131,33 +131,37 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.CronMutationResult
-	for _, resp := range results {
-		var result cronProv.CreateResult
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &result)
+	var apiResponses []gen.CronMutationResult
+	for host, resp := range responses {
+		item := gen.CronMutationResult{
+			Hostname: host,
 		}
-		name := result.Name
-		agentHostname := resp.Hostname
-		responses = append(responses, gen.CronMutationResult{
-			Hostname: &agentHostname,
-			Name:     &name,
-			Changed:  resp.Changed,
-		})
-	}
-	for hostname, errResp := range errs {
-		e := errResp.Error
-		h := hostname
-		responses = append(responses, gen.CronMutationResult{
-			Hostname: &h,
-			Error:    &e,
-		})
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.CronMutationResultStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.CronMutationResultStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.CronMutationResultStatusOk
+			var result cronProv.CreateResult
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &result)
+			}
+			name := result.Name
+			item.Name = &name
+			item.Changed = resp.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.PostNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }

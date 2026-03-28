@@ -127,7 +127,7 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 	target string,
 	data *job.DockerListData,
 ) (gen.GetNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -139,26 +139,32 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerListItem
-	for _, resp := range results {
-		summaries := dockerSummariesFromResponse(resp)
-		responses = append(responses, gen.DockerListItem{
-			Hostname:   resp.Hostname,
-			Containers: &summaries,
-			Changed:    resp.Changed,
-		})
-	}
-	for hostname, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.DockerListItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+	var items []gen.DockerListItem
+	for host, resp := range responses {
+		item := gen.DockerListItem{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerListItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerListItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerListItemStatusOk
+			summaries := dockerSummariesFromResponse(resp)
+			item.Containers = &summaries
+			item.Changed = resp.Changed
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeContainerDocker200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

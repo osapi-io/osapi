@@ -147,7 +147,7 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -159,21 +159,34 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerExecResultItem
-	for _, resp := range results {
-		responses = append(responses, dockerExecItemFromResponse(resp))
-	}
-	for hostname, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.DockerExecResultItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+	var items []gen.DockerExecResultItem
+	for host, resp := range responses {
+		item := gen.DockerExecResultItem{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerExecResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerExecResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerExecResultItemStatusOk
+			ok := dockerExecItemFromResponse(resp)
+			item.Stdout = ok.Stdout
+			item.Stderr = ok.Stderr
+			item.ExitCode = ok.ExitCode
+			item.Changed = resp.Changed
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerExec202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

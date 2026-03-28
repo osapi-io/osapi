@@ -85,7 +85,7 @@ func (s *Node) getNodeMemoryBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeMemoryResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -99,26 +99,37 @@ func (s *Node) getNodeMemoryBroadcast(
 		}, nil
 	}
 
-	var responses []gen.MemoryResultItem
-	for host, resp := range results {
-		var memStats mem.Result
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &memStats)
-		}
-		responses = append(responses, *buildMemoryResultItem(host, &memStats))
-	}
-	for host, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.MemoryResultItem{
+	var apiResponses []gen.MemoryResultItem
+	for host, resp := range responses {
+		item := gen.MemoryResultItem{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.MemoryResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.MemoryResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.MemoryResultItemStatusOk
+			var memStats mem.Result
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &memStats)
+			}
+			built := buildMemoryResultItem(host, &memStats)
+			item.Memory = built.Memory
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeMemory200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

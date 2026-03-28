@@ -99,7 +99,7 @@ func (s *Node) getNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeHostnameResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -113,36 +113,42 @@ func (s *Node) getNodeHostnameBroadcast(
 		}, nil
 	}
 
-	changed := false
-	var responses []gen.HostnameResponse
-	for _, resp := range results {
-		var result struct {
-			Hostname string            `json:"hostname"`
-			Labels   map[string]string `json:"labels,omitempty"`
-		}
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &result)
-		}
-		r := gen.HostnameResponse{
-			Hostname: result.Hostname,
-			Changed:  &changed,
-		}
-		if len(result.Labels) > 0 {
-			r.Labels = &result.Labels
-		}
-		responses = append(responses, r)
-	}
-	for host, errResp := range errs {
-		e := errResp.Error
-		responses = append(responses, gen.HostnameResponse{
+	var apiResponses []gen.HostnameResponse
+	for host, resp := range responses {
+		item := gen.HostnameResponse{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.HostnameResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.HostnameResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.HostnameResponseStatusOk
+			var result struct {
+				Hostname string            `json:"hostname"`
+				Labels   map[string]string `json:"labels,omitempty"`
+			}
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &result)
+			}
+			item.Hostname = result.Hostname
+			changed := false
+			item.Changed = &changed
+			if len(result.Labels) > 0 {
+				item.Labels = &result.Labels
+			}
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeHostname200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
