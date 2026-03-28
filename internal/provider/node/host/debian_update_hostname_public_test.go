@@ -31,29 +31,29 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type DebianSetHostnamePublicTestSuite struct {
+type DebianUpdateHostnamePublicTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
 }
 
-func (suite *DebianSetHostnamePublicTestSuite) SetupTest() {
+func (suite *DebianUpdateHostnamePublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
 }
 
-func (suite *DebianSetHostnamePublicTestSuite) SetupSubTest() {
+func (suite *DebianUpdateHostnamePublicTestSuite) SetupSubTest() {
 	suite.SetupTest()
 }
 
-func (suite *DebianSetHostnamePublicTestSuite) TearDownTest() {
+func (suite *DebianUpdateHostnamePublicTestSuite) TearDownTest() {
 	suite.ctrl.Finish()
 }
 
-func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
+func (suite *DebianUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 	tests := []struct {
 		name        string
 		hostname    string
 		setupMock   func() *mocks.MockManager
-		want        *host.SetHostnameResult
+		want        *host.UpdateHostnameResult
 		wantErr     bool
 		wantErrType error
 	}{
@@ -72,7 +72,7 @@ func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
 				)
 				return mock
 			},
-			want:    &host.SetHostnameResult{Changed: true},
+			want:    &host.UpdateHostnameResult{Changed: true},
 			wantErr: false,
 		},
 		{
@@ -85,7 +85,7 @@ func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
 					Return("existing-host", nil)
 				return mock
 			},
-			want:    &host.SetHostnameResult{Changed: false},
+			want:    &host.UpdateHostnameResult{Changed: false},
 			wantErr: false,
 		},
 		{
@@ -98,7 +98,7 @@ func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
 					Return("existing-host\n", nil)
 				return mock
 			},
-			want:    &host.SetHostnameResult{Changed: false},
+			want:    &host.UpdateHostnameResult{Changed: false},
 			wantErr: false,
 		},
 		{
@@ -139,7 +139,7 @@ func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
 			mock := tc.setupMock()
 			debian := host.NewDebianProvider(mock)
 
-			got, err := debian.SetHostname(tc.hostname)
+			got, err := debian.UpdateHostname(tc.hostname)
 
 			if tc.wantErr {
 				suite.Error(err)
@@ -155,6 +155,6 @@ func (suite *DebianSetHostnamePublicTestSuite) TestSetHostname() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestDebianSetHostnamePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(DebianSetHostnamePublicTestSuite))
+func TestDebianUpdateHostnamePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianUpdateHostnamePublicTestSuite))
 }

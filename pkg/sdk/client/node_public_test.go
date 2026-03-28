@@ -145,7 +145,7 @@ func (suite *NodePublicTestSuite) TestHostname() {
 	}
 }
 
-func (suite *NodePublicTestSuite) TestSetHostname() {
+func (suite *NodePublicTestSuite) TestUpdateHostname() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -248,7 +248,7 @@ func (suite *NodePublicTestSuite) TestSetHostname() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.SetHostname(suite.ctx, tc.target, tc.hostname)
+			resp, err := sut.Node.UpdateHostname(suite.ctx, tc.target, tc.hostname)
 			tc.validateFunc(resp, err)
 		})
 	}

@@ -18,18 +18,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host
+package host_test
 
 import (
-	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-// SetHostname returns ErrUnsupported on Darwin.
-// Darwin is a development platform only; mutations are not supported.
-func (d *Darwin) SetHostname(
-	_ string,
-) (*SetHostnameResult, error) {
-	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
+type DarwinUpdateHostnamePublicTestSuite struct {
+	suite.Suite
+}
+
+func (suite *DarwinUpdateHostnamePublicTestSuite) SetupTest() {}
+
+func (suite *DarwinUpdateHostnamePublicTestSuite) TearDownTest() {}
+
+func (suite *DarwinUpdateHostnamePublicTestSuite) TestUpdateHostname() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			darwin := host.NewDarwinProvider()
+
+			got, err := darwin.UpdateHostname("new-host")
+
+			suite.Nil(got)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+func TestDarwinUpdateHostnamePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinUpdateHostnamePublicTestSuite))
 }

@@ -18,48 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host_test
+package host
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
+	"fmt"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type DarwinSetHostnamePublicTestSuite struct {
-	suite.Suite
-}
-
-func (suite *DarwinSetHostnamePublicTestSuite) SetupTest() {}
-
-func (suite *DarwinSetHostnamePublicTestSuite) TearDownTest() {}
-
-func (suite *DarwinSetHostnamePublicTestSuite) TestSetHostname() {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "returns not implemented error",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			darwin := host.NewDarwinProvider()
-
-			got, err := darwin.SetHostname("new-host")
-
-			suite.Nil(got)
-			suite.ErrorIs(err, provider.ErrUnsupported)
-		})
-	}
-}
-
-// In order for `go test` to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run.
-func TestDarwinSetHostnamePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(DarwinSetHostnamePublicTestSuite))
+// UpdateHostname returns ErrUnsupported for container environments.
+// Hostname in containers is managed by the container runtime.
+func (d *DebianDocker) UpdateHostname(
+	_ string,
+) (*UpdateHostnameResult, error) {
+	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
 }

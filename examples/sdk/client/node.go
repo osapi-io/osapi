@@ -79,7 +79,7 @@ func main() {
 	}
 
 	// Set hostname (uncomment to run — this mutates the system)
-	// setResp, err := c.Node.SetHostname(ctx, "web-01", "new-hostname")
+	// setResp, err := c.Node.UpdateHostname(ctx, "web-01", "new-hostname")
 	// if err != nil {
 	//     log.Fatalf("set hostname: %v", err)
 	// }

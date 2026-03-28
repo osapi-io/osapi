@@ -18,17 +18,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package host
+package host_test
 
 import (
-	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-// SetHostname returns ErrUnsupported on generic Linux.
-func (l *Linux) SetHostname(
-	_ string,
-) (*SetHostnameResult, error) {
-	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
+type DebianDockerPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *DebianDockerPublicTestSuite) TestUpdateHostname() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported for container",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			p := host.NewDebianDockerProvider()
+			result, err := p.UpdateHostname("new-hostname")
+
+			s.Error(err)
+			s.Nil(result)
+			s.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func TestDebianDockerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DebianDockerPublicTestSuite))
 }

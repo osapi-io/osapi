@@ -22,35 +22,13 @@ package host
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/retr0h/osapi/internal/provider"
-	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
-// SetHostname sets the system hostname using hostnamectl.
-// Returns ErrUnsupported in container environments where hostname
-// is managed by the container runtime. Checks the current hostname
-// first and returns Changed: false if already set to the requested value.
-func (u *Debian) SetHostname(
-	name string,
-) (*SetHostnameResult, error) {
-	if platform.IsContainer() {
-		return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
-	}
-
-	current, err := u.execManager.RunCmd("hostnamectl", []string{"hostname"})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current hostname: %w", err)
-	}
-
-	if strings.TrimSpace(current) == name {
-		return &SetHostnameResult{Changed: false}, nil
-	}
-
-	if _, err := u.execManager.RunCmd("hostnamectl", []string{"set-hostname", name}); err != nil {
-		return nil, fmt.Errorf("failed to set hostname: %w", err)
-	}
-
-	return &SetHostnameResult{Changed: true}, nil
+// UpdateHostname returns ErrUnsupported on generic Linux.
+func (l *Linux) UpdateHostname(
+	_ string,
+) (*UpdateHostnameResult, error) {
+	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
 }

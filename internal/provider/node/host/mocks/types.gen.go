@@ -170,17 +170,17 @@ func (mr *MockProviderMockRecorder) GetUptime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUptime", reflect.TypeOf((*MockProvider)(nil).GetUptime))
 }
 
-// SetHostname mocks base method.
-func (m *MockProvider) SetHostname(name string) (*host.SetHostnameResult, error) {
+// UpdateHostname mocks base method.
+func (m *MockProvider) UpdateHostname(name string) (*host.UpdateHostnameResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetHostname", name)
-	ret0, _ := ret[0].(*host.SetHostnameResult)
+	ret := m.ctrl.Call(m, "UpdateHostname", name)
+	ret0, _ := ret[0].(*host.UpdateHostnameResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SetHostname indicates an expected call of SetHostname.
-func (mr *MockProviderMockRecorder) SetHostname(name interface{}) *gomock.Call {
+// UpdateHostname indicates an expected call of UpdateHostname.
+func (mr *MockProviderMockRecorder) UpdateHostname(name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHostname", reflect.TypeOf((*MockProvider)(nil).SetHostname), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHostname", reflect.TypeOf((*MockProvider)(nil).UpdateHostname), name)
 }

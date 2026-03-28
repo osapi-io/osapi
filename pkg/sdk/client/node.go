@@ -300,8 +300,8 @@ func (s *NodeService) GetDNS(
 	return NewResponse(dnsConfigCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// SetHostname updates the hostname on the target node.
-func (s *NodeService) SetHostname(
+// UpdateHostname updates the hostname on the target node.
+func (s *NodeService) UpdateHostname(
 	ctx context.Context,
 	target string,
 	name string,

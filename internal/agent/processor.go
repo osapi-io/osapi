@@ -114,7 +114,7 @@ func setNodeHostname(
 	req job.Request,
 	logger *slog.Logger,
 ) (json.RawMessage, error) {
-	logger.Debug("executing host.SetHostname")
+	logger.Debug("executing host.UpdateHostname")
 
 	var data struct {
 		Hostname string `json:"hostname"`
@@ -123,7 +123,7 @@ func setNodeHostname(
 		return nil, fmt.Errorf("invalid hostname update data: %w", err)
 	}
 
-	result, err := hostProvider.SetHostname(data.Hostname)
+	result, err := hostProvider.UpdateHostname(data.Hostname)
 	if err != nil {
 		return nil, err
 	}

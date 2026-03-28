@@ -38,7 +38,7 @@ var clientNodeHostnameUpdateCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
 
-		resp, err := sdkClient.Node.SetHostname(ctx, host, name)
+		resp, err := sdkClient.Node.UpdateHostname(ctx, host, name)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

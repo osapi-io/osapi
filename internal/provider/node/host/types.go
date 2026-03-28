@@ -45,8 +45,8 @@ type Provider interface {
 	GetServiceManager() (string, error)
 	// GetPackageManager detects the system's package manager (e.g., apt, dnf, yum).
 	GetPackageManager() (string, error)
-	// SetHostname sets the system hostname.
-	SetHostname(name string) (*SetHostnameResult, error)
+	// UpdateHostname sets the system hostname.
+	UpdateHostname(name string) (*UpdateHostnameResult, error)
 }
 
 // Result represents the operating system information.
@@ -59,8 +59,8 @@ type Result struct {
 	Changed bool `json:"changed"`
 }
 
-// SetHostnameResult represents the outcome of a hostname set operation.
-type SetHostnameResult struct {
+// UpdateHostnameResult represents the outcome of a hostname set operation.
+type UpdateHostnameResult struct {
 	// Changed indicates whether the hostname was actually modified.
 	Changed bool `json:"changed"`
 }

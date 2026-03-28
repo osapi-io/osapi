@@ -29,15 +29,15 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type LinuxSetHostnamePublicTestSuite struct {
+type LinuxUpdateHostnamePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *LinuxSetHostnamePublicTestSuite) SetupTest() {}
+func (suite *LinuxUpdateHostnamePublicTestSuite) SetupTest() {}
 
-func (suite *LinuxSetHostnamePublicTestSuite) TearDownTest() {}
+func (suite *LinuxUpdateHostnamePublicTestSuite) TearDownTest() {}
 
-func (suite *LinuxSetHostnamePublicTestSuite) TestSetHostname() {
+func (suite *LinuxUpdateHostnamePublicTestSuite) TestUpdateHostname() {
 	tests := []struct {
 		name string
 	}{
@@ -50,7 +50,7 @@ func (suite *LinuxSetHostnamePublicTestSuite) TestSetHostname() {
 		suite.Run(tc.name, func() {
 			linux := host.NewLinuxProvider()
 
-			got, err := linux.SetHostname("new-host")
+			got, err := linux.UpdateHostname("new-host")
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)
@@ -60,6 +60,6 @@ func (suite *LinuxSetHostnamePublicTestSuite) TestSetHostname() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestLinuxSetHostnamePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LinuxSetHostnamePublicTestSuite))
+func TestLinuxUpdateHostnamePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxUpdateHostnamePublicTestSuite))
 }
