@@ -44,7 +44,7 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type NetworkDNSPutByInterfacePublicTestSuite struct {
+type NodeHostnamePutPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -55,7 +55,7 @@ type NetworkDNSPutByInterfacePublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupSuite() {
+func (s *NodeHostnamePutPublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -64,7 +64,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupTest() {
+func (s *NodeHostnamePutPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apinode.New(slog.Default(), s.mockJobClient)
@@ -73,28 +73,26 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) TearDownTest() {
+func (s *NodeHostnamePutPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
+func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 	trueVal := true
 	falseVal := false
 
 	tests := []struct {
 		name         string
-		request      gen.PutNodeNetworkDNSRequestObject
+		request      gen.PutNodeHostnameRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PutNodeNetworkDNSResponseObject)
+		validateFunc func(resp gen.PutNodeHostnameResponseObject)
 	}{
 		{
-			name: "when success",
-			request: gen.PutNodeNetworkDNSRequestObject{
+			name: "when success single target",
+			request: gen.PutNodeHostnameRequestObject{
 				Hostname: "_any",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
-					SearchDomains: &[]string{"example.com"},
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
 				},
 			},
 			setupMock: func() {
@@ -102,8 +100,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					Modify(
 						gomock.Any(),
 						"_any",
-						"network",
-						job.OperationNetworkDNSUpdate,
+						"node",
+						job.OperationNodeHostnameUpdate,
 						gomock.Any(),
 					).
 					Return(
@@ -115,82 +113,22 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
-				s.Equal(gen.DNSUpdateResultItemStatusOk, r.Results[0].Status)
+				s.Equal(gen.HostnameUpdateResultItemStatusOk, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 			},
 		},
 		{
-			name: "when validation error empty hostname",
-			request: gen.PutNodeNetworkDNSRequestObject{
-				Hostname: "",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
-				},
-			},
-			setupMock: func() {},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				r, ok := resp.(gen.PutNodeNetworkDNS400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "required")
-			},
-		},
-		{
-			name: "when body validation error empty interface name",
-			request: gen.PutNodeNetworkDNSRequestObject{
-				Hostname: "_any",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "",
-					Servers:       &[]string{"1.1.1.1"},
-				},
-			},
-			setupMock: func() {},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				r, ok := resp.(gen.PutNodeNetworkDNS400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-			},
-		},
-		{
-			name: "when job client error",
-			request: gen.PutNodeNetworkDNSRequestObject{
-				Hostname: "_any",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
-				},
-			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"_any",
-						"network",
-						job.OperationNetworkDNSUpdate,
-						gomock.Any(),
-					).
-					Return("", nil, assert.AnError)
-			},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				_, ok := resp.(gen.PutNodeNetworkDNS500JSONResponse)
-				s.True(ok)
-			},
-		},
-		{
 			name: "when broadcast all success",
-			request: gen.PutNodeNetworkDNSRequestObject{
+			request: gen.PutNodeHostnameRequestObject{
 				Hostname: "_all",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
-					SearchDomains: &[]string{"example.com"},
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
 				},
 			},
 			setupMock: func() {
@@ -198,8 +136,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"network",
-						job.OperationNetworkDNSUpdate,
+						"node",
+						job.OperationNodeHostnameUpdate,
 						gomock.Any(),
 					).
 					Return(
@@ -212,18 +150,74 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				s.NotNil(resp)
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 2)
+			},
+		},
+		{
+			name: "when validation error empty hostname body",
+			request: gen.PutNodeHostnameRequestObject{
+				Hostname: "_any",
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "when bad target hostname",
+			request: gen.PutNodeHostnameRequestObject{
+				Hostname: "",
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "required")
+			},
+		},
+		{
+			name: "when job client error",
+			request: gen.PutNodeHostnameRequestObject{
+				Hostname: "_any",
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"_any",
+						"node",
+						job.OperationNodeHostnameUpdate,
+						gomock.Any(),
+					).
+					Return("", nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				_, ok := resp.(gen.PutNodeHostname500JSONResponse)
+				s.True(ok)
 			},
 		},
 		{
 			name: "when broadcast all with errors",
-			request: gen.PutNodeNetworkDNSRequestObject{
+			request: gen.PutNodeHostnameRequestObject{
 				Hostname: "_all",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
-					SearchDomains: &[]string{"example.com"},
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
 				},
 			},
 			setupMock: func() {
@@ -231,8 +225,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"network",
-						job.OperationNetworkDNSUpdate,
+						"node",
+						job.OperationNodeHostnameUpdate,
 						gomock.Any(),
 					).
 					Return(
@@ -246,8 +240,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 2)
 				var foundError bool
@@ -255,7 +249,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					if item.Error != nil {
 						foundError = true
 						s.Equal("server2", item.Hostname)
-						s.Equal(gen.DNSUpdateResultItemStatusFailed, item.Status)
+						s.Equal(gen.HostnameUpdateResultItemStatusFailed, item.Status)
 					}
 				}
 				s.True(foundError)
@@ -263,11 +257,10 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 		},
 		{
 			name: "when broadcast all error",
-			request: gen.PutNodeNetworkDNSRequestObject{
+			request: gen.PutNodeHostnameRequestObject{
 				Hostname: "_all",
-				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
-					InterfaceName: "eth0",
-					Servers:       &[]string{"1.1.1.1"},
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
 				},
 			},
 			setupMock: func() {
@@ -275,14 +268,14 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
-						"network",
-						job.OperationNetworkDNSUpdate,
+						"node",
+						job.OperationNodeHostnameUpdate,
 						gomock.Any(),
 					).
 					Return("", nil, nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
-				_, ok := resp.(gen.PutNodeNetworkDNS500JSONResponse)
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				_, ok := resp.(gen.PutNodeHostname500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -292,14 +285,14 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PutNodeNetworkDNS(s.ctx, tt.request)
+			resp, err := s.handler.PutNodeHostname(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTTP() {
+func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 	trueVal := true
 
 	tests := []struct {
@@ -312,12 +305,12 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1","8.8.8.8"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
+			path: "/node/server1/hostname",
+			body: `{"hostname":"new-hostname"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "node", job.OperationNodeHostnameUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  &trueVal,
@@ -328,107 +321,24 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 			wantContains: []string{`"results"`, `"agent1"`, `"ok"`, `"changed":true`},
 		},
 		{
-			name: "when missing interface name",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1"]}`,
+			name: "when missing hostname body returns 400",
+			path: "/node/server1/hostname",
+			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "InterfaceName", "required"},
+			wantContains: []string{`"error"`, "Hostname", "required"},
 		},
 		{
-			name: "when fact reference interface name passes validation",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.interface.primary"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				mock := jobmocks.NewMockJobClient(s.mockCtrl)
-				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						Hostname: "agent1",
-						Changed:  &trueVal,
-					}, nil)
-				return mock
-			},
-			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"agent1"`},
-		},
-		{
-			name: "when partial fact reference rejected",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1"],"interface_name":"@fact"}`,
+			name: "when empty hostname path returns 400",
+			path: "/node/%20/hostname",
+			body: `{"hostname":"new-hostname"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
 			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
-		},
-		{
-			name: "when non-alphanum interface name",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1"],"interface_name":"eth-0!"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
-		},
-		{
-			name: "when invalid server IP",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["not-an-ip"],"interface_name":"eth0"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "Servers", "ip"},
-		},
-		{
-			name: "when invalid search domain",
-			path: "/node/server1/network/dns",
-			body: `{"search_domains":["not a valid hostname!"],"interface_name":"eth0"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "SearchDomains", "hostname"},
-		},
-		{
-			name: "when unknown fact key interface rejected",
-			path: "/node/server1/network/dns",
-			body: `{"servers":["1.1.1.1"],"interface_name":"@fact.primary_interface"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "InterfaceName", "alphanum_or_fact"},
-		},
-		{
-			name: "when target agent not found",
-			path: "/node/nonexistent/network/dns",
-			body: `{"servers":["1.1.1.1"],"interface_name":"eth0"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "valid_target", "not found"},
-		},
-		{
-			name: "when broadcast all",
-			path: "/node/_all/network/dns",
-			body: `{"servers":["1.1.1.1"],"search_domains":["foo.bar"],"interface_name":"eth0"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				mock := jobmocks.NewMockJobClient(s.mockCtrl)
-				mock.EXPECT().
-					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
-					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
-						"server1": {Hostname: "server1", Changed: &trueVal},
-					}, map[string]string{}, nil)
-				return mock
-			},
-			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"results"`, `"server1"`, `"changed":true`},
+			wantContains: []string{`"error"`},
 		},
 	}
 
@@ -460,9 +370,9 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 	}
 }
 
-const rbacDNSPutTestSigningKey = "test-signing-key-for-dns-put-rbac"
+const rbacHostnamePutTestSigningKey = "test-signing-key-for-hostname-put-rbac"
 
-func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
+func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 	trueVal := true
 
@@ -488,10 +398,10 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacDNSPutTestSigningKey,
+					rbacHostnamePutTestSigningKey,
 					[]string{"read"},
 					"test-user",
-					[]string{"network:read"},
+					[]string{"node:read"},
 				)
 				s.Require().NoError(err)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -503,10 +413,10 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 			wantContains: []string{"Insufficient permissions"},
 		},
 		{
-			name: "when valid token with network:write returns 202",
+			name: "when valid token with node:write returns 202",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacDNSPutTestSigningKey,
+					rbacHostnamePutTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -517,7 +427,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "node", job.OperationNodeHostnameUpdate, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
@@ -541,7 +451,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacDNSPutTestSigningKey,
+							SigningKey: rbacHostnamePutTestSigningKey,
 						},
 					},
 				},
@@ -553,8 +463,8 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/node/server1/network/dns",
-				strings.NewReader(`{"servers":["8.8.8.8"],"interface_name":"eth0"}`),
+				"/node/server1/hostname",
+				strings.NewReader(`{"hostname":"new-hostname"}`),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
@@ -570,6 +480,6 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSRBACHTTP() {
 	}
 }
 
-func TestNetworkDNSPutByInterfacePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(NetworkDNSPutByInterfacePublicTestSuite))
+func TestNodeHostnamePutPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(NodeHostnamePutPublicTestSuite))
 }
