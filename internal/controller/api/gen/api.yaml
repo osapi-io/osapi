@@ -4139,6 +4139,7 @@ components:
           enum:
             - ok
             - failed
+            - skipped
         changed:
           type: boolean
           description: Whether the hostname was actually modified.
@@ -4336,6 +4337,7 @@ components:
           enum:
             - ok
             - failed
+            - skipped
         changed:
           type: boolean
           description: Whether the DNS configuration was actually modified.

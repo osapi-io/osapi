@@ -53,7 +53,7 @@ type JobClient interface {
 		category string,
 		operation job.OperationType,
 		data any,
-	) (string, map[string]*job.Response, map[string]*job.Response, error)
+	) (string, map[string]*job.Response, error)
 	Modify(
 		ctx context.Context,
 		target string,
@@ -67,7 +67,7 @@ type JobClient interface {
 		category string,
 		operation job.OperationType,
 		data any,
-	) (string, map[string]*job.Response, map[string]*job.Response, error)
+	) (string, map[string]*job.Response, error)
 
 	// Job queue management operations
 	GetQueueSummary(

@@ -1146,7 +1146,7 @@ components:
           description: The hostname of the agent.
         status:
           type: string
-          enum: [ok, failed]
+          enum: [ok, failed, skipped]
         changed:
           type: boolean
           description: Whether the hostname was actually modified.
@@ -1354,7 +1354,7 @@ components:
           type: string
         status:
           type: string
-          enum: [ok, failed]
+          enum: [ok, failed, skipped]
         changed:
           type: boolean
           description: Whether the DNS configuration was actually modified.

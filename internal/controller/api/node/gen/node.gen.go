@@ -22,8 +22,9 @@ const (
 
 // Defines values for DNSUpdateResultItemStatus.
 const (
-	DNSUpdateResultItemStatusFailed DNSUpdateResultItemStatus = "failed"
-	DNSUpdateResultItemStatusOk     DNSUpdateResultItemStatus = "ok"
+	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
+	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
+	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
 )
 
 // Defines values for FileDeployRequestContentType.
@@ -34,8 +35,9 @@ const (
 
 // Defines values for HostnameUpdateResultItemStatus.
 const (
-	HostnameUpdateResultItemStatusFailed HostnameUpdateResultItemStatus = "failed"
-	HostnameUpdateResultItemStatusOk     HostnameUpdateResultItemStatus = "ok"
+	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
+	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
+	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
 )
 
 // CommandExecRequest defines model for CommandExecRequest.
