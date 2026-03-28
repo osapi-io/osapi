@@ -40,7 +40,7 @@ func (s *NodeSmokeSuite) TestNodeHostnameGet() {
 	}{
 		{
 			name: "returns hostname results",
-			args: []string{"client", "node", "hostname", "--json"},
+			args: []string{"client", "node", "hostname", "get", "--json"},
 			validateFunc: func(
 				stdout string,
 				exitCode int,
