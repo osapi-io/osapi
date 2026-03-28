@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,50 +21,15 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
+	"fmt"
 
-	"github.com/shirou/gopsutil/v4/host"
-
-	iexec "github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider"
 )
 
-var _ provider.FactsSetter = (*Debian)(nil)
-
-// Debian implements the Mem interface for Debian.
-type Debian struct {
-	provider.FactsAware
-
-	InfoFn      func() (*host.InfoStat, error)
-	HostnameFn  func() (string, error)
-	NumCPUFn    func() int
-	StatFn      func(name string) (os.FileInfo, error)
-	LookPathFn  func(file string) (string, error)
-	execManager iexec.Manager
-}
-
-// NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider(
-	execManager iexec.Manager,
-) *Debian {
-	return &Debian{
-		InfoFn:      host.Info,
-		HostnameFn:  os.Hostname,
-		NumCPUFn:    runtime.NumCPU,
-		StatFn:      os.Stat,
-		LookPathFn:  exec.LookPath,
-		execManager: execManager,
-	}
-}
-
-// ExecNotFoundError wraps exec.ErrNotFound for testability.
-type ExecNotFoundError struct {
-	Name string
-}
-
-// Error implements the error interface.
-func (e *ExecNotFoundError) Error() string {
-	return "executable file not found: " + e.Name
+// SetHostname returns ErrUnsupported on Darwin.
+// Darwin is a development platform only; mutations are not supported.
+func (d *Darwin) SetHostname(
+	_ string,
+) (*SetHostnameResult, error) {
+	return nil, fmt.Errorf("host: %w", provider.ErrUnsupported)
 }

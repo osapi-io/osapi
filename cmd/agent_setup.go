@@ -77,7 +77,7 @@ func setupAgent(
 	var hostProvider nodeHost.Provider
 	switch plat {
 	case "debian":
-		hostProvider = nodeHost.NewDebianProvider()
+		hostProvider = nodeHost.NewDebianProvider(execManager)
 	case "darwin":
 		hostProvider = nodeHost.NewDarwinProvider()
 	default:

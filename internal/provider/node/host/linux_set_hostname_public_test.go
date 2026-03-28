@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -25,69 +25,41 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/node/host"
 )
 
-type DebianGetCPUCountPublicTestSuite struct {
+type LinuxSetHostnamePublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *DebianGetCPUCountPublicTestSuite) SetupTest() {}
+func (suite *LinuxSetHostnamePublicTestSuite) SetupTest() {}
 
-func (suite *DebianGetCPUCountPublicTestSuite) TearDownTest() {}
+func (suite *LinuxSetHostnamePublicTestSuite) TearDownTest() {}
 
-func (suite *DebianGetCPUCountPublicTestSuite) TestGetCPUCount() {
+func (suite *LinuxSetHostnamePublicTestSuite) TestSetHostname() {
 	tests := []struct {
-		name      string
-		setupMock func(u *host.Debian)
-		want      interface{}
-		wantErr   bool
+		name string
 	}{
 		{
-			name: "when GetCPUCount Ok",
-			setupMock: func(u *host.Debian) {
-				u.NumCPUFn = func() int {
-					return 8
-				}
-			},
-			want:    8,
-			wantErr: false,
-		},
-		{
-			name: "when NumCPU returns 1",
-			setupMock: func(u *host.Debian) {
-				u.NumCPUFn = func() int {
-					return 1
-				}
-			},
-			want:    1,
-			wantErr: false,
+			name: "returns not implemented error",
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			debian := host.NewDebianProvider(nil)
+			linux := host.NewLinuxProvider()
 
-			if tc.setupMock != nil {
-				tc.setupMock(debian)
-			}
+			got, err := linux.SetHostname("new-host")
 
-			got, err := debian.GetCPUCount()
-
-			if tc.wantErr {
-				suite.Error(err)
-				suite.Equal(0, got)
-			} else {
-				suite.NoError(err)
-				suite.Equal(tc.want, got)
-			}
+			suite.Nil(got)
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestDebianGetCPUCountPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(DebianGetCPUCountPublicTestSuite))
+func TestLinuxSetHostnamePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LinuxSetHostnamePublicTestSuite))
 }

@@ -70,7 +70,7 @@ func (suite *DebianGetHostnamePublicTestSuite) TestGetHostname() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			debian := host.NewDebianProvider()
+			debian := host.NewDebianProvider(nil)
 
 			if tc.setupMock != nil {
 				debian.InfoFn = tc.setupMock()
