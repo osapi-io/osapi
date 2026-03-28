@@ -23,6 +23,7 @@ package agent_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 	"time"
@@ -37,6 +38,7 @@ import (
 	"github.com/retr0h/osapi/internal/job/mocks"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 	dnsMocks "github.com/retr0h/osapi/internal/provider/network/dns/mocks"
 	netinfoMocks "github.com/retr0h/osapi/internal/provider/network/netinfo/mocks"
@@ -75,6 +77,10 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 
 	// Create mock providers
 	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
+	hostMock.EXPECT().
+		UpdateHostname(gomock.Any()).
+		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
+		AnyTimes()
 	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
 	memMock := memMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
@@ -533,6 +539,55 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 		},
 	}
 
+	// Hostname update tests (TypeModify).
+	modifyTests := []struct {
+		name        string
+		operation   string
+		data        string
+		expectError bool
+		errorMsg    string
+		validate    func(json.RawMessage)
+	}{
+		{
+			name:        "update hostname returns unsupported",
+			operation:   "hostname.update",
+			data:        `{"hostname": "new-host"}`,
+			expectError: true,
+			errorMsg:    "operation not supported",
+		},
+		{
+			name:        "update hostname with invalid data",
+			operation:   "hostname.update",
+			data:        `invalid json`,
+			expectError: true,
+			errorMsg:    "invalid hostname update data",
+		},
+	}
+
+	for _, tt := range modifyTests {
+		s.Run(tt.name, func() {
+			request := job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: tt.operation,
+				Data:      json.RawMessage(tt.data),
+			}
+
+			result, err := agent.ExportProcessNodeOperation(s.testAgent, request)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errorMsg)
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+				if tt.validate != nil {
+					tt.validate(result)
+				}
+			}
+		})
+	}
+
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			cfg := agent.GetAgentAppConfig(s.testAgent)
@@ -560,6 +615,7 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 		})
 	}
 }
+
 
 func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 	tests := []struct {

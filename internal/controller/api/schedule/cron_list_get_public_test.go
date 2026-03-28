@@ -295,8 +295,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								Hostname: "server2",
 							},
 							"server3": {
-								Status:   job.StatusFailed,
-								Error:    "failed",
+								Status:   job.StatusSkipped,
+								Error:    "cron: operation not supported on this OS family",
 								Hostname: "server3",
 							},
 						},
@@ -324,7 +324,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				s.Contains(*byHost["server2"].Error, "not supported")
 
 				s.Require().Contains(byHost, "server3")
-				s.Equal("failed", *byHost["server3"].Error)
+				s.Equal(gen.CronEntryStatusSkipped, byHost["server3"].Status)
+				s.Contains(*byHost["server3"].Error, "not supported")
 			},
 		},
 		{
