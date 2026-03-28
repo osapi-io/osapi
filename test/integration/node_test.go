@@ -111,6 +111,69 @@ func (s *NodeSmokeSuite) TestNodeStatusGet() {
 	}
 }
 
+func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
+	skipWriteOp(s.T(), "HOSTNAME_UPDATE")
+
+	// Use the current hostname to ensure idempotency (Changed: false).
+	stdout, _, exitCode := runCLI("client", "node", "hostname", "get", "--json")
+	s.Require().Equal(0, exitCode)
+
+	var getResult map[string]any
+	err := parseJSON(stdout, &getResult)
+	s.Require().NoError(err)
+
+	results, ok := getResult["results"].([]any)
+	s.Require().True(ok)
+	s.Require().GreaterOrEqual(len(results), 1)
+
+	first, ok := results[0].(map[string]any)
+	s.Require().True(ok)
+
+	currentHostname, ok := first["hostname"].(string)
+	s.Require().True(ok)
+
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(stdout string, exitCode int)
+	}{
+		{
+			name: "updates hostname idempotently",
+			args: []string{
+				"client", "node", "hostname", "update",
+				"--name", currentHostname,
+				"--json",
+			},
+			validateFunc: func(
+				stdout string,
+				exitCode int,
+			) {
+				s.Require().Equal(0, exitCode)
+
+				var result map[string]any
+				err := parseJSON(stdout, &result)
+				s.Require().NoError(err)
+
+				results, ok := result["results"].([]any)
+				s.Require().True(ok)
+				s.GreaterOrEqual(len(results), 1)
+
+				first, ok := results[0].(map[string]any)
+				s.Require().True(ok)
+				s.Contains(first, "hostname")
+				s.Contains(first, "changed")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			stdout, _, exitCode := runCLI(tt.args...)
+			tt.validateFunc(stdout, exitCode)
+		})
+	}
+}
+
 func TestNodeSmokeSuite(
 	t *testing.T,
 ) {
