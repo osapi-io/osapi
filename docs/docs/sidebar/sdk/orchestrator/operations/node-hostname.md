@@ -55,3 +55,50 @@ Requires `node:read` permission.
 See
 [`examples/sdk/orchestrator/operations/node-hostname.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/operations/node-hostname.go)
 for a complete working example.
+
+## node.hostname.update
+
+Set the system hostname on the target node.
+
+### Usage
+
+```go
+task := plan.TaskFunc("set-hostname",
+    func(
+        ctx context.Context,
+        c *client.Client,
+    ) (*orchestrator.Result, error) {
+        resp, err := c.Node.SetHostname(ctx, "web-01", "new-hostname")
+        if err != nil {
+            return nil, err
+        }
+
+        return orchestrator.CollectionResult(
+            resp.Data,
+            func(r client.HostnameUpdateResult) orchestrator.HostResult {
+                return orchestrator.HostResult{
+                    Hostname: r.Hostname,
+                    Changed:  r.Changed,
+                    Error:    r.Error,
+                }
+            },
+        ), nil
+    },
+)
+```
+
+### Parameters
+
+| Parameter | Type   | Required | Description          |
+| --------- | ------ | -------- | -------------------- |
+| target    | string | yes      | Target host or group |
+| name      | string | yes      | New hostname to set  |
+
+### Idempotency
+
+**Idempotent.** If the hostname is already set to the requested value,
+returns `Changed: false` without modifying the system.
+
+### Permissions
+
+Requires `node:write` permission.
