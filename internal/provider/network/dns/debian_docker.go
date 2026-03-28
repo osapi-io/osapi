@@ -31,8 +31,10 @@ import (
 const resolvConfPath = "/etc/resolv.conf"
 
 // Compile-time check: DebianDocker must satisfy Provider and FactsSetter.
-var _ Provider = (*DebianDocker)(nil)
-var _ provider.FactsSetter = (*DebianDocker)(nil)
+var (
+	_ Provider             = (*DebianDocker)(nil)
+	_ provider.FactsSetter = (*DebianDocker)(nil)
+)
 
 // DebianDocker implements the DNS Provider interface for Debian-family
 // systems running inside Docker containers. It reads DNS configuration
