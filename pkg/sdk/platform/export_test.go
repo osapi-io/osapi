@@ -25,15 +25,12 @@ import (
 	"github.com/avfs/avfs/vfs/osfs"
 )
 
-// containerFS is the filesystem used for container detection.
-// Override in tests to use memfs.
-var containerFS avfs.VFS = osfs.New()
-
-const dockerEnvPath = "/.dockerenv"
-
-// IsContainer reports whether the current process is running inside
-// a container. Detects Docker by checking for /.dockerenv.
-func IsContainer() bool {
-	_, err := containerFS.Stat(dockerEnvPath)
-	return err == nil
+// SetContainerFS overrides the filesystem used for container detection.
+// Pass nil to restore the default (osfs).
+func SetContainerFS(fs avfs.VFS) {
+	if fs == nil {
+		containerFS = osfs.New()
+		return
+	}
+	containerFS = fs
 }

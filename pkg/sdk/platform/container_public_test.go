@@ -23,6 +23,7 @@ package platform_test
 import (
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -33,26 +34,29 @@ type ContainerPublicTestSuite struct {
 }
 
 func (s *ContainerPublicTestSuite) TearDownSubTest() {
-	platform.ContainerCheckFn = platform.DefaultContainerCheck
+	platform.SetContainerFS(nil)
 }
 
 func (s *ContainerPublicTestSuite) TestIsContainer() {
 	tests := []struct {
 		name    string
-		checkFn func() bool
+		setupFS func()
 		want    bool
 	}{
 		{
-			name: "when inside a Docker container",
-			checkFn: func() bool {
-				return true
+			name: "when /.dockerenv exists",
+			setupFS: func() {
+				fs := memfs.New()
+				_ = fs.WriteFile("/.dockerenv", []byte(""), 0o644)
+				platform.SetContainerFS(fs)
 			},
 			want: true,
 		},
 		{
-			name: "when not inside a container",
-			checkFn: func() bool {
-				return false
+			name: "when /.dockerenv does not exist",
+			setupFS: func() {
+				fs := memfs.New()
+				platform.SetContainerFS(fs)
 			},
 			want: false,
 		},
@@ -60,7 +64,7 @@ func (s *ContainerPublicTestSuite) TestIsContainer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			platform.ContainerCheckFn = tc.checkFn
+			tc.setupFS()
 
 			got := platform.IsContainer()
 
