@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/retr0h/osapi/internal/job"
+	"github.com/retr0h/osapi/pkg/sdk/platform"
 )
 
 // factsInterval controls the fact refresh period.
@@ -69,6 +70,7 @@ func (a *Agent) writeFacts(
 	hostname string,
 ) {
 	reg := job.FactsRegistration{}
+	reg.Containerized = platform.IsContainer()
 
 	// Call providers — errors are non-fatal
 	if arch, err := a.hostProvider.GetArchitecture(); err == nil {
