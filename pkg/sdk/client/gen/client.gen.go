@@ -75,6 +75,12 @@ const (
 	FileDeployRequestContentTypeTemplate FileDeployRequestContentType = "template"
 )
 
+// Defines values for HostnameUpdateResultItemStatus.
+const (
+	HostnameUpdateResultItemStatusFailed HostnameUpdateResultItemStatus = "failed"
+	HostnameUpdateResultItemStatusOk     HostnameUpdateResultItemStatus = "ok"
+)
+
 // Defines values for NetworkInterfaceResponseFamily.
 const (
 	Dual  NetworkInterfaceResponseFamily = "dual"
@@ -97,11 +103,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
-	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
-	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
-	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
-	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
+	Completed      GetJobParamsStatus = "completed"
+	Failed         GetJobParamsStatus = "failed"
+	PartialFailure GetJobParamsStatus = "partial_failure"
+	Processing     GetJobParamsStatus = "processing"
+	Submitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -1090,6 +1096,33 @@ type HostnameResponse struct {
 	Labels *map[string]string `json:"labels,omitempty"`
 }
 
+// HostnameUpdateCollectionResponse defines model for HostnameUpdateCollectionResponse.
+type HostnameUpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID        `json:"job_id,omitempty"`
+	Results []HostnameUpdateResultItem `json:"results"`
+}
+
+// HostnameUpdateRequest defines model for HostnameUpdateRequest.
+type HostnameUpdateRequest struct {
+	// Hostname The new hostname to set.
+	Hostname string `json:"hostname" validate:"required,min=1,max=253"`
+}
+
+// HostnameUpdateResultItem defines model for HostnameUpdateResultItem.
+type HostnameUpdateResultItem struct {
+	// Changed Whether the hostname was actually modified.
+	Changed *bool   `json:"changed,omitempty"`
+	Error   *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string                         `json:"hostname"`
+	Status   HostnameUpdateResultItemStatus `json:"status"`
+}
+
+// HostnameUpdateResultItemStatus defines model for HostnameUpdateResultItem.Status.
+type HostnameUpdateResultItemStatus string
+
 // JobDetailResponse defines model for JobDetailResponse.
 type JobDetailResponse struct {
 	// AgentStates Per-agent processing state for broadcast jobs.
@@ -1662,6 +1695,9 @@ type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
 
+// PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
+type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
+
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 
@@ -1874,6 +1910,11 @@ type ClientInterface interface {
 
 	// GetNodeHostname request
 	GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeHostnameWithBody request with any body
+	PutNodeHostnameWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeHostname(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeLoad request
 	GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2465,6 +2506,30 @@ func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, bo
 
 func (c *Client) GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeHostnameRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeHostnameWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeHostnameRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeHostname(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeHostnameRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4203,6 +4268,53 @@ func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request,
 	return req, nil
 }
 
+// NewPutNodeHostnameRequest calls the generic PutNodeHostname builder with application/json body
+func NewPutNodeHostnameRequest(server string, hostname Hostname, body PutNodeHostnameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeHostnameRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPutNodeHostnameRequestWithBody generates requests for PutNodeHostname with any type of body
+func NewPutNodeHostnameRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/hostname", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeLoadRequest generates requests for GetNodeLoad
 func NewGetNodeLoadRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -4888,6 +5000,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetNodeHostnameWithResponse request
 	GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error)
+
+	// PutNodeHostnameWithBodyWithResponse request with any body
+	PutNodeHostnameWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error)
+
+	PutNodeHostnameWithResponse(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error)
 
 	// GetNodeLoadWithResponse request
 	GetNodeLoadWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLoadResponse, error)
@@ -5878,6 +5995,32 @@ func (r GetNodeHostnameResponse) StatusCode() int {
 	return 0
 }
 
+type PutNodeHostnameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *HostnameUpdateCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeHostnameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeHostnameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeLoadResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6614,6 +6757,23 @@ func (c *ClientWithResponses) GetNodeHostnameWithResponse(ctx context.Context, h
 		return nil, err
 	}
 	return ParseGetNodeHostnameResponse(rsp)
+}
+
+// PutNodeHostnameWithBodyWithResponse request with arbitrary body returning *PutNodeHostnameResponse
+func (c *ClientWithResponses) PutNodeHostnameWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error) {
+	rsp, err := c.PutNodeHostnameWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeHostnameResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeHostnameWithResponse(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error) {
+	rsp, err := c.PutNodeHostname(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeHostnameResponse(rsp)
 }
 
 // GetNodeLoadWithResponse request returning *GetNodeLoadResponse
@@ -8686,6 +8846,60 @@ func ParseGetNodeHostnameResponse(rsp *http.Response) (*GetNodeHostnameResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeHostnameResponse parses an HTTP response from a PutNodeHostnameWithResponse call
+func ParsePutNodeHostnameResponse(rsp *http.Response) (*PutNodeHostnameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeHostnameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest HostnameUpdateCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

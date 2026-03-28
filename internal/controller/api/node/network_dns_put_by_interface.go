@@ -98,7 +98,7 @@ func (s *Node) PutNodeNetworkDNS(
 		Results: []gen.DNSUpdateResultItem{
 			{
 				Hostname: rawResp.Hostname,
-				Status:   gen.Ok,
+				Status:   gen.DNSUpdateResultItemStatusOk,
 				Changed:  &changed,
 			},
 		},
@@ -137,7 +137,7 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 		changed := resp.Changed == nil || *resp.Changed
 		responses = append(responses, gen.DNSUpdateResultItem{
 			Hostname: host,
-			Status:   gen.Ok,
+			Status:   gen.DNSUpdateResultItemStatusOk,
 			Changed:  &changed,
 		})
 	}
@@ -146,7 +146,7 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 		falsVal := false
 		responses = append(responses, gen.DNSUpdateResultItem{
 			Hostname: host,
-			Status:   gen.Failed,
+			Status:   gen.DNSUpdateResultItemStatusFailed,
 			Error:    &e,
 			Changed:  &falsVal,
 		})
