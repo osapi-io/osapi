@@ -2,8 +2,8 @@
 
 ## Problem
 
-When the OSAPI agent runs inside a Docker container on a Debian-based image,
-the DNS provider fails because `resolvectl` is not available. Containers use
+When the OSAPI agent runs inside a Docker container on a Debian-based image, the
+DNS provider fails because `resolvectl` is not available. Containers use
 `/etc/resolv.conf` directly — there is no systemd-resolved. DNS writes are
 managed by the container runtime (Docker, Kubernetes), not the agent.
 
@@ -51,12 +51,12 @@ Compile-time check: `var _ Provider = (*DebianDocker)(nil)`
 **`debian_docker_get_resolv_conf_by_interface.go`** — Get implementation.
 
 `GetResolvConfByInterface` reads `/etc/resolv.conf` via avfs and parses
-`nameserver` and `search` lines. The `interfaceName` parameter is accepted
-but ignored — containers have a single global DNS configuration.
+`nameserver` and `search` lines. The `interfaceName` parameter is accepted but
+ignored — containers have a single global DNS configuration.
 
-Returns `GetResult` with `DNSServers` and `SearchDomains` populated from
-the file contents. Returns `["."]` for search domains if none are found
-(matching the Debian provider convention).
+Returns `GetResult` with `DNSServers` and `SearchDomains` populated from the
+file contents. Returns `["."]` for search domains if none are found (matching
+the Debian provider convention).
 
 **`debian_docker_update_resolv_conf_by_interface.go`** — Update implementation.
 
@@ -106,9 +106,11 @@ All tests use testify/suite with table-driven patterns. DNS tests use
 `memfs.New()` for filesystem mocking.
 
 Facts-related changes are covered by updating existing test files:
+
 - `internal/facts/keys_public_test.go` — add `containerized` to key list
 - `internal/agent/facts_public_test.go` — verify `Containerized` is set
-- `internal/agent/factref_public_test.go` — test `@fact.containerized` resolution
+- `internal/agent/factref_public_test.go` — test `@fact.containerized`
+  resolution
 
 ## Out of Scope
 

@@ -1,10 +1,19 @@
 # Container DNS Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add container detection to the platform package and a `DebianDocker` DNS provider that reads `/etc/resolv.conf` for containerized agents.
+**Goal:** Add container detection to the platform package and a `DebianDocker`
+DNS provider that reads `/etc/resolv.conf` for containerized agents.
 
-**Architecture:** A new `platform.IsContainer()` function detects Docker containers via `/.dockerenv`. The `DebianDocker` DNS provider uses `avfs.VFS` to parse `/etc/resolv.conf` for Get (ignoring the interface parameter) and returns `ErrUnsupported` for Update. A new `containerized` built-in fact key exposes the container state. Agent setup wires the container check into DNS provider selection.
+**Architecture:** A new `platform.IsContainer()` function detects Docker
+containers via `/.dockerenv`. The `DebianDocker` DNS provider uses `avfs.VFS` to
+parse `/etc/resolv.conf` for Get (ignoring the interface parameter) and returns
+`ErrUnsupported` for Update. A new `containerized` built-in fact key exposes the
+container state. Agent setup wires the container check into DNS provider
+selection.
 
 **Tech Stack:** Go, avfs (memfs for tests), testify/suite, gopsutil
 
@@ -15,6 +24,7 @@
 ### Task 1: Container Detection — `platform.IsContainer()`
 
 **Files:**
+
 - Create: `pkg/sdk/platform/container.go`
 - Create: `pkg/sdk/platform/container_public_test.go`
 
@@ -82,7 +92,8 @@ func TestContainerPublicTestSuite(t *testing.T) {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `go test -run TestContainerPublicTestSuite -v ./pkg/sdk/platform/...`
-Expected: FAIL — `ContainerCheckFn`, `DefaultContainerCheck`, `IsContainer` not defined.
+Expected: FAIL — `ContainerCheckFn`, `DefaultContainerCheck`, `IsContainer` not
+defined.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -127,8 +138,10 @@ feat(platform): add IsContainer() for Docker container detection
 ### Task 2: DebianDocker DNS Provider — Struct and Update Stub
 
 **Files:**
+
 - Create: `internal/provider/network/dns/debian_docker.go`
-- Create: `internal/provider/network/dns/debian_docker_update_resolv_conf_by_interface.go`
+- Create:
+  `internal/provider/network/dns/debian_docker_update_resolv_conf_by_interface.go`
 - Create: `internal/provider/network/dns/debian_docker_public_test.go`
 
 - [ ] **Step 1: Write the failing test**
@@ -199,7 +212,8 @@ func TestDebianDockerPublicTestSuite(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
+Run:
+`go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
 Expected: FAIL — `NewDebianDockerProvider` not defined.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -244,7 +258,8 @@ func NewDebianDockerProvider(
 }
 ```
 
-Create `internal/provider/network/dns/debian_docker_update_resolv_conf_by_interface.go`:
+Create
+`internal/provider/network/dns/debian_docker_update_resolv_conf_by_interface.go`:
 
 ```go
 package dns
@@ -269,14 +284,24 @@ func (d *DebianDocker) UpdateResolvConfByInterface(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
-Expected: FAIL — `GetResolvConfByInterface` not implemented yet (compile-time check). Add a temporary stub to unblock:
+Run:
+`go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
+Expected: FAIL — `GetResolvConfByInterface` not implemented yet (compile-time
+check). Add a temporary stub to unblock:
 
-The compile-time `var _ Provider = (*DebianDocker)(nil)` will fail because `GetResolvConfByInterface` is not yet implemented. To unblock, add a placeholder in `debian_docker_get_resolv_conf_by_interface.go` that panics — this will be replaced in Task 3. Alternatively, remove the `var _ Provider` line and add it back in Task 3.
+The compile-time `var _ Provider = (*DebianDocker)(nil)` will fail because
+`GetResolvConfByInterface` is not yet implemented. To unblock, add a placeholder
+in `debian_docker_get_resolv_conf_by_interface.go` that panics — this will be
+replaced in Task 3. Alternatively, remove the `var _ Provider` line and add it
+back in Task 3.
 
-The simpler approach: temporarily comment out `var _ Provider = (*DebianDocker)(nil)` in `debian_docker.go`. Re-add it in Task 3 when Get is implemented. Keep only `var _ provider.FactsSetter = (*DebianDocker)(nil)`.
+The simpler approach: temporarily comment out
+`var _ Provider = (*DebianDocker)(nil)` in `debian_docker.go`. Re-add it in Task
+3 when Get is implemented. Keep only
+`var _ provider.FactsSetter = (*DebianDocker)(nil)`.
 
-Run again: `go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
+Run again:
+`go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -290,13 +315,18 @@ feat(dns): add DebianDocker provider struct and Update stub
 ### Task 3: DebianDocker DNS Provider — Get (resolv.conf parsing)
 
 **Files:**
-- Create: `internal/provider/network/dns/debian_docker_get_resolv_conf_by_interface.go`
-- Modify: `internal/provider/network/dns/debian_docker.go` (re-add `var _ Provider` check)
-- Modify: `internal/provider/network/dns/debian_docker_public_test.go` (add Get tests)
+
+- Create:
+  `internal/provider/network/dns/debian_docker_get_resolv_conf_by_interface.go`
+- Modify: `internal/provider/network/dns/debian_docker.go` (re-add
+  `var _ Provider` check)
+- Modify: `internal/provider/network/dns/debian_docker_public_test.go` (add Get
+  tests)
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `internal/provider/network/dns/debian_docker_public_test.go` — insert this method before the `TestUpdateResolvConfByInterface` method:
+Add to `internal/provider/network/dns/debian_docker_public_test.go` — insert
+this method before the `TestUpdateResolvConfByInterface` method:
 
 ```go
 func (s *DebianDockerPublicTestSuite) TestGetResolvConfByInterface() {
@@ -449,12 +479,14 @@ func (s *DebianDockerPublicTestSuite) TestGetResolvConfByInterface() {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test -run TestDebianDockerPublicTestSuite/TestGetResolvConfByInterface -v ./internal/provider/network/dns/...`
+Run:
+`go test -run TestDebianDockerPublicTestSuite/TestGetResolvConfByInterface -v ./internal/provider/network/dns/...`
 Expected: FAIL — `GetResolvConfByInterface` not defined on `DebianDocker`.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Create `internal/provider/network/dns/debian_docker_get_resolv_conf_by_interface.go`:
+Create
+`internal/provider/network/dns/debian_docker_get_resolv_conf_by_interface.go`:
 
 ```go
 package dns
@@ -522,7 +554,8 @@ var _ Provider = (*DebianDocker)(nil)
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
+Run:
+`go test -run TestDebianDockerPublicTestSuite -v ./internal/provider/network/dns/...`
 Expected: PASS (both Get and Update tests)
 
 - [ ] **Step 5: Commit**
@@ -536,6 +569,7 @@ feat(dns): add DebianDocker Get implementation for resolv.conf parsing
 ### Task 4: Add `containerized` Built-in Fact Key
 
 **Files:**
+
 - Modify: `internal/facts/keys.go`
 - Modify: `internal/facts/keys_public_test.go`
 - Modify: `internal/controller/api/facts/facts_keys_get.go`
@@ -624,7 +658,9 @@ var builtInDescriptions = map[string]string{
 
 - [ ] **Step 4: Update the facts keys API test**
 
-In `internal/controller/api/facts/facts_keys_get_public_test.go`, update the test that checks the count of keys returned (if there is a count assertion, update from 5 to 6).
+In `internal/controller/api/facts/facts_keys_get_public_test.go`, update the
+test that checks the count of keys returned (if there is a count assertion,
+update from 5 to 6).
 
 - [ ] **Step 5: Run tests**
 
@@ -642,13 +678,15 @@ feat(facts): add containerized built-in fact key
 ### Task 5: Add `Containerized` to `FactsRegistration` and Fact Resolution
 
 **Files:**
+
 - Modify: `internal/job/types.go`
 - Modify: `internal/agent/factref.go`
 - Modify: `internal/agent/factref_public_test.go`
 
 - [ ] **Step 1: Add field to FactsRegistration**
 
-In `internal/job/types.go`, add `Containerized` to the `FactsRegistration` struct:
+In `internal/job/types.go`, add `Containerized` to the `FactsRegistration`
+struct:
 
 ```go
 type FactsRegistration struct {
@@ -666,7 +704,8 @@ type FactsRegistration struct {
 }
 ```
 
-Note: `Containerized bool` does NOT use `omitempty` — the field must always be present (false is meaningful).
+Note: `Containerized bool` does NOT use `omitempty` — the field must always be
+present (false is meaningful).
 
 - [ ] **Step 2: Add fact resolution for containerized**
 
@@ -684,7 +723,8 @@ Insert after the `facts.KeyFQDN` case.
 
 - [ ] **Step 3: Add tests for @fact.containerized resolution**
 
-In `internal/agent/factref_public_test.go`, add two test rows to the `TestResolveFacts` table:
+In `internal/agent/factref_public_test.go`, add two test rows to the
+`TestResolveFacts` table:
 
 ```go
 {
@@ -717,8 +757,7 @@ In `internal/agent/factref_public_test.go`, add two test rows to the `TestResolv
 
 - [ ] **Step 4: Run tests**
 
-Run: `go test -v ./internal/agent/... ./internal/job/...`
-Expected: PASS
+Run: `go test -v ./internal/agent/... ./internal/job/...` Expected: PASS
 
 - [ ] **Step 5: Commit**
 
@@ -731,8 +770,10 @@ feat(facts): add Containerized field to FactsRegistration and fact resolver
 ### Task 6: Wire Container Detection into Facts Collection
 
 **Files:**
+
 - Modify: `internal/agent/facts.go`
-- Modify: `internal/agent/facts_public_test.go` (if test covers writeFacts fields)
+- Modify: `internal/agent/facts_public_test.go` (if test covers writeFacts
+  fields)
 
 - [ ] **Step 1: Add platform.IsContainer() call to writeFacts**
 
@@ -750,8 +791,9 @@ reg.Containerized = platform.IsContainer()
 
 - [ ] **Step 2: Run tests**
 
-Run: `go test -v ./internal/agent/...`
-Expected: PASS (existing tests should still pass — `IsContainer()` returns false on the test host, matching the default zero value)
+Run: `go test -v ./internal/agent/...` Expected: PASS (existing tests should
+still pass — `IsContainer()` returns false on the test host, matching the
+default zero value)
 
 - [ ] **Step 3: Commit**
 
@@ -764,6 +806,7 @@ feat(agent): collect containerized fact during facts refresh
 ### Task 7: Wire DebianDocker DNS Provider into Agent Setup
 
 **Files:**
+
 - Modify: `cmd/agent_setup.go`
 
 - [ ] **Step 1: Update the DNS provider switch**
@@ -791,18 +834,15 @@ No new imports needed — `dns` and `platform` are already imported.
 
 - [ ] **Step 2: Verify build**
 
-Run: `go build ./...`
-Expected: Compiles with no errors.
+Run: `go build ./...` Expected: Compiles with no errors.
 
 - [ ] **Step 3: Run all tests**
 
-Run: `just go::unit`
-Expected: PASS
+Run: `just go::unit` Expected: PASS
 
 - [ ] **Step 4: Run lint**
 
-Run: `just go::vet`
-Expected: Clean
+Run: `just go::vet` Expected: Clean
 
 - [ ] **Step 5: Commit**
 
@@ -820,8 +860,7 @@ Run: `just go::fmt`
 
 - [ ] **Step 2: Run full test suite**
 
-Run: `just test`
-Expected: PASS (lint + unit + coverage)
+Run: `just test` Expected: PASS (lint + unit + coverage)
 
 - [ ] **Step 3: Commit any formatting changes**
 
