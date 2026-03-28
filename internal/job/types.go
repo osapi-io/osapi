@@ -105,11 +105,11 @@ const (
 	OperationNodeHostnameGet    = client.OpNodeHostnameGet
 	OperationNodeHostnameUpdate = client.OpNodeHostnameUpdate
 	OperationNodeStatusGet      = client.OpNodeStatusGet
-	OperationNodeUptimeGet   = client.OpNodeUptimeGet
-	OperationNodeLoadGet     = client.OpNodeLoadGet
-	OperationNodeMemoryGet   = client.OpNodeMemoryGet
-	OperationNodeDiskGet     = client.OpNodeDiskGet
-	OperationNodeOSGet       = client.OpNodeOSGet
+	OperationNodeUptimeGet      = client.OpNodeUptimeGet
+	OperationNodeLoadGet        = client.OpNodeLoadGet
+	OperationNodeMemoryGet      = client.OpNodeMemoryGet
+	OperationNodeDiskGet        = client.OpNodeDiskGet
+	OperationNodeOSGet          = client.OpNodeOSGet
 )
 
 // Network operations.
