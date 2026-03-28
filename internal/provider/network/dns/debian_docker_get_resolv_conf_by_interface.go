@@ -1,0 +1,75 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package dns
+
+import (
+	"bufio"
+	"fmt"
+	"strings"
+)
+
+const resolvConfPath = "/etc/resolv.conf"
+
+// GetResolvConfByInterface reads DNS configuration from /etc/resolv.conf.
+// The interfaceName parameter is accepted but ignored — containers have
+// a single global DNS configuration managed by the container runtime.
+func (d *DebianDocker) GetResolvConfByInterface(
+	_ string,
+) (*GetResult, error) {
+	f, err := d.fs.Open(resolvConfPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s: %w", resolvConfPath, err)
+	}
+	defer f.Close()
+
+	result := &GetResult{}
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+
+		switch fields[0] {
+		case "nameserver":
+			result.DNSServers = append(result.DNSServers, fields[1])
+		case "search":
+			result.SearchDomains = fields[1:]
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", resolvConfPath, err)
+	}
+
+	if len(result.SearchDomains) == 0 {
+		result.SearchDomains = []string{"."}
+	}
+
+	return result, nil
+}
