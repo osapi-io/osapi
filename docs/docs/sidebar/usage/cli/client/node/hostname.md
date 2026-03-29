@@ -35,6 +35,17 @@ $ osapi client node hostname get --target _all
   server2   skipped  unsupported platform
 ```
 
+When a single host does not support the operation:
+
+```bash
+$ osapi client node hostname get --target darwin-host
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME     STATUS   ERROR
+  darwin-host  skipped  host: operation not supported on this OS family
+```
+
 Target by label to query a group of servers:
 
 ```bash
@@ -52,6 +63,17 @@ $ osapi client node hostname update --name web-01
 
   HOSTNAME  STATUS  CHANGED
   web-01    ok      true
+```
+
+When the target host does not support the operation:
+
+```bash
+$ osapi client node hostname update --name web-01 --target darwin-host
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME     STATUS   CHANGED  ERROR
+  darwin-host  skipped           host: operation not supported on this OS family
 ```
 
 When targeting all hosts:

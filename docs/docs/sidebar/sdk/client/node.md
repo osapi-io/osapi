@@ -116,8 +116,9 @@ of three values:
 | `failed`  | Operation failed with an error                      |
 | `skipped` | Operation not supported on this OS family or target |
 
-In broadcast responses, any host that does not support the operation (e.g., a
-Darwin host in a Linux fleet) appears as `skipped` with an error description.
+Any host that does not support the operation (e.g., a Darwin host in a Linux
+fleet) appears as `skipped` with an error description. This applies to both
+single-target and broadcast responses — the response shape is identical.
 
 ## Permissions
 
