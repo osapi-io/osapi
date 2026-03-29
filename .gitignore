@@ -4,6 +4,7 @@ configs/osapi.*.yaml
 !configs/osapi.dev.yaml
 database.db*
 dist/
+docs/gen/
 docs/node_modules/
 docs/bun.lock
 .nats/jetstream/
