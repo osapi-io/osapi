@@ -221,7 +221,10 @@ func (d *Debian) Update(
 	if entry.Object == "" {
 		existing := d.buildEntryFromState(ctx, entry.Name, filePath, "")
 		if existing == nil {
-			return nil, fmt.Errorf("update cron entry: failed to read existing state for %q", entry.Name)
+			return nil, fmt.Errorf(
+				"update cron entry: failed to read existing state for %q",
+				entry.Name,
+			)
 		}
 		entry.Object = existing.Object
 	}
