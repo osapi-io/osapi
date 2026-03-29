@@ -217,6 +217,15 @@ func (d *Debian) Update(
 		return nil, fmt.Errorf("cron entry %q does not exist", entry.Name)
 	}
 
+	// If no new object was specified, preserve the current one.
+	if entry.Object == "" {
+		existing := d.buildEntryFromState(ctx, entry.Name, filePath, "")
+		if existing == nil {
+			return nil, fmt.Errorf("update cron entry: failed to read existing state for %q", entry.Name)
+		}
+		entry.Object = existing.Object
+	}
+
 	result, err := d.fileDeployer.Deploy(ctx, file.DeployRequest{
 		ObjectName:  entry.Object,
 		Path:        filePath,
