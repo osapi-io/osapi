@@ -5,7 +5,7 @@ sidebar_position: 1
 # SDK Development Guidelines
 
 Rules for developing the OSAPI Go SDK (`pkg/sdk/`). These apply to the client
-library, orchestrator engine, and any new SDK packages.
+library and any new SDK packages.
 
 ## Package Structure
 
@@ -19,15 +19,13 @@ pkg/sdk/
     node.go        # NodeService methods
     node_types.go  # SDK result types + gen→SDK conversions
     ...            # One file per domain service
-  orchestrator/    # DAG-based task runner
-    plan.go        # Plan, TaskFunc, TaskFuncWithResults
-    task.go        # Task with deps, guards, error strategies
-    runner.go      # DAG levelization and execution
-    result.go      # Result, HostResult, TaskResult, Report
-    bridge.go      # CollectionResult, StructToMap helpers
-    options.go     # Hooks, error strategies, plan options
   platform/        # Platform detection utilities
 ```
+
+The orchestrator engine previously lived here but has been moved to
+[osapi-orchestrator][]'s `internal/engine/` package.
+
+[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 
 ## Never Expose Generated Types
 
@@ -121,8 +119,7 @@ type Response[T any] struct {
 ```
 
 - `Data` — the typed SDK result
-- `RawJSON()` — the raw HTTP response body for CLI `--json` mode and
-  orchestrator `Result.Data` population
+- `RawJSON()` — the raw HTTP response body for CLI `--json` mode
 
 ## Error Handling
 
@@ -169,46 +166,6 @@ if resp.JSON200 == nil {
 }
 ```
 
-## Orchestrator Bridge Helpers
-
-The orchestrator package provides two bridge helpers for converting SDK client
-responses into orchestrator `Result` values. These exist so consumers like
-`osapi-orchestrator` don't need to reimplement them.
-
-### CollectionResult
-
-Converts a `Collection[T]` response into an orchestrator `Result` with per-host
-details:
-
-```go
-return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
-    func(r client.HostnameResult) orchestrator.HostResult {
-        return orchestrator.HostResult{
-            Hostname: r.Hostname,
-            Changed:  r.Changed,
-            Error:    r.Error,
-        }
-    },
-), nil
-```
-
-- First arg: the `Collection[T]` from `resp.Data`
-- Second arg: `resp.RawJSON()` to populate `Result.Data` (or `nil` to skip)
-- Third arg: mapper function converting each result to `HostResult`
-
-### StructToMap
-
-Converts any struct with JSON tags to `map[string]any`. Use for non-collection
-responses:
-
-```go
-return &orchestrator.Result{
-    JobID:   resp.Data.JobID,
-    Changed: resp.Data.Changed,
-    Data:    orchestrator.StructToMap(resp.Data),
-}, nil
-```
-
 ## Adding a New Service
 
 When adding a new domain service to the SDK client:
@@ -237,7 +194,6 @@ When adding a new domain service to the SDK client:
 SDK consumers (like `osapi-orchestrator`) should:
 
 - Use SDK `client.*` types directly — do not redefine them locally
-- Use `CollectionResult` and `StructToMap` from the orchestrator bridge
 - Use `Collection.First()` instead of `Results[0]`
 - Never import `gen` — if you need to, the SDK is missing a wrapper
 - Never panic on SDK responses — always propagate errors
