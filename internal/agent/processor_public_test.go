@@ -45,6 +45,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
@@ -77,6 +78,10 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 
 	// Create mock providers
 	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
+	hostMock.EXPECT().
+		UpdateHostname("success-host").
+		Return(&nodeHost.UpdateHostnameResult{Changed: true}, nil).
+		AnyTimes()
 	hostMock.EXPECT().
 		UpdateHostname(gomock.Any()).
 		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
@@ -554,6 +559,18 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 			data:        `{"hostname": "new-host"}`,
 			expectError: true,
 			errorMsg:    "operation not supported",
+		},
+		{
+			name:      "update hostname succeeds",
+			operation: "hostname.update",
+			data:      `{"hostname": "success-host"}`,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Equal("success-host", response["hostname"])
+				s.Equal(true, response["changed"])
+			},
 		},
 		{
 			name:        "update hostname with invalid data",

@@ -192,8 +192,19 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 		{
 			name: "when changed and errors both present shows all columns",
 			results: []cli.ResultRow{
-				{Hostname: "web-01", Status: "ok", Changed: boolPtr(true), Fields: []string{"val1"}},
-				{Hostname: "web-02", Status: "failed", Changed: boolPtr(false), Error: &errMsg, Fields: []string{""}},
+				{
+					Hostname: "web-01",
+					Status:   "ok",
+					Changed:  boolPtr(true),
+					Fields:   []string{"val1"},
+				},
+				{
+					Hostname: "web-02",
+					Status:   "failed",
+					Changed:  boolPtr(false),
+					Error:    &errMsg,
+					Fields:   []string{""},
+				},
 			},
 			fieldHeaders: []string{"DATA"},
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "ERROR", "CHANGED", "DATA"},
