@@ -133,57 +133,15 @@ osapi token generate -r write -u user@example.com \
 
 ## Orchestrator
 
-The [orchestrator](../sdk/orchestrator/orchestrator.md) SDK can compose
-container operations as a DAG using `TaskFunc`. Pull, create, exec, inspect, and
-cleanup steps chain together with dependencies and guards:
+Container operations can be composed as a DAG using [osapi-orchestrator][]. See
+the
+[Docker operations](https://github.com/osapi-io/osapi-orchestrator/blob/main/docs/operations/docker/)
+and the
+[docker.go example](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
+for a complete container lifecycle workflow (pull, create, start, exec, inspect,
+stop, remove, image-remove).
 
-```go
-plan := orchestrator.NewPlan(client, orchestrator.OnError(orchestrator.Continue))
-
-pull := plan.TaskFunc("pull-image",
-    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Docker.Pull(ctx, "_any", gen.DockerPullRequest{
-            Image: "nginx:alpine",
-        })
-        if err != nil {
-            return nil, err
-        }
-        return &orchestrator.Result{Changed: true}, nil
-    },
-)
-
-create := plan.TaskFunc("create-container",
-    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        autoStart := true
-        _, err := c.Docker.Create(ctx, "_any", gen.DockerCreateRequest{
-            Image:     "nginx:alpine",
-            Name:      ptr("web-server"),
-            AutoStart: &autoStart,
-        })
-        if err != nil {
-            return nil, err
-        }
-        return &orchestrator.Result{Changed: true}, nil
-    },
-)
-create.DependsOn(pull)
-
-exec := plan.TaskFunc("check-config",
-    func(ctx context.Context, c *client.Client) (*orchestrator.Result, error) {
-        _, err := c.Docker.Exec(ctx, "_any", "web-server",
-            gen.DockerExecRequest{Command: []string{"nginx", "-t"}})
-        if err != nil {
-            return nil, err
-        }
-        return &orchestrator.Result{Changed: true}, nil
-    },
-)
-exec.DependsOn(create)
-```
-
-See
-[`examples/sdk/orchestrator/features/container-targeting.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/features/container-targeting.go)
-for a complete working example.
+[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 
 ## Related
 

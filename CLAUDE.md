@@ -42,7 +42,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
-- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library, `orchestrator/` DAG runner). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
+- **`pkg/sdk/`** - Go SDK for programmatic REST API access (`client/` client library). See @docs/docs/sidebar/sdk/guidelines.md for SDK development rules
 - Shared `nats-client` and `nats-server` are sibling repos linked via `replace` in `go.mod`
 - **`github/`** - Temporary GitHub org config tooling (`repos.json` for declarative repo settings, `sync.sh` for drift detection via `gh` CLI). Untracked and intended to move to its own repo.
 
