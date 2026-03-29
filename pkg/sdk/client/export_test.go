@@ -169,6 +169,14 @@ func ExportDNSUpdateCollectionFromGen(
 	return dnsUpdateCollectionFromGen(input)
 }
 
+// ExportHostnameUpdateCollectionFromGen exposes the private
+// hostnameUpdateCollectionFromGen for testing.
+func ExportHostnameUpdateCollectionFromGen(
+	input *gen.HostnameUpdateCollectionResponse,
+) Collection[HostnameUpdateResult] {
+	return hostnameUpdateCollectionFromGen(input)
+}
+
 // ExportPingCollectionFromGen exposes the private pingCollectionFromGen for
 // testing.
 func ExportPingCollectionFromGen(

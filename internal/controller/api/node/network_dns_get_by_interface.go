@@ -71,6 +71,21 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeNetworkDNSByInterface200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DNSConfigResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.DNSConfigResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var dnsConfig dns.GetResult
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &dnsConfig)
@@ -86,6 +101,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		Results: []gen.DNSConfigResponse{
 			{
 				Hostname:      rawResp.Hostname,
+				Status:        gen.DNSConfigResponseStatusOk,
 				Servers:       &servers,
 				SearchDomains: &searchDomains,
 				Changed:       &changed,
@@ -101,7 +117,7 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 	iface string,
 ) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error) {
 	data := map[string]any{"interface": iface}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"network",
@@ -115,33 +131,39 @@ func (s *Node) getNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	changed := false
-	var responses []gen.DNSConfigResponse
-	for host, resp := range results {
-		var cfg dns.GetResult
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &cfg)
-		}
-		servers := cfg.DNSServers
-		searchDomains := cfg.SearchDomains
-		responses = append(responses, gen.DNSConfigResponse{
-			Hostname:      host,
-			Servers:       &servers,
-			SearchDomains: &searchDomains,
-			Changed:       &changed,
-		})
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DNSConfigResponse{
+	var apiResponses []gen.DNSConfigResponse
+	for host, resp := range responses {
+		item := gen.DNSConfigResponse{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DNSConfigResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DNSConfigResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DNSConfigResponseStatusOk
+			var cfg dns.GetResult
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &cfg)
+			}
+			servers := cfg.DNSServers
+			searchDomains := cfg.SearchDomains
+			changed := false
+			item.Servers = &servers
+			item.SearchDomains = &searchDomains
+			item.Changed = &changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeNetworkDNSByInterface200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }

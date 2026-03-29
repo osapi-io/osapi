@@ -94,6 +94,21 @@ func (s *Container) PostNodeContainerDockerExec(
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDockerExec202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerExecResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerExecResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	item := dockerExecItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
@@ -122,6 +137,7 @@ func dockerExecItemFromResponse(
 
 	return gen.DockerExecResultItem{
 		Hostname: resp.Hostname,
+		Status:   gen.DockerExecResultItemStatusOk,
 		Stdout:   &stdout,
 		Stderr:   &stderr,
 		ExitCode: &exitCode,
@@ -147,7 +163,7 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 		Env:        data.Env,
 		WorkingDir: data.WorkingDir,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -159,21 +175,34 @@ func (s *Container) postNodeContainerDockerExecBroadcast(
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerExecResultItem
-	for _, resp := range results {
-		responses = append(responses, dockerExecItemFromResponse(resp))
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DockerExecResultItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+	var items []gen.DockerExecResultItem
+	for host, resp := range responses {
+		item := gen.DockerExecResultItem{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerExecResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerExecResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerExecResultItemStatusOk
+			ok := dockerExecItemFromResponse(resp)
+			item.Stdout = ok.Stdout
+			item.Stderr = ok.Stderr
+			item.ExitCode = ok.ExitCode
+			item.Changed = resp.Changed
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerExec202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

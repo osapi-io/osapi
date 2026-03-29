@@ -121,6 +121,7 @@ workers = {{ .Facts.cpu_count }}
 				func(r client.FileDeployResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -146,6 +147,7 @@ workers = {{ .Facts.cpu_count }}
 				func(r client.FileStatusResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}

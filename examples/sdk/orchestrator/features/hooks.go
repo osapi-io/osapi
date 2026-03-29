@@ -137,6 +137,7 @@ func main() {
 				func(r client.HostnameResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -161,6 +162,7 @@ func main() {
 				func(r client.DiskResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}

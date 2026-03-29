@@ -9,6 +9,7 @@ $ osapi client node file undeploy \
     --path /etc/app/app.conf
 
   Hostname: server1
+  Status:   ok
   Changed:  true
 ```
 

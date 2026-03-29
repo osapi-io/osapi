@@ -71,6 +71,7 @@ type FileChanged struct {
 // single host in a collection response.
 type FileDeployResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
@@ -79,6 +80,7 @@ type FileDeployResult struct {
 // single host in a collection response.
 type FileUndeployResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
@@ -159,6 +161,7 @@ func fileDeployCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, FileDeployResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		})
@@ -181,6 +184,7 @@ func fileUndeployCollectionFromGen(
 	for _, r := range g.Results {
 		results = append(results, FileUndeployResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		})

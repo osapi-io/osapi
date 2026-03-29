@@ -266,7 +266,6 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
 							"agent2": {Hostname: "agent2", Changed: &changedFalse},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -300,8 +299,12 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
+							"agent2": {
+								Status:   job.StatusFailed,
+								Error:    "deploy failed",
+								Hostname: "agent2",
+							},
 						},
-						map[string]string{"agent2": "deploy failed"},
 						nil,
 					)
 			},
@@ -318,6 +321,88 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 					}
 				}
 				s.Equal(1, errCount)
+			},
+		},
+		{
+			name: "when broadcast with skipped host",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.FileDeployResultStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.FileDeployResultStatusFailed, r.Results[0].Status)
 			},
 		},
 		{
@@ -339,7 +424,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 						job.OperationFileDeployExecute,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)
@@ -370,6 +455,42 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeploy() {
 			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileDeploy500JSONResponse)
 				s.True(ok)
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.PostNodeFileDeployRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeFileDeployJSONRequestBody{
+					ObjectName:  "nginx.conf",
+					Path:        "/etc/nginx/nginx.conf",
+					ContentType: gen.Raw,
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"file",
+						job.OperationFileDeployExecute,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeFileDeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileDeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.FileDeployResultStatusSkipped, r.Results[0].Status)
 			},
 		},
 	}

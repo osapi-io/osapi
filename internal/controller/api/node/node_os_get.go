@@ -66,12 +66,28 @@ func (s *Node) GetNodeOS(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeOS200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.OSInfoResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.OSInfoResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var osInfo host.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &osInfo)
 	}
 
 	resp := buildOSInfoResultItem(rawResp.Hostname, &osInfo)
+	resp.Status = gen.OSInfoResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeOS200JSONResponse{
@@ -85,7 +101,7 @@ func (s *Node) getNodeOSBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeOSResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -99,26 +115,37 @@ func (s *Node) getNodeOSBroadcast(
 		}, nil
 	}
 
-	var responses []gen.OSInfoResultItem
-	for hostname, resp := range results {
-		var osInfo host.Result
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &osInfo)
-		}
-		responses = append(responses, *buildOSInfoResultItem(hostname, &osInfo))
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.OSInfoResultItem{
+	var apiResponses []gen.OSInfoResultItem
+	for hostname, resp := range responses {
+		item := gen.OSInfoResultItem{
 			Hostname: hostname,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.OSInfoResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.OSInfoResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.OSInfoResultItemStatusOk
+			var osInfo host.Result
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &osInfo)
+			}
+			built := buildOSInfoResultItem(hostname, &osInfo)
+			item.OsInfo = built.OsInfo
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeOS200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

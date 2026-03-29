@@ -78,6 +78,16 @@ func main() {
 		fmt.Printf("Hostname: %s\n", r.Hostname)
 	}
 
+	// Update hostname.
+	setResp, err := c.Node.UpdateHostname(ctx, target, "new-hostname")
+	if err != nil {
+		log.Fatalf("set hostname: %v", err)
+	}
+
+	for _, r := range setResp.Data.Results {
+		fmt.Printf("Set hostname (%s): changed=%v\n", r.Hostname, r.Changed)
+	}
+
 	// Disk usage
 	disk, err := c.Node.Disk(ctx, target)
 	if err != nil {

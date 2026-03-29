@@ -296,6 +296,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "gen/api/put-node-hostname",
+          label: "Update node hostname",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
           id: "gen/api/get-node-disk",
           label: "Retrieve disk usage",
           className: "api-method get",

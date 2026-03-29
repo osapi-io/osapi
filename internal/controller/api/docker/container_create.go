@@ -79,6 +79,21 @@ func (s *Container) PostNodeContainerDocker(
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDocker202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerResponse{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var containerResp struct {
 		ID string `json:"id"`
 	}
@@ -95,6 +110,7 @@ func (s *Container) PostNodeContainerDocker(
 		Results: []gen.DockerResponse{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerResponseStatusOk,
 				Id:       stringPtrOrNil(id),
 				Image:    &data.Image,
 				Changed:  changed,
@@ -109,7 +125,7 @@ func (s *Container) postNodeContainerDockerCreateBroadcast(
 	target string,
 	data *job.DockerCreateData,
 ) (gen.PostNodeContainerDockerResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -121,33 +137,39 @@ func (s *Container) postNodeContainerDockerCreateBroadcast(
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerResponse
-	for _, resp := range results {
-		var containerResp struct {
-			ID string `json:"id"`
+	var items []gen.DockerResponse
+	for host, resp := range responses {
+		item := gen.DockerResponse{
+			Hostname: host,
 		}
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &containerResp)
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerResponseStatusOk
+			var containerResp struct {
+				ID string `json:"id"`
+			}
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &containerResp)
+			}
+			id := containerResp.ID
+			item.Id = stringPtrOrNil(id)
+			item.Image = &data.Image
+			item.Changed = resp.Changed
 		}
-		id := containerResp.ID
-		responses = append(responses, gen.DockerResponse{
-			Hostname: resp.Hostname,
-			Id:       stringPtrOrNil(id),
-			Image:    &data.Image,
-			Changed:  resp.Changed,
-		})
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DockerResponse{
-			Hostname: hostname,
-			Error:    &e,
-		})
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDocker202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

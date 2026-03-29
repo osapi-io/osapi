@@ -21,46 +21,16 @@
 package dns_test
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	execMocks "github.com/retr0h/osapi/internal/exec/mocks"
+	"github.com/retr0h/osapi/internal/provider"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
-)
-
-const (
-	darwinHardwarePorts = `Hardware Port: Wi-Fi
-Device: en0
-Ethernet Address: a4:83:e7:1a:2b:3c
-
-Hardware Port: Thunderbolt Ethernet
-Device: en1
-Ethernet Address: 00:11:22:33:44:55
-`
-	darwinScutilExisting = `
-DNS configuration
-
-resolver #1
-  nameserver[0] : 192.168.1.1
-  nameserver[1] : 8.8.8.8
-  search domain[0] : old.example.com
-  if_index : 6 (en0)
-`
-	darwinScutilSameConfig = `
-DNS configuration
-
-resolver #1
-  nameserver[0] : 8.8.8.8
-  nameserver[1] : 9.9.9.9
-  search domain[0] : example.com
-  if_index : 6 (en0)
-`
 )
 
 type DarwinUpdateResolvConfByInterfacePublicTestSuite struct {
@@ -86,263 +56,31 @@ func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TearDownTest() {
 
 func (suite *DarwinUpdateResolvConfByInterfacePublicTestSuite) TestUpdateResolvConfByInterface() {
 	tests := []struct {
-		name          string
-		setupMock     func() *execMocks.MockManager
-		servers       []string
-		searchDomains []string
-		interfaceName string
-		want          *dns.UpdateResult
-		wantErr       bool
-		wantErrType   error
+		name string
 	}{
 		{
-			name: "when update succeeds with new servers and domains",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setdnsservers", "Wi-Fi", "8.8.8.8", "9.9.9.9"}).
-					Return("", nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setsearchdomains", "Wi-Fi", "example.com"}).
-					Return("", nil)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8", "9.9.9.9"},
-			searchDomains: []string{"example.com"},
-			interfaceName: "en0",
-			want:          &dns.UpdateResult{Changed: true},
-		},
-		{
-			name: "when configuration unchanged returns no-op",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilSameConfig, nil)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8", "9.9.9.9"},
-			searchDomains: []string{"example.com"},
-			interfaceName: "en0",
-			want:          &dns.UpdateResult{Changed: false},
-		},
-		{
-			name: "when no servers or domains provided",
-			setupMock: func() *execMocks.MockManager {
-				return execMocks.NewPlainMockManager(suite.ctrl)
-			},
-			servers:       []string{},
-			searchDomains: []string{},
-			interfaceName: "en0",
-			wantErr:       true,
-			wantErrType:   fmt.Errorf("no DNS servers or search domains provided"),
-		},
-		{
-			name: "when scutil errors",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return("", assert.AnError)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{},
-			interfaceName: "en0",
-			wantErr:       true,
-			wantErrType:   assert.AnError,
-		},
-		{
-			name: "when listallhardwareports errors",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return("", assert.AnError)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{},
-			interfaceName: "en0",
-			wantErr:       true,
-			wantErrType:   fmt.Errorf("failed to list hardware ports"),
-		},
-		{
-			name: "when interface not found in scutil",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{},
-			interfaceName: "en99",
-			wantErr:       true,
-			wantErrType:   fmt.Errorf("does not exist"),
-		},
-		{
-			name: "when interface not found in hardware ports",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				// Interface exists in scutil with different config
-				scutilOutput := `
-DNS configuration
-
-resolver #1
-  nameserver[0] : 10.0.0.1
-  if_index : 20 (utun5)
-`
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(scutilOutput, nil)
-
-				// But not in hardware ports
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{},
-			interfaceName: "utun5",
-			wantErr:       true,
-			wantErrType:   fmt.Errorf("no network service found for interface"),
-		},
-		{
-			name: "when setdnsservers errors",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setdnsservers", "Wi-Fi", "8.8.8.8"}).
-					Return("", assert.AnError)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{},
-			interfaceName: "en0",
-			wantErr:       true,
-			wantErrType:   assert.AnError,
-		},
-		{
-			name: "when setsearchdomains errors",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setdnsservers", "Wi-Fi", "8.8.8.8"}).
-					Return("", nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setsearchdomains", "Wi-Fi", "new.example.com"}).
-					Return("", assert.AnError)
-
-				return mock
-			},
-			servers:       []string{"8.8.8.8"},
-			searchDomains: []string{"new.example.com"},
-			interfaceName: "en0",
-			wantErr:       true,
-			wantErrType:   assert.AnError,
-		},
-		{
-			name: "when preserving existing servers when only domains specified",
-			setupMock: func() *execMocks.MockManager {
-				mock := execMocks.NewPlainMockManager(suite.ctrl)
-
-				mock.EXPECT().
-					RunCmd("scutil", []string{"--dns"}).
-					Return(darwinScutilExisting, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-listallhardwareports"}).
-					Return(darwinHardwarePorts, nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setdnsservers", "Wi-Fi", "192.168.1.1", "8.8.8.8"}).
-					Return("", nil)
-
-				mock.EXPECT().
-					RunCmd("networksetup", []string{"-setsearchdomains", "Wi-Fi", "new.example.com"}).
-					Return("", nil)
-
-				return mock
-			},
-			servers:       []string{},
-			searchDomains: []string{"new.example.com"},
-			interfaceName: "en0",
-			want:          &dns.UpdateResult{Changed: true},
+			name: "returns ErrUnsupported on Darwin",
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			mock := tc.setupMock()
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			mock := execMocks.NewPlainMockManager(suite.ctrl)
 
 			darwin := dns.NewDarwinProvider(suite.logger, mock)
-			got, err := darwin.UpdateResolvConfByInterface(
-				tc.servers,
-				tc.searchDomains,
-				tc.interfaceName,
+			result, err := darwin.UpdateResolvConfByInterface(
+				[]string{"8.8.8.8"},
+				[]string{"example.com"},
+				"en0",
 			)
 
-			if !tc.wantErr {
-				suite.NoError(err)
-				suite.Equal(tc.want, got)
-			} else {
-				suite.Error(err)
-				suite.Contains(err.Error(), tc.wantErrType.Error())
-			}
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
 		})
 	}
 }
 
-// In order for `go test` to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run.
 func TestDarwinUpdateResolvConfByInterfacePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(DarwinUpdateResolvConfByInterfacePublicTestSuite))
 }

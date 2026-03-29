@@ -4,10 +4,9 @@ sidebar_position: 1
 
 # Node Management
 
-OSAPI can query a variety of system-level information from managed nodes. All
-node operations are read-only today and run through the
-[job system](job-system.md), so the API server never needs direct access to the
-host.
+OSAPI can query and update system-level information on managed nodes. All node
+operations run through the [job system](job-system.md), so the API server never
+needs direct access to the host.
 
 ## Agent vs. Node
 
@@ -31,7 +30,7 @@ OSAPI separates agent fleet discovery from node system queries:
 
 | Resource                        | Description                                                     |
 | ------------------------------- | --------------------------------------------------------------- |
-| Hostname                        | System hostname                                                 |
+| Hostname                        | Get or update the system hostname                               |
 | Status                          | Uptime, OS name and version, kernel, platform info              |
 | Disk                            | Per-mount usage (total, used, free, percent)                    |
 | Memory                          | RAM and swap usage (total, used, free, percent)                 |
@@ -64,9 +63,10 @@ NATS, agent, and authentication settings.
 
 ## Permissions
 
-Node job endpoints require the `node:read` permission. Agent fleet discovery
-endpoints require the `agent:read` permission. The built-in `admin`, `write`,
-and `read` roles all include both permissions.
+Node read endpoints require `node:read`. Hostname update requires `node:write`.
+Agent fleet discovery endpoints require `agent:read`. The built-in `admin` and
+`write` roles include `node:read` and `node:write`. The `read` role includes
+`node:read` only.
 
 ## Related
 

@@ -61,12 +61,28 @@ func (s *Node) GetNodeStatus(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeStatus200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.NodeStatusResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.NodeStatusResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var status job.NodeStatusResponse
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &status)
 	}
 
 	resp := buildNodeStatusResponse(&status)
+	resp.Status = gen.NodeStatusResponseStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeStatus200JSONResponse{
@@ -80,7 +96,7 @@ func (s *Node) getNodeStatusBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeStatusResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -94,29 +110,45 @@ func (s *Node) getNodeStatusBroadcast(
 		}, nil
 	}
 
-	var responses []gen.NodeStatusResponse
-	for host, resp := range results {
-		var status job.NodeStatusResponse
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &status)
-		}
-		if status.Hostname == "" {
-			status.Hostname = host
-		}
-		responses = append(responses, *buildNodeStatusResponse(&status))
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.NodeStatusResponse{
+	var apiResponses []gen.NodeStatusResponse
+	for host, resp := range responses {
+		item := gen.NodeStatusResponse{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.NodeStatusResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.NodeStatusResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.NodeStatusResponseStatusOk
+			var status job.NodeStatusResponse
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &status)
+			}
+			if status.Hostname == "" {
+				status.Hostname = host
+			}
+			built := buildNodeStatusResponse(&status)
+			item.Hostname = built.Hostname
+			item.Uptime = built.Uptime
+			item.Disks = built.Disks
+			item.LoadAverage = built.LoadAverage
+			item.OsInfo = built.OsInfo
+			item.Memory = built.Memory
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeStatus200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

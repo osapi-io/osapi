@@ -78,6 +78,7 @@ func main() {
 				func(r client.CronMutationResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -106,6 +107,7 @@ func main() {
 				func(r client.CronMutationResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}

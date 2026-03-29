@@ -426,6 +426,10 @@ components:
         hostname:
           type: string
           description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         name:
           type: string
           description: Cron entry name.
@@ -457,6 +461,9 @@ components:
         error:
           type: string
           description: Error message if the agent failed to retrieve this entry.
+      required:
+        - hostname
+        - status
 
     CronCollectionResponse:
       type: object
@@ -496,6 +503,10 @@ components:
         hostname:
           type: string
           description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         name:
           type: string
           description: Cron entry name.
@@ -505,6 +516,9 @@ components:
         error:
           type: string
           description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
 
     CronCreateResponse:
       type: object

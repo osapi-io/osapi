@@ -200,6 +200,41 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "server1",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Status:   job.StatusSkipped,
+							Hostname: "server1",
+							Error:    "cron: operation not supported on this OS family",
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Equal(gen.CronEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.GetNodeScheduleCronRequestObject{
 				Hostname: "server1",
@@ -254,7 +289,6 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 								),
 							},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -290,10 +324,16 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 									`[{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}]`,
 								),
 							},
-						},
-						map[string]string{
-							"server2": "cron: operation not supported on this OS family",
-							"server3": "failed",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "cron: operation not supported on this OS family",
+								Hostname: "server2",
+							},
+							"server3": {
+								Status:   job.StatusSkipped,
+								Error:    "cron: operation not supported on this OS family",
+								Hostname: "server3",
+							},
 						},
 						nil,
 					)
@@ -306,8 +346,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 
 				byHost := make(map[string]*gen.CronEntry)
 				for i := range r.Results {
-					if r.Results[i].Hostname != nil {
-						byHost[*r.Results[i].Hostname] = &r.Results[i]
+					if r.Results[i].Hostname != "" {
+						byHost[r.Results[i].Hostname] = &r.Results[i]
 					}
 				}
 
@@ -319,7 +359,8 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 				s.Contains(*byHost["server2"].Error, "not supported")
 
 				s.Require().Contains(byHost, "server3")
-				s.Equal("failed", *byHost["server3"].Error)
+				s.Equal(gen.CronEntryStatusSkipped, byHost["server3"].Status)
+				s.Contains(*byHost["server3"].Error, "not supported")
 			},
 		},
 		{
@@ -339,7 +380,6 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -364,7 +404,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 						job.OperationCronList,
 						nil,
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCron500JSONResponse)

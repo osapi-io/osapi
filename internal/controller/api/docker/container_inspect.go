@@ -70,6 +70,21 @@ func (s *Container) GetNodeContainerDockerByID(
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeContainerDockerByID200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerDetailResponse{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerDetailResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	item := dockerDetailItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
@@ -126,6 +141,7 @@ func dockerDetailItemFromResponse(
 
 	return gen.DockerDetailResponse{
 		Hostname:        resp.Hostname,
+		Status:          gen.DockerDetailResponseStatusOk,
 		Id:              stringPtrOrNil(detail.ID),
 		Name:            stringPtrOrNil(detail.Name),
 		Image:           stringPtrOrNil(detail.Image),
@@ -145,7 +161,7 @@ func (s *Container) getNodeContainerDockerInspectBroadcast(
 	target string,
 	id string,
 ) (gen.GetNodeContainerDockerByIDResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -157,22 +173,34 @@ func (s *Container) getNodeContainerDockerInspectBroadcast(
 		return gen.GetNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerDetailResponse
-	for _, resp := range results {
-		responses = append(responses, dockerDetailItemFromResponse(resp))
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DockerDetailResponse{
-			Hostname: hostname,
-			Error:    &e,
-		})
+	var items []gen.DockerDetailResponse
+	for host, resp := range responses {
+		switch resp.Status {
+		case job.StatusFailed:
+			e := resp.Error
+			items = append(items, gen.DockerDetailResponse{
+				Hostname: host,
+				Status:   gen.DockerDetailResponseStatusFailed,
+				Error:    &e,
+			})
+		case job.StatusSkipped:
+			e := resp.Error
+			items = append(items, gen.DockerDetailResponse{
+				Hostname: host,
+				Status:   gen.DockerDetailResponseStatusSkipped,
+				Error:    &e,
+			})
+		default:
+			item := dockerDetailItemFromResponse(resp)
+			item.Status = gen.DockerDetailResponseStatusOk
+			items = append(items, item)
+		}
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeContainerDockerByID200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }
 

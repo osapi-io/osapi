@@ -230,6 +230,40 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: intPtr(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.CommandResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
 			name: "broadcast all success",
 			request: gen.PostNodeCommandShellRequestObject{
 				Hostname: "_all",
@@ -255,7 +289,6 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -286,9 +319,11 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-						},
-						map[string]string{
-							"server2": "shell not available",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "shell not available",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -309,6 +344,86 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 			},
 		},
 		{
+			name: "broadcast with skipped host",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: intPtr(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.CommandResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "broadcast with failed host",
+			request: gen.PostNodeCommandShellRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeCommandShellJSONRequestBody{
+					Command: "echo hello",
+					Timeout: intPtr(30),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"command",
+						job.OperationCommandShellExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.CommandResultItemStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name: "broadcast all error",
 			request: gen.PostNodeCommandShellRequestObject{
 				Hostname: "_all",
@@ -326,7 +441,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						job.OperationCommandShellExecute,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
 				_, ok := resp.(gen.PostNodeCommandShell500JSONResponse)

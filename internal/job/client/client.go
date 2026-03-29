@@ -119,7 +119,7 @@ func (c *Client) Query(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+	if resp.Status == job.StatusFailed {
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -134,10 +134,10 @@ func (c *Client) QueryBroadcast(
 	category string,
 	operation job.OperationType,
 	data any,
-) (string, map[string]*job.Response, map[string]string, error) {
+) (string, map[string]*job.Response, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
+		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
 
 	req := &job.Request{
@@ -150,24 +150,10 @@ func (c *Client) QueryBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*job.Response)
-	errs := make(map[string]string)
-	for hostname, resp := range responses {
-		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			errMsg := resp.Error
-			if errMsg == "" {
-				errMsg = string(resp.Status)
-			}
-			errs[hostname] = errMsg
-		} else {
-			results[hostname] = resp
-		}
-	}
-
-	return jobID, results, errs, nil
+	return jobID, responses, nil
 }
 
 // Modify publishes a modify job to a single target and waits for the response.
@@ -196,7 +182,7 @@ func (c *Client) Modify(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+	if resp.Status == job.StatusFailed {
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -211,10 +197,10 @@ func (c *Client) ModifyBroadcast(
 	category string,
 	operation job.OperationType,
 	data any,
-) (string, map[string]*job.Response, map[string]string, error) {
+) (string, map[string]*job.Response, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("marshal data: %w", err)
+		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
 
 	req := &job.Request{
@@ -227,24 +213,10 @@ func (c *Client) ModifyBroadcast(
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, target)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
+		return "", nil, fmt.Errorf("failed to collect broadcast responses: %w", err)
 	}
 
-	results := make(map[string]*job.Response)
-	errs := make(map[string]string)
-	for hostname, resp := range responses {
-		if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
-			errMsg := resp.Error
-			if errMsg == "" {
-				errMsg = string(resp.Status)
-			}
-			errs[hostname] = errMsg
-		} else {
-			results[hostname] = resp
-		}
-	}
-
-	return jobID, results, errs, nil
+	return jobID, responses, nil
 }
 
 // publishAndWait stores a job in KV, publishes a notification, and waits for the agent response.

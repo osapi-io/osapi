@@ -67,6 +67,21 @@ func (s *Container) PostNodeContainerDockerPull(
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDockerPull202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerPullResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerPullResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	item := dockerPullItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
@@ -91,6 +106,7 @@ func dockerPullItemFromResponse(
 
 	return gen.DockerPullResultItem{
 		Hostname: resp.Hostname,
+		Status:   gen.DockerPullResultItemStatusOk,
 		ImageId:  stringPtrOrNil(pullResult.ImageID),
 		Tag:      stringPtrOrNil(pullResult.Tag),
 		Size:     int64PtrOrNil(pullResult.Size),
@@ -104,7 +120,7 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 	target string,
 	data *job.DockerPullData,
 ) (gen.PostNodeContainerDockerPullResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -116,22 +132,35 @@ func (s *Container) postNodeContainerDockerPullBroadcast(
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var responses []gen.DockerPullResultItem
-	for _, resp := range results {
-		responses = append(responses, dockerPullItemFromResponse(resp))
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DockerPullResultItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+	var items []gen.DockerPullResultItem
+	for host, resp := range responses {
+		item := gen.DockerPullResultItem{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerPullResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerPullResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerPullResultItemStatusOk
+			ok := dockerPullItemFromResponse(resp)
+			item.ImageId = ok.ImageId
+			item.Tag = ok.Tag
+			item.Size = ok.Size
+			item.Changed = resp.Changed
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeContainerDockerPull202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }
 

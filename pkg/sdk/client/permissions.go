@@ -30,6 +30,7 @@ const (
 	PermAgentRead      Permission = "agent:read"
 	PermAgentWrite     Permission = "agent:write"
 	PermNodeRead       Permission = "node:read"
+	PermNodeWrite      Permission = "node:write"
 	PermNetworkRead    Permission = "network:read"
 	PermNetworkWrite   Permission = "network:write"
 	PermJobRead        Permission = "job:read"

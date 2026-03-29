@@ -74,6 +74,21 @@ func (s *Node) PostNodeFileUndeploy(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		return gen.PostNodeFileUndeploy202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.FileUndeployResult{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.FileUndeployResultStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileUndeploy202JSONResponse{
@@ -81,6 +96,7 @@ func (s *Node) PostNodeFileUndeploy(
 		Results: []gen.FileUndeployResult{
 			{
 				Hostname: rawResp.Hostname,
+				Status:   gen.FileUndeployResultStatusOk,
 				Changed:  &changed,
 			},
 		},
@@ -94,7 +110,7 @@ func (s *Node) postNodeFileUndeployBroadcast(
 	path string,
 ) (gen.PostNodeFileUndeployResponseObject, error) {
 	data := file.UndeployRequest{Path: path}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"file",
@@ -109,19 +125,25 @@ func (s *Node) postNodeFileUndeployBroadcast(
 	}
 
 	var fileResults []gen.FileUndeployResult
-	for host, resp := range results {
-		changed := resp.Changed == nil || *resp.Changed
-		fileResults = append(fileResults, gen.FileUndeployResult{
+	for host, resp := range responses {
+		item := gen.FileUndeployResult{
 			Hostname: host,
-			Changed:  &changed,
-		})
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		fileResults = append(fileResults, gen.FileUndeployResult{
-			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.FileUndeployResultStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.FileUndeployResultStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.FileUndeployResultStatusOk
+			changed := resp.Changed == nil || *resp.Changed
+			item.Changed = &changed
+		}
+		fileResults = append(fileResults, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)

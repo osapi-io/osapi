@@ -181,6 +181,38 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeContainerDockerPullRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerPull,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerPullResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeContainerDockerPullRequestObject{
 				Hostname: "_all",
@@ -214,7 +246,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 								`{"image_id":"sha256:def","tag":"latest","size":2048}`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
 				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
@@ -249,8 +281,11 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
 							),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
@@ -258,6 +293,41 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with skipped host",
+			request: gen.PostNodeContainerDockerPullRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
+					Image: "nginx:latest",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"docker",
+						job.OperationDockerPull,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "docker: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 1)
+				s.Equal(gen.DockerPullResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("docker: operation not supported on this OS family", *r.Results[0].Error)
 			},
 		},
 		{
@@ -277,7 +347,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						job.OperationDockerPull,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
 				_, ok := resp.(gen.PostNodeContainerDockerPull500JSONResponse)

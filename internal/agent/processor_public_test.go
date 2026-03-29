@@ -23,6 +23,7 @@ package agent_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 	"time"
@@ -35,6 +36,7 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/provider"
 	commandMocks "github.com/retr0h/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/retr0h/osapi/internal/provider/file/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -43,6 +45,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	pingMocks "github.com/retr0h/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/retr0h/osapi/internal/provider/node/disk/mocks"
+	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	hostMocks "github.com/retr0h/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/retr0h/osapi/internal/provider/node/load/mocks"
 	memMocks "github.com/retr0h/osapi/internal/provider/node/mem/mocks"
@@ -75,6 +78,14 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 
 	// Create mock providers
 	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
+	hostMock.EXPECT().
+		UpdateHostname("success-host").
+		Return(&nodeHost.UpdateHostnameResult{Changed: true}, nil).
+		AnyTimes()
+	hostMock.EXPECT().
+		UpdateHostname(gomock.Any()).
+		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
+		AnyTimes()
 	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
 	memMock := memMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
@@ -531,6 +542,67 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 				s.Equal(false, response["changed"])
 			},
 		},
+	}
+
+	// Hostname update tests (TypeModify).
+	modifyTests := []struct {
+		name        string
+		operation   string
+		data        string
+		expectError bool
+		errorMsg    string
+		validate    func(json.RawMessage)
+	}{
+		{
+			name:        "update hostname returns unsupported",
+			operation:   "hostname.update",
+			data:        `{"hostname": "new-host"}`,
+			expectError: true,
+			errorMsg:    "operation not supported",
+		},
+		{
+			name:      "update hostname succeeds",
+			operation: "hostname.update",
+			data:      `{"hostname": "success-host"}`,
+			validate: func(result json.RawMessage) {
+				var response map[string]interface{}
+				err := json.Unmarshal(result, &response)
+				s.NoError(err)
+				s.Equal("success-host", response["hostname"])
+				s.Equal(true, response["changed"])
+			},
+		},
+		{
+			name:        "update hostname with invalid data",
+			operation:   "hostname.update",
+			data:        `invalid json`,
+			expectError: true,
+			errorMsg:    "invalid hostname update data",
+		},
+	}
+
+	for _, tt := range modifyTests {
+		s.Run(tt.name, func() {
+			request := job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: tt.operation,
+				Data:      json.RawMessage(tt.data),
+			}
+
+			result, err := agent.ExportProcessNodeOperation(s.testAgent, request)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errorMsg)
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+				if tt.validate != nil {
+					tt.validate(result)
+				}
+			}
+		})
 	}
 
 	for _, tt := range tests {

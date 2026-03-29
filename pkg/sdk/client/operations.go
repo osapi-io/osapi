@@ -38,13 +38,14 @@ type JobOperation = string
 
 // Node operations — read-only operations that query node state.
 const (
-	OpNodeHostnameGet JobOperation = "node.hostname.get"
-	OpNodeStatusGet   JobOperation = "node.status.get"
-	OpNodeUptimeGet   JobOperation = "node.uptime.get"
-	OpNodeLoadGet     JobOperation = "node.load.get"
-	OpNodeMemoryGet   JobOperation = "node.memory.get"
-	OpNodeDiskGet     JobOperation = "node.disk.get"
-	OpNodeOSGet       JobOperation = "node.os.get"
+	OpNodeHostnameGet    JobOperation = "node.hostname.get"
+	OpNodeHostnameUpdate JobOperation = "node.hostname.update"
+	OpNodeStatusGet      JobOperation = "node.status.get"
+	OpNodeUptimeGet      JobOperation = "node.uptime.get"
+	OpNodeLoadGet        JobOperation = "node.load.get"
+	OpNodeMemoryGet      JobOperation = "node.memory.get"
+	OpNodeDiskGet        JobOperation = "node.disk.get"
+	OpNodeOSGet          JobOperation = "node.os.get"
 )
 
 // Network operations.

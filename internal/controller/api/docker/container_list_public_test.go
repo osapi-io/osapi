@@ -283,6 +283,36 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.GetNodeContainerDockerRequestObject{
+				Hostname: "server1",
+				Params:   gen.GetNodeContainerDockerParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerList,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerListItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.GetNodeContainerDockerRequestObject{
 				Hostname: "_all",
@@ -312,7 +342,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 								`[{"id":"def456","name":"api","state":"running"}]`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
 				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
@@ -344,8 +374,11 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 								`[{"id":"abc123","name":"web","state":"running"}]`,
 							),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
@@ -353,6 +386,39 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with skipped host",
+			request: gen.GetNodeContainerDockerRequestObject{
+				Hostname: "_all",
+				Params:   gen.GetNodeContainerDockerParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"docker",
+						job.OperationDockerList,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "docker: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
+				r, ok := resp.(gen.GetNodeContainerDocker200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 1)
+				s.Equal(gen.DockerListItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("docker: operation not supported on this OS family", *r.Results[0].Error)
 			},
 		},
 		{
@@ -370,7 +436,7 @@ func (s *ContainerListPublicTestSuite) TestGetNodeContainerDocker() {
 						job.OperationDockerList,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeContainerDockerResponseObject) {
 				_, ok := resp.(gen.GetNodeContainerDocker500JSONResponse)

@@ -35,6 +35,13 @@ const (
 	AgentInfoStatusReady    AgentInfoStatus = "Ready"
 )
 
+// Defines values for CommandResultItemStatus.
+const (
+	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
+	CommandResultItemStatusOk      CommandResultItemStatus = "ok"
+	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
+)
+
 // Defines values for CronCreateRequestContentType.
 const (
 	CronCreateRequestContentTypeRaw      CronCreateRequestContentType = "raw"
@@ -57,22 +64,135 @@ const (
 	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
 )
 
+// Defines values for CronEntryStatus.
+const (
+	CronEntryStatusFailed  CronEntryStatus = "failed"
+	CronEntryStatusOk      CronEntryStatus = "ok"
+	CronEntryStatusSkipped CronEntryStatus = "skipped"
+)
+
+// Defines values for CronMutationResultStatus.
+const (
+	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
+	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
+	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
+)
+
 // Defines values for CronUpdateRequestContentType.
 const (
 	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
 	CronUpdateRequestContentTypeTemplate CronUpdateRequestContentType = "template"
 )
 
+// Defines values for DNSConfigResponseStatus.
+const (
+	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
+	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
+	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
+)
+
 // Defines values for DNSUpdateResultItemStatus.
 const (
-	DNSUpdateResultItemStatusFailed DNSUpdateResultItemStatus = "failed"
-	DNSUpdateResultItemStatusOk     DNSUpdateResultItemStatus = "ok"
+	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
+	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
+	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
+)
+
+// Defines values for DiskResultItemStatus.
+const (
+	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
+	DiskResultItemStatusOk      DiskResultItemStatus = "ok"
+	DiskResultItemStatusSkipped DiskResultItemStatus = "skipped"
+)
+
+// Defines values for DockerActionResultItemStatus.
+const (
+	DockerActionResultItemStatusFailed  DockerActionResultItemStatus = "failed"
+	DockerActionResultItemStatusOk      DockerActionResultItemStatus = "ok"
+	DockerActionResultItemStatusSkipped DockerActionResultItemStatus = "skipped"
+)
+
+// Defines values for DockerDetailResponseStatus.
+const (
+	DockerDetailResponseStatusFailed  DockerDetailResponseStatus = "failed"
+	DockerDetailResponseStatusOk      DockerDetailResponseStatus = "ok"
+	DockerDetailResponseStatusSkipped DockerDetailResponseStatus = "skipped"
+)
+
+// Defines values for DockerExecResultItemStatus.
+const (
+	DockerExecResultItemStatusFailed  DockerExecResultItemStatus = "failed"
+	DockerExecResultItemStatusOk      DockerExecResultItemStatus = "ok"
+	DockerExecResultItemStatusSkipped DockerExecResultItemStatus = "skipped"
+)
+
+// Defines values for DockerListItemStatus.
+const (
+	DockerListItemStatusFailed  DockerListItemStatus = "failed"
+	DockerListItemStatusOk      DockerListItemStatus = "ok"
+	DockerListItemStatusSkipped DockerListItemStatus = "skipped"
+)
+
+// Defines values for DockerPullResultItemStatus.
+const (
+	DockerPullResultItemStatusFailed  DockerPullResultItemStatus = "failed"
+	DockerPullResultItemStatusOk      DockerPullResultItemStatus = "ok"
+	DockerPullResultItemStatusSkipped DockerPullResultItemStatus = "skipped"
+)
+
+// Defines values for DockerResponseStatus.
+const (
+	DockerResponseStatusFailed  DockerResponseStatus = "failed"
+	DockerResponseStatusOk      DockerResponseStatus = "ok"
+	DockerResponseStatusSkipped DockerResponseStatus = "skipped"
 )
 
 // Defines values for FileDeployRequestContentType.
 const (
 	FileDeployRequestContentTypeRaw      FileDeployRequestContentType = "raw"
 	FileDeployRequestContentTypeTemplate FileDeployRequestContentType = "template"
+)
+
+// Defines values for FileDeployResultStatus.
+const (
+	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
+	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
+	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
+)
+
+// Defines values for FileUndeployResultStatus.
+const (
+	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
+	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
+	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
+)
+
+// Defines values for HostnameResponseStatus.
+const (
+	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
+	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
+	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
+)
+
+// Defines values for HostnameUpdateResultItemStatus.
+const (
+	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
+	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
+	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
+)
+
+// Defines values for LoadResultItemStatus.
+const (
+	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
+	LoadResultItemStatusOk      LoadResultItemStatus = "ok"
+	LoadResultItemStatusSkipped LoadResultItemStatus = "skipped"
+)
+
+// Defines values for MemoryResultItemStatus.
+const (
+	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
+	MemoryResultItemStatusOk      MemoryResultItemStatus = "ok"
+	MemoryResultItemStatusSkipped MemoryResultItemStatus = "skipped"
 )
 
 // Defines values for NetworkInterfaceResponseFamily.
@@ -89,6 +209,34 @@ const (
 	MemoryPressure NodeConditionType = "MemoryPressure"
 )
 
+// Defines values for NodeStatusResponseStatus.
+const (
+	NodeStatusResponseStatusFailed  NodeStatusResponseStatus = "failed"
+	NodeStatusResponseStatusOk      NodeStatusResponseStatus = "ok"
+	NodeStatusResponseStatusSkipped NodeStatusResponseStatus = "skipped"
+)
+
+// Defines values for OSInfoResultItemStatus.
+const (
+	OSInfoResultItemStatusFailed  OSInfoResultItemStatus = "failed"
+	OSInfoResultItemStatusOk      OSInfoResultItemStatus = "ok"
+	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
+)
+
+// Defines values for PingResponseStatus.
+const (
+	PingResponseStatusFailed  PingResponseStatus = "failed"
+	PingResponseStatusOk      PingResponseStatus = "ok"
+	PingResponseStatusSkipped PingResponseStatus = "skipped"
+)
+
+// Defines values for UptimeResponseStatus.
+const (
+	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
+	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
+	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
+)
+
 // Defines values for PostFileMultipartBodyContentType.
 const (
 	PostFileMultipartBodyContentTypeRaw      PostFileMultipartBodyContentType = "raw"
@@ -97,11 +245,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
-	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
-	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
-	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
-	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
+	Completed      GetJobParamsStatus = "completed"
+	Failed         GetJobParamsStatus = "failed"
+	PartialFailure GetJobParamsStatus = "partial_failure"
+	Processing     GetJobParamsStatus = "processing"
+	Submitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -285,12 +433,18 @@ type CommandResultItem struct {
 	// Hostname The hostname of the agent that executed the command.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status CommandResultItemStatus `json:"status"`
+
 	// Stderr Standard error output of the command.
 	Stderr *string `json:"stderr,omitempty"`
 
 	// Stdout Standard output of the command.
 	Stdout *string `json:"stdout,omitempty"`
 }
+
+// CommandResultItemStatus The status of the operation for this host.
+type CommandResultItemStatus string
 
 // CommandShellRequest defines model for CommandShellRequest.
 type CommandShellRequest struct {
@@ -436,7 +590,7 @@ type CronEntry struct {
 	Error *string `json:"error,omitempty"`
 
 	// Hostname Hostname of the agent that reported this entry.
-	Hostname *string `json:"hostname,omitempty"`
+	Hostname string `json:"hostname"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
@@ -453,12 +607,18 @@ type CronEntry struct {
 	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
 	Source *string `json:"source,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status CronEntryStatus `json:"status"`
+
 	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
 // CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 type CronEntryInterval string
+
+// CronEntryStatus The status of the operation for this host.
+type CronEntryStatus string
 
 // CronGetResponse Collection response for a single cron entry get operation.
 type CronGetResponse struct {
@@ -476,11 +636,17 @@ type CronMutationResult struct {
 	Error *string `json:"error,omitempty"`
 
 	// Hostname Hostname of the agent that processed this operation.
-	Hostname *string `json:"hostname,omitempty"`
+	Hostname string `json:"hostname"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status CronMutationResultStatus `json:"status"`
 }
+
+// CronMutationResultStatus The status of the operation for this host.
+type CronMutationResultStatus string
 
 // CronUpdateRequest defines model for CronUpdateRequest.
 type CronUpdateRequest struct {
@@ -533,7 +699,13 @@ type DNSConfigResponse struct {
 
 	// Servers List of configured DNS servers.
 	Servers *[]string `json:"servers,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DNSConfigResponseStatus `json:"status"`
 }
+
+// DNSConfigResponseStatus The status of the operation for this host.
+type DNSConfigResponseStatus string
 
 // DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
 type DNSConfigUpdateRequest struct {
@@ -601,7 +773,13 @@ type DiskResultItem struct {
 
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status DiskResultItemStatus `json:"status"`
 }
+
+// DiskResultItemStatus The status of the operation for this host.
+type DiskResultItemStatus string
 
 // DisksResponse List of local disk usage information.
 type DisksResponse = []DiskResponse
@@ -629,7 +807,13 @@ type DockerActionResultItem struct {
 
 	// Message Status message.
 	Message *string `json:"message,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerActionResultItemStatus `json:"status"`
 }
+
+// DockerActionResultItemStatus The status of the operation for this host.
+type DockerActionResultItemStatus string
 
 // DockerCreateRequest defines model for DockerCreateRequest.
 type DockerCreateRequest struct {
@@ -702,7 +886,13 @@ type DockerDetailResponse struct {
 
 	// State Current container state.
 	State *string `json:"state,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerDetailResponseStatus `json:"status"`
 }
+
+// DockerDetailResponseStatus The status of the operation for this host.
+type DockerDetailResponseStatus string
 
 // DockerExecCollectionResponse defines model for DockerExecCollectionResponse.
 type DockerExecCollectionResponse struct {
@@ -737,12 +927,18 @@ type DockerExecResultItem struct {
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status DockerExecResultItemStatus `json:"status"`
+
 	// Stderr Standard error output of the command.
 	Stderr *string `json:"stderr,omitempty"`
 
 	// Stdout Standard output of the command.
 	Stdout *string `json:"stdout,omitempty"`
 }
+
+// DockerExecResultItemStatus The status of the operation for this host.
+type DockerExecResultItemStatus string
 
 // DockerListCollectionResponse defines model for DockerListCollectionResponse.
 type DockerListCollectionResponse struct {
@@ -764,7 +960,13 @@ type DockerListItem struct {
 
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status DockerListItemStatus `json:"status"`
 }
+
+// DockerListItemStatus The status of the operation for this host.
+type DockerListItemStatus string
 
 // DockerPullCollectionResponse defines model for DockerPullCollectionResponse.
 type DockerPullCollectionResponse struct {
@@ -796,9 +998,15 @@ type DockerPullResultItem struct {
 	// Size Image size in bytes.
 	Size *int64 `json:"size,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status DockerPullResultItemStatus `json:"status"`
+
 	// Tag The image tag that was pulled.
 	Tag *string `json:"tag,omitempty"`
 }
+
+// DockerPullResultItemStatus The status of the operation for this host.
+type DockerPullResultItemStatus string
 
 // DockerResponse Summary information about a container.
 type DockerResponse struct {
@@ -825,7 +1033,13 @@ type DockerResponse struct {
 
 	// State Current container state.
 	State *string `json:"state,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerResponseStatus `json:"status"`
 }
+
+// DockerResponseStatus The status of the operation for this host.
+type DockerResponseStatus string
 
 // DockerResultCollectionResponse defines model for DockerResultCollectionResponse.
 type DockerResultCollectionResponse struct {
@@ -941,7 +1155,13 @@ type FileDeployResult struct {
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status FileDeployResultStatus `json:"status"`
 }
+
+// FileDeployResultStatus The status of the operation for this host.
+type FileDeployResultStatus string
 
 // FileInfo defines model for FileInfo.
 type FileInfo struct {
@@ -1042,7 +1262,13 @@ type FileUndeployResult struct {
 
 	// Hostname The agent that processed the job.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status FileUndeployResultStatus `json:"status"`
 }
+
+// FileUndeployResultStatus The status of the operation for this host.
+type FileUndeployResultStatus string
 
 // FileUploadResponse defines model for FileUploadResponse.
 type FileUploadResponse struct {
@@ -1088,7 +1314,40 @@ type HostnameResponse struct {
 
 	// Labels Key-value labels configured on the agent.
 	Labels *map[string]string `json:"labels,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status HostnameResponseStatus `json:"status"`
 }
+
+// HostnameResponseStatus The status of the operation for this host.
+type HostnameResponseStatus string
+
+// HostnameUpdateCollectionResponse defines model for HostnameUpdateCollectionResponse.
+type HostnameUpdateCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID        `json:"job_id,omitempty"`
+	Results []HostnameUpdateResultItem `json:"results"`
+}
+
+// HostnameUpdateRequest defines model for HostnameUpdateRequest.
+type HostnameUpdateRequest struct {
+	// Hostname The new hostname to set.
+	Hostname string `json:"hostname" validate:"required,min=1,max=253"`
+}
+
+// HostnameUpdateResultItem defines model for HostnameUpdateResultItem.
+type HostnameUpdateResultItem struct {
+	// Changed Whether the hostname was actually modified.
+	Changed *bool   `json:"changed,omitempty"`
+	Error   *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string                         `json:"hostname"`
+	Status   HostnameUpdateResultItemStatus `json:"status"`
+}
+
+// HostnameUpdateResultItemStatus defines model for HostnameUpdateResultItem.Status.
+type HostnameUpdateResultItemStatus string
 
 // JobDetailResponse defines model for JobDetailResponse.
 type JobDetailResponse struct {
@@ -1249,7 +1508,13 @@ type LoadResultItem struct {
 
 	// LoadAverage The system load averages for 1, 5, and 15 minutes.
 	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status LoadResultItemStatus `json:"status"`
 }
+
+// LoadResultItemStatus The status of the operation for this host.
+type LoadResultItemStatus string
 
 // MemoryCollectionResponse defines model for MemoryCollectionResponse.
 type MemoryCollectionResponse struct {
@@ -1283,7 +1548,13 @@ type MemoryResultItem struct {
 
 	// Memory Memory usage information.
 	Memory *MemoryResponse `json:"memory,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status MemoryResultItemStatus `json:"status"`
 }
+
+// MemoryResultItemStatus The status of the operation for this host.
+type MemoryResultItemStatus string
 
 // NATSInfo defines model for NATSInfo.
 type NATSInfo struct {
@@ -1348,9 +1619,15 @@ type NodeStatusResponse struct {
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status NodeStatusResponseStatus `json:"status"`
+
 	// Uptime The uptime of the system.
 	Uptime *string `json:"uptime,omitempty"`
 }
+
+// NodeStatusResponseStatus The status of the operation for this host.
+type NodeStatusResponseStatus string
 
 // OSInfoCollectionResponse defines model for OSInfoCollectionResponse.
 type OSInfoCollectionResponse struct {
@@ -1381,7 +1658,13 @@ type OSInfoResultItem struct {
 
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status OSInfoResultItemStatus `json:"status"`
 }
+
+// OSInfoResultItemStatus The status of the operation for this host.
+type OSInfoResultItemStatus string
 
 // ObjectStoreInfo defines model for ObjectStoreInfo.
 type ObjectStoreInfo struct {
@@ -1427,7 +1710,13 @@ type PingResponse struct {
 
 	// PacketsSent Number of packets sent.
 	PacketsSent *int `json:"packets_sent,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status PingResponseStatus `json:"status"`
 }
+
+// PingResponseStatus The status of the operation for this host.
+type PingResponseStatus string
 
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
@@ -1539,9 +1828,15 @@ type UptimeResponse struct {
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status UptimeResponseStatus `json:"status"`
+
 	// Uptime The uptime of the system.
 	Uptime *string `json:"uptime,omitempty"`
 }
+
+// UptimeResponseStatus The status of the operation for this host.
+type UptimeResponseStatus string
 
 // CronName defines model for CronName.
 type CronName = string
@@ -1661,6 +1956,9 @@ type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
+
+// PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
+type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
@@ -1874,6 +2172,11 @@ type ClientInterface interface {
 
 	// GetNodeHostname request
 	GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeHostnameWithBody request with any body
+	PutNodeHostnameWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeHostname(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeLoad request
 	GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2465,6 +2768,30 @@ func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, bo
 
 func (c *Client) GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeHostnameRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeHostnameWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeHostnameRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeHostname(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeHostnameRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4203,6 +4530,53 @@ func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request,
 	return req, nil
 }
 
+// NewPutNodeHostnameRequest calls the generic PutNodeHostname builder with application/json body
+func NewPutNodeHostnameRequest(server string, hostname Hostname, body PutNodeHostnameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeHostnameRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPutNodeHostnameRequestWithBody generates requests for PutNodeHostname with any type of body
+func NewPutNodeHostnameRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/hostname", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeLoadRequest generates requests for GetNodeLoad
 func NewGetNodeLoadRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -4888,6 +5262,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetNodeHostnameWithResponse request
 	GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error)
+
+	// PutNodeHostnameWithBodyWithResponse request with any body
+	PutNodeHostnameWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error)
+
+	PutNodeHostnameWithResponse(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error)
 
 	// GetNodeLoadWithResponse request
 	GetNodeLoadWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLoadResponse, error)
@@ -5878,6 +6257,32 @@ func (r GetNodeHostnameResponse) StatusCode() int {
 	return 0
 }
 
+type PutNodeHostnameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *HostnameUpdateCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeHostnameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeHostnameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeLoadResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6614,6 +7019,23 @@ func (c *ClientWithResponses) GetNodeHostnameWithResponse(ctx context.Context, h
 		return nil, err
 	}
 	return ParseGetNodeHostnameResponse(rsp)
+}
+
+// PutNodeHostnameWithBodyWithResponse request with arbitrary body returning *PutNodeHostnameResponse
+func (c *ClientWithResponses) PutNodeHostnameWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error) {
+	rsp, err := c.PutNodeHostnameWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeHostnameResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeHostnameWithResponse(ctx context.Context, hostname Hostname, body PutNodeHostnameJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeHostnameResponse, error) {
+	rsp, err := c.PutNodeHostname(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeHostnameResponse(rsp)
 }
 
 // GetNodeLoadWithResponse request returning *GetNodeLoadResponse
@@ -8686,6 +9108,60 @@ func ParseGetNodeHostnameResponse(rsp *http.Response) (*GetNodeHostnameResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeHostnameResponse parses an HTTP response from a PutNodeHostnameWithResponse call
+func ParsePutNodeHostnameResponse(rsp *http.Response) (*PutNodeHostnameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeHostnameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest HostnameUpdateCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse

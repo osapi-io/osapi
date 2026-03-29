@@ -83,6 +83,22 @@ func (s *Container) DeleteNodeContainerDockerImage(
 		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.DeleteNodeContainerDockerImage202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerActionResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerActionResultItemStatusSkipped,
+					Id:       &imageName,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "image removed"
@@ -92,6 +108,7 @@ func (s *Container) DeleteNodeContainerDockerImage(
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
+				Status:   gen.DockerActionResultItemStatusOk,
 				Id:       &imageName,
 				Changed:  changed,
 				Message:  &msg,
@@ -107,7 +124,7 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	imageName string,
 	data *job.DockerImageRemoveData,
 ) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
@@ -120,26 +137,32 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	}
 
 	msg := "image removed"
-	var responses []gen.DockerActionResultItem
-	for _, resp := range results {
-		responses = append(responses, gen.DockerActionResultItem{
-			Hostname: resp.Hostname,
+	var items []gen.DockerActionResultItem
+	for host, resp := range responses {
+		item := gen.DockerActionResultItem{
+			Hostname: host,
 			Id:       &imageName,
-			Changed:  resp.Changed,
-			Message:  &msg,
-		})
-	}
-	for hostname, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.DockerActionResultItem{
-			Hostname: hostname,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DockerActionResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.DockerActionResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.DockerActionResultItemStatusOk
+			item.Changed = resp.Changed
+			item.Message = &msg
+		}
+		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.DeleteNodeContainerDockerImage202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: items,
 	}, nil
 }

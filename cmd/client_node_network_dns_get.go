@@ -63,6 +63,7 @@ var clientNodeNetworkDNSGetCmd = &cobra.Command{
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: cfg.Hostname,
+				Status:   cfg.Status,
 				Error:    errPtr,
 				Fields: []string{
 					cli.FormatList(cfg.Servers),

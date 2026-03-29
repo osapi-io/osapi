@@ -78,6 +78,21 @@ func (s *Node) PostNodeNetworkPing(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.PostNodeNetworkPing200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.PingResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.PingResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var pingResult ping.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &pingResult)
@@ -99,7 +114,7 @@ func (s *Node) postNodeNetworkPingBroadcast(
 	address string,
 ) (gen.PostNodeNetworkPingResponseObject, error) {
 	data := map[string]any{"address": address}
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"network",
@@ -113,26 +128,42 @@ func (s *Node) postNodeNetworkPingBroadcast(
 		}, nil
 	}
 
-	var responses []gen.PingResponse
-	for host, resp := range results {
-		var pingResult ping.Result
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &pingResult)
-		}
-		responses = append(responses, buildPingResponse(host, &pingResult))
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.PingResponse{
+	var apiResponses []gen.PingResponse
+	for host, resp := range responses {
+		item := gen.PingResponse{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.PingResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.PingResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.PingResponseStatusOk
+			var pingResult ping.Result
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &pingResult)
+			}
+			built := buildPingResponse(host, &pingResult)
+			item.AvgRtt = built.AvgRtt
+			item.MaxRtt = built.MaxRtt
+			item.MinRtt = built.MinRtt
+			item.PacketLoss = built.PacketLoss
+			item.PacketsReceived = built.PacketsReceived
+			item.PacketsSent = built.PacketsSent
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeNetworkPing200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 
@@ -145,6 +176,7 @@ func buildPingResponse(
 
 	return gen.PingResponse{
 		Hostname:        hostname,
+		Status:          gen.PingResponseStatusOk,
 		AvgRtt:          durationToString(&r.AvgRTT),
 		MaxRtt:          durationToString(&r.MaxRTT),
 		MinRtt:          durationToString(&r.MinRTT),

@@ -66,12 +66,28 @@ func (s *Node) GetNodeLoad(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeLoad200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.LoadResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.LoadResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var loadStats load.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &loadStats)
 	}
 
 	resp := buildLoadResultItem(rawResp.Hostname, &loadStats)
+	resp.Status = gen.LoadResultItemStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeLoad200JSONResponse{
@@ -85,7 +101,7 @@ func (s *Node) getNodeLoadBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeLoadResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -99,26 +115,37 @@ func (s *Node) getNodeLoadBroadcast(
 		}, nil
 	}
 
-	var responses []gen.LoadResultItem
-	for host, resp := range results {
-		var loadStats load.Result
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &loadStats)
-		}
-		responses = append(responses, *buildLoadResultItem(host, &loadStats))
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.LoadResultItem{
+	var apiResponses []gen.LoadResultItem
+	for host, resp := range responses {
+		item := gen.LoadResultItem{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.LoadResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.LoadResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.LoadResultItemStatusOk
+			var loadStats load.Result
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &loadStats)
+			}
+			built := buildLoadResultItem(host, &loadStats)
+			item.LoadAverage = built.LoadAverage
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeLoad200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

@@ -20,9 +20,22 @@ $ osapi client node network ping --address 8.8.8.8 --target _all
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
   Ping Response:
-  HOSTNAME  AVG RTT       MAX RTT       MIN RTT       PACKET LOSS  PACKETS RECEIVED  PACKETS SENT
-  server1   19.707031ms   25.066977ms   13.007048ms   0.000000     3                 3
-  server2   22.345678ms   28.123456ms   18.234567ms   0.000000     3                 3
+  HOSTNAME  STATUS  AVG RTT      MAX RTT      MIN RTT      PACKET LOSS  PACKETS RECEIVED  PACKETS SENT
+  server1   ok      19.707031ms  25.066977ms  13.007048ms  0.000000     3                 3
+  server2   ok      22.345678ms  28.123456ms  18.234567ms  0.000000     3                 3
+```
+
+When some hosts fail or are skipped, STATUS and ERROR columns are shown:
+
+```bash
+$ osapi client node network ping --address 8.8.8.8 --target _all
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  Ping Response:
+  HOSTNAME  STATUS   AVG RTT      PACKET LOSS  PACKETS RECEIVED  ERROR
+  server1   ok       19.707031ms  0.000000     3
+  server2   skipped                                               unsupported platform
 ```
 
 Target by label to ping from a group of servers:

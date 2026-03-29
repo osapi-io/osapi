@@ -117,6 +117,21 @@ func (s *Node) PostNodeFileDeploy(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		return gen.PostNodeFileDeploy202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.FileDeployResult{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.FileDeployResultStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeFileDeploy202JSONResponse{
@@ -124,6 +139,7 @@ func (s *Node) PostNodeFileDeploy(
 		Results: []gen.FileDeployResult{
 			{
 				Hostname: rawResp.Hostname,
+				Status:   gen.FileDeployResultStatusOk,
 				Changed:  &changed,
 			},
 		},
@@ -151,7 +167,7 @@ func (s *Node) postNodeFileDeployBroadcast(
 		Group:       group,
 		Vars:        vars,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"file",
@@ -166,19 +182,25 @@ func (s *Node) postNodeFileDeployBroadcast(
 	}
 
 	var fileResults []gen.FileDeployResult
-	for host, resp := range results {
-		changed := resp.Changed == nil || *resp.Changed
-		fileResults = append(fileResults, gen.FileDeployResult{
+	for host, resp := range responses {
+		item := gen.FileDeployResult{
 			Hostname: host,
-			Changed:  &changed,
-		})
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		fileResults = append(fileResults, gen.FileDeployResult{
-			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.FileDeployResultStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.FileDeployResultStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.FileDeployResultStatusOk
+			changed := resp.Changed == nil || *resp.Changed
+			item.Changed = &changed
+		}
+		fileResults = append(fileResults, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)

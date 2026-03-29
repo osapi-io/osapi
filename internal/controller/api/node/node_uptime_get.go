@@ -65,12 +65,28 @@ func (s *Node) GetNodeUptime(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeUptime200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.UptimeResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.UptimeResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var uptimeResp job.NodeUptimeResponse
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &uptimeResp)
 	}
 
 	resp := buildUptimeResponse(rawResp.Hostname, &uptimeResp)
+	resp.Status = gen.UptimeResponseStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeUptime200JSONResponse{
@@ -84,7 +100,7 @@ func (s *Node) getNodeUptimeBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeUptimeResponseObject, error) {
-	jobID, results, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
@@ -98,26 +114,37 @@ func (s *Node) getNodeUptimeBroadcast(
 		}, nil
 	}
 
-	var responses []gen.UptimeResponse
-	for host, resp := range results {
-		var uptimeResp job.NodeUptimeResponse
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &uptimeResp)
-		}
-		responses = append(responses, *buildUptimeResponse(host, &uptimeResp))
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.UptimeResponse{
+	var apiResponses []gen.UptimeResponse
+	for host, resp := range responses {
+		item := gen.UptimeResponse{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.UptimeResponseStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.UptimeResponseStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.UptimeResponseStatusOk
+			var uptimeResp job.NodeUptimeResponse
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &uptimeResp)
+			}
+			built := buildUptimeResponse(host, &uptimeResp)
+			item.Uptime = built.Uptime
+			item.Changed = built.Changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.GetNodeUptime200JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }
 

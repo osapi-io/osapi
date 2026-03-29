@@ -112,7 +112,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal("backup", *r.Results[0].Name)
 				s.Equal("0 2 * * *", *r.Results[0].Schedule)
 				s.Equal("root", *r.Results[0].User)
@@ -144,7 +144,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Equal("", *r.Results[0].Name)
 			},
 		},
@@ -178,7 +178,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 							),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
@@ -211,8 +211,11 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 								`{"name":"backup","schedule":"0 2 * * *","user":"root","object":"backup-script"}`,
 							),
 						},
-					}, map[string]string{
-						"server2": "cron entry not found",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "cron entry not found",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
@@ -231,6 +234,39 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 			},
 		},
 		{
+			name: "broadcast with skipped host",
+			request: gen.GetNodeScheduleCronByNameRequestObject{
+				Hostname: "_all",
+				Name:     "backup",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "cron: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.CronEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
+			},
+		},
+		{
 			name: "broadcast error collecting responses",
 			request: gen.GetNodeScheduleCronByNameRequestObject{
 				Hostname: "_all",
@@ -245,7 +281,7 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 						job.OperationCronGet,
 						map[string]string{"name": "backup"},
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
 				_, ok := resp.(gen.GetNodeScheduleCronByName500JSONResponse)
@@ -336,6 +372,42 @@ func (s *CronGetPublicTestSuite) TestGetNodeScheduleCronByName() {
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "does not exist")
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.GetNodeScheduleCronByNameRequestObject{
+				Hostname: "server1",
+				Name:     "backup",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronGet,
+						map[string]string{"name": "backup"},
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Status:   job.StatusSkipped,
+							Hostname: "server1",
+							Error:    "cron: operation not supported on this OS family",
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCronByName200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Equal(gen.CronEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
 			},
 		},
 		{

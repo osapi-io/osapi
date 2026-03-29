@@ -60,6 +60,7 @@ var clientNodeHostnameGetCmd = &cobra.Command{
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: h.Hostname,
+				Status:   h.Status,
 				Error:    errPtr,
 				Fields:   []string{cli.FormatLabels(h.Labels)},
 			})

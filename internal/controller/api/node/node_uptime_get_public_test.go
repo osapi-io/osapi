@@ -132,6 +132,28 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			},
 		},
 		{
+			name:    "when job skipped",
+			request: gen.GetNodeUptimeRequestObject{Hostname: "server1"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
+				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.UptimeResponseStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
 			name:    "broadcast all success",
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
 			setupMock: func() {
@@ -144,7 +166,7 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 						"server2": {Hostname: "server2", Data: json.RawMessage(data2)},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
 				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
@@ -166,8 +188,11 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
-					}, map[string]string{
-						"server2": "some error",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "some error",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
@@ -186,12 +211,60 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptime() {
 			},
 		},
 		{
+			name:    "broadcast with skipped host",
+			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "host: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
+				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.UptimeResponseStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name:    "broadcast with failed host",
+			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
+				r, ok := resp.(gen.GetNodeUptime200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.UptimeResponseStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name:    "broadcast all error",
 			request: gen.GetNodeUptimeRequestObject{Hostname: "_all"},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", "node", job.OperationNodeUptimeGet, gomock.Any()).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.GetNodeUptimeResponseObject) {
 				_, ok := resp.(gen.GetNodeUptime500JSONResponse)

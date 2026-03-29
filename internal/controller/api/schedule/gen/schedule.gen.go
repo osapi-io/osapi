@@ -42,6 +42,20 @@ const (
 	CronEntryIntervalWeekly  CronEntryInterval = "weekly"
 )
 
+// Defines values for CronEntryStatus.
+const (
+	CronEntryStatusFailed  CronEntryStatus = "failed"
+	CronEntryStatusOk      CronEntryStatus = "ok"
+	CronEntryStatusSkipped CronEntryStatus = "skipped"
+)
+
+// Defines values for CronMutationResultStatus.
+const (
+	CronMutationResultStatusFailed  CronMutationResultStatus = "failed"
+	CronMutationResultStatusOk      CronMutationResultStatus = "ok"
+	CronMutationResultStatusSkipped CronMutationResultStatus = "skipped"
+)
+
 // Defines values for CronUpdateRequestContentType.
 const (
 	CronUpdateRequestContentTypeRaw      CronUpdateRequestContentType = "raw"
@@ -105,7 +119,7 @@ type CronEntry struct {
 	Error *string `json:"error,omitempty"`
 
 	// Hostname Hostname of the agent that reported this entry.
-	Hostname *string `json:"hostname,omitempty"`
+	Hostname string `json:"hostname"`
 
 	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 	Interval *CronEntryInterval `json:"interval,omitempty"`
@@ -122,12 +136,18 @@ type CronEntry struct {
 	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
 	Source *string `json:"source,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status CronEntryStatus `json:"status"`
+
 	// User User the cron entry runs as.
 	User *string `json:"user,omitempty"`
 }
 
 // CronEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
 type CronEntryInterval string
+
+// CronEntryStatus The status of the operation for this host.
+type CronEntryStatus string
 
 // CronGetResponse Collection response for a single cron entry get operation.
 type CronGetResponse struct {
@@ -145,11 +165,17 @@ type CronMutationResult struct {
 	Error *string `json:"error,omitempty"`
 
 	// Hostname Hostname of the agent that processed this operation.
-	Hostname *string `json:"hostname,omitempty"`
+	Hostname string `json:"hostname"`
 
 	// Name Cron entry name.
 	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status CronMutationResultStatus `json:"status"`
 }
+
+// CronMutationResultStatus The status of the operation for this host.
+type CronMutationResultStatus string
 
 // CronUpdateRequest defines model for CronUpdateRequest.
 type CronUpdateRequest struct {

@@ -1648,6 +1648,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update node hostname
+      description: Set the system hostname on the target node.
+      tags:
+        - Node_Management_API_node_operations
+      operationId: PutNodeHostname
+      security:
+        - BearerAuth:
+            - node:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HostnameUpdateRequest'
+      responses:
+        '202':
+          description: Hostname update accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameUpdateCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /node/{hostname}/disk:
     servers: []
     get:
@@ -2999,6 +3047,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -3027,6 +3082,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerDetailResponse:
       type: object
       description: Detailed information about a container.
@@ -3034,6 +3090,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -3090,6 +3153,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerActionResultItem:
       type: object
       description: Result of a container lifecycle action.
@@ -3097,6 +3161,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -3112,6 +3183,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerExecResultItem:
       type: object
       description: Result of a command execution inside a container.
@@ -3119,6 +3191,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         stdout:
           type: string
           description: Standard output of the command.
@@ -3136,6 +3215,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerPullResultItem:
       type: object
       description: Result of an image pull operation.
@@ -3143,6 +3223,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         image_id:
           type: string
           description: The pulled image ID.
@@ -3163,6 +3250,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerListItem:
       type: object
       description: Container summary for list operations.
@@ -3170,6 +3258,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         containers:
           type: array
           description: List of containers on this agent.
@@ -3183,6 +3278,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DockerSummary:
       type: object
       description: Brief container summary.
@@ -3917,6 +4013,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         uptime:
           type: string
           description: The uptime of the system.
@@ -3929,6 +4032,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     NodeStatusResponse:
       type: object
       properties:
@@ -3936,6 +4040,13 @@ components:
           type: string
           description: The hostname of the system.
           example: my-linux-server
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         uptime:
           type: string
           description: The uptime of the system.
@@ -3956,6 +4067,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     HostnameResponse:
       type: object
       description: The hostname of the system.
@@ -3964,6 +4076,13 @@ components:
           type: string
           description: The system's hostname.
           example: my-linux-server
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         labels:
           type: object
           additionalProperties:
@@ -3977,12 +4096,20 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DiskResultItem:
       type: object
       properties:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         disks:
           $ref: '#/components/schemas/DisksResponse'
         changed:
@@ -3993,12 +4120,20 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     MemoryResultItem:
       type: object
       properties:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         memory:
           $ref: '#/components/schemas/MemoryResponse'
         changed:
@@ -4009,12 +4144,20 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     LoadResultItem:
       type: object
       properties:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         load_average:
           $ref: '#/components/schemas/LoadAverageResponse'
         changed:
@@ -4025,12 +4168,20 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     OSInfoResultItem:
       type: object
       properties:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
         changed:
@@ -4041,6 +4192,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     NodeStatusCollectionResponse:
       type: object
       properties:
@@ -4067,6 +4219,51 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
+    HostnameUpdateRequest:
+      type: object
+      properties:
+        hostname:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=253
+          description: The new hostname to set.
+          example: web-01
+      required:
+        - hostname
+    HostnameUpdateResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+        changed:
+          type: boolean
+          description: Whether the hostname was actually modified.
+        error:
+          type: string
+      required:
+        - hostname
+        - status
+    HostnameUpdateCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameUpdateResultItem'
       required:
         - results
     DiskCollectionResponse:
@@ -4145,6 +4342,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent that executed the ping.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         packets_sent:
           type: integer
           description: Number of packets sent.
@@ -4181,6 +4385,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     PingCollectionResponse:
       type: object
       properties:
@@ -4201,6 +4406,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent that served this config.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         servers:
           type: array
           description: List of configured DNS servers.
@@ -4220,6 +4432,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     DNSConfigCollectionResponse:
       type: object
       properties:
@@ -4244,6 +4457,7 @@ components:
           enum:
             - ok
             - failed
+            - skipped
         changed:
           type: boolean
           description: Whether the DNS configuration was actually modified.
@@ -4337,6 +4551,13 @@ components:
         hostname:
           type: string
           description: The agent that processed the job.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         changed:
           type: boolean
           description: Whether the file was actually written.
@@ -4345,6 +4566,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     FileDeployCollectionResponse:
       type: object
       properties:
@@ -4422,6 +4644,13 @@ components:
         hostname:
           type: string
           description: The agent that processed the job.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         changed:
           type: boolean
           description: Whether the file was actually removed.
@@ -4430,6 +4659,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     FileUndeployCollectionResponse:
       type: object
       properties:
@@ -4504,6 +4734,13 @@ components:
         hostname:
           type: string
           description: The hostname of the agent that executed the command.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         stdout:
           type: string
           description: Standard output of the command.
@@ -4525,6 +4762,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
     CommandResultCollectionResponse:
       type: object
       properties:
@@ -4642,6 +4880,13 @@ components:
         hostname:
           type: string
           description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         name:
           type: string
           description: Cron entry name.
@@ -4673,6 +4918,9 @@ components:
         error:
           type: string
           description: Error message if the agent failed to retrieve this entry.
+      required:
+        - hostname
+        - status
     CronCollectionResponse:
       type: object
       properties:
@@ -4709,6 +4957,13 @@ components:
         hostname:
           type: string
           description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
         name:
           type: string
           description: Cron entry name.
@@ -4718,6 +4973,9 @@ components:
         error:
           type: string
           description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
     CronCreateResponse:
       type: object
       properties:

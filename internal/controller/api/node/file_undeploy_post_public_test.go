@@ -179,7 +179,6 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
 							"agent2": {Hostname: "agent2", Changed: &changedFalse},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -211,8 +210,12 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"agent1": {Hostname: "agent1", Changed: &changedTrue},
+							"agent2": {
+								Status:   job.StatusFailed,
+								Error:    "undeploy failed",
+								Hostname: "agent2",
+							},
 						},
-						map[string]string{"agent2": "undeploy failed"},
 						nil,
 					)
 			},
@@ -232,6 +235,84 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.PostNodeFileUndeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileUndeployJSONRequestBody{
+					Path: "/etc/cron.d/backup",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileUndeployExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileUndeploy202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.FileUndeployResultStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PostNodeFileUndeployRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileUndeployJSONRequestBody{
+					Path: "/etc/cron.d/backup",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileUndeployExecute,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileUndeploy202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.FileUndeployResultStatusFailed, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileUndeployRequestObject{
 				Hostname: "_all",
@@ -248,7 +329,7 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 						job.OperationFileUndeployExecute,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileUndeploy500JSONResponse)
@@ -277,6 +358,40 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
 				_, ok := resp.(gen.PostNodeFileUndeploy500JSONResponse)
 				s.True(ok)
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.PostNodeFileUndeployRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeFileUndeployJSONRequestBody{
+					Path: "/etc/cron.d/backup",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"file",
+						job.OperationFileUndeployExecute,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileUndeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.FileUndeployResultStatusSkipped, r.Results[0].Status)
 			},
 		},
 	}

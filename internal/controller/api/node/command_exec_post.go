@@ -97,6 +97,21 @@ func (s *Node) PostNodeCommandExec(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		return gen.PostNodeCommandExec202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.CommandResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.CommandResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var result command.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &result)
@@ -114,6 +129,7 @@ func (s *Node) PostNodeCommandExec(
 		Results: []gen.CommandResultItem{
 			{
 				Hostname:   rawResp.Hostname,
+				Status:     gen.CommandResultItemStatusOk,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,
@@ -139,7 +155,7 @@ func (s *Node) postNodeCommandExecBroadcast(
 		Cwd:     cwd,
 		Timeout: timeout,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"command",
@@ -153,37 +169,43 @@ func (s *Node) postNodeCommandExecBroadcast(
 		}, nil
 	}
 
-	var responses []gen.CommandResultItem
-	for host, resp := range results {
-		var result command.Result
-		if resp.Data != nil {
-			_ = json.Unmarshal(resp.Data, &result)
-		}
-		stdout := result.Stdout
-		stderr := result.Stderr
-		exitCode := result.ExitCode
-		durationMs := result.DurationMs
-		changed := result.Changed
-		responses = append(responses, gen.CommandResultItem{
-			Hostname:   host,
-			Stdout:     &stdout,
-			Stderr:     &stderr,
-			ExitCode:   &exitCode,
-			DurationMs: &durationMs,
-			Changed:    &changed,
-		})
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		responses = append(responses, gen.CommandResultItem{
+	var apiResponses []gen.CommandResultItem
+	for host, resp := range responses {
+		item := gen.CommandResultItem{
 			Hostname: host,
-			Error:    &e,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.CommandResultItemStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.CommandResultItemStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.CommandResultItemStatusOk
+			var result command.Result
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &result)
+			}
+			stdout := result.Stdout
+			stderr := result.Stderr
+			exitCode := result.ExitCode
+			durationMs := result.DurationMs
+			changed := result.Changed
+			item.Stdout = &stdout
+			item.Stderr = &stderr
+			item.ExitCode = &exitCode
+			item.DurationMs = &durationMs
+			item.Changed = &changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PostNodeCommandExec202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }

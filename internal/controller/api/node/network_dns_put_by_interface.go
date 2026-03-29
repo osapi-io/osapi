@@ -91,6 +91,23 @@ func (s *Node) PutNodeNetworkDNS(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		falseVal := false
+		return gen.PutNodeNetworkDNS202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DNSUpdateResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.DNSUpdateResultItemStatusSkipped,
+					Error:    &e,
+					Changed:  &falseVal,
+				},
+			},
+		}, nil
+	}
+
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeNetworkDNS202JSONResponse{
@@ -98,7 +115,7 @@ func (s *Node) PutNodeNetworkDNS(
 		Results: []gen.DNSUpdateResultItem{
 			{
 				Hostname: rawResp.Hostname,
-				Status:   gen.Ok,
+				Status:   gen.DNSUpdateResultItemStatusOk,
 				Changed:  &changed,
 			},
 		},
@@ -118,7 +135,7 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 		"search_domains": searchDomains,
 		"interface":      interfaceName,
 	}
-	jobID, results, errs, err := s.JobClient.ModifyBroadcast(
+	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"network",
@@ -132,29 +149,35 @@ func (s *Node) putNodeNetworkDNSBroadcast(
 		}, nil
 	}
 
-	var responses []gen.DNSUpdateResultItem
-	for host, resp := range results {
-		changed := resp.Changed == nil || *resp.Changed
-		responses = append(responses, gen.DNSUpdateResultItem{
+	var apiResponses []gen.DNSUpdateResultItem
+	for host, resp := range responses {
+		item := gen.DNSUpdateResultItem{
 			Hostname: host,
-			Status:   gen.Ok,
-			Changed:  &changed,
-		})
-	}
-	for host, errMsg := range errs {
-		e := errMsg
-		falsVal := false
-		responses = append(responses, gen.DNSUpdateResultItem{
-			Hostname: host,
-			Status:   gen.Failed,
-			Error:    &e,
-			Changed:  &falsVal,
-		})
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.DNSUpdateResultItemStatusFailed
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
+		case job.StatusSkipped:
+			item.Status = gen.DNSUpdateResultItemStatusSkipped
+			e := resp.Error
+			falseVal := false
+			item.Error = &e
+			item.Changed = &falseVal
+		default:
+			item.Status = gen.DNSUpdateResultItemStatusOk
+			changed := resp.Changed == nil || *resp.Changed
+			item.Changed = &changed
+		}
+		apiResponses = append(apiResponses, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeNetworkDNS202JSONResponse{
 		JobId:   &jobUUID,
-		Results: responses,
+		Results: apiResponses,
 	}, nil
 }

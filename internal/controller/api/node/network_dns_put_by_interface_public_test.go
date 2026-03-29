@@ -120,7 +120,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
-				s.Equal(gen.Ok, r.Results[0].Status)
+				s.Equal(gen.DNSUpdateResultItemStatusOk, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 			},
@@ -184,6 +184,40 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "server1",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast all success",
 			request: gen.PutNodeNetworkDNSRequestObject{
 				Hostname: "_all",
@@ -208,7 +242,6 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 							"server1": {Hostname: "server1", Changed: &trueVal},
 							"server2": {Hostname: "server2", Changed: &falseVal},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -239,9 +272,11 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
 							"server1": {Hostname: "server1", Changed: &trueVal},
-						},
-						map[string]string{
-							"server2": "permission denied",
+							"server2": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server2",
+							},
 						},
 						nil,
 					)
@@ -255,10 +290,90 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 					if item.Error != nil {
 						foundError = true
 						s.Equal("server2", item.Hostname)
-						s.Equal(gen.Failed, item.Status)
+						s.Equal(gen.DNSUpdateResultItemStatusFailed, item.Status)
 					}
 				}
 				s.True(foundError)
+			},
+		},
+		{
+			name: "when broadcast with skipped host",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PutNodeNetworkDNSRequestObject{
+				Hostname: "_all",
+				Body: &gen.PutNodeNetworkDNSJSONRequestBody{
+					InterfaceName: "eth0",
+					Servers:       &[]string{"1.1.1.1"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"network",
+						job.OperationNetworkDNSUpdate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "server1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
+				r, ok := resp.(gen.PutNodeNetworkDNS202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+				s.Equal(gen.DNSUpdateResultItemStatusFailed, r.Results[0].Status)
 			},
 		},
 		{
@@ -279,7 +394,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNodeNetworkDNS() {
 						job.OperationNetworkDNSUpdate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PutNodeNetworkDNSResponseObject) {
 				_, ok := resp.(gen.PutNodeNetworkDNS500JSONResponse)
@@ -424,7 +539,7 @@ func (s *NetworkDNSPutByInterfacePublicTestSuite) TestPutNetworkDNSValidationHTT
 					ModifyBroadcast(gomock.Any(), "_all", "network", job.OperationNetworkDNSUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {Hostname: "server1", Changed: &trueVal},
-					}, map[string]string{}, nil)
+					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,

@@ -20,6 +20,48 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for DockerActionResultItemStatus.
+const (
+	DockerActionResultItemStatusFailed  DockerActionResultItemStatus = "failed"
+	DockerActionResultItemStatusOk      DockerActionResultItemStatus = "ok"
+	DockerActionResultItemStatusSkipped DockerActionResultItemStatus = "skipped"
+)
+
+// Defines values for DockerDetailResponseStatus.
+const (
+	DockerDetailResponseStatusFailed  DockerDetailResponseStatus = "failed"
+	DockerDetailResponseStatusOk      DockerDetailResponseStatus = "ok"
+	DockerDetailResponseStatusSkipped DockerDetailResponseStatus = "skipped"
+)
+
+// Defines values for DockerExecResultItemStatus.
+const (
+	DockerExecResultItemStatusFailed  DockerExecResultItemStatus = "failed"
+	DockerExecResultItemStatusOk      DockerExecResultItemStatus = "ok"
+	DockerExecResultItemStatusSkipped DockerExecResultItemStatus = "skipped"
+)
+
+// Defines values for DockerListItemStatus.
+const (
+	DockerListItemStatusFailed  DockerListItemStatus = "failed"
+	DockerListItemStatusOk      DockerListItemStatus = "ok"
+	DockerListItemStatusSkipped DockerListItemStatus = "skipped"
+)
+
+// Defines values for DockerPullResultItemStatus.
+const (
+	DockerPullResultItemStatusFailed  DockerPullResultItemStatus = "failed"
+	DockerPullResultItemStatusOk      DockerPullResultItemStatus = "ok"
+	DockerPullResultItemStatusSkipped DockerPullResultItemStatus = "skipped"
+)
+
+// Defines values for DockerResponseStatus.
+const (
+	DockerResponseStatusFailed  DockerResponseStatus = "failed"
+	DockerResponseStatusOk      DockerResponseStatus = "ok"
+	DockerResponseStatusSkipped DockerResponseStatus = "skipped"
+)
+
 // Defines values for GetNodeContainerDockerParamsState.
 const (
 	All     GetNodeContainerDockerParamsState = "all"
@@ -50,7 +92,13 @@ type DockerActionResultItem struct {
 
 	// Message Status message.
 	Message *string `json:"message,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerActionResultItemStatus `json:"status"`
 }
+
+// DockerActionResultItemStatus The status of the operation for this host.
+type DockerActionResultItemStatus string
 
 // DockerCreateRequest defines model for DockerCreateRequest.
 type DockerCreateRequest struct {
@@ -123,7 +171,13 @@ type DockerDetailResponse struct {
 
 	// State Current container state.
 	State *string `json:"state,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerDetailResponseStatus `json:"status"`
 }
+
+// DockerDetailResponseStatus The status of the operation for this host.
+type DockerDetailResponseStatus string
 
 // DockerExecCollectionResponse defines model for DockerExecCollectionResponse.
 type DockerExecCollectionResponse struct {
@@ -158,12 +212,18 @@ type DockerExecResultItem struct {
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
 
+	// Status The status of the operation for this host.
+	Status DockerExecResultItemStatus `json:"status"`
+
 	// Stderr Standard error output of the command.
 	Stderr *string `json:"stderr,omitempty"`
 
 	// Stdout Standard output of the command.
 	Stdout *string `json:"stdout,omitempty"`
 }
+
+// DockerExecResultItemStatus The status of the operation for this host.
+type DockerExecResultItemStatus string
 
 // DockerListCollectionResponse defines model for DockerListCollectionResponse.
 type DockerListCollectionResponse struct {
@@ -185,7 +245,13 @@ type DockerListItem struct {
 
 	// Hostname The hostname of the agent.
 	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status DockerListItemStatus `json:"status"`
 }
+
+// DockerListItemStatus The status of the operation for this host.
+type DockerListItemStatus string
 
 // DockerPullCollectionResponse defines model for DockerPullCollectionResponse.
 type DockerPullCollectionResponse struct {
@@ -217,9 +283,15 @@ type DockerPullResultItem struct {
 	// Size Image size in bytes.
 	Size *int64 `json:"size,omitempty"`
 
+	// Status The status of the operation for this host.
+	Status DockerPullResultItemStatus `json:"status"`
+
 	// Tag The image tag that was pulled.
 	Tag *string `json:"tag,omitempty"`
 }
+
+// DockerPullResultItemStatus The status of the operation for this host.
+type DockerPullResultItemStatus string
 
 // DockerResponse Summary information about a container.
 type DockerResponse struct {
@@ -246,7 +318,13 @@ type DockerResponse struct {
 
 	// State Current container state.
 	State *string `json:"state,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status DockerResponseStatus `json:"status"`
 }
+
+// DockerResponseStatus The status of the operation for this host.
+type DockerResponseStatus string
 
 // DockerResultCollectionResponse defines model for DockerResultCollectionResponse.
 type DockerResultCollectionResponse struct {

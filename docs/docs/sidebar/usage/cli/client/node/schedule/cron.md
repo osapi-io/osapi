@@ -51,6 +51,7 @@ $ osapi client node schedule cron create --target web-01 \
     --user root
 
   Name:    backup-daily
+  Status:  ok
   Changed: true
 ```
 
@@ -69,6 +70,7 @@ $ osapi client node schedule cron update --target web-01 \
     --schedule "0 3 * * *"
 
   Name:    backup-daily
+  Status:  ok
   Changed: true
 ```
 
@@ -82,6 +84,7 @@ Delete a cron entry:
 $ osapi client node schedule cron delete --target web-01 --name backup-daily
 
   Name:    backup-daily
+  Status:  ok
   Changed: true
 ```
 

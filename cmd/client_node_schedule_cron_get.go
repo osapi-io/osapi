@@ -53,30 +53,23 @@ var clientNodeScheduleCronGetCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		if len(resp.Data.Results) == 0 {
-			fmt.Println("\n  No cron entry found.")
-			return
-		}
-
-		rows := make([][]string, 0, len(resp.Data.Results))
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
-			errVal := r.Error
-			if errVal == "" {
-				errVal = "-"
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
 			}
-			rows = append(rows, []string{
-				r.Hostname,
-				r.Name,
-				r.Schedule,
-				r.Object,
-				r.User,
-				errVal,
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Error:    errPtr,
+				Fields:   []string{r.Name, r.Schedule, r.Object, r.User},
 			})
 		}
-		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"HOSTNAME", "NAME", "SCHEDULE", "OBJECT", "USER", "ERROR"},
-			Rows:    rows,
-		}})
+		headers, rows := cli.BuildBroadcastTable(results, []string{
+			"NAME", "SCHEDULE", "OBJECT", "USER",
+		})
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

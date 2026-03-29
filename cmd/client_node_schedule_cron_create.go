@@ -66,28 +66,23 @@ var clientNodeScheduleCronCreateCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		if len(resp.Data.Results) == 0 {
-			fmt.Println("\n  No results.")
-			return
-		}
-
-		rows := make([][]string, 0, len(resp.Data.Results))
+		results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
-			errVal := r.Error
-			if errVal == "" {
-				errVal = "-"
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
 			}
-			rows = append(rows, []string{
-				r.Hostname,
-				r.Name,
-				fmt.Sprintf("%v", r.Changed),
-				errVal,
+			changed := r.Changed
+			results = append(results, cli.MutationResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Changed:  &changed,
+				Error:    errPtr,
+				Fields:   []string{r.Name},
 			})
 		}
-		cli.PrintCompactTable([]cli.Section{{
-			Headers: []string{"HOSTNAME", "NAME", "CHANGED", "ERROR"},
-			Rows:    rows,
-		}})
+		headers, rows := cli.BuildMutationTable(results, []string{"NAME"})
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

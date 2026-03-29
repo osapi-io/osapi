@@ -169,3 +169,18 @@ func (mr *MockProviderMockRecorder) GetUptime() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUptime", reflect.TypeOf((*MockProvider)(nil).GetUptime))
 }
+
+// UpdateHostname mocks base method.
+func (m *MockProvider) UpdateHostname(name string) (*host.UpdateHostnameResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateHostname", name)
+	ret0, _ := ret[0].(*host.UpdateHostnameResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateHostname indicates an expected call of UpdateHostname.
+func (mr *MockProviderMockRecorder) UpdateHostname(name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHostname", reflect.TypeOf((*MockProvider)(nil).UpdateHostname), name)
+}

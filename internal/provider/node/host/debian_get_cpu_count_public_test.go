@@ -67,7 +67,7 @@ func (suite *DebianGetCPUCountPublicTestSuite) TestGetCPUCount() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			debian := host.NewDebianProvider()
+			debian := host.NewDebianProvider(nil)
 
 			if tc.setupMock != nil {
 				tc.setupMock(debian)

@@ -58,6 +58,21 @@ func (s *Schedule) GetNodeScheduleCron(
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeScheduleCron200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.CronEntry{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.CronEntryStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	results := responseToCronEntries(resp)
 	jobUUID := uuid.MustParse(jobID)
 
@@ -72,7 +87,7 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeScheduleCronResponseObject, error) {
-	jobID, responses, errs, err := s.JobClient.QueryBroadcast(
+	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"schedule",
@@ -85,16 +100,27 @@ func (s *Schedule) getNodeScheduleCronBroadcast(
 	}
 
 	allResults := make([]gen.CronEntry, 0)
-	for _, resp := range responses {
-		allResults = append(allResults, responseToCronEntries(resp)...)
-	}
-	for hostname, errMsg := range errs {
-		h := hostname
-		e := errMsg
-		allResults = append(allResults, gen.CronEntry{
-			Hostname: &h,
-			Error:    &e,
-		})
+	for host, resp := range responses {
+		switch resp.Status {
+		case job.StatusFailed:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: h,
+				Status:   gen.CronEntryStatusFailed,
+				Error:    &e,
+			})
+		case job.StatusSkipped:
+			e := resp.Error
+			h := host
+			allResults = append(allResults, gen.CronEntry{
+				Hostname: h,
+				Status:   gen.CronEntryStatusSkipped,
+				Error:    &e,
+			})
+		default:
+			allResults = append(allResults, responseToCronEntries(resp)...)
+		}
 	}
 
 	jobUUID := uuid.MustParse(jobID)
@@ -123,7 +149,8 @@ func responseToCronEntries(
 		source := e.Source
 
 		entry := gen.CronEntry{
-			Hostname: &hostname,
+			Hostname: hostname,
+			Status:   gen.CronEntryStatusOk,
 			Name:     &name,
 			Object:   &object,
 			Source:   &source,

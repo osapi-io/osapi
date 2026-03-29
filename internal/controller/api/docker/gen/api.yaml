@@ -728,6 +728,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -756,6 +760,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerDetailResponse:
       type: object
@@ -764,6 +769,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -818,6 +827,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerActionResultItem:
       type: object
@@ -826,6 +836,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         id:
           type: string
           description: Container identifier.
@@ -841,6 +855,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerExecResultItem:
       type: object
@@ -849,6 +864,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         stdout:
           type: string
           description: Standard output of the command.
@@ -866,6 +885,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerPullResultItem:
       type: object
@@ -874,6 +894,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         image_id:
           type: string
           description: The pulled image ID.
@@ -894,6 +918,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerListItem:
       type: object
@@ -902,6 +927,10 @@ components:
         hostname:
           type: string
           description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
         containers:
           type: array
           description: List of containers on this agent.
@@ -915,6 +944,7 @@ components:
           description: Error message if the agent failed.
       required:
         - hostname
+        - status
 
     DockerSummary:
       type: object

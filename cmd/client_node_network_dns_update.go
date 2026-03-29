@@ -22,8 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -65,34 +63,22 @@ var clientNodeNetworkDNSUpdateCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		if len(resp.Data.Results) > 0 {
-			results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
-			for _, r := range resp.Data.Results {
-				var errPtr *string
-				if r.Error != "" {
-					errPtr = &r.Error
-				}
-				var changedPtr *bool
-				if r.Changed {
-					changedPtr = &r.Changed
-				}
-				results = append(results, cli.MutationResultRow{
-					Hostname: r.Hostname,
-					Status:   r.Status,
-					Changed:  changedPtr,
-					Error:    errPtr,
-				})
+		results := make([]cli.MutationResultRow, 0, len(resp.Data.Results))
+		for _, r := range resp.Data.Results {
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
 			}
-			headers, rows := cli.BuildMutationTable(results, nil)
-			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
-		} else {
-			logger.Info(
-				"network dns put",
-				slog.String("search_domains", strings.Join(searchDomains, ",")),
-				slog.String("servers", strings.Join(servers, ",")),
-				slog.String("status", "ok"),
-			)
+			changed := r.Changed
+			results = append(results, cli.MutationResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Changed:  &changed,
+				Error:    errPtr,
+			})
 		}
+		headers, rows := cli.BuildMutationTable(results, nil)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

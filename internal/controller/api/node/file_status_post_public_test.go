@@ -241,7 +241,6 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 								}),
 							},
 						},
-						map[string]string{},
 						nil,
 					)
 			},
@@ -278,8 +277,12 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
 								}),
 							},
+							"agent2": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent2",
+							},
 						},
-						map[string]string{"agent2": "permission denied"},
 						nil,
 					)
 			},
@@ -299,6 +302,82 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			},
 		},
 		{
+			name: "when broadcast with skipped host",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusSkipped,
+								Error:    "host: operation not supported on this OS family",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+			},
+		},
+		{
+			name: "when broadcast with failed host",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(
+						gomock.Any(),
+						"_all",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"agent1": {
+								Status:   job.StatusFailed,
+								Error:    "permission denied",
+								Hostname: "agent1",
+							},
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("permission denied", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "when broadcast client error",
 			request: gen.PostNodeFileStatusRequestObject{
 				Hostname: "_all",
@@ -315,7 +394,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						job.OperationFileStatusGet,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
@@ -344,6 +423,39 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
 				_, ok := resp.(gen.PostNodeFileStatus500JSONResponse)
 				s.True(ok)
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.PostNodeFileStatusRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeFileStatusJSONRequestBody{
+					Path: "/etc/nginx/nginx.conf",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"file",
+						job.OperationFileStatusGet,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeFileStatusResponseObject) {
+				r, ok := resp.(gen.PostNodeFileStatus200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
 			},
 		},
 	}

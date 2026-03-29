@@ -123,7 +123,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", *r.Results[0].Hostname)
+				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 				s.Equal("backup", *r.Results[0].Name)
@@ -275,7 +275,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{}, nil)
+					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
@@ -310,8 +310,11 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 							Changed:  boolPtr(true),
 							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
 						},
-					}, map[string]string{
-						"server2": "agent unreachable",
+						"server2": {
+							Status:   job.StatusFailed,
+							Error:    "agent unreachable",
+							Hostname: "server2",
+						},
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
@@ -319,6 +322,43 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with skipped host",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "_all",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "backup-script",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"schedule",
+						job.OperationCronCreate,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Status:   job.StatusSkipped,
+							Error:    "cron: operation not supported on this OS family",
+							Hostname: "server1",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.CronMutationResultStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
 			},
 		},
 		{
@@ -340,7 +380,7 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 						job.OperationCronCreate,
 						gomock.Any(),
 					).
-					Return("", nil, nil, assert.AnError)
+					Return("", nil, assert.AnError)
 			},
 			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
 				_, ok := resp.(gen.PostNodeScheduleCron500JSONResponse)
@@ -450,6 +490,46 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Status:   job.StatusSkipped,
+							Hostname: "server1",
+							Error:    "cron: operation not supported on this OS family",
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Equal(gen.CronMutationResultStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
 			},
 		},
 		{

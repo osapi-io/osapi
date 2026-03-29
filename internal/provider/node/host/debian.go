@@ -27,6 +27,7 @@ import (
 
 	"github.com/shirou/gopsutil/v4/host"
 
+	iexec "github.com/retr0h/osapi/internal/exec"
 	"github.com/retr0h/osapi/internal/provider"
 )
 
@@ -36,21 +37,25 @@ var _ provider.FactsSetter = (*Debian)(nil)
 type Debian struct {
 	provider.FactsAware
 
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
+	InfoFn      func() (*host.InfoStat, error)
+	HostnameFn  func() (string, error)
+	NumCPUFn    func() int
+	StatFn      func(name string) (os.FileInfo, error)
+	LookPathFn  func(file string) (string, error)
+	execManager iexec.Manager
 }
 
 // NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider() *Debian {
+func NewDebianProvider(
+	execManager iexec.Manager,
+) *Debian {
 	return &Debian{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+		InfoFn:      host.Info,
+		HostnameFn:  os.Hostname,
+		NumCPUFn:    runtime.NumCPU,
+		StatFn:      os.Stat,
+		LookPathFn:  exec.LookPath,
+		execManager: execManager,
 	}
 }
 

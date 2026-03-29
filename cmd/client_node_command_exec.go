@@ -76,41 +76,37 @@ var clientNodeCommandExecCmd = &cobra.Command{
 			cli.PrintKV("Job ID", resp.Data.JobID)
 		}
 
-		if len(resp.Data.Results) > 0 {
-			results := make([]cli.ResultRow, 0, len(resp.Data.Results))
-			for _, r := range resp.Data.Results {
-				var errPtr *string
-				if r.Error != "" {
-					errPtr = &r.Error
-				}
-				var changedPtr *bool
-				if r.Changed {
-					changedPtr = &r.Changed
-				}
-				durationStr := ""
-				if r.DurationMs > 0 {
-					durationStr = strconv.FormatInt(r.DurationMs, 10) + "ms"
-				}
-				results = append(results, cli.ResultRow{
-					Hostname: r.Hostname,
-					Changed:  changedPtr,
-					Error:    errPtr,
-					Fields: []string{
-						r.Stdout,
-						r.Stderr,
-						strconv.Itoa(r.ExitCode),
-						durationStr,
-					},
-				})
+		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
+		for _, r := range resp.Data.Results {
+			var errPtr *string
+			if r.Error != "" {
+				errPtr = &r.Error
 			}
-			headers, rows := cli.BuildBroadcastTable(results, []string{
-				"STDOUT",
-				"STDERR",
-				"EXIT CODE",
-				"DURATION",
+			changed := r.Changed
+			durationStr := ""
+			if r.DurationMs > 0 {
+				durationStr = strconv.FormatInt(r.DurationMs, 10) + "ms"
+			}
+			results = append(results, cli.ResultRow{
+				Hostname: r.Hostname,
+				Status:   r.Status,
+				Changed:  &changed,
+				Error:    errPtr,
+				Fields: []string{
+					r.Stdout,
+					r.Stderr,
+					strconv.Itoa(r.ExitCode),
+					durationStr,
+				},
 			})
-			cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 		}
+		headers, rows := cli.BuildBroadcastTable(results, []string{
+			"STDOUT",
+			"STDERR",
+			"EXIT CODE",
+			"DURATION",
+		})
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 
