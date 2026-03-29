@@ -226,6 +226,37 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
+				Hostname: "server1",
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "_all",

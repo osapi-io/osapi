@@ -78,6 +78,21 @@ func (s *Node) PostNodeNetworkPing(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.PostNodeNetworkPing200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.PingResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.PingResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var pingResult ping.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &pingResult)

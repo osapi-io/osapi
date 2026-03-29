@@ -76,6 +76,23 @@ func (s *Node) PutNodeHostname(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		falseVal := false
+		return gen.PutNodeHostname202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.HostnameUpdateResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.HostnameUpdateResultItemStatusSkipped,
+					Error:    &e,
+					Changed:  &falseVal,
+				},
+			},
+		}, nil
+	}
+
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeHostname202JSONResponse{

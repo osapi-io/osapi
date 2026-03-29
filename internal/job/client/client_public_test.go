@@ -190,7 +190,12 @@ func (s *ClientPublicTestSuite) TestQuery() {
 					nil,
 				)
 			},
-			expectedErr: "job failed: unsupported",
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+				s.Equal(job.StatusSkipped, resp.Status)
+				s.Equal("unsupported", resp.Error)
+			},
 		},
 		{
 			name: "when data marshal fails",
@@ -837,7 +842,12 @@ func (s *ClientPublicTestSuite) TestModify() {
 					nil,
 				)
 			},
-			expectedErr: "job failed: unsupported",
+			validateFunc: func(jobID string, resp *job.Response) {
+				s.NotEmpty(jobID)
+				s.NotNil(resp)
+				s.Equal(job.StatusSkipped, resp.Status)
+				s.Equal("unsupported", resp.Error)
+			},
 		},
 		{
 			name:        "when data marshal fails",

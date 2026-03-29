@@ -278,6 +278,39 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls", "-la"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerExec,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerExec202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerExecResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "_all",

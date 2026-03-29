@@ -18,10 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the docker.inspect operation, which
-// retrieves detailed information about a specific container.
+// Package main demonstrates the node.hostname.update operation, which
+// sets the system hostname on the target node.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run docker-inspect.go
+// Run with: OSAPI_TOKEN="<jwt>" go run node-hostname-update.go
 package main
 
 import (
@@ -58,18 +58,18 @@ func main() {
 	plan := orchestrator.NewPlan(c, orchestrator.WithHooks(hooks))
 
 	plan.TaskFunc(
-		"inspect-container",
+		"update-hostname",
 		func(
 			ctx context.Context,
 			cc *client.Client,
 		) (*orchestrator.Result, error) {
-			resp, err := cc.Docker.Inspect(ctx, "_any", "container-name")
+			resp, err := cc.Node.UpdateHostname(ctx, "_any", "new-hostname")
 			if err != nil {
 				return nil, err
 			}
 
 			return orchestrator.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r client.DockerDetailResult) orchestrator.HostResult {
+				func(r client.HostnameUpdateResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,

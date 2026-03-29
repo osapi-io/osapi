@@ -166,6 +166,31 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNodeNetworkDNSByInterfa
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
+				Hostname:      "server1",
+				InterfaceName: "eth0",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "network", job.OperationNetworkDNSGet, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeNetworkDNSByInterfaceResponseObject) {
+				r, ok := resp.(gen.GetNodeNetworkDNSByInterface200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.DNSConfigResponseStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
 			name: "when broadcast all success",
 			request: gen.GetNodeNetworkDNSByInterfaceRequestObject{
 				Hostname:      "_all",

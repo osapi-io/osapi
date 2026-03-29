@@ -72,6 +72,7 @@ func main() {
 				func(r client.CronEntryResult) orchestrator.HostResult {
 					return orchestrator.HostResult{
 						Hostname: r.Name,
+						Status:   r.Status,
 						Changed:  false,
 						Error:    r.Error,
 					}

@@ -71,6 +71,21 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeNetworkDNSByInterface200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DNSConfigResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.DNSConfigResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var dnsConfig dns.GetResult
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &dnsConfig)

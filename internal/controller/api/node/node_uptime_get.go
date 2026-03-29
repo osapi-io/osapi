@@ -65,6 +65,21 @@ func (s *Node) GetNodeUptime(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeUptime200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.UptimeResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.UptimeResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var uptimeResp job.NodeUptimeResponse
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &uptimeResp)

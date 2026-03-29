@@ -67,6 +67,21 @@ func (s *Container) PostNodeContainerDockerPull(
 		return gen.PostNodeContainerDockerPull500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDockerPull202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerPullResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerPullResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	item := dockerPullItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 

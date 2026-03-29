@@ -87,6 +87,22 @@ func (s *Container) PostNodeContainerDockerStop(
 		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDockerStop202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerActionResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerActionResultItemStatusSkipped,
+					Id:       &id,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
 	msg := "container stopped"

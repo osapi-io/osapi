@@ -215,6 +215,37 @@ func (s *ContainerStopPublicTestSuite) TestPostNodeContainerDockerStop() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeContainerDockerStopRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Body:     nil,
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerStop,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStopResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStop202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeContainerDockerStopRequestObject{
 				Hostname: "_all",

@@ -90,6 +90,21 @@ func (s *Node) PostNodeCommandShell(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		return gen.PostNodeCommandShell202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.CommandResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.CommandResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var result command.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &result)

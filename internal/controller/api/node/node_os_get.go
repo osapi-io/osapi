@@ -66,6 +66,21 @@ func (s *Node) GetNodeOS(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeOS200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.OSInfoResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.OSInfoResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var osInfo host.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &osInfo)

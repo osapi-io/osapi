@@ -212,6 +212,41 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PutNodeHostnameRequestObject{
+				Hostname: "server1",
+				Body: &gen.PutNodeHostnameJSONRequestBody{
+					Hostname: "new-hostname",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"node",
+						job.OperationNodeHostnameUpdate,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeHostnameResponseObject) {
+				r, ok := resp.(gen.PutNodeHostname202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.HostnameUpdateResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.False(*r.Results[0].Changed)
+			},
+		},
+		{
 			name: "when broadcast all with errors",
 			request: gen.PutNodeHostnameRequestObject{
 				Hostname: "_all",

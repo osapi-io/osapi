@@ -78,12 +78,15 @@ func main() {
 		fmt.Printf("Hostname: %s\n", r.Hostname)
 	}
 
-	// Set hostname (uncomment to run — this mutates the system)
-	// setResp, err := c.Node.UpdateHostname(ctx, "web-01", "new-hostname")
-	// if err != nil {
-	//     log.Fatalf("set hostname: %v", err)
-	// }
-	// fmt.Printf("Set hostname changed: %t\n", setResp.Data.Results[0].Changed)
+	// Update hostname.
+	setResp, err := c.Node.UpdateHostname(ctx, target, "new-hostname")
+	if err != nil {
+		log.Fatalf("set hostname: %v", err)
+	}
+
+	for _, r := range setResp.Data.Results {
+		fmt.Printf("Set hostname (%s): changed=%v\n", r.Hostname, r.Changed)
+	}
 
 	// Disk usage
 	disk, err := c.Node.Disk(ctx, target)

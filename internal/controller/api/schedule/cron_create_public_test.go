@@ -493,6 +493,46 @@ func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Status:   job.StatusSkipped,
+							Hostname: "server1",
+							Error:    "cron: operation not supported on this OS family",
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Equal(gen.CronMutationResultStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",

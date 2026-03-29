@@ -79,6 +79,21 @@ func (s *Container) PostNodeContainerDocker(
 		return gen.PostNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDocker202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerResponse{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var containerResp struct {
 		ID string `json:"id"`
 	}

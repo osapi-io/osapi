@@ -166,6 +166,36 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				r, ok := resp.(gen.PostNodeContainerDockerStart202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("unsupported", *r.Results[0].Error)
+			},
+		},
+		{
 			name: "broadcast success",
 			request: gen.PostNodeContainerDockerStartRequestObject{
 				Hostname: "_all",

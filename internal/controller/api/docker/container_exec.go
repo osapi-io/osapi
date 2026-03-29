@@ -94,6 +94,21 @@ func (s *Container) PostNodeContainerDockerExec(
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeContainerDockerExec202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerExecResultItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerExecResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	item := dockerExecItemFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 

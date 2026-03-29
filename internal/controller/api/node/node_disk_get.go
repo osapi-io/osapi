@@ -65,6 +65,21 @@ func (s *Node) GetNodeDisk(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeDisk200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DiskResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.DiskResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var diskResp job.NodeDiskResponse
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &diskResp)

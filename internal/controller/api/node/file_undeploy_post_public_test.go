@@ -360,6 +360,40 @@ func (s *FileUndeployPostPublicTestSuite) TestPostNodeFileUndeploy() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "when job skipped",
+			request: gen.PostNodeFileUndeployRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeFileUndeployJSONRequestBody{
+					Path: "/etc/cron.d/backup",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"file",
+						job.OperationFileUndeployExecute,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "host: operation not supported on this OS family",
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeFileUndeployResponseObject) {
+				r, ok := resp.(gen.PostNodeFileUndeploy202JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
+				s.Equal(gen.FileUndeployResultStatusSkipped, r.Results[0].Status)
+			},
+		},
 	}
 
 	for _, tt := range tests {

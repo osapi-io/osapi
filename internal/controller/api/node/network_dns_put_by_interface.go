@@ -91,6 +91,23 @@ func (s *Node) PutNodeNetworkDNS(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := rawResp.Error
+		falseVal := false
+		return gen.PutNodeNetworkDNS202JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DNSUpdateResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.DNSUpdateResultItemStatusSkipped,
+					Error:    &e,
+					Changed:  &falseVal,
+				},
+			},
+		}, nil
+	}
+
 	changed := rawResp.Changed == nil || *rawResp.Changed
 	jobUUID := uuid.MustParse(jobID)
 	return gen.PutNodeNetworkDNS202JSONResponse{

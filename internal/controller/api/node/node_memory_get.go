@@ -66,6 +66,21 @@ func (s *Node) GetNodeMemory(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeMemory200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.MemoryResultItem{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.MemoryResultItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var memStats mem.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &memStats)

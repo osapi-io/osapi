@@ -75,6 +75,20 @@ func (s *Node) PostNodeFileStatus(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.PostNodeFileStatus200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.FileStatusResult{
+				{
+					Hostname: rawResp.Hostname,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var result file.StatusResult
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &result)

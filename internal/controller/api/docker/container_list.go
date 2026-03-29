@@ -71,6 +71,21 @@ func (s *Container) GetNodeContainerDocker(
 		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeContainerDocker200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.DockerListItem{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.DockerListItemStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	summaries := dockerSummariesFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed

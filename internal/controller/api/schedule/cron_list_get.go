@@ -58,6 +58,21 @@ func (s *Schedule) GetNodeScheduleCron(
 		return gen.GetNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeScheduleCron200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.CronEntry{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.CronEntryStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	results := responseToCronEntries(resp)
 	jobUUID := uuid.MustParse(jobID)
 

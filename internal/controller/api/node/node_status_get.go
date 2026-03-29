@@ -61,6 +61,21 @@ func (s *Node) GetNodeStatus(
 		}, nil
 	}
 
+	if rawResp.Status == job.StatusSkipped {
+		e := rawResp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeStatus200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.NodeStatusResponse{
+				{
+					Hostname: rawResp.Hostname,
+					Status:   gen.NodeStatusResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var status job.NodeStatusResponse
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &status)

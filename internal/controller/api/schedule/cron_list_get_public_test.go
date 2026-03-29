@@ -200,6 +200,41 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCron() {
 			},
 		},
 		{
+			name: "when job skipped",
+			request: gen.GetNodeScheduleCronRequestObject{
+				Hostname: "server1",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronList,
+						nil,
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							Status:   job.StatusSkipped,
+							Hostname: "server1",
+							Error:    "cron: operation not supported on this OS family",
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.GetNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.GetNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("server1", r.Results[0].Hostname)
+				s.Equal(gen.CronEntryStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
+			},
+		},
+		{
 			name: "job client error",
 			request: gen.GetNodeScheduleCronRequestObject{
 				Hostname: "server1",

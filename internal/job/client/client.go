@@ -119,7 +119,7 @@ func (c *Client) Query(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+	if resp.Status == job.StatusFailed {
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 
@@ -182,7 +182,7 @@ func (c *Client) Modify(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed || resp.Status == job.StatusSkipped {
+	if resp.Status == job.StatusFailed {
 		return "", nil, fmt.Errorf("job failed: %s", resp.Error)
 	}
 

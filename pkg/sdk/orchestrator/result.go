@@ -27,6 +27,7 @@ const (
 // operation.
 type HostResult struct {
 	Hostname    string
+	Status      string
 	Changed     bool
 	Error       string
 	Data        map[string]any

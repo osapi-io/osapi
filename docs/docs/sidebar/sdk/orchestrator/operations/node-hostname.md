@@ -104,3 +104,9 @@ task := plan.TaskFunc("set-hostname",
 ### Permissions
 
 Requires `node:write` permission.
+
+### Example
+
+See
+[`examples/sdk/orchestrator/operations/node-hostname-update.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/orchestrator/operations/node-hostname-update.go)
+for a complete working example.

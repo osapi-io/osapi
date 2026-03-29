@@ -65,6 +65,21 @@ func (s *Node) GetNodeHostname(
 		}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeHostname200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.HostnameResponse{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.HostnameResponseStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var result struct {
 		Hostname string            `json:"hostname"`
 		Labels   map[string]string `json:"labels,omitempty"`

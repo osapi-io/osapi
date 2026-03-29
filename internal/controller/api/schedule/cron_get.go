@@ -71,6 +71,21 @@ func (s *Schedule) GetNodeScheduleCronByName(
 		return gen.GetNodeScheduleCronByName500JSONResponse{Error: &errMsg}, nil
 	}
 
+	if resp.Status == job.StatusSkipped {
+		e := resp.Error
+		jobUUID := uuid.MustParse(jobID)
+		return gen.GetNodeScheduleCronByName200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.CronEntry{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.CronEntryStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
 	var entry cronProv.Entry
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &entry)
