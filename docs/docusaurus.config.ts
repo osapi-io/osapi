@@ -64,7 +64,6 @@ const config: Config = {
       }
     },
     navbar: {
-      title: 'OSAPI',
       logo: {
         alt: 'OSAPI Logo',
         src: 'img/logo.png'
