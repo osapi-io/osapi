@@ -87,6 +87,7 @@ var clientNodeCommandShellCmd = &cobra.Command{
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
+				Status:   r.Status,
 				Changed:  &changed,
 				Error:    errPtr,
 				Fields: []string{

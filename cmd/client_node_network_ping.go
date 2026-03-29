@@ -64,6 +64,7 @@ var clientNodeNetworkPingCmd = &cobra.Command{
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
+				Status:   r.Status,
 				Error:    errPtr,
 				Fields: []string{
 					r.AvgRtt,

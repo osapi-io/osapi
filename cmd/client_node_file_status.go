@@ -63,6 +63,7 @@ Reports whether the file is in-sync, drifted, or missing.`,
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
+				Status:   r.Status,
 				Error:    errPtr,
 				Fields:   []string{r.Path, r.Status, r.SHA256},
 			})

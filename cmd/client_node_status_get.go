@@ -91,6 +91,7 @@ func displayNodeStatusCollection(
 		}
 		results = append(results, cli.ResultRow{
 			Hostname: s.Hostname,
+			Status:   s.Status,
 			Error:    errPtr,
 			Fields:   []string{s.Uptime, load, memory},
 		})

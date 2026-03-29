@@ -63,6 +63,7 @@ type Section struct {
 // ResultRow is a per-host broadcast result used by BuildBroadcastTable.
 type ResultRow struct {
 	Hostname string
+	Status   string
 	Changed  *bool
 	Error    *string
 	Fields   []string
@@ -104,10 +105,12 @@ func BuildBroadcastTable(
 	for _, r := range results {
 		row := []string{r.Hostname}
 		if hasErrors {
-			status := "ok"
+			status := r.Status
+			if status == "" {
+				status = "ok"
+			}
 			errMsg := ""
 			if r.Error != nil {
-				status = "failed"
 				errMsg = *r.Error
 			}
 			row = append(row, status, errMsg)

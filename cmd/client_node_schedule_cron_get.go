@@ -61,6 +61,7 @@ var clientNodeScheduleCronGetCmd = &cobra.Command{
 			}
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
+				Status:   r.Status,
 				Error:    errPtr,
 				Fields:   []string{r.Name, r.Schedule, r.Object, r.User},
 			})
