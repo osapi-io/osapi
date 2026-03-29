@@ -133,8 +133,8 @@ osapi token generate -r write -u user@example.com \
 
 ## Orchestrator
 
-Container operations can be composed as a DAG using
-[osapi-orchestrator][]. See the
+Container operations can be composed as a DAG using [osapi-orchestrator][]. See
+the
 [Docker operations](https://github.com/osapi-io/osapi-orchestrator/blob/main/docs/operations/docker/)
 and the
 [docker.go example](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)

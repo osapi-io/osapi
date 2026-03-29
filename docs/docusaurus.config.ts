@@ -247,7 +247,7 @@ const config: Config = {
             },
             {
               href: 'https://github.com/osapi-io/osapi-orchestrator',
-              label: 'osapi-orchestrator',
+              label: 'osapi-orchestrator'
             }
           ]
         },
