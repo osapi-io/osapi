@@ -279,6 +279,70 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
+			name: "when object not specified preserves existing",
+			entry: cron.Entry{
+				Name:     "backup",
+				Schedule: "0 */2 * * *",
+			},
+			setup: func() {
+				_ = suite.memFs.WriteFile(
+					"/etc/cron.d/backup",
+					[]byte("existing content"),
+					0o644,
+				)
+				stateData := managedStateJSONWithMetadata(
+					"backup-script", "/etc/cron.d/backup",
+					map[string]string{"schedule": "0 0 * * *", "user": "root"},
+				)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateData).AnyTimes()
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+				suite.mockDeployer.EXPECT().
+					Deploy(gomock.Any(), gomock.Eq(file.DeployRequest{
+						ObjectName: "backup-script",
+						Path:       "/etc/cron.d/backup",
+						Mode:       "0644",
+						Metadata:   map[string]string{"schedule": "0 */2 * * *"},
+					})).
+					Return(&file.DeployResult{Changed: true, Path: "/etc/cron.d/backup"}, nil)
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Equal("backup", result.Name)
+				suite.True(result.Changed)
+			},
+		},
+		{
+			name: "when object not specified and state lookup fails",
+			entry: cron.Entry{
+				Name:     "backup",
+				Schedule: "0 */2 * * *",
+			},
+			setup: func() {
+				_ = suite.memFs.WriteFile(
+					"/etc/cron.d/backup",
+					[]byte("existing content"),
+					0o644,
+				)
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("kv error"))
+			},
+			validateFunc: func(
+				result *cron.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "failed to read existing state")
+			},
+		},
+		{
 			name: "when name is invalid",
 			entry: cron.Entry{
 				Name:   "bad name",
