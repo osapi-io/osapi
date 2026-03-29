@@ -129,14 +129,27 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 		{
 			name: "when some results have errors adds status and error columns",
 			results: []cli.ResultRow{
-				{Hostname: "web-01", Fields: []string{"val1"}},
-				{Hostname: "web-02", Error: &errMsg, Fields: []string{""}},
+				{Hostname: "web-01", Status: "ok", Fields: []string{"val1"}},
+				{Hostname: "web-02", Status: "failed", Error: &errMsg, Fields: []string{""}},
 			},
 			fieldHeaders: []string{"DATA"},
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "ERROR", "DATA"},
 			wantRows: [][]string{
 				{"web-01", "ok", "", "val1"},
 				{"web-02", "failed", "connection refused", ""},
+			},
+		},
+		{
+			name: "when skipped host shows skipped status",
+			results: []cli.ResultRow{
+				{Hostname: "web-01", Status: "ok", Fields: []string{"val1"}},
+				{Hostname: "web-02", Status: "skipped", Error: &errMsg, Fields: []string{""}},
+			},
+			fieldHeaders: []string{"DATA"},
+			wantHeaders:  []string{"HOSTNAME", "STATUS", "ERROR", "DATA"},
+			wantRows: [][]string{
+				{"web-01", "ok", "", "val1"},
+				{"web-02", "skipped", "connection refused", ""},
 			},
 		},
 		{
@@ -153,8 +166,8 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 		{
 			name: "when all results have errors all show failed",
 			results: []cli.ResultRow{
-				{Hostname: "web-01", Error: &errMsg, Fields: []string{""}},
-				{Hostname: "web-02", Error: &errMsg, Fields: []string{""}},
+				{Hostname: "web-01", Status: "failed", Error: &errMsg, Fields: []string{""}},
+				{Hostname: "web-02", Status: "failed", Error: &errMsg, Fields: []string{""}},
 			},
 			fieldHeaders: []string{"DATA"},
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "ERROR", "DATA"},
@@ -179,8 +192,8 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 		{
 			name: "when changed and errors both present shows all columns",
 			results: []cli.ResultRow{
-				{Hostname: "web-01", Changed: boolPtr(true), Fields: []string{"val1"}},
-				{Hostname: "web-02", Changed: boolPtr(false), Error: &errMsg, Fields: []string{""}},
+				{Hostname: "web-01", Status: "ok", Changed: boolPtr(true), Fields: []string{"val1"}},
+				{Hostname: "web-02", Status: "failed", Changed: boolPtr(false), Error: &errMsg, Fields: []string{""}},
 			},
 			fieldHeaders: []string{"DATA"},
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "ERROR", "CHANGED", "DATA"},

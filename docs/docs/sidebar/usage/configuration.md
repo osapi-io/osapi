@@ -253,10 +253,10 @@ controller:
           - 'http://localhost:3001'
           - 'https://osapi-io.github.io'
       # Custom roles with fine-grained permissions.
-      # Permissions: agent:read, agent:write, node:read, network:read,
-      #              network:write, job:read, job:write, health:read,
-      #              audit:read, command:execute, file:read, file:write,
-      #              docker:read, docker:write, docker:execute,
+      # Permissions: agent:read, agent:write, node:read, node:write,
+      #              network:read, network:write, job:read, job:write,
+      #              health:read, audit:read, command:execute, file:read,
+      #              file:write, docker:read, docker:write, docker:execute,
       #              cron:read, cron:write
       # roles:
       #   ops:

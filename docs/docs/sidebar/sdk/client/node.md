@@ -12,16 +12,16 @@ all target a specific host.
 
 ### Node Info
 
-| Method                           | Description                               |
-| -------------------------------- | ----------------------------------------- |
-| `Status(ctx, target)`            | Full node status (OS, disk, memory, load) |
-| `Hostname(ctx, target)`          | Get system hostname                       |
-| `SetHostname(ctx, target, name)` | Set system hostname                       |
-| `Disk(ctx, target)`              | Get disk usage                            |
-| `Memory(ctx, target)`            | Get memory statistics                     |
-| `Load(ctx, target)`              | Get load averages                         |
-| `OS(ctx, target)`                | Get operating system info                 |
-| `Uptime(ctx, target)`            | Get uptime                                |
+| Method                              | Description                               |
+| ----------------------------------- | ----------------------------------------- |
+| `Status(ctx, target)`               | Full node status (OS, disk, memory, load) |
+| `Hostname(ctx, target)`             | Get system hostname                       |
+| `UpdateHostname(ctx, target, name)` | Set system hostname                       |
+| `Disk(ctx, target)`                 | Get disk usage                            |
+| `Memory(ctx, target)`               | Get memory statistics                     |
+| `Load(ctx, target)`                 | Get load averages                         |
+| `OS(ctx, target)`                   | Get operating system info                 |
+| `Uptime(ctx, target)`               | Get uptime                                |
 
 ### Network
 
@@ -54,8 +54,8 @@ delete) and `FileDeployOpts` details.
 // Get hostname
 resp, err := client.Node.Hostname(ctx, "_any")
 
-// Set hostname
-resp, err := client.Node.SetHostname(ctx, "web-01", "new-hostname")
+// Update hostname
+resp, err := client.Node.UpdateHostname(ctx, "web-01", "new-hostname")
 
 // Get disk usage from all hosts
 resp, err := client.Node.Disk(ctx, "_all")
@@ -105,8 +105,23 @@ and
 [`examples/sdk/client/command.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/command.go)
 for network and command examples.
 
+## Result Status
+
+Every result type returned by node operations includes a `Status` field with one
+of three values:
+
+| Value     | Meaning                                             |
+| --------- | --------------------------------------------------- |
+| `ok`      | Operation completed successfully                    |
+| `failed`  | Operation failed with an error                      |
+| `skipped` | Operation not supported on this OS family or target |
+
+In broadcast responses, any host that does not support the operation (e.g., a
+Darwin host in a Linux fleet) appears as `skipped` with an error description.
+
 ## Permissions
 
-Node info requires `node:read`. Network read requires `network:read`. DNS
-updates require `network:write`. Commands require `command:execute`. File deploy
-requires `file:write`. File status requires `file:read`.
+Node info requires `node:read`. Hostname update requires `node:write`. Network
+read requires `network:read`. DNS updates require `network:write`. Commands
+require `command:execute`. File deploy requires `file:write`. File status
+requires `file:read`.

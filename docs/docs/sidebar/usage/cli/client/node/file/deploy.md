@@ -8,6 +8,7 @@ $ osapi client node file deploy --object app.conf --path /etc/app/app.conf
 
   Job ID:   550e8400-e29b-41d4-a716-446655440000
   Hostname: server1
+  Status:   ok
   Changed:  true
 ```
 

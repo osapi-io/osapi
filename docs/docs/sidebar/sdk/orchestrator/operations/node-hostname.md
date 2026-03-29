@@ -21,6 +21,7 @@ task := plan.TaskFunc("get-hostname",
 
         return orchestrator.CollectionResult(
             resp.Data,
+            resp.RawJSON(),
             func(r client.HostnameResult) orchestrator.HostResult {
                 return orchestrator.HostResult{
                     Hostname: r.Hostname,
@@ -68,13 +69,14 @@ task := plan.TaskFunc("set-hostname",
         ctx context.Context,
         c *client.Client,
     ) (*orchestrator.Result, error) {
-        resp, err := c.Node.SetHostname(ctx, "web-01", "new-hostname")
+        resp, err := c.Node.UpdateHostname(ctx, "web-01", "new-hostname")
         if err != nil {
             return nil, err
         }
 
         return orchestrator.CollectionResult(
             resp.Data,
+            resp.RawJSON(),
             func(r client.HostnameUpdateResult) orchestrator.HostResult {
                 return orchestrator.HostResult{
                     Hostname: r.Hostname,
