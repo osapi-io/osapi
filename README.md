@@ -11,6 +11,7 @@
 ![openapi initiative](https://img.shields.io/badge/openapiinitiative-%23000000.svg?style=for-the-badge&logo=openapiinitiative&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![gitHub commit activity](https://img.shields.io/github/commit-activity/m/osapi-io/osapi?style=for-the-badge)
+[![go reference](https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/retr0h/osapi)
 
 # OS API
 
