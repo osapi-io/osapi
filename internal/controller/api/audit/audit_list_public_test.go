@@ -388,7 +388,12 @@ func (s *AuditListPublicTestSuite) TestGetAuditLogsRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := auditapi.Handler(s.logger, mock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := auditapi.Handler(
+				s.logger,
+				mock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

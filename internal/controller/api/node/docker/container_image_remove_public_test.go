@@ -551,7 +551,12 @@ func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := apicontainer.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apicontainer.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

@@ -572,7 +572,12 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceRB
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := apinetwork.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinetwork.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/network/dns/eth0", nil)

@@ -393,7 +393,12 @@ func (s *JobRetryPublicTestSuite) TestRetryJobByIDRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := apijob.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apijob.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

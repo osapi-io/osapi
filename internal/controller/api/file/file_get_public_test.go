@@ -340,7 +340,12 @@ func (s *FileGetPublicTestSuite) TestGetFileByNameRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := apifile.Handler(s.logger, objMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apifile.Handler(
+				s.logger,
+				objMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/file/nginx.conf", nil)

@@ -448,7 +448,12 @@ func (s *NodeUptimeGetPublicTestSuite) TestGetNodeUptimeRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := apinode.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apinode.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/uptime", nil)
