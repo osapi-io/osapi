@@ -46,8 +46,8 @@ type TokenValidator interface {
 	) (*authtoken.CustomClaims, error)
 }
 
-// scopeMiddleware validates JWT tokens and checks for required permissions.
-func scopeMiddleware(
+// ScopeMiddleware validates JWT tokens and checks for required permissions.
+func ScopeMiddleware(
 	handler strictecho.StrictEchoHandlerFunc,
 	tokenManager TokenValidator,
 	signingKey string,

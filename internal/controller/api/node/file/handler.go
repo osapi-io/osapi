@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package file
 
 import (
 	"log/slog"
@@ -26,25 +26,41 @@ import (
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	"github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/node/file/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
-func ExportAuditMiddleware(
-	store audit.Store,
+// Handler returns node file deploy route registration functions.
+func Handler(
 	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
-}
-
-// ExportScopeMiddleware exposes ScopeMiddleware for testing.
-func ExportScopeMiddleware(
-	next strictecho.StrictEchoHandlerFunc,
-	tokenManager *authtoken.Token,
+	jobClient client.JobClient,
 	signingKey string,
-	contextKey string,
 	customRoles map[string][]string,
-) strictecho.StrictEchoHandlerFunc {
-	return ScopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+) []func(e *echo.Echo) {
+	var tokenManager api.TokenValidator = authtoken.New(logger)
+
+	fileHandler := New(logger, jobClient)
+
+	strictHandler := gen.NewStrictHandler(
+		fileHandler,
+		[]gen.StrictMiddlewareFunc{
+			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
+				return api.ScopeMiddleware(
+					handler,
+					tokenManager,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
+				)
+			},
+		},
+	)
+
+	return []func(e *echo.Echo){
+		func(e *echo.Echo) {
+			gen.RegisterHandlers(e, strictHandler)
+		},
+	}
 }

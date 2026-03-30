@@ -2,34 +2,30 @@
 
 ## Overview
 
-Reorganize `internal/controller/api/` so that all node-targeted API
-handler packages live under `api/node/`, matching the URL path
-structure (`/node/{hostname}/...`). Read-only single-endpoint
-handlers stay flat in `api/node/`. Domains with mutations (CRUD)
-get their own subdirectory with `gen/`, `types.go`, and handler
-files.
+Reorganize `internal/controller/api/` so that all node-targeted API handler
+packages live under `api/node/`, matching the URL path structure
+(`/node/{hostname}/...`). Read-only single-endpoint handlers stay flat in
+`api/node/`. Domains with mutations (CRUD) get their own subdirectory with
+`gen/`, `types.go`, and handler files.
 
 ## Motivation
 
-Currently, node-targeted domains are scattered at the top level of
-`api/`: `api/sysctl/`, `api/schedule/`, `api/docker/`, while
-`api/node/` holds hostname, disk, mem, load, status, uptime, os,
-DNS, ping, command, and file handlers in one package. Every one of
-these routes to `/node/{hostname}/...`, so they belong under
-`api/node/`.
+Currently, node-targeted domains are scattered at the top level of `api/`:
+`api/sysctl/`, `api/schedule/`, `api/docker/`, while `api/node/` holds hostname,
+disk, mem, load, status, uptime, os, DNS, ping, command, and file handlers in
+one package. Every one of these routes to `/node/{hostname}/...`, so they belong
+under `api/node/`.
 
-As more domains are added (power, process, user, ntp, ssh), the
-flat top-level layout will grow confusing. Nesting under `api/node/`
-keeps things organized and makes it clear what's node-targeted vs
-controller-only.
+As more domains are added (power, process, user, ntp, ssh), the flat top-level
+layout will grow confusing. Nesting under `api/node/` keeps things organized and
+makes it clear what's node-targeted vs controller-only.
 
 ## Design Rule
 
-- **Read-only, single-endpoint handlers** stay flat in `api/node/`
-  (disk, memory, load, status, uptime, os)
-- **Domains with mutations** (create, update, delete) get their own
-  subdirectory under `api/node/` with `gen/`, `types.go`, handler
-  files, and tests
+- **Read-only, single-endpoint handlers** stay flat in `api/node/` (disk,
+  memory, load, status, uptime, os)
+- **Domains with mutations** (create, update, delete) get their own subdirectory
+  under `api/node/` with `gen/`, `types.go`, handler files, and tests
 
 ## Directory Structure
 
@@ -179,65 +175,62 @@ internal/controller/api/
 
 ## Handler Shim Pattern
 
-Shims stay in `api/` as methods on `Server`. They are renamed to
-match the nested path:
+Shims stay in `api/` as methods on `Server`. They are renamed to match the
+nested path:
 
-| Before                   | After                        |
-| ------------------------ | ---------------------------- |
-| `handler_node.go`        | split into multiple files    |
-| `handler_sysctl.go`      | `handler_node_sysctl.go`     |
-| `handler_schedule.go`    | `handler_node_schedule.go`   |
-| `handler_docker.go`      | `handler_node_docker.go`     |
-| (in handler_node.go)     | `handler_node_hostname.go`   |
-| (in handler_node.go)     | `handler_node_command.go`    |
-| (in handler_node.go)     | `handler_node_file.go`       |
-| (in handler_node.go)     | `handler_node_network.go`    |
-| (new)                    | `handler_node.go` (read-only)|
+| Before                | After                         |
+| --------------------- | ----------------------------- |
+| `handler_node.go`     | split into multiple files     |
+| `handler_sysctl.go`   | `handler_node_sysctl.go`      |
+| `handler_schedule.go` | `handler_node_schedule.go`    |
+| `handler_docker.go`   | `handler_node_docker.go`      |
+| (in handler_node.go)  | `handler_node_hostname.go`    |
+| (in handler_node.go)  | `handler_node_command.go`     |
+| (in handler_node.go)  | `handler_node_file.go`        |
+| (in handler_node.go)  | `handler_node_network.go`     |
+| (new)                 | `handler_node.go` (read-only) |
 
 Shims stay in `api/` because:
+
 - They are methods on `Server` which owns middleware config
-- Moving them into domain packages would couple domains to
-  auth/middleware internals
-- Domain packages stay clean: only know about `JobClient` and
-  their own `gen` types
+- Moving them into domain packages would couple domains to auth/middleware
+  internals
+- Domain packages stay clean: only know about `JobClient` and their own `gen`
+  types
 
 ## OpenAPI Spec Split
 
-The current monolithic `api/node/gen/api.yaml` must be split. Each
-subdirectory gets its own `gen/api.yaml` containing only its
-endpoints. The read-only node endpoints (disk, mem, load, status,
-uptime, os) stay in `api/node/gen/api.yaml`.
+The current monolithic `api/node/gen/api.yaml` must be split. Each subdirectory
+gets its own `gen/api.yaml` containing only its endpoints. The read-only node
+endpoints (disk, mem, load, status, uptime, os) stay in `api/node/gen/api.yaml`.
 
-The combined spec (`api/gen/api.yaml`) is still generated by
-`redocly join` from all individual specs — no change to how it
-works, just more input specs.
+The combined spec (`api/gen/api.yaml`) is still generated by `redocly join` from
+all individual specs — no change to how it works, just more input specs.
 
 ## Validation Sharing
 
 `validateHostname()` is needed by every node sub-package. Options:
 
-1. Each sub-package defines its own copy (current cron/sysctl
-   pattern — simple, no cross-package imports)
+1. Each sub-package defines its own copy (current cron/sysctl pattern — simple,
+   no cross-package imports)
 2. Put it in `api/node/validate.go` and import from sub-packages
 
-Option 1 is simpler and avoids circular imports. Each sub-package
-already has its own `validate.go` with `validateHostname()`. This
-is a one-liner that calls `validation.Var()` — duplication is
-acceptable.
+Option 1 is simpler and avoids circular imports. Each sub-package already has
+its own `validate.go` with `validateHostname()`. This is a one-liner that calls
+`validation.Var()` — duplication is acceptable.
 
 ## Controller-Only Packages
 
-These packages are NOT under `/node/{hostname}/` and stay at the
-top level:
+These packages are NOT under `/node/{hostname}/` and stay at the top level:
 
-| Package   | Routes               |
-| --------- | -------------------- |
-| `agent/`  | `/node` (list/get/drain/undrain) |
-| `job/`    | `/job/...`           |
-| `health/` | `/health/...`        |
-| `audit/`  | `/audit/...`         |
+| Package   | Routes                               |
+| --------- | ------------------------------------ |
+| `agent/`  | `/node` (list/get/drain/undrain)     |
+| `job/`    | `/job/...`                           |
+| `health/` | `/health/...`                        |
+| `audit/`  | `/audit/...`                         |
 | `file/`   | `/file/...` (upload/list/get/delete) |
-| `facts/`  | `/facts/...`         |
+| `facts/`  | `/facts/...`                         |
 
 ## What Does NOT Change
 
@@ -247,12 +240,13 @@ top level:
 - CLI command structure — stays as-is
 - Job operation constants — stay as-is
 - URL paths — stay exactly the same
-- Handler logic — no changes to handler implementations, only
-  package paths and imports
+- Handler logic — no changes to handler implementations, only package paths and
+  imports
 
 ## Migration Approach
 
 This is a purely mechanical refactor:
+
 1. Create new directory structure
 2. Move files, update package declarations
 3. Update imports across the codebase
@@ -262,5 +256,5 @@ This is a purely mechanical refactor:
 7. Update `controller_setup.go` method names
 8. Run tests, lint, verify
 
-No logic changes anywhere. Every handler, test, and validation
-function stays identical — only the package path changes.
+No logic changes anywhere. Every handler, test, and validation function stays
+identical — only the package path changes.

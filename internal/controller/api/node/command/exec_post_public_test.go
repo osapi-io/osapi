@@ -669,7 +669,7 @@ func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeCommandHandler(jobMock)
+			handlers := apicommand.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

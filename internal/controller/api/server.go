@@ -52,20 +52,10 @@ func New(
 		corsConfig.AllowOrigins = allowOrigins
 	}
 
-	// Build custom roles map from config.
-	var customRoles map[string][]string
-	if cfgRoles := appConfig.Controller.API.Security.Roles; len(cfgRoles) > 0 {
-		customRoles = make(map[string][]string, len(cfgRoles))
-		for name, role := range cfgRoles {
-			customRoles[name] = role.Permissions
-		}
-	}
-
 	s := &Server{
-		Echo:        e,
-		logger:      logger.With(slog.String("subsystem", "api.server")),
-		appConfig:   appConfig,
-		customRoles: customRoles,
+		Echo:      e,
+		logger:    logger.With(slog.String("subsystem", "api.server")),
+		appConfig: appConfig,
 	}
 
 	for _, opt := range opts {

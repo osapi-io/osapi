@@ -18,36 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package hostname
 
 import (
+	"log/slog"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
-	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/authtoken"
-	audithandler "github.com/retr0h/osapi/internal/controller/api/audit"
-	auditGen "github.com/retr0h/osapi/internal/controller/api/audit/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetAuditHandler returns audit handler for registration.
-func (s *Server) GetAuditHandler(
-	store auditstore.Store,
+// Handler returns Hostname route registration functions.
+func Handler(
+	logger *slog.Logger,
+	jobClient client.JobClient,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	handler := audithandler.New(s.logger, store)
+	hostnameHandler := New(logger, jobClient)
 
-	strictHandler := auditGen.NewStrictHandler(
-		handler,
-		[]auditGen.StrictMiddlewareFunc{
+	strictHandler := gen.NewStrictHandler(
+		hostnameHandler,
+		[]gen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					auditGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -55,7 +60,7 @@ func (s *Server) GetAuditHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			auditGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

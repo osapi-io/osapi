@@ -18,36 +18,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package health
 
 import (
+	"log/slog"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	nodeFileAPI "github.com/retr0h/osapi/internal/controller/api/node/file"
-	nodeFileGen "github.com/retr0h/osapi/internal/controller/api/node/file/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/health/gen"
 )
 
-// GetNodeFileHandler returns node file deploy handler for registration.
-func (s *Server) GetNodeFileHandler(
-	jobClient client.JobClient,
+// unauthenticatedOperations lists operation IDs that skip auth.
+var unauthenticatedOperations = map[string]bool{
+	"GetHealth":      true,
+	"GetHealthReady": true,
+}
+
+// Handler returns health route registration functions.
+func Handler(
+	logger *slog.Logger,
+	checker Checker,
+	startTime time.Time,
+	version string,
+	metrics MetricsProvider,
+	subComponents map[string]SubComponentInfo,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	fileHandler := nodeFileAPI.New(s.logger, jobClient)
+	healthHandler := New(logger, checker, startTime, version, metrics, subComponents)
 
-	strictHandler := nodeFileGen.NewStrictHandler(
-		fileHandler,
-		[]nodeFileGen.StrictMiddlewareFunc{
-			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+	strictHandler := gen.NewStrictHandler(
+		healthHandler,
+		[]gen.StrictMiddlewareFunc{
+			func(handler strictecho.StrictEchoHandlerFunc, operationID string) strictecho.StrictEchoHandlerFunc {
+				if unauthenticatedOperations[operationID] {
+					return handler
+				}
+
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					nodeFileGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -55,7 +74,7 @@ func (s *Server) GetNodeFileHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			nodeFileGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

@@ -18,36 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package agent
 
 import (
+	"log/slog"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api/agent"
-	agentGen "github.com/retr0h/osapi/internal/controller/api/agent/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/agent/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetAgentHandler returns agent handler for registration.
-func (s *Server) GetAgentHandler(
+// Handler returns agent route registration functions.
+func Handler(
+	logger *slog.Logger,
 	jobClient client.JobClient,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	agentHandler := agent.New(s.logger, jobClient)
+	agentHandler := New(logger, jobClient)
 
-	strictHandler := agentGen.NewStrictHandler(
+	strictHandler := gen.NewStrictHandler(
 		agentHandler,
-		[]agentGen.StrictMiddlewareFunc{
+		[]gen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					agentGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -55,7 +60,7 @@ func (s *Server) GetAgentHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			agentGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

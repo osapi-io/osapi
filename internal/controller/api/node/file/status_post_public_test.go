@@ -642,7 +642,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeFileHandler(jobMock)
+			handlers := nodeFile.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

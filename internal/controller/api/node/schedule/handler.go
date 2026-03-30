@@ -18,36 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package schedule
 
 import (
+	"log/slog"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	docker "github.com/retr0h/osapi/internal/controller/api/node/docker"
-	dockerGen "github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetNodeDockerHandler returns Docker handler for registration.
-func (s *Server) GetNodeDockerHandler(
+// Handler returns Schedule route registration functions.
+func Handler(
+	logger *slog.Logger,
 	jobClient client.JobClient,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	dockerHandler := docker.New(s.logger, jobClient)
+	scheduleHandler := New(logger, jobClient)
 
-	strictHandler := dockerGen.NewStrictHandler(
-		dockerHandler,
-		[]dockerGen.StrictMiddlewareFunc{
+	strictHandler := gen.NewStrictHandler(
+		scheduleHandler,
+		[]gen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					dockerGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -55,7 +60,7 @@ func (s *Server) GetNodeDockerHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			dockerGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

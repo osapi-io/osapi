@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,36 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package command
 
 import (
+	"log/slog"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	hostnameAPI "github.com/retr0h/osapi/internal/controller/api/node/hostname"
-	hostnameGen "github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/node/command/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetNodeHostnameHandler returns Hostname handler for registration.
-func (s *Server) GetNodeHostnameHandler(
+// Handler returns Command route registration functions.
+func Handler(
+	logger *slog.Logger,
 	jobClient client.JobClient,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	hostnameHandler := hostnameAPI.New(s.logger, jobClient)
+	commandHandler := New(logger, jobClient)
 
-	strictHandler := hostnameGen.NewStrictHandler(
-		hostnameHandler,
-		[]hostnameGen.StrictMiddlewareFunc{
+	strictHandler := gen.NewStrictHandler(
+		commandHandler,
+		[]gen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					hostnameGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -55,7 +60,7 @@ func (s *Server) GetNodeHostnameHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			hostnameGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

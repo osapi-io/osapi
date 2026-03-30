@@ -450,7 +450,7 @@ func (s *NodeOSGetPublicTestSuite) TestGetNodeOSRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := apinode.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/os", nil)

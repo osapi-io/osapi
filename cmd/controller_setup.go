@@ -39,8 +39,20 @@ import (
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller"
 	"github.com/retr0h/osapi/internal/controller/api"
+	agentAPI "github.com/retr0h/osapi/internal/controller/api/agent"
+	auditAPI "github.com/retr0h/osapi/internal/controller/api/audit"
+	factsAPI "github.com/retr0h/osapi/internal/controller/api/facts"
 	"github.com/retr0h/osapi/internal/controller/api/file"
 	"github.com/retr0h/osapi/internal/controller/api/health"
+	jobAPI "github.com/retr0h/osapi/internal/controller/api/job"
+	nodeAPI "github.com/retr0h/osapi/internal/controller/api/node"
+	commandAPI "github.com/retr0h/osapi/internal/controller/api/node/command"
+	dockerAPI "github.com/retr0h/osapi/internal/controller/api/node/docker"
+	nodeFileAPI "github.com/retr0h/osapi/internal/controller/api/node/file"
+	hostnameAPI "github.com/retr0h/osapi/internal/controller/api/node/hostname"
+	networkAPI "github.com/retr0h/osapi/internal/controller/api/node/network"
+	scheduleAPI "github.com/retr0h/osapi/internal/controller/api/node/schedule"
+	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
@@ -52,40 +64,6 @@ import (
 // ServerManager responsible for Server operations.
 type ServerManager interface {
 	cli.Lifecycle
-	// GetAgentHandler returns agent handler for registration.
-	GetAgentHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeHandler returns node handler for registration.
-	GetNodeHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetJobHandler returns job handler for registration.
-	GetJobHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetHealthHandler returns health handler for registration.
-	GetHealthHandler(
-		checker health.Checker,
-		startTime time.Time,
-		version string,
-		metrics health.MetricsProvider,
-		subComponents map[string]health.SubComponentInfo,
-	) []func(e *echo.Echo)
-	// GetAuditHandler returns audit handler for registration.
-	GetAuditHandler(store audit.Store) []func(e *echo.Echo)
-	// GetNodeDockerHandler returns Docker handler for registration.
-	GetNodeDockerHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeScheduleHandler returns Schedule handler for registration.
-	GetNodeScheduleHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeHostnameHandler returns Hostname handler for registration.
-	GetNodeHostnameHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeSysctlHandler returns Sysctl handler for registration.
-	GetNodeSysctlHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeNetworkHandler returns Network handler for registration.
-	GetNodeNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeCommandHandler returns Command handler for registration.
-	GetNodeCommandHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetNodeFileHandler returns node file deploy handler for registration.
-	GetNodeFileHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
-	// GetFileHandler returns file handler for registration.
-	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
-	// GetFactsHandler returns facts handler for registration.
-	GetFactsHandler() []func(e *echo.Echo)
 	// RegisterHandlers registers a list of handlers with the Echo instance.
 	RegisterHandlers(handlers []func(e *echo.Echo))
 }
@@ -235,7 +213,7 @@ func setupController(
 	serverOpts = append(serverOpts, extraOpts...)
 	sm := api.New(appConfig, log, serverOpts...)
 	registerControllerHandlers(
-		sm, b.jobClient, checker, metricsProvider,
+		log, sm, b.jobClient, checker, metricsProvider,
 		auditStore, b.objStore,
 	)
 
@@ -672,6 +650,7 @@ func createAuditStore(
 }
 
 func registerControllerHandlers(
+	log *slog.Logger,
 	sm ServerManager,
 	jc jobclient.JobClient,
 	checker health.Checker,
@@ -680,6 +659,16 @@ func registerControllerHandlers(
 	objStore file.ObjectStoreManager,
 ) {
 	startTime := time.Now()
+	signingKey := appConfig.Controller.API.Security.SigningKey
+
+	// Build custom roles map from config.
+	var customRoles map[string][]string
+	if cfgRoles := appConfig.Controller.API.Security.Roles; len(cfgRoles) > 0 {
+		customRoles = make(map[string][]string, len(cfgRoles))
+		for name, role := range cfgRoles {
+			customRoles[name] = role.Permissions
+		}
+	}
 
 	httpAddr := func(host string, port int) string {
 		return fmt.Sprintf("http://%s:%d", host, port)
@@ -709,27 +698,27 @@ func registerControllerHandlers(
 		"controller.tracing": {Status: enabledOrDisabled(appConfig.Telemetry.Tracing.Enabled)},
 	}
 
-	handlers := make([]func(e *echo.Echo), 0, 8)
-	handlers = append(handlers, sm.GetAgentHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeHandler(jc)...)
-	handlers = append(handlers, sm.GetJobHandler(jc)...)
+	handlers := make([]func(e *echo.Echo), 0, 16)
+	handlers = append(handlers, agentAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, nodeAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(
 		handlers,
-		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider, subComponents)...)
-	handlers = append(handlers, sm.GetNodeHostnameHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeDockerHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeScheduleHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeSysctlHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeNetworkHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeCommandHandler(jc)...)
-	handlers = append(handlers, sm.GetNodeFileHandler(jc)...)
+		health.Handler(log, checker, startTime, "0.1.0", metricsProvider, subComponents, signingKey, customRoles)...)
+	handlers = append(handlers, hostnameAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, dockerAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, sysctlAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, networkAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, commandAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, nodeFileAPI.Handler(log, jc, signingKey, customRoles)...)
 	if auditStore != nil {
-		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
+		handlers = append(handlers, auditAPI.Handler(log, auditStore, signingKey, customRoles)...)
 	}
 	if objStore != nil {
-		handlers = append(handlers, sm.GetFileHandler(objStore)...)
+		handlers = append(handlers, file.Handler(log, objStore, signingKey, customRoles)...)
 	}
-	handlers = append(handlers, sm.GetFactsHandler()...)
+	handlers = append(handlers, factsAPI.Handler(log, signingKey, customRoles)...)
 
 	sm.RegisterHandlers(handlers)
 }

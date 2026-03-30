@@ -590,7 +590,7 @@ func (s *ContainerCreatePublicTestSuite) TestPostNodeContainerDockerRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeDockerHandler(jobMock)
+			handlers := apicontainer.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

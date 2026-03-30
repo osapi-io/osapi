@@ -35,7 +35,6 @@ type Server struct {
 	Echo          *echo.Echo
 	logger        *slog.Logger
 	appConfig     config.Config
-	customRoles   map[string][]string
 	auditStore    audit.Store
 	meterProvider *sdkmetric.MeterProvider
 }

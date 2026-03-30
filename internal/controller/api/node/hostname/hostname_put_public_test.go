@@ -572,7 +572,7 @@ func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHostnameHandler(jobMock)
+			handlers := apihostname.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

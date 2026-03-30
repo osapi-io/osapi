@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,44 +18,64 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package facts_test
 
 import (
-	"github.com/labstack/echo/v4"
-	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api/node"
-	nodeGen "github.com/retr0h/osapi/internal/controller/api/node/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/controller/api/facts"
 )
 
-// GetNodeHandler returns node handler for registration.
-func (s *Server) GetNodeHandler(
-	jobClient client.JobClient,
-) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+type HandlerPublicTestSuite struct {
+	suite.Suite
+}
 
-	nodeHandler := node.New(s.logger, jobClient)
-
-	strictHandler := nodeGen.NewStrictHandler(
-		nodeHandler,
-		[]nodeGen.StrictMiddlewareFunc{
-			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
-					handler,
-					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					nodeGen.BearerAuthScopes,
-					s.customRoles,
-				)
+func (s *HandlerPublicTestSuite) TestHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
 			},
 		},
-	)
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
 
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			nodeGen.RegisterHandlers(e, strictHandler)
+				req := httptest.NewRequest(http.MethodGet, "/facts/keys", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := facts.Handler(
+				slog.Default(),
+				"test-signing-key",
+				nil,
+			)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
+func TestHandlerPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerPublicTestSuite))
 }

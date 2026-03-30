@@ -18,23 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api_test
+package hostname_test
 
 import (
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/retr0h/osapi/internal/config"
-	"github.com/retr0h/osapi/internal/controller/api"
-	agentAPI "github.com/retr0h/osapi/internal/controller/api/agent"
-	"github.com/retr0h/osapi/internal/controller/api/health"
-	jobAPI "github.com/retr0h/osapi/internal/controller/api/job"
-	nodeAPI "github.com/retr0h/osapi/internal/controller/api/node"
+	apihostname "github.com/retr0h/osapi/internal/controller/api/node/hostname"
 	"github.com/retr0h/osapi/internal/job/mocks"
 )
 
@@ -43,57 +39,54 @@ type HandlerPublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *mocks.MockJobClient
-	server        *api.Server
 }
 
 func (s *HandlerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
-
-	appConfig := config.Config{
-		Controller: config.Controller{
-			API: config.APIServer{
-				Security: config.ServerSecurity{
-					SigningKey: "test-signing-key",
-				},
-			},
-		},
-	}
-
-	s.server = api.New(appConfig, slog.Default())
 }
 
 func (s *HandlerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
+func (s *HandlerPublicTestSuite) TestHandler() {
 	tests := []struct {
-		name string
+		name     string
+		validate func([]func(e *echo.Echo))
 	}{
 		{
-			name: "registers handlers with Echo",
+			name: "returns handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname/hostname", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			signingKey := "test-signing-key"
+			handlers := apihostname.Handler(
+				slog.Default(),
+				s.mockJobClient,
+				"test-signing-key",
+				nil,
+			)
 
-			handlers := make([]func(e *echo.Echo), 0, 5)
-			handlers = append(handlers, agentAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
-			handlers = append(handlers, nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
-			handlers = append(handlers, jobAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...)
-			checker := &health.NATSChecker{}
-			handlers = append(
-				handlers,
-				health.Handler(slog.Default(), checker, time.Now(), "0.1.0", nil, nil, signingKey, nil)...)
-
-			routesBefore := len(s.server.Echo.Routes())
-			s.server.RegisterHandlers(handlers)
-			routesAfter := len(s.server.Echo.Routes())
-
-			s.Greater(routesAfter, routesBefore)
+			tt.validate(handlers)
 		})
 	}
 }

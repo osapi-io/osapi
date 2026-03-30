@@ -18,33 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package sysctl
 
 import (
+	"log/slog"
+
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api/facts"
-	factsGen "github.com/retr0h/osapi/internal/controller/api/facts/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
+	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetFactsHandler returns facts handler for registration.
-func (s *Server) GetFactsHandler() []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+// Handler returns Sysctl route registration functions.
+func Handler(
+	logger *slog.Logger,
+	jobClient client.JobClient,
+	signingKey string,
+	customRoles map[string][]string,
+) []func(e *echo.Echo) {
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	factsHandler := facts.New(s.logger)
+	sysctlHandler := New(logger, jobClient)
 
-	strictHandler := factsGen.NewStrictHandler(
-		factsHandler,
-		[]factsGen.StrictMiddlewareFunc{
+	strictHandler := gen.NewStrictHandler(
+		sysctlHandler,
+		[]gen.StrictMiddlewareFunc{
 			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
-				return scopeMiddleware(
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					factsGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -52,7 +60,7 @@ func (s *Server) GetFactsHandler() []func(e *echo.Echo) {
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			factsGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }

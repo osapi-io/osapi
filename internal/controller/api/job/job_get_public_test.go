@@ -597,7 +597,7 @@ func (s *JobGetPublicTestSuite) TestGetJobByIDRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetJobHandler(jobMock)
+			handlers := apijob.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

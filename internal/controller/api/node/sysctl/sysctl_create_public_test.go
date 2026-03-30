@@ -566,7 +566,7 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeSysctlHandler(jobMock)
+			handlers := apisysctl.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

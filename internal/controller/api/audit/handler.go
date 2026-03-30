@@ -18,51 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package api
+package audit
 
 import (
-	"time"
+	"log/slog"
 
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
+	auditstore "github.com/retr0h/osapi/internal/audit"
 	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api/health"
-	healthGen "github.com/retr0h/osapi/internal/controller/api/health/gen"
+	"github.com/retr0h/osapi/internal/controller/api"
+	gen "github.com/retr0h/osapi/internal/controller/api/audit/gen"
 )
 
-// unauthenticatedOperations lists operation IDs that skip auth.
-var unauthenticatedOperations = map[string]bool{
-	"GetHealth":      true,
-	"GetHealthReady": true,
-}
-
-// GetHealthHandler returns health handler for registration.
-func (s *Server) GetHealthHandler(
-	checker health.Checker,
-	startTime time.Time,
-	version string,
-	metrics health.MetricsProvider,
-	subComponents map[string]health.SubComponentInfo,
+// Handler returns audit route registration functions.
+func Handler(
+	logger *slog.Logger,
+	store auditstore.Store,
+	signingKey string,
+	customRoles map[string][]string,
 ) []func(e *echo.Echo) {
-	var tokenManager TokenValidator = authtoken.New(s.logger)
+	var tokenManager api.TokenValidator = authtoken.New(logger)
 
-	healthHandler := health.New(s.logger, checker, startTime, version, metrics, subComponents)
+	auditHandler := New(logger, store)
 
-	strictHandler := healthGen.NewStrictHandler(
-		healthHandler,
-		[]healthGen.StrictMiddlewareFunc{
-			func(handler strictecho.StrictEchoHandlerFunc, operationID string) strictecho.StrictEchoHandlerFunc {
-				if unauthenticatedOperations[operationID] {
-					return handler
-				}
-
-				return scopeMiddleware(
+	strictHandler := gen.NewStrictHandler(
+		auditHandler,
+		[]gen.StrictMiddlewareFunc{
+			func(handler strictecho.StrictEchoHandlerFunc, _ string) strictecho.StrictEchoHandlerFunc {
+				return api.ScopeMiddleware(
 					handler,
 					tokenManager,
-					s.appConfig.Controller.API.Security.SigningKey,
-					healthGen.BearerAuthScopes,
-					s.customRoles,
+					signingKey,
+					gen.BearerAuthScopes,
+					customRoles,
 				)
 			},
 		},
@@ -70,7 +60,7 @@ func (s *Server) GetHealthHandler(
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
-			healthGen.RegisterHandlers(e, strictHandler)
+			gen.RegisterHandlers(e, strictHandler)
 		},
 	}
 }
