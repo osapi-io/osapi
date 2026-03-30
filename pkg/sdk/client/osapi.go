@@ -71,6 +71,10 @@ type Client struct {
 	// create, update, delete).
 	Schedule *ScheduleService
 
+	// Sysctl provides sysctl parameter management operations (list, get,
+	// set, delete).
+	Sysctl *SysctlService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -138,6 +142,7 @@ func New(
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
 	c.Schedule = &ScheduleService{client: httpClient}
+	c.Sysctl = &SysctlService{client: httpClient}
 
 	return c
 }
