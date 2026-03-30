@@ -44,6 +44,22 @@ type SysctlCollectionResponse struct {
 	Results []SysctlEntry       `json:"results"`
 }
 
+// SysctlCreateRequest defines model for SysctlCreateRequest.
+type SysctlCreateRequest struct {
+	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
+	Key string `json:"key" validate:"required,min=1"`
+
+	// Value Value to set for the sysctl parameter.
+	Value string `json:"value" validate:"required"`
+}
+
+// SysctlCreateResponse defines model for SysctlCreateResponse.
+type SysctlCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []SysctlMutationResult `json:"results"`
+}
+
 // SysctlDeleteResponse defines model for SysctlDeleteResponse.
 type SysctlDeleteResponse struct {
 	// JobId The job ID used to process this request.
@@ -79,7 +95,7 @@ type SysctlGetResponse struct {
 	Results []SysctlEntry       `json:"results"`
 }
 
-// SysctlMutationResult Result of a sysctl set or delete operation for one host.
+// SysctlMutationResult Result of a sysctl create, update, or delete operation for one host.
 type SysctlMutationResult struct {
 	// Changed Whether the operation modified system state.
 	Changed *bool `json:"changed,omitempty"`
@@ -100,17 +116,14 @@ type SysctlMutationResult struct {
 // SysctlMutationResultStatus The status of the operation for this host.
 type SysctlMutationResultStatus string
 
-// SysctlSetRequest defines model for SysctlSetRequest.
-type SysctlSetRequest struct {
-	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
-	Key string `json:"key" validate:"required,min=1"`
-
-	// Value Value to set for the sysctl parameter.
+// SysctlUpdateRequest defines model for SysctlUpdateRequest.
+type SysctlUpdateRequest struct {
+	// Value New value for the sysctl parameter.
 	Value string `json:"value" validate:"required"`
 }
 
-// SysctlSetResponse defines model for SysctlSetResponse.
-type SysctlSetResponse struct {
+// SysctlUpdateResponse defines model for SysctlUpdateResponse.
+type SysctlUpdateResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
 	Results []SysctlMutationResult `json:"results"`
@@ -123,14 +136,17 @@ type Hostname = string
 type SysctlKey = string
 
 // PostNodeSysctlJSONRequestBody defines body for PostNodeSysctl for application/json ContentType.
-type PostNodeSysctlJSONRequestBody = SysctlSetRequest
+type PostNodeSysctlJSONRequestBody = SysctlCreateRequest
+
+// PutNodeSysctlJSONRequestBody defines body for PutNodeSysctl for application/json ContentType.
+type PutNodeSysctlJSONRequestBody = SysctlUpdateRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// List all managed sysctl entries
 	// (GET /node/{hostname}/sysctl)
 	GetNodeSysctl(ctx echo.Context, hostname Hostname) error
-	// Set a sysctl parameter
+	// Create a sysctl parameter
 	// (POST /node/{hostname}/sysctl)
 	PostNodeSysctl(ctx echo.Context, hostname Hostname) error
 	// Delete a managed sysctl entry
@@ -139,6 +155,9 @@ type ServerInterface interface {
 	// Get a sysctl entry
 	// (GET /node/{hostname}/sysctl/{key})
 	GetNodeSysctlByKey(ctx echo.Context, hostname Hostname, key SysctlKey) error
+	// Update a sysctl parameter
+	// (PUT /node/{hostname}/sysctl/{key})
+	PutNodeSysctl(ctx echo.Context, hostname Hostname, key SysctlKey) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -234,6 +253,32 @@ func (w *ServerInterfaceWrapper) GetNodeSysctlByKey(ctx echo.Context) error {
 	return err
 }
 
+// PutNodeSysctl converts echo context to params.
+func (w *ServerInterfaceWrapper) PutNodeSysctl(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	// ------------- Path parameter "key" -------------
+	var key SysctlKey
+
+	err = runtime.BindStyledParameterWithOptions("simple", "key", ctx.Param("key"), &key, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter key: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"sysctl:write"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PutNodeSysctl(ctx, hostname, key)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -266,6 +311,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/node/:hostname/sysctl", wrapper.PostNodeSysctl)
 	router.DELETE(baseURL+"/node/:hostname/sysctl/:key", wrapper.DeleteNodeSysctl)
 	router.GET(baseURL+"/node/:hostname/sysctl/:key", wrapper.GetNodeSysctlByKey)
+	router.PUT(baseURL+"/node/:hostname/sysctl/:key", wrapper.PutNodeSysctl)
 
 }
 
@@ -322,7 +368,7 @@ type PostNodeSysctlResponseObject interface {
 	VisitPostNodeSysctlResponse(w http.ResponseWriter) error
 }
 
-type PostNodeSysctl200JSONResponse SysctlSetResponse
+type PostNodeSysctl200JSONResponse SysctlCreateResponse
 
 func (response PostNodeSysctl200JSONResponse) VisitPostNodeSysctlResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -475,12 +521,76 @@ func (response GetNodeSysctlByKey500JSONResponse) VisitGetNodeSysctlByKeyRespons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PutNodeSysctlRequestObject struct {
+	Hostname Hostname  `json:"hostname"`
+	Key      SysctlKey `json:"key"`
+	Body     *PutNodeSysctlJSONRequestBody
+}
+
+type PutNodeSysctlResponseObject interface {
+	VisitPutNodeSysctlResponse(w http.ResponseWriter) error
+}
+
+type PutNodeSysctl200JSONResponse SysctlUpdateResponse
+
+func (response PutNodeSysctl200JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeSysctl400JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSysctl400JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeSysctl401JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSysctl401JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeSysctl403JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSysctl403JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeSysctl404JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSysctl404JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutNodeSysctl500JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSysctl500JSONResponse) VisitPutNodeSysctlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// List all managed sysctl entries
 	// (GET /node/{hostname}/sysctl)
 	GetNodeSysctl(ctx context.Context, request GetNodeSysctlRequestObject) (GetNodeSysctlResponseObject, error)
-	// Set a sysctl parameter
+	// Create a sysctl parameter
 	// (POST /node/{hostname}/sysctl)
 	PostNodeSysctl(ctx context.Context, request PostNodeSysctlRequestObject) (PostNodeSysctlResponseObject, error)
 	// Delete a managed sysctl entry
@@ -489,6 +599,9 @@ type StrictServerInterface interface {
 	// Get a sysctl entry
 	// (GET /node/{hostname}/sysctl/{key})
 	GetNodeSysctlByKey(ctx context.Context, request GetNodeSysctlByKeyRequestObject) (GetNodeSysctlByKeyResponseObject, error)
+	// Update a sysctl parameter
+	// (PUT /node/{hostname}/sysctl/{key})
+	PutNodeSysctl(ctx context.Context, request PutNodeSysctlRequestObject) (PutNodeSysctlResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -605,6 +718,38 @@ func (sh *strictHandler) GetNodeSysctlByKey(ctx echo.Context, hostname Hostname,
 		return err
 	} else if validResponse, ok := response.(GetNodeSysctlByKeyResponseObject); ok {
 		return validResponse.VisitGetNodeSysctlByKeyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PutNodeSysctl operation middleware
+func (sh *strictHandler) PutNodeSysctl(ctx echo.Context, hostname Hostname, key SysctlKey) error {
+	var request PutNodeSysctlRequestObject
+
+	request.Hostname = hostname
+	request.Key = key
+
+	var body PutNodeSysctlJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutNodeSysctl(ctx.Request().Context(), request.(PutNodeSysctlRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutNodeSysctl")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PutNodeSysctlResponseObject); ok {
+		return validResponse.VisitPutNodeSysctlResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

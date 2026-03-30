@@ -33,7 +33,7 @@ type SysctlEntryResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// SysctlMutationResult represents the result of a sysctl set or delete.
+// SysctlMutationResult represents the result of a sysctl create, update, or delete.
 type SysctlMutationResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -42,11 +42,17 @@ type SysctlMutationResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// SysctlSetOpts contains options for setting a sysctl parameter.
-type SysctlSetOpts struct {
+// SysctlCreateOpts contains options for creating a sysctl parameter.
+type SysctlCreateOpts struct {
 	// Key is the sysctl parameter name (e.g., "net.ipv4.ip_forward"). Required.
 	Key string
 	// Value is the parameter value. Required.
+	Value string
+}
+
+// SysctlUpdateOpts contains options for updating a sysctl parameter.
+type SysctlUpdateOpts struct {
+	// Value is the new parameter value. Required.
 	Value string
 }
 
@@ -94,10 +100,32 @@ func sysctlEntryCollectionFromGet(
 	}
 }
 
-// sysctlMutationCollectionFromSet converts a gen.SysctlSetResponse
+// sysctlMutationCollectionFromCreate converts a gen.SysctlCreateResponse
 // to a Collection[SysctlMutationResult].
-func sysctlMutationCollectionFromSet(
-	g *gen.SysctlSetResponse,
+func sysctlMutationCollectionFromCreate(
+	g *gen.SysctlCreateResponse,
+) Collection[SysctlMutationResult] {
+	results := make([]SysctlMutationResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, SysctlMutationResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Key:      derefString(r.Key),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[SysctlMutationResult]{
+		Results: results,
+		JobID:   jobIDFromGen(g.JobId),
+	}
+}
+
+// sysctlMutationCollectionFromUpdate converts a gen.SysctlUpdateResponse
+// to a Collection[SysctlMutationResult].
+func sysctlMutationCollectionFromUpdate(
+	g *gen.SysctlUpdateResponse,
 ) Collection[SysctlMutationResult] {
 	results := make([]SysctlMutationResult, 0, len(g.Results))
 	for _, r := range g.Results {

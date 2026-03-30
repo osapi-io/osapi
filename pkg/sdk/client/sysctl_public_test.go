@@ -366,12 +366,12 @@ func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 	}
 }
 
-func (suite *SysctlPublicTestSuite) TestSysctlSet() {
+func (suite *SysctlPublicTestSuite) TestSysctlCreate() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		opts         client.SysctlSetOpts
+		opts         client.SysctlCreateOpts
 		validateFunc func(*client.Response[client.Collection[client.SysctlMutationResult]], error)
 	}{
 		{
@@ -385,7 +385,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 					),
 				)
 			},
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
 			},
@@ -414,7 +414,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 					),
 				)
 			},
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "vm.swappiness",
 				Value: "10",
 			},
@@ -434,7 +434,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"invalid key"}`))
 			},
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "",
 				Value: "1",
 			},
@@ -457,7 +457,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
 			},
@@ -476,7 +476,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 		{
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
 			},
@@ -486,7 +486,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
-				suite.Contains(err.Error(), "sysctl set")
+				suite.Contains(err.Error(), "sysctl create")
 			},
 		},
 		{
@@ -494,7 +494,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			opts: client.SysctlSetOpts{
+			opts: client.SysctlCreateOpts{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
 			},
@@ -536,7 +536,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlSet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlSet(suite.ctx, "_any", tc.opts)
+			resp, err := sut.Sysctl.SysctlCreate(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}

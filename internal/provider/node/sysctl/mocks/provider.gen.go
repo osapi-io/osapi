@@ -35,6 +35,21 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockProvider) Create(ctx context.Context, entry sysctl.Entry) (*sysctl.CreateResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, entry)
+	ret0, _ := ret[0].(*sysctl.CreateResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockProviderMockRecorder) Create(ctx, entry interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockProvider)(nil).Create), ctx, entry)
+}
+
 // Delete mocks base method.
 func (m *MockProvider) Delete(ctx context.Context, key string) (*sysctl.DeleteResult, error) {
 	m.ctrl.T.Helper()
@@ -80,17 +95,17 @@ func (mr *MockProviderMockRecorder) List(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockProvider)(nil).List), ctx)
 }
 
-// Set mocks base method.
-func (m *MockProvider) Set(ctx context.Context, entry sysctl.Entry) (*sysctl.SetResult, error) {
+// Update mocks base method.
+func (m *MockProvider) Update(ctx context.Context, entry sysctl.Entry) (*sysctl.UpdateResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", ctx, entry)
-	ret0, _ := ret[0].(*sysctl.SetResult)
+	ret := m.ctrl.Call(m, "Update", ctx, entry)
+	ret0, _ := ret[0].(*sysctl.UpdateResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Set indicates an expected call of Set.
-func (mr *MockProviderMockRecorder) Set(ctx, entry interface{}) *gomock.Call {
+// Update indicates an expected call of Update.
+func (mr *MockProviderMockRecorder) Update(ctx, entry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockProvider)(nil).Set), ctx, entry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockProvider)(nil).Update), ctx, entry)
 }

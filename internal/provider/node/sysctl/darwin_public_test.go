@@ -78,7 +78,7 @@ func (suite *DarwinPublicTestSuite) TestGet() {
 	}
 }
 
-func (suite *DarwinPublicTestSuite) TestSet() {
+func (suite *DarwinPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name string
 	}{
@@ -89,7 +89,26 @@ func (suite *DarwinPublicTestSuite) TestSet() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.Set(context.Background(), sysctl.Entry{})
+			got, err := suite.provider.Create(context.Background(), sysctl.Entry{})
+
+			suite.Nil(got)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestUpdate() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got, err := suite.provider.Update(context.Background(), sysctl.Entry{})
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

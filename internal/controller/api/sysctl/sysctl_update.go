@@ -33,27 +33,27 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeSysctl sets a sysctl parameter on a target node.
-func (s *Sysctl) PostNodeSysctl(
+// PutNodeSysctl updates an existing sysctl parameter on a target node.
+func (s *Sysctl) PutNodeSysctl(
 	ctx context.Context,
-	request gen.PostNodeSysctlRequestObject,
-) (gen.PostNodeSysctlResponseObject, error) {
+	request gen.PutNodeSysctlRequestObject,
+) (gen.PutNodeSysctlResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeSysctl400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeSysctl400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSysctl400JSONResponse{Error: &errMsg}, nil
 	}
 
 	entry := sysctlProv.Entry{
-		Key:   request.Body.Key,
+		Key:   request.Key,
 		Value: request.Body.Value,
 	}
 
 	hostname := request.Hostname
 
-	s.logger.Debug("sysctl set",
+	s.logger.Debug("sysctl update",
 		slog.String("target", hostname),
 		slog.String("key", entry.Key),
 		slog.String("value", entry.Value),
@@ -61,25 +61,25 @@ func (s *Sysctl) PostNodeSysctl(
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.postNodeSysctlBroadcast(ctx, hostname, entry)
+		return s.putNodeSysctlBroadcast(ctx, hostname, entry)
 	}
 
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"node",
-		job.OperationSysctlSet,
+		job.OperationSysctlUpdate,
 		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSysctl500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeSysctl200JSONResponse{
+		return gen.PutNodeSysctl200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.SysctlMutationResult{
 				{
@@ -91,7 +91,7 @@ func (s *Sysctl) PostNodeSysctl(
 		}, nil
 	}
 
-	var result sysctlProv.SetResult
+	var result sysctlProv.UpdateResult
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &result)
 	}
@@ -101,7 +101,7 @@ func (s *Sysctl) PostNodeSysctl(
 	resultKey := result.Key
 	agentHostname := resp.Hostname
 
-	return gen.PostNodeSysctl200JSONResponse{
+	return gen.PutNodeSysctl200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.SysctlMutationResult{
 			{
@@ -114,22 +114,22 @@ func (s *Sysctl) PostNodeSysctl(
 	}, nil
 }
 
-// postNodeSysctlBroadcast handles broadcast targets for sysctl set.
-func (s *Sysctl) postNodeSysctlBroadcast(
+// putNodeSysctlBroadcast handles broadcast targets for sysctl update.
+func (s *Sysctl) putNodeSysctlBroadcast(
 	ctx context.Context,
 	target string,
 	entry sysctlProv.Entry,
-) (gen.PostNodeSysctlResponseObject, error) {
+) (gen.PutNodeSysctlResponseObject, error) {
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"node",
-		job.OperationSysctlSet,
+		job.OperationSysctlUpdate,
 		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSysctl500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var apiResponses []gen.SysctlMutationResult
@@ -148,7 +148,7 @@ func (s *Sysctl) postNodeSysctlBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.SysctlMutationResultStatusOk
-			var result sysctlProv.SetResult
+			var result sysctlProv.UpdateResult
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}
@@ -161,7 +161,7 @@ func (s *Sysctl) postNodeSysctlBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.PostNodeSysctl200JSONResponse{
+	return gen.PutNodeSysctl200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

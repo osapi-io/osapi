@@ -1,10 +1,11 @@
-# Set
+# Create
 
-Set a sysctl parameter on a target host. The value is written to
-`/etc/sysctl.d/osapi-{key}.conf` and applied immediately via `sysctl -p`:
+Create a new sysctl parameter on a target host. The value is written to
+`/etc/sysctl.d/osapi-{key}.conf` and applied immediately via `sysctl -p`. Fails
+if the key is already managed -- use `update` to change an existing parameter:
 
 ```bash
-$ osapi client node sysctl set --target web-01 \
+$ osapi client node sysctl create --target web-01 \
     --key net.ipv4.ip_forward --value 1
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -13,23 +14,10 @@ $ osapi client node sysctl set --target web-01 \
   net.ipv4.ip_forward   true
 ```
 
-If the parameter already has the requested value, `changed: false` is
-returned and the file is not rewritten:
-
-```bash
-$ osapi client node sysctl set --target web-01 \
-    --key net.ipv4.ip_forward --value 1
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  KEY                   CHANGED
-  net.ipv4.ip_forward   false
-```
-
 Broadcast to all hosts at once:
 
 ```bash
-$ osapi client node sysctl set --target _all \
+$ osapi client node sysctl create --target _all \
     --key vm.swappiness --value 10
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -39,11 +27,11 @@ $ osapi client node sysctl set --target _all \
   web-02    vm.swappiness  true
 ```
 
-When some hosts are skipped (e.g., macOS agents), STATUS and ERROR columns
-are added:
+When some hosts are skipped (e.g., macOS agents), STATUS and ERROR columns are
+added:
 
 ```bash
-$ osapi client node sysctl set --target _all \
+$ osapi client node sysctl create --target _all \
     --key vm.swappiness --value 10
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -58,7 +46,7 @@ $ osapi client node sysctl set --target _all \
 Use `--json` to get the full API response:
 
 ```bash
-$ osapi client node sysctl set --target web-01 \
+$ osapi client node sysctl create --target web-01 \
     --key vm.swappiness --value 10 --json
 {"results":[{"hostname":"web-01","key":"vm.swappiness","changed":true,"status":"ok"}],"job_id":"..."}
 ```
@@ -67,7 +55,7 @@ $ osapi client node sysctl set --target web-01 \
 
 | Flag           | Description                                              | Default  |
 | -------------- | -------------------------------------------------------- | -------- |
-| `--key`        | Sysctl parameter key to set                              | required |
+| `--key`        | Sysctl parameter key to create                           | required |
 | `--value`      | Value to assign to the parameter                         | required |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`   |
 | `-j, --json`   | Output raw JSON response                                 |          |

@@ -55,8 +55,10 @@ func processSysctlOperation(
 		return processSysctlList(ctx, sysctlProvider, logger)
 	case "get":
 		return processSysctlGet(ctx, sysctlProvider, logger, jobRequest)
-	case "set":
-		return processSysctlSet(ctx, sysctlProvider, logger, jobRequest)
+	case "create":
+		return processSysctlCreate(ctx, sysctlProvider, logger, jobRequest)
+	case "update":
+		return processSysctlUpdate(ctx, sysctlProvider, logger, jobRequest)
 	case "delete":
 		return processSysctlDelete(ctx, sysctlProvider, logger, jobRequest)
 	default:
@@ -106,8 +108,8 @@ func processSysctlGet(
 	return json.Marshal(entry)
 }
 
-// processSysctlSet sets a sysctl entry.
-func processSysctlSet(
+// processSysctlCreate creates a sysctl entry.
+func processSysctlCreate(
 	ctx context.Context,
 	sysctlProvider sysctl.Provider,
 	logger *slog.Logger,
@@ -115,14 +117,38 @@ func processSysctlSet(
 ) (json.RawMessage, error) {
 	var entry sysctl.Entry
 	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
-		return nil, fmt.Errorf("unmarshal sysctl set data: %w", err)
+		return nil, fmt.Errorf("unmarshal sysctl create data: %w", err)
 	}
 
-	logger.Debug("executing sysctl.Set",
+	logger.Debug("executing sysctl.Create",
 		slog.String("key", entry.Key),
 	)
 
-	result, err := sysctlProvider.Set(ctx, entry)
+	result, err := sysctlProvider.Create(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(result)
+}
+
+// processSysctlUpdate updates a sysctl entry.
+func processSysctlUpdate(
+	ctx context.Context,
+	sysctlProvider sysctl.Provider,
+	logger *slog.Logger,
+	jobRequest job.Request,
+) (json.RawMessage, error) {
+	var entry sysctl.Entry
+	if err := json.Unmarshal(jobRequest.Data, &entry); err != nil {
+		return nil, fmt.Errorf("unmarshal sysctl update data: %w", err)
+	}
+
+	logger.Debug("executing sysctl.Update",
+		slog.String("key", entry.Key),
+	)
+
+	result, err := sysctlProvider.Update(ctx, entry)
 	if err != nil {
 		return nil, err
 	}

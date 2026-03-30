@@ -31,8 +31,10 @@ type Provider interface {
 	List(ctx context.Context) ([]Entry, error)
 	// Get returns a single sysctl entry by key with current runtime value.
 	Get(ctx context.Context, key string) (*Entry, error)
-	// Set deploys a sysctl conf file and applies it. Idempotent.
-	Set(ctx context.Context, entry Entry) (*SetResult, error)
+	// Create deploys a new sysctl conf file and applies it. Fails if already managed.
+	Create(ctx context.Context, entry Entry) (*CreateResult, error)
+	// Update redeploys an existing sysctl conf file. Fails if not managed.
+	Update(ctx context.Context, entry Entry) (*UpdateResult, error)
 	// Delete removes a managed sysctl conf file and reloads defaults.
 	Delete(ctx context.Context, key string) (*DeleteResult, error)
 }
@@ -43,8 +45,15 @@ type Entry struct {
 	Value string `json:"value"`
 }
 
-// SetResult represents the outcome of a sysctl set operation.
-type SetResult struct {
+// CreateResult represents the outcome of a sysctl create operation.
+type CreateResult struct {
+	Key     string `json:"key"`
+	Changed bool   `json:"changed"`
+	Error   string `json:"error,omitempty"`
+}
+
+// UpdateResult represents the outcome of a sysctl update operation.
+type UpdateResult struct {
 	Key     string `json:"key"`
 	Changed bool   `json:"changed"`
 	Error   string `json:"error,omitempty"`

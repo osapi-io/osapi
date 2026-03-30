@@ -376,12 +376,20 @@ func SysctlEntryCollectionFromGet(
 	return sysctlEntryCollectionFromGet(input)
 }
 
-// SysctlMutationCollectionFromSet exposes the private
-// sysctlMutationCollectionFromSet for testing.
-func SysctlMutationCollectionFromSet(
-	input *gen.SysctlSetResponse,
+// SysctlMutationCollectionFromCreate exposes the private
+// sysctlMutationCollectionFromCreate for testing.
+func SysctlMutationCollectionFromCreate(
+	input *gen.SysctlCreateResponse,
 ) Collection[SysctlMutationResult] {
-	return sysctlMutationCollectionFromSet(input)
+	return sysctlMutationCollectionFromCreate(input)
+}
+
+// SysctlMutationCollectionFromUpdate exposes the private
+// sysctlMutationCollectionFromUpdate for testing.
+func SysctlMutationCollectionFromUpdate(
+	input *gen.SysctlUpdateResponse,
+) Collection[SysctlMutationResult] {
+	return sysctlMutationCollectionFromUpdate(input)
 }
 
 // SysctlMutationCollectionFromDelete exposes the private

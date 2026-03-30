@@ -219,7 +219,7 @@ func (suite *SysctlTypesPublicTestSuite) TestSysctlEntryCollectionFromGet() {
 	}
 }
 
-func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromSet() {
+func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromCreate() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,
 		0xe2, 0x9b, 0x41, 0xd4,
@@ -229,16 +229,16 @@ func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromSet() {
 
 	tests := []struct {
 		name         string
-		input        *gen.SysctlSetResponse
+		input        *gen.SysctlCreateResponse
 		validateFunc func(client.Collection[client.SysctlMutationResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.SysctlSetResponse {
+			input: func() *gen.SysctlCreateResponse {
 				key := "net.ipv4.ip_forward"
 				changed := true
 
-				return &gen.SysctlSetResponse{
+				return &gen.SysctlCreateResponse{
 					JobId: &testUUID,
 					Results: []gen.SysctlMutationResult{
 						{
@@ -264,10 +264,10 @@ func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromSet() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.SysctlSetResponse {
+			input: func() *gen.SysctlCreateResponse {
 				errMsg := "permission denied"
 
-				return &gen.SysctlSetResponse{
+				return &gen.SysctlCreateResponse{
 					Results: []gen.SysctlMutationResult{
 						{
 							Hostname: "web-01",
@@ -293,7 +293,7 @@ func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromSet() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result := client.SysctlMutationCollectionFromSet(tc.input)
+			result := client.SysctlMutationCollectionFromCreate(tc.input)
 			tc.validateFunc(result)
 		})
 	}

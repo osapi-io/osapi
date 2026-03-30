@@ -51,11 +51,19 @@ func (d *Darwin) Get(
 	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
 }
 
-// Set returns ErrUnsupported on Darwin.
-func (d *Darwin) Set(
+// Create returns ErrUnsupported on Darwin.
+func (d *Darwin) Create(
 	_ context.Context,
 	_ Entry,
-) (*SetResult, error) {
+) (*CreateResult, error) {
+	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
+}
+
+// Update returns ErrUnsupported on Darwin.
+func (d *Darwin) Update(
+	_ context.Context,
+	_ Entry,
+) (*UpdateResult, error) {
 	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
 }
 

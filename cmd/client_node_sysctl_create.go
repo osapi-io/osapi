@@ -29,17 +29,17 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-// clientNodeSysctlSetCmd represents the sysctl set command.
-var clientNodeSysctlSetCmd = &cobra.Command{
-	Use:   "set",
-	Short: "Set a sysctl parameter",
+// clientNodeSysctlCreateCmd represents the sysctl create command.
+var clientNodeSysctlCreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Create a sysctl parameter",
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		resp, err := sdkClient.Sysctl.SysctlSet(ctx, host, client.SysctlSetOpts{
+		resp, err := sdkClient.Sysctl.SysctlCreate(ctx, host, client.SysctlCreateOpts{
 			Key:   key,
 			Value: value,
 		})
@@ -79,13 +79,13 @@ var clientNodeSysctlSetCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeSysctlCmd.AddCommand(clientNodeSysctlSetCmd)
+	clientNodeSysctlCmd.AddCommand(clientNodeSysctlCreateCmd)
 
-	clientNodeSysctlSetCmd.PersistentFlags().
+	clientNodeSysctlCreateCmd.PersistentFlags().
 		String("key", "", "Sysctl parameter key (required)")
-	clientNodeSysctlSetCmd.PersistentFlags().
+	clientNodeSysctlCreateCmd.PersistentFlags().
 		String("value", "", "Sysctl parameter value (required)")
 
-	_ = clientNodeSysctlSetCmd.MarkPersistentFlagRequired("key")
-	_ = clientNodeSysctlSetCmd.MarkPersistentFlagRequired("value")
+	_ = clientNodeSysctlCreateCmd.MarkPersistentFlagRequired("key")
+	_ = clientNodeSysctlCreateCmd.MarkPersistentFlagRequired("value")
 }

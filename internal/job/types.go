@@ -158,7 +158,8 @@ const (
 const (
 	OperationSysctlList   = client.OpSysctlList
 	OperationSysctlGet    = client.OpSysctlGet
-	OperationSysctlSet    = client.OpSysctlSet
+	OperationSysctlCreate = client.OpSysctlCreate
+	OperationSysctlUpdate = client.OpSysctlUpdate
 	OperationSysctlDelete = client.OpSysctlDelete
 )
 

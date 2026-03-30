@@ -81,21 +81,92 @@ func NewDebianProvider(
 	}
 }
 
-// Set deploys a sysctl conf file and applies it. Idempotent: if the
-// content hasn't changed since the last deploy, the file is not
-// rewritten and Changed is false.
-func (d *Debian) Set(
+// Create deploys a new sysctl conf file and applies it. Fails if the
+// key is already managed. Idempotent: if the content hasn't changed
+// since the last deploy, the file is not rewritten and Changed is false.
+func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
-) (*SetResult, error) {
+) (*CreateResult, error) {
 	if entry.Key == "" {
-		return nil, fmt.Errorf("sysctl set: key must not be empty")
+		return nil, fmt.Errorf("sysctl create: key must not be empty")
 	}
 
 	if entry.Value == "" {
-		return nil, fmt.Errorf("sysctl set: value must not be empty")
+		return nil, fmt.Errorf("sysctl create: value must not be empty")
 	}
 
+	confPath := confPath(entry.Key)
+	stateKey := file.BuildStateKey(d.hostname, confPath)
+
+	// Check if already managed: fail if exists and not undeployed.
+	kvEntry, err := d.stateKV.Get(ctx, stateKey)
+	if err == nil {
+		var state job.FileState
+		if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
+			if state.UndeployedAt == "" {
+				return nil, fmt.Errorf(
+					"sysctl create: key %q already managed",
+					entry.Key,
+				)
+			}
+		}
+	}
+
+	return d.deploy(ctx, entry, "create")
+}
+
+// Update redeploys an existing managed sysctl conf file. Fails if the
+// key is not currently managed. Idempotent: if the content hasn't
+// changed, Changed is false.
+func (d *Debian) Update(
+	ctx context.Context,
+	entry Entry,
+) (*UpdateResult, error) {
+	if entry.Key == "" {
+		return nil, fmt.Errorf("sysctl update: key must not be empty")
+	}
+
+	if entry.Value == "" {
+		return nil, fmt.Errorf("sysctl update: value must not be empty")
+	}
+
+	confPath := confPath(entry.Key)
+	stateKey := file.BuildStateKey(d.hostname, confPath)
+
+	// Check that the key is managed.
+	kvEntry, err := d.stateKV.Get(ctx, stateKey)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"sysctl update: key %q not managed",
+			entry.Key,
+		)
+	}
+
+	var state job.FileState
+	if unmarshalErr := json.Unmarshal(kvEntry.Value(), &state); unmarshalErr == nil {
+		if state.UndeployedAt != "" {
+			return nil, fmt.Errorf(
+				"sysctl update: key %q not managed",
+				entry.Key,
+			)
+		}
+	}
+
+	result, deployErr := d.deploy(ctx, entry, "update")
+	if deployErr != nil {
+		return nil, deployErr
+	}
+
+	return (*UpdateResult)(result), nil
+}
+
+// deploy is the shared implementation for Create and Update.
+func (d *Debian) deploy(
+	ctx context.Context,
+	entry Entry,
+	opName string,
+) (*CreateResult, error) {
 	content := []byte(entry.Key + " = " + entry.Value + "\n")
 	confPath := confPath(entry.Key)
 	sha := computeSHA256(content)
@@ -115,7 +186,7 @@ func (d *Debian) Set(
 						slog.String("path", confPath),
 					)
 
-					return &SetResult{
+					return &CreateResult{
 						Key:     entry.Key,
 						Changed: false,
 					}, nil
@@ -126,12 +197,12 @@ func (d *Debian) Set(
 
 	// Ensure the directory exists.
 	if mkErr := d.fs.MkdirAll(sysctlDir, 0o755); mkErr != nil {
-		return nil, fmt.Errorf("sysctl set: create directory: %w", mkErr)
+		return nil, fmt.Errorf("sysctl %s: create directory: %w", opName, mkErr)
 	}
 
 	// Write the conf file.
 	if writeErr := d.fs.WriteFile(confPath, content, 0o644); writeErr != nil {
-		return nil, fmt.Errorf("sysctl set: write file: %w", writeErr)
+		return nil, fmt.Errorf("sysctl %s: write file: %w", opName, writeErr)
 	}
 
 	// Persist state in KV.
@@ -148,11 +219,11 @@ func (d *Debian) Set(
 
 	stateBytes, marshalErr := marshalJSON(state)
 	if marshalErr != nil {
-		return nil, fmt.Errorf("sysctl set: marshal state: %w", marshalErr)
+		return nil, fmt.Errorf("sysctl %s: marshal state: %w", opName, marshalErr)
 	}
 
 	if _, putErr := d.stateKV.Put(ctx, stateKey, stateBytes); putErr != nil {
-		return nil, fmt.Errorf("sysctl set: update state: %w", putErr)
+		return nil, fmt.Errorf("sysctl %s: update state: %w", opName, putErr)
 	}
 
 	// Apply the sysctl conf file.
@@ -172,7 +243,7 @@ func (d *Debian) Set(
 		slog.Bool("changed", true),
 	)
 
-	return &SetResult{
+	return &CreateResult{
 		Key:     entry.Key,
 		Changed: true,
 	}, nil

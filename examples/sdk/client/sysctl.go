@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package main demonstrates sysctl parameter management: list all parameters
-// on a host, then set and verify a kernel parameter using the SDK.
+// on a host, then create a kernel parameter using the SDK.
 //
 // All responses return Collection[T] with per-host results when targeting
 // broadcast targets (_all, _any) or a single hostname. Use .Data.Results
@@ -76,15 +76,15 @@ func sysctlExample() {
 		}
 	}
 
-	// Set a sysctl parameter to a new value.
+	// Create a sysctl parameter.
 	// Returns Collection[SysctlMutationResult] with per-host results.
-	fmt.Println("\n=== Setting sysctl parameter ===")
-	setResp, err := c.Sysctl.SysctlSet(ctx, hostname, client.SysctlSetOpts{
+	fmt.Println("\n=== Creating sysctl parameter ===")
+	setResp, err := c.Sysctl.SysctlCreate(ctx, hostname, client.SysctlCreateOpts{
 		Key:   "net.ipv4.ip_forward",
 		Value: "1",
 	})
 	if err != nil {
-		log.Fatalf("set failed: %v", err)
+		log.Fatalf("create failed: %v", err)
 	}
 
 	// Print the result.

@@ -51,11 +51,19 @@ func (l *Linux) Get(
 	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
 }
 
-// Set returns ErrUnsupported on generic Linux.
-func (l *Linux) Set(
+// Create returns ErrUnsupported on generic Linux.
+func (l *Linux) Create(
 	_ context.Context,
 	_ Entry,
-) (*SetResult, error) {
+) (*CreateResult, error) {
+	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
+}
+
+// Update returns ErrUnsupported on generic Linux.
+func (l *Linux) Update(
+	_ context.Context,
+	_ Entry,
+) (*UpdateResult, error) {
 	return nil, fmt.Errorf("sysctl: %w", provider.ErrUnsupported)
 }
 

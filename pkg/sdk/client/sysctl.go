@@ -92,20 +92,20 @@ func (s *SysctlService) SysctlGet(
 	return NewResponse(sysctlEntryCollectionFromGet(resp.JSON200), resp.Body), nil
 }
 
-// SysctlSet sets a sysctl parameter on the target host.
-func (s *SysctlService) SysctlSet(
+// SysctlCreate creates a sysctl parameter on the target host.
+func (s *SysctlService) SysctlCreate(
 	ctx context.Context,
 	hostname string,
-	opts SysctlSetOpts,
+	opts SysctlCreateOpts,
 ) (*Response[Collection[SysctlMutationResult]], error) {
-	body := gen.SysctlSetRequest{
+	body := gen.SysctlCreateRequest{
 		Key:   opts.Key,
 		Value: opts.Value,
 	}
 
 	resp, err := s.client.PostNodeSysctlWithResponse(ctx, hostname, body)
 	if err != nil {
-		return nil, fmt.Errorf("sysctl set: %w", err)
+		return nil, fmt.Errorf("sysctl create: %w", err)
 	}
 
 	if err := checkError(
@@ -125,7 +125,44 @@ func (s *SysctlService) SysctlSet(
 		}}
 	}
 
-	return NewResponse(sysctlMutationCollectionFromSet(resp.JSON200), resp.Body), nil
+	return NewResponse(sysctlMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
+}
+
+// SysctlUpdate updates an existing sysctl parameter on the target host.
+func (s *SysctlService) SysctlUpdate(
+	ctx context.Context,
+	hostname string,
+	key string,
+	opts SysctlUpdateOpts,
+) (*Response[Collection[SysctlMutationResult]], error) {
+	body := gen.SysctlUpdateRequest{
+		Value: opts.Value,
+	}
+
+	resp, err := s.client.PutNodeSysctlWithResponse(ctx, hostname, key, body)
+	if err != nil {
+		return nil, fmt.Errorf("sysctl update: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(sysctlMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
 }
 
 // SysctlDelete removes a sysctl parameter on the target host.

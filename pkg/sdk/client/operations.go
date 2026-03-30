@@ -94,7 +94,8 @@ const (
 const (
 	OpSysctlList   JobOperation = "node.sysctl.list"
 	OpSysctlGet    JobOperation = "node.sysctl.get"
-	OpSysctlSet    JobOperation = "node.sysctl.set"
+	OpSysctlCreate JobOperation = "node.sysctl.create"
+	OpSysctlUpdate JobOperation = "node.sysctl.update"
 	OpSysctlDelete JobOperation = "node.sysctl.delete"
 )
 

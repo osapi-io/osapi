@@ -298,7 +298,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlGet() {
 	}
 }
 
-func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlSet() {
+func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlCreate() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
@@ -308,26 +308,26 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlSet() {
 		validate    func(json.RawMessage)
 	}{
 		{
-			name: "successful sysctl set",
+			name: "successful sysctl create",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "node",
-				Operation: "sysctl.set",
+				Operation: "sysctl.create",
 				Data:      json.RawMessage(`{"key":"net.ipv4.ip_forward","value":"1"}`),
 			},
 			setupMock: func() sysctl.Provider {
 				m := sysctlMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Set(gomock.Any(), sysctl.Entry{
+				m.EXPECT().Create(gomock.Any(), sysctl.Entry{
 					Key:   "net.ipv4.ip_forward",
 					Value: "1",
-				}).Return(&sysctl.SetResult{
+				}).Return(&sysctl.CreateResult{
 					Key:     "net.ipv4.ip_forward",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r sysctl.SetResult
+				var r sysctl.CreateResult
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("net.ipv4.ip_forward", r.Key)
@@ -335,36 +335,131 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlSet() {
 			},
 		},
 		{
-			name: "sysctl set with invalid JSON data",
+			name: "sysctl create with invalid JSON data",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "node",
-				Operation: "sysctl.set",
+				Operation: "sysctl.create",
 				Data:      json.RawMessage(`invalid json`),
 			},
 			setupMock: func() sysctl.Provider {
 				return sysctlMocks.NewMockProvider(s.mockCtrl)
 			},
 			expectError: true,
-			errorMsg:    "unmarshal sysctl set data",
+			errorMsg:    "unmarshal sysctl create data",
 		},
 		{
-			name: "sysctl set provider error",
+			name: "sysctl create provider error",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
 				Category:  "node",
-				Operation: "sysctl.set",
+				Operation: "sysctl.create",
 				Data:      json.RawMessage(`{"key":"invalid.param","value":"bad"}`),
 			},
 			setupMock: func() sysctl.Provider {
 				m := sysctlMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().
-					Set(gomock.Any(), gomock.Any()).
+					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("invalid parameter"))
 				return m
 			},
 			expectError: true,
 			errorMsg:    "invalid parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			processor := agent.NewNodeProcessor(
+				nil, nil, nil, nil,
+				tt.setupMock(),
+				config.Config{},
+				slog.Default(),
+			)
+			result, err := processor(tt.jobRequest)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errorMsg)
+				s.Nil(result)
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+				if tt.validate != nil {
+					tt.validate(result)
+				}
+			}
+		})
+	}
+}
+
+func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlUpdate() {
+	tests := []struct {
+		name        string
+		jobRequest  job.Request
+		setupMock   func() sysctl.Provider
+		expectError bool
+		errorMsg    string
+		validate    func(json.RawMessage)
+	}{
+		{
+			name: "successful sysctl update",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: "sysctl.update",
+				Data:      json.RawMessage(`{"key":"net.ipv4.ip_forward","value":"0"}`),
+			},
+			setupMock: func() sysctl.Provider {
+				m := sysctlMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().Update(gomock.Any(), sysctl.Entry{
+					Key:   "net.ipv4.ip_forward",
+					Value: "0",
+				}).Return(&sysctl.UpdateResult{
+					Key:     "net.ipv4.ip_forward",
+					Changed: true,
+				}, nil)
+				return m
+			},
+			validate: func(result json.RawMessage) {
+				var r sysctl.UpdateResult
+				err := json.Unmarshal(result, &r)
+				s.NoError(err)
+				s.Equal("net.ipv4.ip_forward", r.Key)
+				s.True(r.Changed)
+			},
+		},
+		{
+			name: "sysctl update with invalid JSON data",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: "sysctl.update",
+				Data:      json.RawMessage(`invalid json`),
+			},
+			setupMock: func() sysctl.Provider {
+				return sysctlMocks.NewMockProvider(s.mockCtrl)
+			},
+			expectError: true,
+			errorMsg:    "unmarshal sysctl update data",
+		},
+		{
+			name: "sysctl update provider error",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: "sysctl.update",
+				Data:      json.RawMessage(`{"key":"net.ipv4.ip_forward","value":"0"}`),
+			},
+			setupMock: func() sysctl.Provider {
+				m := sysctlMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().
+					Update(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not managed"))
+				return m
+			},
+			expectError: true,
+			errorMsg:    "not managed",
 		},
 	}
 

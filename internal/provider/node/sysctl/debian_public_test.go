@@ -103,12 +103,12 @@ func (suite *DebianPublicTestSuite) TearDownSubTest() {
 	sysctl.ResetMarshalJSON()
 }
 
-func (suite *DebianPublicTestSuite) TestSet() {
+func (suite *DebianPublicTestSuite) TestCreate() {
 	tests := []struct {
 		name         string
 		entry        sysctl.Entry
 		setup        func()
-		validateFunc func(*sysctl.SetResult, error)
+		validateFunc func(*sysctl.CreateResult, error)
 	}{
 		{
 			name: "when deploy succeeds",
@@ -117,9 +117,12 @@ func (suite *DebianPublicTestSuite) TestSet() {
 				Value: "1",
 			},
 			setup: func() {
+				// First Get in Create (check if already managed) => not found.
+				// Second Get in deploy (idempotency check) => not found.
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
+					Return(nil, errors.New("not found")).
+					Times(2)
 				suite.mockStateKV.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
@@ -128,7 +131,7 @@ func (suite *DebianPublicTestSuite) TestSet() {
 					Return("", nil)
 			},
 			validateFunc: func(
-				result *sysctl.SetResult,
+				result *sysctl.CreateResult,
 				err error,
 			) {
 				suite.NoError(err)
@@ -141,6 +144,326 @@ func (suite *DebianPublicTestSuite) TestSet() {
 				)
 				suite.NoError(readErr)
 				suite.Equal("net.ipv4.ip_forward = 1\n", string(content))
+			},
+		},
+		{
+			name: "when key already managed returns error",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				stateBytes := managedStateJSON(
+					"net.ipv4.ip_forward",
+					"0",
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+				)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "already managed")
+			},
+		},
+		{
+			name: "when key is empty",
+			entry: sysctl.Entry{
+				Key:   "",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "key must not be empty")
+			},
+		},
+		{
+			name: "when value is empty",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "value must not be empty")
+			},
+		},
+		{
+			name: "when previously undeployed allows create",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				content := []byte("net.ipv4.ip_forward = 1\n")
+				state := job.FileState{
+					Path:         "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+					SHA256:       computeTestSHA256(content),
+					Mode:         "0644",
+					DeployedAt:   "2026-01-01T00:00:00Z",
+					UndeployedAt: "2026-02-01T00:00:00Z",
+					Metadata: map[string]string{
+						"key":   "net.ipv4.ip_forward",
+						"value": "1",
+					},
+				}
+				stateBytes, _ := json.Marshal(state)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil).
+					Times(2)
+				suite.mockStateKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunCmd("sysctl", gomock.Any()).
+					Return("", nil)
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.True(result.Changed)
+			},
+		},
+		{
+			name: "when state put fails",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found")).
+					Times(2)
+				suite.mockStateKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(0), errors.New("kv put error"))
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "update state")
+			},
+		},
+		{
+			name: "when marshal state fails",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found")).
+					Times(2)
+				sysctl.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
+					return nil, errors.New("marshal error")
+				})
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "marshal state")
+			},
+		},
+		{
+			name: "when sysctl apply fails it still succeeds",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found")).
+					Times(2)
+				suite.mockStateKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunCmd("sysctl", gomock.Any()).
+					Return("", errors.New("sysctl failed"))
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.True(result.Changed)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.setup()
+
+			result, err := suite.provider.Create(context.Background(), tc.entry)
+
+			tc.validateFunc(result, err)
+		})
+	}
+}
+
+func (suite *DebianPublicTestSuite) TestUpdate() {
+	tests := []struct {
+		name         string
+		entry        sysctl.Entry
+		setup        func()
+		validateFunc func(*sysctl.UpdateResult, error)
+	}{
+		{
+			name: "when update succeeds",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "0",
+			},
+			setup: func() {
+				stateBytes := managedStateJSON(
+					"net.ipv4.ip_forward",
+					"1",
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+				)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+
+				// First Get in Update (check managed), second Get in deploy (idempotency).
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil).
+					Times(2)
+				suite.mockStateKV.EXPECT().
+					Put(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunCmd("sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					Return("", nil)
+			},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Equal("net.ipv4.ip_forward", result.Key)
+				suite.True(result.Changed)
+			},
+		},
+		{
+			name: "when key not managed returns error",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "0",
+			},
+			setup: func() {
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+			},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "not managed")
+			},
+		},
+		{
+			name: "when key was undeployed returns error",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "0",
+			},
+			setup: func() {
+				content := []byte("net.ipv4.ip_forward = 1\n")
+				state := job.FileState{
+					Path:         "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+					SHA256:       computeTestSHA256(content),
+					Mode:         "0644",
+					DeployedAt:   "2026-01-01T00:00:00Z",
+					UndeployedAt: "2026-02-01T00:00:00Z",
+					Metadata: map[string]string{
+						"key":   "net.ipv4.ip_forward",
+						"value": "1",
+					},
+				}
+				stateBytes, _ := json.Marshal(state)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateBytes)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "not managed")
+			},
+		},
+		{
+			name: "when key is empty",
+			entry: sysctl.Entry{
+				Key:   "",
+				Value: "1",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "key must not be empty")
+			},
+		},
+		{
+			name: "when value is empty",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "",
+			},
+			setup: func() {},
+			validateFunc: func(
+				result *sysctl.UpdateResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "value must not be empty")
 			},
 		},
 		{
@@ -171,14 +494,15 @@ func (suite *DebianPublicTestSuite) TestSet() {
 				}
 				stateBytes, _ := json.Marshal(state)
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
+				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
+					Return(mockEntry, nil).
+					Times(2)
 			},
 			validateFunc: func(
-				result *sysctl.SetResult,
+				result *sysctl.UpdateResult,
 				err error,
 			) {
 				suite.NoError(err)
@@ -187,217 +511,26 @@ func (suite *DebianPublicTestSuite) TestSet() {
 			},
 		},
 		{
-			name: "when key is empty",
-			entry: sysctl.Entry{
-				Key:   "",
-				Value: "1",
-			},
-			setup: func() {},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "key must not be empty")
-			},
-		},
-		{
-			name: "when value is empty",
+			name: "when deploy MkdirAll fails returns error",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
-				Value: "",
-			},
-			setup: func() {},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "value must not be empty")
-			},
-		},
-		{
-			name: "when sysctl.d does not exist it creates the directory",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
+				Value: "0",
 			},
 			setup: func() {
-				cleanFs := memfs.New()
-				suite.provider = sysctl.NewDebianProvider(
-					suite.logger,
-					cleanFs,
-					suite.mockStateKV,
-					suite.mockExec,
-					testHostname,
+				stateBytes := managedStateJSON(
+					"net.ipv4.ip_forward",
+					"1",
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
 				)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
-					Return("", nil)
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
-			},
-		},
-		{
-			name: "when state put fails",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(0), errors.New("kv put error"))
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "update state")
-			},
-		},
-		{
-			name: "when marshal state fails",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-				sysctl.SetMarshalJSON(func(_ interface{}) ([]byte, error) {
-					return nil, errors.New("marshal error")
-				})
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(result)
-				suite.Contains(err.Error(), "marshal state")
-			},
-		},
-		{
-			name: "when sysctl apply fails it still succeeds",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
-					Return("", errors.New("sysctl failed"))
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
-			},
-		},
-		{
-			name: "when state KV unmarshal fails it deploys anyway",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
 				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return([]byte("not-json"))
+				// First Get in Update (check managed), second Get in deploy (idempotency).
+				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
 
 				suite.mockStateKV.EXPECT().
 					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
-					Return("", nil)
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
-			},
-		},
-		{
-			name: "when SHA matches but file missing redeploys",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
-				// Create state with matching SHA but no file on disk.
-				content := []byte("net.ipv4.ip_forward = 1\n")
-				state := job.FileState{
-					Path:       "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
-					SHA256:     computeTestSHA256(content),
-					Mode:       "0644",
-					DeployedAt: "2026-01-01T00:00:00Z",
-					Metadata: map[string]string{
-						"key":   "net.ipv4.ip_forward",
-						"value": "1",
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
+					Return(mockEntry, nil).
+					Times(2)
 
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
-					Return("", nil)
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
-			},
-		},
-		{
-			name: "when MkdirAll fails returns error",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
 				baseFs := memfs.New()
 				vfs := failfs.New(baseFs)
 				_ = vfs.SetFailFunc(func(
@@ -418,12 +551,9 @@ func (suite *DebianPublicTestSuite) TestSet() {
 					suite.mockExec,
 					testHostname,
 				)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 			},
 			validateFunc: func(
-				result *sysctl.SetResult,
+				result *sysctl.UpdateResult,
 				err error,
 			) {
 				suite.Error(err)
@@ -432,12 +562,26 @@ func (suite *DebianPublicTestSuite) TestSet() {
 			},
 		},
 		{
-			name: "when WriteFile fails returns error",
+			name: "when deploy WriteFile fails returns error",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
-				Value: "1",
+				Value: "0",
 			},
 			setup: func() {
+				stateBytes := managedStateJSON(
+					"net.ipv4.ip_forward",
+					"1",
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+				)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				// First Get in Update (check managed), second Get in deploy (idempotency).
+				mockEntry.EXPECT().Value().Return(stateBytes).Times(2)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil).
+					Times(2)
+
 				baseFs := memfs.New()
 				_ = baseFs.MkdirAll("/etc/sysctl.d", 0o755)
 				vfs := failfs.New(baseFs)
@@ -459,58 +603,14 @@ func (suite *DebianPublicTestSuite) TestSet() {
 					suite.mockExec,
 					testHostname,
 				)
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("not found"))
 			},
 			validateFunc: func(
-				result *sysctl.SetResult,
+				result *sysctl.UpdateResult,
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "write file")
-			},
-		},
-		{
-			name: "when SHA matches and undeployed redeploys",
-			entry: sysctl.Entry{
-				Key:   "net.ipv4.ip_forward",
-				Value: "1",
-			},
-			setup: func() {
-				content := []byte("net.ipv4.ip_forward = 1\n")
-				state := job.FileState{
-					Path:         "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
-					SHA256:       computeTestSHA256(content),
-					Mode:         "0644",
-					DeployedAt:   "2026-01-01T00:00:00Z",
-					UndeployedAt: "2026-02-01T00:00:00Z",
-					Metadata: map[string]string{
-						"key":   "net.ipv4.ip_forward",
-						"value": "1",
-					},
-				}
-				stateBytes, _ := json.Marshal(state)
-				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
-				mockEntry.EXPECT().Value().Return(stateBytes)
-
-				suite.mockStateKV.EXPECT().
-					Get(gomock.Any(), gomock.Any()).
-					Return(mockEntry, nil)
-				suite.mockStateKV.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				suite.mockExec.EXPECT().
-					RunCmd("sysctl", gomock.Any()).
-					Return("", nil)
-			},
-			validateFunc: func(
-				result *sysctl.SetResult,
-				err error,
-			) {
-				suite.NoError(err)
-				suite.True(result.Changed)
 			},
 		},
 	}
@@ -519,7 +619,7 @@ func (suite *DebianPublicTestSuite) TestSet() {
 		suite.Run(tc.name, func() {
 			tc.setup()
 
-			result, err := suite.provider.Set(context.Background(), tc.entry)
+			result, err := suite.provider.Update(context.Background(), tc.entry)
 
 			tc.validateFunc(result, err)
 		})
