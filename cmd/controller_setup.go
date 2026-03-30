@@ -72,6 +72,8 @@ type ServerManager interface {
 	GetNodeDockerHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNodeScheduleHandler returns Schedule handler for registration.
 	GetNodeScheduleHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetNodeHostnameHandler returns Hostname handler for registration.
+	GetNodeHostnameHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNodeSysctlHandler returns Sysctl handler for registration.
 	GetNodeSysctlHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetFileHandler returns file handler for registration.
@@ -708,6 +710,7 @@ func registerControllerHandlers(
 	handlers = append(
 		handlers,
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider, subComponents)...)
+	handlers = append(handlers, sm.GetNodeHostnameHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeDockerHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeScheduleHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeSysctlHandler(jc)...)

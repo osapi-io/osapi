@@ -68,20 +68,6 @@ const (
 	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
 )
 
-// Defines values for HostnameResponseStatus.
-const (
-	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
-	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
-	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
-)
-
-// Defines values for HostnameUpdateResultItemStatus.
-const (
-	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
-	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
-	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
-)
-
 // Defines values for LoadResultItemStatus.
 const (
 	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
@@ -416,61 +402,6 @@ type FileUndeployResult struct {
 // FileUndeployResultStatus The status of the operation for this host.
 type FileUndeployResultStatus string
 
-// HostnameCollectionResponse defines model for HostnameCollectionResponse.
-type HostnameCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []HostnameResponse  `json:"results"`
-}
-
-// HostnameResponse The hostname of the system.
-type HostnameResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The system's hostname.
-	Hostname string `json:"hostname"`
-
-	// Labels Key-value labels configured on the agent.
-	Labels *map[string]string `json:"labels,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status HostnameResponseStatus `json:"status"`
-}
-
-// HostnameResponseStatus The status of the operation for this host.
-type HostnameResponseStatus string
-
-// HostnameUpdateCollectionResponse defines model for HostnameUpdateCollectionResponse.
-type HostnameUpdateCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID        `json:"job_id,omitempty"`
-	Results []HostnameUpdateResultItem `json:"results"`
-}
-
-// HostnameUpdateRequest defines model for HostnameUpdateRequest.
-type HostnameUpdateRequest struct {
-	// Hostname The new hostname to set.
-	Hostname string `json:"hostname" validate:"required,min=1,max=253"`
-}
-
-// HostnameUpdateResultItem defines model for HostnameUpdateResultItem.
-type HostnameUpdateResultItem struct {
-	// Changed Whether the hostname was actually modified.
-	Changed *bool   `json:"changed,omitempty"`
-	Error   *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string                         `json:"hostname"`
-	Status   HostnameUpdateResultItemStatus `json:"status"`
-}
-
-// HostnameUpdateResultItemStatus defines model for HostnameUpdateResultItem.Status.
-type HostnameUpdateResultItemStatus string
-
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
 type LoadAverageResponse struct {
 	// N15min Load average for the last 15 minutes.
@@ -723,9 +654,6 @@ type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
 
-// PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
-type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
-
 // PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
 type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 
@@ -755,12 +683,6 @@ type ServerInterface interface {
 	// Remove a deployed file from the host filesystem
 	// (POST /node/{hostname}/file/undeploy)
 	PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error
-	// Retrieve node hostname
-	// (GET /node/{hostname}/hostname)
-	GetNodeHostname(ctx echo.Context, hostname Hostname) error
-	// Update node hostname
-	// (PUT /node/{hostname}/hostname)
-	PutNodeHostname(ctx echo.Context, hostname Hostname) error
 	// Retrieve load averages
 	// (GET /node/{hostname}/load)
 	GetNodeLoad(ctx echo.Context, hostname Hostname) error
@@ -912,42 +834,6 @@ func (w *ServerInterfaceWrapper) PostNodeFileUndeploy(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostNodeFileUndeploy(ctx, hostname)
-	return err
-}
-
-// GetNodeHostname converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeHostname(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"node:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeHostname(ctx, hostname)
-	return err
-}
-
-// PutNodeHostname converts echo context to params.
-func (w *ServerInterfaceWrapper) PutNodeHostname(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"node:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutNodeHostname(ctx, hostname)
 	return err
 }
 
@@ -1120,8 +1006,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
 	router.POST(baseURL+"/node/:hostname/file/status", wrapper.PostNodeFileStatus)
 	router.POST(baseURL+"/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
-	router.GET(baseURL+"/node/:hostname/hostname", wrapper.GetNodeHostname)
-	router.PUT(baseURL+"/node/:hostname/hostname", wrapper.PutNodeHostname)
 	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
 	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
 	router.PUT(baseURL+"/node/:hostname/network/dns", wrapper.PutNodeNetworkDNS)
@@ -1502,113 +1386,6 @@ func (response PostNodeFileUndeploy403JSONResponse) VisitPostNodeFileUndeployRes
 type PostNodeFileUndeploy500JSONResponse externalRef0.ErrorResponse
 
 func (response PostNodeFileUndeploy500JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostnameRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-}
-
-type GetNodeHostnameResponseObject interface {
-	VisitGetNodeHostnameResponse(w http.ResponseWriter) error
-}
-
-type GetNodeHostname200JSONResponse HostnameCollectionResponse
-
-func (response GetNodeHostname200JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname400JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname401JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname403JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeHostname500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeHostname500JSONResponse) VisitGetNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeHostnameRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PutNodeHostnameJSONRequestBody
-}
-
-type PutNodeHostnameResponseObject interface {
-	VisitPutNodeHostnameResponse(w http.ResponseWriter) error
-}
-
-type PutNodeHostname202JSONResponse HostnameUpdateCollectionResponse
-
-func (response PutNodeHostname202JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeHostname400JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeHostname400JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeHostname401JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeHostname401JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeHostname403JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeHostname403JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeHostname500JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeHostname500JSONResponse) VisitPutNodeHostnameResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -2012,12 +1789,6 @@ type StrictServerInterface interface {
 	// Remove a deployed file from the host filesystem
 	// (POST /node/{hostname}/file/undeploy)
 	PostNodeFileUndeploy(ctx context.Context, request PostNodeFileUndeployRequestObject) (PostNodeFileUndeployResponseObject, error)
-	// Retrieve node hostname
-	// (GET /node/{hostname}/hostname)
-	GetNodeHostname(ctx context.Context, request GetNodeHostnameRequestObject) (GetNodeHostnameResponseObject, error)
-	// Update node hostname
-	// (PUT /node/{hostname}/hostname)
-	PutNodeHostname(ctx context.Context, request PutNodeHostnameRequestObject) (PutNodeHostnameResponseObject, error)
 	// Retrieve load averages
 	// (GET /node/{hostname}/load)
 	GetNodeLoad(ctx context.Context, request GetNodeLoadRequestObject) (GetNodeLoadResponseObject, error)
@@ -2252,62 +2023,6 @@ func (sh *strictHandler) PostNodeFileUndeploy(ctx echo.Context, hostname Hostnam
 		return err
 	} else if validResponse, ok := response.(PostNodeFileUndeployResponseObject); ok {
 		return validResponse.VisitPostNodeFileUndeployResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetNodeHostname operation middleware
-func (sh *strictHandler) GetNodeHostname(ctx echo.Context, hostname Hostname) error {
-	var request GetNodeHostnameRequestObject
-
-	request.Hostname = hostname
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeHostname(ctx.Request().Context(), request.(GetNodeHostnameRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeHostname")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetNodeHostnameResponseObject); ok {
-		return validResponse.VisitGetNodeHostnameResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PutNodeHostname operation middleware
-func (sh *strictHandler) PutNodeHostname(ctx echo.Context, hostname Hostname) error {
-	var request PutNodeHostnameRequestObject
-
-	request.Hostname = hostname
-
-	var body PutNodeHostnameJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PutNodeHostname(ctx.Request().Context(), request.(PutNodeHostnameRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutNodeHostname")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PutNodeHostnameResponseObject); ok {
-		return validResponse.VisitPutNodeHostnameResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

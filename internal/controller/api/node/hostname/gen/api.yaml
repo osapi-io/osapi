@@ -1,0 +1,239 @@
+# Copyright (c) 2024 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Hostname Management API
+  version: 1.0.0
+tags:
+  - name: hostname_operations
+    x-displayName: Node/Hostname
+    description: Hostname operations on a target node.
+
+paths:
+  /node/{hostname}/hostname:
+    get:
+      summary: Retrieve node hostname
+      description: Get the current hostname and labels of the node.
+      tags:
+        - hostname_operations
+      operationId: GetNodeHostname
+      security:
+        - BearerAuth:
+            - node:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: A JSON object containing the node's hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameCollectionResponse'
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+    put:
+      summary: Update node hostname
+      description: Set the system hostname on the target node.
+      tags:
+        - hostname_operations
+      operationId: PutNodeHostname
+      security:
+        - BearerAuth:
+            - node:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HostnameUpdateRequest'
+      responses:
+        '202':
+          description: Hostname update accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameUpdateCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ---------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    HostnameResponse:
+      type: object
+      description: The hostname of the system.
+      properties:
+        hostname:
+          type: string
+          description: The system's hostname.
+          example: "my-linux-server"
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: Key-value labels configured on the agent.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    HostnameCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameResponse'
+      required:
+        - results
+
+    HostnameUpdateRequest:
+      type: object
+      properties:
+        hostname:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=253
+          description: The new hostname to set.
+          example: "web-01"
+      required:
+        - hostname
+
+    HostnameUpdateResultItem:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+        changed:
+          type: boolean
+          description: Whether the hostname was actually modified.
+        error:
+          type: string
+      required:
+        - hostname
+        - status
+
+    HostnameUpdateCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostnameUpdateResultItem'
+      required:
+        - results

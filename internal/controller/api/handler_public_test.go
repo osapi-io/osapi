@@ -321,6 +321,42 @@ func (s *HandlerPublicTestSuite) TestGetFileHandler() {
 	}
 }
 
+func (s *HandlerPublicTestSuite) TestGetNodeHostnameHandler() {
+	tests := []struct {
+		name     string
+		validate func([]func(e *echo.Echo))
+	}{
+		{
+			name: "returns hostname handler functions",
+			validate: func(handlers []func(e *echo.Echo)) {
+				s.NotEmpty(handlers)
+			},
+		},
+		{
+			name: "closure registers routes and middleware executes",
+			validate: func(handlers []func(e *echo.Echo)) {
+				e := echo.New()
+				for _, h := range handlers {
+					h(e)
+				}
+				s.NotEmpty(e.Routes())
+
+				req := httptest.NewRequest(http.MethodGet, "/node/hostname/hostname", nil)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlers := s.server.GetNodeHostnameHandler(s.mockJobClient)
+
+			tt.validate(handlers)
+		})
+	}
+}
+
 func (s *HandlerPublicTestSuite) TestGetNodeDockerHandler() {
 	tests := []struct {
 		name     string

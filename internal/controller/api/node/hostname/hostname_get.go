@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package hostname
 
 import (
 	"context"
@@ -27,12 +27,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
 	"github.com/retr0h/osapi/internal/job"
 )
 
 // GetNodeHostname get the node hostname API endpoint.
-func (s *Node) GetNodeHostname(
+func (s *Hostname) GetNodeHostname(
 	ctx context.Context,
 	request gen.GetNodeHostnameRequestObject,
 ) (gen.GetNodeHostnameResponseObject, error) {
@@ -111,7 +111,7 @@ func (s *Node) GetNodeHostname(
 }
 
 // getNodeHostnameBroadcast handles broadcast targets (_all or label) for node hostname.
-func (s *Node) getNodeHostnameBroadcast(
+func (s *Hostname) getNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 ) (gen.GetNodeHostnameResponseObject, error) {

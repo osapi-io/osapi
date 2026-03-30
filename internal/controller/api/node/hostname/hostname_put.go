@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package hostname
 
 import (
 	"context"
@@ -26,13 +26,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PutNodeHostname put the node hostname API endpoint.
-func (s *Node) PutNodeHostname(
+func (s *Hostname) PutNodeHostname(
 	ctx context.Context,
 	request gen.PutNodeHostnameRequestObject,
 ) (gen.PutNodeHostnameResponseObject, error) {
@@ -108,7 +108,7 @@ func (s *Node) PutNodeHostname(
 }
 
 // putNodeHostnameBroadcast handles broadcast targets (_all or label) for hostname modification.
-func (s *Node) putNodeHostnameBroadcast(
+func (s *Hostname) putNodeHostnameBroadcast(
 	ctx context.Context,
 	target string,
 	newHostname string,

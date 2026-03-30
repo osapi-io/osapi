@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package hostname_test
 
 import (
 	"context"
@@ -37,25 +37,25 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	apihostname "github.com/retr0h/osapi/internal/controller/api/node/hostname"
+	"github.com/retr0h/osapi/internal/controller/api/node/hostname/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type NodeHostnamePutPublicTestSuite struct {
+type HostnamePutPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *apihostname.Hostname
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
 }
 
-func (s *NodeHostnamePutPublicTestSuite) SetupSuite() {
+func (s *HostnamePutPublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -64,20 +64,20 @@ func (s *NodeHostnamePutPublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *NodeHostnamePutPublicTestSuite) SetupTest() {
+func (s *HostnamePutPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = apihostname.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *NodeHostnamePutPublicTestSuite) TearDownTest() {
+func (s *HostnamePutPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
+func (s *HostnamePutPublicTestSuite) TestPutNodeHostname() {
 	trueVal := true
 	falseVal := false
 
@@ -406,7 +406,7 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostname() {
 	}
 }
 
-func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
+func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 	trueVal := true
 
 	tests := []struct {
@@ -460,8 +460,8 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			hostnameHandler := apihostname.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(hostnameHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -486,7 +486,7 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameHTTP() {
 
 const rbacHostnamePutTestSigningKey = "test-signing-key-for-hostname-put-rbac"
 
-func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
+func (s *HostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 	trueVal := true
 
@@ -572,7 +572,7 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeHostnameHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
@@ -594,6 +594,6 @@ func (s *NodeHostnamePutPublicTestSuite) TestPutNodeHostnameRBACHTTP() {
 	}
 }
 
-func TestNodeHostnamePutPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(NodeHostnamePutPublicTestSuite))
+func TestHostnamePutPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(HostnamePutPublicTestSuite))
 }
