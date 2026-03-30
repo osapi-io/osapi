@@ -32,11 +32,3 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(hostname, "required,min=1,valid_target")
 }
-
-// validateSysctlKey validates a sysctl key path parameter using the shared
-// validator. Returns the error message and false if invalid.
-func validateSysctlKey(
-	key string,
-) (string, bool) {
-	return validation.Var(key, "required,min=1")
-}
