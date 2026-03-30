@@ -359,3 +359,43 @@ func ExportAgentListFromGen(
 ) AgentList {
 	return agentListFromGen(input)
 }
+
+// SysctlEntryCollectionFromGen exposes the private
+// sysctlEntryCollectionFromGen for testing.
+func SysctlEntryCollectionFromGen(
+	input *gen.SysctlCollectionResponse,
+) Collection[SysctlEntryResult] {
+	return sysctlEntryCollectionFromGen(input)
+}
+
+// SysctlEntryCollectionFromGet exposes the private
+// sysctlEntryCollectionFromGet for testing.
+func SysctlEntryCollectionFromGet(
+	input *gen.SysctlGetResponse,
+) Collection[SysctlEntryResult] {
+	return sysctlEntryCollectionFromGet(input)
+}
+
+// SysctlMutationCollectionFromCreate exposes the private
+// sysctlMutationCollectionFromCreate for testing.
+func SysctlMutationCollectionFromCreate(
+	input *gen.SysctlCreateResponse,
+) Collection[SysctlMutationResult] {
+	return sysctlMutationCollectionFromCreate(input)
+}
+
+// SysctlMutationCollectionFromUpdate exposes the private
+// sysctlMutationCollectionFromUpdate for testing.
+func SysctlMutationCollectionFromUpdate(
+	input *gen.SysctlUpdateResponse,
+) Collection[SysctlMutationResult] {
+	return sysctlMutationCollectionFromUpdate(input)
+}
+
+// SysctlMutationCollectionFromDelete exposes the private
+// sysctlMutationCollectionFromDelete for testing.
+func SysctlMutationCollectionFromDelete(
+	input *gen.SysctlDeleteResponse,
+) Collection[SysctlMutationResult] {
+	return sysctlMutationCollectionFromDelete(input)
+}

@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
@@ -83,7 +83,8 @@ Reference: `internal/provider/container/docker/` or `internal/provider/node/host
 the file provider. This gives them SHA tracking, idempotency, drift
 detection, and template rendering for free:
 - `scheduled/cron` — deploys cron drop-in files and periodic scripts
-- Future: `systemd`, `sysctl`, `apt sources`
+- `node/sysctl` — deploys sysctl conf files to `/etc/sysctl.d/`
+- Future: `systemd`, `apt sources`
 
 Meta providers depend on `file.Deployer` (the narrow interface):
 ```go
@@ -280,35 +281,42 @@ when using the file provider's template support.
 
 Two files connect a provider to the agent:
 
-1. **`internal/agent/processor_{domain}.go`** — create a
-   `NewXxxProcessor` factory function that returns a
-   `ProcessorFunc` closure capturing the provider:
+1. **`internal/agent/processor_{domain}.go`** — create helper
+   functions that dispatch sub-operations to the provider. If the
+   domain gets its own category (like `schedule`, `docker`), create
+   a `NewXxxProcessor` factory. If the domain belongs under an
+   existing category (like `node`), add a `case` to that category's
+   processor and delegate to helpers in a new file:
    ```go
-   func NewSysctlProcessor(
-       provider sysctl.Provider,
+   // processor_{domain}.go
+   func process{Domain}Operation(
+       provider {domain}.Provider,
        logger *slog.Logger,
-   ) ProcessorFunc {
-       return func(req job.Request) (json.RawMessage, error) {
-           // switch on sub-operation, call provider, marshal result
-       }
+       req job.Request,
+   ) (json.RawMessage, error) {
+       // switch on sub-operation, call provider, marshal result
    }
    ```
 
 2. **`cmd/agent_setup.go`** — create the provider and register it
-   with the `ProviderRegistry` in ONE call:
+   with the `ProviderRegistry`. For new categories, use a separate
+   `Register` call. For existing categories (e.g., `node`), pass
+   the provider to the existing processor factory:
    ```go
-   var sysctlProv sysctl.Provider
-   switch platform.Detect() {
-   case "debian":
-       sysctlProv = sysctl.NewDebianProvider(logger, appFs)
-   case "darwin":
-       sysctlProv = sysctl.NewDarwinProvider()
-   default:
-       sysctlProv = sysctl.NewLinuxProvider()
-   }
-   registry.Register("sysctl",
-       agent.NewSysctlProcessor(sysctlProv, log),
-       sysctlProv)
+   // New category example (like schedule, docker):
+   registry.Register("mydomain",
+       agent.NewMyDomainProcessor(myProv, log),
+       myProv)
+
+   // Existing category example (like sysctl under node):
+   registry.Register("node",
+       agent.NewNodeProcessor(
+           hostProv, diskProv, memProv, loadProv,
+           sysctlProv,  // added to existing processor
+           appConfig, log,
+       ),
+       hostProv, diskProv, memProv, loadProv, sysctlProv,
+   )
    ```
 
 That's it. No changes to `agent/types.go`, `agent/agent.go`, or
@@ -337,6 +345,21 @@ Create `internal/controller/api/{domain}/gen/` with three hand-written files:
 - `cfg.yaml` — oapi-codegen config (`strict-server: true`, import-mapping
   for `common/gen`)
 - `generate.go` — `//go:generate` directive
+
+#### HTTP Verb Conventions
+
+Mutable domains MUST use separate verbs for create and update:
+
+- `POST` — create a new resource (key/name in request body)
+- `PUT` — update an existing resource (key/name from path parameter)
+- `GET` — read/list resources
+- `DELETE` — remove a resource
+
+Do NOT combine create and update into a single "set" or "upsert"
+endpoint. The cron domain is the reference: `POST` creates,
+`PUT /{name}` updates. This separation gives clear 404 semantics
+(update fails if not found, create fails if already exists) and
+matches REST conventions.
 
 #### Validation in OpenAPI Specs
 
@@ -475,7 +498,7 @@ call these with a category string and operation constant. No new
 methods are needed when adding operations. Example:
 ```go
 jobID, resp, err := s.JobClient.Modify(
-    ctx, hostname, "sysctl", job.OperationSysctlSet, data)
+    ctx, hostname, "node", job.OperationSysctlCreate, data)
 ```
 
 See `internal/controller/api/node/node_hostname_get.go` for the
@@ -523,6 +546,8 @@ and wrap errors with context.
 2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
    spec from the combined `api.yaml`
 3. Add an SDK example in `examples/sdk/client/{domain}.go`
+4. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
+   with methods table, request types, usage examples, and permissions
 
 #### SDK example conventions
 
@@ -567,8 +592,15 @@ Follow the same principles as the orchestrator examples:
   per CLI subcommand with usage examples and `--json` output
 - Update `docs/docusaurus.config.ts` — add the new feature to the
   "Features" navbar dropdown
-- Update `docs/docs/sidebar/usage/configuration.md` — add any new config
-  sections (env vars, YAML reference, section reference table)
+- Update `docs/docs/sidebar/usage/configuration.md` — add any new
+  permissions to the roles table and permissions comments in the
+  YAML reference
+- Update `docs/docs/sidebar/features/authentication.md` — add new
+  permissions to the roles/permissions tables
+- Update `docs/docs/sidebar/architecture/architecture.md` — add link
+  to the new feature page in the features list
+- Update `docs/docs/sidebar/architecture/api-guidelines.md` — add
+  new endpoints to the path pattern table
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
 

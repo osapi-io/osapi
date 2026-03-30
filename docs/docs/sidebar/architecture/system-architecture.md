@@ -145,8 +145,9 @@ type Deployer interface {
 }
 ```
 
-The pattern extends to future providers like systemd, sysctl, and apt sources —
-any provider that writes configuration files to well-known paths.
+The pattern extends to providers like sysctl (which manages `/etc/sysctl.d/`
+conf files) and future providers like systemd and apt sources — any provider
+that writes configuration files to well-known paths.
 
 #### Protected Objects
 

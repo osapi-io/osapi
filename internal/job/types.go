@@ -154,6 +154,15 @@ const (
 	OperationCronDelete = client.OpCronDelete
 )
 
+// Sysctl operations.
+const (
+	OperationSysctlList   = client.OpSysctlList
+	OperationSysctlGet    = client.OpSysctlGet
+	OperationSysctlCreate = client.OpSysctlCreate
+	OperationSysctlUpdate = client.OpSysctlUpdate
+	OperationSysctlDelete = client.OpSysctlDelete
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

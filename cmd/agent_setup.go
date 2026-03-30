@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/retr0h/osapi/internal/agent"
@@ -42,6 +43,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -176,6 +178,9 @@ func setupAgent(
 	// --- Cron provider ---
 	cronProvider := createCronProvider(log, fileProvider, fileStateKV, hostname)
 
+	// --- Sysctl provider ---
+	sysctlProvider := createSysctlProvider(log, appFs, fileStateKV, execManager, hostname)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -186,6 +191,7 @@ func setupAgent(
 			diskProvider,
 			memProvider,
 			loadProvider,
+			sysctlProvider,
 			appConfig,
 			log,
 		),
@@ -193,6 +199,7 @@ func setupAgent(
 		diskProvider,
 		memProvider,
 		loadProvider,
+		sysctlProvider,
 	)
 
 	registry.Register("network",
@@ -304,6 +311,33 @@ func createFileProvider(
 	}
 
 	return fileProv.New(log, appFs, objStore, fileStateKV, hostname), fileStateKV
+}
+
+// createSysctlProvider creates a platform-specific sysctl provider. On Debian,
+// the sysctl provider writes conf files directly to /etc/sysctl.d/ and tracks
+// state in the file-state KV. On other platforms, all operations return
+// ErrUnsupported.
+func createSysctlProvider(
+	log *slog.Logger,
+	fs avfs.VFS,
+	fileStateKV jetstream.KeyValue,
+	execManager exec.Manager,
+	hostname string,
+) sysctlProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if fileStateKV == nil {
+			log.Warn("file state KV not available, sysctl operations disabled")
+			return sysctlProv.NewLinuxProvider()
+		}
+		return sysctlProv.NewDebianProvider(log, fs, fileStateKV, execManager, hostname)
+	case "darwin":
+		return sysctlProv.NewDarwinProvider()
+	default:
+		return sysctlProv.NewLinuxProvider()
+	}
 }
 
 // createCronProvider creates a platform-specific cron provider. On Debian, the
