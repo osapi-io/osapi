@@ -704,7 +704,16 @@ func registerControllerHandlers(
 	handlers = append(handlers, jobAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(
 		handlers,
-		health.Handler(log, checker, startTime, "0.1.0", metricsProvider, subComponents, signingKey, customRoles)...)
+		health.Handler(
+			log,
+			checker,
+			startTime,
+			"0.1.0",
+			metricsProvider,
+			subComponents,
+			signingKey,
+			customRoles,
+		)...)
 	handlers = append(handlers, hostnameAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
