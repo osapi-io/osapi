@@ -27,26 +27,6 @@ const (
 	DiskResultItemStatusSkipped DiskResultItemStatus = "skipped"
 )
 
-// Defines values for FileDeployRequestContentType.
-const (
-	Raw      FileDeployRequestContentType = "raw"
-	Template FileDeployRequestContentType = "template"
-)
-
-// Defines values for FileDeployResultStatus.
-const (
-	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
-	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
-	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
-)
-
-// Defines values for FileUndeployResultStatus.
-const (
-	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
-	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
-	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
-)
-
 // Defines values for LoadResultItemStatus.
 const (
 	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
@@ -130,123 +110,6 @@ type DisksResponse = []DiskResponse
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
-
-// FileDeployCollectionResponse defines model for FileDeployCollectionResponse.
-type FileDeployCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []FileDeployResult  `json:"results"`
-}
-
-// FileDeployRequest defines model for FileDeployRequest.
-type FileDeployRequest struct {
-	// ContentType Content type — "raw" or "template".
-	ContentType FileDeployRequestContentType `json:"content_type" validate:"required,oneof=raw template"`
-
-	// Group File owner group.
-	Group *string `json:"group,omitempty"`
-
-	// Mode File permission mode (e.g., "0644").
-	Mode *string `json:"mode,omitempty"`
-
-	// ObjectName Name of the file in the Object Store.
-	ObjectName string `json:"object_name" validate:"required,min=1,max=255"`
-
-	// Owner File owner user.
-	Owner *string `json:"owner,omitempty"`
-
-	// Path Destination path on the target filesystem.
-	Path string `json:"path" validate:"required,min=1"`
-
-	// Vars Template variables when content_type is "template".
-	Vars *map[string]interface{} `json:"vars,omitempty"`
-}
-
-// FileDeployRequestContentType Content type — "raw" or "template".
-type FileDeployRequestContentType string
-
-// FileDeployResult defines model for FileDeployResult.
-type FileDeployResult struct {
-	// Changed Whether the file was actually written.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The agent that processed the job.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status FileDeployResultStatus `json:"status"`
-}
-
-// FileDeployResultStatus The status of the operation for this host.
-type FileDeployResultStatus string
-
-// FileStatusCollectionResponse defines model for FileStatusCollectionResponse.
-type FileStatusCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []FileStatusResult  `json:"results"`
-}
-
-// FileStatusRequest defines model for FileStatusRequest.
-type FileStatusRequest struct {
-	// Path Filesystem path to check.
-	Path string `json:"path" validate:"required,min=1"`
-}
-
-// FileStatusResult defines model for FileStatusResult.
-type FileStatusResult struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The agent that processed the job.
-	Hostname string `json:"hostname"`
-
-	// Path The filesystem path.
-	Path *string `json:"path,omitempty"`
-
-	// Sha256 Current SHA-256 of the file on disk.
-	Sha256 *string `json:"sha256,omitempty"`
-
-	// Status File state — "in-sync", "drifted", or "missing".
-	Status *string `json:"status,omitempty"`
-}
-
-// FileUndeployCollectionResponse defines model for FileUndeployCollectionResponse.
-type FileUndeployCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []FileUndeployResult `json:"results"`
-}
-
-// FileUndeployRequest defines model for FileUndeployRequest.
-type FileUndeployRequest struct {
-	// Path Filesystem path to undeploy.
-	Path string `json:"path" validate:"required,min=1"`
-}
-
-// FileUndeployResult defines model for FileUndeployResult.
-type FileUndeployResult struct {
-	// Changed Whether the file was actually removed.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The agent that processed the job.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status FileUndeployResultStatus `json:"status"`
-}
-
-// FileUndeployResultStatus The status of the operation for this host.
-type FileUndeployResultStatus string
 
 // LoadAverageResponse The system load averages for 1, 5, and 15 minutes.
 type LoadAverageResponse struct {
@@ -436,15 +299,6 @@ type UptimeResponseStatus string
 // Hostname defines model for Hostname.
 type Hostname = string
 
-// PostNodeFileDeployJSONRequestBody defines body for PostNodeFileDeploy for application/json ContentType.
-type PostNodeFileDeployJSONRequestBody = FileDeployRequest
-
-// PostNodeFileStatusJSONRequestBody defines body for PostNodeFileStatus for application/json ContentType.
-type PostNodeFileStatusJSONRequestBody = FileStatusRequest
-
-// PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
-type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
-
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Retrieve node status
@@ -453,15 +307,6 @@ type ServerInterface interface {
 	// Retrieve disk usage
 	// (GET /node/{hostname}/disk)
 	GetNodeDisk(ctx echo.Context, hostname Hostname) error
-	// Deploy a file from Object Store to the host
-	// (POST /node/{hostname}/file/deploy)
-	PostNodeFileDeploy(ctx echo.Context, hostname Hostname) error
-	// Check deployment status of a file on the host
-	// (POST /node/{hostname}/file/status)
-	PostNodeFileStatus(ctx echo.Context, hostname Hostname) error
-	// Remove a deployed file from the host filesystem
-	// (POST /node/{hostname}/file/undeploy)
-	PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error
 	// Retrieve load averages
 	// (GET /node/{hostname}/load)
 	GetNodeLoad(ctx echo.Context, hostname Hostname) error
@@ -514,60 +359,6 @@ func (w *ServerInterfaceWrapper) GetNodeDisk(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetNodeDisk(ctx, hostname)
-	return err
-}
-
-// PostNodeFileDeploy converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeFileDeploy(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"file:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeFileDeploy(ctx, hostname)
-	return err
-}
-
-// PostNodeFileStatus converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeFileStatus(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"file:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeFileStatus(ctx, hostname)
-	return err
-}
-
-// PostNodeFileUndeploy converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeFileUndeploy(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"file:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeFileUndeploy(ctx, hostname)
 	return err
 }
 
@@ -673,9 +464,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/node/:hostname", wrapper.GetNodeStatus)
 	router.GET(baseURL+"/node/:hostname/disk", wrapper.GetNodeDisk)
-	router.POST(baseURL+"/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
-	router.POST(baseURL+"/node/:hostname/file/status", wrapper.PostNodeFileStatus)
-	router.POST(baseURL+"/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
 	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
 	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
 	router.GET(baseURL+"/node/:hostname/os", wrapper.GetNodeOS)
@@ -783,168 +571,6 @@ func (response GetNodeDisk403JSONResponse) VisitGetNodeDiskResponse(w http.Respo
 type GetNodeDisk500JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeDisk500JSONResponse) VisitGetNodeDiskResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileDeployRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeFileDeployJSONRequestBody
-}
-
-type PostNodeFileDeployResponseObject interface {
-	VisitPostNodeFileDeployResponse(w http.ResponseWriter) error
-}
-
-type PostNodeFileDeploy202JSONResponse FileDeployCollectionResponse
-
-func (response PostNodeFileDeploy202JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileDeploy400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileDeploy400JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileDeploy401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileDeploy401JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileDeploy403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileDeploy403JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileDeploy500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileDeploy500JSONResponse) VisitPostNodeFileDeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileStatusRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeFileStatusJSONRequestBody
-}
-
-type PostNodeFileStatusResponseObject interface {
-	VisitPostNodeFileStatusResponse(w http.ResponseWriter) error
-}
-
-type PostNodeFileStatus200JSONResponse FileStatusCollectionResponse
-
-func (response PostNodeFileStatus200JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileStatus400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileStatus400JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileStatus401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileStatus401JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileStatus403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileStatus403JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileStatus500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileStatus500JSONResponse) VisitPostNodeFileStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileUndeployRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeFileUndeployJSONRequestBody
-}
-
-type PostNodeFileUndeployResponseObject interface {
-	VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error
-}
-
-type PostNodeFileUndeploy202JSONResponse FileUndeployCollectionResponse
-
-func (response PostNodeFileUndeploy202JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileUndeploy400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileUndeploy400JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileUndeploy401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileUndeploy401JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileUndeploy403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileUndeploy403JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeFileUndeploy500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeFileUndeploy500JSONResponse) VisitPostNodeFileUndeployResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1171,15 +797,6 @@ type StrictServerInterface interface {
 	// Retrieve disk usage
 	// (GET /node/{hostname}/disk)
 	GetNodeDisk(ctx context.Context, request GetNodeDiskRequestObject) (GetNodeDiskResponseObject, error)
-	// Deploy a file from Object Store to the host
-	// (POST /node/{hostname}/file/deploy)
-	PostNodeFileDeploy(ctx context.Context, request PostNodeFileDeployRequestObject) (PostNodeFileDeployResponseObject, error)
-	// Check deployment status of a file on the host
-	// (POST /node/{hostname}/file/status)
-	PostNodeFileStatus(ctx context.Context, request PostNodeFileStatusRequestObject) (PostNodeFileStatusResponseObject, error)
-	// Remove a deployed file from the host filesystem
-	// (POST /node/{hostname}/file/undeploy)
-	PostNodeFileUndeploy(ctx context.Context, request PostNodeFileUndeployRequestObject) (PostNodeFileUndeployResponseObject, error)
 	// Retrieve load averages
 	// (GET /node/{hostname}/load)
 	GetNodeLoad(ctx context.Context, request GetNodeLoadRequestObject) (GetNodeLoadResponseObject, error)
@@ -1250,99 +867,6 @@ func (sh *strictHandler) GetNodeDisk(ctx echo.Context, hostname Hostname) error 
 		return err
 	} else if validResponse, ok := response.(GetNodeDiskResponseObject); ok {
 		return validResponse.VisitGetNodeDiskResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeFileDeploy operation middleware
-func (sh *strictHandler) PostNodeFileDeploy(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeFileDeployRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeFileDeployJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeFileDeploy(ctx.Request().Context(), request.(PostNodeFileDeployRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeFileDeploy")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeFileDeployResponseObject); ok {
-		return validResponse.VisitPostNodeFileDeployResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeFileStatus operation middleware
-func (sh *strictHandler) PostNodeFileStatus(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeFileStatusRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeFileStatusJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeFileStatus(ctx.Request().Context(), request.(PostNodeFileStatusRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeFileStatus")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeFileStatusResponseObject); ok {
-		return validResponse.VisitPostNodeFileStatusResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeFileUndeploy operation middleware
-func (sh *strictHandler) PostNodeFileUndeploy(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeFileUndeployRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeFileUndeployJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeFileUndeploy(ctx.Request().Context(), request.(PostNodeFileUndeployRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeFileUndeploy")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeFileUndeployResponseObject); ok {
-		return validResponse.VisitPostNodeFileUndeployResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

@@ -18,10 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+// Package file provides node-targeted file deploy API handlers.
+package file
 
-func strPtr(
-	s string,
-) *string {
-	return &s
+import (
+	"log/slog"
+
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
+	"github.com/retr0h/osapi/internal/job/client"
+)
+
+// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
+var _ gen.StrictServerInterface = (*File)(nil)
+
+// New factory to create a new instance.
+func New(
+	logger *slog.Logger,
+	jobClient client.JobClient,
+) *File {
+	return &File{
+		JobClient: jobClient,
+		logger:    logger.With(slog.String("subsystem", "api.node.file")),
+	}
 }

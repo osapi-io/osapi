@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package file
 
 import (
 	"context"
@@ -26,14 +26,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/file"
+	providerFile "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeFileUndeploy post the node file undeploy API endpoint.
-func (s *Node) PostNodeFileUndeploy(
+func (s *File) PostNodeFileUndeploy(
 	ctx context.Context,
 	request gen.PostNodeFileUndeployRequestObject,
 ) (gen.PostNodeFileUndeployResponseObject, error) {
@@ -59,7 +59,7 @@ func (s *Node) PostNodeFileUndeploy(
 		return s.postNodeFileUndeployBroadcast(ctx, hostname, path)
 	}
 
-	data := file.UndeployRequest{Path: path}
+	data := providerFile.UndeployRequest{Path: path}
 	jobID, rawResp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
@@ -104,12 +104,12 @@ func (s *Node) PostNodeFileUndeploy(
 }
 
 // postNodeFileUndeployBroadcast handles broadcast targets for file undeploy.
-func (s *Node) postNodeFileUndeployBroadcast(
+func (s *File) postNodeFileUndeployBroadcast(
 	ctx context.Context,
 	target string,
 	path string,
 ) (gen.PostNodeFileUndeployResponseObject, error) {
-	data := file.UndeployRequest{Path: path}
+	data := providerFile.UndeployRequest{Path: path}
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,

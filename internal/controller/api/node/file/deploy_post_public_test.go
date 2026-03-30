@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package file_test
 
 import (
 	"context"
@@ -37,8 +37,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	nodeFile "github.com/retr0h/osapi/internal/controller/api/node/file"
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
@@ -49,7 +49,7 @@ type FileDeployPostPublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *nodeFile.File
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
@@ -67,7 +67,7 @@ func (s *FileDeployPostPublicTestSuite) SetupSuite() {
 func (s *FileDeployPostPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = nodeFile.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -584,8 +584,8 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployValidationHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			fileHandler := nodeFile.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -696,7 +696,7 @@ func (s *FileDeployPostPublicTestSuite) TestPostNodeFileDeployRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeFileHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

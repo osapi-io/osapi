@@ -1,0 +1,370 @@
+# Copyright (c) 2024 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Node File Operations API
+  version: 1.0.0
+tags:
+  - name: node_file_operations
+    x-displayName: Node/File
+    description: File deploy, undeploy, and status operations on a target node.
+
+paths:
+  /node/{hostname}/file/deploy:
+    post:
+      operationId: PostNodeFileDeploy
+      summary: Deploy a file from Object Store to the host
+      tags:
+        - node_file_operations
+      security:
+        - BearerAuth:
+            - "file:write"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileDeployRequest'
+      responses:
+        '202':
+          description: File deploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeployCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/file/undeploy:
+    post:
+      operationId: PostNodeFileUndeploy
+      summary: Remove a deployed file from the host filesystem
+      tags:
+        - node_file_operations
+      security:
+        - BearerAuth:
+            - "file:write"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUndeployRequest'
+      responses:
+        '202':
+          description: File undeploy job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUndeployCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/file/status:
+    post:
+      operationId: PostNodeFileStatus
+      summary: Check deployment status of a file on the host
+      tags:
+        - node_file_operations
+      security:
+        - BearerAuth:
+            - "file:read"
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileStatusRequest'
+      responses:
+        '200':
+          description: File status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatusCollectionResponse'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ---------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    FileDeployRequest:
+      type: object
+      properties:
+        object_name:
+          type: string
+          description: Name of the file in the Object Store.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        path:
+          type: string
+          description: Destination path on the target filesystem.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+        mode:
+          type: string
+          description: File permission mode (e.g., "0644").
+        owner:
+          type: string
+          description: File owner user.
+        group:
+          type: string
+          description: File owner group.
+        content_type:
+          type: string
+          description: Content type — "raw" or "template".
+          enum: [raw, template]
+          x-oapi-codegen-extra-tags:
+            validate: required,oneof=raw template
+        vars:
+          type: object
+          description: Template variables when content_type is "template".
+          additionalProperties: true
+      required: [object_name, path, content_type]
+
+    FileDeployResult:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        changed:
+          type: boolean
+          description: Whether the file was actually written.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    FileDeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileDeployResult'
+      required:
+        - results
+
+    FileStatusRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to check.
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+      required: [path]
+
+    FileStatusResult:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        path:
+          type: string
+          description: The filesystem path.
+        status:
+          type: string
+          description: File state — "in-sync", "drifted", or "missing".
+        sha256:
+          type: string
+          description: Current SHA-256 of the file on disk.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+
+    FileStatusCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileStatusResult'
+      required:
+        - results
+
+    FileUndeployRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Filesystem path to undeploy.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+      required: [path]
+
+    FileUndeployResult:
+      type: object
+      properties:
+        hostname:
+          type: string
+          description: The agent that processed the job.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        changed:
+          type: boolean
+          description: Whether the file was actually removed.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    FileUndeployCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUndeployResult'
+      required:
+        - results

@@ -80,6 +80,8 @@ type ServerManager interface {
 	GetNodeNetworkHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetNodeCommandHandler returns Command handler for registration.
 	GetNodeCommandHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetNodeFileHandler returns node file deploy handler for registration.
+	GetNodeFileHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetFileHandler returns file handler for registration.
 	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
 	// GetFactsHandler returns facts handler for registration.
@@ -720,6 +722,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, sm.GetNodeSysctlHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeNetworkHandler(jc)...)
 	handlers = append(handlers, sm.GetNodeCommandHandler(jc)...)
+	handlers = append(handlers, sm.GetNodeFileHandler(jc)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
 	}

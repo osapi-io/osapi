@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package file_test
 
 import (
 	"context"
@@ -38,11 +38,11 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	nodeFile "github.com/retr0h/osapi/internal/controller/api/node/file"
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	"github.com/retr0h/osapi/internal/provider/file"
+	providerFile "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
@@ -51,7 +51,7 @@ type FileStatusPostPublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *nodeFile.File
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
@@ -69,7 +69,7 @@ func (s *FileStatusPostPublicTestSuite) SetupSuite() {
 func (s *FileStatusPostPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = nodeFile.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -79,7 +79,7 @@ func (s *FileStatusPostPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func marshalStatusResult(r file.StatusResult) json.RawMessage {
+func marshalStatusResult(r providerFile.StatusResult) json.RawMessage {
 	b, _ := json.Marshal(r)
 	return b
 }
@@ -112,7 +112,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
 							Hostname: "agent1",
-							Data: marshalStatusResult(file.StatusResult{
+							Data: marshalStatusResult(providerFile.StatusResult{
 								Path:   "/etc/nginx/nginx.conf",
 								Status: "in-sync",
 								SHA256: "abc123def456",
@@ -158,7 +158,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
 							Hostname: "agent1",
-							Data: marshalStatusResult(file.StatusResult{
+							Data: marshalStatusResult(providerFile.StatusResult{
 								Path:   "/etc/missing.conf",
 								Status: "missing",
 							}),
@@ -230,13 +230,13 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						map[string]*job.Response{
 							"agent1": {
 								Hostname: "agent1",
-								Data: marshalStatusResult(file.StatusResult{
+								Data: marshalStatusResult(providerFile.StatusResult{
 									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
 								}),
 							},
 							"agent2": {
 								Hostname: "agent2",
-								Data: marshalStatusResult(file.StatusResult{
+								Data: marshalStatusResult(providerFile.StatusResult{
 									Path: "/etc/nginx/nginx.conf", Status: "missing",
 								}),
 							},
@@ -273,7 +273,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatus() {
 						map[string]*job.Response{
 							"agent1": {
 								Hostname: "agent1",
-								Data: marshalStatusResult(file.StatusResult{
+								Data: marshalStatusResult(providerFile.StatusResult{
 									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
 								}),
 							},
@@ -490,7 +490,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 					Query(gomock.Any(), "server1", "file", job.OperationFileStatusGet, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data: marshalStatusResult(file.StatusResult{
+						Data: marshalStatusResult(providerFile.StatusResult{
 							Path:   "/etc/nginx/nginx.conf",
 							Status: "in-sync",
 							SHA256: "abc123",
@@ -527,8 +527,8 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusValidationHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			fileHandler := nodeFile.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(fileHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -612,7 +612,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
 							Hostname: "agent1",
-							Data: marshalStatusResult(file.StatusResult{
+							Data: marshalStatusResult(providerFile.StatusResult{
 								Path:   "/etc/nginx/nginx.conf",
 								Status: "in-sync",
 								SHA256: "abc123",
@@ -642,7 +642,7 @@ func (s *FileStatusPostPublicTestSuite) TestPostNodeFileStatusRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeFileHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

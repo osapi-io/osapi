@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package file
 
 import (
 	"context"
@@ -26,14 +26,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/file"
+	providerFile "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeFileDeploy post the node file deploy API endpoint.
-func (s *Node) PostNodeFileDeploy(
+func (s *File) PostNodeFileDeploy(
 	ctx context.Context,
 	request gen.PostNodeFileDeployRequestObject,
 ) (gen.PostNodeFileDeployResponseObject, error) {
@@ -94,7 +94,7 @@ func (s *Node) PostNodeFileDeploy(
 		)
 	}
 
-	data := file.DeployRequest{
+	data := providerFile.DeployRequest{
 		ObjectName:  objectName,
 		Path:        path,
 		ContentType: contentType,
@@ -147,7 +147,7 @@ func (s *Node) PostNodeFileDeploy(
 }
 
 // postNodeFileDeployBroadcast handles broadcast targets for file deploy.
-func (s *Node) postNodeFileDeployBroadcast(
+func (s *File) postNodeFileDeployBroadcast(
 	ctx context.Context,
 	target string,
 	objectName string,
@@ -158,7 +158,7 @@ func (s *Node) postNodeFileDeployBroadcast(
 	group string,
 	vars map[string]any,
 ) (gen.PostNodeFileDeployResponseObject, error) {
-	data := file.DeployRequest{
+	data := providerFile.DeployRequest{
 		ObjectName:  objectName,
 		Path:        path,
 		ContentType: contentType,

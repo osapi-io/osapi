@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package file
 
 import (
 	"context"
@@ -27,14 +27,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/file/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/file"
+	providerFile "github.com/retr0h/osapi/internal/provider/file"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeFileStatus post the node file status API endpoint.
-func (s *Node) PostNodeFileStatus(
+func (s *File) PostNodeFileStatus(
 	ctx context.Context,
 	request gen.PostNodeFileStatusRequestObject,
 ) (gen.PostNodeFileStatusResponseObject, error) {
@@ -60,7 +60,7 @@ func (s *Node) PostNodeFileStatus(
 		return s.postNodeFileStatusBroadcast(ctx, hostname, path)
 	}
 
-	data := file.StatusRequest{Path: path}
+	data := providerFile.StatusRequest{Path: path}
 	jobID, rawResp, err := s.JobClient.Query(
 		ctx,
 		hostname,
@@ -89,7 +89,7 @@ func (s *Node) PostNodeFileStatus(
 		}, nil
 	}
 
-	var result file.StatusResult
+	var result providerFile.StatusResult
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &result)
 	}
@@ -113,12 +113,12 @@ func (s *Node) PostNodeFileStatus(
 }
 
 // postNodeFileStatusBroadcast handles broadcast targets for file status.
-func (s *Node) postNodeFileStatusBroadcast(
+func (s *File) postNodeFileStatusBroadcast(
 	ctx context.Context,
 	target string,
 	path string,
 ) (gen.PostNodeFileStatusResponseObject, error) {
-	data := file.StatusRequest{Path: path}
+	data := providerFile.StatusRequest{Path: path}
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
@@ -146,7 +146,7 @@ func (s *Node) postNodeFileStatusBroadcast(
 			e := resp.Error
 			item.Error = &e
 		default:
-			var result file.StatusResult
+			var result providerFile.StatusResult
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}
