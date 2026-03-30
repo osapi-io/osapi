@@ -10,20 +10,20 @@ hosts via `/etc/sysctl.d/` conf files. Access via `client.Sysctl.SysctlList()`,
 
 ## Methods
 
-| Method                                   | Description                  |
-| ---------------------------------------- | ---------------------------- |
-| `SysctlList(ctx, hostname)`              | List all managed parameters  |
-| `SysctlGet(ctx, hostname, key)`          | Get a parameter by key       |
-| `SysctlCreate(ctx, hostname, opts)`      | Create a new managed entry   |
-| `SysctlUpdate(ctx, hostname, key, opts)` | Update an existing entry     |
-| `SysctlDelete(ctx, hostname, key)`       | Delete a managed entry       |
+| Method                                   | Description                 |
+| ---------------------------------------- | --------------------------- |
+| `SysctlList(ctx, hostname)`              | List all managed parameters |
+| `SysctlGet(ctx, hostname, key)`          | Get a parameter by key      |
+| `SysctlCreate(ctx, hostname, opts)`      | Create a new managed entry  |
+| `SysctlUpdate(ctx, hostname, key, opts)` | Update an existing entry    |
+| `SysctlDelete(ctx, hostname, key)`       | Delete a managed entry      |
 
 ## Request Types
 
-| Type               | Fields                                |
-| ------------------ | ------------------------------------- |
-| `SysctlCreateOpts` | Key (required), Value (required)      |
-| `SysctlUpdateOpts` | Value (required)                      |
+| Type               | Fields                           |
+| ------------------ | -------------------------------- |
+| `SysctlCreateOpts` | Key (required), Value (required) |
+| `SysctlUpdateOpts` | Value (required)                 |
 
 ## Usage
 
