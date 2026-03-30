@@ -1,12 +1,12 @@
 ---
-id: post-node-sysctl
-title: "Create a sysctl parameter"
-description: "Create a new sysctl kernel parameter on the target node. Fails if the key is already managed. This operation is idempotent — creating the same key and value again results in no change."
-sidebar_label: "Create a sysctl parameter"
+id: put-node-sysctl
+title: "Update a sysctl parameter"
+description: "Update an existing sysctl kernel parameter on the target node. Fails if the key is not currently managed. This operation is idempotent — updating with the same value results in no change."
+sidebar_label: "Update a sysctl parameter"
 hide_title: true
 hide_table_of_contents: true
-api: eJztWG1v2zYQ/isEP6WA7Did020G9iHtGizDXoI0XT9khnEWzxJjiVTJkxPPELAfsV+4XzIcKfl9a9FtQAv0k2WJPN49z3NHHldSoU+drkhbI0fyhUMgFCAMPgi/9CkVYo7OYCEqcFAioRPWCMpRELgMSRirsC8uQRde6Fn4Msel0F5A4RDUUpRgIEPVF7e59sJW6ICX4yFaYVlZQkPiz9//ECkvr00WrHgooykwSiygqFFABtoIh74uyAtthLEizcFk2P/VyEQSZF6O7uSr4Pnkx7BwiYYmF9dXkxjPZO2Al+NErv9dKTmS19bTT1ZhNCAT6TGtnaalHN2t5HMEh+6ippwXieZGD04TynEzTuQaIh+GGyhRjmRuPYXHRGrGuALKZSIdvq21QyVH5GpM9oi4jeBCxtB0FhIOHd0ClXC2DkBFXE4mYJaJmEBRPEmEdaKAKRbCY4EpWSdO5rgchaFPIlCPPQuV7qVWYYamh4/koBfRW8kFFFoBse+dk0mpzTdnSfgyicTLJpE+zbEEnkPLisd7ctpkMpGlNj+gyRips4axYUvo6blVSx6/G22EO9KPG6X5/hGcUmtYL2wEqqrQaWDv9N6zpdWhS3Z6jyntGLqTc1zKRAZEWASVYxmQxhA/fzwS0lGXN1nBSj3BftZPhEHq62ox7OtqMrPuAZz6V7jLpumcfadfvwRBkBUeScysi6m05+yHOSMb9oM0FbgGIBaMm0guD2gYaF9Z4yOYTweDv+V7A15kXjHfH8zvLon3djrR6hheM+tKIDmSda3VAX63OYp7OxVX34rao2IkK2dT9F4Ql69Wx+wpPkJZBSzOzwf41XAw6OHTr6e94Zka9uDLs2e94fDZs/Pz4XAwGAxkRIYr15ZX4BywFDVh6Y9FtevdTTAg7ExAR2qELhF1pcKvdUJhgYRblZZ1YA2GQtI/gGpdoN4pru/akewA6yqWJ8qBOpAYsZ0q3w91goBqf8w+mrrkhLRzZgZ0gUyJn+uqQsWpechONNa5sBtkWDtG2SQfnshhdtxYtiU0tbZAMAcm3uRIObo9f0qr9EyjYqIIy+A3BsvonHXv9uwlDxMleg8ZdntrhDwi1Zcx3TZ1bWuvaTEf72fsjzUF/6KUZLNvotPowcQu1WNyt7k+PJbeVyZUjy5XRAXLwsJ/md3vieCF2PrfKSbMjaK1aVo7F+vOJpsvA7ic+Q7JaVx0mgvkKSQ+67zH4kppfoRCtHMETG1NGyeOLqti+TZID9bNBekSbR31zJV6a11tCDN0R0tYDJIn7CxyPhhs1/CgsANGzw4ZfW2gptw6/Rsq0RMX11dhv1vr5jOxnwKxXxwSe2ndVCuFRvTElfH1bKZTzRWmQldq78Mx+TO7Hz+758cKcdxB1l3VwTHwM7MfPbNNIkuk3HJ3WlkfkOcGciRPufM+XXVbfnPqN02rW8QmdLzpYF8xk5Gs7T527XxOVMm2pQuHnTBIJu3DZXdq/v7NbTh2sEJuNk3dyy6itn/akNA2Lt2LhtvgmQ0rt1FfhDPNplvn/YUnovMRwLP+oB8O0IxACUGZbXe9vrHYF/c+C6uN1D/5a47IGOEjnVYFaMPQ1K7gIKM47iT7KxM52j4RRn2Mk3BM5EGr1RQ8vnZF0/DrtzW6ZVTNApyGKbNzt5JKe35WcjSDwu/fVWwDe3LTngieiP/5BuMoBl1TZZZbupNtI7A5HDfjJpE5gkIX4oufX8QoerdsZDP9oCo2STfjIk2xon8cO95K3+ufX91yPrVXIGUoHtLBA19OwEN01Vbxamq0iu9WsgCT1ZDx2GiTsw92k3cvWUNUR8FYreKIWztH0zRrbIj/MzBN8xdzRgGY
-sidebar_class_name: "post api-method"
+api: eJztWG1v2zYQ/isEsQ8pJjtO53SrgH1ItwbLsBZBmqAfMs+gxbPEWCJV8mTHFQTsR+wX7pcMR0p+79plG7AO+WLINnm8e57nTseruQSXWFWiMprH/KaUAoEJzeBeOVQ6ZW7pEszZDKyGnJXCigIQLDOaYQYMhU0BmTYS+uxcqNwxNfX/zGDJlGPaIEsqa0FjvmSF0CIF2WfXmXLMlGAFHU0LlYSiNAga2e+//sYqcoUcWCjMvEEnCmBzkVfALLgqR8eUZtqwJBM6hf7PmkccRep4fMvfeLfHr/x5BWgcn11ejEMw49W5jo8ivvp2IXnMLyt8bSSE/TziDpLKKlzy+LbmL0BYsGcVZnRGsBYvrELgo2YU8RU8zi/XogAe88w49I8RV4RyKTDjEbfwrlIWJI/RVhDtUHEdgBUpAdJZiChysHOQzJrKwxMAORoLvYzYWOT5k4gZy3IxgZw5yCFBY9nRDJaxX/ok4HTfM6JUvcRISEH34B6t6AXwaj4XuSIh8HjlZFQo/e1J5P8ZB9J5E3GXZFAI2oPLktY7tEqnPOKF0j+BTgmpk6aJVmDMYPmXcAhEbAiPdHUE/bQfMQ3YV+V82FfleGrsQlj5t8L79IiIakSw5OEvt6L3ftB73h/3Rl9+wRsSAtkFhy+MXJKpgyFVIdnWmukfACMxmlKCjIiyzFXilXp858hSve+tmdxBgluGbrknnqReWhI7KuhwqOBQpNvuvoZFq7KpsSETdzh5GOa8aZqIo8IcVqCEAnQV0KMFDUXiSqNd8PnpYPBBQNcaCdBKAvTBAG5jdWcmYyUPgTU1thDIY15VSu6Bd50BuzMTdvE9qxxIhoaV1iTgHEMqga1QyFO4F0XpsTg9HcA3w8GgB0+fT3rDEznsia9PnvWGw2fPTk+Hw8FgMOABGSqDG14Ja4XPL4TCHYpq27srb4CZKRMdqYkFgRC1EPpaIiEHhI1qTTowGnxZ6u9BtSp3H1XWD+1KcoB0FYodZgI7kAixrTdF3+coCqzcIfugq4IUb2bEjFA5ECVupsoSJGXAPjvBWOfCdpD+7BBlE/nS9dGYDtUrvzu8pTYlNDEmB6H3TLzNADOwO/4URqqpAklEIRTeb/CWwVpjP+7ZS1rGCnBOpNC9pQPkAak+D+m2Lhwbb64W89Fuxr6q0PsXpMSbXROdRvc2dqkekrvN9eGh9L7Qvnp0ucJKscyN+Cez+xMRPGMb3zvF+L1BtCbxnY7czuZzDy5lvgW0Cuad5jx5EpC6pk84XEpFjyJn7R4mJqbCtRMHj5UV0NEacGHsjKEqwFRBz1SpN85VGiEFe7CEhSBpw9Yhp4PBZg33Cttj9GSf0RstKsyMVe9Bsh47u7zwr/WVbh6J/RyI/Wqf2HNjJ0pK0KzHLrSrplOVKKowJdhCOed77kd2Pwd2hx/ss0CjXfqL3dRU+rEOfxaEnh56s4aWYHXV3uvrH5n9zzPbRLwAzAzNLsrKA0/X6pgf00zmuO5auOY4sHtcz2DZ+MGGnYdBxWg95XhDdAbGNmcdqwgyxJK3l2TfwvpFPGofzru70I9vr30zSTK5Wt+FX3ZhrS6fHRcNzQSmxh/VxnrmW9P1BIfaBB5xcjrAdtIf9P09qDQOC+H12E4ZukHWnqR3sa/XAv8/TL8CSwj3eFzmQmlCp7I5xRlkccvJWR7xeLO374ZdMV1xRpHv+2ltXU+EgxubNw39/K4CuwyCmQurxIR4uq25VI6eJY+nIne7I5xNiI+u2hbvCfuXB1wHoehuyZruyJ0CeXuzW992aFz1oJgeNqx6gKv02YyaiGcgJFjPQvjnu+BX75r2r3fu1W6KMew4SxIo8U/XjjaKzOXNNeV7O9kqfIXjVixo5iQWwUlThulqXIffap4LnVYipbXBJFUHsV1cdoqJD+ogDHUdVlybGeimWaGC9J1waZo/AF7N9zw=
+sidebar_class_name: "put api-method"
 info_path: gen/api/agent-management-api
 custom_edit_url: null
 ---
@@ -27,20 +27,20 @@ import TabItem from "@theme/TabItem";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Create a sysctl parameter"}
+  children={"Update a sysctl parameter"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"post"}
-  path={"/node/{hostname}/sysctl"}
+  method={"put"}
+  path={"/node/{hostname}/sysctl/{key}"}
 >
   
 </MethodEndpoint>
 
 
 
-Create a new sysctl kernel parameter on the target node. Fails if the key is already managed. This operation is idempotent — creating the same key and value again results in no change.
+Update an existing sysctl kernel parameter on the target node. Fails if the key is not currently managed. This operation is idempotent — updating with the same value results in no change.
 
 
 <Heading
@@ -70,6 +70,11 @@ Create a new sysctl kernel parameter on the target node. Fails if the key is alr
       <ParamsItem
         className={"paramsItem"}
         param={{"name":"hostname","in":"path","required":true,"description":"Target agent hostname, reserved routing value (_any, _all), or label selector (key:value).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"},"schema":{"type":"string","minLength":1}}}
+      >
+        
+      </ParamsItem><ParamsItem
+        className={"paramsItem"}
+        param={{"name":"key","in":"path","required":true,"description":"Sysctl parameter key (e.g., net.ipv4.ip_forward).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"},"schema":{"type":"string","minLength":1,"pattern":"^[a-z0-9._-]+$"}}}
       >
         
       </ParamsItem>
@@ -109,7 +114,7 @@ Create a new sysctl kernel parameter on the target node. Fails if the key is alr
         >
           
           
-          Sysctl create parameters.
+          Sysctl update parameters.
           
           
         </div>
@@ -118,20 +123,11 @@ Create a new sysctl kernel parameter on the target node. Fails if the key is alr
       >
         <SchemaItem
           collapsible={false}
-          name={"key"}
-          required={true}
-          schemaName={"string"}
-          qualifierMessage={undefined}
-          schema={{"type":"string","description":"Sysctl parameter key (e.g., net.ipv4.ip_forward).\n","x-oapi-codegen-extra-tags":{"validate":"required,min=1"}}}
-        >
-          
-        </SchemaItem><SchemaItem
-          collapsible={false}
           name={"value"}
           required={true}
           schemaName={"string"}
           qualifierMessage={undefined}
-          schema={{"type":"string","description":"Value to set for the sysctl parameter.\n","x-oapi-codegen-extra-tags":{"validate":"required"}}}
+          schema={{"type":"string","description":"New value for the sysctl parameter.\n","x-oapi-codegen-extra-tags":{"validate":"required"}}}
         >
           
         </SchemaItem>
@@ -151,7 +147,7 @@ Create a new sysctl kernel parameter on the target node. Fails if the key is alr
         <div>
           
           
-          Sysctl parameter created.
+          Sysctl parameter updated.
           
           
         </div><div>
@@ -586,13 +582,104 @@ Create a new sysctl kernel parameter on the target node. Fails if the key is alr
           </MimeTabs>
         </div>
       </TabItem><TabItem
+        label={"404"}
+        value={"404"}
+      >
+        <div>
+          
+          
+          Sysctl entry not found.
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"error"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A description of the error that occurred.","example":"Failed to retrieve status."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"details"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"Additional details about the error.","example":"Failed due to network timeout."}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"code"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The error code.","example":500}}
+                      >
+                        
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"error\": \"Failed to retrieve status.\",\n  \"details\": \"Failed due to network timeout.\",\n  \"code\": 500\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
         label={"500"}
         value={"500"}
       >
         <div>
           
           
-          Error creating sysctl parameter.
+          Error updating sysctl parameter.
           
           
         </div><div>

@@ -1,8 +1,8 @@
 # Delete
 
-Delete a sysctl parameter by removing its drop-in file from
-`/etc/sysctl.d/`. The parameter value is **not** reset in the running
-kernel — it persists until the next reboot or until you set a new value:
+Delete a sysctl parameter by removing its drop-in file from `/etc/sysctl.d/`.
+The parameter value is **not** reset in the running kernel — it persists until
+the next reboot or until you set a new value:
 
 ```bash
 $ osapi client node sysctl delete --target web-01 \

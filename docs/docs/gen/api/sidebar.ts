@@ -483,7 +483,7 @@ const sidebar: SidebarsConfig = {
         {
           type: "doc",
           id: "gen/api/post-node-sysctl",
-          label: "Set a sysctl parameter",
+          label: "Create a sysctl parameter",
           className: "api-method post",
         },
         {
@@ -491,6 +491,12 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-sysctl-by-key",
           label: "Get a sysctl entry",
           className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-sysctl",
+          label: "Update a sysctl parameter",
+          className: "api-method put",
         },
         {
           type: "doc",
