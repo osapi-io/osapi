@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package command_test
 
 import (
 	"context"
@@ -38,26 +38,26 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	apicommand "github.com/retr0h/osapi/internal/controller/api/node/command"
+	"github.com/retr0h/osapi/internal/controller/api/node/command/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type CommandShellPostPublicTestSuite struct {
+type CommandExecPostPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *apicommand.Command
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
 }
 
-func (s *CommandShellPostPublicTestSuite) SetupSuite() {
+func (s *CommandExecPostPublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -66,41 +66,54 @@ func (s *CommandShellPostPublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *CommandShellPostPublicTestSuite) SetupTest() {
+func (s *CommandExecPostPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = apicommand.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *CommandShellPostPublicTestSuite) TearDownTest() {
+func (s *CommandExecPostPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
+func intPtr(
+	i int,
+) *int {
+	return &i
+}
+
+func strPtr(
+	s string,
+) *string {
+	return &s
+}
+
+func (s *CommandExecPostPublicTestSuite) TestPostNodeCommandExec() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeCommandShellRequestObject
+		request      gen.PostNodeCommandExecRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeCommandShellResponseObject)
+		validateFunc func(resp gen.PostNodeCommandExecResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
 			setupMock: func() {
 				data, _ := json.Marshal(command.Result{
-					Stdout:     "hello",
+					Stdout:     "file1\nfile2",
 					Stderr:     "",
 					ExitCode:   0,
-					DurationMs: 5,
+					DurationMs: 12,
 					Changed:    false,
 				})
 				s.mockJobClient.EXPECT().
@@ -108,7 +121,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"_any",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -120,13 +133,13 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Stdout)
-				s.Equal("hello", *r.Results[0].Stdout)
+				s.Equal("file1\nfile2", *r.Results[0].Stdout)
 				s.Require().NotNil(r.Results[0].ExitCode)
 				s.Equal(0, *r.Results[0].ExitCode)
 				s.Require().NotNil(r.Results[0].Changed)
@@ -135,26 +148,27 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 		},
 		{
 			name: "success with all optional fields",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Cwd:     strPtr("/tmp"),
 					Timeout: intPtr(30),
 				},
 			},
 			setupMock: func() {
 				data, _ := json.Marshal(command.Result{
-					Stdout:     "hello",
+					Stdout:     "file1\nfile2",
 					ExitCode:   0,
-					DurationMs: 5,
+					DurationMs: 12,
 				})
 				s.mockJobClient.EXPECT().
 					Modify(
 						gomock.Any(),
 						"_any",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -166,8 +180,8 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
@@ -175,15 +189,15 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell400JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -191,25 +205,26 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 		},
 		{
 			name: "body validation error empty command",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
 					Command: "",
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell400JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 			},
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_any",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
@@ -219,22 +234,23 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"_any",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				_, ok := resp.(gen.PostNodeCommandShell500JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				_, ok := resp.(gen.PostNodeCommandExec500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
@@ -244,7 +260,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"server1",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
@@ -253,34 +269,35 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						Error:    "host: operation not supported on this OS family",
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.CommandResultItemStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.Skipped, r.Results[0].Status)
 			},
 		},
 		{
 			name: "broadcast all success",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
 			setupMock: func() {
-				data1, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
-				data2, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
+				data1, _ := json.Marshal(command.Result{Stdout: "file1", ExitCode: 0})
+				data2, _ := json.Marshal(command.Result{Stdout: "file2", ExitCode: 0})
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -292,27 +309,28 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
 				s.NotNil(resp)
 			},
 		},
 		{
 			name: "broadcast all with errors",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
 			setupMock: func() {
-				data1, _ := json.Marshal(command.Result{Stdout: "hello", ExitCode: 0})
+				data1, _ := json.Marshal(command.Result{Stdout: "file1", ExitCode: 0})
 				s.mockJobClient.EXPECT().
 					ModifyBroadcast(
 						gomock.Any(),
 						"_all",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -321,15 +339,15 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 							"server1": {Hostname: "server1", Data: json.RawMessage(data1)},
 							"server2": {
 								Status:   job.StatusFailed,
-								Error:    "shell not available",
+								Error:    "command not found",
 								Hostname: "server2",
 							},
 						},
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 2)
 				var foundError bool
@@ -337,7 +355,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 					if item.Error != nil {
 						foundError = true
 						s.Equal("server2", item.Hostname)
-						s.Equal("shell not available", *item.Error)
+						s.Equal("command not found", *item.Error)
 					}
 				}
 				s.True(foundError)
@@ -345,10 +363,11 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 		},
 		{
 			name: "broadcast with skipped host",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
@@ -358,7 +377,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"_all",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -373,22 +392,23 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.CommandResultItemStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.Skipped, r.Results[0].Status)
 			},
 		},
 		{
 			name: "broadcast with failed host",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
@@ -398,7 +418,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"_all",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return(
@@ -413,22 +433,23 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				r, ok := resp.(gen.PostNodeCommandShell202JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				r, ok := resp.(gen.PostNodeCommandExec202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("permission denied", *r.Results[0].Error)
-				s.Equal(gen.CommandResultItemStatusFailed, r.Results[0].Status)
+				s.Equal(gen.Failed, r.Results[0].Status)
 			},
 		},
 		{
 			name: "broadcast all error",
-			request: gen.PostNodeCommandShellRequestObject{
+			request: gen.PostNodeCommandExecRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeCommandShellJSONRequestBody{
-					Command: "echo hello",
+				Body: &gen.PostNodeCommandExecJSONRequestBody{
+					Command: "ls",
+					Args:    &[]string{"-la"},
 					Timeout: intPtr(30),
 				},
 			},
@@ -438,13 +459,13 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 						gomock.Any(),
 						"_all",
 						"command",
-						job.OperationCommandShellExecute,
+						job.OperationCommandExecExecute,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeCommandShellResponseObject) {
-				_, ok := resp.(gen.PostNodeCommandShell500JSONResponse)
+			validateFunc: func(resp gen.PostNodeCommandExecResponseObject) {
+				_, ok := resp.(gen.PostNodeCommandExec500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -454,14 +475,14 @@ func (s *CommandShellPostPublicTestSuite) TestPostNodeCommandShell() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeCommandShell(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeCommandExec(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
+func (s *CommandExecPostPublicTestSuite) TestPostCommandExecValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -472,19 +493,19 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/command/shell",
-			body: `{"command":"echo hello"}`,
+			path: "/node/server1/command/exec",
+			body: `{"command":"ls","args":["-la"]}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				data, _ := json.Marshal(command.Result{
-					Stdout:     "hello",
+					Stdout:     "file1\nfile2",
 					Stderr:     "",
 					ExitCode:   0,
-					DurationMs: 15,
+					DurationMs: 42,
 					Changed:    true,
 				})
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "command", job.OperationCommandShellExecute, gomock.Any()).
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandExecExecute, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data:     json.RawMessage(data),
@@ -496,7 +517,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when missing command",
-			path: "/node/server1/command/shell",
+			path: "/node/server1/command/exec",
 			body: `{}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
@@ -506,8 +527,8 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when invalid timeout",
-			path: "/node/server1/command/shell",
-			body: `{"command":"echo hello","timeout":999}`,
+			path: "/node/server1/command/exec",
+			body: `{"command":"ls","timeout":999}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -516,8 +537,8 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/command/shell",
-			body: `{"command":"echo hello"}`,
+			path: "/node/nonexistent/command/exec",
+			body: `{"command":"ls"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -530,8 +551,8 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			commandHandler := apicommand.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(commandHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -554,9 +575,9 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellValidationHTTP() {
 	}
 }
 
-const rbacShellTestSigningKey = "test-signing-key-for-shell-rbac"
+const rbacExecTestSigningKey = "test-signing-key-for-exec-rbac"
 
-func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
+func (s *CommandExecPostPublicTestSuite) TestPostCommandExecRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -581,7 +602,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacShellTestSigningKey,
+					rbacExecTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"network:read"},
@@ -599,7 +620,7 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 			name: "when valid token with command:execute returns 202",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacShellTestSigningKey,
+					rbacExecTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -610,14 +631,14 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				data, _ := json.Marshal(command.Result{
-					Stdout:     "hello",
+					Stdout:     "output",
 					Stderr:     "",
 					ExitCode:   0,
 					DurationMs: 10,
 					Changed:    true,
 				})
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "command", job.OperationCommandShellExecute, gomock.Any()).
+					Modify(gomock.Any(), "server1", "command", job.OperationCommandExecExecute, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
@@ -641,20 +662,20 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacShellTestSigningKey,
+							SigningKey: rbacExecTestSigningKey,
 						},
 					},
 				},
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeCommandHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
 				http.MethodPost,
-				"/node/server1/command/shell",
-				strings.NewReader(`{"command":"echo hello"}`),
+				"/node/server1/command/exec",
+				strings.NewReader(`{"command":"ls","args":["-la"]}`),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
@@ -670,6 +691,6 @@ func (s *CommandShellPostPublicTestSuite) TestPostCommandShellRBACHTTP() {
 	}
 }
 
-func TestCommandShellPostPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(CommandShellPostPublicTestSuite))
+func TestCommandExecPostPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(CommandExecPostPublicTestSuite))
 }

@@ -20,13 +20,6 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
-// Defines values for CommandResultItemStatus.
-const (
-	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
-	CommandResultItemStatusOk      CommandResultItemStatus = "ok"
-	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
-)
-
 // Defines values for DiskResultItemStatus.
 const (
 	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
@@ -84,74 +77,10 @@ const (
 
 // Defines values for UptimeResponseStatus.
 const (
-	Failed  UptimeResponseStatus = "failed"
-	Ok      UptimeResponseStatus = "ok"
-	Skipped UptimeResponseStatus = "skipped"
+	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
+	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
+	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
 )
-
-// CommandExecRequest defines model for CommandExecRequest.
-type CommandExecRequest struct {
-	// Args Command arguments.
-	Args *[]string `json:"args,omitempty"`
-
-	// Command The executable name or path.
-	Command string `json:"command" validate:"required,min=1"`
-
-	// Cwd Working directory for the command.
-	Cwd *string `json:"cwd,omitempty"`
-
-	// Timeout Timeout in seconds (default 30, max 300).
-	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
-}
-
-// CommandResultCollectionResponse defines model for CommandResultCollectionResponse.
-type CommandResultCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CommandResultItem `json:"results"`
-}
-
-// CommandResultItem defines model for CommandResultItem.
-type CommandResultItem struct {
-	// Changed Whether the command modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// DurationMs Execution time in milliseconds.
-	DurationMs *int64 `json:"duration_ms,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// ExitCode Exit code of the command.
-	ExitCode *int `json:"exit_code,omitempty"`
-
-	// Hostname The hostname of the agent that executed the command.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status CommandResultItemStatus `json:"status"`
-
-	// Stderr Standard error output of the command.
-	Stderr *string `json:"stderr,omitempty"`
-
-	// Stdout Standard output of the command.
-	Stdout *string `json:"stdout,omitempty"`
-}
-
-// CommandResultItemStatus The status of the operation for this host.
-type CommandResultItemStatus string
-
-// CommandShellRequest defines model for CommandShellRequest.
-type CommandShellRequest struct {
-	// Command The full shell command string.
-	Command string `json:"command" validate:"required,min=1"`
-
-	// Cwd Working directory for the command.
-	Cwd *string `json:"cwd,omitempty"`
-
-	// Timeout Timeout in seconds (default 30, max 300).
-	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
-}
 
 // DiskCollectionResponse defines model for DiskCollectionResponse.
 type DiskCollectionResponse struct {
@@ -507,12 +436,6 @@ type UptimeResponseStatus string
 // Hostname defines model for Hostname.
 type Hostname = string
 
-// PostNodeCommandExecJSONRequestBody defines body for PostNodeCommandExec for application/json ContentType.
-type PostNodeCommandExecJSONRequestBody = CommandExecRequest
-
-// PostNodeCommandShellJSONRequestBody defines body for PostNodeCommandShell for application/json ContentType.
-type PostNodeCommandShellJSONRequestBody = CommandShellRequest
-
 // PostNodeFileDeployJSONRequestBody defines body for PostNodeFileDeploy for application/json ContentType.
 type PostNodeFileDeployJSONRequestBody = FileDeployRequest
 
@@ -527,12 +450,6 @@ type ServerInterface interface {
 	// Retrieve node status
 	// (GET /node/{hostname})
 	GetNodeStatus(ctx echo.Context, hostname Hostname) error
-	// Execute a command
-	// (POST /node/{hostname}/command/exec)
-	PostNodeCommandExec(ctx echo.Context, hostname Hostname) error
-	// Execute a shell command
-	// (POST /node/{hostname}/command/shell)
-	PostNodeCommandShell(ctx echo.Context, hostname Hostname) error
 	// Retrieve disk usage
 	// (GET /node/{hostname}/disk)
 	GetNodeDisk(ctx echo.Context, hostname Hostname) error
@@ -579,42 +496,6 @@ func (w *ServerInterfaceWrapper) GetNodeStatus(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetNodeStatus(ctx, hostname)
-	return err
-}
-
-// PostNodeCommandExec converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeCommandExec(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"command:execute"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeCommandExec(ctx, hostname)
-	return err
-}
-
-// PostNodeCommandShell converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeCommandShell(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"command:execute"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeCommandShell(ctx, hostname)
 	return err
 }
 
@@ -791,8 +672,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/node/:hostname", wrapper.GetNodeStatus)
-	router.POST(baseURL+"/node/:hostname/command/exec", wrapper.PostNodeCommandExec)
-	router.POST(baseURL+"/node/:hostname/command/shell", wrapper.PostNodeCommandShell)
 	router.GET(baseURL+"/node/:hostname/disk", wrapper.GetNodeDisk)
 	router.POST(baseURL+"/node/:hostname/file/deploy", wrapper.PostNodeFileDeploy)
 	router.POST(baseURL+"/node/:hostname/file/status", wrapper.PostNodeFileStatus)
@@ -851,114 +730,6 @@ func (response GetNodeStatus403JSONResponse) VisitGetNodeStatusResponse(w http.R
 type GetNodeStatus500JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeStatus500JSONResponse) VisitGetNodeStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandExecRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeCommandExecJSONRequestBody
-}
-
-type PostNodeCommandExecResponseObject interface {
-	VisitPostNodeCommandExecResponse(w http.ResponseWriter) error
-}
-
-type PostNodeCommandExec202JSONResponse CommandResultCollectionResponse
-
-func (response PostNodeCommandExec202JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandExec400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandExec400JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandExec401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandExec401JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandExec403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandExec403JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandExec500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandExec500JSONResponse) VisitPostNodeCommandExecResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandShellRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeCommandShellJSONRequestBody
-}
-
-type PostNodeCommandShellResponseObject interface {
-	VisitPostNodeCommandShellResponse(w http.ResponseWriter) error
-}
-
-type PostNodeCommandShell202JSONResponse CommandResultCollectionResponse
-
-func (response PostNodeCommandShell202JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandShell400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandShell400JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandShell401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandShell401JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandShell403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandShell403JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeCommandShell500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeCommandShell500JSONResponse) VisitPostNodeCommandShellResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1397,12 +1168,6 @@ type StrictServerInterface interface {
 	// Retrieve node status
 	// (GET /node/{hostname})
 	GetNodeStatus(ctx context.Context, request GetNodeStatusRequestObject) (GetNodeStatusResponseObject, error)
-	// Execute a command
-	// (POST /node/{hostname}/command/exec)
-	PostNodeCommandExec(ctx context.Context, request PostNodeCommandExecRequestObject) (PostNodeCommandExecResponseObject, error)
-	// Execute a shell command
-	// (POST /node/{hostname}/command/shell)
-	PostNodeCommandShell(ctx context.Context, request PostNodeCommandShellRequestObject) (PostNodeCommandShellResponseObject, error)
 	// Retrieve disk usage
 	// (GET /node/{hostname}/disk)
 	GetNodeDisk(ctx context.Context, request GetNodeDiskRequestObject) (GetNodeDiskResponseObject, error)
@@ -1460,68 +1225,6 @@ func (sh *strictHandler) GetNodeStatus(ctx echo.Context, hostname Hostname) erro
 		return err
 	} else if validResponse, ok := response.(GetNodeStatusResponseObject); ok {
 		return validResponse.VisitGetNodeStatusResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeCommandExec operation middleware
-func (sh *strictHandler) PostNodeCommandExec(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeCommandExecRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeCommandExecJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeCommandExec(ctx.Request().Context(), request.(PostNodeCommandExecRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeCommandExec")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeCommandExecResponseObject); ok {
-		return validResponse.VisitPostNodeCommandExecResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeCommandShell operation middleware
-func (sh *strictHandler) PostNodeCommandShell(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeCommandShellRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeCommandShellJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeCommandShell(ctx.Request().Context(), request.(PostNodeCommandShellRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeCommandShell")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeCommandShellResponseObject); ok {
-		return validResponse.VisitPostNodeCommandShellResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package command
 
 import (
 	"context"
@@ -27,14 +27,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/command/gen"
 	"github.com/retr0h/osapi/internal/job"
-	"github.com/retr0h/osapi/internal/provider/command"
+	commandProvider "github.com/retr0h/osapi/internal/provider/command"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeCommandExec post the node command exec API endpoint.
-func (s *Node) PostNodeCommandExec(
+func (s *Command) PostNodeCommandExec(
 	ctx context.Context,
 	request gen.PostNodeCommandExecRequestObject,
 ) (gen.PostNodeCommandExecResponseObject, error) {
@@ -105,14 +105,14 @@ func (s *Node) PostNodeCommandExec(
 			Results: []gen.CommandResultItem{
 				{
 					Hostname: rawResp.Hostname,
-					Status:   gen.CommandResultItemStatusSkipped,
+					Status:   gen.Skipped,
 					Error:    &e,
 				},
 			},
 		}, nil
 	}
 
-	var result command.Result
+	var result commandProvider.Result
 	if rawResp.Data != nil {
 		_ = json.Unmarshal(rawResp.Data, &result)
 	}
@@ -129,7 +129,7 @@ func (s *Node) PostNodeCommandExec(
 		Results: []gen.CommandResultItem{
 			{
 				Hostname:   rawResp.Hostname,
-				Status:     gen.CommandResultItemStatusOk,
+				Status:     gen.Ok,
 				Stdout:     &stdout,
 				Stderr:     &stderr,
 				ExitCode:   &exitCode,
@@ -141,7 +141,7 @@ func (s *Node) PostNodeCommandExec(
 }
 
 // postNodeCommandExecBroadcast handles broadcast targets for command exec.
-func (s *Node) postNodeCommandExecBroadcast(
+func (s *Command) postNodeCommandExecBroadcast(
 	ctx context.Context,
 	target string,
 	cmdName string,
@@ -176,16 +176,16 @@ func (s *Node) postNodeCommandExecBroadcast(
 		}
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.CommandResultItemStatusFailed
+			item.Status = gen.Failed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.CommandResultItemStatusSkipped
+			item.Status = gen.Skipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.CommandResultItemStatusOk
-			var result command.Result
+			item.Status = gen.Ok
+			var result commandProvider.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}

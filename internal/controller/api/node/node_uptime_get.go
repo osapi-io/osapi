@@ -73,7 +73,7 @@ func (s *Node) GetNodeUptime(
 			Results: []gen.UptimeResponse{
 				{
 					Hostname: rawResp.Hostname,
-					Status:   gen.Skipped,
+					Status:   gen.UptimeResponseStatusSkipped,
 					Error:    &e,
 				},
 			},
@@ -86,7 +86,7 @@ func (s *Node) GetNodeUptime(
 	}
 
 	resp := buildUptimeResponse(rawResp.Hostname, &uptimeResp)
-	resp.Status = gen.Ok
+	resp.Status = gen.UptimeResponseStatusOk
 	jobUUID := uuid.MustParse(jobID)
 
 	return gen.GetNodeUptime200JSONResponse{
@@ -121,15 +121,15 @@ func (s *Node) getNodeUptimeBroadcast(
 		}
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.Failed
+			item.Status = gen.UptimeResponseStatusFailed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.Skipped
+			item.Status = gen.UptimeResponseStatusSkipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.Ok
+			item.Status = gen.UptimeResponseStatusOk
 			var uptimeResp job.NodeUptimeResponse
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &uptimeResp)
