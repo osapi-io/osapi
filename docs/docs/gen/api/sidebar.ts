@@ -466,6 +466,40 @@ const sidebar: SidebarsConfig = {
         },
       ],
     },
+    {
+      type: "category",
+      label: "Node/Sysctl",
+      link: {
+        type: "doc",
+        id: "gen/api/sysctl-management-api-sysctl-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-sysctl",
+          label: "List all managed sysctl entries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-sysctl",
+          label: "Set a sysctl parameter",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-sysctl-by-key",
+          label: "Get a sysctl entry",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-sysctl",
+          label: "Delete a managed sysctl entry",
+          className: "api-method delete",
+        },
+      ],
+    },
   ],
 };
 

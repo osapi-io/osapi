@@ -230,6 +230,20 @@ const (
 	PingResponseStatusSkipped PingResponseStatus = "skipped"
 )
 
+// Defines values for SysctlEntryStatus.
+const (
+	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
+	SysctlEntryStatusOk      SysctlEntryStatus = "ok"
+	SysctlEntryStatusSkipped SysctlEntryStatus = "skipped"
+)
+
+// Defines values for SysctlMutationResultStatus.
+const (
+	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
+	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
+	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
+)
+
 // Defines values for UptimeResponseStatus.
 const (
 	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
@@ -1801,6 +1815,85 @@ type StreamInfo struct {
 	Name string `json:"name"`
 }
 
+// SysctlCollectionResponse defines model for SysctlCollectionResponse.
+type SysctlCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []SysctlEntry       `json:"results"`
+}
+
+// SysctlDeleteResponse defines model for SysctlDeleteResponse.
+type SysctlDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []SysctlMutationResult `json:"results"`
+}
+
+// SysctlEntry A managed sysctl entry.
+type SysctlEntry struct {
+	// Error Error message if the agent failed to retrieve this entry.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Key Sysctl parameter key.
+	Key *string `json:"key,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status SysctlEntryStatus `json:"status"`
+
+	// Value Current value of the sysctl parameter.
+	Value *string `json:"value,omitempty"`
+}
+
+// SysctlEntryStatus The status of the operation for this host.
+type SysctlEntryStatus string
+
+// SysctlGetResponse Collection response for a single sysctl entry get operation.
+type SysctlGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []SysctlEntry       `json:"results"`
+}
+
+// SysctlMutationResult Result of a sysctl set or delete operation for one host.
+type SysctlMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Key Sysctl parameter key.
+	Key *string `json:"key,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status SysctlMutationResultStatus `json:"status"`
+}
+
+// SysctlMutationResultStatus The status of the operation for this host.
+type SysctlMutationResultStatus string
+
+// SysctlSetRequest defines model for SysctlSetRequest.
+type SysctlSetRequest struct {
+	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
+	Key string `json:"key" validate:"required,min=1"`
+
+	// Value Value to set for the sysctl parameter.
+	Value string `json:"value" validate:"required"`
+}
+
+// SysctlSetResponse defines model for SysctlSetResponse.
+type SysctlSetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	Results []SysctlMutationResult `json:"results"`
+}
+
 // TimelineEvent defines model for TimelineEvent.
 type TimelineEvent struct {
 	Error     *string   `json:"error,omitempty"`
@@ -1849,6 +1942,9 @@ type FileName = string
 
 // Hostname defines model for Hostname.
 type Hostname = string
+
+// SysctlKey defines model for SysctlKey.
+type SysctlKey = string
 
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
@@ -1971,6 +2067,9 @@ type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
 
 // PutNodeScheduleCronJSONRequestBody defines body for PutNodeScheduleCron for application/json ContentType.
 type PutNodeScheduleCronJSONRequestBody = CronUpdateRequest
+
+// PostNodeSysctlJSONRequestBody defines body for PostNodeSysctl for application/json ContentType.
+type PostNodeSysctlJSONRequestBody = SysctlSetRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -2218,6 +2317,20 @@ type ClientInterface interface {
 	PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeSysctl request
+	GetNodeSysctl(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeSysctlWithBody request with any body
+	PostNodeSysctlWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeSysctl(ctx context.Context, hostname Hostname, body PostNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeSysctl request
+	DeleteNodeSysctl(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeSysctlByKey request
+	GetNodeSysctlByKey(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeUptime request
 	GetNodeUptime(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2972,6 +3085,66 @@ func (c *Client) PutNodeScheduleCronWithBody(ctx context.Context, hostname Hostn
 
 func (c *Client) PutNodeScheduleCron(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeScheduleCronRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeSysctl(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeSysctlRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeSysctlWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeSysctlRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeSysctl(ctx context.Context, hostname Hostname, body PostNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeSysctlRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeSysctl(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeSysctlRequest(c.Server, hostname, key)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeSysctlByKey(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeSysctlByKeyRequest(c.Server, hostname, key)
 	if err != nil {
 		return nil, err
 	}
@@ -5031,6 +5204,169 @@ func NewPutNodeScheduleCronRequestWithBody(server string, hostname Hostname, nam
 	return req, nil
 }
 
+// NewGetNodeSysctlRequest generates requests for GetNodeSysctl
+func NewGetNodeSysctlRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/sysctl", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeSysctlRequest calls the generic PostNodeSysctl builder with application/json body
+func NewPostNodeSysctlRequest(server string, hostname Hostname, body PostNodeSysctlJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeSysctlRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeSysctlRequestWithBody generates requests for PostNodeSysctl with any type of body
+func NewPostNodeSysctlRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/sysctl", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNodeSysctlRequest generates requests for DeleteNodeSysctl
+func NewDeleteNodeSysctlRequest(server string, hostname Hostname, key SysctlKey) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "key", runtime.ParamLocationPath, key)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/sysctl/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeSysctlByKeyRequest generates requests for GetNodeSysctlByKey
+func NewGetNodeSysctlByKeyRequest(server string, hostname Hostname, key SysctlKey) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "key", runtime.ParamLocationPath, key)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/sysctl/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetNodeUptimeRequest generates requests for GetNodeUptime
 func NewGetNodeUptimeRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -5308,6 +5644,20 @@ type ClientWithResponsesInterface interface {
 	PutNodeScheduleCronWithBodyWithResponse(ctx context.Context, hostname Hostname, name CronName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
 
 	PutNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, name CronName, body PutNodeScheduleCronJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeScheduleCronResponse, error)
+
+	// GetNodeSysctlWithResponse request
+	GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error)
+
+	// PostNodeSysctlWithBodyWithResponse request with any body
+	PostNodeSysctlWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeSysctlResponse, error)
+
+	PostNodeSysctlWithResponse(ctx context.Context, hostname Hostname, body PostNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeSysctlResponse, error)
+
+	// DeleteNodeSysctlWithResponse request
+	DeleteNodeSysctlWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*DeleteNodeSysctlResponse, error)
+
+	// GetNodeSysctlByKeyWithResponse request
+	GetNodeSysctlByKeyWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*GetNodeSysctlByKeyResponse, error)
 
 	// GetNodeUptimeWithResponse request
 	GetNodeUptimeWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeUptimeResponse, error)
@@ -6569,6 +6919,109 @@ func (r PutNodeScheduleCronResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodeSysctlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SysctlCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeSysctlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeSysctlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeSysctlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SysctlSetResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeSysctlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeSysctlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeSysctlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SysctlDeleteResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeSysctlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeSysctlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeSysctlByKeyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SysctlGetResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeSysctlByKeyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeSysctlByKeyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeUptimeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7167,6 +7620,50 @@ func (c *ClientWithResponses) PutNodeScheduleCronWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePutNodeScheduleCronResponse(rsp)
+}
+
+// GetNodeSysctlWithResponse request returning *GetNodeSysctlResponse
+func (c *ClientWithResponses) GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error) {
+	rsp, err := c.GetNodeSysctl(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeSysctlResponse(rsp)
+}
+
+// PostNodeSysctlWithBodyWithResponse request with arbitrary body returning *PostNodeSysctlResponse
+func (c *ClientWithResponses) PostNodeSysctlWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeSysctlResponse, error) {
+	rsp, err := c.PostNodeSysctlWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeSysctlResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeSysctlWithResponse(ctx context.Context, hostname Hostname, body PostNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeSysctlResponse, error) {
+	rsp, err := c.PostNodeSysctl(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeSysctlResponse(rsp)
+}
+
+// DeleteNodeSysctlWithResponse request returning *DeleteNodeSysctlResponse
+func (c *ClientWithResponses) DeleteNodeSysctlWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*DeleteNodeSysctlResponse, error) {
+	rsp, err := c.DeleteNodeSysctl(ctx, hostname, key, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeSysctlResponse(rsp)
+}
+
+// GetNodeSysctlByKeyWithResponse request returning *GetNodeSysctlByKeyResponse
+func (c *ClientWithResponses) GetNodeSysctlByKeyWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, reqEditors ...RequestEditorFn) (*GetNodeSysctlByKeyResponse, error) {
+	rsp, err := c.GetNodeSysctlByKey(ctx, hostname, key, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeSysctlByKeyResponse(rsp)
 }
 
 // GetNodeUptimeWithResponse request returning *GetNodeUptimeResponse
@@ -9756,6 +10253,215 @@ func ParsePutNodeScheduleCronResponse(rsp *http.Response) (*PutNodeScheduleCronR
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeSysctlResponse parses an HTTP response from a GetNodeSysctlWithResponse call
+func ParseGetNodeSysctlResponse(rsp *http.Response) (*GetNodeSysctlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeSysctlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SysctlCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeSysctlResponse parses an HTTP response from a PostNodeSysctlWithResponse call
+func ParsePostNodeSysctlResponse(rsp *http.Response) (*PostNodeSysctlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeSysctlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SysctlSetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeSysctlResponse parses an HTTP response from a DeleteNodeSysctlWithResponse call
+func ParseDeleteNodeSysctlResponse(rsp *http.Response) (*DeleteNodeSysctlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeSysctlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SysctlDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeSysctlByKeyResponse parses an HTTP response from a GetNodeSysctlByKeyWithResponse call
+func ParseGetNodeSysctlByKeyResponse(rsp *http.Response) (*GetNodeSysctlByKeyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeSysctlByKeyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SysctlGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
