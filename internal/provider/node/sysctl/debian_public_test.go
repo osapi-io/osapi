@@ -31,6 +31,7 @@ import (
 	"testing"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -391,6 +392,87 @@ func (suite *DebianPublicTestSuite) TestSet() {
 			},
 		},
 		{
+			name: "when MkdirAll fails returns error",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				baseFs := memfs.New()
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnMkdirAll {
+						return errors.New("mkdir failed")
+					}
+
+					return nil
+				})
+				suite.provider = sysctl.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockStateKV,
+					suite.mockExec,
+					testHostname,
+				)
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+			},
+			validateFunc: func(
+				result *sysctl.SetResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "create directory")
+			},
+		},
+		{
+			name: "when WriteFile fails returns error",
+			entry: sysctl.Entry{
+				Key:   "net.ipv4.ip_forward",
+				Value: "1",
+			},
+			setup: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/etc/sysctl.d", 0o755)
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnOpenFile {
+						return errors.New("write failed")
+					}
+
+					return nil
+				})
+				suite.provider = sysctl.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockStateKV,
+					suite.mockExec,
+					testHostname,
+				)
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("not found"))
+			},
+			validateFunc: func(
+				result *sysctl.SetResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "write file")
+			},
+		},
+		{
 			name: "when SHA matches and undeployed redeploys",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
@@ -590,6 +672,56 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			) {
 				suite.NoError(err)
 				suite.False(result.Changed)
+			},
+		},
+		{
+			name: "when Remove fails returns error",
+			key:  "net.ipv4.ip_forward",
+			setup: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/etc/sysctl.d", 0o755)
+				_ = baseFs.WriteFile(
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+					[]byte("net.ipv4.ip_forward = 1\n"),
+					0o644,
+				)
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnRemove {
+						return errors.New("remove failed")
+					}
+
+					return nil
+				})
+				suite.provider = sysctl.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockStateKV,
+					suite.mockExec,
+					testHostname,
+				)
+				stateData := managedStateJSON(
+					"net.ipv4.ip_forward", "1",
+					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
+				)
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().Value().Return(stateData)
+
+				suite.mockStateKV.EXPECT().
+					Get(gomock.Any(), gomock.Any()).
+					Return(mockEntry, nil)
+			},
+			validateFunc: func(
+				result *sysctl.DeleteResult,
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "remove file")
 			},
 		},
 		{

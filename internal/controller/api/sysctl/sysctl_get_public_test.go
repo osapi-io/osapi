@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -34,6 +35,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
 	apisysctl "github.com/retr0h/osapi/internal/controller/api/sysctl"
@@ -492,6 +494,112 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyValidationHTTP() {
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+			for _, str := range tc.wantContains {
+				s.Contains(rec.Body.String(), str)
+			}
+		})
+	}
+}
+
+const rbacSysctlGetTestSigningKey = "test-signing-key-for-rbac-sysctl-get"
+
+func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+		wantContains []string
+	}{
+		{
+			name: "when no token returns 401",
+			setupAuth: func(_ *http.Request) {
+				// No auth header set
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusUnauthorized,
+			wantContains: []string{"Bearer token required"},
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacSysctlGetTestSigningKey,
+					[]string{"write"},
+					"test-user",
+					[]string{"sysctl:write"},
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusForbidden,
+			wantContains: []string{"Insufficient permissions"},
+		},
+		{
+			name: "when valid admin token returns 200",
+			setupAuth: func(req *http.Request) {
+				token, err := tokenManager.Generate(
+					rbacSysctlGetTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				s.Require().NoError(err)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					Query(gomock.Any(), "server1", "node", job.OperationSysctlGet, map[string]string{"key": "net.ipv4.ip_forward"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`{"key":"net.ipv4.ip_forward","value":"1"}`,
+						),
+					}, nil)
+				return mock
+			},
+			wantCode:     http.StatusOK,
+			wantContains: []string{`"job_id"`, `"results"`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{
+							SigningKey: rbacSysctlGetTestSigningKey,
+						},
+					},
+				},
+			}
+
+			server := api.New(appConfig, s.logger)
+			handlers := server.GetSysctlHandler(jobMock)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(
+				http.MethodGet,
+				"/node/server1/sysctl/net.ipv4.ip_forward",
+				nil,
+			)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+
+			server.Echo.ServeHTTP(rec, req)
 
 			s.Equal(tc.wantCode, rec.Code)
 			for _, str := range tc.wantContains {
