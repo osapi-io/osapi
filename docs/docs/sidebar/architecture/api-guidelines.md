@@ -47,6 +47,8 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/command/exec`                | Command  |
 | `/node/{hostname}/schedule/cron`               | Schedule |
 | `/node/{hostname}/schedule/cron/{name}`        | Schedule |
+| `/node/{hostname}/sysctl`                      | Sysctl   |
+| `/node/{hostname}/sysctl/{key}`                | Sysctl   |
 
 6. **Path Parameters Over Query Parameters**
 
