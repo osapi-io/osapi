@@ -18,26 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package schedule provides schedule-related API handlers.
-package schedule
+package schedule_test
 
 import (
-	"log/slog"
-
-	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
-	"github.com/retr0h/osapi/internal/job/client"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 )
 
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*Schedule)(nil)
+func strPtr(
+	s string,
+) *string {
+	return &s
+}
 
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-) *Schedule {
-	return &Schedule{
-		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "api.schedule")),
-	}
+func boolPtr(
+	b bool,
+) *bool {
+	return &b
+}
+
+func intervalPtr(
+	i gen.CronCreateRequestInterval,
+) *gen.CronCreateRequestInterval {
+	return &i
 }

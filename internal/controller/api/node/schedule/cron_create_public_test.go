@@ -23,7 +23,6 @@ package schedule_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,14 +38,14 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apischedule "github.com/retr0h/osapi/internal/controller/api/schedule"
-	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	apischedule "github.com/retr0h/osapi/internal/controller/api/node/schedule"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type CronUpdatePublicTestSuite struct {
+type CronCreatePublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -57,7 +56,7 @@ type CronUpdatePublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *CronUpdatePublicTestSuite) SetupSuite() {
+func (s *CronCreatePublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -66,7 +65,7 @@ func (s *CronUpdatePublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *CronUpdatePublicTestSuite) SetupTest() {
+func (s *CronCreatePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apischedule.New(slog.Default(), s.mockJobClient)
@@ -75,27 +74,27 @@ func (s *CronUpdatePublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *CronUpdatePublicTestSuite) TearDownTest() {
+func (s *CronCreatePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
+func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCron() {
 	tests := []struct {
 		name         string
-		request      gen.PutNodeScheduleCronRequestObject
+		request      gen.PostNodeScheduleCronRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PutNodeScheduleCronResponseObject)
+		validateFunc func(resp gen.PostNodeScheduleCronResponseObject)
 	}{
 		{
-			name: "success with all fields",
-			request: gen.PutNodeScheduleCronRequestObject{
+			name: "success",
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule:    strPtr("0 3 * * *"),
-					Object:      strPtr("backup-v2-script"),
-					User:        strPtr("admin"),
-					ContentType: (*gen.CronUpdateRequestContentType)(strPtr("template")),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:        "backup",
+					Schedule:    strPtr("0 2 * * *"),
+					Object:      "backup-script",
+					User:        strPtr("root"),
+					ContentType: (*gen.CronCreateRequestContentType)(strPtr("template")),
 					Vars:        &map[string]interface{}{"region": "us-east"},
 				},
 			},
@@ -105,7 +104,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"server1",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return(
@@ -119,8 +118,8 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -131,47 +130,13 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 			},
 		},
 		{
-			name: "success with nil optional fields",
-			request: gen.PutNodeScheduleCronRequestObject{
+			name: "success with nil user",
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "backup",
-				Body:     &gen.PutNodeScheduleCronJSONRequestBody{},
-			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"schedule",
-						job.OperationCronUpdate,
-						gomock.Any(),
-					).
-					Return(
-						"550e8400-e29b-41d4-a716-446655440000",
-						&job.Response{
-							JobID:    "550e8400-e29b-41d4-a716-446655440000",
-							Hostname: "agent1",
-							Changed:  boolPtr(false),
-							Data:     json.RawMessage(`{"name":"backup","changed":false}`),
-						},
-						nil,
-					)
-			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
-				s.True(ok)
-				s.Require().Len(r.Results, 1)
-				s.Require().NotNil(r.Results[0].Changed)
-				s.False(*r.Results[0].Changed)
-			},
-		},
-		{
-			name: "success with nil response data",
-			request: gen.PutNodeScheduleCronRequestObject{
-				Hostname: "server1",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -180,7 +145,83 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"server1",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"backup","changed":true}`),
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("backup", *r.Results[0].Name)
+			},
+		},
+		{
+			name: "success with interval instead of schedule",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "daily-backup",
+					Interval: intervalPtr(gen.CronCreateRequestIntervalDaily),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronCreate,
+						gomock.Any(),
+					).
+					Return(
+						"550e8400-e29b-41d4-a716-446655440000",
+						&job.Response{
+							JobID:    "550e8400-e29b-41d4-a716-446655440000",
+							Hostname: "agent1",
+							Changed:  boolPtr(true),
+							Data:     json.RawMessage(`{"name":"daily-backup","changed":true}`),
+						},
+						nil,
+					)
+			},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal("daily-backup", *r.Results[0].Name)
+			},
+		},
+		{
+			name: "success with nil response data",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"schedule",
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return(
@@ -194,8 +235,8 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -204,11 +245,12 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 		},
 		{
 			name: "broadcast success",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "_all",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "backup-script",
 				},
 			},
 			setupMock: func() {
@@ -217,7 +259,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"_all",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -235,20 +277,21 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
 			},
 		},
 		{
-			name: "broadcast with error entries",
-			request: gen.PutNodeScheduleCronRequestObject{
+			name: "broadcast with errors",
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "_all",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "backup-script",
 				},
 			},
 			setupMock: func() {
@@ -257,7 +300,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"_all",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -269,33 +312,26 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						},
 						"server2": {
 							Status:   job.StatusFailed,
-							Error:    "cron entry not found",
+							Error:    "agent unreachable",
 							Hostname: "server2",
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
-				errCount := 0
-				for _, res := range r.Results {
-					if res.Error != nil {
-						errCount++
-						s.Equal("cron entry not found", *res.Error)
-					}
-				}
-				s.Equal(1, errCount)
 			},
 		},
 		{
 			name: "broadcast with skipped host",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "_all",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "backup-script",
 				},
 			},
 			setupMock: func() {
@@ -304,7 +340,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"_all",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -315,8 +351,8 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -327,11 +363,12 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 		},
 		{
 			name: "broadcast error collecting responses",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "_all",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "backup-script",
 				},
 			},
 			setupMock: func() {
@@ -340,111 +377,129 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"_all",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				_, ok := resp.(gen.PutNodeScheduleCron500JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				_, ok := resp.(gen.PostNodeScheduleCron500JSONResponse)
 				s.True(ok)
-			},
-		},
-		{
-			name: "body validation error schedule too short",
-			request: gen.PutNodeScheduleCronRequestObject{
-				Hostname: "server1",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("short"),
-				},
-			},
-			setupMock: func() {},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "Schedule")
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron400JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
 			},
 		},
 		{
-			name: "not found error",
-			request: gen.PutNodeScheduleCronRequestObject{
+			name: "body validation error empty name",
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "nonexistent",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"schedule",
-						job.OperationCronUpdate,
-						gomock.Any(),
-					).
-					Return("", nil, errors.New("cron entry not found"))
-			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron404JSONResponse)
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "not found")
 			},
 		},
 		{
-			name: "does not exist error",
-			request: gen.PutNodeScheduleCronRequestObject{
+			name: "validation error neither schedule nor interval",
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "missing",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:   "backup",
+					Object: "/usr/bin/backup.sh",
 				},
 			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Modify(
-						gomock.Any(),
-						"server1",
-						"schedule",
-						job.OperationCronUpdate,
-						gomock.Any(),
-					).
-					Return("", nil, errors.New("cron entry does not exist"))
-			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron404JSONResponse)
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "does not exist")
+				s.Contains(*r.Error, "Schedule")
+			},
+		},
+		{
+			name: "validation error both schedule and interval",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Interval: intervalPtr(gen.CronCreateRequestIntervalDaily),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+			},
+		},
+		{
+			name: "validation error invalid cron schedule expression",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("not-a-cron"),
+					Object:   "/usr/bin/backup.sh",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "cron_schedule")
+			},
+		},
+		{
+			name: "body validation error empty command",
+			request: gen.PostNodeScheduleCronRequestObject{
+				Hostname: "server1",
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "",
+				},
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron400JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -453,7 +508,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"server1",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return(
@@ -466,8 +521,8 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				r, ok := resp.(gen.PutNodeScheduleCron200JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				r, ok := resp.(gen.PostNodeScheduleCron200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -479,11 +534,12 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 		},
 		{
 			name: "job client error",
-			request: gen.PutNodeScheduleCronRequestObject{
+			request: gen.PostNodeScheduleCronRequestObject{
 				Hostname: "server1",
-				Name:     "backup",
-				Body: &gen.PutNodeScheduleCronJSONRequestBody{
-					Schedule: strPtr("0 3 * * *"),
+				Body: &gen.PostNodeScheduleCronJSONRequestBody{
+					Name:     "backup",
+					Schedule: strPtr("0 2 * * *"),
+					Object:   "/usr/bin/backup.sh",
 				},
 			},
 			setupMock: func() {
@@ -492,13 +548,13 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 						gomock.Any(),
 						"server1",
 						"schedule",
-						job.OperationCronUpdate,
+						job.OperationCronCreate,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PutNodeScheduleCronResponseObject) {
-				_, ok := resp.(gen.PutNodeScheduleCron500JSONResponse)
+			validateFunc: func(resp gen.PostNodeScheduleCronResponseObject) {
+				_, ok := resp.(gen.PostNodeScheduleCron500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -508,14 +564,14 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCron() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PutNodeScheduleCron(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeScheduleCron(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
+func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -526,12 +582,12 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/schedule/cron/backup",
-			body: `{"schedule":"0 3 * * *"}`,
+			path: "/node/server1/schedule/cron",
+			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "schedule", job.OperationCronUpdate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronCreate, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
@@ -548,9 +604,19 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 			wantContains: []string{`"job_id"`, `"results"`},
 		},
 		{
+			name: "when missing name",
+			path: "/node/server1/schedule/cron",
+			body: `{"schedule":"0 2 * * *","object":"backup-script"}`,
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode:     http.StatusBadRequest,
+			wantContains: []string{`"error"`, "Name", "required"},
+		},
+		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/schedule/cron/backup",
-			body: `{"schedule":"0 3 * * *"}`,
+			path: "/node/nonexistent/schedule/cron",
+			body: `{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -570,7 +636,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
 			req := httptest.NewRequest(
-				http.MethodPut,
+				http.MethodPost,
 				tc.path,
 				strings.NewReader(tc.body),
 			)
@@ -587,9 +653,9 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronValidationHTTP() {
 	}
 }
 
-const rbacCronUpdateTestSigningKey = "test-signing-key-for-rbac-cron-update"
+const rbacCronCreateTestSigningKey = "test-signing-key-for-rbac-cron-create"
 
-func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
+func (s *CronCreatePublicTestSuite) TestPostNodeScheduleCronRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -614,7 +680,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacCronUpdateTestSigningKey,
+					rbacCronCreateTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"cron:read"},
@@ -632,7 +698,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacCronUpdateTestSigningKey,
+					rbacCronCreateTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -643,7 +709,7 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "schedule", job.OperationCronUpdate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronCreate, gomock.Any()).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
 						&job.Response{
@@ -669,20 +735,22 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacCronUpdateTestSigningKey,
+							SigningKey: rbacCronCreateTestSigningKey,
 						},
 					},
 				},
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetScheduleHandler(jobMock)
+			handlers := server.GetNodeScheduleHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodPut,
-				"/node/server1/schedule/cron/backup",
-				strings.NewReader(`{"schedule":"0 3 * * *"}`),
+				http.MethodPost,
+				"/node/server1/schedule/cron",
+				strings.NewReader(
+					`{"name":"backup","schedule":"0 2 * * *","object":"backup-script"}`,
+				),
 			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
@@ -698,6 +766,6 @@ func (s *CronUpdatePublicTestSuite) TestPutNodeScheduleCronRBACHTTP() {
 	}
 }
 
-func TestCronUpdatePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(CronUpdatePublicTestSuite))
+func TestCronCreatePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(CronCreatePublicTestSuite))
 }

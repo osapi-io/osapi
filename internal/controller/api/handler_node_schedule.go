@@ -25,13 +25,13 @@ import (
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	"github.com/retr0h/osapi/internal/controller/api/schedule"
-	scheduleGen "github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule"
+	scheduleGen "github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetScheduleHandler returns Schedule handler for registration.
-func (s *Server) GetScheduleHandler(
+// GetNodeScheduleHandler returns Schedule handler for registration.
+func (s *Server) GetNodeScheduleHandler(
 	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)

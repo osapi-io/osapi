@@ -37,8 +37,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apischedule "github.com/retr0h/osapi/internal/controller/api/schedule"
-	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	apischedule "github.com/retr0h/osapi/internal/controller/api/node/schedule"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
@@ -565,7 +565,7 @@ func (s *CronListGetPublicTestSuite) TestGetNodeScheduleCronRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetScheduleHandler(jobMock)
+			handlers := server.GetNodeScheduleHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

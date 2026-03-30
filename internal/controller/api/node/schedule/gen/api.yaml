@@ -56,19 +56,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing cron entries.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     post:
       summary: Create a cron entry
@@ -101,25 +101,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating cron entry.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # -- Cron individual entry -------------------------------------------
 
@@ -149,25 +149,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Cron entry not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving cron entry.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     put:
       summary: Update a cron entry
@@ -201,31 +201,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Cron entry not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error updating cron entry.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Delete a cron entry
@@ -252,25 +252,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Cron entry not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting cron entry.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # -- Reusable components ------------------------------------------------
 
@@ -317,7 +317,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # -- Request schemas -------------------------------------------------
 

@@ -24,56 +24,77 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
-// DeleteNodeScheduleCron deletes a cron entry on a target node.
-func (s *Schedule) DeleteNodeScheduleCron(
+// PostNodeScheduleCron creates a cron entry on a target node.
+func (s *Schedule) PostNodeScheduleCron(
 	ctx context.Context,
-	request gen.DeleteNodeScheduleCronRequestObject,
-) (gen.DeleteNodeScheduleCronResponseObject, error) {
+	request gen.PostNodeScheduleCronRequestObject,
+) (gen.PostNodeScheduleCronResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Body); !ok {
+		return gen.PostNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
+	}
+
+	entry := cronProv.Entry{
+		Name:   request.Body.Name,
+		Object: request.Body.Object,
+	}
+	if request.Body.Schedule != nil {
+		entry.Schedule = *request.Body.Schedule
+	}
+	if request.Body.Interval != nil {
+		entry.Interval = string(*request.Body.Interval)
+	}
+	if request.Body.User != nil {
+		entry.User = *request.Body.User
+	}
+	if request.Body.ContentType != nil {
+		entry.ContentType = string(*request.Body.ContentType)
+	}
+	if request.Body.Vars != nil {
+		entry.Vars = *request.Body.Vars
 	}
 
 	hostname := request.Hostname
-	name := request.Name
 
-	s.logger.Debug("cron delete",
+	s.logger.Debug("cron create",
 		slog.String("target", hostname),
-		slog.String("name", name),
+		slog.String("name", entry.Name),
+		slog.String("object", entry.Object),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.deleteNodeScheduleCronBroadcast(ctx, hostname, name)
+		return s.postNodeScheduleCronCreateBroadcast(ctx, hostname, entry)
 	}
 
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"schedule",
-		job.OperationCronDelete,
-		map[string]string{"name": name},
+		job.OperationCronCreate,
+		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
-			return gen.DeleteNodeScheduleCron404JSONResponse{Error: &errMsg}, nil
-		}
-		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeScheduleCron200JSONResponse{
+		return gen.PostNodeScheduleCron200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.CronMutationResult{
 				{
@@ -85,45 +106,45 @@ func (s *Schedule) DeleteNodeScheduleCron(
 		}, nil
 	}
 
-	var result cronProv.DeleteResult
+	var result cronProv.CreateResult
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &result)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
-	resultName := result.Name
+	name := result.Name
 	agentHostname := resp.Hostname
 
-	return gen.DeleteNodeScheduleCron200JSONResponse{
+	return gen.PostNodeScheduleCron200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.CronMutationResult{
 			{
 				Hostname: agentHostname,
 				Status:   gen.CronMutationResultStatusOk,
-				Name:     &resultName,
+				Name:     &name,
 				Changed:  changed,
 			},
 		},
 	}, nil
 }
 
-// deleteNodeScheduleCronBroadcast handles broadcast targets for cron delete.
-func (s *Schedule) deleteNodeScheduleCronBroadcast(
+// postNodeScheduleCronCreateBroadcast handles broadcast targets for cron create.
+func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 	ctx context.Context,
 	target string,
-	name string,
-) (gen.DeleteNodeScheduleCronResponseObject, error) {
+	entry cronProv.Entry,
+) (gen.PostNodeScheduleCronResponseObject, error) {
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"schedule",
-		job.OperationCronDelete,
-		map[string]string{"name": name},
+		job.OperationCronCreate,
+		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var apiResponses []gen.CronMutationResult
@@ -142,12 +163,12 @@ func (s *Schedule) deleteNodeScheduleCronBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.CronMutationResultStatusOk
-			var result cronProv.DeleteResult
+			var result cronProv.CreateResult
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}
-			resultName := result.Name
-			item.Name = &resultName
+			name := result.Name
+			item.Name = &name
 			item.Changed = resp.Changed
 		}
 		apiResponses = append(apiResponses, item)
@@ -155,7 +176,7 @@ func (s *Schedule) deleteNodeScheduleCronBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.DeleteNodeScheduleCron200JSONResponse{
+	return gen.PostNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

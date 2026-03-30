@@ -24,37 +24,37 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/schedule/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/schedule/gen"
 	"github.com/retr0h/osapi/internal/job"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeScheduleCron creates a cron entry on a target node.
-func (s *Schedule) PostNodeScheduleCron(
+// PutNodeScheduleCron updates a cron entry on a target node.
+func (s *Schedule) PutNodeScheduleCron(
 	ctx context.Context,
-	request gen.PostNodeScheduleCronRequestObject,
-) (gen.PostNodeScheduleCronResponseObject, error) {
+	request gen.PutNodeScheduleCronRequestObject,
+) (gen.PutNodeScheduleCronResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeScheduleCron400JSONResponse{Error: &errMsg}, nil
 	}
 
 	entry := cronProv.Entry{
-		Name:   request.Body.Name,
-		Object: request.Body.Object,
+		Name: request.Name,
+	}
+	if request.Body.Object != nil {
+		entry.Object = *request.Body.Object
 	}
 	if request.Body.Schedule != nil {
 		entry.Schedule = *request.Body.Schedule
-	}
-	if request.Body.Interval != nil {
-		entry.Interval = string(*request.Body.Interval)
 	}
 	if request.Body.User != nil {
 		entry.User = *request.Body.User
@@ -68,33 +68,35 @@ func (s *Schedule) PostNodeScheduleCron(
 
 	hostname := request.Hostname
 
-	s.logger.Debug("cron create",
+	s.logger.Debug("cron update",
 		slog.String("target", hostname),
 		slog.String("name", entry.Name),
-		slog.String("object", entry.Object),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.postNodeScheduleCronCreateBroadcast(ctx, hostname, entry)
+		return s.putNodeScheduleCronUpdateBroadcast(ctx, hostname, entry)
 	}
 
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"schedule",
-		job.OperationCronCreate,
+		job.OperationCronUpdate,
 		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") {
+			return gen.PutNodeScheduleCron404JSONResponse{Error: &errMsg}, nil
+		}
+		return gen.PutNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeScheduleCron200JSONResponse{
+		return gen.PutNodeScheduleCron200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.CronMutationResult{
 				{
@@ -106,7 +108,7 @@ func (s *Schedule) PostNodeScheduleCron(
 		}, nil
 	}
 
-	var result cronProv.CreateResult
+	var result cronProv.UpdateResult
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &result)
 	}
@@ -116,7 +118,7 @@ func (s *Schedule) PostNodeScheduleCron(
 	name := result.Name
 	agentHostname := resp.Hostname
 
-	return gen.PostNodeScheduleCron200JSONResponse{
+	return gen.PutNodeScheduleCron200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.CronMutationResult{
 			{
@@ -129,22 +131,22 @@ func (s *Schedule) PostNodeScheduleCron(
 	}, nil
 }
 
-// postNodeScheduleCronCreateBroadcast handles broadcast targets for cron create.
-func (s *Schedule) postNodeScheduleCronCreateBroadcast(
+// putNodeScheduleCronUpdateBroadcast handles broadcast targets for cron update.
+func (s *Schedule) putNodeScheduleCronUpdateBroadcast(
 	ctx context.Context,
 	target string,
 	entry cronProv.Entry,
-) (gen.PostNodeScheduleCronResponseObject, error) {
+) (gen.PutNodeScheduleCronResponseObject, error) {
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"schedule",
-		job.OperationCronCreate,
+		job.OperationCronUpdate,
 		entry,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeScheduleCron500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var apiResponses []gen.CronMutationResult
@@ -163,7 +165,7 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.CronMutationResultStatusOk
-			var result cronProv.CreateResult
+			var result cronProv.UpdateResult
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}
@@ -176,7 +178,7 @@ func (s *Schedule) postNodeScheduleCronCreateBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.PostNodeScheduleCron200JSONResponse{
+	return gen.PutNodeScheduleCron200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil
