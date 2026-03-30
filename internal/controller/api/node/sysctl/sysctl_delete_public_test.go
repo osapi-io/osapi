@@ -23,12 +23,12 @@ package sysctl_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -38,15 +38,14 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apisysctl "github.com/retr0h/osapi/internal/controller/api/sysctl"
-	"github.com/retr0h/osapi/internal/controller/api/sysctl/gen"
+	apisysctl "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
+	"github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
-	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type SysctlCreatePublicTestSuite struct {
+type SysctlDeletePublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -57,7 +56,7 @@ type SysctlCreatePublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *SysctlCreatePublicTestSuite) SetupSuite() {
+func (s *SysctlDeletePublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -66,7 +65,7 @@ func (s *SysctlCreatePublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *SysctlCreatePublicTestSuite) SetupTest() {
+func (s *SysctlDeletePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apisysctl.New(slog.Default(), s.mockJobClient)
@@ -75,27 +74,24 @@ func (s *SysctlCreatePublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *SysctlCreatePublicTestSuite) TearDownTest() {
+func (s *SysctlDeletePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
+func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctl() {
 	changedTrue := true
 
 	tests := []struct {
 		name         string
-		request      gen.PostNodeSysctlRequestObject
+		request      gen.DeleteNodeSysctlRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeSysctlResponseObject)
+		validateFunc func(resp gen.DeleteNodeSysctlResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "server1",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -103,11 +99,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
@@ -117,8 +110,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -129,64 +122,24 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 			},
 		},
 		{
-			name: "validation error missing key",
-			request: gen.PostNodeSysctlRequestObject{
-				Hostname: "server1",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "",
-					Value: "1",
-				},
-			},
-			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "Key")
-			},
-		},
-		{
-			name: "validation error missing value",
-			request: gen.PostNodeSysctlRequestObject{
-				Hostname: "server1",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "",
-				},
-			},
-			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
-				s.True(ok)
-				s.Require().NotNil(r.Error)
-				s.Contains(*r.Error, "Value")
-			},
-		},
-		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl400JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl500JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
 			},
 		},
 		{
-			name: "when job skipped",
-			request: gen.PostNodeSysctlRequestObject{
+			name: "not found error",
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "server1",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "nonexistent.key",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -194,11 +147,56 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "nonexistent.key"},
+					).
+					Return("", nil, errors.New("sysctl entry not found"))
+			},
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl404JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "not found")
+			},
+		},
+		{
+			name: "does not exist error",
+			request: gen.DeleteNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "missing.key",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"node",
+						job.OperationSysctlDelete,
+						map[string]string{"key": "missing.key"},
+					).
+					Return("", nil, errors.New("sysctl entry does not exist"))
+			},
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl404JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Error)
+				s.Contains(*r.Error, "does not exist")
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.DeleteNodeSysctlRequestObject{
+				Hostname: "server1",
+				Key:      "net.ipv4.ip_forward",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"node",
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return(
 						"550e8400-e29b-41d4-a716-446655440000",
@@ -210,8 +208,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -223,12 +221,9 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "server1",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -236,27 +231,21 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				_, ok := resp.(gen.PostNodeSysctl500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				_, ok := resp.(gen.DeleteNodeSysctl500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "broadcast success",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "_all",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -264,11 +253,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -287,8 +273,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -296,12 +282,9 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 		},
 		{
 			name: "broadcast with failed and skipped agents",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "_all",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -309,11 +292,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
@@ -335,8 +315,8 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				r, ok := resp.(gen.PostNodeSysctl200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSysctl200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 3)
@@ -359,12 +339,9 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 		},
 		{
 			name: "broadcast job client error",
-			request: gen.PostNodeSysctlRequestObject{
+			request: gen.DeleteNodeSysctlRequestObject{
 				Hostname: "_all",
-				Body: &gen.SysctlCreateRequest{
-					Key:   "net.ipv4.ip_forward",
-					Value: "1",
-				},
+				Key:      "net.ipv4.ip_forward",
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -372,16 +349,13 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationSysctlCreate,
-						sysctlProv.Entry{
-							Key:   "net.ipv4.ip_forward",
-							Value: "1",
-						},
+						job.OperationSysctlDelete,
+						map[string]string{"key": "net.ipv4.ip_forward"},
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeSysctlResponseObject) {
-				_, ok := resp.(gen.PostNodeSysctl500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeSysctlResponseObject) {
+				_, ok := resp.(gen.DeleteNodeSysctl500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -391,32 +365,32 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctl() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeSysctl(s.ctx, tt.request)
+			resp, err := s.handler.DeleteNodeSysctl(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlValidationHTTP() {
+func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlValidationHTTP() {
 	changedTrue := true
 
 	tests := []struct {
 		name         string
 		path         string
-		body         string
+		method       string
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
 		wantContains []string
 	}{
 		{
-			name: "when valid request",
-			path: "/node/server1/sysctl",
-			body: `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			name:   "when valid request",
+			path:   "/node/server1/sysctl/net.ipv4.ip_forward",
+			method: http.MethodDelete,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "node", job.OperationSysctlCreate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "node", job.OperationSysctlDelete, map[string]string{"key": "net.ipv4.ip_forward"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  &changedTrue,
@@ -430,23 +404,13 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlValidationHTTP() {
 			wantContains: []string{`"job_id"`, `"results"`},
 		},
 		{
-			name: "when missing key returns 400",
-			path: "/node/server1/sysctl",
-			body: `{"value":"1"}`,
+			name:   "when target agent not found",
+			path:   "/node/nonexistent/sysctl/net.ipv4.ip_forward",
+			method: http.MethodDelete,
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "Key"},
-		},
-		{
-			name: "when target agent not found",
-			path: "/node/nonexistent/sysctl",
-			body: `{"key":"net.ipv4.ip_forward","value":"1"}`,
-			setupJobMock: func() *jobmocks.MockJobClient {
-				return jobmocks.NewMockJobClient(s.mockCtrl)
-			},
-			wantCode:     http.StatusBadRequest,
+			wantCode:     http.StatusInternalServerError,
 			wantContains: []string{`"error"`, "valid_target"},
 		},
 	}
@@ -461,12 +425,7 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlValidationHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(
-				http.MethodPost,
-				tc.path,
-				strings.NewReader(tc.body),
-			)
-			req.Header.Set("Content-Type", "application/json")
+			req := httptest.NewRequest(tc.method, tc.path, nil)
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -479,9 +438,9 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlValidationHTTP() {
 	}
 }
 
-const rbacSysctlCreateTestSigningKey = "test-signing-key-for-rbac-sysctl-create"
+const rbacSysctlDeleteTestSigningKey = "test-signing-key-for-rbac-sysctl-delete"
 
-func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
+func (s *SysctlDeletePublicTestSuite) TestDeleteNodeSysctlRBACHTTP() {
 	changedTrue := true
 	tokenManager := authtoken.New(s.logger)
 
@@ -507,7 +466,7 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacSysctlCreateTestSigningKey,
+					rbacSysctlDeleteTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"sysctl:read"},
@@ -525,7 +484,7 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacSysctlCreateTestSigningKey,
+					rbacSysctlDeleteTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -536,7 +495,7 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "node", job.OperationSysctlCreate, gomock.Any()).
+					Modify(gomock.Any(), "server1", "node", job.OperationSysctlDelete, map[string]string{"key": "net.ipv4.ip_forward"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  &changedTrue,
@@ -559,22 +518,21 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacSysctlCreateTestSigningKey,
+							SigningKey: rbacSysctlDeleteTestSigningKey,
 						},
 					},
 				},
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetSysctlHandler(jobMock)
+			handlers := server.GetNodeSysctlHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodPost,
-				"/node/server1/sysctl",
-				strings.NewReader(`{"key":"net.ipv4.ip_forward","value":"1"}`),
+				http.MethodDelete,
+				"/node/server1/sysctl/net.ipv4.ip_forward",
+				nil,
 			)
-			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 
@@ -588,6 +546,6 @@ func (s *SysctlCreatePublicTestSuite) TestPostNodeSysctlRBACHTTP() {
 	}
 }
 
-func TestSysctlCreatePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(SysctlCreatePublicTestSuite))
+func TestSysctlDeletePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(SysctlDeletePublicTestSuite))
 }

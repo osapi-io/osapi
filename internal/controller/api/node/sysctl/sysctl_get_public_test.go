@@ -38,8 +38,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apisysctl "github.com/retr0h/osapi/internal/controller/api/sysctl"
-	"github.com/retr0h/osapi/internal/controller/api/sysctl/gen"
+	apisysctl "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
+	"github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
@@ -588,7 +588,7 @@ func (s *SysctlGetPublicTestSuite) TestGetNodeSysctlByKeyRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetSysctlHandler(jobMock)
+			handlers := server.GetNodeSysctlHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

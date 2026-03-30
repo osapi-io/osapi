@@ -28,7 +28,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/sysctl/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/retr0h/osapi/internal/job"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 )

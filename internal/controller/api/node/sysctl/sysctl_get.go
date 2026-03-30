@@ -24,44 +24,57 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/sysctl/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/retr0h/osapi/internal/job"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 )
 
-// GetNodeSysctl lists all managed sysctl entries on a target node.
-func (s *Sysctl) GetNodeSysctl(
+// GetNodeSysctlByKey gets a single sysctl entry by key on a target node.
+func (s *Sysctl) GetNodeSysctlByKey(
 	ctx context.Context,
-	request gen.GetNodeSysctlRequestObject,
-) (gen.GetNodeSysctlResponseObject, error) {
+	request gen.GetNodeSysctlByKeyRequestObject,
+) (gen.GetNodeSysctlByKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSysctlByKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
+	key := request.Key
 
-	s.logger.Debug("sysctl list",
+	s.logger.Debug("sysctl get",
 		slog.String("target", hostname),
+		slog.String("key", key),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.getNodeSysctlBroadcast(ctx, hostname)
+		return s.getNodeSysctlByKeyBroadcast(ctx, hostname, key)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationSysctlList, nil)
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"node",
+		job.OperationSysctlGet,
+		map[string]string{"key": key},
+	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist") ||
+			strings.Contains(errMsg, "not managed") {
+			return gen.GetNodeSysctlByKey404JSONResponse{Error: &errMsg}, nil
+		}
+		return gen.GetNodeSysctlByKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		e := resp.Error
 		jobUUID := uuid.MustParse(jobID)
-		return gen.GetNodeSysctl200JSONResponse{
+		return gen.GetNodeSysctlByKey200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.SysctlEntry{
 				{
@@ -73,89 +86,79 @@ func (s *Sysctl) GetNodeSysctl(
 		}, nil
 	}
 
-	results := responseToSysctlEntries(resp)
-	jobUUID := uuid.MustParse(jobID)
+	var entry sysctlProv.Entry
+	if resp.Data != nil {
+		_ = json.Unmarshal(resp.Data, &entry)
+	}
 
-	return gen.GetNodeSysctl200JSONResponse{
-		JobId:   &jobUUID,
-		Results: results,
+	jobUUID := uuid.MustParse(jobID)
+	entryKey := entry.Key
+	entryValue := entry.Value
+	agentHostname := resp.Hostname
+
+	return gen.GetNodeSysctlByKey200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.SysctlEntry{
+			{
+				Hostname: agentHostname,
+				Status:   gen.SysctlEntryStatusOk,
+				Key:      &entryKey,
+				Value:    &entryValue,
+			},
+		},
 	}, nil
 }
 
-// getNodeSysctlBroadcast handles broadcast targets for sysctl list.
-func (s *Sysctl) getNodeSysctlBroadcast(
+// getNodeSysctlByKeyBroadcast handles broadcast targets for sysctl get.
+func (s *Sysctl) getNodeSysctlByKeyBroadcast(
 	ctx context.Context,
 	target string,
-) (gen.GetNodeSysctlResponseObject, error) {
+	key string,
+) (gen.GetNodeSysctlByKeyResponseObject, error) {
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
-		job.OperationSysctlList,
-		nil,
+		job.OperationSysctlGet,
+		map[string]string{"key": key},
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeSysctl500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSysctlByKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	allResults := make([]gen.SysctlEntry, 0)
 	for host, resp := range responses {
+		item := gen.SysctlEntry{
+			Hostname: host,
+		}
 		switch resp.Status {
 		case job.StatusFailed:
+			item.Status = gen.SysctlEntryStatusFailed
 			e := resp.Error
-			h := host
-			allResults = append(allResults, gen.SysctlEntry{
-				Hostname: h,
-				Status:   gen.SysctlEntryStatusFailed,
-				Error:    &e,
-			})
+			item.Error = &e
 		case job.StatusSkipped:
+			item.Status = gen.SysctlEntryStatusSkipped
 			e := resp.Error
-			h := host
-			allResults = append(allResults, gen.SysctlEntry{
-				Hostname: h,
-				Status:   gen.SysctlEntryStatusSkipped,
-				Error:    &e,
-			})
+			item.Error = &e
 		default:
-			allResults = append(allResults, responseToSysctlEntries(resp)...)
+			item.Status = gen.SysctlEntryStatusOk
+			var entry sysctlProv.Entry
+			if resp.Data != nil {
+				_ = json.Unmarshal(resp.Data, &entry)
+			}
+			entryKey := entry.Key
+			entryValue := entry.Value
+			item.Key = &entryKey
+			item.Value = &entryValue
 		}
+		allResults = append(allResults, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.GetNodeSysctl200JSONResponse{
+	return gen.GetNodeSysctlByKey200JSONResponse{
 		JobId:   &jobUUID,
 		Results: allResults,
 	}, nil
-}
-
-// responseToSysctlEntries converts a job response to gen SysctlEntry slice.
-func responseToSysctlEntries(
-	resp *job.Response,
-) []gen.SysctlEntry {
-	var entries []sysctlProv.Entry
-	if resp.Data != nil {
-		_ = json.Unmarshal(resp.Data, &entries)
-	}
-
-	hostname := resp.Hostname
-
-	results := make([]gen.SysctlEntry, 0, len(entries))
-	for _, e := range entries {
-		key := e.Key
-		value := e.Value
-
-		entry := gen.SysctlEntry{
-			Hostname: hostname,
-			Status:   gen.SysctlEntryStatusOk,
-			Key:      &key,
-			Value:    &value,
-		}
-
-		results = append(results, entry)
-	}
-
-	return results
 }

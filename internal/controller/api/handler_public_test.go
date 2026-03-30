@@ -393,7 +393,7 @@ func (s *HandlerPublicTestSuite) TestGetScheduleHandler() {
 	}
 }
 
-func (s *HandlerPublicTestSuite) TestGetSysctlHandler() {
+func (s *HandlerPublicTestSuite) TestGetNodeSysctlHandler() {
 	tests := []struct {
 		name     string
 		validate func([]func(e *echo.Echo))
@@ -422,7 +422,7 @@ func (s *HandlerPublicTestSuite) TestGetSysctlHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.GetSysctlHandler(s.mockJobClient)
+			handlers := s.server.GetNodeSysctlHandler(s.mockJobClient)
 
 			tt.validate(handlers)
 		})

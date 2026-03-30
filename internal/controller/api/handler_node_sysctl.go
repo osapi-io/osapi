@@ -25,13 +25,13 @@ import (
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/sysctl"
-	sysctlGen "github.com/retr0h/osapi/internal/controller/api/sysctl/gen"
+	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
+	sysctlGen "github.com/retr0h/osapi/internal/controller/api/node/sysctl/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetSysctlHandler returns Sysctl handler for registration.
-func (s *Server) GetSysctlHandler(
+// GetNodeSysctlHandler returns Sysctl handler for registration.
+func (s *Server) GetNodeSysctlHandler(
 	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)
