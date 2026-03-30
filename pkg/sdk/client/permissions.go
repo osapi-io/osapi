@@ -45,6 +45,8 @@ const (
 	PermDockerExecute  Permission = "docker:execute"
 	PermCronRead       Permission = "cron:read"
 	PermCronWrite      Permission = "cron:write"
+	PermSysctlRead     Permission = "sysctl:read"
+	PermSysctlWrite    Permission = "sysctl:write"
 )
 
 // Role represents a built-in RBAC role name.

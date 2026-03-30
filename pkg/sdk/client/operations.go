@@ -90,6 +90,14 @@ const (
 	OpCronDelete JobOperation = "schedule.cron.delete"
 )
 
+// Sysctl operations.
+const (
+	OpSysctlList   JobOperation = "node.sysctl.list"
+	OpSysctlGet    JobOperation = "node.sysctl.get"
+	OpSysctlSet    JobOperation = "node.sysctl.set"
+	OpSysctlDelete JobOperation = "node.sysctl.delete"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).
