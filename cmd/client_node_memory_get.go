@@ -59,24 +59,28 @@ var clientNodeMemoryGetCmd = &cobra.Command{
 				errPtr = &r.Error
 			}
 
-			memory := ""
+			total, used, free, usage := "", "", "", ""
 			if r.Memory != nil {
-				memory = fmt.Sprintf(
-					"%d GB used / %d GB total / %d GB free",
-					r.Memory.Used/1024/1024/1024,
-					r.Memory.Total/1024/1024/1024,
-					r.Memory.Free/1024/1024/1024,
-				)
+				total = cli.FormatBytes(r.Memory.Total)
+				used = cli.FormatBytes(r.Memory.Used)
+				free = cli.FormatBytes(r.Memory.Free)
+				if r.Memory.Total > 0 {
+					pct := float64(r.Memory.Used) / float64(r.Memory.Total) * 100
+					usage = fmt.Sprintf("%.0f%%", pct)
+				}
 			}
 
 			results = append(results, cli.ResultRow{
 				Hostname: r.Hostname,
 				Status:   r.Status,
 				Error:    errPtr,
-				Fields:   []string{memory},
+				Fields:   []string{total, used, free, usage},
 			})
 		}
-		headers, rows := cli.BuildBroadcastTable(results, []string{"MEMORY"})
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"TOTAL", "USED", "FREE", "USAGE"},
+		)
 		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }

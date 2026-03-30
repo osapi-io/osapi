@@ -64,17 +64,24 @@ var clientNodeDiskGetCmd = &cobra.Command{
 
 			diskRows := make([][]string, 0, len(r.Disks))
 			for _, disk := range r.Disks {
+				usage := ""
+				if disk.Total > 0 {
+					pct := float64(disk.Used) / float64(disk.Total) * 100
+					usage = fmt.Sprintf("%.0f%%", pct)
+				}
+
 				diskRows = append(diskRows, []string{
 					disk.Name,
-					fmt.Sprintf("%d GB", disk.Total/1024/1024/1024),
-					fmt.Sprintf("%d GB", disk.Used/1024/1024/1024),
-					fmt.Sprintf("%d GB", disk.Free/1024/1024/1024),
+					cli.FormatBytes(disk.Total),
+					cli.FormatBytes(disk.Used),
+					cli.FormatBytes(disk.Free),
+					usage,
 				})
 			}
 
 			sections := []cli.Section{
 				{
-					Headers: []string{"DISK NAME", "TOTAL", "USED", "FREE"},
+					Headers: []string{"MOUNT", "TOTAL", "USED", "FREE", "USAGE"},
 					Rows:    diskRows,
 				},
 			}
