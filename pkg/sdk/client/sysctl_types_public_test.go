@@ -299,6 +299,81 @@ func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromCreate(
 	}
 }
 
+func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromUpdate() {
+	testUUID := openapi_types.UUID{
+		0x55, 0x0e, 0x84, 0x00,
+		0xe2, 0x9b, 0x41, 0xd4,
+		0xa7, 0x16, 0x44, 0x66,
+		0x55, 0x44, 0x00, 0x00,
+	}
+
+	tests := []struct {
+		name         string
+		input        *gen.SysctlUpdateResponse
+		validateFunc func(client.Collection[client.SysctlMutationResult])
+	}{
+		{
+			name: "when all fields are populated",
+			input: func() *gen.SysctlUpdateResponse {
+				key := "net.ipv4.ip_forward"
+				changed := true
+
+				return &gen.SysctlUpdateResponse{
+					JobId: &testUUID,
+					Results: []gen.SysctlMutationResult{
+						{
+							Hostname: "web-01",
+							Status:   gen.SysctlMutationResultStatusOk,
+							Key:      &key,
+							Changed:  &changed,
+						},
+					},
+				}
+			}(),
+			validateFunc: func(c client.Collection[client.SysctlMutationResult]) {
+				suite.Equal("550e8400-e29b-41d4-a716-446655440000", c.JobID)
+				suite.Require().Len(c.Results, 1)
+
+				r := c.Results[0]
+				suite.Equal("web-01", r.Hostname)
+				suite.Equal("ok", r.Status)
+				suite.Equal("net.ipv4.ip_forward", r.Key)
+				suite.True(r.Changed)
+				suite.Empty(r.Error)
+			},
+		},
+		{
+			name: "when minimal with nil pointers",
+			input: &gen.SysctlUpdateResponse{
+				Results: []gen.SysctlMutationResult{
+					{
+						Hostname: "web-01",
+						Status:   gen.SysctlMutationResultStatusSkipped,
+					},
+				},
+			},
+			validateFunc: func(c client.Collection[client.SysctlMutationResult]) {
+				suite.Empty(c.JobID)
+				suite.Require().Len(c.Results, 1)
+
+				r := c.Results[0]
+				suite.Equal("web-01", r.Hostname)
+				suite.Equal("skipped", r.Status)
+				suite.Empty(r.Key)
+				suite.False(r.Changed)
+				suite.Empty(r.Error)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result := client.SysctlMutationCollectionFromUpdate(tc.input)
+			tc.validateFunc(result)
+		})
+	}
+}
+
 func (suite *SysctlTypesPublicTestSuite) TestSysctlMutationCollectionFromDelete() {
 	testUUID := openapi_types.UUID{
 		0x55, 0x0e, 0x84, 0x00,

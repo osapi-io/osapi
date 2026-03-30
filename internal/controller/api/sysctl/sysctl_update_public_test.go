@@ -305,6 +305,97 @@ func (s *SysctlUpdatePublicTestSuite) TestPutNodeSysctl() {
 				s.True(ok)
 			},
 		},
+		{
+			name: "broadcast with failed agent",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "_all",
+				Key:      "net.ipv4.ip_forward",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "0",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationSysctlUpdate,
+						sysctlProv.Entry{
+							Key:   "net.ipv4.ip_forward",
+							Value: "0",
+						},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Changed:  &changedTrue,
+							Data: json.RawMessage(
+								`{"key":"net.ipv4.ip_forward","changed":true}`,
+							),
+						},
+						"server2": {
+							Hostname: "server2",
+							Status:   job.StatusFailed,
+							Error:    "permission denied",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PutNodeSysctl200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Len(r.Results, 2)
+
+				resultsByHost := make(map[string]gen.SysctlMutationResult)
+				for _, res := range r.Results {
+					resultsByHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.SysctlMutationResultStatusFailed, resultsByHost["server2"].Status)
+				s.Require().NotNil(resultsByHost["server2"].Error)
+				s.Contains(*resultsByHost["server2"].Error, "permission denied")
+			},
+		},
+		{
+			name: "broadcast with skipped agent",
+			request: gen.PutNodeSysctlRequestObject{
+				Hostname: "_all",
+				Key:      "net.ipv4.ip_forward",
+				Body: &gen.SysctlUpdateRequest{
+					Value: "0",
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(
+						gomock.Any(),
+						"_all",
+						"node",
+						job.OperationSysctlUpdate,
+						sysctlProv.Entry{
+							Key:   "net.ipv4.ip_forward",
+							Value: "0",
+						},
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
+						"server1": {
+							Hostname: "server1",
+							Status:   job.StatusSkipped,
+							Error:    "operation not supported on this OS family",
+						},
+					}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeSysctlResponseObject) {
+				r, ok := resp.(gen.PutNodeSysctl200JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.JobId)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.SysctlMutationResultStatusSkipped, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Error)
+				s.Contains(*r.Results[0].Error, "not supported")
+			},
+		},
 	}
 
 	for _, tt := range tests {
