@@ -32,6 +32,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 )
 
 // processJobOperation handles the actual job processing based on category and operation.
@@ -52,6 +53,7 @@ func NewNodeProcessor(
 	diskProvider disk.Provider,
 	memProvider mem.Provider,
 	loadProvider load.Provider,
+	sysctlProvider sysctl.Provider,
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -77,6 +79,8 @@ func NewNodeProcessor(
 			return getNodeMemory(memProvider, logger)
 		case "load":
 			return getNodeLoad(loadProvider, logger)
+		case "sysctl":
+			return processSysctlOperation(sysctlProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

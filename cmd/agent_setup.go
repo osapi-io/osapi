@@ -186,6 +186,7 @@ func setupAgent(
 			diskProvider,
 			memProvider,
 			loadProvider,
+			nil,
 			appConfig,
 			log,
 		),
