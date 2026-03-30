@@ -437,6 +437,24 @@ and wrap errors with context.
 1. Add a service wrapper in `pkg/sdk/client/{domain}.go`
 2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
    spec from the combined `api.yaml`
+3. Add an SDK example in `examples/sdk/client/{domain}.go`
+
+#### SDK example conventions
+
+SDK examples live in `examples/sdk/client/`, one file per domain.
+Follow the same principles as the orchestrator examples:
+
+- **One domain per file**: demonstrate the domain's SDK operations.
+  Don't mix in other domains.
+- **Self-contained**: for read-only operations, just call and print.
+  For mutating operations, cleanup at the start so the example is
+  repeatable.
+- **Print results**: decode and print at least one result so the
+  example isn't silent.
+- **Keep it short**: under ~100 lines of code (excluding license).
+- **Handle errors inline**: use `log.Fatalf` for unexpected errors.
+  For operations that may fail on some platforms, check the error
+  and print a message instead of crashing.
 
 ### Step 6: CLI Commands
 
