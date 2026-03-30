@@ -487,8 +487,8 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			},
 		},
 		{
-			name: "when key is empty",
-			key:  "",
+			name:  "when key is empty",
+			key:   "",
 			setup: func() {},
 			validateFunc: func(
 				result *sysctl.DeleteResult,
@@ -1025,8 +1025,8 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 		},
 		{
-			name: "when key is empty",
-			key:  "",
+			name:  "when key is empty",
+			key:   "",
 			setup: func() {},
 			validateFunc: func(
 				entry *sysctl.Entry,
