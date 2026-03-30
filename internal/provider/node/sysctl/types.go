@@ -19,8 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package sysctl provides kernel parameter management via /etc/sysctl.d/.
-// It is a meta-provider that delegates file writes to the file provider
-// for SHA tracking, idempotency, and drift detection.
+// It writes conf files directly and tracks state in the file-state KV
+// for SHA-based idempotency and drift detection.
 package sysctl
 
 import "context"
