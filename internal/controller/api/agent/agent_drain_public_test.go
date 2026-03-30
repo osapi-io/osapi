@@ -411,7 +411,12 @@ func (s *AgentDrainPublicTestSuite) TestDrainAgentRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetAgentHandler(jobMock)
+			handlers := apiagent.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

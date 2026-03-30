@@ -33,7 +33,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Architecture (Quick Reference)
 
 - **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `controller.api`, `nats server`)
-- **`internal/controller/api/`** - Echo REST API by domain (`node/`, `job/`, `health/`, `audit/`, `schedule/`, `common/`). Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
+- **`internal/controller/api/`** - Echo REST API by domain. Node-targeted handlers are nested under `node/` (`node/hostname/`, `node/sysctl/`, `node/schedule/`, `node/docker/`, `node/command/`, `node/file/`, `node/network/`). Controller-only handlers: `job/`, `health/`, `audit/`, `agent/`, `file/`, `facts/`, `common/`. Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
@@ -49,10 +49,11 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Adding a New API Domain
 
 When adding a new domain (e.g., `service`, `power`), follow existing
-domains as reference. For node-targeted operations that run on agents,
-follow `docker` or `scheduled/cron`. For controller-only operations,
-follow `health` or `audit`. Read the existing files before creating
-new ones.
+domains as reference. Node-targeted operations live under
+`internal/controller/api/node/{domain}/` — follow `node/docker/` or
+`node/schedule/`. Controller-only operations live under
+`internal/controller/api/{domain}/` — follow `health/` or `audit/`.
+Read the existing files before creating new ones.
 
 ### Step 0: Provider Implementation
 
@@ -339,7 +340,10 @@ FactsAware wiring automatically.
 
 ### Step 1: OpenAPI Spec + Code Generation
 
-Create `internal/controller/api/{domain}/gen/` with three hand-written files:
+For node-targeted domains, create
+`internal/controller/api/node/{domain}/gen/` with three hand-written
+files. For controller-only domains, create
+`internal/controller/api/{domain}/gen/` instead:
 
 - `api.yaml` — OpenAPI spec with paths, schemas, and `BearerAuth` security
 - `cfg.yaml` — oapi-codegen config (`strict-server: true`, import-mapping
@@ -437,7 +441,9 @@ input must be validated, and the spec must declare how:
 
 ### Step 2: Handler Implementation
 
-Create `internal/controller/api/{domain}/`:
+For node-targeted domains, create
+`internal/controller/api/node/{domain}/`. For controller-only
+domains, create `internal/controller/api/{domain}/`:
 
 - `types.go` — domain struct, dependency interfaces (e.g., `Checker`)
 - `{domain}.go` — `New()` factory, compile-time interface check:
@@ -454,7 +460,8 @@ Create `internal/controller/api/{domain}/`:
     wrong permissions (403), valid token (200). Uses `api.New()` +
     `server.GetXxxHandler()` + `server.RegisterHandlers()` to wire
     through `scopeMiddleware`.
-  See existing examples in `internal/controller/api/job/` and
+  See existing examples in `internal/controller/api/node/docker/`,
+  `internal/controller/api/job/`, and
   `internal/controller/api/audit/`.
 
 #### Broadcast Support (MANDATORY for node-targeted operations)
@@ -501,25 +508,61 @@ jobID, resp, err := s.JobClient.Modify(
     ctx, hostname, "node", job.OperationSysctlCreate, data)
 ```
 
-See `internal/controller/api/node/node_hostname_get.go` for the
+See `internal/controller/api/node/node_status_get.go` for the
 reference implementation.
 
-### Step 3: Server Wiring (4 files in `internal/controller/api/`)
+### Step 3: Handler Registration
 
-- `handler_{domain}.go` — `Get{Domain}Handler()` method that wraps the
-  handler with `NewStrictHandler` + `scopeMiddleware`. Define
-  `unauthenticatedOperations` map if any endpoints skip auth.
-- `types.go` — add `{domain}Handler` field to `Server` struct +
-  `With{Domain}Handler()` option func
-- `handler.go` — call `Get{Domain}Handler()` in `CreateHandlers()` and
-  append results
-- `handler_public_test.go` — add `TestGet{Domain}Handler` with test cases
-  for both unauthenticated and authenticated paths
+Each domain package exports a `Handler()` function that creates the
+handler, wraps it with auth middleware, and returns route
+registration closures. No changes to the `Server` struct are needed.
+
+Create `handler.go` in your domain package:
+
+```go
+// internal/controller/api/node/{domain}/handler.go
+package {domain}
+
+func Handler(
+    logger *slog.Logger,
+    jobClient client.JobClient,
+    signingKey string,
+    customRoles map[string][]string,
+) []func(e *echo.Echo) {
+    var tokenManager api.TokenValidator = authtoken.New(logger)
+    h := New(logger, jobClient)
+    strictHandler := gen.NewStrictHandler(h,
+        []gen.StrictMiddlewareFunc{
+            func(handler strictecho.StrictEchoHandlerFunc,
+                _ string,
+            ) strictecho.StrictEchoHandlerFunc {
+                return api.ScopeMiddleware(
+                    handler, tokenManager, signingKey,
+                    gen.BearerAuthScopes, customRoles,
+                )
+            },
+        },
+    )
+    return []func(e *echo.Echo){
+        func(e *echo.Echo) {
+            gen.RegisterHandlers(e, strictHandler)
+        },
+    }
+}
+```
+
+Add a `handler_public_test.go` that tests route registration and
+middleware execution. Follow existing domain handler tests.
 
 ### Step 4: Startup Wiring
 
-- `cmd/controller_start.go` — initialize the handler with real
-  dependencies and pass `api.With{Domain}Handler(h)` to `api.New()`
+- `cmd/controller_setup.go` — add one line to
+  `registerControllerHandlers`:
+  ```go
+  handlers = append(handlers,
+      {domain}API.Handler(log, jc, signingKey, customRoles)...)
+  ```
+  Add the import for your domain package.
 
 ### Step 5: Update SDK
 
@@ -532,7 +575,8 @@ and wrap errors with context.
 
 **When modifying existing API specs:**
 
-1. Make changes to `internal/controller/api/{domain}/gen/api.yaml` in this repo
+1. Make changes to the domain's `gen/api.yaml` (under `api/node/{domain}/`
+   for node-targeted domains or `api/{domain}/` for controller-only domains)
 2. Run `just generate` to regenerate server code (this also regenerates the
    combined spec via `redocly join`)
 3. Run `go generate ./pkg/sdk/client/gen/...` to regenerate the SDK client

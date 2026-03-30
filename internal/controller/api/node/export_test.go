@@ -35,10 +35,3 @@ func ExportUint64ToInt(
 ) int {
 	return uint64ToInt(v)
 }
-
-// ExportDurationToString exposes the private durationToString for testing.
-func ExportDurationToString(
-	d *time.Duration,
-) *string {
-	return durationToString(d)
-}

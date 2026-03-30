@@ -86,90 +86,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Docker",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker",
-          label: "Create a container",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-container-docker",
-          label: "List containers",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-container-docker-by-id",
-          label: "Inspect a container",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-container-docker-by-id",
-          label: "Remove a container",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-start",
-          label: "Start a container",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-stop",
-          label: "Stop a container",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Docker/Exec",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-exec",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-exec",
-          label: "Execute a command in a container",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Docker/Image",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-image",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/delete-node-container-docker-image",
-          label: "Remove a container image",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-pull",
-          label: "Pull a container image",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Facts",
       link: {
         type: "doc",
@@ -290,18 +206,6 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "gen/api/get-node-hostname",
-          label: "Retrieve node hostname",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-hostname",
-          label: "Update node hostname",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
           id: "gen/api/get-node-disk",
           label: "Retrieve disk usage",
           className: "api-method get",
@@ -330,6 +234,138 @@ const sidebar: SidebarsConfig = {
           label: "Retrieve uptime",
           className: "api-method get",
         },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Status",
+      link: {
+        type: "doc",
+        id: "gen/api/node-management-api-node-status",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-status",
+          label: "Retrieve node status",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Command",
+      link: {
+        type: "doc",
+        id: "gen/api/command-execution-api-command-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-exec",
+          label: "Execute a command",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-shell",
+          label: "Execute a shell command",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Docker",
+      link: {
+        type: "doc",
+        id: "gen/api/docker-management-api-docker-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker",
+          label: "Create a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-docker",
+          label: "List containers",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-docker-by-id",
+          label: "Inspect a container",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-container-docker-by-id",
+          label: "Remove a container",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-start",
+          label: "Start a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-stop",
+          label: "Stop a container",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Docker/Exec",
+      link: {
+        type: "doc",
+        id: "gen/api/docker-management-api-docker-exec",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-exec",
+          label: "Execute a command in a container",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Docker/Image",
+      link: {
+        type: "doc",
+        id: "gen/api/docker-management-api-docker-image",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-container-docker-image",
+          label: "Remove a container image",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-pull",
+          label: "Pull a container image",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/File",
+      link: {
+        type: "doc",
+        id: "gen/api/node-file-operations-api-node-file-operations",
+      },
+      items: [
         {
           type: "doc",
           id: "gen/api/post-node-file-deploy",
@@ -352,17 +388,23 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Status",
+      label: "Node/Hostname",
       link: {
         type: "doc",
-        id: "gen/api/node-management-api-node-status",
+        id: "gen/api/hostname-management-api-hostname-operations",
       },
       items: [
         {
           type: "doc",
-          id: "gen/api/get-node-status",
-          label: "Retrieve node status",
+          id: "gen/api/get-node-hostname",
+          label: "Retrieve node hostname",
           className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-hostname",
+          label: "Update node hostname",
+          className: "api-method put",
         },
       ],
     },
@@ -371,7 +413,7 @@ const sidebar: SidebarsConfig = {
       label: "Node/Network",
       link: {
         type: "doc",
-        id: "gen/api/node-management-api-network-operations",
+        id: "gen/api/network-management-api-network-operations",
       },
       items: [
         {
@@ -387,7 +429,7 @@ const sidebar: SidebarsConfig = {
       label: "Node/Network/DNS",
       link: {
         type: "doc",
-        id: "gen/api/node-management-api-dns-operations",
+        id: "gen/api/network-management-api-dns-operations",
       },
       items: [
         {
@@ -401,28 +443,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/put-node-network-dns",
           label: "Update DNS servers",
           className: "api-method put",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Command",
-      link: {
-        type: "doc",
-        id: "gen/api/node-management-api-command-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-command-exec",
-          label: "Execute a command",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-command-shell",
-          label: "Execute a shell command",
-          className: "api-method post",
         },
       ],
     },

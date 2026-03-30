@@ -38,7 +38,7 @@ func ExportAuditMiddleware(
 	return auditMiddleware(store, logger)
 }
 
-// ExportScopeMiddleware exposes the private scopeMiddleware for testing.
+// ExportScopeMiddleware exposes ScopeMiddleware for testing.
 func ExportScopeMiddleware(
 	next strictecho.StrictEchoHandlerFunc,
 	tokenManager *authtoken.Token,
@@ -46,5 +46,5 @@ func ExportScopeMiddleware(
 	contextKey string,
 	customRoles map[string][]string,
 ) strictecho.StrictEchoHandlerFunc {
-	return scopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+	return ScopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
 }

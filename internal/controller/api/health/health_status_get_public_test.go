@@ -953,11 +953,14 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetHealthHandler(
+			handlers := health.Handler(
+				s.logger,
 				checker,
 				time.Now(),
 				"0.1.0",
 				metrics,
+				nil,
+				appConfig.Controller.API.Security.SigningKey,
 				nil,
 			)
 			server.RegisterHandlers(handlers)

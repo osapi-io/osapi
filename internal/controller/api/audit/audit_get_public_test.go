@@ -298,7 +298,12 @@ func (s *AuditGetPublicTestSuite) TestGetAuditLogByIDRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetAuditHandler(mock)
+			handlers := auditapi.Handler(
+				s.logger,
+				mock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
