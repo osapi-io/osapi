@@ -26,72 +26,71 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// DeleteNodeContainerDockerByID removes a container from a target node.
-func (s *Container) DeleteNodeContainerDockerByID(
+// PostNodeContainerDockerStop stops a container on a target node.
+func (s *Container) PostNodeContainerDockerStop(
 	ctx context.Context,
-	request gen.DeleteNodeContainerDockerByIDRequestObject,
-) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
+	request gen.PostNodeContainerDockerStopRequestObject,
+) (gen.PostNodeContainerDockerStopResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
-		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
 	}
 
-	// Defense in depth: Force *bool with omitempty cannot currently
-	// fail validation, but guards against future parameter additions.
-	if errMsg, ok := validation.Struct(request.Params); !ok {
-		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+	if request.Body != nil {
+		if errMsg, ok := validation.Struct(request.Body); !ok {
+			return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
+		}
 	}
 
 	hostname := request.Hostname
 	id := request.Id
 
-	data := &job.DockerRemoveData{}
-	if request.Params.Force != nil {
-		data.Force = *request.Params.Force
+	data := &job.DockerStopData{}
+	if request.Body != nil && request.Body.Timeout != nil {
+		data.Timeout = request.Body.Timeout
 	}
 
-	s.logger.Debug("container remove",
+	s.logger.Debug("container stop",
 		slog.String("target", hostname),
 		slog.String("id", id),
-		slog.Bool("force", data.Force),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.deleteNodeContainerDockerRemoveBroadcast(ctx, hostname, id, data)
+		return s.postNodeContainerDockerStopBroadcast(ctx, hostname, id, data)
 	}
 
-	removeData := struct {
-		ID    string `json:"id"`
-		Force bool   `json:"force,omitempty"`
+	stopData := struct {
+		ID      string `json:"id"`
+		Timeout *int   `json:"timeout,omitempty"`
 	}{
-		ID:    id,
-		Force: data.Force,
+		ID:      id,
+		Timeout: data.Timeout,
 	}
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"docker",
-		job.OperationDockerRemove,
-		removeData,
+		job.OperationDockerStop,
+		stopData,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeContainerDockerByID202JSONResponse{
+		return gen.PostNodeContainerDockerStop202JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -106,9 +105,9 @@ func (s *Container) DeleteNodeContainerDockerByID(
 
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
-	msg := "container removed"
+	msg := "container stopped"
 
-	return gen.DeleteNodeContainerDockerByID202JSONResponse{
+	return gen.PostNodeContainerDockerStop202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -122,33 +121,33 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	}, nil
 }
 
-// deleteNodeContainerDockerRemoveBroadcast handles broadcast targets for container remove.
-func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
+// postNodeContainerDockerStopBroadcast handles broadcast targets for container stop.
+func (s *Container) postNodeContainerDockerStopBroadcast(
 	ctx context.Context,
 	target string,
 	id string,
-	data *job.DockerRemoveData,
-) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
-	removeData := struct {
-		ID    string `json:"id"`
-		Force bool   `json:"force,omitempty"`
+	data *job.DockerStopData,
+) (gen.PostNodeContainerDockerStopResponseObject, error) {
+	stopData := struct {
+		ID      string `json:"id"`
+		Timeout *int   `json:"timeout,omitempty"`
 	}{
-		ID:    id,
-		Force: data.Force,
+		ID:      id,
+		Timeout: data.Timeout,
 	}
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
-		job.OperationDockerRemove,
-		removeData,
+		job.OperationDockerStop,
+		stopData,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
 	}
 
-	msg := "container removed"
+	msg := "container stopped"
 	var items []gen.DockerActionResultItem
 	for host, resp := range responses {
 		item := gen.DockerActionResultItem{
@@ -173,7 +172,7 @@ func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.DeleteNodeContainerDockerByID202JSONResponse{
+	return gen.PostNodeContainerDockerStop202JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

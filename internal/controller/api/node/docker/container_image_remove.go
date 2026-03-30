@@ -26,59 +26,73 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainerDockerStart starts a container on a target node.
-func (s *Container) PostNodeContainerDockerStart(
+// DeleteNodeContainerDockerImage removes a container image from a target node.
+func (s *Container) DeleteNodeContainerDockerImage(
 	ctx context.Context,
-	request gen.PostNodeContainerDockerStartRequestObject,
-) (gen.PostNodeContainerDockerStartResponseObject, error) {
+	request gen.DeleteNodeContainerDockerImageRequestObject,
+) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
-		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
+	if errMsg, ok := validation.Var(request.Image, "required,min=1"); !ok {
+		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+	}
+
+	// Defense in depth: Force *bool with omitempty cannot currently
+	// fail validation, but guards against future parameter additions.
+	if errMsg, ok := validation.Struct(request.Params); !ok {
+		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
-	id := request.Id
+	imageName := request.Image
 
-	s.logger.Debug("container start",
+	data := &job.DockerImageRemoveData{
+		Image: imageName,
+	}
+	if request.Params.Force != nil {
+		data.Force = *request.Params.Force
+	}
+
+	s.logger.Debug("container image remove",
 		slog.String("target", hostname),
-		slog.String("id", id),
+		slog.String("image", imageName),
+		slog.Bool("force", data.Force),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.postNodeContainerDockerStartBroadcast(ctx, hostname, id)
+		return s.deleteNodeContainerDockerImageRemoveBroadcast(ctx, hostname, imageName, data)
 	}
 
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"docker",
-		job.OperationDockerStart,
-		map[string]string{"id": id},
+		job.OperationDockerImageRemove,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeContainerDockerStart202JSONResponse{
+		return gen.DeleteNodeContainerDockerImage202JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
 					Hostname: resp.Hostname,
 					Status:   gen.DockerActionResultItemStatusSkipped,
-					Id:       &id,
+					Id:       &imageName,
 					Error:    &e,
 				},
 			},
@@ -87,15 +101,15 @@ func (s *Container) PostNodeContainerDockerStart(
 
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
-	msg := "container started"
+	msg := "image removed"
 
-	return gen.PostNodeContainerDockerStart202JSONResponse{
+	return gen.DeleteNodeContainerDockerImage202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
 				Status:   gen.DockerActionResultItemStatusOk,
-				Id:       &id,
+				Id:       &imageName,
 				Changed:  changed,
 				Message:  &msg,
 			},
@@ -103,30 +117,31 @@ func (s *Container) PostNodeContainerDockerStart(
 	}, nil
 }
 
-// postNodeContainerDockerStartBroadcast handles broadcast targets for container start.
-func (s *Container) postNodeContainerDockerStartBroadcast(
+// deleteNodeContainerDockerImageRemoveBroadcast handles broadcast targets for image remove.
+func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	ctx context.Context,
 	target string,
-	id string,
-) (gen.PostNodeContainerDockerStartResponseObject, error) {
+	imageName string,
+	data *job.DockerImageRemoveData,
+) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
-		job.OperationDockerStart,
-		map[string]string{"id": id},
+		job.OperationDockerImageRemove,
+		data,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
 	}
 
-	msg := "container started"
+	msg := "image removed"
 	var items []gen.DockerActionResultItem
 	for host, resp := range responses {
 		item := gen.DockerActionResultItem{
 			Hostname: host,
-			Id:       &id,
+			Id:       &imageName,
 		}
 		switch resp.Status {
 		case job.StatusFailed:
@@ -146,7 +161,7 @@ func (s *Container) postNodeContainerDockerStartBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeContainerDockerStart202JSONResponse{
+	return gen.DeleteNodeContainerDockerImage202JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

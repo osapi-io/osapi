@@ -26,71 +26,53 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeContainerDockerStop stops a container on a target node.
-func (s *Container) PostNodeContainerDockerStop(
+// PostNodeContainerDockerStart starts a container on a target node.
+func (s *Container) PostNodeContainerDockerStart(
 	ctx context.Context,
-	request gen.PostNodeContainerDockerStopRequestObject,
-) (gen.PostNodeContainerDockerStopResponseObject, error) {
+	request gen.PostNodeContainerDockerStartRequestObject,
+) (gen.PostNodeContainerDockerStartResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
-		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
-	}
-
-	if request.Body != nil {
-		if errMsg, ok := validation.Struct(request.Body); !ok {
-			return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
-		}
+		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
 	id := request.Id
 
-	data := &job.DockerStopData{}
-	if request.Body != nil && request.Body.Timeout != nil {
-		data.Timeout = request.Body.Timeout
-	}
-
-	s.logger.Debug("container stop",
+	s.logger.Debug("container start",
 		slog.String("target", hostname),
 		slog.String("id", id),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.postNodeContainerDockerStopBroadcast(ctx, hostname, id, data)
+		return s.postNodeContainerDockerStartBroadcast(ctx, hostname, id)
 	}
 
-	stopData := struct {
-		ID      string `json:"id"`
-		Timeout *int   `json:"timeout,omitempty"`
-	}{
-		ID:      id,
-		Timeout: data.Timeout,
-	}
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"docker",
-		job.OperationDockerStop,
-		stopData,
+		job.OperationDockerStart,
+		map[string]string{"id": id},
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeContainerDockerStop202JSONResponse{
+		return gen.PostNodeContainerDockerStart202JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
@@ -105,9 +87,9 @@ func (s *Container) PostNodeContainerDockerStop(
 
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
-	msg := "container stopped"
+	msg := "container started"
 
-	return gen.PostNodeContainerDockerStop202JSONResponse{
+	return gen.PostNodeContainerDockerStart202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
@@ -121,33 +103,25 @@ func (s *Container) PostNodeContainerDockerStop(
 	}, nil
 }
 
-// postNodeContainerDockerStopBroadcast handles broadcast targets for container stop.
-func (s *Container) postNodeContainerDockerStopBroadcast(
+// postNodeContainerDockerStartBroadcast handles broadcast targets for container start.
+func (s *Container) postNodeContainerDockerStartBroadcast(
 	ctx context.Context,
 	target string,
 	id string,
-	data *job.DockerStopData,
-) (gen.PostNodeContainerDockerStopResponseObject, error) {
-	stopData := struct {
-		ID      string `json:"id"`
-		Timeout *int   `json:"timeout,omitempty"`
-	}{
-		ID:      id,
-		Timeout: data.Timeout,
-	}
+) (gen.PostNodeContainerDockerStartResponseObject, error) {
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
-		job.OperationDockerStop,
-		stopData,
+		job.OperationDockerStart,
+		map[string]string{"id": id},
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
 	}
 
-	msg := "container stopped"
+	msg := "container started"
 	var items []gen.DockerActionResultItem
 	for host, resp := range responses {
 		item := gen.DockerActionResultItem{
@@ -172,7 +146,7 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.PostNodeContainerDockerStop202JSONResponse{
+	return gen.PostNodeContainerDockerStart202JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

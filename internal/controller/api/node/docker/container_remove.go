@@ -26,73 +26,78 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// DeleteNodeContainerDockerImage removes a container image from a target node.
-func (s *Container) DeleteNodeContainerDockerImage(
+// DeleteNodeContainerDockerByID removes a container from a target node.
+func (s *Container) DeleteNodeContainerDockerByID(
 	ctx context.Context,
-	request gen.DeleteNodeContainerDockerImageRequestObject,
-) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
+	request gen.DeleteNodeContainerDockerByIDRequestObject,
+) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
-	if errMsg, ok := validation.Var(request.Image, "required,min=1"); !ok {
-		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+	if errMsg, ok := validation.Var(request.Id, "required,min=1"); !ok {
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
 	// Defense in depth: Force *bool with omitempty cannot currently
 	// fail validation, but guards against future parameter additions.
 	if errMsg, ok := validation.Struct(request.Params); !ok {
-		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
-	imageName := request.Image
+	id := request.Id
 
-	data := &job.DockerImageRemoveData{
-		Image: imageName,
-	}
+	data := &job.DockerRemoveData{}
 	if request.Params.Force != nil {
 		data.Force = *request.Params.Force
 	}
 
-	s.logger.Debug("container image remove",
+	s.logger.Debug("container remove",
 		slog.String("target", hostname),
-		slog.String("image", imageName),
+		slog.String("id", id),
 		slog.Bool("force", data.Force),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
 	if job.IsBroadcastTarget(hostname) {
-		return s.deleteNodeContainerDockerImageRemoveBroadcast(ctx, hostname, imageName, data)
+		return s.deleteNodeContainerDockerRemoveBroadcast(ctx, hostname, id, data)
 	}
 
+	removeData := struct {
+		ID    string `json:"id"`
+		Force bool   `json:"force,omitempty"`
+	}{
+		ID:    id,
+		Force: data.Force,
+	}
 	jobID, resp, err := s.JobClient.Modify(
 		ctx,
 		hostname,
 		"docker",
-		job.OperationDockerImageRemove,
-		data,
+		job.OperationDockerRemove,
+		removeData,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeContainerDockerImage202JSONResponse{
+		return gen.DeleteNodeContainerDockerByID202JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.DockerActionResultItem{
 				{
 					Hostname: resp.Hostname,
 					Status:   gen.DockerActionResultItemStatusSkipped,
-					Id:       &imageName,
+					Id:       &id,
 					Error:    &e,
 				},
 			},
@@ -101,15 +106,15 @@ func (s *Container) DeleteNodeContainerDockerImage(
 
 	jobUUID := uuid.MustParse(jobID)
 	changed := resp.Changed
-	msg := "image removed"
+	msg := "container removed"
 
-	return gen.DeleteNodeContainerDockerImage202JSONResponse{
+	return gen.DeleteNodeContainerDockerByID202JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.DockerActionResultItem{
 			{
 				Hostname: resp.Hostname,
 				Status:   gen.DockerActionResultItemStatusOk,
-				Id:       &imageName,
+				Id:       &id,
 				Changed:  changed,
 				Message:  &msg,
 			},
@@ -117,31 +122,38 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	}, nil
 }
 
-// deleteNodeContainerDockerImageRemoveBroadcast handles broadcast targets for image remove.
-func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
+// deleteNodeContainerDockerRemoveBroadcast handles broadcast targets for container remove.
+func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 	ctx context.Context,
 	target string,
-	imageName string,
-	data *job.DockerImageRemoveData,
-) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
+	id string,
+	data *job.DockerRemoveData,
+) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
+	removeData := struct {
+		ID    string `json:"id"`
+		Force bool   `json:"force,omitempty"`
+	}{
+		ID:    id,
+		Force: data.Force,
+	}
 	jobID, responses, err := s.JobClient.ModifyBroadcast(
 		ctx,
 		target,
 		"docker",
-		job.OperationDockerImageRemove,
-		data,
+		job.OperationDockerRemove,
+		removeData,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
 	}
 
-	msg := "image removed"
+	msg := "container removed"
 	var items []gen.DockerActionResultItem
 	for host, resp := range responses {
 		item := gen.DockerActionResultItem{
 			Hostname: host,
-			Id:       &imageName,
+			Id:       &id,
 		}
 		switch resp.Status {
 		case job.StatusFailed:
@@ -161,7 +173,7 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.DeleteNodeContainerDockerImage202JSONResponse{
+	return gen.DeleteNodeContainerDockerByID202JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

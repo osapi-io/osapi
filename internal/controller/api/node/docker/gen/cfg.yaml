@@ -26,7 +26,7 @@ generate:
   echo-server: true
   strict-server: true
 import-mapping:
-  ../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
+  ../../../common/gen/api.yaml: github.com/retr0h/osapi/internal/controller/api/common/gen
 output-options:
   # to make sure that all types are generated
   skip-prune: true

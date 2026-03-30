@@ -22,13 +22,11 @@ package container_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -38,14 +36,14 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apicontainer "github.com/retr0h/osapi/internal/controller/api/docker"
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	apicontainer "github.com/retr0h/osapi/internal/controller/api/node/docker"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type ContainerPullPublicTestSuite struct {
+type ContainerImageRemovePublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -56,7 +54,7 @@ type ContainerPullPublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *ContainerPullPublicTestSuite) SetupSuite() {
+func (s *ContainerImageRemovePublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -65,7 +63,7 @@ func (s *ContainerPullPublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *ContainerPullPublicTestSuite) SetupTest() {
+func (s *ContainerImageRemovePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = apicontainer.New(slog.Default(), s.mockJobClient)
@@ -74,23 +72,60 @@ func (s *ContainerPullPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *ContainerPullPublicTestSuite) TearDownTest() {
+func (s *ContainerImageRemovePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
+func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImage() {
+	forceTrue := true
+
 	tests := []struct {
 		name         string
-		request      gen.PostNodeContainerDockerPullRequestObject
+		request      gen.DeleteNodeContainerDockerImageRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeContainerDockerPullResponseObject)
+		validateFunc func(resp gen.DeleteNodeContainerDockerImageResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Changed:  boolPtr(true),
+					}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("agent1", r.Results[0].Hostname)
+				s.Require().NotNil(r.Results[0].Id)
+				s.Equal("nginx:latest", *r.Results[0].Id)
+				s.Require().NotNil(r.Results[0].Message)
+				s.Equal("image removed", *r.Results[0].Message)
+				s.Require().NotNil(r.Results[0].Changed)
+				s.True(*r.Results[0].Changed)
+			},
+		},
+		{
+			name: "success with force",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
+				Hostname: "server1",
+				Image:    "nginx:latest",
+				Params: gen.DeleteNodeContainerDockerImageParams{
+					Force: &forceTrue,
 				},
 			},
 			setupMock: func() {
@@ -99,70 +134,57 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"server1",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data: json.RawMessage(
-							`{"image_id":"sha256:abc123","tag":"latest","size":12345}`,
-						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal("agent1", r.Results[0].Hostname)
-				s.Require().NotNil(r.Results[0].ImageId)
-				s.Equal("sha256:abc123", *r.Results[0].ImageId)
-				s.Require().NotNil(r.Results[0].Tag)
-				s.Equal("latest", *r.Results[0].Tag)
-				s.Require().NotNil(r.Results[0].Size)
-				s.Equal(int64(12345), *r.Results[0].Size)
 				s.Require().NotNil(r.Results[0].Changed)
 				s.True(*r.Results[0].Changed)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull400JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
 			},
 		},
 		{
-			name: "body validation error empty image",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			name: "validation error empty image",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "",
-				},
+				Image:    "",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull400JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage400JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 			},
 		},
 		{
-			name: "job client error",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			name: "server error",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -170,23 +192,45 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"server1",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				_, ok := resp.(gen.PostNodeContainerDockerPull500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "job client error",
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
+				Hostname: "server1",
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerImageRemove,
+						gomock.Any(),
+					).
+					Return("", nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "server1",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -194,7 +238,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"server1",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
@@ -203,22 +247,21 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						Error:    "unsupported",
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal(gen.DockerPullResultItemStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("unsupported", *r.Results[0].Error)
 			},
 		},
 		{
 			name: "broadcast success",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -226,7 +269,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"_all",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -234,22 +277,16 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data: json.RawMessage(
-								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
-							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server2",
 							Changed:  boolPtr(true),
-							Data: json.RawMessage(
-								`{"image_id":"sha256:def","tag":"latest","size":2048}`,
-							),
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -257,11 +294,10 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 		},
 		{
 			name: "broadcast with errors",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -269,7 +305,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"_all",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -277,9 +313,6 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
 							Changed:  boolPtr(true),
-							Data: json.RawMessage(
-								`{"image_id":"sha256:abc","tag":"latest","size":2048}`,
-							),
 						},
 						"server2": {
 							Status:   job.StatusFailed,
@@ -288,8 +321,8 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -297,11 +330,10 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 		},
 		{
 			name: "broadcast with skipped host",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -309,7 +341,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"_all",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
@@ -320,23 +352,22 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				r, ok := resp.(gen.PostNodeContainerDockerPull202JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				r, ok := resp.(gen.DeleteNodeContainerDockerImage202JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
-				s.Equal(gen.DockerPullResultItemStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.DockerActionResultItemStatusSkipped, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("docker: operation not supported on this OS family", *r.Results[0].Error)
 			},
 		},
 		{
 			name: "broadcast error collecting responses",
-			request: gen.PostNodeContainerDockerPullRequestObject{
+			request: gen.DeleteNodeContainerDockerImageRequestObject{
 				Hostname: "_all",
-				Body: &gen.PostNodeContainerDockerPullJSONRequestBody{
-					Image: "nginx:latest",
-				},
+				Image:    "nginx:latest",
+				Params:   gen.DeleteNodeContainerDockerImageParams{},
 			},
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
@@ -344,13 +375,13 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 						gomock.Any(),
 						"_all",
 						"docker",
-						job.OperationDockerPull,
+						job.OperationDockerImageRemove,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeContainerDockerPullResponseObject) {
-				_, ok := resp.(gen.PostNodeContainerDockerPull500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeContainerDockerImageResponseObject) {
+				_, ok := resp.(gen.DeleteNodeContainerDockerImage500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -360,56 +391,48 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPull() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.PostNodeContainerDockerPull(s.ctx, tt.request)
+			resp, err := s.handler.DeleteNodeContainerDockerImage(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidationHTTP() {
+func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImageValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
-		body         string
 		setupJobMock func() *jobmocks.MockJobClient
 		wantCode     int
 		wantContains []string
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/container/docker/pull",
-			body: `{"image":"nginx:latest"}`,
+			path: "/node/server1/container/docker/image/nginx:latest",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "docker", job.OperationDockerPull, gomock.Any()).
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerImageRemove, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data: json.RawMessage(
-							`{"image_id":"sha256:abc123","tag":"latest","size":12345}`,
-						),
 					}, nil)
 				return mock
 			},
 			wantCode:     http.StatusAccepted,
-			wantContains: []string{`"job_id"`, `"results"`, `"image_id"`},
+			wantContains: []string{`"job_id"`, `"results"`, `"image removed"`},
 		},
 		{
-			name: "when missing image",
-			path: "/node/server1/container/docker/pull",
-			body: `{}`,
+			name: "when empty image returns 400",
+			path: "/node/server1/container/docker/image/",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
-			wantCode:     http.StatusBadRequest,
-			wantContains: []string{`"error"`, "Image", "required"},
+			wantCode: http.StatusNotFound,
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/container/docker/pull",
-			body: `{"image":"nginx:latest"}`,
+			path: "/node/nonexistent/container/docker/image/nginx:latest",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -429,11 +452,10 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidation
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
 			req := httptest.NewRequest(
-				http.MethodPost,
+				http.MethodDelete,
 				tc.path,
-				strings.NewReader(tc.body),
+				nil,
 			)
-			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 
 			a.Echo.ServeHTTP(rec, req)
@@ -446,9 +468,9 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullValidation
 	}
 }
 
-const rbacContainerPullTestSigningKey = "test-signing-key-for-rbac-container-pull"
+const rbacContainerImageRemoveTestSigningKey = "test-signing-key-for-rbac-container-image-remove"
 
-func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP() {
+func (s *ContainerImageRemovePublicTestSuite) TestDeleteNodeContainerDockerImageRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -473,7 +495,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacContainerPullTestSigningKey,
+					rbacContainerImageRemoveTestSigningKey,
 					[]string{"read"},
 					"test-user",
 					[]string{"docker:read"},
@@ -491,7 +513,7 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 			name: "when valid admin token returns 202",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacContainerPullTestSigningKey,
+					rbacContainerImageRemoveTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -502,13 +524,10 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Modify(gomock.Any(), "server1", "docker", job.OperationDockerPull, gomock.Any()).
+					Modify(gomock.Any(), "server1", "docker", job.OperationDockerImageRemove, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Changed:  boolPtr(true),
-						Data: json.RawMessage(
-							`{"image_id":"sha256:abc123","tag":"latest","size":12345}`,
-						),
 					}, nil)
 				return mock
 			},
@@ -525,22 +544,21 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacContainerPullTestSigningKey,
+							SigningKey: rbacContainerImageRemoveTestSigningKey,
 						},
 					},
 				},
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetDockerHandler(jobMock)
+			handlers := server.GetNodeDockerHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
-				http.MethodPost,
-				"/node/server1/container/docker/pull",
-				strings.NewReader(`{"image":"nginx:latest"}`),
+				http.MethodDelete,
+				"/node/server1/container/docker/image/nginx:latest",
+				nil,
 			)
-			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
 
@@ -554,6 +572,6 @@ func (s *ContainerPullPublicTestSuite) TestPostNodeContainerDockerPullRBACHTTP()
 	}
 }
 
-func TestContainerPullPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(ContainerPullPublicTestSuite))
+func TestContainerImageRemovePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(ContainerImageRemovePublicTestSuite))
 }

@@ -38,8 +38,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apicontainer "github.com/retr0h/osapi/internal/controller/api/docker"
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	apicontainer "github.com/retr0h/osapi/internal/controller/api/node/docker"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/validation"
@@ -630,7 +630,7 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExecRBACHTTP()
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetDockerHandler(jobMock)
+			handlers := server.GetNodeDockerHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(

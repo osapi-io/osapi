@@ -25,13 +25,13 @@ import (
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 
 	"github.com/retr0h/osapi/internal/authtoken"
-	docker "github.com/retr0h/osapi/internal/controller/api/docker"
-	dockerGen "github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	docker "github.com/retr0h/osapi/internal/controller/api/node/docker"
+	dockerGen "github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job/client"
 )
 
-// GetDockerHandler returns Docker handler for registration.
-func (s *Server) GetDockerHandler(
+// GetNodeDockerHandler returns Docker handler for registration.
+func (s *Server) GetNodeDockerHandler(
 	jobClient client.JobClient,
 ) []func(e *echo.Echo) {
 	var tokenManager TokenValidator = authtoken.New(s.logger)

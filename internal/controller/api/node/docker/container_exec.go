@@ -27,7 +27,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/docker/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/docker/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )

@@ -70,25 +70,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error creating container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     get:
       summary: List containers
@@ -140,25 +140,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error listing containers.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /node/{hostname}/container/docker/{id}:
     get:
@@ -186,31 +186,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Container not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error inspecting container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     delete:
       summary: Remove a container
@@ -248,31 +248,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Container not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error removing container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /node/{hostname}/container/docker/{id}/start:
     post:
@@ -300,31 +300,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Container not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error starting container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /node/{hostname}/container/docker/{id}/stop:
     post:
@@ -360,31 +360,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Container not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error stopping container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # ── Docker exec ────────────────────────────────────────────
 
@@ -421,31 +421,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '404':
           description: Container not found.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error executing command in container.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   # ── Docker image ───────────────────────────────────────────
 
@@ -498,25 +498,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error removing image.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
   /node/{hostname}/container/docker/pull:
     post:
@@ -550,25 +550,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - API key required
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
         '500':
           description: Error pulling image.
           content:
             application/json:
               schema:
-                $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
 # ── Reusable components ─────────────────────────────────────
 
@@ -616,7 +616,7 @@ components:
 
   schemas:
     ErrorResponse:
-      $ref: '../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
     # ── Request schemas ───────────────────────────────────────
 

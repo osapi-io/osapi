@@ -321,7 +321,7 @@ func (s *HandlerPublicTestSuite) TestGetFileHandler() {
 	}
 }
 
-func (s *HandlerPublicTestSuite) TestGetDockerHandler() {
+func (s *HandlerPublicTestSuite) TestGetNodeDockerHandler() {
 	tests := []struct {
 		name     string
 		validate func([]func(e *echo.Echo))
@@ -350,7 +350,7 @@ func (s *HandlerPublicTestSuite) TestGetDockerHandler() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			handlers := s.server.GetDockerHandler(s.mockJobClient)
+			handlers := s.server.GetNodeDockerHandler(s.mockJobClient)
 
 			tt.validate(handlers)
 		})

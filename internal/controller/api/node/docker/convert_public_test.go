@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	container "github.com/retr0h/osapi/internal/controller/api/docker"
+	container "github.com/retr0h/osapi/internal/controller/api/node/docker"
 	"github.com/retr0h/osapi/internal/job"
 )
 
