@@ -72,6 +72,8 @@ type ServerManager interface {
 	GetDockerHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetScheduleHandler returns Schedule handler for registration.
 	GetScheduleHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
+	// GetSysctlHandler returns Sysctl handler for registration.
+	GetSysctlHandler(jobClient jobclient.JobClient) []func(e *echo.Echo)
 	// GetFileHandler returns file handler for registration.
 	GetFileHandler(objStore file.ObjectStoreManager) []func(e *echo.Echo)
 	// GetFactsHandler returns facts handler for registration.
@@ -708,6 +710,7 @@ func registerControllerHandlers(
 		sm.GetHealthHandler(checker, startTime, "0.1.0", metricsProvider, subComponents)...)
 	handlers = append(handlers, sm.GetDockerHandler(jc)...)
 	handlers = append(handlers, sm.GetScheduleHandler(jc)...)
+	handlers = append(handlers, sm.GetSysctlHandler(jc)...)
 	if auditStore != nil {
 		handlers = append(handlers, sm.GetAuditHandler(auditStore)...)
 	}
