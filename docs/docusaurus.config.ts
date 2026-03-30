@@ -131,6 +131,11 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Sysctl Management',
+              docId: 'sidebar/features/sysctl'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },
