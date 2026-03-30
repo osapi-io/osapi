@@ -346,6 +346,21 @@ Create `internal/controller/api/{domain}/gen/` with three hand-written files:
   for `common/gen`)
 - `generate.go` — `//go:generate` directive
 
+#### HTTP Verb Conventions
+
+Mutable domains MUST use separate verbs for create and update:
+
+- `POST` — create a new resource (key/name in request body)
+- `PUT` — update an existing resource (key/name from path parameter)
+- `GET` — read/list resources
+- `DELETE` — remove a resource
+
+Do NOT combine create and update into a single "set" or "upsert"
+endpoint. The cron domain is the reference: `POST` creates,
+`PUT /{name}` updates. This separation gives clear 404 semantics
+(update fails if not found, create fails if already exists) and
+matches REST conventions.
+
 #### Validation in OpenAPI Specs
 
 The OpenAPI spec is the **source of truth** for input validation. All user
@@ -531,6 +546,8 @@ and wrap errors with context.
 2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
    spec from the combined `api.yaml`
 3. Add an SDK example in `examples/sdk/client/{domain}.go`
+4. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
+   with methods table, request types, usage examples, and permissions
 
 #### SDK example conventions
 
@@ -575,8 +592,15 @@ Follow the same principles as the orchestrator examples:
   per CLI subcommand with usage examples and `--json` output
 - Update `docs/docusaurus.config.ts` — add the new feature to the
   "Features" navbar dropdown
-- Update `docs/docs/sidebar/usage/configuration.md` — add any new config
-  sections (env vars, YAML reference, section reference table)
+- Update `docs/docs/sidebar/usage/configuration.md` — add any new
+  permissions to the roles table and permissions comments in the
+  YAML reference
+- Update `docs/docs/sidebar/features/authentication.md` — add new
+  permissions to the roles/permissions tables
+- Update `docs/docs/sidebar/architecture/architecture.md` — add link
+  to the new feature page in the features list
+- Update `docs/docs/sidebar/architecture/api-guidelines.md` — add
+  new endpoints to the path pattern table
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
 
