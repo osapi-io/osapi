@@ -102,12 +102,25 @@ Reference: `internal/provider/scheduled/cron/`
 
 #### File Structure
 
+Platform-specific providers:
 ```
 internal/provider/{category}/{domain}/
-  types.go        — Provider interface + domain types (Entry, Result)
-  debian.go       — Debian-family implementation
-  darwin.go       — macOS stub (returns ErrUnsupported)
-  linux.go        — Generic Linux stub (returns ErrUnsupported)
+  types.go              — Provider interface + domain types
+  debian.go             — Debian-family implementation
+  debian_{operation}.go — Per-operation file (large methods)
+  debian_docker.go      — Container-aware variant (if needed)
+  darwin.go             — macOS stub (returns ErrUnsupported)
+  linux.go              — Generic Linux stub (returns ErrUnsupported)
+  mocks/                — Generated gomock mocks
+    generate.go         — //go:generate mockgen directive
+```
+
+SDK-based providers (no platform variants):
+```
+internal/provider/{category}/{domain}/
+  types.go        — Provider interface + domain types
+  {domain}.go     — Single implementation (e.g., docker.go)
+  client.go       — API client interface for testing
   mocks/          — Generated gomock mocks
     generate.go   — //go:generate mockgen directive
 ```
@@ -173,6 +186,78 @@ func (d *Darwin) List(
     return nil, fmt.Errorf("cron: %w", provider.ErrUnsupported)
 }
 ```
+
+#### Provider Naming Conventions
+
+There are three provider implementation patterns. The naming
+convention determines the struct name, constructor, and file layout.
+
+**1. Platform-specific providers** (most common)
+
+One struct per OS family, each in its own file. Constructor names
+follow `New{Platform}Provider()`. Methods that are large or testable
+go in separate files named `{platform}_{operation}.go`.
+
+| Struct   | Constructor              | File(s)                          |
+| -------- | ------------------------ | -------------------------------- |
+| `Debian` | `NewDebianProvider(...)` | `debian.go`, `debian_get_*.go`   |
+| `Darwin` | `NewDarwinProvider(...)` | `darwin.go`, `darwin_get_*.go`   |
+| `Linux`  | `NewLinuxProvider()`     | `linux.go`, `linux_get_*.go`     |
+
+Examples: `node/host`, `node/disk`, `node/mem`, `node/load`,
+`network/dns`, `network/ping`, `network/netinfo`.
+
+**2. Container-aware platform providers**
+
+When a provider's behavior differs inside a Docker container (e.g.,
+hostname is read-only, DNS uses `/etc/resolv.conf` instead of
+`resolvectl`), add a `DebianDocker` variant alongside the regular
+`Debian` struct. The agent selects it via `platform.IsContainer()`.
+
+| Struct          | Constructor                     | File(s)                              |
+| --------------- | ------------------------------- | ------------------------------------ |
+| `DebianDocker`  | `NewDebianDockerProvider(...)`  | `debian_docker.go`, `debian_docker_*.go` |
+
+`DebianDocker` either embeds `Debian` (delegating reads, overriding
+writes) or stands alone. It satisfies the same `Provider` interface.
+
+```go
+// agent_setup.go wiring
+case "debian":
+    if platform.IsContainer() {
+        hostProvider = nodeHost.NewDebianDockerProvider()
+    } else {
+        hostProvider = nodeHost.NewDebianProvider(execManager)
+    }
+```
+
+Examples: `node/host` (embeds `Debian`, blocks `UpdateHostname`),
+`network/dns` (standalone, reads `/etc/resolv.conf` directly).
+
+**3. SDK-based providers** (no platform variants)
+
+Providers that talk to an external API (not the OS) use a single
+`Client` struct with `New()` / `NewWithClient()` constructors.
+No `debian.go` / `darwin.go` / `linux.go` files — the provider
+works the same on all platforms. Availability is checked at startup
+(e.g., Docker daemon ping).
+
+| Struct   | Constructor         | File(s)              |
+| -------- | ------------------- | -------------------- |
+| `Client` | `New()`             | `docker.go`          |
+|          | `NewWithClient(c)`  | (same file, testing) |
+
+```go
+// agent_setup.go wiring — no platform switch
+dockerClient, err := dockerNewFn()
+if err == nil {
+    if pingErr := dockerClient.Ping(ctx); pingErr == nil {
+        dockerProvider = dockerClient
+    }
+}
+```
+
+Examples: `container/docker`.
 
 #### FactsAware
 
