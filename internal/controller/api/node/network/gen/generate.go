@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+// Package gen contains generated code for the network API.
+package gen
 
-import "time"
-
-// ExportFormatDuration exposes the private formatDuration for testing.
-func ExportFormatDuration(
-	d time.Duration,
-) string {
-	return formatDuration(d)
-}
-
-// ExportUint64ToInt exposes the private uint64ToInt for testing.
-func ExportUint64ToInt(
-	v uint64,
-) int {
-	return uint64ToInt(v)
-}
+//go:generate go tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen -config cfg.yaml api.yaml

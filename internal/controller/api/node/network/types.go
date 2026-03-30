@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
-import "time"
+import (
+	"log/slog"
 
-// ExportFormatDuration exposes the private formatDuration for testing.
-func ExportFormatDuration(
-	d time.Duration,
-) string {
-	return formatDuration(d)
-}
+	"github.com/retr0h/osapi/internal/job/client"
+)
 
-// ExportUint64ToInt exposes the private uint64ToInt for testing.
-func ExportUint64ToInt(
-	v uint64,
-) int {
-	return uint64ToInt(v)
+// Network implementation of the Network APIs operations.
+type Network struct {
+	// JobClient provides job-based operations for network management.
+	JobClient client.JobClient
+	logger    *slog.Logger
 }

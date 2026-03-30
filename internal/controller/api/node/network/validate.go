@@ -18,20 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
-import "time"
+import "github.com/retr0h/osapi/internal/validation"
 
-// ExportFormatDuration exposes the private formatDuration for testing.
-func ExportFormatDuration(
-	d time.Duration,
-) string {
-	return formatDuration(d)
+// validateHostname validates a hostname path parameter using the shared
+// validator. Returns the error message and false if invalid.
+//
+// This exists because oapi-codegen does not generate validate tags on
+// path parameters in strict-server mode (upstream limitation).
+func validateHostname(
+	hostname string,
+) (string, bool) {
+	return validation.Var(hostname, "required,min=1,valid_target")
 }
 
-// ExportUint64ToInt exposes the private uint64ToInt for testing.
-func ExportUint64ToInt(
-	v uint64,
-) int {
-	return uint64ToInt(v)
+// validateInterfaceName validates an interfaceName path parameter.
+// Same upstream limitation as validateHostname.
+func validateInterfaceName(
+	name string,
+) (string, bool) {
+	return validation.Var(name, "required,alphanum_or_fact")
 }

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
 import (
 	"context"
@@ -27,13 +27,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
 )
 
 // GetNodeNetworkDNSByInterface get the node network dns get API endpoint.
-func (s *Node) GetNodeNetworkDNSByInterface(
+func (s *Network) GetNodeNetworkDNSByInterface(
 	ctx context.Context,
 	request gen.GetNodeNetworkDNSByInterfaceRequestObject,
 ) (gen.GetNodeNetworkDNSByInterfaceResponseObject, error) {
@@ -111,7 +111,7 @@ func (s *Node) GetNodeNetworkDNSByInterface(
 }
 
 // getNodeNetworkDNSBroadcast handles broadcast targets (_all or label) for DNS config.
-func (s *Node) getNodeNetworkDNSBroadcast(
+func (s *Network) getNodeNetworkDNSBroadcast(
 	ctx context.Context,
 	target string,
 	iface string,

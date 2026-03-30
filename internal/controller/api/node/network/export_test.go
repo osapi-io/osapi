@@ -18,20 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
 import "time"
 
-// ExportFormatDuration exposes the private formatDuration for testing.
-func ExportFormatDuration(
-	d time.Duration,
-) string {
-	return formatDuration(d)
-}
-
-// ExportUint64ToInt exposes the private uint64ToInt for testing.
-func ExportUint64ToInt(
-	v uint64,
-) int {
-	return uint64ToInt(v)
+// ExportDurationToString exposes the private durationToString for testing.
+func ExportDurationToString(
+	d *time.Duration,
+) *string {
+	return durationToString(d)
 }

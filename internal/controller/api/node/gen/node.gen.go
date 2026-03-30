@@ -27,20 +27,6 @@ const (
 	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
 )
 
-// Defines values for DNSConfigResponseStatus.
-const (
-	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
-	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
-	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
-)
-
-// Defines values for DNSUpdateResultItemStatus.
-const (
-	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
-	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
-	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
-)
-
 // Defines values for DiskResultItemStatus.
 const (
 	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
@@ -96,18 +82,11 @@ const (
 	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
 )
 
-// Defines values for PingResponseStatus.
-const (
-	PingResponseStatusFailed  PingResponseStatus = "failed"
-	PingResponseStatusOk      PingResponseStatus = "ok"
-	PingResponseStatusSkipped PingResponseStatus = "skipped"
-)
-
 // Defines values for UptimeResponseStatus.
 const (
-	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
-	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
-	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
+	Failed  UptimeResponseStatus = "failed"
+	Ok      UptimeResponseStatus = "ok"
+	Skipped UptimeResponseStatus = "skipped"
 )
 
 // CommandExecRequest defines model for CommandExecRequest.
@@ -173,68 +152,6 @@ type CommandShellRequest struct {
 	// Timeout Timeout in seconds (default 30, max 300).
 	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
 }
-
-// DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
-type DNSConfigCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []DNSConfigResponse `json:"results"`
-}
-
-// DNSConfigResponse defines model for DNSConfigResponse.
-type DNSConfigResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent that served this config.
-	Hostname string `json:"hostname"`
-
-	// SearchDomains List of search domains.
-	SearchDomains *[]string `json:"search_domains,omitempty"`
-
-	// Servers List of configured DNS servers.
-	Servers *[]string `json:"servers,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status DNSConfigResponseStatus `json:"status"`
-}
-
-// DNSConfigResponseStatus The status of the operation for this host.
-type DNSConfigResponseStatus string
-
-// DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
-type DNSConfigUpdateRequest struct {
-	// InterfaceName The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references.
-	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact"`
-
-	// SearchDomains New list of search domains to configure.
-	SearchDomains *[]string `json:"search_domains,omitempty" validate:"required_without=Servers,omitempty,dive,hostname,min=1"`
-
-	// Servers New list of DNS servers to configure.
-	Servers *[]string `json:"servers,omitempty" validate:"required_without=SearchDomains,omitempty,dive,ip,min=1"`
-}
-
-// DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
-type DNSUpdateCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []DNSUpdateResultItem `json:"results"`
-}
-
-// DNSUpdateResultItem defines model for DNSUpdateResultItem.
-type DNSUpdateResultItem struct {
-	// Changed Whether the DNS configuration was actually modified.
-	Changed  *bool                     `json:"changed,omitempty"`
-	Error    *string                   `json:"error,omitempty"`
-	Hostname string                    `json:"hostname"`
-	Status   DNSUpdateResultItemStatus `json:"status"`
-}
-
-// DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
-type DNSUpdateResultItemStatus string
 
 // DiskCollectionResponse defines model for DiskCollectionResponse.
 type DiskCollectionResponse struct {
@@ -559,49 +476,6 @@ type OSInfoResultItem struct {
 // OSInfoResultItemStatus The status of the operation for this host.
 type OSInfoResultItemStatus string
 
-// PingCollectionResponse defines model for PingCollectionResponse.
-type PingCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []PingResponse      `json:"results"`
-}
-
-// PingResponse defines model for PingResponse.
-type PingResponse struct {
-	// AvgRtt Average round-trip time in Go time.Duration format.
-	AvgRtt *string `json:"avg_rtt,omitempty"`
-
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent that executed the ping.
-	Hostname string `json:"hostname"`
-
-	// MaxRtt Maximum round-trip time in Go time.Duration format.
-	MaxRtt *string `json:"max_rtt,omitempty"`
-
-	// MinRtt Minimum round-trip time in Go time.Duration format.
-	MinRtt *string `json:"min_rtt,omitempty"`
-
-	// PacketLoss Percentage of packet loss.
-	PacketLoss *float64 `json:"packet_loss,omitempty"`
-
-	// PacketsReceived Number of packets received.
-	PacketsReceived *int `json:"packets_received,omitempty"`
-
-	// PacketsSent Number of packets sent.
-	PacketsSent *int `json:"packets_sent,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status PingResponseStatus `json:"status"`
-}
-
-// PingResponseStatus The status of the operation for this host.
-type PingResponseStatus string
-
 // UptimeCollectionResponse defines model for UptimeCollectionResponse.
 type UptimeCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -633,12 +507,6 @@ type UptimeResponseStatus string
 // Hostname defines model for Hostname.
 type Hostname = string
 
-// PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
-type PostNodeNetworkPingJSONBody struct {
-	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
-	Address string `json:"address" validate:"required,ip_or_fact"`
-}
-
 // PostNodeCommandExecJSONRequestBody defines body for PostNodeCommandExec for application/json ContentType.
 type PostNodeCommandExecJSONRequestBody = CommandExecRequest
 
@@ -653,12 +521,6 @@ type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
-
-// PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
-type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
-
-// PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
-type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -689,15 +551,6 @@ type ServerInterface interface {
 	// Retrieve memory stats
 	// (GET /node/{hostname}/memory)
 	GetNodeMemory(ctx echo.Context, hostname Hostname) error
-	// Update DNS servers
-	// (PUT /node/{hostname}/network/dns)
-	PutNodeNetworkDNS(ctx echo.Context, hostname Hostname) error
-	// List DNS servers
-	// (GET /node/{hostname}/network/dns/{interfaceName})
-	GetNodeNetworkDNSByInterface(ctx echo.Context, hostname Hostname, interfaceName string) error
-	// Ping a remote server
-	// (POST /node/{hostname}/network/ping)
-	PostNodeNetworkPing(ctx echo.Context, hostname Hostname) error
 	// Retrieve OS info
 	// (GET /node/{hostname}/os)
 	GetNodeOS(ctx echo.Context, hostname Hostname) error
@@ -873,68 +726,6 @@ func (w *ServerInterfaceWrapper) GetNodeMemory(ctx echo.Context) error {
 	return err
 }
 
-// PutNodeNetworkDNS converts echo context to params.
-func (w *ServerInterfaceWrapper) PutNodeNetworkDNS(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"network:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutNodeNetworkDNS(ctx, hostname)
-	return err
-}
-
-// GetNodeNetworkDNSByInterface converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeNetworkDNSByInterface(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	// ------------- Path parameter "interfaceName" -------------
-	var interfaceName string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "interfaceName", ctx.Param("interfaceName"), &interfaceName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter interfaceName: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"network:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeNetworkDNSByInterface(ctx, hostname, interfaceName)
-	return err
-}
-
-// PostNodeNetworkPing converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeNetworkPing(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(BearerAuthScopes, []string{"network:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeNetworkPing(ctx, hostname)
-	return err
-}
-
 // GetNodeOS converts echo context to params.
 func (w *ServerInterfaceWrapper) GetNodeOS(ctx echo.Context) error {
 	var err error
@@ -1008,9 +799,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/node/:hostname/file/undeploy", wrapper.PostNodeFileUndeploy)
 	router.GET(baseURL+"/node/:hostname/load", wrapper.GetNodeLoad)
 	router.GET(baseURL+"/node/:hostname/memory", wrapper.GetNodeMemory)
-	router.PUT(baseURL+"/node/:hostname/network/dns", wrapper.PutNodeNetworkDNS)
-	router.GET(baseURL+"/node/:hostname/network/dns/:interfaceName", wrapper.GetNodeNetworkDNSByInterface)
-	router.POST(baseURL+"/node/:hostname/network/ping", wrapper.PostNodeNetworkPing)
 	router.GET(baseURL+"/node/:hostname/os", wrapper.GetNodeOS)
 	router.GET(baseURL+"/node/:hostname/uptime", wrapper.GetNodeUptime)
 
@@ -1498,168 +1286,6 @@ func (response GetNodeMemory500JSONResponse) VisitGetNodeMemoryResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PutNodeNetworkDNSRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PutNodeNetworkDNSJSONRequestBody
-}
-
-type PutNodeNetworkDNSResponseObject interface {
-	VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error
-}
-
-type PutNodeNetworkDNS202JSONResponse DNSUpdateCollectionResponse
-
-func (response PutNodeNetworkDNS202JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(202)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeNetworkDNS400JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeNetworkDNS400JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeNetworkDNS401JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeNetworkDNS401JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeNetworkDNS403JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeNetworkDNS403JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PutNodeNetworkDNS500JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeNetworkDNS500JSONResponse) VisitPutNodeNetworkDNSResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeNetworkDNSByInterfaceRequestObject struct {
-	Hostname      Hostname `json:"hostname"`
-	InterfaceName string   `json:"interfaceName"`
-}
-
-type GetNodeNetworkDNSByInterfaceResponseObject interface {
-	VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error
-}
-
-type GetNodeNetworkDNSByInterface200JSONResponse DNSConfigCollectionResponse
-
-func (response GetNodeNetworkDNSByInterface200JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeNetworkDNSByInterface400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeNetworkDNSByInterface400JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeNetworkDNSByInterface401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeNetworkDNSByInterface401JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeNetworkDNSByInterface403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeNetworkDNSByInterface403JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetNodeNetworkDNSByInterface500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeNetworkDNSByInterface500JSONResponse) VisitGetNodeNetworkDNSByInterfaceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeNetworkPingRequestObject struct {
-	Hostname Hostname `json:"hostname"`
-	Body     *PostNodeNetworkPingJSONRequestBody
-}
-
-type PostNodeNetworkPingResponseObject interface {
-	VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error
-}
-
-type PostNodeNetworkPing200JSONResponse PingCollectionResponse
-
-func (response PostNodeNetworkPing200JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeNetworkPing400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeNetworkPing400JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeNetworkPing401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeNetworkPing401JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeNetworkPing403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeNetworkPing403JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostNodeNetworkPing500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeNetworkPing500JSONResponse) VisitPostNodeNetworkPingResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type GetNodeOSRequestObject struct {
 	Hostname Hostname `json:"hostname"`
 }
@@ -1795,15 +1421,6 @@ type StrictServerInterface interface {
 	// Retrieve memory stats
 	// (GET /node/{hostname}/memory)
 	GetNodeMemory(ctx context.Context, request GetNodeMemoryRequestObject) (GetNodeMemoryResponseObject, error)
-	// Update DNS servers
-	// (PUT /node/{hostname}/network/dns)
-	PutNodeNetworkDNS(ctx context.Context, request PutNodeNetworkDNSRequestObject) (PutNodeNetworkDNSResponseObject, error)
-	// List DNS servers
-	// (GET /node/{hostname}/network/dns/{interfaceName})
-	GetNodeNetworkDNSByInterface(ctx context.Context, request GetNodeNetworkDNSByInterfaceRequestObject) (GetNodeNetworkDNSByInterfaceResponseObject, error)
-	// Ping a remote server
-	// (POST /node/{hostname}/network/ping)
-	PostNodeNetworkPing(ctx context.Context, request PostNodeNetworkPingRequestObject) (PostNodeNetworkPingResponseObject, error)
 	// Retrieve OS info
 	// (GET /node/{hostname}/os)
 	GetNodeOS(ctx context.Context, request GetNodeOSRequestObject) (GetNodeOSResponseObject, error)
@@ -2073,94 +1690,6 @@ func (sh *strictHandler) GetNodeMemory(ctx echo.Context, hostname Hostname) erro
 		return err
 	} else if validResponse, ok := response.(GetNodeMemoryResponseObject); ok {
 		return validResponse.VisitGetNodeMemoryResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PutNodeNetworkDNS operation middleware
-func (sh *strictHandler) PutNodeNetworkDNS(ctx echo.Context, hostname Hostname) error {
-	var request PutNodeNetworkDNSRequestObject
-
-	request.Hostname = hostname
-
-	var body PutNodeNetworkDNSJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PutNodeNetworkDNS(ctx.Request().Context(), request.(PutNodeNetworkDNSRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutNodeNetworkDNS")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PutNodeNetworkDNSResponseObject); ok {
-		return validResponse.VisitPutNodeNetworkDNSResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetNodeNetworkDNSByInterface operation middleware
-func (sh *strictHandler) GetNodeNetworkDNSByInterface(ctx echo.Context, hostname Hostname, interfaceName string) error {
-	var request GetNodeNetworkDNSByInterfaceRequestObject
-
-	request.Hostname = hostname
-	request.InterfaceName = interfaceName
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeNetworkDNSByInterface(ctx.Request().Context(), request.(GetNodeNetworkDNSByInterfaceRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeNetworkDNSByInterface")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetNodeNetworkDNSByInterfaceResponseObject); ok {
-		return validResponse.VisitGetNodeNetworkDNSByInterfaceResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeNetworkPing operation middleware
-func (sh *strictHandler) PostNodeNetworkPing(ctx echo.Context, hostname Hostname) error {
-	var request PostNodeNetworkPingRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeNetworkPingJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeNetworkPing(ctx.Request().Context(), request.(PostNodeNetworkPingRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeNetworkPing")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeNetworkPingResponseObject); ok {
-		return validResponse.VisitPostNodeNetworkPingResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

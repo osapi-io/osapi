@@ -699,34 +699,6 @@ func (s *NodeStatusGetPublicTestSuite) TestUint64ToInt() {
 	}
 }
 
-func (s *NodeStatusGetPublicTestSuite) TestDurationToString() {
-	dur := 20 * time.Millisecond
-
-	tests := []struct {
-		name string
-		d    *time.Duration
-		want *string
-	}{
-		{
-			name: "when nil",
-			d:    nil,
-			want: nil,
-		},
-		{
-			name: "when valid duration",
-			d:    &dur,
-			want: func() *string { str := "20.00ms"; return &str }(),
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			got := apinode.ExportDurationToString(tc.d)
-			s.Equal(tc.want, got)
-		})
-	}
-}
-
 func TestNodeStatusGetPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(NodeStatusGetPublicTestSuite))
 }

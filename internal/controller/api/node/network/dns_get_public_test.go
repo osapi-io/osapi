@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package network_test
 
 import (
 	"context"
@@ -37,8 +37,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	apinetwork "github.com/retr0h/osapi/internal/controller/api/node/network"
+	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/dns"
@@ -50,7 +50,7 @@ type NetworkDNSGetByInterfacePublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *apinetwork.Network
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
@@ -68,7 +68,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) SetupSuite() {
 func (s *NetworkDNSGetByInterfacePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = apinetwork.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -461,8 +461,8 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceVa
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			networkHandler := apinetwork.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(networkHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -572,7 +572,7 @@ func (s *NetworkDNSGetByInterfacePublicTestSuite) TestGetNetworkDNSByInterfaceRB
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeNetworkHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/network/dns/eth0", nil)

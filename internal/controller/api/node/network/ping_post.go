@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
 import (
 	"context"
@@ -29,14 +29,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeNetworkPing post the node network ping API endpoint.
-func (s *Node) PostNodeNetworkPing(
+func (s *Network) PostNodeNetworkPing(
 	ctx context.Context,
 	request gen.PostNodeNetworkPingRequestObject,
 ) (gen.PostNodeNetworkPingResponseObject, error) {
@@ -86,7 +86,7 @@ func (s *Node) PostNodeNetworkPing(
 			Results: []gen.PingResponse{
 				{
 					Hostname: rawResp.Hostname,
-					Status:   gen.PingResponseStatusSkipped,
+					Status:   gen.Skipped,
 					Error:    &e,
 				},
 			},
@@ -108,7 +108,7 @@ func (s *Node) PostNodeNetworkPing(
 }
 
 // postNodeNetworkPingBroadcast handles broadcast targets (_all or label) for ping.
-func (s *Node) postNodeNetworkPingBroadcast(
+func (s *Network) postNodeNetworkPingBroadcast(
 	ctx context.Context,
 	target string,
 	address string,
@@ -135,15 +135,15 @@ func (s *Node) postNodeNetworkPingBroadcast(
 		}
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.PingResponseStatusFailed
+			item.Status = gen.Failed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.PingResponseStatusSkipped
+			item.Status = gen.Skipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.PingResponseStatusOk
+			item.Status = gen.Ok
 			var pingResult ping.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &pingResult)
@@ -176,7 +176,7 @@ func buildPingResponse(
 
 	return gen.PingResponse{
 		Hostname:        hostname,
-		Status:          gen.PingResponseStatusOk,
+		Status:          gen.Ok,
 		AvgRtt:          durationToString(&r.AvgRTT),
 		MaxRtt:          durationToString(&r.MaxRTT),
 		MinRtt:          durationToString(&r.MinRTT),

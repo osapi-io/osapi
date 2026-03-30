@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node_test
+package network_test
 
 import (
 	"context"
@@ -39,8 +39,8 @@ import (
 	"github.com/retr0h/osapi/internal/authtoken"
 	"github.com/retr0h/osapi/internal/config"
 	"github.com/retr0h/osapi/internal/controller/api"
-	apinode "github.com/retr0h/osapi/internal/controller/api/node"
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	apinetwork "github.com/retr0h/osapi/internal/controller/api/node/network"
+	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
 	"github.com/retr0h/osapi/internal/provider/network/ping"
@@ -52,7 +52,7 @@ type NetworkPingPostPublicTestSuite struct {
 
 	mockCtrl      *gomock.Controller
 	mockJobClient *jobmocks.MockJobClient
-	handler       *apinode.Node
+	handler       *apinetwork.Network
 	ctx           context.Context
 	appConfig     config.Config
 	logger        *slog.Logger
@@ -70,7 +70,7 @@ func (s *NetworkPingPostPublicTestSuite) SetupSuite() {
 func (s *NetworkPingPostPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
-	s.handler = apinode.New(slog.Default(), s.mockJobClient)
+	s.handler = apinetwork.New(slog.Default(), s.mockJobClient)
 	s.ctx = context.Background()
 	s.appConfig = config.Config{}
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -202,7 +202,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.PingResponseStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.Skipped, r.Results[0].Status)
 			},
 		},
 		{
@@ -318,7 +318,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("host: operation not supported on this OS family", *r.Results[0].Error)
-				s.Equal(gen.PingResponseStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.Skipped, r.Results[0].Status)
 			},
 		},
 		{
@@ -347,7 +347,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNodeNetworkPing() {
 				s.Equal("server1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("permission denied", *r.Results[0].Error)
-				s.Equal(gen.PingResponseStatusFailed, r.Results[0].Status)
+				s.Equal(gen.Failed, r.Results[0].Status)
 			},
 		},
 		{
@@ -513,8 +513,8 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingValidationHTTP() {
 		s.Run(tc.name, func() {
 			jobMock := tc.setupJobMock()
 
-			nodeHandler := apinode.New(s.logger, jobMock)
-			strictHandler := gen.NewStrictHandler(nodeHandler, nil)
+			networkHandler := apinetwork.New(s.logger, jobMock)
+			strictHandler := gen.NewStrictHandler(networkHandler, nil)
 
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
@@ -633,7 +633,7 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingRBACHTTP() {
 			}
 
 			server := api.New(appConfig, s.logger)
-			handlers := server.GetNodeHandler(jobMock)
+			handlers := server.GetNodeNetworkHandler(jobMock)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(
@@ -651,6 +651,34 @@ func (s *NetworkPingPostPublicTestSuite) TestPostNetworkPingRBACHTTP() {
 			for _, str := range tc.wantContains {
 				s.Contains(rec.Body.String(), str)
 			}
+		})
+	}
+}
+
+func (s *NetworkPingPostPublicTestSuite) TestDurationToString() {
+	dur := 20 * time.Millisecond
+
+	tests := []struct {
+		name string
+		d    *time.Duration
+		want *string
+	}{
+		{
+			name: "when nil",
+			d:    nil,
+			want: nil,
+		},
+		{
+			name: "when valid duration",
+			d:    &dur,
+			want: func() *string { str := "20.00ms"; return &str }(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := apinetwork.ExportDurationToString(tc.d)
+			s.Equal(tc.want, got)
 		})
 	}
 }

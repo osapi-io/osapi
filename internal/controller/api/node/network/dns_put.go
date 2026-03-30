@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package network
 
 import (
 	"context"
@@ -26,13 +26,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/retr0h/osapi/internal/controller/api/node/gen"
+	"github.com/retr0h/osapi/internal/controller/api/node/network/gen"
 	"github.com/retr0h/osapi/internal/job"
 	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PutNodeNetworkDNS put the node network dns API endpoint.
-func (s *Node) PutNodeNetworkDNS(
+func (s *Network) PutNodeNetworkDNS(
 	ctx context.Context,
 	request gen.PutNodeNetworkDNSRequestObject,
 ) (gen.PutNodeNetworkDNSResponseObject, error) {
@@ -123,7 +123,7 @@ func (s *Node) PutNodeNetworkDNS(
 }
 
 // putNodeNetworkDNSBroadcast handles broadcast targets (_all or label) for DNS modification.
-func (s *Node) putNodeNetworkDNSBroadcast(
+func (s *Network) putNodeNetworkDNSBroadcast(
 	ctx context.Context,
 	target string,
 	servers []string,
