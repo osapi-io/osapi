@@ -511,27 +511,58 @@ jobID, resp, err := s.JobClient.Modify(
 See `internal/controller/api/node/node_status_get.go` for the
 reference implementation.
 
-### Step 3: Server Wiring (4 files in `internal/controller/api/`)
+### Step 3: Handler Registration
 
-For node-targeted domains, the handler shim is named
-`handler_node_{domain}.go` with a `GetNode{Domain}Handler()` method.
-For controller-only domains, use `handler_{domain}.go` with
-`Get{Domain}Handler()`.
+Each domain package exports a `Handler()` function that creates the
+handler, wraps it with auth middleware, and returns route
+registration closures. No changes to the `Server` struct are needed.
 
-- `handler_node_{domain}.go` (or `handler_{domain}.go`) — wraps the
-  handler with `NewStrictHandler` + `scopeMiddleware`. Define
-  `unauthenticatedOperations` map if any endpoints skip auth.
-- `types.go` — add `{domain}Handler` field to `Server` struct +
-  `With{Domain}Handler()` option func
-- `handler.go` — call `Get{Domain}Handler()` in `CreateHandlers()` and
-  append results
-- `handler_public_test.go` — add `TestGet{Domain}Handler` with test cases
-  for both unauthenticated and authenticated paths
+Create `handler.go` in your domain package:
+
+```go
+// internal/controller/api/node/{domain}/handler.go
+package {domain}
+
+func Handler(
+    logger *slog.Logger,
+    jobClient client.JobClient,
+    signingKey string,
+    customRoles map[string][]string,
+) []func(e *echo.Echo) {
+    var tokenManager api.TokenValidator = authtoken.New(logger)
+    h := New(logger, jobClient)
+    strictHandler := gen.NewStrictHandler(h,
+        []gen.StrictMiddlewareFunc{
+            func(handler strictecho.StrictEchoHandlerFunc,
+                _ string,
+            ) strictecho.StrictEchoHandlerFunc {
+                return api.ScopeMiddleware(
+                    handler, tokenManager, signingKey,
+                    gen.BearerAuthScopes, customRoles,
+                )
+            },
+        },
+    )
+    return []func(e *echo.Echo){
+        func(e *echo.Echo) {
+            gen.RegisterHandlers(e, strictHandler)
+        },
+    }
+}
+```
+
+Add a `handler_public_test.go` that tests route registration and
+middleware execution. Follow existing domain handler tests.
 
 ### Step 4: Startup Wiring
 
-- `cmd/controller_start.go` — initialize the handler with real
-  dependencies and pass `api.With{Domain}Handler(h)` to `api.New()`
+- `cmd/controller_setup.go` — add one line to
+  `registerControllerHandlers`:
+  ```go
+  handlers = append(handlers,
+      {domain}API.Handler(log, jc, signingKey, customRoles)...)
+  ```
+  Add the import for your domain package.
 
 ### Step 5: Update SDK
 
