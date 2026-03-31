@@ -600,6 +600,40 @@ and wrap errors with context.
    `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
    section)
 
+#### SDK method naming (MANDATORY)
+
+Method names MUST be clean verbs — NEVER repeat the service name.
+The service struct already provides the namespace. Stuttering like
+`SysctlService.SysctlGet()` is wrong — use `SysctlService.Get()`.
+
+Standard verbs:
+
+| Verb       | HTTP | Description                          |
+| ---------- | ---- | ------------------------------------ |
+| `List`     | GET  | List collection                      |
+| `Get`      | GET  | Get single resource / read state     |
+| `Create`   | POST | Create new resource                  |
+| `Update`   | PUT  | Update existing resource             |
+| `Delete`   | DEL  | Remove resource                      |
+
+Rare exceptions for action operations (no persistent resource):
+- `Ping.Do()` — one-shot action
+- `Command.Exec()`, `Command.Shell()` — execute commands
+
+Examples:
+```go
+// GOOD — clean verbs, no stuttering
+client.Sysctl.Get(ctx, host, key)
+client.Cron.Create(ctx, host, opts)
+client.Hostname.Update(ctx, host, name)
+client.NTP.Delete(ctx, host)
+client.Timezone.Get(ctx, host)
+
+// BAD — stuttering, repeats service name
+client.Sysctl.SysctlGet(ctx, host, key)
+client.NTP.NtpCreate(ctx, host, opts)
+```
+
 #### SDK example conventions
 
 SDK examples live in `examples/sdk/client/`, one file per domain.
