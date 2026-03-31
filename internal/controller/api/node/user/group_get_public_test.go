@@ -218,7 +218,9 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`{"name":"sudo","gid":27,"members":["testuser"]}`),
+								Data: json.RawMessage(
+									`{"name":"sudo","gid":27,"members":["testuser"]}`,
+								),
 							},
 							"server2": {
 								Hostname: "server2",
