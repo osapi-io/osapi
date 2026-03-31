@@ -56,47 +56,17 @@ domains before creating new ones — the codebase IS the reference.
 
 ### Cross-Layer Consistency (MANDATORY)
 
-Every domain MUST have consistent artifacts across ALL layers. Use
-this checklist when adding or modifying a domain. The `{service}`
-name is the SDK Client field name in lowercase (e.g., `sysctl`,
-`ntp`, `hostname`).
+Every domain MUST be consistent across all layers: provider, agent
+processor, API handler, SDK service, CLI commands, docs, and tests.
+When adding a new domain, look at a recently completed domain (like
+`ntp` or `sysctl`) and replicate the same set of artifacts across
+every layer. If something exists for `sysctl` but not for your new
+domain, it's missing.
 
-| Layer | Artifact | Path/Name |
-| ----- | -------- | --------- |
-| Provider | Package | `internal/provider/{category}/{domain}/` |
-| Agent | Processor | `internal/agent/processor_{domain}.go` |
-| API | Handler package | `internal/controller/api/node/{domain}/` |
-| API | OpenAPI spec | `api/node/{domain}/gen/api.yaml` |
-| API | Handler registration | `api/node/{domain}/handler.go` |
-| SDK | Service file | `pkg/sdk/client/{service}.go` |
-| SDK | Types file | `pkg/sdk/client/{service}_types.go` |
-| SDK | Service test | `pkg/sdk/client/{service}_public_test.go` |
-| SDK | Types test | `pkg/sdk/client/{service}_types_public_test.go` |
-| SDK | Client field | `client.{Service}` (e.g., `client.Sysctl`) |
-| SDK | Doc page | `docs/sidebar/sdk/client/{service}.md` |
-| SDK | Doc page title | `# {Service}` (no "Service" suffix) |
-| SDK | Dropdown entry | `docs/docusaurus.config.ts` SDK section |
-| SDK | Example | `examples/sdk/client/{service}.go` |
-| CLI | Parent command | `cmd/client_node_{domain}.go` |
-| CLI | Subcommands | `cmd/client_node_{domain}_{verb}.go` |
-| CLI | Doc directory | `docs/usage/cli/client/node/{domain}/` |
-| CLI | Doc landing page | `{domain}/{domain}.md` with `<DocCardList />` |
-| CLI | Doc subcommands | `{domain}/{verb}.md` per subcommand |
-| Docs | Feature page | `docs/features/{domain}-management.md` |
-| Docs | Features table | `docs/features/features.md` — add row |
-| Docs | Features dropdown | `docs/docusaurus.config.ts` Features section |
-| Docs | Permissions | `docs/features/authentication.md` — roles table |
-| Docs | Configuration | `docs/usage/configuration.md` — roles table |
-| Docs | API guidelines | `docs/architecture/api-guidelines.md` — endpoint table |
-| Docs | Architecture | `docs/architecture/architecture.md` — feature link |
-| Constants | Operations | `pkg/sdk/client/operations.go` |
-| Constants | Permissions | `pkg/sdk/client/permissions.go` |
-| Constants | Job re-exports | `internal/job/types.go` |
-| Constants | Auth re-exports | `internal/authtoken/permissions.go` + roles |
-| Integration | Smoke test | `test/integration/{domain}_test.go` |
-
-If ANY row is missing, the domain is incomplete. Check this list
-before marking implementation as done.
+The principle: **pick any existing domain and `find`/`grep` for it
+across the codebase. Your new domain should appear in all the same
+places.** This includes code, tests, examples, SDK docs, CLI docs,
+feature docs, docusaurus config, and permissions tables.
 
 ### Step 0: Provider Implementation
 
