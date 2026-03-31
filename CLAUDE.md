@@ -591,9 +591,13 @@ and wrap errors with context.
 
 **When adding a new API domain:**
 
-1. Add a service in `pkg/sdk/client/{domain}.go` with its own
-   `{Domain}Service` struct. Each domain gets its own service — do
-   NOT add methods to an existing service.
+1. Add a service with four files in `pkg/sdk/client/`:
+   - `{service}.go` — `{Service}Service` struct + methods
+   - `{service}_types.go` — SDK result types + gen→SDK conversions
+   - `{service}_public_test.go` — service method tests
+   - `{service}_types_public_test.go` — conversion function tests
+   Each service gets its own files — do NOT add methods or types to
+   an existing service's files.
 2. Add a field to the `Client` struct in `osapi.go` and wire it
    in `New()`
 3. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new
