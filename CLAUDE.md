@@ -586,12 +586,19 @@ and wrap errors with context.
 
 **When adding a new API domain:**
 
-1. Add a service wrapper in `pkg/sdk/client/{domain}.go`
-2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
-   spec from the combined `api.yaml`
-3. Add an SDK example in `examples/sdk/client/{domain}.go`
-4. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
+1. Add a service in `pkg/sdk/client/{domain}.go` with its own
+   `{Domain}Service` struct. Each domain gets its own service — do
+   NOT add methods to an existing service.
+2. Add a field to the `Client` struct in `osapi.go` and wire it
+   in `New()`
+3. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new
+   domain's spec from the combined `api.yaml`
+4. Add an SDK example in `examples/sdk/client/{domain}.go`
+5. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
    with methods table, request types, usage examples, and permissions
+6. Add the new service to the SDK navbar dropdown in
+   `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
+   section)
 
 #### SDK example conventions
 
@@ -647,6 +654,10 @@ Follow the same principles as the orchestrator examples:
   new endpoints to the path pattern table
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
+- Update `docs/docs/sidebar/features/features.md` — add the new
+  domain to the features landing page table
+- Update `docs/docusaurus.config.ts` — add the new SDK service to
+  the SDK navbar dropdown (under "Client Library" section)
 
 ### Step 8: Verify
 
