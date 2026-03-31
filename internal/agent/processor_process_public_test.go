@@ -372,7 +372,9 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessSignal() {
 			},
 			setupMock: func() process.Provider {
 				m := processMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Signal(gomock.Any(), 1234, "KILL").Return(nil, errors.New("permission denied"))
+				m.EXPECT().
+					Signal(gomock.Any(), 1234, "KILL").
+					Return(nil, errors.New("permission denied"))
 				return m
 			},
 			expectError: true,

@@ -308,11 +308,11 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			},
 		},
 		{
-			name:      "when invalid signal returns error",
-			pid:       42,
-			signal:    "INVALID",
-			setupMock: func() {},
-			wantErr:   true,
+			name:       "when invalid signal returns error",
+			pid:        42,
+			signal:     "INVALID",
+			setupMock:  func() {},
+			wantErr:    true,
 			wantErrMsg: `process: signal: invalid signal "INVALID"`,
 		},
 		{
