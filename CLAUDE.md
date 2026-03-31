@@ -48,12 +48,11 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 
 ## Adding a New API Domain
 
-When adding a new domain (e.g., `service`, `power`), follow existing
-domains as reference. Node-targeted operations live under
-`internal/controller/api/node/{domain}/` — follow `node/docker/` or
-`node/schedule/`. Controller-only operations live under
-`internal/controller/api/{domain}/` — follow `health/` or `audit/`.
-Read the existing files before creating new ones.
+When adding a new domain, follow existing domains as reference.
+Node-targeted operations live under
+`internal/controller/api/node/{domain}/`. Controller-only operations
+live under `internal/controller/api/{domain}/`. Read existing
+domains before creating new ones — the codebase IS the reference.
 
 ### Cross-Layer Consistency (MANDATORY)
 
@@ -246,8 +245,7 @@ go in separate files named `{platform}_{operation}.go`.
 | `Darwin` | `NewDarwinProvider(...)` | `darwin.go`, `darwin_get_*.go`   |
 | `Linux`  | `NewLinuxProvider()`     | `linux.go`, `linux_get_*.go`     |
 
-Examples: `node/host`, `node/disk`, `node/mem`, `node/load`,
-`network/dns`, `network/ping`, `network/netinfo`.
+Most providers under `node/` and `network/` follow this pattern.
 
 **2. Container-aware platform providers**
 
@@ -349,15 +347,10 @@ Two files connect a provider to the agent:
        agent.NewMyDomainProcessor(myProv, log),
        myProv)
 
-   // Existing category example (like sysctl under node):
-   registry.Register("node",
-       agent.NewNodeProcessor(
-           hostProv, diskProv, memProv, loadProv,
-           sysctlProv,  // added to existing processor
-           appConfig, log,
-       ),
-       hostProv, diskProv, memProv, loadProv, sysctlProv,
-   )
+   // Existing category example (node):
+   // Add your provider as a parameter to NewNodeProcessor
+   // and include it in the providers list for FactsAware wiring.
+   // Read cmd/agent_setup.go to see the current parameter list.
    ```
 
 That's it. No changes to `agent/types.go`, `agent/agent.go`, or
