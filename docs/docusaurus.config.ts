@@ -234,6 +234,21 @@ const config: Config = {
               docId: 'sidebar/sdk/client/docker'
             },
             {
+              type: 'doc',
+              label: 'Sysctl',
+              docId: 'sidebar/sdk/client/sysctl'
+            },
+            {
+              type: 'doc',
+              label: 'NTP',
+              docId: 'sidebar/sdk/client/ntp'
+            },
+            {
+              type: 'doc',
+              label: 'Timezone',
+              docId: 'sidebar/sdk/client/timezone'
+            },
+            {
               type: 'html',
               value: '<hr style="margin: 0.3rem 0;">',
               className: 'dropdown-separator'
