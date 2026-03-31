@@ -610,14 +610,17 @@ and wrap errors with context.
 4. Add an SDK example in `examples/sdk/client/{service}.go` — one
    file per SDK service (e.g., `hostname.go`, `disk.go`, `ntp.go`).
    The example file name matches the Client field name in lowercase.
-5. Add an SDK doc page in
-   `docs/docs/sidebar/sdk/client/{service}.md` — one page per SDK
-   service. Use the Client field name (e.g., `Hostname`, `Disk`,
-   `NTP`) as the page title, NOT the Go struct name
-   (`HostnameService`).
+5. Add an SDK doc page under the appropriate category subdirectory
+   in `docs/docs/sidebar/sdk/client/`. SDK docs are grouped by
+   concern (e.g., `node-info/`, `system-config/`, `operations/`).
+   Place the new page in the matching group — look at the existing
+   directory structure to find the right one. Use the Client field
+   name as the page title (e.g., `# Power`), NOT the Go struct
+   name. Update `client.md` to add the service to its category
+   table.
 6. Add the new service to the SDK navbar dropdown in
-   `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
-   section). Use the Client field name as the label.
+   `docs/docusaurus.config.ts` under the matching category header.
+   The dropdown is grouped the same way as the sidebar.
 
 #### SDK method naming (MANDATORY)
 
