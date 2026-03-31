@@ -39,6 +39,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
@@ -64,6 +65,7 @@ type newTestAgentParams struct {
 	dockerProvider  dockerProv.Provider
 	cronProvider    cronProv.Provider
 	sysctlProvider  sysctlProv.Provider
+	ntpProvider     ntpProv.Provider
 	processProvider process.Provider
 	registryKV      jetstream.KeyValue
 	factsKV         jetstream.KeyValue
@@ -92,6 +94,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.memProvider,
 			p.loadProvider,
 			p.sysctlProvider,
+			p.ntpProvider,
 			p.appConfig,
 			logger,
 		),

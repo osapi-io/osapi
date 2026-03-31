@@ -40,6 +40,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	memProv "github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/node/ntp"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 )
 
@@ -355,6 +356,7 @@ func SetAgentAppConfig(
 			a.memProvider,
 			a.loadProvider,
 			(sysctl.Provider)(nil),
+			(ntp.Provider)(nil),
 			cfg,
 			a.logger,
 		)
@@ -385,6 +387,7 @@ func SetAgentHostProvider(
 			a.memProvider,
 			a.loadProvider,
 			(sysctl.Provider)(nil),
+			(ntp.Provider)(nil),
 			a.appConfig,
 			a.logger,
 		)

@@ -32,6 +32,7 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/node/ntp"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 )
 
@@ -54,6 +55,7 @@ func NewNodeProcessor(
 	memProvider mem.Provider,
 	loadProvider load.Provider,
 	sysctlProvider sysctl.Provider,
+	ntpProvider ntp.Provider,
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -81,6 +83,8 @@ func NewNodeProcessor(
 			return getNodeLoad(loadProvider, logger)
 		case "sysctl":
 			return processSysctlOperation(sysctlProvider, logger, req)
+		case "ntp":
+			return processNtpOperation(ntpProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}
