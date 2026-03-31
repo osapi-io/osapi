@@ -53,6 +53,9 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/timezone`                    | Timezone |
 | `/node/{hostname}/power/reboot`                | Power    |
 | `/node/{hostname}/power/shutdown`              | Power    |
+| `/node/{hostname}/process`                     | Process  |
+| `/node/{hostname}/process/{pid}`               | Process  |
+| `/node/{hostname}/process/{pid}/signal`        | Process  |
 
 6. **Path Parameters Over Query Parameters**
 

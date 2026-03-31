@@ -110,6 +110,9 @@ type Client struct {
 	// Timezone provides system timezone management operations (get, update).
 	Timezone *TimezoneService
 
+	// Process provides process management operations (list, get, signal).
+	Process *ProcessService
+
 	// Power provides power management operations (reboot, shutdown).
 	Power *PowerService
 
@@ -193,6 +196,7 @@ func New(
 	c.Sysctl = &SysctlService{client: httpClient}
 	c.NTP = &NTPService{client: httpClient}
 	c.Timezone = &TimezoneService{client: httpClient}
+	c.Process = &ProcessService{client: httpClient}
 	c.Power = &PowerService{client: httpClient}
 
 	return c

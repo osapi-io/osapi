@@ -504,6 +504,34 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Process",
+      link: {
+        type: "doc",
+        id: "gen/api/process-management-api-process-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-process",
+          label: "List processes",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-process-by-pid",
+          label: "Get process by PID",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-process-signal",
+          label: "Send signal to process",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Schedule/Cron",
       link: {
         type: "doc",

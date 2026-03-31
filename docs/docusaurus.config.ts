@@ -173,6 +173,11 @@ const config: Config = {
               type: 'doc',
               label: 'Power Management',
               docId: 'sidebar/features/power-management'
+            },
+            {
+              type: 'doc',
+              label: 'Process Management',
+              docId: 'sidebar/features/process-management'
             }
           ]
         },
@@ -291,6 +296,11 @@ const config: Config = {
               type: 'doc',
               label: 'Power',
               docId: 'sidebar/sdk/client/operations/power'
+            },
+            {
+              type: 'doc',
+              label: 'Process',
+              docId: 'sidebar/sdk/client/operations/process'
             },
             {
               type: 'html',
