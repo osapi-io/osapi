@@ -183,6 +183,11 @@ const config: Config = {
               type: 'doc',
               label: 'User & Group Management',
               docId: 'sidebar/features/user-management'
+            },
+            {
+              type: 'doc',
+              label: 'Package Management',
+              docId: 'sidebar/features/package-management'
             }
           ]
         },
@@ -285,6 +290,11 @@ const config: Config = {
               type: 'doc',
               label: 'Timezone',
               docId: 'sidebar/sdk/client/system-config/timezone'
+            },
+            {
+              type: 'doc',
+              label: 'Package',
+              docId: 'sidebar/sdk/client/system-config/package'
             },
             {
               type: 'html',

@@ -31,5 +31,6 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | ⚡  | [Power Management](power-management.md)        | Reboot and shutdown target hosts with optional delay                                          |
 | 📡  | [Process Management](process-management.md)    | List, inspect, and signal running processes                                                   |
 | 👤  | [User & Group Management](user-management.md)  | Local user account and group management                                                       |
+| 📦  | [Package Management](package-management.md)    | System package install, remove, update, and query                                             |
 
 <!-- prettier-ignore-end -->

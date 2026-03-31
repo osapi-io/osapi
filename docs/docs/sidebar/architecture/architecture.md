@@ -164,6 +164,8 @@ configure them — see the Features section:
   signal processes
 - [User & Group Management](../features/user-management.md) — local user account
   and group management
+- [Package Management](../features/package-management.md) — system package
+  management
 - [Job System](../features/job-system.md) — async job processing and routing
 - [Audit Logging](../features/audit-logging.md) — API audit trail and export
 - [Health Checks](../features/health-checks.md) — liveness, readiness, status
