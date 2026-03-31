@@ -43,13 +43,17 @@ var allowedSignals = map[string]syscall.Signal{
 }
 
 // gopsutilLister wraps gopsutil calls to satisfy ProcessLister.
+// These are thin OS wrappers — error paths are not coverable in
+// unit tests because gopsutil.Processes() always succeeds on a
+// running system. The provider's List/Get/Signal methods are fully
+// tested via the mocked ProcessLister/ProcessSignaler interfaces.
 type gopsutilLister struct{}
 
 // Processes returns all running processes as ProcessItem instances.
 func (g *gopsutilLister) Processes() ([]ProcessItem, error) {
 	procs, err := gopsutil.Processes()
 	if err != nil {
-		return nil, err
+		return nil, err // not coverable: gopsutil always succeeds on a running system
 	}
 
 	result := make([]ProcessItem, len(procs))
