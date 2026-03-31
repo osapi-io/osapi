@@ -10,8 +10,8 @@ hosts via `/etc/sysctl.d/` conf files. Access via `client.Sysctl.List()`,
 
 ## Methods
 
-| Method                                   | Description                 |
-| ---------------------------------------- | --------------------------- |
+| Method                             | Description                 |
+| ---------------------------------- | --------------------------- |
 | `List(ctx, hostname)`              | List all managed parameters |
 | `Get(ctx, hostname, key)`          | Get a parameter by key      |
 | `Create(ctx, hostname, opts)`      | Create a new managed entry  |

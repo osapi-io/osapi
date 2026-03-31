@@ -10,8 +10,8 @@ target hosts via `timedatectl`. Access via `client.Timezone.Get()`,
 
 ## Methods
 
-| Method                                | Description         |
-| ------------------------------------- | ------------------- |
+| Method                        | Description         |
+| ----------------------------- | ------------------- |
 | `Get(ctx, hostname)`          | Get system timezone |
 | `Update(ctx, hostname, opts)` | Set system timezone |
 
