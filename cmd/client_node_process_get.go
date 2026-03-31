@@ -55,36 +55,47 @@ var clientNodeProcessGetCmd = &cobra.Command{
 			fmt.Println()
 		}
 
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			if r.Error != "" {
-				cli.PrintKV("Hostname", r.Hostname, "Error", r.Error)
+				var errPtr *string
+				e := r.Error
+				errPtr = &e
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Error:    errPtr,
+				})
+
 				continue
 			}
 
-			rows := make([][]string, 0, len(r.Processes))
 			for _, p := range r.Processes {
 				command := p.Command
 				if len(command) > 60 {
 					command = command[:57] + "..."
 				}
 
-				rows = append(rows, []string{
-					fmt.Sprintf("%d", p.PID),
-					p.Name,
-					p.User,
-					p.State,
-					fmt.Sprintf("%.1f%%", p.CPUPercent),
-					fmt.Sprintf("%.1f%%", p.MemPercent),
-					command,
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Fields: []string{
+						fmt.Sprintf("%d", p.PID),
+						p.Name,
+						p.User,
+						p.State,
+						fmt.Sprintf("%.1f%%", p.CPUPercent),
+						fmt.Sprintf("%.1f%%", p.MemPercent),
+						command,
+					},
 				})
 			}
-
-			cli.PrintCompactTable([]cli.Section{{
-				Title:   r.Hostname,
-				Headers: []string{"PID", "NAME", "USER", "STATE", "CPU%", "MEM%", "COMMAND"},
-				Rows:    rows,
-			}})
 		}
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"PID", "NAME", "USER", "STATE", "CPU%", "MEM%", "COMMAND"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 
