@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations organized by category (`node/`, `network/`, `scheduled/`, `container/`) then domain. Top-level for `command/` and `file/`
+- **`internal/provider/`** - Operation implementations organized by category then domain. Browse the directory to see current providers
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
@@ -139,7 +139,7 @@ Meta providers store domain-specific metadata in the
 The file provider persists this in the file-state KV alongside SHA,
 path, and mode — one KV bucket for all providers.
 
-Reference: `internal/provider/scheduled/cron/`
+Reference: look at existing meta providers in the codebase.
 
 #### File Structure
 
@@ -166,11 +166,9 @@ internal/provider/{category}/{domain}/
     generate.go   — //go:generate mockgen directive
 ```
 
-For top-level providers: `internal/provider/{domain}/` (e.g.,
-`internal/provider/command/`, `internal/provider/file/`).
-For categorized providers: `internal/provider/{category}/{domain}/`
-(e.g., `internal/provider/container/docker/`,
-`internal/provider/scheduled/cron/`).
+For top-level providers: `internal/provider/{domain}/`.
+For categorized providers: `internal/provider/{category}/{domain}/`.
+Look at existing providers to see both patterns.
 
 #### Provider Interface
 
@@ -493,9 +491,7 @@ domains, create `internal/controller/api/{domain}/`:
     wrong permissions (403), valid token (200). Uses `api.New()` +
     `{domain}.Handler()` + `server.RegisterHandlers()` to wire
     through `ScopeMiddleware`.
-  See existing examples in `internal/controller/api/node/docker/`,
-  `internal/controller/api/job/`, and
-  `internal/controller/api/audit/`.
+  Follow existing handler test files in the codebase.
 
 #### Broadcast Support (MANDATORY for node-targeted operations)
 
@@ -541,8 +537,7 @@ jobID, resp, err := s.JobClient.Modify(
     ctx, hostname, "node", job.OperationSysctlCreate, data)
 ```
 
-See `internal/controller/api/node/node_status_get.go` for the
-reference implementation.
+Read existing handlers in the codebase for reference.
 
 ### Step 3: Handler Registration
 
