@@ -8,9 +8,9 @@ Network ping operations.
 
 ## Methods
 
-| Method                       | Description |
-| ---------------------------- | ----------- |
-| `Do(ctx, target, address)`   | Ping a host |
+| Method                     | Description |
+| -------------------------- | ----------- |
+| `Do(ctx, target, address)` | Ping a host |
 
 ## Usage
 

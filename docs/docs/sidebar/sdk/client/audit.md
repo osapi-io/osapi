@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# AuditService
+# Audit
 
 Audit log operations.
 

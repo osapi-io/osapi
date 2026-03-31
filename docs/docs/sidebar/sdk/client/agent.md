@@ -8,12 +8,12 @@ Agent discovery, details, and lifecycle management.
 
 ## Methods
 
-| Method                  | Description                         |
-| ----------------------- | ----------------------------------- |
-| `List(ctx)`             | Retrieve all active agents          |
-| `Get(ctx, hostname)`    | Get detailed agent info by hostname |
-| `Drain(ctx, hostname)`  | Drain agent (stop accepting jobs)   |
-| `Undrain(ctx, hostname)`| Undrain agent (resume accepting jobs) |
+| Method                   | Description                           |
+| ------------------------ | ------------------------------------- |
+| `List(ctx)`              | Retrieve all active agents            |
+| `Get(ctx, hostname)`     | Get detailed agent info by hostname   |
+| `Drain(ctx, hostname)`   | Drain agent (stop accepting jobs)     |
+| `Undrain(ctx, hostname)` | Undrain agent (resume accepting jobs) |
 
 ## Usage
 
@@ -46,5 +46,4 @@ for a complete working example.
 
 ## Permissions
 
-Requires `agent:read` for List and Get. Drain and Undrain require
-`agent:write`.
+Requires `agent:read` for List and Get. Drain and Undrain require `agent:write`.

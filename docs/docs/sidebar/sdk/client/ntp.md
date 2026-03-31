@@ -2,11 +2,11 @@
 sidebar_position: 16
 ---
 
-# NTP Service
+# NTP
 
-The `NTPService` provides methods for managing NTP configuration on target hosts
-via chrony drop-in files. Access via `client.NTP.Get()`, `client.NTP.Create()`,
-etc.
+The `NTP` service provides methods for managing NTP configuration on target
+hosts via chrony drop-in files. Access via `client.NTP.Get()`,
+`client.NTP.Create()`, etc.
 
 ## Methods
 

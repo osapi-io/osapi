@@ -8,10 +8,10 @@ System hostname query and update operations.
 
 ## Methods
 
-| Method                        | Description         |
-| ----------------------------- | ------------------- |
-| `Get(ctx, target)`            | Get system hostname |
-| `Update(ctx, target, name)`   | Set system hostname |
+| Method                      | Description         |
+| --------------------------- | ------------------- |
+| `Get(ctx, target)`          | Get system hostname |
+| `Update(ctx, target, name)` | Set system hostname |
 
 ## Usage
 

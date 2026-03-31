@@ -2,7 +2,7 @@
 sidebar_position: 8
 ---
 
-# DockerService
+# Docker
 
 Docker container lifecycle management — create, list, inspect, start, stop,
 remove, exec, and pull operations.

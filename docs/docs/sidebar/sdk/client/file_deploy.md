@@ -21,7 +21,7 @@ to agents, check status, and undeploy.
 | ------------- | -------------- | -------- | ------------------------------------ |
 | `ObjectName`  | string         | Yes      | Name of the file in Object Store     |
 | `Path`        | string         | Yes      | Destination path on the target host  |
-| `ContentType` | string         | Yes      | `"raw"` or `"template"`             |
+| `ContentType` | string         | Yes      | `"raw"` or `"template"`              |
 | `Mode`        | string         | No       | File permission mode (e.g. `"0644"`) |
 | `Owner`       | string         | No       | File owner user                      |
 | `Group`       | string         | No       | File owner group                     |

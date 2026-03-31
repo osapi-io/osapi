@@ -15,10 +15,10 @@ Command execution operations -- direct exec and shell-interpreted commands.
 
 ## Request Types
 
-| Type           | Fields                                   |
-| -------------- | ---------------------------------------- |
-| `ExecRequest`  | Target, Command, Args (optional)         |
-| `ShellRequest` | Target, Command                          |
+| Type           | Fields                           |
+| -------------- | -------------------------------- |
+| `ExecRequest`  | Target, Command, Args (optional) |
+| `ShellRequest` | Target, Command                  |
 
 ## Usage
 

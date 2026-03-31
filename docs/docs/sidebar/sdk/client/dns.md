@@ -8,9 +8,9 @@ DNS configuration query and update operations.
 
 ## Methods
 
-| Method                                     | Description        |
-| ------------------------------------------ | ------------------ |
-| `Get(ctx, target, iface)`                  | Get DNS config     |
+| Method                                        | Description        |
+| --------------------------------------------- | ------------------ |
+| `Get(ctx, target, iface)`                     | Get DNS config     |
 | `Update(ctx, target, iface, servers, search)` | Update DNS servers |
 
 ## Usage
