@@ -248,7 +248,7 @@ func (d *Debian) parsePasswd() ([]User, error) {
 		})
 	}
 
-	if err := scanner.Err(); err != nil { // not coverable: scanner.Err() only fires on I/O errors
+	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("read %s: %w", passwdFile, err)
 	}
 

@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -183,6 +184,42 @@ func (suite *DebianPublicTestSuite) TestListUsers() {
 				suite.Equal("valid", result[0].Name)
 				suite.Equal(1000, result[0].UID)
 				suite.Equal(1000, result[0].GID)
+			},
+		},
+		{
+			name:   "when read error occurs returns scanner error",
+			passwd: "valid:x:1001:1001::/home/valid:/bin/bash\n",
+			setup: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/etc", 0o755)
+				_ = baseFs.WriteFile(
+					"/etc/passwd",
+					[]byte("valid:x:1001:1001::/home/valid:/bin/bash\n"),
+					0o644,
+				)
+
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnFileRead {
+						return errors.New("I/O error")
+					}
+
+					return nil
+				})
+				suite.provider = user.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockExec,
+				)
+			},
+			validateFunc: func(result []user.User, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "I/O error")
 			},
 		},
 		{
@@ -673,11 +710,13 @@ func (suite *DebianPublicTestSuite) TestListGroups() {
 	tests := []struct {
 		name         string
 		groupContent string
+		setup        func()
 		validateFunc func([]user.Group, error)
 	}{
 		{
 			name:         "when successful",
 			groupContent: groupContent,
+			setup:        func() {},
 			validateFunc: func(result []user.Group, err error) {
 				suite.NoError(err)
 				suite.Require().Len(result, 5)
@@ -698,6 +737,7 @@ func (suite *DebianPublicTestSuite) TestListGroups() {
 		{
 			name:         "when group has corrupt lines skips them",
 			groupContent: "# comment\n\nshort:x\nbadgid:x:notanumber:\nvalid:x:100:john,jane\n",
+			setup:        func() {},
 			validateFunc: func(result []user.Group, err error) {
 				suite.NoError(err)
 				suite.Require().Len(result, 1)
@@ -709,10 +749,47 @@ func (suite *DebianPublicTestSuite) TestListGroups() {
 		{
 			name:         "when group file not found",
 			groupContent: "",
+			setup:        func() {},
 			validateFunc: func(result []user.Group, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "group:")
+			},
+		},
+		{
+			name:         "when read error occurs returns scanner error",
+			groupContent: "root:x:0:\n",
+			setup: func() {
+				baseFs := memfs.New()
+				_ = baseFs.MkdirAll("/etc", 0o755)
+				_ = baseFs.WriteFile(
+					"/etc/group",
+					[]byte("root:x:0:\n"),
+					0o644,
+				)
+
+				vfs := failfs.New(baseFs)
+				_ = vfs.SetFailFunc(func(
+					_ avfs.VFSBase,
+					fn avfs.FnVFS,
+					_ *failfs.FailParam,
+				) error {
+					if fn == avfs.FnFileRead {
+						return errors.New("I/O error")
+					}
+
+					return nil
+				})
+				suite.provider = user.NewDebianProvider(
+					suite.logger,
+					vfs,
+					suite.mockExec,
+				)
+			},
+			validateFunc: func(result []user.Group, err error) {
+				suite.Error(err)
+				suite.Nil(result)
+				suite.Contains(err.Error(), "I/O error")
 			},
 		},
 	}
@@ -722,6 +799,8 @@ func (suite *DebianPublicTestSuite) TestListGroups() {
 			if tc.groupContent != "" {
 				suite.writeGroup(tc.groupContent)
 			}
+
+			tc.setup()
 
 			result, err := suite.provider.ListGroups(suite.ctx)
 			tc.validateFunc(result, err)
