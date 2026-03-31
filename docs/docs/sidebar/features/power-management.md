@@ -13,20 +13,24 @@ controller returns immediately.
 
 Power operations call `shutdown` on the agent host:
 
-- **Reboot**: schedules `shutdown -r +<delay>` (or `shutdown -r now` when delay
-  is 0)
-- **Shutdown**: schedules `shutdown -h +<delay>` (or `shutdown -h now` when
-  delay is 0)
+- **Reboot**: schedules `shutdown -r +N`
+- **Shutdown**: schedules `shutdown -h +N`
 
-The agent records the scheduled action and returns `changed: true`. If the
-operation is unsupported on the platform (e.g., macOS agents), the job returns
-`status: skipped` instead of failing.
+The agent records the scheduled action and returns `changed: true` before the
+system goes down. If the operation is unsupported on the platform (e.g., macOS
+agents), the job returns `status: skipped`.
 
-### Delay Behaviour
+### Minimum Delay
 
-The `delay` field specifies seconds to wait before the power event occurs. When
-`delay` is 0, the operation executes immediately (`now`). The system broadcasts
-a wall message to logged-in users when a non-zero delay or message is provided.
+A minimum 1-minute delay is always enforced, even when `delay` is 0 or omitted.
+This ensures the agent has time to write the job result back to NATS, send the
+response to the API, and complete its graceful shutdown lifecycle before the
+system powers off.
+
+The `delay` field in the request body specifies seconds. The provider converts
+to minutes for the `shutdown` command (minimum 1 minute). The actual delay
+applied is returned in the response so the caller knows when the action will
+take effect.
 
 ## Operations
 
@@ -38,14 +42,14 @@ a wall message to logged-in users when a non-zero delay or message is provided.
 ## CLI Usage
 
 ```bash
-# Reboot a host immediately
+# Reboot a host (1-minute minimum delay)
 osapi client node power reboot --target web-01
 
 # Reboot with a 60-second delay and message
 osapi client node power reboot --target web-01 \
   --delay 60 --message "Maintenance reboot"
 
-# Shut down a host immediately
+# Shut down a host (1-minute minimum delay)
 osapi client node power shutdown --target web-01
 
 # Broadcast reboot to all hosts with a delay
