@@ -27,6 +27,41 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
+// ExecRequest contains parameters for direct command execution.
+type ExecRequest struct {
+	// Command is the binary to execute (required).
+	Command string
+
+	// Args is the argument list passed to the command.
+	Args []string
+
+	// Cwd is the working directory. Empty uses the agent default.
+	Cwd string
+
+	// Timeout in seconds. Zero uses the server default (30s).
+	Timeout int
+
+	// Target specifies the host: "_any", "_all", hostname, or
+	// label ("group:web").
+	Target string
+}
+
+// ShellRequest contains parameters for shell command execution.
+type ShellRequest struct {
+	// Command is the shell command string passed to /bin/sh -c (required).
+	Command string
+
+	// Cwd is the working directory. Empty uses the agent default.
+	Cwd string
+
+	// Timeout in seconds. Zero uses the server default (30s).
+	Timeout int
+
+	// Target specifies the host: "_any", "_all", hostname, or
+	// label ("group:web").
+	Target string
+}
+
 // CommandService provides command execution operations.
 type CommandService struct {
 	client *gen.ClientWithResponses

@@ -27,6 +27,44 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
+// FileDeployOpts contains parameters for file deployment.
+type FileDeployOpts struct {
+	// ObjectName is the name of the file in the Object Store (required).
+	ObjectName string
+
+	// Path is the destination path on the target filesystem (required).
+	Path string
+
+	// ContentType is "raw" or "template" (required).
+	ContentType string
+
+	// Mode is the file permission mode (e.g., "0644"). Optional.
+	Mode string
+
+	// Owner is the file owner user. Optional.
+	Owner string
+
+	// Group is the file owner group. Optional.
+	Group string
+
+	// Vars are template variables when ContentType is "template". Optional.
+	Vars map[string]any
+
+	// Target specifies the host: "_any", "_all", hostname, or
+	// label ("group:web").
+	Target string
+}
+
+// FileUndeployOpts contains parameters for file undeployment.
+type FileUndeployOpts struct {
+	// Path is the filesystem path to remove from the target host (required).
+	Path string
+
+	// Target specifies the host: "_any", "_all", hostname, or
+	// label ("group:web").
+	Target string
+}
+
 // FileDeployService provides file deployment operations on target hosts.
 type FileDeployService struct {
 	client *gen.ClientWithResponses

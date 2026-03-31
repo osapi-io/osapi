@@ -1,8 +1,8 @@
 ---
-sidebar_position: 3
+sidebar_position: 8
 ---
 
-# DockerService
+# Docker
 
 Docker container lifecycle management — create, list, inspect, start, stop,
 remove, exec, and pull operations.
@@ -85,7 +85,7 @@ resp, err := c.Docker.ImageRemove(ctx, "_any", "nginx:latest",
 
 ## Examples
 
-- [`examples/sdk/client/container.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/container.go)
+- [`examples/sdk/client/docker.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/docker.go)
 
 ## Permissions
 

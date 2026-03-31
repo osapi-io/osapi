@@ -1,10 +1,10 @@
 ---
-sidebar_position: 11
+sidebar_position: 21
 ---
 
-# Timezone Service
+# Timezone
 
-The `TimezoneService` provides methods for managing the system timezone on
+The `Timezone` service provides methods for managing the system timezone on
 target hosts via `timedatectl`. Access via `client.Timezone.Get()`,
 `client.Timezone.Update()`.
 
@@ -64,3 +64,18 @@ for _, r := range resp.Data.Results {
 | Timezone | string | Timezone that was set            |
 | Changed  | bool   | Whether state was modified       |
 | Error    | string | Error message (empty on success) |
+
+## Example
+
+- [`examples/sdk/client/timezone.go`](https://github.com/retr0h/osapi/blob/main/examples/sdk/client/timezone.go)
+
+## Permissions
+
+| Operation | Permission       |
+| --------- | ---------------- |
+| Get       | `timezone:read`  |
+| Update    | `timezone:write` |
+
+Timezone management is supported on the Debian OS family (Ubuntu, Debian,
+Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
+`status: skipped`.

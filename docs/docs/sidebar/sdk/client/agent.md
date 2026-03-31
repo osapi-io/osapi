@@ -2,25 +2,40 @@
 sidebar_position: 2
 ---
 
-# AgentService
+# Agent
 
-Agent discovery and details.
+Agent discovery, details, and lifecycle management.
 
 ## Methods
 
-| Method               | Description                         |
-| -------------------- | ----------------------------------- |
-| `List(ctx)`          | Retrieve all active agents          |
-| `Get(ctx, hostname)` | Get detailed agent info by hostname |
+| Method                   | Description                           |
+| ------------------------ | ------------------------------------- |
+| `List(ctx)`              | Retrieve all active agents            |
+| `Get(ctx, hostname)`     | Get detailed agent info by hostname   |
+| `Drain(ctx, hostname)`   | Drain agent (stop accepting jobs)     |
+| `Undrain(ctx, hostname)` | Undrain agent (resume accepting jobs) |
 
 ## Usage
 
 ```go
+import "github.com/retr0h/osapi/pkg/sdk/client"
+
+c := client.New("http://localhost:8080", token)
+
 // List all agents
-resp, err := client.Agent.List(ctx)
+resp, err := c.Agent.List(ctx)
+for _, a := range resp.Data.Agents {
+    fmt.Printf("%s  status=%s\n", a.Hostname, a.Status)
+}
 
 // Get specific agent details
-resp, err := client.Agent.Get(ctx, "web-01")
+resp, err := c.Agent.Get(ctx, "web-01")
+
+// Drain an agent (stop new jobs)
+resp, err := c.Agent.Drain(ctx, "web-01")
+
+// Undrain an agent (resume jobs)
+resp, err := c.Agent.Undrain(ctx, "web-01")
 ```
 
 ## Example
@@ -31,4 +46,4 @@ for a complete working example.
 
 ## Permissions
 
-Requires `agent:read` permission.
+Requires `agent:read` for List and Get. Drain and Undrain require `agent:write`.

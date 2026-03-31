@@ -1,10 +1,10 @@
 ---
-sidebar_position: 8
+sidebar_position: 5
 ---
 
-# CronService
+# Cron
 
-The `CronService` provides methods for managing cron drop-in files on target
+The `Cron` service provides methods for managing cron drop-in files on target
 hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
 
 ## Methods

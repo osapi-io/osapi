@@ -1,8 +1,8 @@
 ---
-sidebar_position: 4
+sidebar_position: 9
 ---
 
-# FileService
+# File
 
 File management operations for the OSAPI Object Store. Upload, list, inspect,
 and delete files that can be deployed to agents via `Node.FileDeploy`.

@@ -132,17 +132,17 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Sysctl Management',
-              docId: 'sidebar/features/sysctl'
+              docId: 'sidebar/features/sysctl-management'
             },
             {
               type: 'doc',
               label: 'NTP Management',
-              docId: 'sidebar/features/ntp'
+              docId: 'sidebar/features/ntp-management'
             },
             {
               type: 'doc',
               label: 'Timezone Management',
-              docId: 'sidebar/features/timezone'
+              docId: 'sidebar/features/timezone-management'
             },
             {
               type: 'doc',
@@ -205,23 +205,8 @@ const config: Config = {
             },
             {
               type: 'doc',
-              label: 'File',
-              docId: 'sidebar/sdk/client/file'
-            },
-            {
-              type: 'doc',
-              label: 'Health',
-              docId: 'sidebar/sdk/client/health'
-            },
-            {
-              type: 'doc',
-              label: 'Job',
-              docId: 'sidebar/sdk/client/job'
-            },
-            {
-              type: 'doc',
-              label: 'Node',
-              docId: 'sidebar/sdk/client/node'
+              label: 'Command',
+              docId: 'sidebar/sdk/client/command'
             },
             {
               type: 'doc',
@@ -230,13 +215,53 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'Disk',
+              docId: 'sidebar/sdk/client/disk'
+            },
+            {
+              type: 'doc',
+              label: 'DNS',
+              docId: 'sidebar/sdk/client/dns'
+            },
+            {
+              type: 'doc',
               label: 'Docker',
               docId: 'sidebar/sdk/client/docker'
             },
             {
               type: 'doc',
-              label: 'Sysctl',
-              docId: 'sidebar/sdk/client/sysctl'
+              label: 'File',
+              docId: 'sidebar/sdk/client/file'
+            },
+            {
+              type: 'doc',
+              label: 'FileDeploy',
+              docId: 'sidebar/sdk/client/file_deploy'
+            },
+            {
+              type: 'doc',
+              label: 'Health',
+              docId: 'sidebar/sdk/client/health'
+            },
+            {
+              type: 'doc',
+              label: 'Hostname',
+              docId: 'sidebar/sdk/client/hostname'
+            },
+            {
+              type: 'doc',
+              label: 'Job',
+              docId: 'sidebar/sdk/client/job'
+            },
+            {
+              type: 'doc',
+              label: 'Load',
+              docId: 'sidebar/sdk/client/load'
+            },
+            {
+              type: 'doc',
+              label: 'Memory',
+              docId: 'sidebar/sdk/client/memory'
             },
             {
               type: 'doc',
@@ -245,8 +270,33 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'OS',
+              docId: 'sidebar/sdk/client/os'
+            },
+            {
+              type: 'doc',
+              label: 'Ping',
+              docId: 'sidebar/sdk/client/ping'
+            },
+            {
+              type: 'doc',
+              label: 'Status',
+              docId: 'sidebar/sdk/client/status'
+            },
+            {
+              type: 'doc',
+              label: 'Sysctl',
+              docId: 'sidebar/sdk/client/sysctl'
+            },
+            {
+              type: 'doc',
               label: 'Timezone',
               docId: 'sidebar/sdk/client/timezone'
+            },
+            {
+              type: 'doc',
+              label: 'Uptime',
+              docId: 'sidebar/sdk/client/uptime'
             },
             {
               type: 'html',

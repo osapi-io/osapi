@@ -33,12 +33,12 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 ## Architecture (Quick Reference)
 
 - **`cmd/`** - Cobra CLI commands (`client`, `node agent`, `controller.api`, `nats server`)
-- **`internal/controller/api/`** - Echo REST API by domain. Node-targeted handlers are nested under `node/` (`node/hostname/`, `node/sysctl/`, `node/schedule/`, `node/docker/`, `node/command/`, `node/file/`, `node/network/`). Controller-only handlers: `job/`, `health/`, `audit/`, `agent/`, `file/`, `facts/`, `common/`. Types are OpenAPI-generated (`*.gen.go`). Combined OpenAPI spec: `internal/controller/api/gen/api.yaml`
+- **`internal/controller/api/`** - Echo REST API. Node-targeted handlers nest under `node/{domain}/`. Controller-only handlers are top-level (`job/`, `health/`, etc.). Each domain has its own `gen/` with OpenAPI spec. Combined spec: `api/gen/api.yaml`
 - **`internal/job/`** - Job domain types, subject routing. `client/` for high-level ops
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl,ntp,timezone}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
+- **`internal/provider/`** - Operation implementations organized by category then domain. Browse the directory to see current providers
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
@@ -48,12 +48,25 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 
 ## Adding a New API Domain
 
-When adding a new domain (e.g., `service`, `power`), follow existing
-domains as reference. Node-targeted operations live under
-`internal/controller/api/node/{domain}/` — follow `node/docker/` or
-`node/schedule/`. Controller-only operations live under
-`internal/controller/api/{domain}/` — follow `health/` or `audit/`.
-Read the existing files before creating new ones.
+When adding a new domain, follow existing domains as reference.
+Node-targeted operations live under
+`internal/controller/api/node/{domain}/`. Controller-only operations
+live under `internal/controller/api/{domain}/`. Read existing
+domains before creating new ones — the codebase IS the reference.
+
+### Cross-Layer Consistency (MANDATORY)
+
+Every domain MUST be consistent across all layers: provider, agent
+processor, API handler, SDK service, CLI commands, docs, and tests.
+When adding a new domain, look at a recently completed domain (like
+`ntp` or `sysctl`) and replicate the same set of artifacts across
+every layer. If something exists for `sysctl` but not for your new
+domain, it's missing.
+
+The principle: **pick any existing domain and `find`/`grep` for it
+across the codebase. Your new domain should appear in all the same
+places.** This includes code, tests, examples, SDK docs, CLI docs,
+feature docs, docusaurus config, and permissions tables.
 
 ### Step 0: Provider Implementation
 
@@ -70,27 +83,18 @@ parameters from the job payload and returns a result.
 
 #### Provider Types
 
-**Direct providers** interact with the system directly:
-- `node/host` — reads hostname, uptime, OS info
-- `node/disk`, `node/mem`, `node/load` — reads system stats
-- `network/dns` — reads/writes resolv.conf via `resolvectl`
-- `network/ping` — executes ICMP ping
-- `command` — executes arbitrary commands
-- `docker` — manages Docker containers via the Docker SDK
+Three provider patterns exist. Check existing providers for
+examples of each:
 
-Reference: `internal/provider/container/docker/` or `internal/provider/node/host/`
+**Direct providers** interact with the system directly via
+commands or system calls. No file management.
 
-**Meta providers** delegate file writes to the file provider,
-which gives them SHA tracking, idempotency, drift detection, and
-template rendering for free:
-- `scheduled/cron` — deploys cron drop-in files and periodic scripts
-- Future: `systemd`, `apt sources`
+**Meta providers** delegate file writes to `file.Deployer` for
+SHA tracking, idempotency, and template rendering.
 
-**Direct-write providers** manage their own files and state
-without the file provider. They write config files directly via
-`avfs.VFS` and may track state in the file-state KV manually:
-- `node/sysctl` — writes to `/etc/sysctl.d/osapi-{key}.conf`
-- `node/ntp` — writes to `/etc/chrony/sources.d/osapi-ntp.sources`
+**Direct-write providers** manage their own config files via
+`avfs.VFS` without `file.Deployer`. They use the `osapi-` filename
+prefix to identify managed files.
 
 Meta providers depend on `file.Deployer` (the narrow interface):
 ```go
@@ -105,7 +109,7 @@ Meta providers store domain-specific metadata in the
 The file provider persists this in the file-state KV alongside SHA,
 path, and mode — one KV bucket for all providers.
 
-Reference: `internal/provider/scheduled/cron/`
+Reference: look at existing meta providers in the codebase.
 
 #### File Structure
 
@@ -132,11 +136,9 @@ internal/provider/{category}/{domain}/
     generate.go   — //go:generate mockgen directive
 ```
 
-For top-level providers: `internal/provider/{domain}/` (e.g.,
-`internal/provider/command/`, `internal/provider/file/`).
-For categorized providers: `internal/provider/{category}/{domain}/`
-(e.g., `internal/provider/container/docker/`,
-`internal/provider/scheduled/cron/`).
+For top-level providers: `internal/provider/{domain}/`.
+For categorized providers: `internal/provider/{category}/{domain}/`.
+Look at existing providers to see both patterns.
 
 #### Provider Interface
 
@@ -211,8 +213,7 @@ go in separate files named `{platform}_{operation}.go`.
 | `Darwin` | `NewDarwinProvider(...)` | `darwin.go`, `darwin_get_*.go`   |
 | `Linux`  | `NewLinuxProvider()`     | `linux.go`, `linux_get_*.go`     |
 
-Examples: `node/host`, `node/disk`, `node/mem`, `node/load`,
-`network/dns`, `network/ping`, `network/netinfo`.
+Most providers under `node/` and `network/` follow this pattern.
 
 **2. Container-aware platform providers**
 
@@ -314,15 +315,10 @@ Two files connect a provider to the agent:
        agent.NewMyDomainProcessor(myProv, log),
        myProv)
 
-   // Existing category example (like sysctl under node):
-   registry.Register("node",
-       agent.NewNodeProcessor(
-           hostProv, diskProv, memProv, loadProv,
-           sysctlProv,  // added to existing processor
-           appConfig, log,
-       ),
-       hostProv, diskProv, memProv, loadProv, sysctlProv,
-   )
+   // Existing category example (node):
+   // Add your provider as a parameter to NewNodeProcessor
+   // and include it in the providers list for FactsAware wiring.
+   // Read cmd/agent_setup.go to see the current parameter list.
    ```
 
 That's it. No changes to `agent/types.go`, `agent/agent.go`, or
@@ -465,9 +461,7 @@ domains, create `internal/controller/api/{domain}/`:
     wrong permissions (403), valid token (200). Uses `api.New()` +
     `{domain}.Handler()` + `server.RegisterHandlers()` to wire
     through `ScopeMiddleware`.
-  See existing examples in `internal/controller/api/node/docker/`,
-  `internal/controller/api/job/`, and
-  `internal/controller/api/audit/`.
+  Follow existing handler test files in the codebase.
 
 #### Broadcast Support (MANDATORY for node-targeted operations)
 
@@ -513,8 +507,7 @@ jobID, resp, err := s.JobClient.Modify(
     ctx, hostname, "node", job.OperationSysctlCreate, data)
 ```
 
-See `internal/controller/api/node/node_status_get.go` for the
-reference implementation.
+Read existing handlers in the codebase for reference.
 
 ### Step 3: Handler Registration
 
@@ -591,19 +584,28 @@ and wrap errors with context.
 
 **When adding a new API domain:**
 
-1. Add a service in `pkg/sdk/client/{domain}.go` with its own
-   `{Domain}Service` struct. Each domain gets its own service — do
-   NOT add methods to an existing service.
+1. Add a service with four files in `pkg/sdk/client/`:
+   - `{service}.go` — `{Service}Service` struct + methods
+   - `{service}_types.go` — SDK result types + gen→SDK conversions
+   - `{service}_public_test.go` — service method tests
+   - `{service}_types_public_test.go` — conversion function tests
+   Each service gets its own files — do NOT add methods or types to
+   an existing service's files.
 2. Add a field to the `Client` struct in `osapi.go` and wire it
    in `New()`
 3. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new
    domain's spec from the combined `api.yaml`
-4. Add an SDK example in `examples/sdk/client/{domain}.go`
-5. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
-   with methods table, request types, usage examples, and permissions
+4. Add an SDK example in `examples/sdk/client/{service}.go` — one
+   file per SDK service (e.g., `hostname.go`, `disk.go`, `ntp.go`).
+   The example file name matches the Client field name in lowercase.
+5. Add an SDK doc page in
+   `docs/docs/sidebar/sdk/client/{service}.md` — one page per SDK
+   service. Use the Client field name (e.g., `Hostname`, `Disk`,
+   `NTP`) as the page title, NOT the Go struct name
+   (`HostnameService`).
 6. Add the new service to the SDK navbar dropdown in
    `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
-   section)
+   section). Use the Client field name as the label.
 
 #### SDK method naming (MANDATORY)
 
@@ -641,11 +643,11 @@ client.NTP.NtpCreate(ctx, host, opts)
 
 #### SDK example conventions
 
-SDK examples live in `examples/sdk/client/`, one file per domain.
-Follow the same principles as the orchestrator examples:
+SDK examples live in `examples/sdk/client/`, one file per SDK
+service. Follow the same principles as the orchestrator examples:
 
-- **One domain per file**: demonstrate the domain's SDK operations.
-  Don't mix in other domains.
+- **One service per file**: demonstrate the service's SDK operations.
+  Don't mix in other services.
 - **Self-contained**: for read-only operations, just call and print.
   For mutating operations, cleanup at the start so the example is
   repeatable.
@@ -674,14 +676,12 @@ Follow the same principles as the orchestrator examples:
 
 ### Step 7: Documentation
 
-- `docs/docs/sidebar/features/{domain}.md` — feature page describing
-  what the domain manages, how it works, configuration, permissions,
-  and links to CLI, API, and architecture docs. Follow the consistent
-  template used by existing feature pages (see `features/` directory).
-- `docs/docs/sidebar/usage/cli/client/{domain}/{domain}.md` — parent
-  page with `<DocCardList />` for sidebar navigation
-- `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
-  per CLI subcommand with usage examples and `--json` output
+- `docs/docs/sidebar/features/{domain}-management.md` — feature page.
+  Follow existing feature pages for the template.
+- `docs/docs/sidebar/usage/cli/client/node/{domain}/{domain}.md` —
+  CLI landing page with `<DocCardList />`
+- `docs/docs/sidebar/usage/cli/client/node/{domain}/{verb}.md` — one
+  page per CLI subcommand (e.g., `get.md`, `create.md`, `update.md`)
 - Update `docs/docusaurus.config.ts`:
   - Add the new feature to the "Features" navbar dropdown
   - Add the new SDK service to the "SDK" → "Client Library" dropdown
