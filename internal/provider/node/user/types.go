@@ -27,10 +27,10 @@ import "context"
 type Provider interface {
 	ListUsers(ctx context.Context) ([]User, error)
 	GetUser(ctx context.Context, name string) (*User, error)
-	CreateUser(ctx context.Context, opts CreateUserOpts) (*UserResult, error)
-	UpdateUser(ctx context.Context, name string, opts UpdateUserOpts) (*UserResult, error)
-	DeleteUser(ctx context.Context, name string) (*UserResult, error)
-	ChangePassword(ctx context.Context, name string, password string) (*UserResult, error)
+	CreateUser(ctx context.Context, opts CreateUserOpts) (*Result, error)
+	UpdateUser(ctx context.Context, name string, opts UpdateUserOpts) (*Result, error)
+	DeleteUser(ctx context.Context, name string) (*Result, error)
+	ChangePassword(ctx context.Context, name string, password string) (*Result, error)
 	ListGroups(ctx context.Context) ([]Group, error)
 	GetGroup(ctx context.Context, name string) (*Group, error)
 	CreateGroup(ctx context.Context, opts CreateGroupOpts) (*GroupResult, error)
@@ -88,8 +88,8 @@ type UpdateGroupOpts struct {
 	Members []string `json:"members,omitempty"`
 }
 
-// UserResult represents the result of a user mutation operation.
-type UserResult struct {
+// Result represents the result of a user mutation operation.
+type Result struct {
 	Name    string `json:"name"`
 	Changed bool   `json:"changed"`
 	Error   string `json:"error,omitempty"`

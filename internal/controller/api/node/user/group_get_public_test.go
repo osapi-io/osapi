@@ -96,7 +96,9 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 						map[string]string{"name": "sudo"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"name":"sudo","gid":27,"members":["testuser"]}`),
+						Data: json.RawMessage(
+							`{"name":"sudo","gid":27,"members":["testuser"]}`,
+						),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
@@ -188,7 +190,11 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 						map[string]string{"name": "sudo"}).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Data: json.RawMessage(`{"name":"sudo","gid":27}`)},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data:     json.RawMessage(`{"name":"sudo","gid":27}`),
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
@@ -248,7 +254,12 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByNameRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacGroupGetTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacGroupGetTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -269,11 +280,18 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByNameRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacGroupGetTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacGroupGetTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/group/sudo", nil)

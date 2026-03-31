@@ -291,7 +291,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 		name         string
 		opts         user.CreateUserOpts
 		setup        func()
-		validateFunc func(*user.UserResult, error)
+		validateFunc func(*user.Result, error)
 	}{
 		{
 			name: "when minimal create succeeds",
@@ -303,7 +303,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					RunCmd("useradd", []string{"--create-home", "newuser"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("newuser", result.Name)
@@ -335,7 +335,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("newuser", result.Name)
@@ -356,7 +356,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					RunCmd("sh", []string{"-c", "echo 'newuser:secret123' | chpasswd"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("newuser", result.Name)
@@ -373,7 +373,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					RunCmd("useradd", []string{"--create-home", "newuser"}).
 					Return("", errors.New("user already exists"))
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "useradd failed")
@@ -393,7 +393,7 @@ func (suite *DebianPublicTestSuite) TestCreateUser() {
 					RunCmd("sh", []string{"-c", "echo 'newuser:secret123' | chpasswd"}).
 					Return("", errors.New("chpasswd failed"))
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "set password failed")
@@ -420,7 +420,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 		userName     string
 		opts         user.UpdateUserOpts
 		setup        func()
-		validateFunc func(*user.UserResult, error)
+		validateFunc func(*user.Result, error)
 	}{
 		{
 			name:     "when shell change",
@@ -433,7 +433,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-s", "/bin/zsh", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("john", result.Name)
@@ -451,7 +451,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-G", "sudo,docker,admin", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.True(result.Changed)
@@ -468,7 +468,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-L", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.True(result.Changed)
@@ -485,7 +485,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-U", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.True(result.Changed)
@@ -502,7 +502,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-d", "/opt/john", "-m", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.True(result.Changed)
@@ -513,7 +513,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 			userName: "john",
 			opts:     user.UpdateUserOpts{},
 			setup:    func() {},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("john", result.Name)
@@ -531,7 +531,7 @@ func (suite *DebianPublicTestSuite) TestUpdateUser() {
 					RunCmd("usermod", []string{"-s", "/bin/zsh", "john"}).
 					Return("", errors.New("usermod error"))
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "usermod failed")
@@ -554,7 +554,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 		name         string
 		userName     string
 		setup        func()
-		validateFunc func(*user.UserResult, error)
+		validateFunc func(*user.Result, error)
 	}{
 		{
 			name:     "when delete succeeds",
@@ -564,7 +564,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 					RunCmd("userdel", []string{"-r", "john"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("john", result.Name)
@@ -579,7 +579,7 @@ func (suite *DebianPublicTestSuite) TestDeleteUser() {
 					RunCmd("userdel", []string{"-r", "nonexistent"}).
 					Return("", errors.New("user does not exist"))
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "userdel failed")
@@ -603,7 +603,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 		userName     string
 		password     string
 		setup        func()
-		validateFunc func(*user.UserResult, error)
+		validateFunc func(*user.Result, error)
 	}{
 		{
 			name:     "when password change succeeds",
@@ -614,7 +614,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 					RunCmd("sh", []string{"-c", "echo 'john:newpassword' | chpasswd"}).
 					Return("", nil)
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.NoError(err)
 				suite.Require().NotNil(result)
 				suite.Equal("john", result.Name)
@@ -630,7 +630,7 @@ func (suite *DebianPublicTestSuite) TestChangePassword() {
 					RunCmd("sh", []string{"-c", "echo 'john:newpassword' | chpasswd"}).
 					Return("", errors.New("chpasswd error"))
 			},
-			validateFunc: func(result *user.UserResult, err error) {
+			validateFunc: func(result *user.Result, err error) {
 				suite.Error(err)
 				suite.Nil(result)
 				suite.Contains(err.Error(), "chpasswd failed")

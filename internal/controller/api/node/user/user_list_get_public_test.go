@@ -199,7 +199,9 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUser() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash","locked":false}]`),
+								Data: json.RawMessage(
+									`[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash","locked":false}]`,
+								),
 							},
 						},
 						nil,
@@ -226,7 +228,9 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUser() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash","locked":false}]`),
+								Data: json.RawMessage(
+									`[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash","locked":false}]`,
+								),
 							},
 							"server2": {
 								Hostname: "server2",

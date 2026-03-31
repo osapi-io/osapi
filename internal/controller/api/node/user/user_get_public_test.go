@@ -96,7 +96,9 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 						map[string]string{"name": "testuser"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo"]}`),
+						Data: json.RawMessage(
+							`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo"]}`,
+						),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
@@ -194,7 +196,9 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`),
+								Data: json.RawMessage(
+									`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`,
+								),
 							},
 							"server2": {
 								Hostname: "server2",
@@ -261,7 +265,12 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserGetTestSigningKey, []string{"write"}, "test-user", []string{"node:write"})
+				token, _ := tokenManager.Generate(
+					rbacUserGetTestSigningKey,
+					[]string{"write"},
+					"test-user",
+					[]string{"node:write"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -272,7 +281,12 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserGetTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacUserGetTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -281,7 +295,9 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
 					Query(gomock.Any(), "server1", "user", job.OperationUserGet, map[string]string{"name": "testuser"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`),
+						Data: json.RawMessage(
+							`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`,
+						),
 					}, nil)
 				return mock
 			},
@@ -294,11 +310,18 @@ func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacUserGetTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacUserGetTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/user/testuser", nil)

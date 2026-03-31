@@ -36,10 +36,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // ChangePassword mocks base method.
-func (m *MockProvider) ChangePassword(ctx context.Context, name, password string) (*user.UserResult, error) {
+func (m *MockProvider) ChangePassword(ctx context.Context, name, password string) (*user.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangePassword", ctx, name, password)
-	ret0, _ := ret[0].(*user.UserResult)
+	ret0, _ := ret[0].(*user.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -66,10 +66,10 @@ func (mr *MockProviderMockRecorder) CreateGroup(ctx, opts interface{}) *gomock.C
 }
 
 // CreateUser mocks base method.
-func (m *MockProvider) CreateUser(ctx context.Context, opts user.CreateUserOpts) (*user.UserResult, error) {
+func (m *MockProvider) CreateUser(ctx context.Context, opts user.CreateUserOpts) (*user.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, opts)
-	ret0, _ := ret[0].(*user.UserResult)
+	ret0, _ := ret[0].(*user.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,10 +96,10 @@ func (mr *MockProviderMockRecorder) DeleteGroup(ctx, name interface{}) *gomock.C
 }
 
 // DeleteUser mocks base method.
-func (m *MockProvider) DeleteUser(ctx context.Context, name string) (*user.UserResult, error) {
+func (m *MockProvider) DeleteUser(ctx context.Context, name string) (*user.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", ctx, name)
-	ret0, _ := ret[0].(*user.UserResult)
+	ret0, _ := ret[0].(*user.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -186,10 +186,10 @@ func (mr *MockProviderMockRecorder) UpdateGroup(ctx, name, opts interface{}) *go
 }
 
 // UpdateUser mocks base method.
-func (m *MockProvider) UpdateUser(ctx context.Context, name string, opts user.UpdateUserOpts) (*user.UserResult, error) {
+func (m *MockProvider) UpdateUser(ctx context.Context, name string, opts user.UpdateUserOpts) (*user.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUser", ctx, name, opts)
-	ret0, _ := ret[0].(*user.UserResult)
+	ret0, _ := ret[0].(*user.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -110,7 +110,7 @@ func (u *User) PostNodeUser(
 		}, nil
 	}
 
-	var result userProv.UserResult
+	var result userProv.Result
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &result)
 	}
@@ -167,7 +167,7 @@ func (u *User) postNodeUserCreateBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.UserMutationResultStatusOk
-			var result userProv.UserResult
+			var result userProv.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}

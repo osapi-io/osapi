@@ -178,7 +178,12 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroup() {
 					ModifyBroadcast(gomock.Any(), "_all", "group", job.OperationGroupCreate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Changed: boolPtr(true), Data: json.RawMessage(`{"name":"devops","changed":true}`)},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"devops","changed":true}`),
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeGroupResponseObject) {
@@ -237,7 +242,12 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroupRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacGroupCreateTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacGroupCreateTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -259,14 +269,25 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroupRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacGroupCreateTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacGroupCreateTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodPost, "/node/server1/group", strings.NewReader(`{"name":"devops"}`))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/group",
+				strings.NewReader(`{"name":"devops"}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()

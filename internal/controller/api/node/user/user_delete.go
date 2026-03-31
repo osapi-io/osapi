@@ -85,7 +85,7 @@ func (u *User) DeleteNodeUser(
 		}, nil
 	}
 
-	var result userProv.UserResult
+	var result userProv.Result
 	if resp.Data != nil {
 		_ = json.Unmarshal(resp.Data, &result)
 	}
@@ -142,7 +142,7 @@ func (u *User) deleteNodeUserBroadcast(
 			item.Error = &e
 		default:
 			item.Status = gen.UserMutationResultStatusOk
-			var result userProv.UserResult
+			var result userProv.Result
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &result)
 			}

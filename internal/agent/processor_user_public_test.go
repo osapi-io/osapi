@@ -314,14 +314,14 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserCreate() {
 				m.EXPECT().CreateUser(gomock.Any(), user.CreateUserOpts{
 					Name:  "newuser",
 					Shell: "/bin/bash",
-				}).Return(&user.UserResult{
+				}).Return(&user.Result{
 					Name:    "newuser",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r user.UserResult
+				var r user.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("newuser", r.Name)
@@ -403,14 +403,14 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserUpdate() {
 				m := userMocks.NewMockProvider(s.mockCtrl)
 				m.EXPECT().UpdateUser(gomock.Any(), "john", user.UpdateUserOpts{
 					Shell: "/bin/zsh",
-				}).Return(&user.UserResult{
+				}).Return(&user.Result{
 					Name:    "john",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r user.UserResult
+				var r user.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("john", r.Name)
@@ -490,14 +490,14 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserDelete() {
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().DeleteUser(gomock.Any(), "olduser").Return(&user.UserResult{
+				m.EXPECT().DeleteUser(gomock.Any(), "olduser").Return(&user.Result{
 					Name:    "olduser",
 					Changed: true,
 				}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r user.UserResult
+				var r user.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("olduser", r.Name)
@@ -575,14 +575,16 @@ func (s *ProcessorUserPublicTestSuite) TestProcessUserPassword() {
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().ChangePassword(gomock.Any(), "john", "newpass123").Return(&user.UserResult{
-					Name:    "john",
-					Changed: true,
-				}, nil)
+				m.EXPECT().
+					ChangePassword(gomock.Any(), "john", "newpass123").
+					Return(&user.Result{
+						Name:    "john",
+						Changed: true,
+					}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
-				var r user.UserResult
+				var r user.Result
 				err := json.Unmarshal(result, &r)
 				s.NoError(err)
 				s.Equal("john", r.Name)
@@ -975,7 +977,9 @@ func (s *ProcessorUserPublicTestSuite) TestProcessGroupUpdate() {
 				Type:      job.TypeModify,
 				Category:  "node",
 				Operation: "group.update",
-				Data:      json.RawMessage(`{"name":"developers","opts":{"members":["john","jane"]}}`),
+				Data: json.RawMessage(
+					`{"name":"developers","opts":{"members":["john","jane"]}}`,
+				),
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)

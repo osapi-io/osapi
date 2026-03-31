@@ -146,7 +146,7 @@ func (d *Debian) parseGroup() ([]Group, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", groupFile, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var groups []Group
 	scanner := bufio.NewScanner(f)

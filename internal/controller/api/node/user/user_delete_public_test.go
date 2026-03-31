@@ -180,7 +180,12 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUser() {
 					ModifyBroadcast(gomock.Any(), "_all", "user", job.OperationUserDelete, map[string]string{"name": "testuser"}).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Changed: boolPtr(true), Data: json.RawMessage(`{"name":"testuser","changed":true}`)},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"testuser","changed":true}`),
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.DeleteNodeUserResponseObject) {
@@ -239,7 +244,12 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUserRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserDeleteTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacUserDeleteTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -261,11 +271,18 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUserRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacUserDeleteTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacUserDeleteTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodDelete, "/node/server1/user/testuser", nil)

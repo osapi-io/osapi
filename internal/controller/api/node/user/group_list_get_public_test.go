@@ -94,7 +94,9 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroup() {
 					Query(gomock.Any(), "server1", "group", job.OperationGroupList, nil).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`[{"name":"root","gid":0},{"name":"sudo","gid":27,"members":["testuser"]}]`),
+						Data: json.RawMessage(
+							`[{"name":"root","gid":0},{"name":"sudo","gid":27,"members":["testuser"]}]`,
+						),
 					}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeGroupResponseObject) {
@@ -160,8 +162,16 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroup() {
 					QueryBroadcast(gomock.Any(), "_all", "group", job.OperationGroupList, nil).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Data: json.RawMessage(`[{"name":"root","gid":0}]`)},
-							"server2": {Hostname: "server2", Status: job.StatusSkipped, Error: "unsupported"},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data:     json.RawMessage(`[{"name":"root","gid":0}]`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.GetNodeGroupResponseObject) {
@@ -219,7 +229,12 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroupRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacGroupListTestSigningKey, []string{"write"}, "test-user", []string{"node:write"})
+				token, _ := tokenManager.Generate(
+					rbacGroupListTestSigningKey,
+					[]string{"write"},
+					"test-user",
+					[]string{"node:write"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -230,7 +245,12 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroupRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacGroupListTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacGroupListTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -251,11 +271,18 @@ func (s *GroupListGetPublicTestSuite) TestGetNodeGroupRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacGroupListTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacGroupListTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
 			req := httptest.NewRequest(http.MethodGet, "/node/server1/group", nil)

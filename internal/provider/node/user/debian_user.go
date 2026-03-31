@@ -106,7 +106,7 @@ func (d *Debian) GetUser(
 func (d *Debian) CreateUser(
 	ctx context.Context,
 	opts CreateUserOpts,
-) (*UserResult, error) {
+) (*Result, error) {
 	_ = ctx
 
 	args := d.buildUseraddArgs(opts)
@@ -126,7 +126,7 @@ func (d *Debian) CreateUser(
 		slog.String("name", opts.Name),
 	)
 
-	return &UserResult{
+	return &Result{
 		Name:    opts.Name,
 		Changed: true,
 	}, nil
@@ -137,12 +137,12 @@ func (d *Debian) UpdateUser(
 	ctx context.Context,
 	name string,
 	opts UpdateUserOpts,
-) (*UserResult, error) {
+) (*Result, error) {
 	_ = ctx
 
 	args := d.buildUsermodArgs(name, opts)
 	if len(args) == 0 {
-		return &UserResult{
+		return &Result{
 			Name:    name,
 			Changed: false,
 		}, nil
@@ -157,7 +157,7 @@ func (d *Debian) UpdateUser(
 		slog.String("name", name),
 	)
 
-	return &UserResult{
+	return &Result{
 		Name:    name,
 		Changed: true,
 	}, nil
@@ -167,7 +167,7 @@ func (d *Debian) UpdateUser(
 func (d *Debian) DeleteUser(
 	ctx context.Context,
 	name string,
-) (*UserResult, error) {
+) (*Result, error) {
 	_ = ctx
 
 	_, err := d.execManager.RunCmd("userdel", []string{"-r", name})
@@ -179,7 +179,7 @@ func (d *Debian) DeleteUser(
 		slog.String("name", name),
 	)
 
-	return &UserResult{
+	return &Result{
 		Name:    name,
 		Changed: true,
 	}, nil
@@ -190,7 +190,7 @@ func (d *Debian) ChangePassword(
 	ctx context.Context,
 	name string,
 	password string,
-) (*UserResult, error) {
+) (*Result, error) {
 	_ = ctx
 
 	if err := d.setPassword(name, password); err != nil {
@@ -201,7 +201,7 @@ func (d *Debian) ChangePassword(
 		slog.String("name", name),
 	)
 
-	return &UserResult{
+	return &Result{
 		Name:    name,
 		Changed: true,
 	}, nil
@@ -213,7 +213,7 @@ func (d *Debian) parsePasswd() ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", passwdFile, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var users []User
 	scanner := bufio.NewScanner(f)

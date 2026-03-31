@@ -177,7 +177,7 @@ func processUserUpdate(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
-		Name string          `json:"name"`
+		Name string              `json:"name"`
 		Opts user.UpdateUserOpts `json:"opts"`
 	}
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
@@ -323,7 +323,7 @@ func processGroupUpdate(
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
-		Name string             `json:"name"`
+		Name string               `json:"name"`
 		Opts user.UpdateGroupOpts `json:"opts"`
 	}
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {

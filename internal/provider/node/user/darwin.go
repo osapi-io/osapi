@@ -56,7 +56,7 @@ func (d *Darwin) GetUser(
 func (d *Darwin) CreateUser(
 	_ context.Context,
 	_ CreateUserOpts,
-) (*UserResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
 
@@ -65,7 +65,7 @@ func (d *Darwin) UpdateUser(
 	_ context.Context,
 	_ string,
 	_ UpdateUserOpts,
-) (*UserResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
 
@@ -73,7 +73,7 @@ func (d *Darwin) UpdateUser(
 func (d *Darwin) DeleteUser(
 	_ context.Context,
 	_ string,
-) (*UserResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
 
@@ -82,7 +82,7 @@ func (d *Darwin) ChangePassword(
 	_ context.Context,
 	_ string,
 	_ string,
-) (*UserResult, error) {
+) (*Result, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
 

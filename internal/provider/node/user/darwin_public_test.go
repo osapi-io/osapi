@@ -237,7 +237,11 @@ func (suite *DarwinPublicTestSuite) TestUpdateGroup() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			result, err := suite.provider.UpdateGroup(suite.ctx, "testgroup", user.UpdateGroupOpts{})
+			result, err := suite.provider.UpdateGroup(
+				suite.ctx,
+				"testgroup",
+				user.UpdateGroupOpts{},
+			)
 
 			suite.Error(err)
 			suite.Nil(result)

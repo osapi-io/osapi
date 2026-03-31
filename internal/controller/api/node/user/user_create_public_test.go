@@ -187,7 +187,12 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUser() {
 					ModifyBroadcast(gomock.Any(), "_all", "user", job.OperationUserCreate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Changed: boolPtr(true), Data: json.RawMessage(`{"name":"newuser","changed":true}`)},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"newuser","changed":true}`),
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeUserResponseObject) {
@@ -260,7 +265,11 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserValidationHTTP() {
 			a := api.New(s.appConfig, s.logger)
 			gen.RegisterHandlers(a.Echo, strictHandler)
 
-			req := httptest.NewRequest(http.MethodPost, "/node/server1/user", strings.NewReader(tc.body))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/user",
+				strings.NewReader(tc.body),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 			a.Echo.ServeHTTP(rec, req)
@@ -292,7 +301,12 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserRBACHTTP() {
 		{
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserCreateTestSigningKey, []string{"read"}, "test-user", []string{"user:read"})
+				token, _ := tokenManager.Generate(
+					rbacUserCreateTestSigningKey,
+					[]string{"read"},
+					"test-user",
+					[]string{"user:read"},
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -303,7 +317,12 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserCreateTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacUserCreateTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -326,14 +345,25 @@ func (s *UserCreatePublicTestSuite) TestPostNodeUserRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacUserCreateTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacUserCreateTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodPost, "/node/server1/user", strings.NewReader(`{"name":"newuser"}`))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/user",
+				strings.NewReader(`{"name":"newuser"}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()

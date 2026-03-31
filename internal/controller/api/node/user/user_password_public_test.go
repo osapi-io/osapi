@@ -200,7 +200,12 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPassword() {
 					ModifyBroadcast(gomock.Any(), "_all", "user", job.OperationUserChangePassword, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000",
 						map[string]*job.Response{
-							"server1": {Hostname: "server1", Status: job.StatusCompleted, Changed: boolPtr(true), Data: json.RawMessage(`{"name":"testuser","changed":true}`)},
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"testuser","changed":true}`),
+							},
 						}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeUserPasswordResponseObject) {
@@ -260,7 +265,12 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordRBACHTTP() {
 		{
 			name: "when valid admin token returns 200",
 			setupAuth: func(req *http.Request) {
-				token, _ := tokenManager.Generate(rbacUserPasswordTestSigningKey, []string{"admin"}, "test-user", nil)
+				token, _ := tokenManager.Generate(
+					rbacUserPasswordTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			},
 			setupJobMock: func() *jobmocks.MockJobClient {
@@ -282,14 +292,25 @@ func (s *UserPasswordPublicTestSuite) TestPostNodeUserPasswordRBACHTTP() {
 			jobMock := tc.setupJobMock()
 			appConfig := config.Config{
 				Controller: config.Controller{
-					API: config.APIServer{Security: config.ServerSecurity{SigningKey: rbacUserPasswordTestSigningKey}},
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacUserPasswordTestSigningKey},
+					},
 				},
 			}
 			server := api.New(appConfig, s.logger)
-			handlers := apiuser.Handler(s.logger, jobMock, appConfig.Controller.API.Security.SigningKey, nil)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
 			server.RegisterHandlers(handlers)
 
-			req := httptest.NewRequest(http.MethodPost, "/node/server1/user/testuser/password", strings.NewReader(`{"password":"newpass123"}`))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/node/server1/user/testuser/password",
+				strings.NewReader(`{"password":"newpass123"}`),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			tc.setupAuth(req)
 			rec := httptest.NewRecorder()
