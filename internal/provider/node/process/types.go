@@ -38,9 +38,9 @@ type Provider interface {
 	Signal(ctx context.Context, pid int, signal string) (*SignalResult, error)
 }
 
-// ProcessQuerier provides methods to query a single process.
+// Querier provides methods to query a single process.
 // *gopsutil.Process satisfies this interface.
-type ProcessQuerier interface {
+type Querier interface {
 	Name() (string, error)
 	Username() (string, error)
 	Status() ([]string, error)
@@ -51,22 +51,22 @@ type ProcessQuerier interface {
 	CreateTime() (int64, error)
 }
 
-// ProcessItem pairs a PID with a ProcessQuerier. PID is exposed
+// Item pairs a PID with a Querier. PID is exposed
 // separately because gopsutil.Process.Pid is a struct field, which
 // interfaces cannot express.
-type ProcessItem struct {
+type Item struct {
 	PID     int32
-	Querier ProcessQuerier
+	Querier Querier
 }
 
-// ProcessLister provides methods to list and look up processes.
-type ProcessLister interface {
-	Processes() ([]ProcessItem, error)
-	NewProcess(pid int32) (ProcessQuerier, error)
+// Lister provides methods to list and look up processes.
+type Lister interface {
+	Processes() ([]Item, error)
+	NewProcess(pid int32) (Querier, error)
 }
 
-// ProcessSignaler sends signals to processes.
-type ProcessSignaler interface {
+// Signaler sends signals to processes.
+type Signaler interface {
 	Kill(pid int, sig syscall.Signal) error
 }
 

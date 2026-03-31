@@ -40,15 +40,15 @@ type DebianPublicTestSuite struct {
 	suite.Suite
 
 	ctrl         *gomock.Controller
-	mockLister   *mocks.MockProcessLister
-	mockSignaler *mocks.MockProcessSignaler
+	mockLister   *mocks.MockLister
+	mockSignaler *mocks.MockSignaler
 	provider     *process.Debian
 }
 
 func (suite *DebianPublicTestSuite) SetupTest() {
 	suite.ctrl = gomock.NewController(suite.T())
-	suite.mockLister = mocks.NewMockProcessLister(suite.ctrl)
-	suite.mockSignaler = mocks.NewMockProcessSignaler(suite.ctrl)
+	suite.mockLister = mocks.NewMockLister(suite.ctrl)
+	suite.mockSignaler = mocks.NewMockSignaler(suite.ctrl)
 	suite.provider = process.NewDebianProvider(
 		slog.New(slog.NewTextHandler(os.Stdout, nil)),
 		suite.mockLister,
@@ -71,7 +71,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when successful returns process list",
 			setupMock: func() {
-				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1 := mocks.NewMockQuerier(suite.ctrl)
 				q1.EXPECT().Name().Return("test-proc", nil)
 				q1.EXPECT().Username().Return("root", nil)
 				q1.EXPECT().Status().Return([]string{"running"}, nil)
@@ -81,7 +81,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q1.EXPECT().Cmdline().Return("/usr/bin/test", nil)
 				q1.EXPECT().CreateTime().Return(int64(1735689600000), nil)
 
-				q2 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q2 := mocks.NewMockQuerier(suite.ctrl)
 				q2.EXPECT().Name().Return("other-proc", nil)
 				q2.EXPECT().Username().Return("user", nil)
 				q2.EXPECT().Status().Return([]string{"sleeping"}, nil)
@@ -91,7 +91,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q2.EXPECT().Cmdline().Return("/usr/bin/other", nil)
 				q2.EXPECT().CreateTime().Return(int64(1735689600000), nil)
 
-				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+				suite.mockLister.EXPECT().Processes().Return([]process.Item{
 					{PID: 1, Querier: q1},
 					{PID: 2, Querier: q2},
 				}, nil)
@@ -121,7 +121,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when gather info errors skips process",
 			setupMock: func() {
-				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1 := mocks.NewMockQuerier(suite.ctrl)
 				q1.EXPECT().Name().Return("ok-proc", nil)
 				q1.EXPECT().Username().Return("root", nil)
 				q1.EXPECT().Status().Return([]string{"running"}, nil)
@@ -131,10 +131,10 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q1.EXPECT().Cmdline().Return("", nil)
 				q1.EXPECT().CreateTime().Return(int64(0), nil)
 
-				q2 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q2 := mocks.NewMockQuerier(suite.ctrl)
 				q2.EXPECT().Name().Return("", errors.New("permission denied"))
 
-				q3 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q3 := mocks.NewMockQuerier(suite.ctrl)
 				q3.EXPECT().Name().Return("ok-proc", nil)
 				q3.EXPECT().Username().Return("root", nil)
 				q3.EXPECT().Status().Return([]string{"running"}, nil)
@@ -144,7 +144,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q3.EXPECT().Cmdline().Return("", nil)
 				q3.EXPECT().CreateTime().Return(int64(0), nil)
 
-				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+				suite.mockLister.EXPECT().Processes().Return([]process.Item{
 					{PID: 1, Querier: q1},
 					{PID: 2, Querier: q2},
 					{PID: 3, Querier: q3},
@@ -159,10 +159,10 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when all processes error returns empty list",
 			setupMock: func() {
-				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1 := mocks.NewMockQuerier(suite.ctrl)
 				q1.EXPECT().Name().Return("", errors.New("permission denied"))
 
-				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+				suite.mockLister.EXPECT().Processes().Return([]process.Item{
 					{PID: 1, Querier: q1},
 				}, nil)
 			},
@@ -173,7 +173,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when status is empty returns empty state",
 			setupMock: func() {
-				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1 := mocks.NewMockQuerier(suite.ctrl)
 				q1.EXPECT().Name().Return("proc", nil)
 				q1.EXPECT().Username().Return("root", nil)
 				q1.EXPECT().Status().Return([]string{}, nil)
@@ -183,7 +183,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q1.EXPECT().Cmdline().Return("", nil)
 				q1.EXPECT().CreateTime().Return(int64(0), nil)
 
-				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+				suite.mockLister.EXPECT().Processes().Return([]process.Item{
 					{PID: 1, Querier: q1},
 				}, nil)
 			},
@@ -195,7 +195,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when MemoryInfo returns nil uses zero RSS",
 			setupMock: func() {
-				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1 := mocks.NewMockQuerier(suite.ctrl)
 				q1.EXPECT().Name().Return("proc", nil)
 				q1.EXPECT().Username().Return("root", nil)
 				q1.EXPECT().Status().Return([]string{"running"}, nil)
@@ -205,7 +205,7 @@ func (suite *DebianPublicTestSuite) TestList() {
 				q1.EXPECT().Cmdline().Return("", nil)
 				q1.EXPECT().CreateTime().Return(int64(0), nil)
 
-				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+				suite.mockLister.EXPECT().Processes().Return([]process.Item{
 					{PID: 1, Querier: q1},
 				}, nil)
 			},
@@ -249,7 +249,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when successful returns process info",
 			pid:  42,
 			setupMock: func() {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("test-proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"sleeping"}, nil)
@@ -287,7 +287,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when gather info errors returns error",
 			pid:  42,
 			setupMock: func() {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("", errors.New("permission denied"))
 
 				suite.mockLister.EXPECT().NewProcess(int32(42)).Return(q, nil)
@@ -420,13 +420,13 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 	tests := []struct {
 		name      string
-		setupMock func() *mocks.MockProcessQuerier
+		setupMock func() *mocks.MockQuerier
 		wantErr   string
 	}{
 		{
 			name: "when Username errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("", errors.New("user error"))
 
@@ -436,8 +436,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when Status errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return(nil, errors.New("status error"))
@@ -448,8 +448,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when CPUPercent errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"running"}, nil)
@@ -461,8 +461,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when MemoryPercent errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"running"}, nil)
@@ -475,8 +475,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when MemoryInfo errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"running"}, nil)
@@ -490,8 +490,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when Cmdline errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"running"}, nil)
@@ -506,8 +506,8 @@ func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
 		},
 		{
 			name: "when CreateTime errors returns error",
-			setupMock: func() *mocks.MockProcessQuerier {
-				q := mocks.NewMockProcessQuerier(suite.ctrl)
+			setupMock: func() *mocks.MockQuerier {
+				q := mocks.NewMockQuerier(suite.ctrl)
 				q.EXPECT().Name().Return("proc", nil)
 				q.EXPECT().Username().Return("root", nil)
 				q.EXPECT().Status().Return([]string{"running"}, nil)

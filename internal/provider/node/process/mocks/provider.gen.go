@@ -82,31 +82,31 @@ func (mr *MockProviderMockRecorder) Signal(ctx, pid, signal interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Signal", reflect.TypeOf((*MockProvider)(nil).Signal), ctx, pid, signal)
 }
 
-// MockProcessQuerier is a mock of ProcessQuerier interface.
-type MockProcessQuerier struct {
+// MockQuerier is a mock of Querier interface.
+type MockQuerier struct {
 	ctrl     *gomock.Controller
-	recorder *MockProcessQuerierMockRecorder
+	recorder *MockQuerierMockRecorder
 }
 
-// MockProcessQuerierMockRecorder is the mock recorder for MockProcessQuerier.
-type MockProcessQuerierMockRecorder struct {
-	mock *MockProcessQuerier
+// MockQuerierMockRecorder is the mock recorder for MockQuerier.
+type MockQuerierMockRecorder struct {
+	mock *MockQuerier
 }
 
-// NewMockProcessQuerier creates a new mock instance.
-func NewMockProcessQuerier(ctrl *gomock.Controller) *MockProcessQuerier {
-	mock := &MockProcessQuerier{ctrl: ctrl}
-	mock.recorder = &MockProcessQuerierMockRecorder{mock}
+// NewMockQuerier creates a new mock instance.
+func NewMockQuerier(ctrl *gomock.Controller) *MockQuerier {
+	mock := &MockQuerier{ctrl: ctrl}
+	mock.recorder = &MockQuerierMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockProcessQuerier) EXPECT() *MockProcessQuerierMockRecorder {
+func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
 // CPUPercent mocks base method.
-func (m *MockProcessQuerier) CPUPercent() (float64, error) {
+func (m *MockQuerier) CPUPercent() (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CPUPercent")
 	ret0, _ := ret[0].(float64)
@@ -115,13 +115,13 @@ func (m *MockProcessQuerier) CPUPercent() (float64, error) {
 }
 
 // CPUPercent indicates an expected call of CPUPercent.
-func (mr *MockProcessQuerierMockRecorder) CPUPercent() *gomock.Call {
+func (mr *MockQuerierMockRecorder) CPUPercent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CPUPercent", reflect.TypeOf((*MockProcessQuerier)(nil).CPUPercent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CPUPercent", reflect.TypeOf((*MockQuerier)(nil).CPUPercent))
 }
 
 // Cmdline mocks base method.
-func (m *MockProcessQuerier) Cmdline() (string, error) {
+func (m *MockQuerier) Cmdline() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Cmdline")
 	ret0, _ := ret[0].(string)
@@ -130,13 +130,13 @@ func (m *MockProcessQuerier) Cmdline() (string, error) {
 }
 
 // Cmdline indicates an expected call of Cmdline.
-func (mr *MockProcessQuerierMockRecorder) Cmdline() *gomock.Call {
+func (mr *MockQuerierMockRecorder) Cmdline() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cmdline", reflect.TypeOf((*MockProcessQuerier)(nil).Cmdline))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cmdline", reflect.TypeOf((*MockQuerier)(nil).Cmdline))
 }
 
 // CreateTime mocks base method.
-func (m *MockProcessQuerier) CreateTime() (int64, error) {
+func (m *MockQuerier) CreateTime() (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTime")
 	ret0, _ := ret[0].(int64)
@@ -145,13 +145,13 @@ func (m *MockProcessQuerier) CreateTime() (int64, error) {
 }
 
 // CreateTime indicates an expected call of CreateTime.
-func (mr *MockProcessQuerierMockRecorder) CreateTime() *gomock.Call {
+func (mr *MockQuerierMockRecorder) CreateTime() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTime", reflect.TypeOf((*MockProcessQuerier)(nil).CreateTime))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTime", reflect.TypeOf((*MockQuerier)(nil).CreateTime))
 }
 
 // MemoryInfo mocks base method.
-func (m *MockProcessQuerier) MemoryInfo() (*process0.MemoryInfoStat, error) {
+func (m *MockQuerier) MemoryInfo() (*process0.MemoryInfoStat, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MemoryInfo")
 	ret0, _ := ret[0].(*process0.MemoryInfoStat)
@@ -160,13 +160,13 @@ func (m *MockProcessQuerier) MemoryInfo() (*process0.MemoryInfoStat, error) {
 }
 
 // MemoryInfo indicates an expected call of MemoryInfo.
-func (mr *MockProcessQuerierMockRecorder) MemoryInfo() *gomock.Call {
+func (mr *MockQuerierMockRecorder) MemoryInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryInfo", reflect.TypeOf((*MockProcessQuerier)(nil).MemoryInfo))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryInfo", reflect.TypeOf((*MockQuerier)(nil).MemoryInfo))
 }
 
 // MemoryPercent mocks base method.
-func (m *MockProcessQuerier) MemoryPercent() (float32, error) {
+func (m *MockQuerier) MemoryPercent() (float32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MemoryPercent")
 	ret0, _ := ret[0].(float32)
@@ -175,13 +175,13 @@ func (m *MockProcessQuerier) MemoryPercent() (float32, error) {
 }
 
 // MemoryPercent indicates an expected call of MemoryPercent.
-func (mr *MockProcessQuerierMockRecorder) MemoryPercent() *gomock.Call {
+func (mr *MockQuerierMockRecorder) MemoryPercent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryPercent", reflect.TypeOf((*MockProcessQuerier)(nil).MemoryPercent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryPercent", reflect.TypeOf((*MockQuerier)(nil).MemoryPercent))
 }
 
 // Name mocks base method.
-func (m *MockProcessQuerier) Name() (string, error) {
+func (m *MockQuerier) Name() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Name")
 	ret0, _ := ret[0].(string)
@@ -190,13 +190,13 @@ func (m *MockProcessQuerier) Name() (string, error) {
 }
 
 // Name indicates an expected call of Name.
-func (mr *MockProcessQuerierMockRecorder) Name() *gomock.Call {
+func (mr *MockQuerierMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockProcessQuerier)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockQuerier)(nil).Name))
 }
 
 // Status mocks base method.
-func (m *MockProcessQuerier) Status() ([]string, error) {
+func (m *MockQuerier) Status() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Status")
 	ret0, _ := ret[0].([]string)
@@ -205,13 +205,13 @@ func (m *MockProcessQuerier) Status() ([]string, error) {
 }
 
 // Status indicates an expected call of Status.
-func (mr *MockProcessQuerierMockRecorder) Status() *gomock.Call {
+func (mr *MockQuerierMockRecorder) Status() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockProcessQuerier)(nil).Status))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockQuerier)(nil).Status))
 }
 
 // Username mocks base method.
-func (m *MockProcessQuerier) Username() (string, error) {
+func (m *MockQuerier) Username() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Username")
 	ret0, _ := ret[0].(string)
@@ -220,89 +220,89 @@ func (m *MockProcessQuerier) Username() (string, error) {
 }
 
 // Username indicates an expected call of Username.
-func (mr *MockProcessQuerierMockRecorder) Username() *gomock.Call {
+func (mr *MockQuerierMockRecorder) Username() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Username", reflect.TypeOf((*MockProcessQuerier)(nil).Username))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Username", reflect.TypeOf((*MockQuerier)(nil).Username))
 }
 
-// MockProcessLister is a mock of ProcessLister interface.
-type MockProcessLister struct {
+// MockLister is a mock of Lister interface.
+type MockLister struct {
 	ctrl     *gomock.Controller
-	recorder *MockProcessListerMockRecorder
+	recorder *MockListerMockRecorder
 }
 
-// MockProcessListerMockRecorder is the mock recorder for MockProcessLister.
-type MockProcessListerMockRecorder struct {
-	mock *MockProcessLister
+// MockListerMockRecorder is the mock recorder for MockLister.
+type MockListerMockRecorder struct {
+	mock *MockLister
 }
 
-// NewMockProcessLister creates a new mock instance.
-func NewMockProcessLister(ctrl *gomock.Controller) *MockProcessLister {
-	mock := &MockProcessLister{ctrl: ctrl}
-	mock.recorder = &MockProcessListerMockRecorder{mock}
+// NewMockLister creates a new mock instance.
+func NewMockLister(ctrl *gomock.Controller) *MockLister {
+	mock := &MockLister{ctrl: ctrl}
+	mock.recorder = &MockListerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockProcessLister) EXPECT() *MockProcessListerMockRecorder {
+func (m *MockLister) EXPECT() *MockListerMockRecorder {
 	return m.recorder
 }
 
 // NewProcess mocks base method.
-func (m *MockProcessLister) NewProcess(pid int32) (process.ProcessQuerier, error) {
+func (m *MockLister) NewProcess(pid int32) (process.Querier, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewProcess", pid)
-	ret0, _ := ret[0].(process.ProcessQuerier)
+	ret0, _ := ret[0].(process.Querier)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NewProcess indicates an expected call of NewProcess.
-func (mr *MockProcessListerMockRecorder) NewProcess(pid interface{}) *gomock.Call {
+func (mr *MockListerMockRecorder) NewProcess(pid interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewProcess", reflect.TypeOf((*MockProcessLister)(nil).NewProcess), pid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewProcess", reflect.TypeOf((*MockLister)(nil).NewProcess), pid)
 }
 
 // Processes mocks base method.
-func (m *MockProcessLister) Processes() ([]process.ProcessItem, error) {
+func (m *MockLister) Processes() ([]process.Item, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Processes")
-	ret0, _ := ret[0].([]process.ProcessItem)
+	ret0, _ := ret[0].([]process.Item)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Processes indicates an expected call of Processes.
-func (mr *MockProcessListerMockRecorder) Processes() *gomock.Call {
+func (mr *MockListerMockRecorder) Processes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Processes", reflect.TypeOf((*MockProcessLister)(nil).Processes))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Processes", reflect.TypeOf((*MockLister)(nil).Processes))
 }
 
-// MockProcessSignaler is a mock of ProcessSignaler interface.
-type MockProcessSignaler struct {
+// MockSignaler is a mock of Signaler interface.
+type MockSignaler struct {
 	ctrl     *gomock.Controller
-	recorder *MockProcessSignalerMockRecorder
+	recorder *MockSignalerMockRecorder
 }
 
-// MockProcessSignalerMockRecorder is the mock recorder for MockProcessSignaler.
-type MockProcessSignalerMockRecorder struct {
-	mock *MockProcessSignaler
+// MockSignalerMockRecorder is the mock recorder for MockSignaler.
+type MockSignalerMockRecorder struct {
+	mock *MockSignaler
 }
 
-// NewMockProcessSignaler creates a new mock instance.
-func NewMockProcessSignaler(ctrl *gomock.Controller) *MockProcessSignaler {
-	mock := &MockProcessSignaler{ctrl: ctrl}
-	mock.recorder = &MockProcessSignalerMockRecorder{mock}
+// NewMockSignaler creates a new mock instance.
+func NewMockSignaler(ctrl *gomock.Controller) *MockSignaler {
+	mock := &MockSignaler{ctrl: ctrl}
+	mock.recorder = &MockSignalerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockProcessSignaler) EXPECT() *MockProcessSignalerMockRecorder {
+func (m *MockSignaler) EXPECT() *MockSignalerMockRecorder {
 	return m.recorder
 }
 
 // Kill mocks base method.
-func (m *MockProcessSignaler) Kill(pid int, sig syscall.Signal) error {
+func (m *MockSignaler) Kill(pid int, sig syscall.Signal) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Kill", pid, sig)
 	ret0, _ := ret[0].(error)
@@ -310,7 +310,7 @@ func (m *MockProcessSignaler) Kill(pid int, sig syscall.Signal) error {
 }
 
 // Kill indicates an expected call of Kill.
-func (mr *MockProcessSignalerMockRecorder) Kill(pid, sig interface{}) *gomock.Call {
+func (mr *MockSignalerMockRecorder) Kill(pid, sig interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kill", reflect.TypeOf((*MockProcessSignaler)(nil).Kill), pid, sig)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kill", reflect.TypeOf((*MockSignaler)(nil).Kill), pid, sig)
 }

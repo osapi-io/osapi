@@ -42,23 +42,23 @@ var allowedSignals = map[string]syscall.Signal{
 	"USR2": syscall.SIGUSR2,
 }
 
-// gopsutilLister wraps gopsutil calls to satisfy ProcessLister.
+// gopsutilLister wraps gopsutil calls to satisfy Lister.
 // These are thin OS wrappers — error paths are not coverable in
 // unit tests because gopsutil.Processes() always succeeds on a
 // running system. The provider's List/Get/Signal methods are fully
-// tested via the mocked ProcessLister/ProcessSignaler interfaces.
+// tested via the mocked Lister/Signaler interfaces.
 type gopsutilLister struct{}
 
-// Processes returns all running processes as ProcessItem instances.
-func (g *gopsutilLister) Processes() ([]ProcessItem, error) {
+// Processes returns all running processes as Item instances.
+func (g *gopsutilLister) Processes() ([]Item, error) {
 	procs, err := gopsutil.Processes()
 	if err != nil {
 		return nil, err // not coverable: gopsutil always succeeds on a running system
 	}
 
-	result := make([]ProcessItem, len(procs))
+	result := make([]Item, len(procs))
 	for i, p := range procs {
-		result[i] = ProcessItem{
+		result[i] = Item{
 			PID:     p.Pid,
 			Querier: p,
 		}
@@ -67,14 +67,14 @@ func (g *gopsutilLister) Processes() ([]ProcessItem, error) {
 	return result, nil
 }
 
-// NewProcess returns a ProcessQuerier for the given PID.
+// NewProcess returns a Querier for the given PID.
 func (g *gopsutilLister) NewProcess(
 	pid int32,
-) (ProcessQuerier, error) {
+) (Querier, error) {
 	return gopsutil.NewProcess(pid)
 }
 
-// syscallSignaler wraps syscall.Kill to satisfy ProcessSignaler.
+// syscallSignaler wraps syscall.Kill to satisfy Signaler.
 type syscallSignaler struct{}
 
 // Kill sends a signal to a process.
@@ -85,13 +85,13 @@ func (s *syscallSignaler) Kill(
 	return syscall.Kill(pid, sig)
 }
 
-// NewGopsutilLister returns the real gopsutil-backed ProcessLister.
-func NewGopsutilLister() ProcessLister {
+// NewGopsutilLister returns the real gopsutil-backed Lister.
+func NewGopsutilLister() Lister {
 	return &gopsutilLister{}
 }
 
-// NewSyscallSignaler returns the real syscall-backed ProcessSignaler.
-func NewSyscallSignaler() ProcessSignaler {
+// NewSyscallSignaler returns the real syscall-backed Signaler.
+func NewSyscallSignaler() Signaler {
 	return &syscallSignaler{}
 }
 
@@ -105,15 +105,15 @@ var (
 type Debian struct {
 	provider.FactsAware
 	logger   *slog.Logger
-	lister   ProcessLister
-	signaler ProcessSignaler
+	lister   Lister
+	signaler Signaler
 }
 
 // NewDebianProvider factory to create a new Debian instance.
 func NewDebianProvider(
 	logger *slog.Logger,
-	lister ProcessLister,
-	signaler ProcessSignaler,
+	lister Lister,
+	signaler Signaler,
 ) *Debian {
 	return &Debian{
 		logger:   logger.With(slog.String("subsystem", "provider.process")),
@@ -199,12 +199,12 @@ func (d *Debian) Signal(
 	}, nil
 }
 
-// gatherInfo extracts process information from a ProcessQuerier.
+// gatherInfo extracts process information from a Querier.
 // PID is passed separately because gopsutil exposes it as a struct
 // field rather than a method.
 func gatherInfo(
 	pid int32,
-	p ProcessQuerier,
+	p Querier,
 ) (*Info, error) {
 	name, err := p.Name()
 	if err != nil {
