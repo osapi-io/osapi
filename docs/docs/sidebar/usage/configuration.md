@@ -156,9 +156,9 @@ of permissions:
 
 | Role    | Permissions                                                                                                                                                                                                                                                                                                                                                        |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write` |
-| `write` | `agent:read`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`                                                                   |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `cron:read`, `sysctl:read`, `ntp:read`, `timezone:read`                                                                                                                                                                                                          |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`, `power:execute` |
+| `write` | `agent:read`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`                                                                         |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `cron:read`, `sysctl:read`, `ntp:read`, `timezone:read`                                                                                                                                                                                                               |
 
 ### Custom Roles
 
@@ -258,7 +258,8 @@ controller:
       #              health:read, audit:read, command:execute, file:read,
       #              file:write, docker:read, docker:write, docker:execute,
       #              cron:read, cron:write, sysctl:read, sysctl:write,
-      #              ntp:read, ntp:write, timezone:read, timezone:write
+      #              ntp:read, ntp:write, timezone:read, timezone:write,
+      #              power:execute
       # roles:
       #   ops:
       #     permissions:

@@ -168,6 +168,11 @@ const config: Config = {
               type: 'doc',
               label: 'Metrics',
               docId: 'sidebar/features/metrics'
+            },
+            {
+              type: 'doc',
+              label: 'Power Management',
+              docId: 'sidebar/features/power-management'
             }
           ]
         },
@@ -277,6 +282,11 @@ const config: Config = {
               type: 'doc',
               label: 'Ping',
               docId: 'sidebar/sdk/client/ping'
+            },
+            {
+              type: 'doc',
+              label: 'Power',
+              docId: 'sidebar/sdk/client/power'
             },
             {
               type: 'doc',

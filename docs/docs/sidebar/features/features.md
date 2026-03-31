@@ -28,5 +28,6 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 🌍  | [Timezone Management](timezone-management.md)  | System timezone get and set via timedatectl                                                   |
 | 🔔  | [Notifications](notifications.md)              | Pluggable condition alerts with re-notification                                               |
 | 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry with trace context propagation                                                  |
+| ⚡  | [Power Management](power-management.md)        | Reboot and shutdown target hosts with optional delay                                          |
 
 <!-- prettier-ignore-end -->
