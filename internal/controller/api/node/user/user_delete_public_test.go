@@ -195,6 +195,51 @@ func (s *UserDeletePublicTestSuite) TestDeleteNodeUser() {
 			},
 		},
 		{
+			name: "broadcast with failed and skipped agents",
+			request: gen.DeleteNodeUserRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "user", job.OperationUserDelete, map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"testuser","changed":true}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.DeleteNodeUserResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUser200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.UserMutationResult)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.UserMutationResultStatusOk, byHost["server1"].Status)
+				s.Equal(gen.UserMutationResultStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.UserMutationResultStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.DeleteNodeUserRequestObject{
 				Hostname: "_all",

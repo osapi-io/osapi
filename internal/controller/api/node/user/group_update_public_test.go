@@ -203,6 +203,52 @@ func (s *GroupUpdatePublicTestSuite) TestPutNodeGroup() {
 			},
 		},
 		{
+			name: "broadcast with failed and skipped agents",
+			request: gen.PutNodeGroupRequestObject{
+				Hostname: "_all",
+				Name:     "devops",
+				Body:     &gen.GroupUpdateRequest{Members: &members},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "group", job.OperationGroupUpdate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"devops","changed":true}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.PutNodeGroupResponseObject) {
+				r, ok := resp.(gen.PutNodeGroup200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.GroupMutationResult)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.GroupMutationResultStatusOk, byHost["server1"].Status)
+				s.Equal(gen.GroupMutationResultStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.GroupMutationResultStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PutNodeGroupRequestObject{
 				Hostname: "_all",

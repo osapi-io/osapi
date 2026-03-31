@@ -193,6 +193,76 @@ func (s *GroupCreatePublicTestSuite) TestPostNodeGroup() {
 			},
 		},
 		{
+			name: "success with optional fields",
+			request: gen.PostNodeGroupRequestObject{
+				Hostname: "server1",
+				Body: &gen.GroupCreateRequest{
+					Name:   "devops",
+					Gid:    intPtr(2000),
+					System: boolPtr(true),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "group", job.OperationGroupCreate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1", Changed: boolPtr(true),
+						Data: json.RawMessage(`{"name":"devops","changed":true}`),
+					}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeGroupResponseObject) {
+				r, ok := resp.(gen.PostNodeGroup200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal("devops", *r.Results[0].Name)
+			},
+		},
+		{
+			name: "broadcast with failed and skipped agents",
+			request: gen.PostNodeGroupRequestObject{
+				Hostname: "_all",
+				Body:     &gen.GroupCreateRequest{Name: "devops"},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", "group", job.OperationGroupCreate, gomock.Any()).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Changed:  boolPtr(true),
+								Data:     json.RawMessage(`{"name":"devops","changed":true}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.PostNodeGroupResponseObject) {
+				r, ok := resp.(gen.PostNodeGroup200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.GroupMutationResult)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.GroupMutationResultStatusOk, byHost["server1"].Status)
+				s.Equal(gen.GroupMutationResultStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.GroupMutationResultStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.PostNodeGroupRequestObject{
 				Hostname: "_all",

@@ -204,6 +204,51 @@ func (s *GroupGetPublicTestSuite) TestGetNodeGroupByName() {
 			},
 		},
 		{
+			name: "broadcast with failed and skipped agents",
+			request: gen.GetNodeGroupByNameRequestObject{
+				Hostname: "_all",
+				Name:     "sudo",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "group", job.OperationGroupGet,
+						map[string]string{"name": "sudo"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data:     json.RawMessage(`{"name":"sudo","gid":27,"members":["testuser"]}`),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeGroupByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeGroupByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.GroupEntry)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.GroupEntryStatusOk, byHost["server1"].Status)
+				s.Equal(gen.GroupEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.GroupEntryStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
 			name: "broadcast job client error",
 			request: gen.GetNodeGroupByNameRequestObject{
 				Hostname: "_all",

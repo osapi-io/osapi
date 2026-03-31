@@ -111,6 +111,34 @@ func (s *UserListGetPublicTestSuite) TestGetNodeUser() {
 			},
 		},
 		{
+			name: "success with user groups",
+			request: gen.GetNodeUserRequestObject{
+				Hostname: "server1",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserList, nil).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`[{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo","docker"]}]`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserResponseObject) {
+				r, ok := resp.(gen.GetNodeUser200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Users)
+				users := *r.Results[0].Users
+				s.Require().Len(users, 1)
+				s.Require().NotNil(users[0].Groups)
+				s.Contains(*users[0].Groups, "sudo")
+				s.Contains(*users[0].Groups, "docker")
+			},
+		},
+		{
 			name: "success with nil response data",
 			request: gen.GetNodeUserRequestObject{
 				Hostname: "server1",
