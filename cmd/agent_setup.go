@@ -370,6 +370,10 @@ func createNtpProvider(
 
 	switch plat {
 	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, NTP operations disabled")
+			return ntpProv.NewLinuxProvider()
+		}
 		return ntpProv.NewDebianProvider(log, fs, execManager)
 	case "darwin":
 		return ntpProv.NewDarwinProvider()
@@ -380,6 +384,7 @@ func createNtpProvider(
 
 // createTimezoneProvider creates a platform-specific timezone provider. On
 // Debian, the timezone provider manages the system timezone via timedatectl.
+// In containers, timedatectl is not available — returns ErrUnsupported.
 // On other platforms, all operations return ErrUnsupported.
 func createTimezoneProvider(
 	log *slog.Logger,
@@ -389,6 +394,10 @@ func createTimezoneProvider(
 
 	switch plat {
 	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, timezone operations disabled")
+			return timezoneProv.NewLinuxProvider()
+		}
 		return timezoneProv.NewDebianProvider(log, execManager)
 	case "darwin":
 		return timezoneProv.NewDarwinProvider()
@@ -398,8 +407,9 @@ func createTimezoneProvider(
 }
 
 // createPowerProvider creates a platform-specific power provider. On Debian, the
-// power provider manages system reboot and shutdown via systemctl. On other
-// platforms, all operations return ErrUnsupported.
+// power provider manages system reboot and shutdown via shutdown(8).
+// In containers, shutdown is not meaningful — returns ErrUnsupported.
+// On other platforms, all operations return ErrUnsupported.
 func createPowerProvider(
 	log *slog.Logger,
 	execManager exec.Manager,
@@ -408,6 +418,10 @@ func createPowerProvider(
 
 	switch plat {
 	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, power operations disabled")
+			return powerProv.NewLinuxProvider()
+		}
 		return powerProv.NewDebianProvider(log, execManager)
 	case "darwin":
 		return powerProv.NewDarwinProvider()
