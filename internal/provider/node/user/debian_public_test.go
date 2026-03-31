@@ -167,6 +167,25 @@ func (suite *DebianPublicTestSuite) TestListUsers() {
 			},
 		},
 		{
+			name:   "when passwd has corrupt lines skips them",
+			passwd: "# comment line\n\nbaduid:x:notanumber:1001::/home/bad:/bin/sh\nshort:x:1001\nbadgid:x:1002:notanumber::/home/badgid:/bin/sh\nvalid:x:1000:1000:Valid User:/home/valid:/bin/bash\n",
+			setup: func() {
+				suite.mockExec.EXPECT().
+					RunCmd("id", []string{"-Gn", "valid"}).
+					Return("valid", nil)
+				suite.mockExec.EXPECT().
+					RunCmd("passwd", []string{"-S", "valid"}).
+					Return("valid P 01/01/2026 0 99999 7 -1", nil)
+			},
+			validateFunc: func(result []user.User, err error) {
+				suite.NoError(err)
+				suite.Require().Len(result, 1)
+				suite.Equal("valid", result[0].Name)
+				suite.Equal(1000, result[0].UID)
+				suite.Equal(1000, result[0].GID)
+			},
+		},
+		{
 			name:   "when exec error on groups lookup",
 			passwd: "testuser:x:1000:1000:Test:/home/testuser:/bin/bash\n",
 			setup: func() {
@@ -674,6 +693,17 @@ func (suite *DebianPublicTestSuite) TestListGroups() {
 				suite.Equal("developers", result[4].Name)
 				suite.Equal(1001, result[4].GID)
 				suite.Equal([]string{"john", "jane", "bob"}, result[4].Members)
+			},
+		},
+		{
+			name:         "when group has corrupt lines skips them",
+			groupContent: "# comment\n\nshort:x\nbadgid:x:notanumber:\nvalid:x:100:john,jane\n",
+			validateFunc: func(result []user.Group, err error) {
+				suite.NoError(err)
+				suite.Require().Len(result, 1)
+				suite.Equal("valid", result[0].Name)
+				suite.Equal(100, result[0].GID)
+				suite.Equal([]string{"john", "jane"}, result[0].Members)
 			},
 		},
 		{
