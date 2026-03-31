@@ -99,6 +99,20 @@ const (
 	OpSysctlDelete JobOperation = "node.sysctl.delete"
 )
 
+// NTP operations.
+const (
+	OpNtpGet    JobOperation = "node.ntp.get"
+	OpNtpCreate JobOperation = "node.ntp.create"
+	OpNtpUpdate JobOperation = "node.ntp.update"
+	OpNtpDelete JobOperation = "node.ntp.delete"
+)
+
+// Timezone operations.
+const (
+	OpTimezoneGet    JobOperation = "node.timezone.get"
+	OpTimezoneUpdate JobOperation = "node.timezone.update"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

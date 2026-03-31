@@ -47,6 +47,10 @@ const (
 	PermCronWrite      = client.PermCronWrite
 	PermSysctlRead     = client.PermSysctlRead
 	PermSysctlWrite    = client.PermSysctlWrite
+	PermNtpRead        = client.PermNtpRead
+	PermNtpWrite       = client.PermNtpWrite
+	PermTimezoneRead   = client.PermTimezoneRead
+	PermTimezoneWrite  = client.PermTimezoneWrite
 )
 
 // AllPermissions is the full set of known permissions.
@@ -71,6 +75,10 @@ var AllPermissions = []Permission{
 	PermCronWrite,
 	PermSysctlRead,
 	PermSysctlWrite,
+	PermNtpRead,
+	PermNtpWrite,
+	PermTimezoneRead,
+	PermTimezoneWrite,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -96,6 +104,10 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermCronWrite,
 		PermSysctlRead,
 		PermSysctlWrite,
+		PermNtpRead,
+		PermNtpWrite,
+		PermTimezoneRead,
+		PermTimezoneWrite,
 	},
 	client.RoleWrite: {
 		PermAgentRead,
@@ -114,6 +126,10 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermCronWrite,
 		PermSysctlRead,
 		PermSysctlWrite,
+		PermNtpRead,
+		PermNtpWrite,
+		PermTimezoneRead,
+		PermTimezoneWrite,
 	},
 	client.RoleRead: {
 		PermAgentRead,
@@ -125,6 +141,8 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermDockerRead,
 		PermCronRead,
 		PermSysctlRead,
+		PermNtpRead,
+		PermTimezoneRead,
 	},
 }
 

@@ -163,6 +163,20 @@ const (
 	OperationSysctlDelete = client.OpSysctlDelete
 )
 
+// NTP operations.
+const (
+	OperationNtpGet    = client.OpNtpGet
+	OperationNtpCreate = client.OpNtpCreate
+	OperationNtpUpdate = client.OpNtpUpdate
+	OperationNtpDelete = client.OpNtpDelete
+)
+
+// Timezone operations.
+const (
+	OperationTimezoneGet    = client.OpTimezoneGet
+	OperationTimezoneUpdate = client.OpTimezoneUpdate
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format
