@@ -80,12 +80,17 @@ parameters from the job payload and returns a result.
 
 Reference: `internal/provider/container/docker/` or `internal/provider/node/host/`
 
-**Meta providers** don't write files directly — they delegate to
-the file provider. This gives them SHA tracking, idempotency, drift
-detection, and template rendering for free:
+**Meta providers** delegate file writes to the file provider,
+which gives them SHA tracking, idempotency, drift detection, and
+template rendering for free:
 - `scheduled/cron` — deploys cron drop-in files and periodic scripts
-- `node/sysctl` — deploys sysctl conf files to `/etc/sysctl.d/`
 - Future: `systemd`, `apt sources`
+
+**Direct-write providers** manage their own files and state
+without the file provider. They write config files directly via
+`avfs.VFS` and may track state in the file-state KV manually:
+- `node/sysctl` — writes to `/etc/sysctl.d/osapi-{key}.conf`
+- `node/ntp` — writes to `/etc/chrony/sources.d/osapi-ntp.sources`
 
 Meta providers depend on `file.Deployer` (the narrow interface):
 ```go
@@ -458,8 +463,8 @@ domains, create `internal/controller/api/{domain}/`:
     stack to verify validation (valid input, invalid input → 400).
   - `TestXxxRBACHTTP` — verifies auth middleware: no token (401),
     wrong permissions (403), valid token (200). Uses `api.New()` +
-    `server.GetXxxHandler()` + `server.RegisterHandlers()` to wire
-    through `scopeMiddleware`.
+    `{domain}.Handler()` + `server.RegisterHandlers()` to wire
+    through `ScopeMiddleware`.
   See existing examples in `internal/controller/api/node/docker/`,
   `internal/controller/api/job/`, and
   `internal/controller/api/audit/`.
@@ -653,8 +658,10 @@ Follow the same principles as the orchestrator examples:
 
 ### Step 6: CLI Commands
 
-- `cmd/client_{domain}.go` — parent command registered under `clientCmd`
-- `cmd/client_{domain}_{operation}.go` — one subcommand per endpoint
+- `cmd/client_node_{domain}.go` — parent command registered under
+  `clientNodeCmd` (for node-targeted domains)
+- `cmd/client_node_{domain}_{operation}.go` — one subcommand per
+  endpoint (e.g., `client_node_sysctl_get.go`)
 - All commands support `--json` for raw output
 - Use `printKV` for inline key-value output and `printStyledTable` for
   multi-row tabular data (both in `cmd/ui.go`)
@@ -675,8 +682,11 @@ Follow the same principles as the orchestrator examples:
   page with `<DocCardList />` for sidebar navigation
 - `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
   per CLI subcommand with usage examples and `--json` output
-- Update `docs/docusaurus.config.ts` — add the new feature to the
-  "Features" navbar dropdown
+- Update `docs/docusaurus.config.ts`:
+  - Add the new feature to the "Features" navbar dropdown
+  - Add the new SDK service to the "SDK" → "Client Library" dropdown
+- Update `docs/docs/sidebar/features/features.md` — add the new
+  domain to the features landing page table
 - Update `docs/docs/sidebar/usage/configuration.md` — add any new
   permissions to the roles table and permissions comments in the
   YAML reference
@@ -688,10 +698,6 @@ Follow the same principles as the orchestrator examples:
   new endpoints to the path pattern table
 - Update `docs/docs/sidebar/architecture/system-architecture.md` — add
   endpoints to the health/endpoint tables if applicable
-- Update `docs/docs/sidebar/features/features.md` — add the new
-  domain to the features landing page table
-- Update `docs/docusaurus.config.ts` — add the new SDK service to
-  the SDK navbar dropdown (under "Client Library" section)
 
 ### Step 8: Verify
 
