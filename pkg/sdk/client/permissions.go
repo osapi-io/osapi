@@ -51,6 +51,7 @@ const (
 	PermNtpWrite       Permission = "ntp:write"
 	PermTimezoneRead   Permission = "timezone:read"
 	PermTimezoneWrite  Permission = "timezone:write"
+	PermPowerExecute   Permission = "power:execute"
 )
 
 // Role represents a built-in RBAC role name.
