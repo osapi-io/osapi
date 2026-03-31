@@ -41,6 +41,6 @@ $ osapi client node process signal --target web-01 \
 | Flag           | Description                                              | Default |
 | -------------- | -------------------------------------------------------- | ------- |
 | `--pid`        | Process ID to signal (required)                          |         |
-| `--signal`     | Signal name: TERM, KILL, HUP, INT, USR1, USR2, etc.     |         |
+| `--signal`     | Signal name: TERM, KILL, HUP, INT, USR1, USR2, etc.      |         |
 | `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_any`  |
 | `-j, --json`   | Output raw JSON response                                 |         |

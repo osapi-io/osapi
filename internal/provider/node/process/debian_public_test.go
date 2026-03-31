@@ -374,6 +374,70 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 	}
 }
 
+// TestDefaultOSFunctions exercises the real OS-interaction wrappers
+// against the current test process to ensure coverage of gopsutil calls.
+func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
+	// Use real functions (not mocked).
+	process.ResetListProcesses()
+	process.ResetGetProcess()
+	process.ResetGatherInfoFromP()
+
+	pid := os.Getpid()
+
+	tests := []struct {
+		name         string
+		fn           func() error
+		validateFunc func()
+	}{
+		{
+			name: "when listing with real OS returns current process",
+			fn: func() error {
+				provider := process.NewDebianProvider(slog.Default())
+				results, err := provider.List(context.Background())
+				if err != nil {
+					return err
+				}
+
+				found := false
+				for _, p := range results {
+					if p.PID == pid {
+						found = true
+
+						break
+					}
+				}
+				suite.True(found, "current process not found in list")
+				suite.NotEmpty(results)
+
+				return nil
+			},
+		},
+		{
+			name: "when getting with real OS returns current process info",
+			fn: func() error {
+				provider := process.NewDebianProvider(slog.Default())
+				info, err := provider.Get(context.Background(), pid)
+				if err != nil {
+					return err
+				}
+
+				suite.Equal(pid, info.PID)
+				suite.NotEmpty(info.Name)
+				suite.NotEmpty(info.StartTime)
+
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			err := tc.fn()
+			suite.NoError(err)
+		})
+	}
+}
+
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestDebianPublicTestSuite(t *testing.T) {

@@ -17,8 +17,8 @@ always live -- each request returns the current snapshot of running processes.
 ### List
 
 Returns all running processes with their PID, name, user, state, CPU and memory
-usage, and command line. The agent reads `/proc/{pid}/stat`, `/proc/{pid}/status`,
-and `/proc/{pid}/cmdline` on Debian systems.
+usage, and command line. The agent reads `/proc/{pid}/stat`,
+`/proc/{pid}/status`, and `/proc/{pid}/cmdline` on Debian systems.
 
 ### Get
 
@@ -33,11 +33,11 @@ Sends a POSIX signal to a process by PID. Supported signals: `TERM`, `KILL`,
 
 ## Operations
 
-| Operation | Description                                 |
-| --------- | ------------------------------------------- |
-| List      | List all running processes                  |
-| Get       | Get information about a process by PID      |
-| Signal    | Send a signal to a process by PID           |
+| Operation | Description                            |
+| --------- | -------------------------------------- |
+| List      | List all running processes             |
+| Get       | Get information about a process by PID |
+| Signal    | Send a signal to a process by PID      |
 
 ## CLI Usage
 
@@ -91,10 +91,10 @@ OS family detection.
 
 ## Permissions
 
-| Operation    | Permission        |
-| ------------ | ----------------- |
-| List, Get    | `process:read`    |
-| Signal       | `process:execute` |
+| Operation | Permission        |
+| --------- | ----------------- |
+| List, Get | `process:read`    |
+| Signal    | `process:execute` |
 
 Process listing and inspection require `process:read`, included in all built-in
 roles. Sending signals requires `process:execute`, included only in the `admin`

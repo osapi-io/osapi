@@ -6,16 +6,15 @@ sidebar_position: 3
 
 The `Process` service provides methods for listing processes, getting process
 details, and sending signals to processes on target hosts. Access via
-`client.Process.List()`, `client.Process.Get()`, and
-`client.Process.Signal()`.
+`client.Process.List()`, `client.Process.Get()`, and `client.Process.Signal()`.
 
 ## Methods
 
-| Method                               | Description                                |
-| ------------------------------------ | ------------------------------------------ |
-| `List(ctx, hostname)`                | List all running processes on the target   |
-| `Get(ctx, hostname, pid)`            | Get information about a process by PID     |
-| `Signal(ctx, hostname, pid, opts)`   | Send a signal to a process by PID          |
+| Method                             | Description                              |
+| ---------------------------------- | ---------------------------------------- |
+| `List(ctx, hostname)`              | List all running processes on the target |
+| `Get(ctx, hostname, pid)`          | Get information about a process by PID   |
+| `Signal(ctx, hostname, pid, opts)` | Send a signal to a process by PID        |
 
 ## Request Types
 
@@ -66,10 +65,10 @@ resp, err := c.Process.List(ctx, "_all")
 
 ## Permissions
 
-| Operation    | Permission        |
-| ------------ | ----------------- |
-| List, Get    | `process:read`    |
-| Signal       | `process:execute` |
+| Operation | Permission        |
+| --------- | ----------------- |
+| List, Get | `process:read`    |
+| Signal    | `process:execute` |
 
 Process management is supported on the Debian OS family (Ubuntu, Debian,
 Raspbian). On unsupported platforms (Darwin, generic Linux), operations return

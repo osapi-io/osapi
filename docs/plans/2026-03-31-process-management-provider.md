@@ -1,12 +1,21 @@
 # Process Management Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add process listing, details, and signal sending as a node provider with full API/CLI/SDK support.
+**Goal:** Add process listing, details, and signal sending as a node provider
+with full API/CLI/SDK support.
 
-**Architecture:** Direct provider at `provider/node/process/` using `gopsutil/process` for reading process info and `syscall.Kill` for signaling. Three endpoints: list all, get by PID, signal by PID. Integrates into the node processor. Permission: `process:read` (all roles) and `process:execute` (admin only).
+**Architecture:** Direct provider at `provider/node/process/` using
+`gopsutil/process` for reading process info and `syscall.Kill` for signaling.
+Three endpoints: list all, get by PID, signal by PID. Integrates into the node
+processor. Permission: `process:read` (all roles) and `process:execute` (admin
+only).
 
-**Tech Stack:** Go 1.25, gopsutil/v4, Echo, oapi-codegen (strict-server), gomock, testify/suite
+**Tech Stack:** Go 1.25, gopsutil/v4, Echo, oapi-codegen (strict-server),
+gomock, testify/suite
 
 **Coverage baseline:** 99.9% — must remain at or above this.
 
@@ -15,6 +24,7 @@
 ## Task 1: SDK Constants (Operations + Permissions)
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `pkg/sdk/client/permissions.go`
 - Modify: `internal/job/types.go`
@@ -56,6 +66,7 @@ const (
 - [ ] **Step 4: Re-export permissions in internal/authtoken/permissions.go**
 
 Add constants. Add to `AllPermissions`. Add to `DefaultRolePermissions`:
+
 - `RoleAdmin`: add `PermProcessRead` and `PermProcessExecute`
 - `RoleWrite`: add `PermProcessRead` only
 - `RoleRead`: add `PermProcessRead` only
@@ -72,6 +83,7 @@ git commit -m "feat(process): add operation and permission constants"
 ## Task 2: Provider Interface + Platform Stubs
 
 **Files:**
+
 - Create: `internal/provider/node/process/types.go`
 - Create: `internal/provider/node/process/darwin.go`
 - Create: `internal/provider/node/process/linux.go`
@@ -130,13 +142,14 @@ git commit -m "feat(process): add provider interface and platform stubs"
 ## Task 3: Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/process/debian.go`
 - Create: `internal/provider/node/process/debian_public_test.go`
 - Create: `internal/provider/node/process/darwin_public_test.go`
 - Create: `internal/provider/node/process/linux_public_test.go`
 
-The Debian provider uses `gopsutil/v4/process` for reading process
-info and `syscall.Kill` for sending signals.
+The Debian provider uses `gopsutil/v4/process` for reading process info and
+`syscall.Kill` for sending signals.
 
 - [ ] **Step 1: Write stub tests**
 
@@ -144,21 +157,23 @@ Verify Darwin and Linux return `ErrUnsupported` for all methods.
 
 - [ ] **Step 2: Write Debian tests**
 
-The provider wraps gopsutil — for testability, the provider should
-accept an interface that wraps gopsutil calls so it can be mocked.
-Alternatively, use the export_test.go pattern to swap the gopsutil
-functions.
+The provider wraps gopsutil — for testability, the provider should accept an
+interface that wraps gopsutil calls so it can be mocked. Alternatively, use the
+export_test.go pattern to swap the gopsutil functions.
 
 **TestList:**
+
 - success (returns process list)
 - gopsutil error
 
 **TestGet:**
+
 - success (PID exists)
 - PID not found
 - gopsutil error
 
 **TestSignal:**
+
 - success with TERM
 - success with KILL
 - invalid signal name
@@ -184,18 +199,20 @@ func NewDebianProvider(
 ```
 
 Key implementation:
-- **List**: call `process.Processes()`, for each PID gather info
-  with `p.Name()`, `p.Username()`, `p.Status()`,
-  `p.CPUPercent()`, `p.MemoryPercent()`, `p.MemoryInfo()` (for
-  RSS), `p.Cmdline()`, `p.CreateTime()`. Skip processes that
-  error (permission denied on some PIDs is normal).
-- **Get**: `process.NewProcess(int32(pid))`, gather same info.
-  Return error if PID doesn't exist.
+
+- **List**: call `process.Processes()`, for each PID gather info with
+  `p.Name()`, `p.Username()`, `p.Status()`, `p.CPUPercent()`,
+  `p.MemoryPercent()`, `p.MemoryInfo()` (for RSS), `p.Cmdline()`,
+  `p.CreateTime()`. Skip processes that error (permission denied on some PIDs is
+  normal).
+- **Get**: `process.NewProcess(int32(pid))`, gather same info. Return error if
+  PID doesn't exist.
 - **Signal**: validate signal name against allowed map. Use
-  `syscall.Kill(pid, sig)`. Handle `ESRCH` (no such process) and
-  `EPERM` (permission denied) errors.
+  `syscall.Kill(pid, sig)`. Handle `ESRCH` (no such process) and `EPERM`
+  (permission denied) errors.
 
 Allowed signals map:
+
 ```go
 var allowedSignals = map[string]syscall.Signal{
 	"TERM": syscall.SIGTERM,
@@ -219,6 +236,7 @@ git commit -m "feat(process): implement Debian process provider with tests"
 ## Task 4: Agent Processor + Wiring
 
 **Files:**
+
 - Create: `internal/agent/processor_process.go`
 - Create: `internal/agent/processor_process_public_test.go`
 - Modify: `internal/agent/processor.go`
@@ -227,19 +245,21 @@ git commit -m "feat(process): implement Debian process provider with tests"
 - [ ] **Step 1: Create processor with tests**
 
 Three sub-operations:
+
 - `process.list` — no data, call `provider.List(ctx)`
 - `process.get` — unmarshal `{"pid": 1234}`, call `provider.Get(ctx, pid)`
-- `process.signal` — unmarshal `{"pid": 1234, "signal": "TERM"}`, call `provider.Signal(ctx, pid, signal)`
+- `process.signal` — unmarshal `{"pid": 1234, "signal": "TERM"}`, call
+  `provider.Signal(ctx, pid, signal)`
 
 - [ ] **Step 2: Add to node processor**
 
-Add `processProvider process.Provider` parameter to
-`NewNodeProcessor`. Add `case "process":` dispatch.
+Add `processProvider process.Provider` parameter to `NewNodeProcessor`. Add
+`case "process":` dispatch.
 
 - [ ] **Step 3: Wire in agent_setup.go**
 
-Create `createProcessProvider` function. Add container check.
-Process provider only needs `logger` (no exec manager, no fs).
+Create `createProcessProvider` function. Add container check. Process provider
+only needs `logger` (no exec manager, no fs).
 
 ```go
 func createProcessProvider(
@@ -273,6 +293,7 @@ git commit -m "feat(process): add agent processor and wiring"
 ## Task 5: OpenAPI Spec + API Handlers
 
 **Files:**
+
 - Create: `internal/controller/api/node/process/gen/api.yaml`
 - Create: `internal/controller/api/node/process/gen/cfg.yaml`
 - Create: `internal/controller/api/node/process/gen/generate.go`
@@ -289,24 +310,24 @@ git commit -m "feat(process): add agent processor and wiring"
 - [ ] **Step 1: Create OpenAPI spec**
 
 Three paths:
-- `GET /node/{hostname}/process` — `GetNodeProcess`, security:
-  `process:read`. Response: `ProcessCollectionResponse`
-- `GET /node/{hostname}/process/{pid}` — `GetNodeProcessByPid`,
-  security: `process:read`. PID is integer path param. Response:
-  `ProcessGetResponse`
-- `POST /node/{hostname}/process/{pid}/signal` —
-  `PostNodeProcessSignal`, security: `process:execute`. Request
-  body: `ProcessSignalRequest` with signal (required, enum of
-  TERM/KILL/HUP/INT/USR1/USR2, validate `required,oneof=...`).
-  Response: `ProcessSignalResponse`
+
+- `GET /node/{hostname}/process` — `GetNodeProcess`, security: `process:read`.
+  Response: `ProcessCollectionResponse`
+- `GET /node/{hostname}/process/{pid}` — `GetNodeProcessByPid`, security:
+  `process:read`. PID is integer path param. Response: `ProcessGetResponse`
+- `POST /node/{hostname}/process/{pid}/signal` — `PostNodeProcessSignal`,
+  security: `process:execute`. Request body: `ProcessSignalRequest` with signal
+  (required, enum of TERM/KILL/HUP/INT/USR1/USR2, validate
+  `required,oneof=...`). Response: `ProcessSignalResponse`
 
 Schemas:
-- `ProcessEntry` — hostname (req), status (req, enum
-  ok/failed/skipped), processes (array of ProcessInfo), error
-- `ProcessInfo` — pid, name, user, state, cpu_percent,
-  mem_percent, mem_rss, command, start_time
-- `ProcessSignalResult` — hostname (req), status (req), pid,
-  signal, changed, error
+
+- `ProcessEntry` — hostname (req), status (req, enum ok/failed/skipped),
+  processes (array of ProcessInfo), error
+- `ProcessInfo` — pid, name, user, state, cpu_percent, mem_percent, mem_rss,
+  command, start_time
+- `ProcessSignalResult` — hostname (req), status (req), pid, signal, changed,
+  error
 
 - [ ] **Step 2: Generate code and create handlers**
 
@@ -332,6 +353,7 @@ git commit -m "feat(process): add OpenAPI spec, API handlers, and server wiring"
 ## Task 6: SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/process.go`
 - Create: `pkg/sdk/client/process_types.go`
 - Create: `pkg/sdk/client/process_public_test.go`
@@ -399,6 +421,7 @@ git commit -m "feat(process): add SDK service with tests"
 ## Task 7: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_process.go`
 - Create: `cmd/client_node_process_list.go`
 - Create: `cmd/client_node_process_get.go`
@@ -408,9 +431,9 @@ git commit -m "feat(process): add SDK service with tests"
 
 - [ ] **Step 2: Create list command**
 
-No extra flags. Table fields: PID, NAME, USER, STATE, CPU%, MEM%,
-COMMAND. Use `cli.BuildBroadcastTable` + `cli.PrintCompactTable`.
-Format CPU% and MEM% with `fmt.Sprintf("%.1f%%", val)`.
+No extra flags. Table fields: PID, NAME, USER, STATE, CPU%, MEM%, COMMAND. Use
+`cli.BuildBroadcastTable` + `cli.PrintCompactTable`. Format CPU% and MEM% with
+`fmt.Sprintf("%.1f%%", val)`.
 
 - [ ] **Step 3: Create get command**
 
@@ -418,8 +441,8 @@ Flag: `--pid` (int, required). Same table output as list.
 
 - [ ] **Step 4: Create signal command**
 
-Flags: `--pid` (int, required), `--signal` (string, required).
-Mutation table output with PID and SIGNAL fields.
+Flags: `--pid` (int, required), `--signal` (string, required). Mutation table
+output with PID and SIGNAL fields.
 
 - [ ] **Step 5: Verify and commit**
 
@@ -433,6 +456,7 @@ git commit -m "feat(process): add CLI commands"
 ## Task 8: Docs + Example + Integration Test
 
 **Files:**
+
 - Create: `examples/sdk/client/process.go`
 - Create: `test/integration/process_test.go`
 - Create: `docs/docs/sidebar/features/process-management.md`
@@ -449,23 +473,22 @@ git commit -m "feat(process): add CLI commands"
 - Modify: `docs/docs/sidebar/sdk/client/client.md`
 - Modify: `docs/docusaurus.config.ts` (Features + SDK dropdowns)
 
-SDK doc goes under `management/` category (same as Agent, Job,
-Health, Audit — process management is an operational concern).
+SDK doc goes under `management/` category (same as Agent, Job, Health, Audit —
+process management is an operational concern).
 
 - [ ] **Step 1: Create SDK example**
 
-Demonstrate `client.Process.List()` and `client.Process.Get()`.
-Don't demonstrate Signal in the example (destructive).
+Demonstrate `client.Process.List()` and `client.Process.Get()`. Don't
+demonstrate Signal in the example (destructive).
 
 - [ ] **Step 2: Create integration test**
 
-`ProcessSmokeSuite` with `TestProcessList`. Guard signal test
-with `skipWrite`.
+`ProcessSmokeSuite` with `TestProcessList`. Guard signal test with `skipWrite`.
 
 - [ ] **Step 3: Create feature page**
 
-`process-management.md` — list, get, signal operations. CLI
-examples. Permissions. Platforms.
+`process-management.md` — list, get, signal operations. CLI examples.
+Permissions. Platforms.
 
 - [ ] **Step 4: Create CLI doc pages**
 
@@ -473,14 +496,14 @@ Directory with landing page + list.md, get.md, signal.md.
 
 - [ ] **Step 5: Create SDK doc page**
 
-Under `management/`. Title: `# Process`. Methods: List, Get,
-Signal. Add to `client.md` Management table.
+Under `management/`. Title: `# Process`. Methods: List, Get, Signal. Add to
+`client.md` Management table.
 
 - [ ] **Step 6: Update all shared docs**
 
-Features table, authentication permissions, configuration roles,
-API guidelines endpoints, architecture feature link, docusaurus
-dropdowns (Features + SDK under Management group).
+Features table, authentication permissions, configuration roles, API guidelines
+endpoints, architecture feature link, docusaurus dropdowns (Features + SDK under
+Management group).
 
 - [ ] **Step 7: Regenerate and verify**
 
