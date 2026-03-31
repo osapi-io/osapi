@@ -11,15 +11,15 @@ handles a single concern and is accessed directly on the client.
 
 ### StatusService
 
-| Method             | Description                               |
-| ------------------ | ----------------------------------------- |
+| Method                    | Description                               |
+| ------------------------- | ----------------------------------------- |
 | `Status.Get(ctx, target)` | Full node status (OS, disk, memory, load) |
 
 ### HostnameService
 
-| Method                            | Description        |
-| --------------------------------- | ------------------ |
-| `Hostname.Get(ctx, target)`       | Get system hostname |
+| Method                               | Description         |
+| ------------------------------------ | ------------------- |
+| `Hostname.Get(ctx, target)`          | Get system hostname |
 | `Hostname.Update(ctx, target, name)` | Set system hostname |
 
 ### DiskService
@@ -30,8 +30,8 @@ handles a single concern and is accessed directly on the client.
 
 ### MemoryService
 
-| Method                    | Description          |
-| ------------------------- | -------------------- |
+| Method                    | Description           |
+| ------------------------- | --------------------- |
 | `Memory.Get(ctx, target)` | Get memory statistics |
 
 ### LoadService
@@ -48,15 +48,15 @@ handles a single concern and is accessed directly on the client.
 
 ### OSService
 
-| Method                | Description             |
-| --------------------- | ----------------------- |
+| Method                | Description               |
+| --------------------- | ------------------------- |
 | `OS.Get(ctx, target)` | Get operating system info |
 
 ### DNSService
 
-| Method                                       | Description        |
-| -------------------------------------------- | ------------------ |
-| `DNS.Get(ctx, target, iface)`                | Get DNS config     |
+| Method                                            | Description        |
+| ------------------------------------------------- | ------------------ |
+| `DNS.Get(ctx, target, iface)`                     | Get DNS config     |
 | `DNS.Update(ctx, target, iface, servers, search)` | Update DNS servers |
 
 ### PingService
@@ -67,17 +67,17 @@ handles a single concern and is accessed directly on the client.
 
 ### CommandService
 
-| Method                  | Description                                 |
-| ----------------------- | ------------------------------------------- |
-| `Command.Exec(ctx, req)` | Execute a command directly (no shell)       |
+| Method                    | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `Command.Exec(ctx, req)`  | Execute a command directly (no shell)       |
 | `Command.Shell(ctx, req)` | Execute via `/bin/sh -c` (pipes, redirects) |
 
 ### FileDeployService
 
-| Method                                | Description                         |
-| ------------------------------------- | ----------------------------------- |
-| `FileDeploy.Deploy(ctx, opts)`        | Deploy file to agent with SHA check |
-| `FileDeploy.Undeploy(ctx, opts)`      | Remove a deployed file              |
+| Method                                 | Description                         |
+| -------------------------------------- | ----------------------------------- |
+| `FileDeploy.Deploy(ctx, opts)`         | Deploy file to agent with SHA check |
+| `FileDeploy.Undeploy(ctx, opts)`       | Remove a deployed file              |
 | `FileDeploy.Status(ctx, target, path)` | Check deployed file status          |
 
 See [`FileService`](file.md) for Object Store operations (upload, list, get,

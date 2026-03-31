@@ -24,11 +24,11 @@ and delete files that can be deployed to agents via `Node.FileDeploy`.
 File deploy and status methods live on `FileDeployService` because they target a
 specific host:
 
-| Method                          | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `Deploy(ctx, opts)`             | Deploy file to agent with SHA check |
-| `Undeploy(ctx, opts)`           | Remove a deployed file              |
-| `Status(ctx, target, path)`     | Check deployed file status          |
+| Method                      | Description                         |
+| --------------------------- | ----------------------------------- |
+| `Deploy(ctx, opts)`         | Deploy file to agent with SHA check |
+| `Undeploy(ctx, opts)`       | Remove a deployed file              |
+| `Status(ctx, target, path)` | Check deployed file status          |
 
 ## FileDeployOpts
 
