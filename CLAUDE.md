@@ -440,6 +440,18 @@ input must be validated, and the spec must declare how:
    - Validation errors return correct status codes and error messages
    - RBAC: 401 (no token), 403 (wrong permissions), 200 (valid token)
 
+**Defense-in-depth validation**: When validation calls cannot
+currently fail (e.g., all fields use `omitempty`), keep the call
+but add a comment explaining why. This guards against future field
+additions breaking validation silently:
+```go
+// Defense in depth: current fields use omitempty so validation
+// always passes, but guards against future field additions.
+if errMsg, ok := validation.Struct(request.Body); !ok {
+    return gen.PostFoo400JSONResponse{Error: &errMsg}, nil
+}
+```
+
 ### Step 2: Handler Implementation
 
 For node-targeted domains, create

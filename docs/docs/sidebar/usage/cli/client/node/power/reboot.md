@@ -47,9 +47,9 @@ $ osapi client node power reboot --target web-01 --json
 
 ## Flags
 
-| Flag            | Description                                              | Default |
-| --------------- | -------------------------------------------------------- | ------- |
-| `--delay`       | Seconds to wait before rebooting                         | `0`     |
-| `--message`     | Optional message to broadcast before reboot              |         |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `-j, --json`    | Output raw JSON response                                 |         |
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `--delay`      | Seconds to wait before rebooting                         | `0`     |
+| `--message`    | Optional message to broadcast before reboot              |         |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
+| `-j, --json`   | Output raw JSON response                                 |         |

@@ -6,16 +6,16 @@ via reboot and shutdown operations. Access via `client.Power.Reboot()` and
 
 ## Methods
 
-| Method                           | Description                        |
-| -------------------------------- | ---------------------------------- |
-| `Reboot(ctx, hostname, opts)`    | Schedule a reboot on the target    |
-| `Shutdown(ctx, hostname, opts)`  | Schedule a shutdown on the target  |
+| Method                          | Description                       |
+| ------------------------------- | --------------------------------- |
+| `Reboot(ctx, hostname, opts)`   | Schedule a reboot on the target   |
+| `Shutdown(ctx, hostname, opts)` | Schedule a shutdown on the target |
 
 ## Request Types
 
-| Type         | Fields                                   |
-| ------------ | ---------------------------------------- |
-| `PowerOpts`  | `Delay` (int, seconds), `Message` (string) |
+| Type        | Fields                                     |
+| ----------- | ------------------------------------------ |
+| `PowerOpts` | `Delay` (int, seconds), `Message` (string) |
 
 ## Usage
 

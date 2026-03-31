@@ -1,7 +1,7 @@
 # Shutdown
 
-Schedule a shutdown on the target host. The agent calls `shutdown -h` with
-the configured delay. When `--delay` is 0, the shutdown happens immediately:
+Schedule a shutdown on the target host. The agent calls `shutdown -h` with the
+configured delay. When `--delay` is 0, the shutdown happens immediately:
 
 ```bash
 $ osapi client node power shutdown --target web-01
@@ -47,9 +47,9 @@ $ osapi client node power shutdown --target web-01 --json
 
 ## Flags
 
-| Flag            | Description                                              | Default |
-| --------------- | -------------------------------------------------------- | ------- |
-| `--delay`       | Seconds to wait before shutting down                     | `0`     |
-| `--message`     | Optional message to broadcast before shutdown            |         |
-| `-T, --target`  | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
-| `-j, --json`    | Output raw JSON response                                 |         |
+| Flag           | Description                                              | Default |
+| -------------- | -------------------------------------------------------- | ------- |
+| `--delay`      | Seconds to wait before shutting down                     | `0`     |
+| `--message`    | Optional message to broadcast before shutdown            |         |
+| `-T, --target` | Target: `_any`, `_all`, hostname, or label (`group:web`) | `_all`  |
+| `-j, --json`   | Output raw JSON response                                 |         |

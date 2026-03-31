@@ -72,6 +72,20 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 			errorMsg:    "power provider not available",
 		},
 		{
+			name: "invalid operation format (no sub-operation)",
+			jobRequest: job.Request{
+				Type:      job.TypeModify,
+				Category:  "node",
+				Operation: "power",
+				Data:      json.RawMessage(`{}`),
+			},
+			setupMock: func() power.Provider {
+				return powerMocks.NewMockProvider(s.mockCtrl)
+			},
+			expectError: true,
+			errorMsg:    "invalid power operation: power",
+		},
+		{
 			name: "unsupported power sub-operation",
 			jobRequest: job.Request{
 				Type:      job.TypeModify,
@@ -205,7 +219,9 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 			},
 			setupMock: func() power.Provider {
 				m := powerMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Reboot(gomock.Any(), power.Opts{}).Return(nil, errors.New("permission denied"))
+				m.EXPECT().
+					Reboot(gomock.Any(), power.Opts{}).
+					Return(nil, errors.New("permission denied"))
 				return m
 			},
 			expectError: true,
@@ -326,7 +342,9 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 			},
 			setupMock: func() power.Provider {
 				m := powerMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Shutdown(gomock.Any(), power.Opts{}).Return(nil, errors.New("operation not permitted"))
+				m.EXPECT().
+					Shutdown(gomock.Any(), power.Opts{}).
+					Return(nil, errors.New("operation not permitted"))
 				return m
 			},
 			expectError: true,

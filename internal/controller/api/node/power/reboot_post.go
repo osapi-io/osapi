@@ -44,6 +44,8 @@ func (s *Power) PostNodePowerReboot(
 
 	opts := powerProv.Opts{}
 	if request.Body != nil {
+		// Defense in depth: current fields use omitempty so validation
+		// always passes, but guards against future field additions.
 		if errMsg, ok := validation.Struct(request.Body); !ok {
 			return gen.PostNodePowerReboot400JSONResponse{Error: &errMsg}, nil
 		}
