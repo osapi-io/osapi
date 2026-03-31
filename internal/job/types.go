@@ -183,6 +183,13 @@ const (
 	OperationPowerShutdown = client.OpPowerShutdown
 )
 
+// Process operations.
+const (
+	OperationProcessList   = client.OpProcessList
+	OperationProcessGet    = client.OpProcessGet
+	OperationProcessSignal = client.OpProcessSignal
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

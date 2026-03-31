@@ -119,6 +119,13 @@ const (
 	OpPowerShutdown JobOperation = "node.power.shutdown"
 )
 
+// Process operations.
+const (
+	OpProcessList   JobOperation = "node.process.list"
+	OpProcessGet    JobOperation = "node.process.get"
+	OpProcessSignal JobOperation = "node.process.signal"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).
