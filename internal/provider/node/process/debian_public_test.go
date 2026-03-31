@@ -276,7 +276,9 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when pid not found returns error",
 			pid:  99999,
 			setupMock: func() {
-				suite.mockLister.EXPECT().NewProcess(int32(99999)).Return(nil, errors.New("process not found"))
+				suite.mockLister.EXPECT().
+					NewProcess(int32(99999)).
+					Return(nil, errors.New("process not found"))
 			},
 			wantErr:    true,
 			wantErrMsg: "process: get: process not found",
@@ -385,7 +387,9 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    42,
 			signal: "HUP",
 			setupMock: func() {
-				suite.mockSignaler.EXPECT().Kill(42, syscall.SIGHUP).Return(errors.New("unexpected error"))
+				suite.mockSignaler.EXPECT().
+					Kill(42, syscall.SIGHUP).
+					Return(errors.New("unexpected error"))
 			},
 			wantErr:    true,
 			wantErrMsg: "process: signal: unexpected error",
