@@ -99,12 +99,12 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-| Operation      | Permission   |
-| -------------- | ------------ |
-| User list/get  | `user:read`  |
-| User mutations | `user:write` |
-| Group list/get | `user:read`  |
-| Group mutations| `user:write` |
+| Operation       | Permission   |
+| --------------- | ------------ |
+| User list/get   | `user:read`  |
+| User mutations  | `user:write` |
+| Group list/get  | `user:read`  |
+| Group mutations | `user:write` |
 
 ## Platform Support
 

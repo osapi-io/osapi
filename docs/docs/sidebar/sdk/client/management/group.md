@@ -8,13 +8,13 @@ Group management on target hosts.
 
 ## Methods
 
-| Method                              | Description        |
-| ----------------------------------- | ------------------ |
-| `List(ctx, hostname)`              | List all groups    |
-| `Get(ctx, hostname, name)`         | Get a group by name |
-| `Create(ctx, hostname, opts)`      | Create a group     |
-| `Update(ctx, hostname, name, opts)` | Update a group    |
-| `Delete(ctx, hostname, name)`      | Delete a group     |
+| Method                              | Description         |
+| ----------------------------------- | ------------------- |
+| `List(ctx, hostname)`               | List all groups     |
+| `Get(ctx, hostname, name)`          | Get a group by name |
+| `Create(ctx, hostname, opts)`       | Create a group      |
+| `Update(ctx, hostname, name, opts)` | Update a group      |
+| `Delete(ctx, hostname, name)`       | Delete a group      |
 
 ## Usage
 

@@ -2,16 +2,15 @@
 
 ## Overview
 
-Add user and group management to OSAPI. CRUD operations for local
-system users and groups. Uses `useradd`, `usermod`, `userdel`,
-`groupadd`, `groupmod`, `groupdel`, and `chpasswd` via
-`exec.Manager`. Never exposes password hashes.
+Add user and group management to OSAPI. CRUD operations for local system users
+and groups. Uses `useradd`, `usermod`, `userdel`, `groupadd`, `groupmod`,
+`groupdel`, and `chpasswd` via `exec.Manager`. Never exposes password hashes.
 
 ## Architecture
 
-Direct provider at `internal/provider/node/user/`. One provider
-package with two sets of methods (users and groups). Two API path
-prefixes under `/node/{hostname}/`: `user/` and `group/`.
+Direct provider at `internal/provider/node/user/`. One provider package with two
+sets of methods (users and groups). Two API path prefixes under
+`/node/{hostname}/`: `user/` and `group/`.
 
 - **Category**: `node`
 - **Permissions**: `user:read`, `user:write`
@@ -100,64 +99,62 @@ type GroupResult struct {
 
 ## Debian Implementation
 
-- **ListUsers**: parse `/etc/passwd`, filter UID >= 1000 by default
-  (skip system users like root, daemon, etc.)
-- **GetUser**: parse `/etc/passwd` for specific user, read groups
-  via `id -Gn <name>`
-- **CreateUser**: `useradd` with flags for UID (`-u`), home (`-d`),
-  shell (`-s`), groups (`-G`), system (`-r`), create home (`-m`).
-  If password provided, pipe to `chpasswd` after creation.
-- **UpdateUser**: `usermod` with flags for shell (`-s`), home
-  (`-d -m`), groups (`-G`). Lock via `usermod -L`, unlock via
-  `usermod -U`.
+- **ListUsers**: parse `/etc/passwd`, filter UID >= 1000 by default (skip system
+  users like root, daemon, etc.)
+- **GetUser**: parse `/etc/passwd` for specific user, read groups via
+  `id -Gn <name>`
+- **CreateUser**: `useradd` with flags for UID (`-u`), home (`-d`), shell
+  (`-s`), groups (`-G`), system (`-r`), create home (`-m`). If password
+  provided, pipe to `chpasswd` after creation.
+- **UpdateUser**: `usermod` with flags for shell (`-s`), home (`-d -m`), groups
+  (`-G`). Lock via `usermod -L`, unlock via `usermod -U`.
 - **DeleteUser**: `userdel -r` (removes home directory)
 - **ChangePassword**: echo `name:password` and pipe to `chpasswd`
 - **ListGroups**: parse `/etc/group`
 - **GetGroup**: parse `/etc/group` for specific group
-- **CreateGroup**: `groupadd` with optional GID (`-g`), system
-  (`-r`)
-- **UpdateGroup**: `groupmod` for membership. Use `gpasswd -M` to
-  set member list.
+- **CreateGroup**: `groupadd` with optional GID (`-g`), system (`-r`)
+- **UpdateGroup**: `groupmod` for membership. Use `gpasswd -M` to set member
+  list.
 - **DeleteGroup**: `groupdel`
 
-Never expose password hashes — only read from `/etc/passwd` (which
-doesn't contain hashes), not `/etc/shadow`.
+Never expose password hashes — only read from `/etc/passwd` (which doesn't
+contain hashes), not `/etc/shadow`.
 
 ## Platform Implementations
 
-| Platform | Implementation                                  |
-| -------- | ----------------------------------------------- |
+| Platform | Implementation                                     |
+| -------- | -------------------------------------------------- |
 | Debian   | useradd/usermod/userdel/groupadd/groupmod/groupdel |
-| Darwin   | ErrUnsupported                                  |
-| Linux    | ErrUnsupported                                  |
+| Darwin   | ErrUnsupported                                     |
+| Linux    | ErrUnsupported                                     |
 
 ## Container Behavior
 
-Return `ErrUnsupported` in containers — user/group management is
-the host's concern.
+Return `ErrUnsupported` in containers — user/group management is the host's
+concern.
 
 ## API Endpoints
 
 ### User Endpoints
 
-| Method   | Path                                    | Permission   | Description      |
-| -------- | --------------------------------------- | ------------ | ---------------- |
-| `GET`    | `/node/{hostname}/user`                 | `user:read`  | List users       |
-| `GET`    | `/node/{hostname}/user/{name}`          | `user:read`  | Get user         |
-| `POST`   | `/node/{hostname}/user`                 | `user:write` | Create user      |
-| `PUT`    | `/node/{hostname}/user/{name}`          | `user:write` | Update user      |
-| `DELETE` | `/node/{hostname}/user/{name}`          | `user:write` | Delete user      |
-| `POST`   | `/node/{hostname}/user/{name}/password` | `user:write` | Change password  |
+| Method   | Path                                    | Permission   | Description     |
+| -------- | --------------------------------------- | ------------ | --------------- |
+| `GET`    | `/node/{hostname}/user`                 | `user:read`  | List users      |
+| `GET`    | `/node/{hostname}/user/{name}`          | `user:read`  | Get user        |
+| `POST`   | `/node/{hostname}/user`                 | `user:write` | Create user     |
+| `PUT`    | `/node/{hostname}/user/{name}`          | `user:write` | Update user     |
+| `DELETE` | `/node/{hostname}/user/{name}`          | `user:write` | Delete user     |
+| `POST`   | `/node/{hostname}/user/{name}/password` | `user:write` | Change password |
 
 ### Group Endpoints
 
-| Method   | Path                              | Permission   | Description    |
-| -------- | --------------------------------- | ------------ | -------------- |
-| `GET`    | `/node/{hostname}/group`          | `user:read`  | List groups    |
-| `GET`    | `/node/{hostname}/group/{name}`   | `user:read`  | Get group      |
-| `POST`   | `/node/{hostname}/group`          | `user:write` | Create group   |
-| `PUT`    | `/node/{hostname}/group/{name}`   | `user:write` | Update group   |
-| `DELETE` | `/node/{hostname}/group/{name}`   | `user:write` | Delete group   |
+| Method   | Path                            | Permission   | Description  |
+| -------- | ------------------------------- | ------------ | ------------ |
+| `GET`    | `/node/{hostname}/group`        | `user:read`  | List groups  |
+| `GET`    | `/node/{hostname}/group/{name}` | `user:read`  | Get group    |
+| `POST`   | `/node/{hostname}/group`        | `user:write` | Create group |
+| `PUT`    | `/node/{hostname}/group/{name}` | `user:write` | Update group |
+| `DELETE` | `/node/{hostname}/group/{name}` | `user:write` | Delete group |
 
 All endpoints support broadcast targeting.
 
@@ -184,7 +181,7 @@ client.Group.Delete(ctx, host, name)
 
 ## Permissions
 
-- `user:read` — list and get (users and groups). Added to admin,
-  write, and read roles.
-- `user:write` — create, update, delete, change password. Added
-  to admin and write roles.
+- `user:read` — list and get (users and groups). Added to admin, write, and read
+  roles.
+- `user:write` — create, update, delete, change password. Added to admin and
+  write roles.

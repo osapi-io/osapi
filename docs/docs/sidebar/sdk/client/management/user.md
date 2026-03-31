@@ -8,14 +8,14 @@ User account management on target hosts.
 
 ## Methods
 
-| Method                                        | Description                 |
-| --------------------------------------------- | --------------------------- |
-| `List(ctx, hostname)`                         | List all user accounts      |
-| `Get(ctx, hostname, name)`                    | Get a user by name          |
-| `Create(ctx, hostname, opts)`                 | Create a user account       |
-| `Update(ctx, hostname, name, opts)`           | Update a user account       |
-| `Delete(ctx, hostname, name)`                 | Delete a user account       |
-| `ChangePassword(ctx, hostname, name, password)` | Change a user's password  |
+| Method                                          | Description              |
+| ----------------------------------------------- | ------------------------ |
+| `List(ctx, hostname)`                           | List all user accounts   |
+| `Get(ctx, hostname, name)`                      | Get a user by name       |
+| `Create(ctx, hostname, opts)`                   | Create a user account    |
+| `Update(ctx, hostname, name, opts)`             | Update a user account    |
+| `Delete(ctx, hostname, name)`                   | Delete a user account    |
+| `ChangePassword(ctx, hostname, name, password)` | Change a user's password |
 
 ## Usage
 
