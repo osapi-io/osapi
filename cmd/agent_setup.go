@@ -459,10 +459,6 @@ func createProcessProvider(
 
 	switch plat {
 	case "debian":
-		if platform.IsContainer() {
-			log.Info("running in container, process operations disabled")
-			return processProv.NewLinuxProvider()
-		}
 		return processProv.NewDebianProvider(
 			log,
 			processProv.NewGopsutilLister(),
@@ -513,10 +509,6 @@ func createUserProvider(
 
 	switch plat {
 	case "debian":
-		if platform.IsContainer() {
-			log.Info("running in container, user operations disabled")
-			return userProv.NewLinuxProvider()
-		}
 		return userProv.NewDebianProvider(log, fs, execManager)
 	case "darwin":
 		return userProv.NewDarwinProvider()
@@ -537,10 +529,6 @@ func createPackageProvider(
 
 	switch plat {
 	case "debian":
-		if platform.IsContainer() {
-			log.Info("running in container, package operations disabled")
-			return aptProv.NewLinuxProvider()
-		}
 		return aptProv.NewDebianProvider(log, execManager)
 	case "darwin":
 		return aptProv.NewDarwinProvider()
