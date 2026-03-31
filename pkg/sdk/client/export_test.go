@@ -589,3 +589,67 @@ func GroupMutationCollectionFromDelete(
 ) Collection[GroupMutationResult] {
 	return groupMutationCollectionFromDelete(input)
 }
+
+// PackageInfoCollectionFromList exposes the private
+// packageInfoCollectionFromList for testing.
+func PackageInfoCollectionFromList(
+	input *gen.PackageCollectionResponse,
+) Collection[PackageInfoResult] {
+	return packageInfoCollectionFromList(input)
+}
+
+// PackageInfoCollectionFromGet exposes the private
+// packageInfoCollectionFromGet for testing.
+func PackageInfoCollectionFromGet(
+	input *gen.PackageCollectionResponse,
+) Collection[PackageInfoResult] {
+	return packageInfoCollectionFromGet(input)
+}
+
+// PackageMutationCollectionFromInstall exposes the private
+// packageMutationCollectionFromInstall for testing.
+func PackageMutationCollectionFromInstall(
+	input *gen.PackageMutationResponse,
+) Collection[PackageMutationResult] {
+	return packageMutationCollectionFromInstall(input)
+}
+
+// PackageMutationCollectionFromRemove exposes the private
+// packageMutationCollectionFromRemove for testing.
+func PackageMutationCollectionFromRemove(
+	input *gen.PackageMutationResponse,
+) Collection[PackageMutationResult] {
+	return packageMutationCollectionFromRemove(input)
+}
+
+// PackageMutationCollectionFromUpdate exposes the private
+// packageMutationCollectionFromUpdate for testing.
+func PackageMutationCollectionFromUpdate(
+	input *gen.PackageMutationResponse,
+) Collection[PackageMutationResult] {
+	return packageMutationCollectionFromUpdate(input)
+}
+
+// PackageUpdateCollectionFromGen exposes the private
+// packageUpdateCollectionFromGen for testing.
+func PackageUpdateCollectionFromGen(
+	input *gen.UpdateCollectionResponse,
+) Collection[PackageUpdateResult] {
+	return packageUpdateCollectionFromGen(input)
+}
+
+// ExportPackageInfosFromGen exposes the private packageInfosFromGen
+// for testing.
+func ExportPackageInfosFromGen(
+	input *[]gen.PackageInfo,
+) []PackageInfo {
+	return packageInfosFromGen(input)
+}
+
+// ExportUpdateInfosFromGen exposes the private updateInfosFromGen
+// for testing.
+func ExportUpdateInfosFromGen(
+	input *[]gen.UpdateInfo,
+) []UpdateInfo {
+	return updateInfosFromGen(input)
+}

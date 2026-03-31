@@ -124,6 +124,10 @@ type Client struct {
 	// update, delete).
 	Group *GroupService
 
+	// Package provides package management operations (list, get,
+	// install, remove, update, list updates).
+	Package *PackageService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -208,6 +212,7 @@ func New(
 	c.Power = &PowerService{client: httpClient}
 	c.User = &UserService{client: httpClient}
 	c.Group = &GroupService{client: httpClient}
+	c.Package = &PackageService{client: httpClient}
 
 	return c
 }
