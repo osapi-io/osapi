@@ -501,3 +501,91 @@ func ExportDerefStringSlice(
 ) []string {
 	return derefStringSlice(s)
 }
+
+// UserInfoCollectionFromList exposes the private
+// userInfoCollectionFromList for testing.
+func UserInfoCollectionFromList(
+	input *gen.UserCollectionResponse,
+) Collection[UserInfoResult] {
+	return userInfoCollectionFromList(input)
+}
+
+// UserInfoCollectionFromGet exposes the private
+// userInfoCollectionFromGet for testing.
+func UserInfoCollectionFromGet(
+	input *gen.UserCollectionResponse,
+) Collection[UserInfoResult] {
+	return userInfoCollectionFromGet(input)
+}
+
+// UserMutationCollectionFromCreate exposes the private
+// userMutationCollectionFromCreate for testing.
+func UserMutationCollectionFromCreate(
+	input *gen.UserMutationResponse,
+) Collection[UserMutationResult] {
+	return userMutationCollectionFromCreate(input)
+}
+
+// UserMutationCollectionFromUpdate exposes the private
+// userMutationCollectionFromUpdate for testing.
+func UserMutationCollectionFromUpdate(
+	input *gen.UserMutationResponse,
+) Collection[UserMutationResult] {
+	return userMutationCollectionFromUpdate(input)
+}
+
+// UserMutationCollectionFromDelete exposes the private
+// userMutationCollectionFromDelete for testing.
+func UserMutationCollectionFromDelete(
+	input *gen.UserMutationResponse,
+) Collection[UserMutationResult] {
+	return userMutationCollectionFromDelete(input)
+}
+
+// UserMutationCollectionFromPassword exposes the private
+// userMutationCollectionFromPassword for testing.
+func UserMutationCollectionFromPassword(
+	input *gen.UserMutationResponse,
+) Collection[UserMutationResult] {
+	return userMutationCollectionFromPassword(input)
+}
+
+// GroupInfoCollectionFromList exposes the private
+// groupInfoCollectionFromList for testing.
+func GroupInfoCollectionFromList(
+	input *gen.GroupCollectionResponse,
+) Collection[GroupInfoResult] {
+	return groupInfoCollectionFromList(input)
+}
+
+// GroupInfoCollectionFromGet exposes the private
+// groupInfoCollectionFromGet for testing.
+func GroupInfoCollectionFromGet(
+	input *gen.GroupCollectionResponse,
+) Collection[GroupInfoResult] {
+	return groupInfoCollectionFromGet(input)
+}
+
+// GroupMutationCollectionFromCreate exposes the private
+// groupMutationCollectionFromCreate for testing.
+func GroupMutationCollectionFromCreate(
+	input *gen.GroupMutationResponse,
+) Collection[GroupMutationResult] {
+	return groupMutationCollectionFromCreate(input)
+}
+
+// GroupMutationCollectionFromUpdate exposes the private
+// groupMutationCollectionFromUpdate for testing.
+func GroupMutationCollectionFromUpdate(
+	input *gen.GroupMutationResponse,
+) Collection[GroupMutationResult] {
+	return groupMutationCollectionFromUpdate(input)
+}
+
+// GroupMutationCollectionFromDelete exposes the private
+// groupMutationCollectionFromDelete for testing.
+func GroupMutationCollectionFromDelete(
+	input *gen.GroupMutationResponse,
+) Collection[GroupMutationResult] {
+	return groupMutationCollectionFromDelete(input)
+}
