@@ -155,7 +155,8 @@ configure them — see the Features section:
   lifecycle, exec, pull
 - [Cron Management](../features/cron-management.md) — cron drop-in file
   management
-- [Sysctl Management](../features/sysctl-management.md) — kernel parameter management
+- [Sysctl Management](../features/sysctl-management.md) — kernel parameter
+  management
 - [NTP Management](../features/ntp-management.md) — NTP server management
 - [Timezone Management](../features/timezone-management.md) — system timezone
 - [Job System](../features/job-system.md) — async job processing and routing
