@@ -41,6 +41,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	memProv "github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/provider/node/ntp"
+	"github.com/retr0h/osapi/internal/provider/node/power"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 	"github.com/retr0h/osapi/internal/provider/node/timezone"
 )
@@ -359,6 +360,7 @@ func SetAgentAppConfig(
 			(sysctl.Provider)(nil),
 			(ntp.Provider)(nil),
 			(timezone.Provider)(nil),
+			(power.Provider)(nil),
 			cfg,
 			a.logger,
 		)
@@ -391,6 +393,7 @@ func SetAgentHostProvider(
 			(sysctl.Provider)(nil),
 			(ntp.Provider)(nil),
 			(timezone.Provider)(nil),
+			(power.Provider)(nil),
 			a.appConfig,
 			a.logger,
 		)

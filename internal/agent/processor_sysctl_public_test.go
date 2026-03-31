@@ -111,7 +111,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlOperation() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				sysctlProvider,
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -189,7 +189,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlList() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				tt.setupMock(),
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -280,7 +280,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlGet() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				tt.setupMock(),
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -376,7 +376,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlCreate() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				tt.setupMock(),
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -472,7 +472,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlUpdate() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				tt.setupMock(),
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -563,7 +563,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlDelete() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil,
 				tt.setupMock(),
-				nil, nil,
+				nil, nil, nil,
 				config.Config{},
 				slog.Default(),
 			)

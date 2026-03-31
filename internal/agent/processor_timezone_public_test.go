@@ -111,6 +111,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil, nil, nil,
 				timezoneProvider,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -187,6 +188,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil, nil, nil,
 				tt.setupMock(),
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -279,6 +281,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 			processor := agent.NewNodeProcessor(
 				nil, nil, nil, nil, nil, nil,
 				tt.setupMock(),
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
