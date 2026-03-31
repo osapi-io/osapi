@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl,ntp,timezone}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
@@ -80,12 +80,17 @@ parameters from the job payload and returns a result.
 
 Reference: `internal/provider/container/docker/` or `internal/provider/node/host/`
 
-**Meta providers** don't write files directly — they delegate to
-the file provider. This gives them SHA tracking, idempotency, drift
-detection, and template rendering for free:
+**Meta providers** delegate file writes to the file provider,
+which gives them SHA tracking, idempotency, drift detection, and
+template rendering for free:
 - `scheduled/cron` — deploys cron drop-in files and periodic scripts
-- `node/sysctl` — deploys sysctl conf files to `/etc/sysctl.d/`
 - Future: `systemd`, `apt sources`
+
+**Direct-write providers** manage their own files and state
+without the file provider. They write config files directly via
+`avfs.VFS` and may track state in the file-state KV manually:
+- `node/sysctl` — writes to `/etc/sysctl.d/osapi-{key}.conf`
+- `node/ntp` — writes to `/etc/chrony/sources.d/osapi-ntp.sources`
 
 Meta providers depend on `file.Deployer` (the narrow interface):
 ```go
@@ -458,8 +463,8 @@ domains, create `internal/controller/api/{domain}/`:
     stack to verify validation (valid input, invalid input → 400).
   - `TestXxxRBACHTTP` — verifies auth middleware: no token (401),
     wrong permissions (403), valid token (200). Uses `api.New()` +
-    `server.GetXxxHandler()` + `server.RegisterHandlers()` to wire
-    through `scopeMiddleware`.
+    `{domain}.Handler()` + `server.RegisterHandlers()` to wire
+    through `ScopeMiddleware`.
   See existing examples in `internal/controller/api/node/docker/`,
   `internal/controller/api/job/`, and
   `internal/controller/api/audit/`.
@@ -586,12 +591,53 @@ and wrap errors with context.
 
 **When adding a new API domain:**
 
-1. Add a service wrapper in `pkg/sdk/client/{domain}.go`
-2. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new domain's
-   spec from the combined `api.yaml`
-3. Add an SDK example in `examples/sdk/client/{domain}.go`
-4. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
+1. Add a service in `pkg/sdk/client/{domain}.go` with its own
+   `{Domain}Service` struct. Each domain gets its own service — do
+   NOT add methods to an existing service.
+2. Add a field to the `Client` struct in `osapi.go` and wire it
+   in `New()`
+3. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new
+   domain's spec from the combined `api.yaml`
+4. Add an SDK example in `examples/sdk/client/{domain}.go`
+5. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
    with methods table, request types, usage examples, and permissions
+6. Add the new service to the SDK navbar dropdown in
+   `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
+   section)
+
+#### SDK method naming (MANDATORY)
+
+Method names MUST be clean verbs — NEVER repeat the service name.
+The service struct already provides the namespace. Stuttering like
+`SysctlService.SysctlGet()` is wrong — use `SysctlService.Get()`.
+
+Standard verbs:
+
+| Verb       | HTTP | Description                          |
+| ---------- | ---- | ------------------------------------ |
+| `List`     | GET  | List collection                      |
+| `Get`      | GET  | Get single resource / read state     |
+| `Create`   | POST | Create new resource                  |
+| `Update`   | PUT  | Update existing resource             |
+| `Delete`   | DEL  | Remove resource                      |
+
+Rare exceptions for action operations (no persistent resource):
+- `Ping.Do()` — one-shot action
+- `Command.Exec()`, `Command.Shell()` — execute commands
+
+Examples:
+```go
+// GOOD — clean verbs, no stuttering
+client.Sysctl.Get(ctx, host, key)
+client.Cron.Create(ctx, host, opts)
+client.Hostname.Update(ctx, host, name)
+client.NTP.Delete(ctx, host)
+client.Timezone.Get(ctx, host)
+
+// BAD — stuttering, repeats service name
+client.Sysctl.SysctlGet(ctx, host, key)
+client.NTP.NtpCreate(ctx, host, opts)
+```
 
 #### SDK example conventions
 
@@ -612,8 +658,10 @@ Follow the same principles as the orchestrator examples:
 
 ### Step 6: CLI Commands
 
-- `cmd/client_{domain}.go` — parent command registered under `clientCmd`
-- `cmd/client_{domain}_{operation}.go` — one subcommand per endpoint
+- `cmd/client_node_{domain}.go` — parent command registered under
+  `clientNodeCmd` (for node-targeted domains)
+- `cmd/client_node_{domain}_{operation}.go` — one subcommand per
+  endpoint (e.g., `client_node_sysctl_get.go`)
 - All commands support `--json` for raw output
 - Use `printKV` for inline key-value output and `printStyledTable` for
   multi-row tabular data (both in `cmd/ui.go`)
@@ -634,8 +682,11 @@ Follow the same principles as the orchestrator examples:
   page with `<DocCardList />` for sidebar navigation
 - `docs/docs/sidebar/usage/cli/client/{domain}/{operation}.md` — one page
   per CLI subcommand with usage examples and `--json` output
-- Update `docs/docusaurus.config.ts` — add the new feature to the
-  "Features" navbar dropdown
+- Update `docs/docusaurus.config.ts`:
+  - Add the new feature to the "Features" navbar dropdown
+  - Add the new SDK service to the "SDK" → "Client Library" dropdown
+- Update `docs/docs/sidebar/features/features.md` — add the new
+  domain to the features landing page table
 - Update `docs/docs/sidebar/usage/configuration.md` — add any new
   permissions to the roles table and permissions comments in the
   YAML reference

@@ -108,7 +108,7 @@ func main() {
 		meta.Data.Name, meta.Data.SHA256, meta.Data.Size)
 
 	// Deploy the file to an agent.
-	deploy, err := c.Node.FileDeploy(ctx, client.FileDeployOpts{
+	deploy, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
 		ObjectName:  "app.conf",
 		Path:        "/tmp/app.conf",
 		ContentType: "raw",
@@ -125,7 +125,7 @@ func main() {
 	}
 
 	// Check file status on the agent.
-	status, err := c.Node.FileStatus(ctx, "_all", "/tmp/app.conf")
+	status, err := c.FileDeploy.Status(ctx, "_all", "/tmp/app.conf")
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}

@@ -37,7 +37,7 @@ var clientNodeSysctlDeleteCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")
 
-		resp, err := sdkClient.Sysctl.SysctlDelete(ctx, host, key)
+		resp, err := sdkClient.Sysctl.Delete(ctx, host, key)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

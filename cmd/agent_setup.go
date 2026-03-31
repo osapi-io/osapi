@@ -43,7 +43,9 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
+	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -181,6 +183,12 @@ func setupAgent(
 	// --- Sysctl provider ---
 	sysctlProvider := createSysctlProvider(log, appFs, fileStateKV, execManager, hostname)
 
+	// --- NTP provider ---
+	ntpProvider := createNtpProvider(log, appFs, execManager)
+
+	// --- Timezone provider ---
+	timezoneProvider := createTimezoneProvider(log, execManager)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -192,6 +200,8 @@ func setupAgent(
 			memProvider,
 			loadProvider,
 			sysctlProvider,
+			ntpProvider,
+			timezoneProvider,
 			appConfig,
 			log,
 		),
@@ -200,6 +210,8 @@ func setupAgent(
 		memProvider,
 		loadProvider,
 		sysctlProvider,
+		ntpProvider,
+		timezoneProvider,
 	)
 
 	registry.Register("network",
@@ -337,6 +349,45 @@ func createSysctlProvider(
 		return sysctlProv.NewDarwinProvider()
 	default:
 		return sysctlProv.NewLinuxProvider()
+	}
+}
+
+// createNtpProvider creates a platform-specific NTP provider. On Debian, the
+// NTP provider manages chrony configuration. On other platforms, all operations
+// return ErrUnsupported.
+func createNtpProvider(
+	log *slog.Logger,
+	fs avfs.VFS,
+	execManager exec.Manager,
+) ntpProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		return ntpProv.NewDebianProvider(log, fs, execManager)
+	case "darwin":
+		return ntpProv.NewDarwinProvider()
+	default:
+		return ntpProv.NewLinuxProvider()
+	}
+}
+
+// createTimezoneProvider creates a platform-specific timezone provider. On
+// Debian, the timezone provider manages the system timezone via timedatectl.
+// On other platforms, all operations return ErrUnsupported.
+func createTimezoneProvider(
+	log *slog.Logger,
+	execManager exec.Manager,
+) timezoneProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		return timezoneProv.NewDebianProvider(log, execManager)
+	case "darwin":
+		return timezoneProv.NewDarwinProvider()
+	default:
+		return timezoneProv.NewLinuxProvider()
 	}
 }
 

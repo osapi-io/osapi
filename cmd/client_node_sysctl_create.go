@@ -39,7 +39,7 @@ var clientNodeSysctlCreateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		resp, err := sdkClient.Sysctl.SysctlCreate(ctx, host, client.SysctlCreateOpts{
+		resp, err := sdkClient.Sysctl.Create(ctx, host, client.SysctlCreateOpts{
 			Key:   key,
 			Value: value,
 		})

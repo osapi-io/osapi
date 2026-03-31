@@ -2,48 +2,83 @@
 sidebar_position: 8
 ---
 
-# NodeService
+# Node Services
 
-Node management, network configuration, and command execution. This is the
-largest service -- it combines node info, network, and command operations that
-all target a specific host.
+Node-targeted operations are split into per-domain services. Each service
+handles a single concern and is accessed directly on the client.
 
-## Methods
+## Services
 
-### Node Info
+### StatusService
 
-| Method                              | Description                               |
-| ----------------------------------- | ----------------------------------------- |
-| `Status(ctx, target)`               | Full node status (OS, disk, memory, load) |
-| `Hostname(ctx, target)`             | Get system hostname                       |
-| `UpdateHostname(ctx, target, name)` | Set system hostname                       |
-| `Disk(ctx, target)`                 | Get disk usage                            |
-| `Memory(ctx, target)`               | Get memory statistics                     |
-| `Load(ctx, target)`                 | Get load averages                         |
-| `OS(ctx, target)`                   | Get operating system info                 |
-| `Uptime(ctx, target)`               | Get uptime                                |
+| Method                    | Description                               |
+| ------------------------- | ----------------------------------------- |
+| `Status.Get(ctx, target)` | Full node status (OS, disk, memory, load) |
 
-### Network
+### HostnameService
 
-| Method                                           | Description        |
-| ------------------------------------------------ | ------------------ |
-| `GetDNS(ctx, target, iface)`                     | Get DNS config     |
-| `UpdateDNS(ctx, target, iface, servers, search)` | Update DNS servers |
-| `Ping(ctx, target, address)`                     | Ping a host        |
+| Method                               | Description         |
+| ------------------------------------ | ------------------- |
+| `Hostname.Get(ctx, target)`          | Get system hostname |
+| `Hostname.Update(ctx, target, name)` | Set system hostname |
 
-### Command
+### DiskService
 
-| Method            | Description                                 |
-| ----------------- | ------------------------------------------- |
-| `Exec(ctx, req)`  | Execute a command directly (no shell)       |
-| `Shell(ctx, req)` | Execute via `/bin/sh -c` (pipes, redirects) |
+| Method                  | Description    |
+| ----------------------- | -------------- |
+| `Disk.Get(ctx, target)` | Get disk usage |
 
-### File
+### MemoryService
 
-| Method                          | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `FileDeploy(ctx, opts)`         | Deploy file to agent with SHA check |
-| `FileStatus(ctx, target, path)` | Check deployed file status          |
+| Method                    | Description           |
+| ------------------------- | --------------------- |
+| `Memory.Get(ctx, target)` | Get memory statistics |
+
+### LoadService
+
+| Method                  | Description       |
+| ----------------------- | ----------------- |
+| `Load.Get(ctx, target)` | Get load averages |
+
+### UptimeService
+
+| Method                    | Description |
+| ------------------------- | ----------- |
+| `Uptime.Get(ctx, target)` | Get uptime  |
+
+### OSService
+
+| Method                | Description               |
+| --------------------- | ------------------------- |
+| `OS.Get(ctx, target)` | Get operating system info |
+
+### DNSService
+
+| Method                                            | Description        |
+| ------------------------------------------------- | ------------------ |
+| `DNS.Get(ctx, target, iface)`                     | Get DNS config     |
+| `DNS.Update(ctx, target, iface, servers, search)` | Update DNS servers |
+
+### PingService
+
+| Method                          | Description |
+| ------------------------------- | ----------- |
+| `Ping.Do(ctx, target, address)` | Ping a host |
+
+### CommandService
+
+| Method                    | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `Command.Exec(ctx, req)`  | Execute a command directly (no shell)       |
+| `Command.Shell(ctx, req)` | Execute via `/bin/sh -c` (pipes, redirects) |
+
+### FileDeployService
+
+| Method                                 | Description                         |
+| -------------------------------------- | ----------------------------------- |
+| `FileDeploy.Deploy(ctx, opts)`         | Deploy file to agent with SHA check |
+| `FileDeploy.Undeploy(ctx, opts)`       | Remove a deployed file              |
+| `FileDeploy.Status(ctx, target, path)` | Check deployed file status          |
 
 See [`FileService`](file.md) for Object Store operations (upload, list, get,
 delete) and `FileDeployOpts` details.
@@ -52,36 +87,36 @@ delete) and `FileDeployOpts` details.
 
 ```go
 // Get hostname
-resp, err := client.Node.Hostname(ctx, "_any")
+resp, err := client.Hostname.Get(ctx, "_any")
 
 // Update hostname
-resp, err := client.Node.UpdateHostname(ctx, "web-01", "new-hostname")
+resp, err := client.Hostname.Update(ctx, "web-01", "new-hostname")
 
 // Get disk usage from all hosts
-resp, err := client.Node.Disk(ctx, "_all")
+resp, err := client.Disk.Get(ctx, "_all")
 
 // Update DNS
-resp, err := client.Node.UpdateDNS(
+resp, err := client.DNS.Update(
     ctx, "web-01", "eth0",
     []string{"8.8.8.8", "8.8.4.4"},
     nil,
 )
 
 // Execute a command
-resp, err := client.Node.Exec(ctx, client.ExecRequest{
+resp, err := client.Command.Exec(ctx, client.ExecRequest{
     Command: "apt",
     Args:    []string{"install", "-y", "nginx"},
     Target:  "_all",
 })
 
 // Execute a shell command
-resp, err := client.Node.Shell(ctx, client.ShellRequest{
+resp, err := client.Command.Shell(ctx, client.ShellRequest{
     Command: "ps aux | grep nginx",
     Target:  "_any",
 })
 
 // Deploy a file
-resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
+resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "nginx.conf",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "raw",
@@ -90,7 +125,7 @@ resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
 })
 
 // Check file status
-resp, err := client.Node.FileStatus(
+resp, err := client.FileDeploy.Status(
     ctx, "web-01", "/etc/nginx/nginx.conf",
 )
 ```
@@ -118,7 +153,7 @@ of three values:
 
 Any host that does not support the operation (e.g., a Darwin host in a Linux
 fleet) appears as `skipped` with an error description. This applies to both
-single-target and broadcast responses — the response shape is identical.
+single-target and broadcast responses -- the response shape is identical.
 
 ## Permissions
 

@@ -47,6 +47,10 @@ const (
 	PermCronWrite      Permission = "cron:write"
 	PermSysctlRead     Permission = "sysctl:read"
 	PermSysctlWrite    Permission = "sysctl:write"
+	PermNtpRead        Permission = "ntp:read"
+	PermNtpWrite       Permission = "ntp:write"
+	PermTimezoneRead   Permission = "timezone:read"
+	PermTimezoneWrite  Permission = "timezone:write"
 )
 
 // Role represents a built-in RBAC role name.

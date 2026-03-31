@@ -14,20 +14,21 @@ import "github.com/retr0h/osapi/pkg/sdk/client"
 
 client := client.New("http://localhost:8080", "your-jwt-token")
 
-resp, err := client.Node.Hostname(ctx, "_any")
+resp, err := client.Hostname.Get(ctx, "_any")
 ```
 
 ## Services
 
-| Service             | Description                        |
-| ------------------- | ---------------------------------- |
-| [Agent](agent.md)   | Agent discovery and details        |
-| [Audit](audit.md)   | Audit log operations               |
-| [Docker](docker.md) | Container runtime operations       |
-| [File](file.md)     | File management (Object Store)     |
-| [Health](health.md) | Health check operations            |
-| [Job](job.md)       | Async job queue operations         |
-| [Node](node.md)     | Node management, network, commands |
+| Service             | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| [Agent](agent.md)   | Agent discovery and details                           |
+| [Audit](audit.md)   | Audit log operations                                  |
+| [Cron](cron.md)     | Cron schedule management                              |
+| [Docker](docker.md) | Container runtime operations                          |
+| [File](file.md)     | File management (Object Store)                        |
+| [Health](health.md) | Health check operations                               |
+| [Job](job.md)       | Async job queue operations                            |
+| [Node](node.md)     | Node info, network, command, and file deploy services |
 
 ## Client Options
 

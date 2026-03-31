@@ -32,8 +32,8 @@ type SysctlService struct {
 	client *gen.ClientWithResponses
 }
 
-// SysctlList lists all sysctl parameters on the target host.
-func (s *SysctlService) SysctlList(
+// List lists all sysctl parameters on the target host.
+func (s *SysctlService) List(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[SysctlEntryResult]], error) {
@@ -61,8 +61,8 @@ func (s *SysctlService) SysctlList(
 	return NewResponse(sysctlEntryCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// SysctlGet retrieves a single sysctl parameter by key on the target host.
-func (s *SysctlService) SysctlGet(
+// Get retrieves a single sysctl parameter by key on the target host.
+func (s *SysctlService) Get(
 	ctx context.Context,
 	hostname string,
 	key string,
@@ -92,8 +92,8 @@ func (s *SysctlService) SysctlGet(
 	return NewResponse(sysctlEntryCollectionFromGet(resp.JSON200), resp.Body), nil
 }
 
-// SysctlCreate creates a sysctl parameter on the target host.
-func (s *SysctlService) SysctlCreate(
+// Create creates a sysctl parameter on the target host.
+func (s *SysctlService) Create(
 	ctx context.Context,
 	hostname string,
 	opts SysctlCreateOpts,
@@ -128,8 +128,8 @@ func (s *SysctlService) SysctlCreate(
 	return NewResponse(sysctlMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
 }
 
-// SysctlUpdate updates an existing sysctl parameter on the target host.
-func (s *SysctlService) SysctlUpdate(
+// Update updates an existing sysctl parameter on the target host.
+func (s *SysctlService) Update(
 	ctx context.Context,
 	hostname string,
 	key string,
@@ -165,8 +165,8 @@ func (s *SysctlService) SysctlUpdate(
 	return NewResponse(sysctlMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
 }
 
-// SysctlDelete removes a sysctl parameter on the target host.
-func (s *SysctlService) SysctlDelete(
+// Delete removes a sysctl parameter on the target host.
+func (s *SysctlService) Delete(
 	ctx context.Context,
 	hostname string,
 	key string,

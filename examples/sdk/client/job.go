@@ -51,7 +51,7 @@ func main() {
 	ctx := context.Background()
 
 	// Trigger a job via a domain operation so we have something to inspect.
-	hn, err := c.Node.Hostname(ctx, "_all")
+	hn, err := c.Hostname.Get(ctx, "_all")
 	if err != nil {
 		log.Fatalf("hostname: %v", err)
 	}

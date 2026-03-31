@@ -37,7 +37,7 @@ var clientNodeScheduleCronDeleteCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
 
-		resp, err := sdkClient.Schedule.CronDelete(ctx, host, name)
+		resp, err := sdkClient.Cron.Delete(ctx, host, name)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

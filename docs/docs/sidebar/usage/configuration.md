@@ -154,11 +154,11 @@ OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
 endpoint requires a specific permission. Built-in roles expand to a default set
 of permissions:
 
-| Role    | Permissions                                                                                                                                                                                                                                                                                            |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `admin` | `agent:read`, `agent:write`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write` |
-| `write` | `agent:read`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`                                                                   |
-| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `cron:read`, `sysctl:read`                                                                                                                                                                           |
+| Role    | Permissions                                                                                                                                                                                                                                                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `admin` | `agent:read`, `agent:write`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `audit:read`, `command:execute`, `file:read`, `file:write`, `docker:read`, `docker:write`, `docker:execute`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write` |
+| `write` | `agent:read`, `node:read`, `node:write`, `network:read`, `network:write`, `job:read`, `job:write`, `health:read`, `file:read`, `file:write`, `docker:read`, `docker:write`, `cron:read`, `cron:write`, `sysctl:read`, `sysctl:write`, `ntp:read`, `ntp:write`, `timezone:read`, `timezone:write`                                                                   |
+| `read`  | `agent:read`, `node:read`, `network:read`, `job:read`, `health:read`, `file:read`, `docker:read`, `cron:read`, `sysctl:read`, `ntp:read`, `timezone:read`                                                                                                                                                                                                          |
 
 ### Custom Roles
 
@@ -257,7 +257,8 @@ controller:
       #              network:read, network:write, job:read, job:write,
       #              health:read, audit:read, command:execute, file:read,
       #              file:write, docker:read, docker:write, docker:execute,
-      #              cron:read, cron:write, sysctl:read, sysctl:write
+      #              cron:read, cron:write, sysctl:read, sysctl:write,
+      #              ntp:read, ntp:write, timezone:read, timezone:write
       # roles:
       #   ops:
       #     permissions:

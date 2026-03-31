@@ -40,7 +40,9 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	memProv "github.com/retr0h/osapi/internal/provider/node/mem"
+	"github.com/retr0h/osapi/internal/provider/node/ntp"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
+	"github.com/retr0h/osapi/internal/provider/node/timezone"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.
@@ -355,6 +357,8 @@ func SetAgentAppConfig(
 			a.memProvider,
 			a.loadProvider,
 			(sysctl.Provider)(nil),
+			(ntp.Provider)(nil),
+			(timezone.Provider)(nil),
 			cfg,
 			a.logger,
 		)
@@ -385,6 +389,8 @@ func SetAgentHostProvider(
 			a.memProvider,
 			a.loadProvider,
 			(sysctl.Provider)(nil),
+			(ntp.Provider)(nil),
+			(timezone.Provider)(nil),
 			a.appConfig,
 			a.logger,
 		)

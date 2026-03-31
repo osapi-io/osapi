@@ -51,8 +51,10 @@ import (
 	nodeFileAPI "github.com/retr0h/osapi/internal/controller/api/node/file"
 	hostnameAPI "github.com/retr0h/osapi/internal/controller/api/node/hostname"
 	networkAPI "github.com/retr0h/osapi/internal/controller/api/node/network"
+	ntpAPI "github.com/retr0h/osapi/internal/controller/api/node/ntp"
 	scheduleAPI "github.com/retr0h/osapi/internal/controller/api/node/schedule"
 	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
+	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
@@ -718,6 +720,8 @@ func registerControllerHandlers(
 	handlers = append(handlers, dockerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, sysctlAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, ntpAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, timezoneAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, networkAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, commandAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(log, jc, signingKey, customRoles)...)

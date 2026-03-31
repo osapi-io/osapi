@@ -136,6 +136,16 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'NTP Management',
+              docId: 'sidebar/features/ntp'
+            },
+            {
+              type: 'doc',
+              label: 'Timezone Management',
+              docId: 'sidebar/features/timezone'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },
@@ -222,6 +232,21 @@ const config: Config = {
               type: 'doc',
               label: 'Docker',
               docId: 'sidebar/sdk/client/docker'
+            },
+            {
+              type: 'doc',
+              label: 'Sysctl',
+              docId: 'sidebar/sdk/client/sysctl'
+            },
+            {
+              type: 'doc',
+              label: 'NTP',
+              docId: 'sidebar/sdk/client/ntp'
+            },
+            {
+              type: 'doc',
+              label: 'Timezone',
+              docId: 'sidebar/sdk/client/timezone'
             },
             {
               type: 'html',

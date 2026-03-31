@@ -42,7 +42,7 @@ var clientNodeScheduleCronUpdateCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 		contentType, _ := cmd.Flags().GetString("content-type")
 
-		resp, err := sdkClient.Schedule.CronUpdate(ctx, host, name, client.CronUpdateOpts{
+		resp, err := sdkClient.Cron.Update(ctx, host, name, client.CronUpdateOpts{
 			Object:      object,
 			Schedule:    schedule,
 			User:        user,

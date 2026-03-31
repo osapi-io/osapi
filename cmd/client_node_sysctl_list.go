@@ -36,7 +36,7 @@ var clientNodeSysctlListCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
-		resp, err := sdkClient.Sysctl.SysctlList(ctx, host)
+		resp, err := sdkClient.Sysctl.List(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

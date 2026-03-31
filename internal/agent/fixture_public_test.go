@@ -39,7 +39,9 @@ import (
 	nodeHost "github.com/retr0h/osapi/internal/provider/node/host"
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
+	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
+	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 )
@@ -47,26 +49,28 @@ import (
 // newTestAgentParams holds all provider dependencies for building a test agent.
 // This mirrors the old agent.New() parameter list, making test migration mechanical.
 type newTestAgentParams struct {
-	appFs           avfs.VFS
-	appConfig       config.Config
-	logger          *slog.Logger
-	jobClient       client.JobClient
-	streamName      string
-	hostProvider    nodeHost.Provider
-	diskProvider    disk.Provider
-	memProvider     mem.Provider
-	loadProvider    load.Provider
-	dnsProvider     dns.Provider
-	pingProvider    ping.Provider
-	netinfoProvider netinfo.Provider
-	commandProvider command.Provider
-	fileProvider    fileProv.Provider
-	dockerProvider  dockerProv.Provider
-	cronProvider    cronProv.Provider
-	sysctlProvider  sysctlProv.Provider
-	processProvider process.Provider
-	registryKV      jetstream.KeyValue
-	factsKV         jetstream.KeyValue
+	appFs            avfs.VFS
+	appConfig        config.Config
+	logger           *slog.Logger
+	jobClient        client.JobClient
+	streamName       string
+	hostProvider     nodeHost.Provider
+	diskProvider     disk.Provider
+	memProvider      mem.Provider
+	loadProvider     load.Provider
+	dnsProvider      dns.Provider
+	pingProvider     ping.Provider
+	netinfoProvider  netinfo.Provider
+	commandProvider  command.Provider
+	fileProvider     fileProv.Provider
+	dockerProvider   dockerProv.Provider
+	cronProvider     cronProv.Provider
+	sysctlProvider   sysctlProv.Provider
+	ntpProvider      ntpProv.Provider
+	timezoneProvider timezoneProv.Provider
+	processProvider  process.Provider
+	registryKV       jetstream.KeyValue
+	factsKV          jetstream.KeyValue
 }
 
 // newTestAgent builds a ProviderRegistry from the supplied providers and
@@ -92,6 +96,8 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.memProvider,
 			p.loadProvider,
 			p.sysctlProvider,
+			p.ntpProvider,
+			p.timezoneProvider,
 			p.appConfig,
 			logger,
 		),

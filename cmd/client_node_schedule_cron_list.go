@@ -36,7 +36,7 @@ var clientNodeScheduleCronListCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
-		resp, err := sdkClient.Schedule.CronList(ctx, host)
+		resp, err := sdkClient.Cron.List(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

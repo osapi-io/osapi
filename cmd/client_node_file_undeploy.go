@@ -40,7 +40,7 @@ The object store entry is preserved; only the file on disk is removed.`,
 		host, _ := cmd.Flags().GetString("target")
 		path, _ := cmd.Flags().GetString("path")
 
-		resp, err := sdkClient.Node.FileUndeploy(ctx, client.FileUndeployOpts{
+		resp, err := sdkClient.FileDeploy.Undeploy(ctx, client.FileUndeployOpts{
 			Target: host,
 			Path:   path,
 		})

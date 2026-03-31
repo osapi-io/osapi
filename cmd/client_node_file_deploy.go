@@ -50,7 +50,7 @@ SHA-256 idempotency ensures unchanged files are not rewritten.`,
 
 		vars := parseVarFlags(varFlags)
 
-		resp, err := sdkClient.Node.FileDeploy(ctx, client.FileDeployOpts{
+		resp, err := sdkClient.FileDeploy.Deploy(ctx, client.FileDeployOpts{
 			Target:      host,
 			ObjectName:  objectName,
 			Path:        path,

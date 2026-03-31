@@ -1,0 +1,401 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: NTP Management API
+  version: 1.0.0
+tags:
+  - name: ntp_operations
+    x-displayName: Node/NTP
+    description: NTP server configuration management on a target node.
+
+paths:
+  /node/{hostname}/ntp:
+    get:
+      summary: Get NTP status
+      description: >
+        Get NTP sync status and configured servers on the target node.
+      tags:
+        - ntp_operations
+      operationId: GetNodeNtp
+      security:
+        - BearerAuth:
+            - ntp:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: NTP status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving NTP status.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create NTP configuration
+      description: >
+        Deploy a managed NTP server configuration on the target node.
+        Fails if already managed.
+      tags:
+        - ntp_operations
+      operationId: PostNodeNtp
+      security:
+        - BearerAuth:
+            - ntp:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: NTP create parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NtpCreateRequest'
+      responses:
+        '200':
+          description: NTP configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpCreateResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating NTP configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update NTP configuration
+      description: >
+        Replace the managed NTP server configuration on the target node.
+        Fails if not currently managed.
+      tags:
+        - ntp_operations
+      operationId: PutNodeNtp
+      security:
+        - BearerAuth:
+            - ntp:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: NTP update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NtpUpdateRequest'
+      responses:
+        '200':
+          description: NTP configuration updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpUpdateResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: NTP configuration not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating NTP configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete NTP configuration
+      description: >
+        Remove the managed NTP server configuration from the target node.
+      tags:
+        - ntp_operations
+      operationId: DeleteNodeNtp
+      security:
+        - BearerAuth:
+            - ntp:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: NTP configuration deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpDeleteResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: NTP configuration not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting NTP configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas -------------------------------------------------
+
+    NtpCreateRequest:
+      type: object
+      required:
+        - servers
+      properties:
+        servers:
+          type: array
+          items:
+            type: string
+          description: >
+            List of NTP server addresses to configure.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    NtpUpdateRequest:
+      type: object
+      required:
+        - servers
+      properties:
+        servers:
+          type: array
+          items:
+            type: string
+          description: >
+            List of NTP server addresses to configure.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    # -- Response schemas ------------------------------------------------
+
+    NtpStatusEntry:
+      type: object
+      description: NTP status for a single host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        synchronized:
+          type: boolean
+          description: Whether the system clock is synchronized.
+        stratum:
+          type: integer
+          description: NTP stratum level.
+        offset:
+          type: string
+          description: Clock offset from the NTP source.
+        current_source:
+          type: string
+          description: The currently selected NTP source.
+        servers:
+          type: array
+          items:
+            type: string
+          description: Configured NTP server addresses.
+        error:
+          type: string
+          description: Error message if the agent failed to retrieve NTP status.
+      required:
+        - hostname
+        - status
+
+    NtpCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NtpStatusEntry'
+      required:
+        - results
+
+    NtpMutationResult:
+      type: object
+      description: Result of an NTP create, update, or delete operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    NtpCreateResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NtpMutationResult'
+      required:
+        - results
+
+    NtpUpdateResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NtpMutationResult'
+      required:
+        - results
+
+    NtpDeleteResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NtpMutationResult'
+      required:
+        - results

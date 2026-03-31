@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the NodeService: querying status, hostname,
+// Package main demonstrates node-related services: querying status, hostname,
 // OS info, disk, memory, load averages, and uptime from a target node.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run node.go
@@ -49,7 +49,7 @@ func main() {
 	target := "_all"
 
 	// Status (aggregated node info).
-	status, err := c.Node.Status(ctx, target)
+	status, err := c.Status.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}
@@ -69,7 +69,7 @@ func main() {
 	}
 
 	// Hostname
-	hn, err := c.Node.Hostname(ctx, target)
+	hn, err := c.Hostname.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("hostname: %v", err)
 	}
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	// Update hostname.
-	setResp, err := c.Node.UpdateHostname(ctx, target, "new-hostname")
+	setResp, err := c.Hostname.Update(ctx, target, "new-hostname")
 	if err != nil {
 		log.Fatalf("set hostname: %v", err)
 	}
@@ -89,7 +89,7 @@ func main() {
 	}
 
 	// Disk usage
-	disk, err := c.Node.Disk(ctx, target)
+	disk, err := c.Disk.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("disk: %v", err)
 	}
@@ -103,7 +103,7 @@ func main() {
 	}
 
 	// Memory
-	mem, err := c.Node.Memory(ctx, target)
+	mem, err := c.Memory.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("memory: %v", err)
 	}
@@ -114,7 +114,7 @@ func main() {
 	}
 
 	// Load averages
-	load, err := c.Node.Load(ctx, target)
+	load, err := c.Load.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("load: %v", err)
 	}
@@ -128,7 +128,7 @@ func main() {
 	}
 
 	// OS info
-	osInfo, err := c.Node.OS(ctx, target)
+	osInfo, err := c.OS.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("os: %v", err)
 	}
@@ -141,7 +141,7 @@ func main() {
 	}
 
 	// Uptime
-	up, err := c.Node.Uptime(ctx, target)
+	up, err := c.Uptime.Get(ctx, target)
 	if err != nil {
 		log.Fatalf("uptime: %v", err)
 	}

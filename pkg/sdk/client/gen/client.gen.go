@@ -216,6 +216,20 @@ const (
 	NodeStatusResponseStatusSkipped NodeStatusResponseStatus = "skipped"
 )
 
+// Defines values for NtpMutationResultStatus.
+const (
+	NtpMutationResultStatusFailed  NtpMutationResultStatus = "failed"
+	NtpMutationResultStatusOk      NtpMutationResultStatus = "ok"
+	NtpMutationResultStatusSkipped NtpMutationResultStatus = "skipped"
+)
+
+// Defines values for NtpStatusEntryStatus.
+const (
+	NtpStatusEntryStatusFailed  NtpStatusEntryStatus = "failed"
+	NtpStatusEntryStatusOk      NtpStatusEntryStatus = "ok"
+	NtpStatusEntryStatusSkipped NtpStatusEntryStatus = "skipped"
+)
+
 // Defines values for OSInfoResultItemStatus.
 const (
 	OSInfoResultItemStatusFailed  OSInfoResultItemStatus = "failed"
@@ -242,6 +256,20 @@ const (
 	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
 	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
 	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
+)
+
+// Defines values for TimezoneEntryStatus.
+const (
+	TimezoneEntryStatusFailed  TimezoneEntryStatus = "failed"
+	TimezoneEntryStatusOk      TimezoneEntryStatus = "ok"
+	TimezoneEntryStatusSkipped TimezoneEntryStatus = "skipped"
+)
+
+// Defines values for TimezoneMutationResultStatus.
+const (
+	TimezoneMutationResultStatusFailed  TimezoneMutationResultStatus = "failed"
+	TimezoneMutationResultStatusOk      TimezoneMutationResultStatus = "ok"
+	TimezoneMutationResultStatusSkipped TimezoneMutationResultStatus = "skipped"
 )
 
 // Defines values for UptimeResponseStatus.
@@ -1643,6 +1671,94 @@ type NodeStatusResponse struct {
 // NodeStatusResponseStatus The status of the operation for this host.
 type NodeStatusResponseStatus string
 
+// NtpCollectionResponse defines model for NtpCollectionResponse.
+type NtpCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []NtpStatusEntry    `json:"results"`
+}
+
+// NtpCreateRequest defines model for NtpCreateRequest.
+type NtpCreateRequest struct {
+	// Servers List of NTP server addresses to configure.
+	Servers []string `json:"servers" validate:"required,min=1"`
+}
+
+// NtpCreateResponse defines model for NtpCreateResponse.
+type NtpCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []NtpMutationResult `json:"results"`
+}
+
+// NtpDeleteResponse defines model for NtpDeleteResponse.
+type NtpDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []NtpMutationResult `json:"results"`
+}
+
+// NtpMutationResult Result of an NTP create, update, or delete operation for one host.
+type NtpMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status NtpMutationResultStatus `json:"status"`
+}
+
+// NtpMutationResultStatus The status of the operation for this host.
+type NtpMutationResultStatus string
+
+// NtpStatusEntry NTP status for a single host.
+type NtpStatusEntry struct {
+	// CurrentSource The currently selected NTP source.
+	CurrentSource *string `json:"current_source,omitempty"`
+
+	// Error Error message if the agent failed to retrieve NTP status.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Offset Clock offset from the NTP source.
+	Offset *string `json:"offset,omitempty"`
+
+	// Servers Configured NTP server addresses.
+	Servers *[]string `json:"servers,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NtpStatusEntryStatus `json:"status"`
+
+	// Stratum NTP stratum level.
+	Stratum *int `json:"stratum,omitempty"`
+
+	// Synchronized Whether the system clock is synchronized.
+	Synchronized *bool `json:"synchronized,omitempty"`
+}
+
+// NtpStatusEntryStatus The status of the operation for this host.
+type NtpStatusEntryStatus string
+
+// NtpUpdateRequest defines model for NtpUpdateRequest.
+type NtpUpdateRequest struct {
+	// Servers List of NTP server addresses to configure.
+	Servers []string `json:"servers" validate:"required,min=1"`
+}
+
+// NtpUpdateResponse defines model for NtpUpdateResponse.
+type NtpUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []NtpMutationResult `json:"results"`
+}
+
 // OSInfoCollectionResponse defines model for OSInfoCollectionResponse.
 type OSInfoCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -1916,6 +2032,68 @@ type TimelineEvent struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// TimezoneCollectionResponse defines model for TimezoneCollectionResponse.
+type TimezoneCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []TimezoneEntry     `json:"results"`
+}
+
+// TimezoneEntry Timezone information for a single host.
+type TimezoneEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status TimezoneEntryStatus `json:"status"`
+
+	// Timezone Current timezone name.
+	Timezone *string `json:"timezone,omitempty"`
+
+	// UtcOffset Current UTC offset (e.g., "-05:00").
+	UtcOffset *string `json:"utc_offset,omitempty"`
+}
+
+// TimezoneEntryStatus The status of the operation for this host.
+type TimezoneEntryStatus string
+
+// TimezoneMutationResult Result of a timezone update operation for one host.
+type TimezoneMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status TimezoneMutationResultStatus `json:"status"`
+
+	// Timezone Timezone that was set.
+	Timezone *string `json:"timezone,omitempty"`
+}
+
+// TimezoneMutationResultStatus The status of the operation for this host.
+type TimezoneMutationResultStatus string
+
+// TimezoneUpdateRequest defines model for TimezoneUpdateRequest.
+type TimezoneUpdateRequest struct {
+	// Timezone IANA timezone name (e.g., "America/New_York", "UTC").
+	Timezone string `json:"timezone" validate:"required,min=1"`
+}
+
+// TimezoneUpdateResponse defines model for TimezoneUpdateResponse.
+type TimezoneUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
+	Results []TimezoneMutationResult `json:"results"`
+}
+
 // UptimeCollectionResponse defines model for UptimeCollectionResponse.
 type UptimeCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2075,6 +2253,12 @@ type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
 // PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
 type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
 
+// PostNodeNtpJSONRequestBody defines body for PostNodeNtp for application/json ContentType.
+type PostNodeNtpJSONRequestBody = NtpCreateRequest
+
+// PutNodeNtpJSONRequestBody defines body for PutNodeNtp for application/json ContentType.
+type PutNodeNtpJSONRequestBody = NtpUpdateRequest
+
 // PostNodeScheduleCronJSONRequestBody defines body for PostNodeScheduleCron for application/json ContentType.
 type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
 
@@ -2086,6 +2270,9 @@ type PostNodeSysctlJSONRequestBody = SysctlCreateRequest
 
 // PutNodeSysctlJSONRequestBody defines body for PutNodeSysctl for application/json ContentType.
 type PutNodeSysctlJSONRequestBody = SysctlUpdateRequest
+
+// PutNodeTimezoneJSONRequestBody defines body for PutNodeTimezone for application/json ContentType.
+type PutNodeTimezoneJSONRequestBody = TimezoneUpdateRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -2312,6 +2499,22 @@ type ClientInterface interface {
 
 	PostNodeNetworkPing(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteNodeNtp request
+	DeleteNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeNtp request
+	GetNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeNtpWithBody request with any body
+	PostNodeNtpWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeNtp(ctx context.Context, hostname Hostname, body PostNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeNtpWithBody request with any body
+	PutNodeNtpWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeNtp(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetNodeOS request
 	GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2352,6 +2555,14 @@ type ClientInterface interface {
 	PutNodeSysctlWithBody(ctx context.Context, hostname Hostname, key SysctlKey, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutNodeSysctl(ctx context.Context, hostname Hostname, key SysctlKey, body PutNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeTimezone request
+	GetNodeTimezone(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeTimezoneWithBody request with any body
+	PutNodeTimezoneWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeTimezone(ctx context.Context, hostname Hostname, body PutNodeTimezoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeUptime request
 	GetNodeUptime(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3020,6 +3231,78 @@ func (c *Client) PostNodeNetworkPing(ctx context.Context, hostname Hostname, bod
 	return c.Client.Do(req)
 }
 
+func (c *Client) DeleteNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeNtpRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeNtpRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeNtpWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNtpRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeNtp(ctx context.Context, hostname Hostname, body PostNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNtpRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeNtpWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNtpRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeNtp(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNtpRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeOSRequest(c.Server, hostname)
 	if err != nil {
@@ -3190,6 +3473,42 @@ func (c *Client) PutNodeSysctlWithBody(ctx context.Context, hostname Hostname, k
 
 func (c *Client) PutNodeSysctl(ctx context.Context, hostname Hostname, key SysctlKey, body PutNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeSysctlRequest(c.Server, hostname, key, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeTimezone(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeTimezoneRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeTimezoneWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeTimezoneRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeTimezone(ctx context.Context, hostname Hostname, body PutNodeTimezoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeTimezoneRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4998,6 +5317,168 @@ func NewPostNodeNetworkPingRequestWithBody(server string, hostname Hostname, con
 	return req, nil
 }
 
+// NewDeleteNodeNtpRequest generates requests for DeleteNodeNtp
+func NewDeleteNodeNtpRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeNtpRequest generates requests for GetNodeNtp
+func NewGetNodeNtpRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeNtpRequest calls the generic PostNodeNtp builder with application/json body
+func NewPostNodeNtpRequest(server string, hostname Hostname, body PostNodeNtpJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeNtpRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeNtpRequestWithBody generates requests for PostNodeNtp with any type of body
+func NewPostNodeNtpRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPutNodeNtpRequest calls the generic PutNodeNtp builder with application/json body
+func NewPutNodeNtpRequest(server string, hostname Hostname, body PutNodeNtpJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeNtpRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPutNodeNtpRequestWithBody generates requests for PutNodeNtp with any type of body
+func NewPutNodeNtpRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/ntp", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeOSRequest generates requests for GetNodeOS
 func NewGetNodeOSRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -5466,6 +5947,87 @@ func NewPutNodeSysctlRequestWithBody(server string, hostname Hostname, key Sysct
 	return req, nil
 }
 
+// NewGetNodeTimezoneRequest generates requests for GetNodeTimezone
+func NewGetNodeTimezoneRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/timezone", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutNodeTimezoneRequest calls the generic PutNodeTimezone builder with application/json body
+func NewPutNodeTimezoneRequest(server string, hostname Hostname, body PutNodeTimezoneJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeTimezoneRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPutNodeTimezoneRequestWithBody generates requests for PutNodeTimezone with any type of body
+func NewPutNodeTimezoneRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/timezone", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeUptimeRequest generates requests for GetNodeUptime
 func NewGetNodeUptimeRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -5722,6 +6284,22 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeNetworkPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
 
+	// DeleteNodeNtpWithResponse request
+	DeleteNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*DeleteNodeNtpResponse, error)
+
+	// GetNodeNtpWithResponse request
+	GetNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNtpResponse, error)
+
+	// PostNodeNtpWithBodyWithResponse request with any body
+	PostNodeNtpWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNtpResponse, error)
+
+	PostNodeNtpWithResponse(ctx context.Context, hostname Hostname, body PostNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNtpResponse, error)
+
+	// PutNodeNtpWithBodyWithResponse request with any body
+	PutNodeNtpWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNtpResponse, error)
+
+	PutNodeNtpWithResponse(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNtpResponse, error)
+
 	// GetNodeOSWithResponse request
 	GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error)
 
@@ -5762,6 +6340,14 @@ type ClientWithResponsesInterface interface {
 	PutNodeSysctlWithBodyWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeSysctlResponse, error)
 
 	PutNodeSysctlWithResponse(ctx context.Context, hostname Hostname, key SysctlKey, body PutNodeSysctlJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeSysctlResponse, error)
+
+	// GetNodeTimezoneWithResponse request
+	GetNodeTimezoneWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeTimezoneResponse, error)
+
+	// PutNodeTimezoneWithBodyWithResponse request with any body
+	PutNodeTimezoneWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeTimezoneResponse, error)
+
+	PutNodeTimezoneWithResponse(ctx context.Context, hostname Hostname, body PutNodeTimezoneJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeTimezoneResponse, error)
 
 	// GetNodeUptimeWithResponse request
 	GetNodeUptimeWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeUptimeResponse, error)
@@ -6867,6 +7453,110 @@ func (r PostNodeNetworkPingResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteNodeNtpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NtpDeleteResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeNtpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeNtpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeNtpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NtpCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeNtpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeNtpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeNtpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NtpCreateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeNtpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeNtpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeNtpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NtpUpdateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeNtpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeNtpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeOSResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7147,6 +7837,57 @@ func (r PutNodeSysctlResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutNodeSysctlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeTimezoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TimezoneCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeTimezoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeTimezoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeTimezoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TimezoneUpdateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeTimezoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeTimezoneResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7683,6 +8424,58 @@ func (c *ClientWithResponses) PostNodeNetworkPingWithResponse(ctx context.Contex
 	return ParsePostNodeNetworkPingResponse(rsp)
 }
 
+// DeleteNodeNtpWithResponse request returning *DeleteNodeNtpResponse
+func (c *ClientWithResponses) DeleteNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*DeleteNodeNtpResponse, error) {
+	rsp, err := c.DeleteNodeNtp(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeNtpResponse(rsp)
+}
+
+// GetNodeNtpWithResponse request returning *GetNodeNtpResponse
+func (c *ClientWithResponses) GetNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNtpResponse, error) {
+	rsp, err := c.GetNodeNtp(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeNtpResponse(rsp)
+}
+
+// PostNodeNtpWithBodyWithResponse request with arbitrary body returning *PostNodeNtpResponse
+func (c *ClientWithResponses) PostNodeNtpWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNtpResponse, error) {
+	rsp, err := c.PostNodeNtpWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNtpResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeNtpWithResponse(ctx context.Context, hostname Hostname, body PostNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNtpResponse, error) {
+	rsp, err := c.PostNodeNtp(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNtpResponse(rsp)
+}
+
+// PutNodeNtpWithBodyWithResponse request with arbitrary body returning *PutNodeNtpResponse
+func (c *ClientWithResponses) PutNodeNtpWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNtpResponse, error) {
+	rsp, err := c.PutNodeNtpWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeNtpResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeNtpWithResponse(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNtpResponse, error) {
+	rsp, err := c.PutNodeNtp(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeNtpResponse(rsp)
+}
+
 // GetNodeOSWithResponse request returning *GetNodeOSResponse
 func (c *ClientWithResponses) GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error) {
 	rsp, err := c.GetNodeOS(ctx, hostname, reqEditors...)
@@ -7812,6 +8605,32 @@ func (c *ClientWithResponses) PutNodeSysctlWithResponse(ctx context.Context, hos
 		return nil, err
 	}
 	return ParsePutNodeSysctlResponse(rsp)
+}
+
+// GetNodeTimezoneWithResponse request returning *GetNodeTimezoneResponse
+func (c *ClientWithResponses) GetNodeTimezoneWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeTimezoneResponse, error) {
+	rsp, err := c.GetNodeTimezone(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeTimezoneResponse(rsp)
+}
+
+// PutNodeTimezoneWithBodyWithResponse request with arbitrary body returning *PutNodeTimezoneResponse
+func (c *ClientWithResponses) PutNodeTimezoneWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeTimezoneResponse, error) {
+	rsp, err := c.PutNodeTimezoneWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeTimezoneResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeTimezoneWithResponse(ctx context.Context, hostname Hostname, body PutNodeTimezoneJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeTimezoneResponse, error) {
+	rsp, err := c.PutNodeTimezone(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeTimezoneResponse(rsp)
 }
 
 // GetNodeUptimeWithResponse request returning *GetNodeUptimeResponse
@@ -10111,6 +10930,222 @@ func ParsePostNodeNetworkPingResponse(rsp *http.Response) (*PostNodeNetworkPingR
 	return response, nil
 }
 
+// ParseDeleteNodeNtpResponse parses an HTTP response from a DeleteNodeNtpWithResponse call
+func ParseDeleteNodeNtpResponse(rsp *http.Response) (*DeleteNodeNtpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeNtpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NtpDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeNtpResponse parses an HTTP response from a GetNodeNtpWithResponse call
+func ParseGetNodeNtpResponse(rsp *http.Response) (*GetNodeNtpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeNtpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NtpCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeNtpResponse parses an HTTP response from a PostNodeNtpWithResponse call
+func ParsePostNodeNtpResponse(rsp *http.Response) (*PostNodeNtpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeNtpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NtpCreateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeNtpResponse parses an HTTP response from a PutNodeNtpWithResponse call
+func ParsePutNodeNtpResponse(rsp *http.Response) (*PutNodeNtpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeNtpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NtpUpdateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetNodeOSResponse parses an HTTP response from a GetNodeOSWithResponse call
 func ParseGetNodeOSResponse(rsp *http.Response) (*GetNodeOSResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -10692,6 +11727,107 @@ func ParsePutNodeSysctlResponse(rsp *http.Response) (*PutNodeSysctlResponse, err
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeTimezoneResponse parses an HTTP response from a GetNodeTimezoneWithResponse call
+func ParseGetNodeTimezoneResponse(rsp *http.Response) (*GetNodeTimezoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeTimezoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimezoneCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeTimezoneResponse parses an HTTP response from a PutNodeTimezoneWithResponse call
+func ParsePutNodeTimezoneResponse(rsp *http.Response) (*PutNodeTimezoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeTimezoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimezoneUpdateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

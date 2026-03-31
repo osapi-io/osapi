@@ -448,6 +448,40 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/NTP",
+      link: {
+        type: "doc",
+        id: "gen/api/ntp-management-api-ntp-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-ntp",
+          label: "Get NTP status",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-ntp",
+          label: "Create NTP configuration",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-ntp",
+          label: "Update NTP configuration",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-ntp",
+          label: "Delete NTP configuration",
+          className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Schedule/Cron",
       link: {
         type: "doc",
@@ -523,6 +557,28 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-node-sysctl",
           label: "Delete a managed sysctl entry",
           className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Timezone",
+      link: {
+        type: "doc",
+        id: "gen/api/timezone-management-api-timezone-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-timezone",
+          label: "Get system timezone",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-timezone",
+          label: "Update system timezone",
+          className: "api-method put",
         },
       ],
     },

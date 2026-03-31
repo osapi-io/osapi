@@ -21,13 +21,14 @@ and delete files that can be deployed to agents via `Node.FileDeploy`.
 
 ### Node File Operations
 
-File deploy and status methods live on `NodeService` because they target a
+File deploy and status methods live on `FileDeployService` because they target a
 specific host:
 
-| Method                          | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `FileDeploy(ctx, opts)`         | Deploy file to agent with SHA check |
-| `FileStatus(ctx, target, path)` | Check deployed file status          |
+| Method                      | Description                         |
+| --------------------------- | ----------------------------------- |
+| `Deploy(ctx, opts)`         | Deploy file to agent with SHA check |
+| `Undeploy(ctx, opts)`       | Remove a deployed file              |
+| `Status(ctx, target, path)` | Check deployed file status          |
 
 ## FileDeployOpts
 
@@ -78,7 +79,7 @@ resp, err := client.File.Get(ctx, "nginx.conf")
 resp, err := client.File.Delete(ctx, "nginx.conf")
 
 // Deploy a raw file to a specific host.
-resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
+resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "nginx.conf",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "raw",
@@ -89,7 +90,7 @@ resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
 })
 
 // Deploy a template file with variables.
-resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
+resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
@@ -101,7 +102,7 @@ resp, err := client.Node.FileDeploy(ctx, client.FileDeployOpts{
 })
 
 // Check file status on a host.
-resp, err := client.Node.FileStatus(
+resp, err := client.FileDeploy.Status(
     ctx, "web-01", "/etc/nginx/nginx.conf",
 )
 ```

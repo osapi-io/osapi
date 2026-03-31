@@ -49,7 +49,7 @@ func main() {
 	target := "_all"
 
 	// Direct exec — runs a binary with arguments.
-	exec, err := c.Node.Exec(ctx, client.ExecRequest{
+	exec, err := c.Command.Exec(ctx, client.ExecRequest{
 		Target:  target,
 		Command: "uptime",
 	})
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	// Shell — interpreted by /bin/sh, supports pipes and redirection.
-	shell, err := c.Node.Shell(ctx, client.ShellRequest{
+	shell, err := c.Command.Shell(ctx, client.ShellRequest{
 		Target:  target,
 		Command: "uname -a",
 	})
