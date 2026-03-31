@@ -18,10 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates network operations: reading DNS config
-// and running a ping check.
+// Package main demonstrates the DNSService: reading DNS configuration
+// for a network interface and updating DNS servers.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run network.go
+// Run with: OSAPI_TOKEN="<jwt>" OSAPI_INTERFACE="eth0" go run dns.go
 package main
 
 import (
@@ -54,26 +54,14 @@ func main() {
 	target := "_all"
 
 	// Get DNS configuration for an interface.
-	dns, err := c.DNS.Get(ctx, target, iface)
+	resp, err := c.DNS.Get(ctx, target, iface)
 	if err != nil {
 		log.Fatalf("get dns: %v", err)
 	}
 
-	for _, r := range dns.Data.Results {
+	for _, r := range resp.Data.Results {
 		fmt.Printf("DNS (%s):\n", r.Hostname)
 		fmt.Printf("  Servers: %v\n", r.Servers)
 		fmt.Printf("  Search:  %v\n", r.SearchDomains)
-	}
-
-	// Ping a host.
-	ping, err := c.Ping.Do(ctx, target, "8.8.8.8")
-	if err != nil {
-		log.Fatalf("ping: %v", err)
-	}
-
-	for _, r := range ping.Data.Results {
-		fmt.Printf("Ping (%s):\n", r.Hostname)
-		fmt.Printf("  Sent=%d  Received=%d  Loss=%.1f%%\n",
-			r.PacketsSent, r.PacketsReceived, r.PacketLoss)
 	}
 }

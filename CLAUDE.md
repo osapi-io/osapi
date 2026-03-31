@@ -598,12 +598,17 @@ and wrap errors with context.
    in `New()`
 3. Run `go generate ./pkg/sdk/client/gen/...` to pick up the new
    domain's spec from the combined `api.yaml`
-4. Add an SDK example in `examples/sdk/client/{domain}.go`
-5. Add an SDK doc page in `docs/docs/sidebar/sdk/client/{domain}.md`
-   with methods table, request types, usage examples, and permissions
+4. Add an SDK example in `examples/sdk/client/{service}.go` — one
+   file per SDK service (e.g., `hostname.go`, `disk.go`, `ntp.go`).
+   The example file name matches the Client field name in lowercase.
+5. Add an SDK doc page in
+   `docs/docs/sidebar/sdk/client/{service}.md` — one page per SDK
+   service. Use the Client field name (e.g., `Hostname`, `Disk`,
+   `NTP`) as the page title, NOT the Go struct name
+   (`HostnameService`).
 6. Add the new service to the SDK navbar dropdown in
    `docs/docusaurus.config.ts` (under the "SDK" → "Client Library"
-   section)
+   section). Use the Client field name as the label.
 
 #### SDK method naming (MANDATORY)
 
@@ -641,11 +646,11 @@ client.NTP.NtpCreate(ctx, host, opts)
 
 #### SDK example conventions
 
-SDK examples live in `examples/sdk/client/`, one file per domain.
-Follow the same principles as the orchestrator examples:
+SDK examples live in `examples/sdk/client/`, one file per SDK
+service. Follow the same principles as the orchestrator examples:
 
-- **One domain per file**: demonstrate the domain's SDK operations.
-  Don't mix in other domains.
+- **One service per file**: demonstrate the service's SDK operations.
+  Don't mix in other services.
 - **Self-contained**: for read-only operations, just call and print.
   For mutating operations, cleanup at the start so the example is
   repeatable.

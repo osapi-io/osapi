@@ -21,7 +21,7 @@
 // Package main demonstrates container management: pull an image, create
 // a container, list, inspect, exec, stop, and remove.
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run container.go
+// Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
 
 import (
