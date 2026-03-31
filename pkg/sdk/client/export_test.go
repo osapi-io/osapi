@@ -432,6 +432,22 @@ func NtpMutationCollectionFromDelete(
 	return ntpMutationCollectionFromDelete(input)
 }
 
+// ExportTimezoneCollectionFromGen exposes the private
+// timezoneCollectionFromGen for testing.
+func ExportTimezoneCollectionFromGen(
+	input *gen.TimezoneCollectionResponse,
+) Collection[TimezoneResult] {
+	return timezoneCollectionFromGen(input)
+}
+
+// ExportTimezoneMutationCollectionFromUpdate exposes the private
+// timezoneMutationCollectionFromUpdate for testing.
+func ExportTimezoneMutationCollectionFromUpdate(
+	input *gen.TimezoneUpdateResponse,
+) Collection[TimezoneMutationResult] {
+	return timezoneMutationCollectionFromUpdate(input)
+}
+
 // ExportDerefStringSlice exposes the private derefStringSlice for testing.
 func ExportDerefStringSlice(
 	s *[]string,

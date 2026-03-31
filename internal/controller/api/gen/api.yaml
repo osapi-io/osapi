@@ -63,6 +63,9 @@ tags:
   - name: Sysctl_Management_API_sysctl_operations
     x-displayName: Node/Sysctl
     description: Kernel parameter management on a target node.
+  - name: Timezone_Management_API_timezone_operations
+    x-displayName: Node/Timezone
+    description: System timezone management on a target node.
 paths:
   /agent:
     servers: []
@@ -3017,6 +3020,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/timezone:
+    servers: []
+    get:
+      summary: Get system timezone
+      description: |
+        Get the current system timezone on the target node.
+      tags:
+        - Timezone_Management_API_timezone_operations
+      operationId: GetNodeTimezone
+      security:
+        - BearerAuth:
+            - timezone:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: Timezone status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimezoneCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving timezone.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update system timezone
+      description: >
+        Set the system timezone on the target node. Idempotent: returns changed
+        false when the timezone already matches.
+      tags:
+        - Timezone_Management_API_timezone_operations
+      operationId: PutNodeTimezone
+      security:
+        - BearerAuth:
+            - timezone:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Timezone update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimezoneUpdateRequest'
+      responses:
+        '200':
+          description: Timezone updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimezoneUpdateResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating timezone.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     BearerAuth:
@@ -5754,6 +5847,97 @@ components:
             $ref: '#/components/schemas/SysctlMutationResult'
       required:
         - results
+    TimezoneUpdateRequest:
+      type: object
+      required:
+        - timezone
+      properties:
+        timezone:
+          type: string
+          description: |
+            IANA timezone name (e.g., "America/New_York", "UTC").
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+    TimezoneEntry:
+      type: object
+      description: Timezone information for a single host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        timezone:
+          type: string
+          description: Current timezone name.
+        utc_offset:
+          type: string
+          description: Current UTC offset (e.g., "-05:00").
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    TimezoneCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimezoneEntry'
+      required:
+        - results
+    TimezoneMutationResult:
+      type: object
+      description: Result of a timezone update operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        timezone:
+          type: string
+          description: Timezone that was set.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    TimezoneUpdateResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimezoneMutationResult'
+      required:
+        - results
   parameters:
     FileName:
       name: name
@@ -5871,3 +6055,6 @@ x-tagGroups:
   - name: Sysctl Management API
     tags:
       - Sysctl_Management_API_sysctl_operations
+  - name: Timezone Management API
+    tags:
+      - Timezone_Management_API_timezone_operations

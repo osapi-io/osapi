@@ -78,6 +78,9 @@ type Client struct {
 	// NTP provides NTP management operations (get, create, update, delete).
 	NTP *NTPService
 
+	// Timezone provides system timezone management operations (get, update).
+	Timezone *TimezoneService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -147,6 +150,7 @@ func New(
 	c.Schedule = &ScheduleService{client: httpClient}
 	c.Sysctl = &SysctlService{client: httpClient}
 	c.NTP = &NTPService{client: httpClient}
+	c.Timezone = &TimezoneService{client: httpClient}
 
 	return c
 }
