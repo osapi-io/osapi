@@ -190,6 +190,25 @@ const (
 	OperationProcessSignal = client.OpProcessSignal
 )
 
+// User operations.
+const (
+	OperationUserList           = client.OpUserList
+	OperationUserGet            = client.OpUserGet
+	OperationUserCreate         = client.OpUserCreate
+	OperationUserUpdate         = client.OpUserUpdate
+	OperationUserDelete         = client.OpUserDelete
+	OperationUserChangePassword = client.OpUserChangePassword
+)
+
+// Group operations.
+const (
+	OperationGroupList   = client.OpGroupList
+	OperationGroupGet    = client.OpGroupGet
+	OperationGroupCreate = client.OpGroupCreate
+	OperationGroupUpdate = client.OpGroupUpdate
+	OperationGroupDelete = client.OpGroupDelete
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

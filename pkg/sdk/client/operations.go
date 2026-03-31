@@ -126,6 +126,25 @@ const (
 	OpProcessSignal JobOperation = "node.process.signal"
 )
 
+// User operations.
+const (
+	OpUserList           JobOperation = "node.user.list"
+	OpUserGet            JobOperation = "node.user.get"
+	OpUserCreate         JobOperation = "node.user.create"
+	OpUserUpdate         JobOperation = "node.user.update"
+	OpUserDelete         JobOperation = "node.user.delete"
+	OpUserChangePassword JobOperation = "node.user.password"
+)
+
+// Group operations.
+const (
+	OpGroupList   JobOperation = "node.group.list"
+	OpGroupGet    JobOperation = "node.group.get"
+	OpGroupCreate JobOperation = "node.group.create"
+	OpGroupUpdate JobOperation = "node.group.update"
+	OpGroupDelete JobOperation = "node.group.delete"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).
