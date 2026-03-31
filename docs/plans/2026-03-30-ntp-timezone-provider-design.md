@@ -13,7 +13,7 @@ timedatectl.
 ### Architecture
 
 Direct provider at `internal/provider/node/ntp/`. Manages a chrony
-drop-in config file at `/etc/chrony/sources.d/osapi.sources`. Reads
+drop-in config file at `/etc/chrony/sources.d/osapi-ntp.sources`. Reads
 sync status and configured sources via `chronyc` commands. Applies
 changes via `chronyc reload sources`.
 
@@ -66,7 +66,7 @@ type DeleteResult struct {
 
 ### Debian Implementation
 
-**Config file**: `/etc/chrony/sources.d/osapi.sources`
+**Config file**: `/etc/chrony/sources.d/osapi-ntp.sources`
 
 Content format (one server per line):
 ```
