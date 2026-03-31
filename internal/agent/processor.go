@@ -34,6 +34,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	"github.com/retr0h/osapi/internal/provider/node/ntp"
 	"github.com/retr0h/osapi/internal/provider/node/power"
+	processProv "github.com/retr0h/osapi/internal/provider/node/process"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 	"github.com/retr0h/osapi/internal/provider/node/timezone"
 )
@@ -60,6 +61,7 @@ func NewNodeProcessor(
 	ntpProvider ntp.Provider,
 	timezoneProvider timezone.Provider,
 	powerProvider power.Provider,
+	processProvider processProv.Provider,
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -93,6 +95,8 @@ func NewNodeProcessor(
 			return processTimezoneOperation(timezoneProvider, logger, req)
 		case "power":
 			return processPowerOperation(powerProvider, logger, req)
+		case "process":
+			return processProcessOperation(processProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

@@ -101,6 +101,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.ntpProvider,
 			p.timezoneProvider,
 			p.powerProvider,
+			nil,
 			p.appConfig,
 			logger,
 		),

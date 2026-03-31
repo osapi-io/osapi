@@ -45,6 +45,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
 	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
+	processProv "github.com/retr0h/osapi/internal/provider/node/process"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
@@ -193,6 +194,9 @@ func setupAgent(
 	// --- Power provider ---
 	powerProvider := createPowerProvider(log, execManager)
 
+	// --- Process provider ---
+	processProvider := createProcessProvider(log)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -207,6 +211,7 @@ func setupAgent(
 			ntpProvider,
 			timezoneProvider,
 			powerProvider,
+			processProvider,
 			appConfig,
 			log,
 		),
@@ -218,6 +223,7 @@ func setupAgent(
 		ntpProvider,
 		timezoneProvider,
 		powerProvider,
+		processProvider,
 	)
 
 	registry.Register("network",
@@ -427,6 +433,29 @@ func createPowerProvider(
 		return powerProv.NewDarwinProvider()
 	default:
 		return powerProv.NewLinuxProvider()
+	}
+}
+
+// createProcessProvider creates a platform-specific process provider. On Debian,
+// the process provider reads /proc and sends signals to processes. In containers,
+// process visibility is limited so the provider is disabled. On other platforms,
+// all operations return ErrUnsupported.
+func createProcessProvider(
+	log *slog.Logger,
+) processProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, process operations disabled")
+			return processProv.NewLinuxProvider()
+		}
+		return processProv.NewDebianProvider(log)
+	case "darwin":
+		return processProv.NewDarwinProvider()
+	default:
+		return processProv.NewLinuxProvider()
 	}
 }
 
