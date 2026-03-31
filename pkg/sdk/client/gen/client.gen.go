@@ -167,6 +167,20 @@ const (
 	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
 )
 
+// Defines values for GroupEntryStatus.
+const (
+	GroupEntryStatusFailed  GroupEntryStatus = "failed"
+	GroupEntryStatusOk      GroupEntryStatus = "ok"
+	GroupEntryStatusSkipped GroupEntryStatus = "skipped"
+)
+
+// Defines values for GroupMutationResultStatus.
+const (
+	GroupMutationResultStatusFailed  GroupMutationResultStatus = "failed"
+	GroupMutationResultStatusOk      GroupMutationResultStatus = "ok"
+	GroupMutationResultStatusSkipped GroupMutationResultStatus = "skipped"
+)
+
 // Defines values for HostnameResponseStatus.
 const (
 	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
@@ -315,6 +329,20 @@ const (
 	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
 	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
 	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
+)
+
+// Defines values for UserEntryStatus.
+const (
+	UserEntryStatusFailed  UserEntryStatus = "failed"
+	UserEntryStatusOk      UserEntryStatus = "ok"
+	UserEntryStatusSkipped UserEntryStatus = "skipped"
+)
+
+// Defines values for UserMutationResultStatus.
+const (
+	UserMutationResultStatusFailed  UserMutationResultStatus = "failed"
+	UserMutationResultStatusOk      UserMutationResultStatus = "ok"
+	UserMutationResultStatusSkipped UserMutationResultStatus = "skipped"
 )
 
 // Defines values for PostFileMultipartBodyContentType.
@@ -1368,6 +1396,89 @@ type FileUploadResponse struct {
 	Size int `json:"size"`
 }
 
+// GroupCollectionResponse defines model for GroupCollectionResponse.
+type GroupCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []GroupEntry        `json:"results"`
+}
+
+// GroupCreateRequest defines model for GroupCreateRequest.
+type GroupCreateRequest struct {
+	// Gid Numeric group ID. If omitted, the system assigns one.
+	Gid *int `json:"gid,omitempty"`
+
+	// Name Group name.
+	Name string `json:"name" validate:"required,min=1,max=32"`
+
+	// System Create a system group.
+	System *bool `json:"system,omitempty"`
+}
+
+// GroupEntry Group listing result for one host.
+type GroupEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Groups Groups on this host.
+	Groups *[]GroupInfo `json:"groups,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status GroupEntryStatus `json:"status"`
+}
+
+// GroupEntryStatus The status of the operation for this host.
+type GroupEntryStatus string
+
+// GroupInfo A group on the target node.
+type GroupInfo struct {
+	// Gid Numeric group ID.
+	Gid *int `json:"gid,omitempty"`
+
+	// Members Group member usernames.
+	Members *[]string `json:"members,omitempty"`
+
+	// Name Group name.
+	Name *string `json:"name,omitempty"`
+}
+
+// GroupMutationResponse defines model for GroupMutationResponse.
+type GroupMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
+	Results []GroupMutationResult `json:"results"`
+}
+
+// GroupMutationResult Result of a group create, update, or delete operation for one host.
+type GroupMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Group name.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status GroupMutationResultStatus `json:"status"`
+}
+
+// GroupMutationResultStatus The status of the operation for this host.
+type GroupMutationResultStatus string
+
+// GroupUpdateRequest defines model for GroupUpdateRequest.
+type GroupUpdateRequest struct {
+	// Members Group member usernames (replaces existing).
+	Members *[]string `json:"members,omitempty"`
+}
+
 // HealthResponse defines model for HealthResponse.
 type HealthResponse struct {
 	// Status Health status.
@@ -2327,6 +2438,131 @@ type UptimeResponse struct {
 // UptimeResponseStatus The status of the operation for this host.
 type UptimeResponseStatus string
 
+// UserCollectionResponse defines model for UserCollectionResponse.
+type UserCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []UserEntry         `json:"results"`
+}
+
+// UserCreateRequest defines model for UserCreateRequest.
+type UserCreateRequest struct {
+	// Gid Primary group ID. If omitted, a group matching the username is created.
+	Gid *int `json:"gid,omitempty"`
+
+	// Groups Supplementary group names.
+	Groups *[]string `json:"groups,omitempty"`
+
+	// Home Home directory path.
+	Home *string `json:"home,omitempty"`
+
+	// Name Username for the new account.
+	Name string `json:"name" validate:"required,min=1,max=32"`
+
+	// Password Initial password (plaintext, hashed by the agent).
+	Password *string `json:"password,omitempty"`
+
+	// Shell Login shell path.
+	Shell *string `json:"shell,omitempty"`
+
+	// System Create a system account.
+	System *bool `json:"system,omitempty"`
+
+	// Uid Numeric user ID. If omitted, the system assigns one.
+	Uid *int `json:"uid,omitempty"`
+}
+
+// UserEntry User listing result for one host.
+type UserEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that reported this entry.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status UserEntryStatus `json:"status"`
+
+	// Users User accounts on this host.
+	Users *[]UserInfo `json:"users,omitempty"`
+}
+
+// UserEntryStatus The status of the operation for this host.
+type UserEntryStatus string
+
+// UserInfo A user account on the target node.
+type UserInfo struct {
+	// Gid Primary group ID.
+	Gid *int `json:"gid,omitempty"`
+
+	// Groups Supplementary group names.
+	Groups *[]string `json:"groups,omitempty"`
+
+	// Home Home directory path.
+	Home *string `json:"home,omitempty"`
+
+	// Locked Whether the account is locked.
+	Locked *bool `json:"locked,omitempty"`
+
+	// Name Username.
+	Name *string `json:"name,omitempty"`
+
+	// Shell Login shell path.
+	Shell *string `json:"shell,omitempty"`
+
+	// Uid Numeric user ID.
+	Uid *int `json:"uid,omitempty"`
+}
+
+// UserMutationResponse defines model for UserMutationResponse.
+type UserMutationResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
+	Results []UserMutationResult `json:"results"`
+}
+
+// UserMutationResult Result of a user create, update, delete, or password operation for one host.
+type UserMutationResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Name Username.
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status UserMutationResultStatus `json:"status"`
+}
+
+// UserMutationResultStatus The status of the operation for this host.
+type UserMutationResultStatus string
+
+// UserPasswordRequest defines model for UserPasswordRequest.
+type UserPasswordRequest struct {
+	// Password New password (plaintext, hashed by the agent).
+	Password string `json:"password" validate:"required,min=1"`
+}
+
+// UserUpdateRequest defines model for UserUpdateRequest.
+type UserUpdateRequest struct {
+	// Groups Supplementary group names (replaces existing).
+	Groups *[]string `json:"groups,omitempty"`
+
+	// Home New home directory path.
+	Home *string `json:"home,omitempty"`
+
+	// Lock Lock or unlock the account.
+	Lock *bool `json:"lock,omitempty"`
+
+	// Shell New login shell path.
+	Shell *string `json:"shell,omitempty"`
+}
+
 // CronName defines model for CronName.
 type CronName = string
 
@@ -2336,6 +2572,9 @@ type DockerId = string
 // FileName defines model for FileName.
 type FileName = string
 
+// GroupName defines model for GroupName.
+type GroupName = string
+
 // Hostname defines model for Hostname.
 type Hostname = string
 
@@ -2344,6 +2583,9 @@ type Pid = int
 
 // SysctlKey defines model for SysctlKey.
 type SysctlKey = string
+
+// UserName defines model for UserName.
+type UserName = string
 
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
@@ -2452,6 +2694,12 @@ type PostNodeFileStatusJSONRequestBody = FileStatusRequest
 // PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
 type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
 
+// PostNodeGroupJSONRequestBody defines body for PostNodeGroup for application/json ContentType.
+type PostNodeGroupJSONRequestBody = GroupCreateRequest
+
+// PutNodeGroupJSONRequestBody defines body for PutNodeGroup for application/json ContentType.
+type PutNodeGroupJSONRequestBody = GroupUpdateRequest
+
 // PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
 type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 
@@ -2490,6 +2738,15 @@ type PutNodeSysctlJSONRequestBody = SysctlUpdateRequest
 
 // PutNodeTimezoneJSONRequestBody defines body for PutNodeTimezone for application/json ContentType.
 type PutNodeTimezoneJSONRequestBody = TimezoneUpdateRequest
+
+// PostNodeUserJSONRequestBody defines body for PostNodeUser for application/json ContentType.
+type PostNodeUserJSONRequestBody = UserCreateRequest
+
+// PutNodeUserJSONRequestBody defines body for PutNodeUser for application/json ContentType.
+type PutNodeUserJSONRequestBody = UserUpdateRequest
+
+// PostNodeUserPasswordJSONRequestBody defines body for PostNodeUserPassword for application/json ContentType.
+type PostNodeUserPasswordJSONRequestBody = UserPasswordRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -2689,6 +2946,25 @@ type ClientInterface interface {
 
 	PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetNodeGroup request
+	GetNodeGroup(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeGroupWithBody request with any body
+	PostNodeGroupWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeGroup(ctx context.Context, hostname Hostname, body PostNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeGroup request
+	DeleteNodeGroup(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeGroupByName request
+	GetNodeGroupByName(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeGroupWithBody request with any body
+	PutNodeGroupWithBody(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeGroup(ctx context.Context, hostname Hostname, name GroupName, body PutNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetNodeHostname request
 	GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2804,6 +3080,30 @@ type ClientInterface interface {
 
 	// GetNodeUptime request
 	GetNodeUptime(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeUser request
+	GetNodeUser(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeUserWithBody request with any body
+	PostNodeUserWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeUser(ctx context.Context, hostname Hostname, body PostNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNodeUser request
+	DeleteNodeUser(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeUserByName request
+	GetNodeUserByName(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeUserWithBody request with any body
+	PutNodeUserWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeUser(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeUserPasswordWithBody request with any body
+	PostNodeUserPasswordWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeUserPassword(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetVersion request
 	GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3349,6 +3649,90 @@ func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, bo
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetNodeGroup(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeGroupRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeGroupWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeGroupRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeGroup(ctx context.Context, hostname Hostname, body PostNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeGroupRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeGroup(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeGroupRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeGroupByName(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeGroupByNameRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeGroupWithBody(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeGroupRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeGroup(ctx context.Context, hostname Hostname, name GroupName, body PutNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeGroupRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetNodeHostname(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeHostnameRequest(c.Server, hostname)
 	if err != nil {
@@ -3855,6 +4239,114 @@ func (c *Client) PutNodeTimezone(ctx context.Context, hostname Hostname, body Pu
 
 func (c *Client) GetNodeUptime(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeUptimeRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeUser(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeUserRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeUserWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeUser(ctx context.Context, hostname Hostname, body PostNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeUser(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeUserRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeUserByName(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeUserByNameRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeUserWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeUserRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeUser(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeUserRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeUserPasswordWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserPasswordRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeUserPassword(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserPasswordRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5367,6 +5859,223 @@ func NewPostNodeFileUndeployRequestWithBody(server string, hostname Hostname, co
 	return req, nil
 }
 
+// NewGetNodeGroupRequest generates requests for GetNodeGroup
+func NewGetNodeGroupRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/group", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeGroupRequest calls the generic PostNodeGroup builder with application/json body
+func NewPostNodeGroupRequest(server string, hostname Hostname, body PostNodeGroupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeGroupRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeGroupRequestWithBody generates requests for PostNodeGroup with any type of body
+func NewPostNodeGroupRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/group", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNodeGroupRequest generates requests for DeleteNodeGroup
+func NewDeleteNodeGroupRequest(server string, hostname Hostname, name GroupName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeGroupByNameRequest generates requests for GetNodeGroupByName
+func NewGetNodeGroupByNameRequest(server string, hostname Hostname, name GroupName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutNodeGroupRequest calls the generic PutNodeGroup builder with application/json body
+func NewPutNodeGroupRequest(server string, hostname Hostname, name GroupName, body PutNodeGroupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeGroupRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPutNodeGroupRequestWithBody generates requests for PutNodeGroup with any type of body
+func NewPutNodeGroupRequestWithBody(server string, hostname Hostname, name GroupName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/group/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeHostnameRequest generates requests for GetNodeHostname
 func NewGetNodeHostnameRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -6619,6 +7328,277 @@ func NewGetNodeUptimeRequest(server string, hostname Hostname) (*http.Request, e
 	return req, nil
 }
 
+// NewGetNodeUserRequest generates requests for GetNodeUser
+func NewGetNodeUserRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeUserRequest calls the generic PostNodeUser builder with application/json body
+func NewPostNodeUserRequest(server string, hostname Hostname, body PostNodeUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeUserRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeUserRequestWithBody generates requests for PostNodeUser with any type of body
+func NewPostNodeUserRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNodeUserRequest generates requests for DeleteNodeUser
+func NewDeleteNodeUserRequest(server string, hostname Hostname, name UserName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeUserByNameRequest generates requests for GetNodeUserByName
+func NewGetNodeUserByNameRequest(server string, hostname Hostname, name UserName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutNodeUserRequest calls the generic PutNodeUser builder with application/json body
+func NewPutNodeUserRequest(server string, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeUserRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPutNodeUserRequestWithBody generates requests for PutNodeUser with any type of body
+func NewPutNodeUserRequestWithBody(server string, hostname Hostname, name UserName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostNodeUserPasswordRequest calls the generic PostNodeUserPassword builder with application/json body
+func NewPostNodeUserPasswordRequest(server string, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeUserPasswordRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPostNodeUserPasswordRequestWithBody generates requests for PostNodeUserPassword with any type of body
+func NewPostNodeUserPasswordRequestWithBody(server string, hostname Hostname, name UserName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/user/%s/password", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetVersionRequest generates requests for GetVersion
 func NewGetVersionRequest(server string) (*http.Request, error) {
 	var err error
@@ -6814,6 +7794,25 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
 
+	// GetNodeGroupWithResponse request
+	GetNodeGroupWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeGroupResponse, error)
+
+	// PostNodeGroupWithBodyWithResponse request with any body
+	PostNodeGroupWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeGroupResponse, error)
+
+	PostNodeGroupWithResponse(ctx context.Context, hostname Hostname, body PostNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeGroupResponse, error)
+
+	// DeleteNodeGroupWithResponse request
+	DeleteNodeGroupWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*DeleteNodeGroupResponse, error)
+
+	// GetNodeGroupByNameWithResponse request
+	GetNodeGroupByNameWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByNameResponse, error)
+
+	// PutNodeGroupWithBodyWithResponse request with any body
+	PutNodeGroupWithBodyWithResponse(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeGroupResponse, error)
+
+	PutNodeGroupWithResponse(ctx context.Context, hostname Hostname, name GroupName, body PutNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeGroupResponse, error)
+
 	// GetNodeHostnameWithResponse request
 	GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error)
 
@@ -6929,6 +7928,30 @@ type ClientWithResponsesInterface interface {
 
 	// GetNodeUptimeWithResponse request
 	GetNodeUptimeWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeUptimeResponse, error)
+
+	// GetNodeUserWithResponse request
+	GetNodeUserWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeUserResponse, error)
+
+	// PostNodeUserWithBodyWithResponse request with any body
+	PostNodeUserWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserResponse, error)
+
+	PostNodeUserWithResponse(ctx context.Context, hostname Hostname, body PostNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserResponse, error)
+
+	// DeleteNodeUserWithResponse request
+	DeleteNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*DeleteNodeUserResponse, error)
+
+	// GetNodeUserByNameWithResponse request
+	GetNodeUserByNameWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByNameResponse, error)
+
+	// PutNodeUserWithBodyWithResponse request with any body
+	PutNodeUserWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error)
+
+	PutNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error)
+
+	// PostNodeUserPasswordWithBodyWithResponse request with any body
+	PostNodeUserPasswordWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error)
+
+	PostNodeUserPasswordWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error)
 
 	// GetVersionWithResponse request
 	GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error)
@@ -7849,6 +8872,136 @@ func (r PostNodeFileUndeployResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodeGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GroupCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GroupMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GroupMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeGroupByNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GroupCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeGroupByNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeGroupByNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeGroupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GroupMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeGroupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeGroupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8628,6 +9781,163 @@ func (r GetNodeUptimeResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodeUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNodeUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserMutationResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeUserByNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeUserByNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeUserByNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutNodeUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeUserPasswordResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserMutationResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeUserPasswordResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeUserPasswordResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetVersionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9045,6 +10355,67 @@ func (c *ClientWithResponses) PostNodeFileUndeployWithResponse(ctx context.Conte
 	return ParsePostNodeFileUndeployResponse(rsp)
 }
 
+// GetNodeGroupWithResponse request returning *GetNodeGroupResponse
+func (c *ClientWithResponses) GetNodeGroupWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeGroupResponse, error) {
+	rsp, err := c.GetNodeGroup(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeGroupResponse(rsp)
+}
+
+// PostNodeGroupWithBodyWithResponse request with arbitrary body returning *PostNodeGroupResponse
+func (c *ClientWithResponses) PostNodeGroupWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeGroupResponse, error) {
+	rsp, err := c.PostNodeGroupWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeGroupResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeGroupWithResponse(ctx context.Context, hostname Hostname, body PostNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeGroupResponse, error) {
+	rsp, err := c.PostNodeGroup(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeGroupResponse(rsp)
+}
+
+// DeleteNodeGroupWithResponse request returning *DeleteNodeGroupResponse
+func (c *ClientWithResponses) DeleteNodeGroupWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*DeleteNodeGroupResponse, error) {
+	rsp, err := c.DeleteNodeGroup(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeGroupResponse(rsp)
+}
+
+// GetNodeGroupByNameWithResponse request returning *GetNodeGroupByNameResponse
+func (c *ClientWithResponses) GetNodeGroupByNameWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByNameResponse, error) {
+	rsp, err := c.GetNodeGroupByName(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeGroupByNameResponse(rsp)
+}
+
+// PutNodeGroupWithBodyWithResponse request with arbitrary body returning *PutNodeGroupResponse
+func (c *ClientWithResponses) PutNodeGroupWithBodyWithResponse(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeGroupResponse, error) {
+	rsp, err := c.PutNodeGroupWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeGroupResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeGroupWithResponse(ctx context.Context, hostname Hostname, name GroupName, body PutNodeGroupJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeGroupResponse, error) {
+	rsp, err := c.PutNodeGroup(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeGroupResponse(rsp)
+}
+
 // GetNodeHostnameWithResponse request returning *GetNodeHostnameResponse
 func (c *ClientWithResponses) GetNodeHostnameWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeHostnameResponse, error) {
 	rsp, err := c.GetNodeHostname(ctx, hostname, reqEditors...)
@@ -9417,6 +10788,84 @@ func (c *ClientWithResponses) GetNodeUptimeWithResponse(ctx context.Context, hos
 		return nil, err
 	}
 	return ParseGetNodeUptimeResponse(rsp)
+}
+
+// GetNodeUserWithResponse request returning *GetNodeUserResponse
+func (c *ClientWithResponses) GetNodeUserWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeUserResponse, error) {
+	rsp, err := c.GetNodeUser(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeUserResponse(rsp)
+}
+
+// PostNodeUserWithBodyWithResponse request with arbitrary body returning *PostNodeUserResponse
+func (c *ClientWithResponses) PostNodeUserWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserResponse, error) {
+	rsp, err := c.PostNodeUserWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeUserWithResponse(ctx context.Context, hostname Hostname, body PostNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserResponse, error) {
+	rsp, err := c.PostNodeUser(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeUserResponse(rsp)
+}
+
+// DeleteNodeUserWithResponse request returning *DeleteNodeUserResponse
+func (c *ClientWithResponses) DeleteNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*DeleteNodeUserResponse, error) {
+	rsp, err := c.DeleteNodeUser(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeUserResponse(rsp)
+}
+
+// GetNodeUserByNameWithResponse request returning *GetNodeUserByNameResponse
+func (c *ClientWithResponses) GetNodeUserByNameWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByNameResponse, error) {
+	rsp, err := c.GetNodeUserByName(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeUserByNameResponse(rsp)
+}
+
+// PutNodeUserWithBodyWithResponse request with arbitrary body returning *PutNodeUserResponse
+func (c *ClientWithResponses) PutNodeUserWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error) {
+	rsp, err := c.PutNodeUserWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error) {
+	rsp, err := c.PutNodeUser(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeUserResponse(rsp)
+}
+
+// PostNodeUserPasswordWithBodyWithResponse request with arbitrary body returning *PostNodeUserPasswordResponse
+func (c *ClientWithResponses) PostNodeUserPasswordWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error) {
+	rsp, err := c.PostNodeUserPasswordWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeUserPasswordResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeUserPasswordWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error) {
+	rsp, err := c.PostNodeUserPassword(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeUserPasswordResponse(rsp)
 }
 
 // GetVersionWithResponse request returning *GetVersionResponse
@@ -11329,6 +12778,276 @@ func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeplo
 	return response, nil
 }
 
+// ParseGetNodeGroupResponse parses an HTTP response from a GetNodeGroupWithResponse call
+func ParseGetNodeGroupResponse(rsp *http.Response) (*GetNodeGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GroupCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeGroupResponse parses an HTTP response from a PostNodeGroupWithResponse call
+func ParsePostNodeGroupResponse(rsp *http.Response) (*PostNodeGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GroupMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeGroupResponse parses an HTTP response from a DeleteNodeGroupWithResponse call
+func ParseDeleteNodeGroupResponse(rsp *http.Response) (*DeleteNodeGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GroupMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeGroupByNameResponse parses an HTTP response from a GetNodeGroupByNameWithResponse call
+func ParseGetNodeGroupByNameResponse(rsp *http.Response) (*GetNodeGroupByNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeGroupByNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GroupCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeGroupResponse parses an HTTP response from a PutNodeGroupWithResponse call
+func ParsePutNodeGroupResponse(rsp *http.Response) (*PutNodeGroupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeGroupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GroupMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetNodeHostnameResponse parses an HTTP response from a GetNodeHostnameWithResponse call
 func ParseGetNodeHostnameResponse(rsp *http.Response) (*GetNodeHostnameResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -12929,6 +14648,337 @@ func ParseGetNodeUptimeResponse(rsp *http.Response) (*GetNodeUptimeResponse, err
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeUserResponse parses an HTTP response from a GetNodeUserWithResponse call
+func ParseGetNodeUserResponse(rsp *http.Response) (*GetNodeUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeUserResponse parses an HTTP response from a PostNodeUserWithResponse call
+func ParsePostNodeUserResponse(rsp *http.Response) (*PostNodeUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNodeUserResponse parses an HTTP response from a DeleteNodeUserWithResponse call
+func ParseDeleteNodeUserResponse(rsp *http.Response) (*DeleteNodeUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeUserByNameResponse parses an HTTP response from a GetNodeUserByNameWithResponse call
+func ParseGetNodeUserByNameResponse(rsp *http.Response) (*GetNodeUserByNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeUserByNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeUserResponse parses an HTTP response from a PutNodeUserWithResponse call
+func ParsePutNodeUserResponse(rsp *http.Response) (*PutNodeUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeUserPasswordResponse parses an HTTP response from a PostNodeUserPasswordWithResponse call
+func ParsePostNodeUserPasswordResponse(rsp *http.Response) (*PostNodeUserPasswordResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeUserPasswordResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserMutationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

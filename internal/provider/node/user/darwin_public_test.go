@@ -1,0 +1,275 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package user_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/provider"
+	"github.com/retr0h/osapi/internal/provider/node/user"
+)
+
+type DarwinPublicTestSuite struct {
+	suite.Suite
+
+	ctx      context.Context
+	provider *user.Darwin
+}
+
+func (suite *DarwinPublicTestSuite) SetupTest() {
+	suite.ctx = context.Background()
+	suite.provider = user.NewDarwinProvider()
+}
+
+func (suite *DarwinPublicTestSuite) TestListUsers() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.ListUsers(suite.ctx)
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestGetUser() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.GetUser(suite.ctx, "testuser")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestCreateUser() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.CreateUser(suite.ctx, user.CreateUserOpts{
+				Name: "testuser",
+			})
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestUpdateUser() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.UpdateUser(suite.ctx, "testuser", user.UpdateUserOpts{})
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestDeleteUser() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.DeleteUser(suite.ctx, "testuser")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestChangePassword() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.ChangePassword(suite.ctx, "testuser", "secret")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestListGroups() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.ListGroups(suite.ctx)
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestGetGroup() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.GetGroup(suite.ctx, "testgroup")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestCreateGroup() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.CreateGroup(suite.ctx, user.CreateGroupOpts{
+				Name: "testgroup",
+			})
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestUpdateGroup() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.UpdateGroup(
+				suite.ctx,
+				"testgroup",
+				user.UpdateGroupOpts{},
+			)
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func (suite *DarwinPublicTestSuite) TestDeleteGroup() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns ErrUnsupported",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := suite.provider.DeleteGroup(suite.ctx, "testgroup")
+
+			suite.Error(err)
+			suite.Nil(result)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
+func TestDarwinPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(DarwinPublicTestSuite))
+}

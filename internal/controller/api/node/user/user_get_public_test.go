@@ -1,0 +1,386 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package user_test
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/retr0h/osapi/internal/authtoken"
+	"github.com/retr0h/osapi/internal/config"
+	"github.com/retr0h/osapi/internal/controller/api"
+	apiuser "github.com/retr0h/osapi/internal/controller/api/node/user"
+	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
+	"github.com/retr0h/osapi/internal/job"
+	jobmocks "github.com/retr0h/osapi/internal/job/mocks"
+	"github.com/retr0h/osapi/internal/validation"
+)
+
+type UserGetPublicTestSuite struct {
+	suite.Suite
+
+	mockCtrl      *gomock.Controller
+	mockJobClient *jobmocks.MockJobClient
+	handler       *apiuser.User
+	ctx           context.Context
+	appConfig     config.Config
+	logger        *slog.Logger
+}
+
+func (s *UserGetPublicTestSuite) SetupSuite() {
+	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
+		return []validation.AgentTarget{
+			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
+			{Hostname: "server2"},
+		}, nil
+	})
+}
+
+func (s *UserGetPublicTestSuite) SetupTest() {
+	s.mockCtrl = gomock.NewController(s.T())
+	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
+	s.handler = apiuser.New(slog.Default(), s.mockJobClient)
+	s.ctx = context.Background()
+	s.appConfig = config.Config{}
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func (s *UserGetPublicTestSuite) TearDownTest() {
+	s.mockCtrl.Finish()
+}
+
+func (s *UserGetPublicTestSuite) TestGetNodeUserByName() {
+	tests := []struct {
+		name         string
+		request      gen.GetNodeUserByNameRequestObject
+		setupMock    func()
+		validateFunc func(resp gen.GetNodeUserByNameResponseObject)
+	}{
+		{
+			name: "success",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo"]}`,
+						),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Require().NotNil(r.Results[0].Users)
+				users := *r.Results[0].Users
+				s.Equal("testuser", *users[0].Name)
+				s.Require().NotNil(users[0].Groups)
+				s.Contains(*users[0].Groups, "sudo")
+			},
+		},
+		{
+			name: "validation error empty hostname",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "",
+				Name:     "testuser",
+			},
+			setupMock: func() {},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeUserByName500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "not found",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "server1",
+				Name:     "missing",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserGet,
+						map[string]string{"name": "missing"}).
+					Return("", nil, fmt.Errorf("user not found: missing"))
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeUserByName404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "job client error",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("", nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeUserByName500JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
+			name: "when job skipped",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "server1",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "unsupported",
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.UserEntryStatusSkipped, r.Results[0].Status)
+			},
+		},
+		{
+			name: "broadcast target _all",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 2)
+			},
+		},
+		{
+			name: "broadcast with failed and skipped agents",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000",
+						map[string]*job.Response{
+							"server1": {
+								Hostname: "server1",
+								Status:   job.StatusCompleted,
+								Data: json.RawMessage(
+									`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false,"groups":["sudo","docker"]}`,
+								),
+							},
+							"server2": {
+								Hostname: "server2",
+								Status:   job.StatusFailed,
+								Error:    "connection timeout",
+							},
+							"server3": {
+								Hostname: "server3",
+								Status:   job.StatusSkipped,
+								Error:    "unsupported",
+							},
+						}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				r, ok := resp.(gen.GetNodeUserByName200JSONResponse)
+				s.True(ok)
+				s.Len(r.Results, 3)
+
+				byHost := make(map[string]gen.UserEntry)
+				for _, res := range r.Results {
+					byHost[res.Hostname] = res
+				}
+
+				s.Equal(gen.UserEntryStatusOk, byHost["server1"].Status)
+				s.Equal(gen.UserEntryStatusFailed, byHost["server2"].Status)
+				s.Contains(*byHost["server2"].Error, "connection timeout")
+				s.Equal(gen.UserEntryStatusSkipped, byHost["server3"].Status)
+			},
+		},
+		{
+			name: "broadcast job client error",
+			request: gen.GetNodeUserByNameRequestObject{
+				Hostname: "_all",
+				Name:     "testuser",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", "user", job.OperationUserGet,
+						map[string]string{"name": "testuser"}).
+					Return("", nil, assert.AnError)
+			},
+			validateFunc: func(resp gen.GetNodeUserByNameResponseObject) {
+				_, ok := resp.(gen.GetNodeUserByName500JSONResponse)
+				s.True(ok)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMock()
+
+			resp, err := s.handler.GetNodeUserByName(s.ctx, tt.request)
+			s.NoError(err)
+			tt.validateFunc(resp)
+		})
+	}
+}
+
+const rbacUserGetTestSigningKey = "test-signing-key-for-rbac-user-get"
+
+func (s *UserGetPublicTestSuite) TestGetNodeUserByNameRBACHTTP() {
+	tokenManager := authtoken.New(s.logger)
+
+	tests := []struct {
+		name         string
+		setupAuth    func(req *http.Request)
+		setupJobMock func() *jobmocks.MockJobClient
+		wantCode     int
+	}{
+		{
+			name:      "when no token returns 401",
+			setupAuth: func(_ *http.Request) {},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "when insufficient permissions returns 403",
+			setupAuth: func(req *http.Request) {
+				token, _ := tokenManager.Generate(
+					rbacUserGetTestSigningKey,
+					[]string{"write"},
+					"test-user",
+					[]string{"node:write"},
+				)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				return jobmocks.NewMockJobClient(s.mockCtrl)
+			},
+			wantCode: http.StatusForbidden,
+		},
+		{
+			name: "when valid admin token returns 200",
+			setupAuth: func(req *http.Request) {
+				token, _ := tokenManager.Generate(
+					rbacUserGetTestSigningKey,
+					[]string{"admin"},
+					"test-user",
+					nil,
+				)
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			},
+			setupJobMock: func() *jobmocks.MockJobClient {
+				mock := jobmocks.NewMockJobClient(s.mockCtrl)
+				mock.EXPECT().
+					Query(gomock.Any(), "server1", "user", job.OperationUserGet, map[string]string{"name": "testuser"}).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						Hostname: "agent1",
+						Data: json.RawMessage(
+							`{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","locked":false}`,
+						),
+					}, nil)
+				return mock
+			},
+			wantCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			jobMock := tc.setupJobMock()
+			appConfig := config.Config{
+				Controller: config.Controller{
+					API: config.APIServer{
+						Security: config.ServerSecurity{SigningKey: rbacUserGetTestSigningKey},
+					},
+				},
+			}
+			server := api.New(appConfig, s.logger)
+			handlers := apiuser.Handler(
+				s.logger,
+				jobMock,
+				appConfig.Controller.API.Security.SigningKey,
+				nil,
+			)
+			server.RegisterHandlers(handlers)
+
+			req := httptest.NewRequest(http.MethodGet, "/node/server1/user/testuser", nil)
+			tc.setupAuth(req)
+			rec := httptest.NewRecorder()
+			server.Echo.ServeHTTP(rec, req)
+
+			s.Equal(tc.wantCode, rec.Code)
+		})
+	}
+}
+
+func TestUserGetPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(UserGetPublicTestSuite))
+}

@@ -37,6 +37,7 @@ import (
 	processProv "github.com/retr0h/osapi/internal/provider/node/process"
 	"github.com/retr0h/osapi/internal/provider/node/sysctl"
 	"github.com/retr0h/osapi/internal/provider/node/timezone"
+	"github.com/retr0h/osapi/internal/provider/node/user"
 )
 
 // processJobOperation handles the actual job processing based on category and operation.
@@ -62,6 +63,7 @@ func NewNodeProcessor(
 	timezoneProvider timezone.Provider,
 	powerProvider power.Provider,
 	processProvider processProv.Provider,
+	userProvider user.Provider,
 	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -97,6 +99,10 @@ func NewNodeProcessor(
 			return processPowerOperation(powerProvider, logger, req)
 		case "process":
 			return processProcessOperation(processProvider, logger, req)
+		case "user":
+			return processUserOperation(userProvider, logger, req)
+		case "group":
+			return processGroupOperation(userProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

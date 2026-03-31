@@ -116,6 +116,14 @@ type Client struct {
 	// Power provides power management operations (reboot, shutdown).
 	Power *PowerService
 
+	// User provides user account management operations (list, get,
+	// create, update, delete, change password).
+	User *UserService
+
+	// Group provides group management operations (list, get, create,
+	// update, delete).
+	Group *GroupService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -198,6 +206,8 @@ func New(
 	c.Timezone = &TimezoneService{client: httpClient}
 	c.Process = &ProcessService{client: httpClient}
 	c.Power = &PowerService{client: httpClient}
+	c.User = &UserService{client: httpClient}
+	c.Group = &GroupService{client: httpClient}
 
 	return c
 }

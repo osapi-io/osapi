@@ -57,6 +57,7 @@ import (
 	scheduleAPI "github.com/retr0h/osapi/internal/controller/api/node/schedule"
 	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
+	userAPI "github.com/retr0h/osapi/internal/controller/api/node/user"
 	"github.com/retr0h/osapi/internal/controller/notify"
 	"github.com/retr0h/osapi/internal/job"
 	jobclient "github.com/retr0h/osapi/internal/job/client"
@@ -728,6 +729,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, networkAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, commandAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, processAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, userAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(log, jc, signingKey, customRoles)...)
 	if auditStore != nil {
 		handlers = append(handlers, auditAPI.Handler(log, auditStore, signingKey, customRoles)...)

@@ -1,0 +1,931 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: User and Group Management API
+  version: 1.0.0
+tags:
+  - name: user_operations
+    x-displayName: Node/User
+    description: User account management on a target node.
+  - name: group_operations
+    x-displayName: Node/Group
+    description: Group management on a target node.
+
+paths:
+  # -- User collection -----------------------------------------------------
+
+  /node/{hostname}/user:
+    get:
+      summary: List all users
+      description: >
+        List all user accounts on the target node.
+      tags:
+        - user_operations
+      operationId: GetNodeUser
+      security:
+        - BearerAuth:
+            - user:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of user accounts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing users.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a user
+      description: >
+        Create a new user account on the target node.
+      tags:
+        - user_operations
+      operationId: PostNodeUser
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: User account creation parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '200':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating user.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- User individual entry -----------------------------------------------
+
+  /node/{hostname}/user/{name}:
+    get:
+      summary: Get a user
+      description: >
+        Get a specific user account by name on the target node.
+      tags:
+        - user_operations
+      operationId: GetNodeUserByName
+      security:
+        - BearerAuth:
+            - user:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      responses:
+        '200':
+          description: User account detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving user.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a user
+      description: >
+        Update an existing user account on the target node.
+      tags:
+        - user_operations
+      operationId: PutNodeUser
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      requestBody:
+        description: User account update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: User updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating user.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a user
+      description: >
+        Delete a user account from the target node.
+      tags:
+        - user_operations
+      operationId: DeleteNodeUser
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      responses:
+        '200':
+          description: User deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting user.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- User password -------------------------------------------------------
+
+  /node/{hostname}/user/{name}/password:
+    post:
+      summary: Change user password
+      description: >
+        Change the password for a user account on the target node.
+      tags:
+        - user_operations
+      operationId: PostNodeUserPassword
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      requestBody:
+        description: Password change parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswordRequest'
+      responses:
+        '200':
+          description: Password changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error changing password.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Group collection ----------------------------------------------------
+
+  /node/{hostname}/group:
+    get:
+      summary: List all groups
+      description: >
+        List all groups on the target node.
+      tags:
+        - group_operations
+      operationId: GetNodeGroup
+      security:
+        - BearerAuth:
+            - user:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of groups.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing groups.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a group
+      description: >
+        Create a new group on the target node.
+      tags:
+        - group_operations
+      operationId: PostNodeGroup
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Group creation parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreateRequest'
+      responses:
+        '200':
+          description: Group created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating group.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- Group individual entry ----------------------------------------------
+
+  /node/{hostname}/group/{name}:
+    get:
+      summary: Get a group
+      description: >
+        Get a specific group by name on the target node.
+      tags:
+        - group_operations
+      operationId: GetNodeGroupByName
+      security:
+        - BearerAuth:
+            - user:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      responses:
+        '200':
+          description: Group detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving group.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a group
+      description: >
+        Update an existing group on the target node.
+      tags:
+        - group_operations
+      operationId: PutNodeGroup
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      requestBody:
+        description: Group update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdateRequest'
+      responses:
+        '200':
+          description: Group updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating group.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a group
+      description: >
+        Delete a group from the target node.
+      tags:
+        - group_operations
+      operationId: DeleteNodeGroup
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      responses:
+        '200':
+          description: Group deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting group.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components --------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+    UserName:
+      name: name
+      in: path
+      required: true
+      description: >
+        User account name.
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+    GroupName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Group name.
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas ---------------------------------------------------
+
+    UserCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Username for the new account.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1,max=32"
+        uid:
+          type: integer
+          description: Numeric user ID. If omitted, the system assigns one.
+        gid:
+          type: integer
+          description: Primary group ID. If omitted, a group matching the username is created.
+        home:
+          type: string
+          description: Home directory path.
+        shell:
+          type: string
+          description: Login shell path.
+        groups:
+          type: array
+          items:
+            type: string
+          description: Supplementary group names.
+        password:
+          type: string
+          description: Initial password (plaintext, hashed by the agent).
+        system:
+          type: boolean
+          description: Create a system account.
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        shell:
+          type: string
+          description: New login shell path.
+        home:
+          type: string
+          description: New home directory path.
+        groups:
+          type: array
+          items:
+            type: string
+          description: Supplementary group names (replaces existing).
+        lock:
+          type: boolean
+          description: Lock or unlock the account.
+
+    UserPasswordRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          description: New password (plaintext, hashed by the agent).
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    GroupCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Group name.
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1,max=32"
+        gid:
+          type: integer
+          description: Numeric group ID. If omitted, the system assigns one.
+        system:
+          type: boolean
+          description: Create a system group.
+
+    GroupUpdateRequest:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            type: string
+          description: Group member usernames (replaces existing).
+
+    # -- Response schemas --------------------------------------------------
+
+    UserInfo:
+      type: object
+      description: A user account on the target node.
+      properties:
+        name:
+          type: string
+          description: Username.
+        uid:
+          type: integer
+          description: Numeric user ID.
+        gid:
+          type: integer
+          description: Primary group ID.
+        home:
+          type: string
+          description: Home directory path.
+        shell:
+          type: string
+          description: Login shell path.
+        groups:
+          type: array
+          items:
+            type: string
+          description: Supplementary group names.
+        locked:
+          type: boolean
+          description: Whether the account is locked.
+
+    UserEntry:
+      type: object
+      description: User listing result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInfo'
+          description: User accounts on this host.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    UserCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserEntry'
+      required:
+        - results
+
+    UserMutationResult:
+      type: object
+      description: Result of a user create, update, delete, or password operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Username.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    UserMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMutationResult'
+      required:
+        - results
+
+    GroupInfo:
+      type: object
+      description: A group on the target node.
+      properties:
+        name:
+          type: string
+          description: Group name.
+        gid:
+          type: integer
+          description: Numeric group ID.
+        members:
+          type: array
+          items:
+            type: string
+          description: Group member usernames.
+
+    GroupEntry:
+      type: object
+      description: Group listing result for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupInfo'
+          description: Groups on this host.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    GroupCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupEntry'
+      required:
+        - results
+
+    GroupMutationResult:
+      type: object
+      description: Result of a group create, update, or delete operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Group name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    GroupMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMutationResult'
+      required:
+        - results

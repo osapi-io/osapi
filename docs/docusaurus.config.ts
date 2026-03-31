@@ -178,6 +178,11 @@ const config: Config = {
               type: 'doc',
               label: 'Process Management',
               docId: 'sidebar/features/process-management'
+            },
+            {
+              type: 'doc',
+              label: 'User & Group Management',
+              docId: 'sidebar/features/user-management'
             }
           ]
         },
@@ -359,6 +364,16 @@ const config: Config = {
               type: 'doc',
               label: 'Audit',
               docId: 'sidebar/sdk/client/management/audit'
+            },
+            {
+              type: 'doc',
+              label: 'User',
+              docId: 'sidebar/sdk/client/management/user'
+            },
+            {
+              type: 'doc',
+              label: 'Group',
+              docId: 'sidebar/sdk/client/management/group'
             },
             {
               type: 'html',

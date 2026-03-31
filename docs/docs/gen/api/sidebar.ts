@@ -632,6 +632,92 @@ const sidebar: SidebarsConfig = {
         },
       ],
     },
+    {
+      type: "category",
+      label: "Node/User",
+      link: {
+        type: "doc",
+        id: "gen/api/user-and-group-management-api-user-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-user",
+          label: "List all users",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user",
+          label: "Create a user",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-user-by-name",
+          label: "Get a user",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-user",
+          label: "Update a user",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-user",
+          label: "Delete a user",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user-password",
+          label: "Change user password",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Group",
+      link: {
+        type: "doc",
+        id: "gen/api/user-and-group-management-api-group-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-group",
+          label: "List all groups",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-group",
+          label: "Create a group",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-group-by-name",
+          label: "Get a group",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-group",
+          label: "Update a group",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-group",
+          label: "Delete a group",
+          className: "api-method delete",
+        },
+      ],
+    },
   ],
 };
 
