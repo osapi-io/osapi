@@ -30,8 +30,9 @@ import (
 )
 
 // minDelayMinutes is the minimum delay before shutdown/reboot in minutes.
-// This ensures the agent has time to complete its job response lifecycle
-// before the system goes down.
+// This ensures the agent has time to write the job result back to NATS,
+// send the response to the API, and complete graceful shutdown before
+// the system goes down.
 const minDelayMinutes = 1
 
 // Compile-time checks.
@@ -75,6 +76,7 @@ func (d *Debian) Shutdown(
 }
 
 // executePowerAction runs the shutdown command with the given flag (-r or -h).
+// Uses `shutdown <flag> +N` where N is in minutes (minimum 1 minute).
 func (d *Debian) executePowerAction(
 	_ context.Context,
 	action string,

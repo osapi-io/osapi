@@ -22,15 +22,15 @@ agents), the job returns `status: skipped`.
 
 ### Minimum Delay
 
-A minimum 1-minute delay is always enforced, even when `delay` is 0 or omitted.
-This ensures the agent has time to write the job result back to NATS, send the
-response to the API, and complete its graceful shutdown lifecycle before the
-system powers off.
+A minimum 1-minute delay is always enforced, even when `delay` is 0
+or omitted. This ensures the agent has time to write the job result
+back to NATS, send the response to the API, and complete its
+graceful shutdown lifecycle before the system powers off.
 
-The `delay` field in the request body specifies seconds. The provider converts
-to minutes for the `shutdown` command (minimum 1 minute). The actual delay
-applied is returned in the response so the caller knows when the action will
-take effect.
+The `delay` field in the request body specifies seconds. The
+provider converts to minutes for the `shutdown` command (minimum 1
+minute, rounded up). The actual delay in seconds is returned in the
+response so the caller knows when the action will take effect.
 
 ## Operations
 
