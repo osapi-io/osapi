@@ -362,6 +362,7 @@ func SetAgentAppConfig(
 			(timezone.Provider)(nil),
 			(power.Provider)(nil),
 			nil,
+			nil,
 			cfg,
 			a.logger,
 		)
@@ -395,6 +396,7 @@ func SetAgentHostProvider(
 			(ntp.Provider)(nil),
 			(timezone.Provider)(nil),
 			(power.Provider)(nil),
+			nil,
 			nil,
 			a.appConfig,
 			a.logger,

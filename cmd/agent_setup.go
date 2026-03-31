@@ -48,6 +48,7 @@ import (
 	processProv "github.com/retr0h/osapi/internal/provider/node/process"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
+	userProv "github.com/retr0h/osapi/internal/provider/node/user"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -197,6 +198,9 @@ func setupAgent(
 	// --- Process provider ---
 	processProvider := createProcessProvider(log)
 
+	// --- User provider ---
+	userProvider := createUserProvider(log, appFs, execManager)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -212,6 +216,7 @@ func setupAgent(
 			timezoneProvider,
 			powerProvider,
 			processProvider,
+			userProvider,
 			appConfig,
 			log,
 		),
@@ -224,6 +229,7 @@ func setupAgent(
 		timezoneProvider,
 		powerProvider,
 		processProvider,
+		userProvider,
 	)
 
 	registry.Register("network",
@@ -485,5 +491,30 @@ func createCronProvider(
 		return cronProv.NewDarwinProvider()
 	default:
 		return cronProv.NewLinuxProvider()
+	}
+}
+
+// createUserProvider creates a platform-specific user provider. On Debian, the
+// user provider manages system users and groups via useradd/usermod/groupadd.
+// In containers, user management is not meaningful — returns ErrUnsupported.
+// On other platforms, all operations return ErrUnsupported.
+func createUserProvider(
+	log *slog.Logger,
+	fs avfs.VFS,
+	execManager exec.Manager,
+) userProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if platform.IsContainer() {
+			log.Info("running in container, user operations disabled")
+			return userProv.NewLinuxProvider()
+		}
+		return userProv.NewDebianProvider(log, fs, execManager)
+	case "darwin":
+		return userProv.NewDarwinProvider()
+	default:
+		return userProv.NewLinuxProvider()
 	}
 }

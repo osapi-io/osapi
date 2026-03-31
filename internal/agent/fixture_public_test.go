@@ -102,6 +102,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.timezoneProvider,
 			p.powerProvider,
 			nil,
+			nil,
 			p.appConfig,
 			logger,
 		),
