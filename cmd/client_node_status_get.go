@@ -38,7 +38,7 @@ var clientNodeStatusGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		resp, err := sdkClient.Node.Status(ctx, host)
+		resp, err := sdkClient.Status.Get(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

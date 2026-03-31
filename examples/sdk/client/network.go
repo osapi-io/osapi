@@ -54,7 +54,7 @@ func main() {
 	target := "_all"
 
 	// Get DNS configuration for an interface.
-	dns, err := c.Node.GetDNS(ctx, target, iface)
+	dns, err := c.DNS.Get(ctx, target, iface)
 	if err != nil {
 		log.Fatalf("get dns: %v", err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// Ping a host.
-	ping, err := c.Node.Ping(ctx, target, "8.8.8.8")
+	ping, err := c.Ping.Do(ctx, target, "8.8.8.8")
 	if err != nil {
 		log.Fatalf("ping: %v", err)
 	}

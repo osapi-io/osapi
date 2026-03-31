@@ -80,7 +80,7 @@ func main() {
 	// Create a cron entry referencing the uploaded object.
 	// Returns Collection[CronMutationResult] with per-host results.
 	fmt.Println("\n=== Creating cron entry ===")
-	createResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
+	createResp, err := c.Cron.Create(ctx, target, client.CronCreateOpts{
 		Name:     "backup-daily",
 		Schedule: "0 2 * * *",
 		Object:   "backup-script",
@@ -95,7 +95,7 @@ func main() {
 
 	// Create a periodic entry (interval-based) referencing an uploaded object.
 	fmt.Println("\n=== Creating periodic cron entry ===")
-	periodicResp, err := c.Schedule.CronCreate(ctx, target, client.CronCreateOpts{
+	periodicResp, err := c.Cron.Create(ctx, target, client.CronCreateOpts{
 		Name:     "logrotate",
 		Interval: "daily",
 		Object:   "logrotate-script",
@@ -110,7 +110,7 @@ func main() {
 	// List all cron entries.
 	// Returns Collection[CronEntryResult] with per-host entries.
 	fmt.Println("\n=== Listing cron entries ===")
-	listResp, err := c.Schedule.CronList(ctx, target)
+	listResp, err := c.Cron.List(ctx, target)
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
@@ -126,7 +126,7 @@ func main() {
 	// Get a specific entry.
 	// Returns Collection[CronEntryResult] — one result per host.
 	fmt.Println("\n=== Getting cron entry ===")
-	getResp, err := c.Schedule.CronGet(ctx, target, "backup-daily")
+	getResp, err := c.Cron.Get(ctx, target, "backup-daily")
 	if err != nil {
 		log.Fatalf("get failed: %v", err)
 	}
@@ -149,7 +149,7 @@ func main() {
 	fmt.Println("Uploaded: backup-script-v2")
 
 	fmt.Println("\n=== Updating cron entry ===")
-	updateResp, err := c.Schedule.CronUpdate(ctx, target, "backup-daily", client.CronUpdateOpts{
+	updateResp, err := c.Cron.Update(ctx, target, "backup-daily", client.CronUpdateOpts{
 		Schedule: "0 3 * * *",
 		Object:   "backup-script-v2",
 	})
@@ -163,7 +163,7 @@ func main() {
 	// Delete the entry. The cron file is removed from disk; file-state KV
 	// tracking is preserved so the undeploy is recorded.
 	fmt.Println("\n=== Deleting cron entry ===")
-	deleteResp, err := c.Schedule.CronDelete(ctx, target, "backup-daily")
+	deleteResp, err := c.Cron.Delete(ctx, target, "backup-daily")
 	if err != nil {
 		log.Fatalf("delete failed: %v", err)
 	}
@@ -173,7 +173,7 @@ func main() {
 
 	// Clean up the periodic entry.
 	fmt.Println("\n=== Cleaning up periodic entry ===")
-	cleanupResp, err := c.Schedule.CronDelete(ctx, target, "logrotate")
+	cleanupResp, err := c.Cron.Delete(ctx, target, "logrotate")
 	if err != nil {
 		log.Fatalf("cleanup failed: %v", err)
 	}

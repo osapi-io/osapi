@@ -64,11 +64,22 @@ func (suite *ClientPublicTestSuite) TestNew() {
 			},
 			validateFunc: func(c *client.Client) {
 				suite.NotNil(c)
-				suite.NotNil(c.Node)
+				suite.NotNil(c.Status)
+				suite.NotNil(c.Hostname)
+				suite.NotNil(c.Disk)
+				suite.NotNil(c.Memory)
+				suite.NotNil(c.Load)
+				suite.NotNil(c.Uptime)
+				suite.NotNil(c.OS)
+				suite.NotNil(c.DNS)
+				suite.NotNil(c.Ping)
+				suite.NotNil(c.Command)
+				suite.NotNil(c.FileDeploy)
 				suite.NotNil(c.Job)
 				suite.NotNil(c.Health)
 				suite.NotNil(c.Audit)
 				suite.NotNil(c.File)
+				suite.NotNil(c.Cron)
 			},
 		},
 		{

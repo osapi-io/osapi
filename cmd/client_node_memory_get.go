@@ -36,7 +36,7 @@ var clientNodeMemoryGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		resp, err := sdkClient.Node.Memory(ctx, host)
+		resp, err := sdkClient.Memory.Get(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

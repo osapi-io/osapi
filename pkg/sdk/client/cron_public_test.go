@@ -33,17 +33,17 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-type SchedulePublicTestSuite struct {
+type CronPublicTestSuite struct {
 	suite.Suite
 
 	ctx context.Context
 }
 
-func (suite *SchedulePublicTestSuite) SetupTest() {
+func (suite *CronPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *SchedulePublicTestSuite) TestCronList() {
+func (suite *CronPublicTestSuite) TestCronList() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -180,13 +180,13 @@ func (suite *SchedulePublicTestSuite) TestCronList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Schedule.CronList(suite.ctx, "_any")
+			resp, err := sut.Cron.List(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *SchedulePublicTestSuite) TestCronGet() {
+func (suite *CronPublicTestSuite) TestCronGet() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -355,13 +355,13 @@ func (suite *SchedulePublicTestSuite) TestCronGet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Schedule.CronGet(suite.ctx, "_any", "backup")
+			resp, err := sut.Cron.Get(suite.ctx, "_any", "backup")
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *SchedulePublicTestSuite) TestCronCreate() {
+func (suite *CronPublicTestSuite) TestCronCreate() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -620,13 +620,13 @@ func (suite *SchedulePublicTestSuite) TestCronCreate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Schedule.CronCreate(suite.ctx, "_any", tc.opts)
+			resp, err := sut.Cron.Create(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func (suite *SchedulePublicTestSuite) TestCronUpdate() {
+func (suite *CronPublicTestSuite) TestCronUpdate() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -862,7 +862,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Schedule.CronUpdate(
+			resp, err := sut.Cron.Update(
 				suite.ctx,
 				"_any",
 				"backup",
@@ -873,7 +873,7 @@ func (suite *SchedulePublicTestSuite) TestCronUpdate() {
 	}
 }
 
-func (suite *SchedulePublicTestSuite) TestCronDelete() {
+func (suite *CronPublicTestSuite) TestCronDelete() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
@@ -1015,12 +1015,12 @@ func (suite *SchedulePublicTestSuite) TestCronDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Schedule.CronDelete(suite.ctx, "_any", "backup")
+			resp, err := sut.Cron.Delete(suite.ctx, "_any", "backup")
 			tc.validateFunc(resp, err)
 		})
 	}
 }
 
-func TestSchedulePublicTestSuite(t *testing.T) {
-	suite.Run(t, new(SchedulePublicTestSuite))
+func TestCronPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(CronPublicTestSuite))
 }

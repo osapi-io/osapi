@@ -27,13 +27,13 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client/gen"
 )
 
-// ScheduleService provides schedule management operations.
-type ScheduleService struct {
+// CronService provides cron schedule management operations.
+type CronService struct {
 	client *gen.ClientWithResponses
 }
 
-// CronList lists all cron entries on the target host.
-func (s *ScheduleService) CronList(
+// List lists all cron entries on the target host.
+func (s *CronService) List(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[CronEntryResult]], error) {
@@ -61,8 +61,8 @@ func (s *ScheduleService) CronList(
 	return NewResponse(cronEntryCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// CronGet retrieves a single cron entry by name on the target host.
-func (s *ScheduleService) CronGet(
+// Get retrieves a single cron entry by name on the target host.
+func (s *CronService) Get(
 	ctx context.Context,
 	hostname string,
 	name string,
@@ -92,8 +92,8 @@ func (s *ScheduleService) CronGet(
 	return NewResponse(cronGetCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// CronCreate creates a new cron entry on the target host.
-func (s *ScheduleService) CronCreate(
+// Create creates a new cron entry on the target host.
+func (s *CronService) Create(
 	ctx context.Context,
 	hostname string,
 	opts CronCreateOpts,
@@ -145,8 +145,8 @@ func (s *ScheduleService) CronCreate(
 	return NewResponse(cronMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
 }
 
-// CronUpdate updates an existing cron entry on the target host.
-func (s *ScheduleService) CronUpdate(
+// Update updates an existing cron entry on the target host.
+func (s *CronService) Update(
 	ctx context.Context,
 	hostname string,
 	name string,
@@ -196,8 +196,8 @@ func (s *ScheduleService) CronUpdate(
 	return NewResponse(cronMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
 }
 
-// CronDelete deletes a cron entry on the target host.
-func (s *ScheduleService) CronDelete(
+// Delete deletes a cron entry on the target host.
+func (s *CronService) Delete(
 	ctx context.Context,
 	hostname string,
 	name string,

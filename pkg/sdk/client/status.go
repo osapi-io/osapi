@@ -20,6 +20,13 @@
 
 package client
 
+import (
+	"context"
+	"fmt"
+
+	"github.com/retr0h/osapi/pkg/sdk/client/gen"
+)
+
 // JobStatus represents the status of a job in the OSAPI system.
 // These values match the status strings returned by the REST API.
 type JobStatus string
@@ -74,3 +81,33 @@ const (
 	ConditionHighLoad       ConditionType = "HighLoad"
 	ConditionDiskPressure   ConditionType = "DiskPressure"
 )
+
+// StatusService provides node status operations.
+type StatusService struct {
+	client *gen.ClientWithResponses
+}
+
+// Get retrieves node status (OS info, disk, memory, load) from the
+// target host.
+func (s *StatusService) Get(
+	ctx context.Context,
+	target string,
+) (*Response[Collection[NodeStatus]], error) {
+	resp, err := s.client.GetNodeStatusWithResponse(ctx, target)
+	if err != nil {
+		return nil, fmt.Errorf("get status: %w", err)
+	}
+
+	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(nodeStatusCollectionFromGen(resp.JSON200), resp.Body), nil
+}

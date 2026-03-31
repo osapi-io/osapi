@@ -36,7 +36,7 @@ var clientNodeDiskGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
-		resp, err := sdkClient.Node.Disk(ctx, host)
+		resp, err := sdkClient.Disk.Get(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

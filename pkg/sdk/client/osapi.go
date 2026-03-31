@@ -26,10 +26,10 @@
 //	client := client.New("http://localhost:8080", "your-jwt-token")
 //
 //	// Get hostname
-//	resp, err := client.Node.Hostname(ctx, "_any")
+//	resp, err := client.Hostname.Get(ctx, "_any")
 //
 //	// Execute a command
-//	resp, err := client.Node.Exec(ctx, client.ExecRequest{
+//	resp, err := client.Command.Exec(ctx, client.ExecRequest{
 //	    Command: "uptime",
 //	    Target:  "_all",
 //	})
@@ -47,9 +47,38 @@ type Client struct {
 	// Agent provides agent discovery and details operations.
 	Agent *AgentService
 
-	// Node provides node management operations (hostname, status, disk,
-	// memory, load, OS, uptime, network DNS/ping, command exec/shell).
-	Node *NodeService
+	// Status provides full node status queries (OS, disk, memory, load).
+	Status *StatusService
+
+	// Hostname provides hostname query and update operations.
+	Hostname *HostnameService
+
+	// Disk provides disk usage query operations.
+	Disk *DiskService
+
+	// Memory provides memory usage query operations.
+	Memory *MemoryService
+
+	// Load provides load average query operations.
+	Load *LoadService
+
+	// Uptime provides uptime query operations.
+	Uptime *UptimeService
+
+	// OS provides operating system info query operations.
+	OS *OSService
+
+	// DNS provides DNS configuration query and update operations.
+	DNS *DNSService
+
+	// Ping provides network ping operations.
+	Ping *PingService
+
+	// Command provides command execution operations (exec, shell).
+	Command *CommandService
+
+	// FileDeploy provides file deployment operations on target hosts.
+	FileDeploy *FileDeployService
 
 	// Job provides job queue operations (create, get, list, delete, retry).
 	Job *JobService
@@ -67,9 +96,9 @@ type Client struct {
 	// inspect, start, stop, remove, exec, pull).
 	Docker *DockerService
 
-	// Schedule provides schedule management operations (cron list, get,
+	// Cron provides cron schedule management operations (list, get,
 	// create, update, delete).
-	Schedule *ScheduleService
+	Cron *CronService
 
 	// Sysctl provides sysctl parameter management operations (list, get,
 	// set, delete).
@@ -141,13 +170,23 @@ func New(
 
 	c.httpClient = httpClient
 	c.Agent = &AgentService{client: httpClient}
-	c.Node = &NodeService{client: httpClient}
+	c.Status = &StatusService{client: httpClient}
+	c.Hostname = &HostnameService{client: httpClient}
+	c.Disk = &DiskService{client: httpClient}
+	c.Memory = &MemoryService{client: httpClient}
+	c.Load = &LoadService{client: httpClient}
+	c.Uptime = &UptimeService{client: httpClient}
+	c.OS = &OSService{client: httpClient}
+	c.DNS = &DNSService{client: httpClient}
+	c.Ping = &PingService{client: httpClient}
+	c.Command = &CommandService{client: httpClient}
+	c.FileDeploy = &FileDeployService{client: httpClient}
 	c.Job = &JobService{client: httpClient}
 	c.Health = &HealthService{client: httpClient}
 	c.Audit = &AuditService{client: httpClient}
 	c.File = &FileService{client: httpClient}
 	c.Docker = &DockerService{client: httpClient}
-	c.Schedule = &ScheduleService{client: httpClient}
+	c.Cron = &CronService{client: httpClient}
 	c.Sysctl = &SysctlService{client: httpClient}
 	c.NTP = &NTPService{client: httpClient}
 	c.Timezone = &TimezoneService{client: httpClient}

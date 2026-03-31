@@ -39,7 +39,7 @@ var clientNodeNetworkDNSGetCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		interfaceName, _ := cmd.Flags().GetString("interface-name")
 
-		resp, err := sdkClient.Node.GetDNS(ctx, host, interfaceName)
+		resp, err := sdkClient.DNS.Get(ctx, host, interfaceName)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

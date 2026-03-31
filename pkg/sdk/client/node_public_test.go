@@ -139,7 +139,7 @@ func (suite *NodePublicTestSuite) TestHostname() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Hostname(suite.ctx, tc.target)
+			resp, err := sut.Hostname.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -248,7 +248,7 @@ func (suite *NodePublicTestSuite) TestUpdateHostname() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.UpdateHostname(suite.ctx, tc.target, tc.hostname)
+			resp, err := sut.Hostname.Update(suite.ctx, tc.target, tc.hostname)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -345,7 +345,7 @@ func (suite *NodePublicTestSuite) TestStatus() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Status(suite.ctx, tc.target)
+			resp, err := sut.Status.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -442,7 +442,7 @@ func (suite *NodePublicTestSuite) TestDisk() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Disk(suite.ctx, tc.target)
+			resp, err := sut.Disk.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -539,7 +539,7 @@ func (suite *NodePublicTestSuite) TestMemory() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Memory(suite.ctx, tc.target)
+			resp, err := sut.Memory.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -636,7 +636,7 @@ func (suite *NodePublicTestSuite) TestLoad() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Load(suite.ctx, tc.target)
+			resp, err := sut.Load.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -733,7 +733,7 @@ func (suite *NodePublicTestSuite) TestOS() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.OS(suite.ctx, tc.target)
+			resp, err := sut.OS.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -833,7 +833,7 @@ func (suite *NodePublicTestSuite) TestUptime() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Uptime(suite.ctx, tc.target)
+			resp, err := sut.Uptime.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -938,7 +938,7 @@ func (suite *NodePublicTestSuite) TestGetDNS() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.GetDNS(suite.ctx, tc.target, tc.interfaceName)
+			resp, err := sut.DNS.Get(suite.ctx, tc.target, tc.interfaceName)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1113,7 +1113,7 @@ func (suite *NodePublicTestSuite) TestUpdateDNS() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.UpdateDNS(
+			resp, err := sut.DNS.Update(
 				suite.ctx,
 				tc.target,
 				tc.iface,
@@ -1226,7 +1226,7 @@ func (suite *NodePublicTestSuite) TestPing() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Ping(suite.ctx, tc.target, tc.address)
+			resp, err := sut.Ping.Do(suite.ctx, tc.target, tc.address)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1363,7 +1363,7 @@ func (suite *NodePublicTestSuite) TestExec() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Exec(suite.ctx, tc.req)
+			resp, err := sut.Command.Exec(suite.ctx, tc.req)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1497,7 +1497,7 @@ func (suite *NodePublicTestSuite) TestShell() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.Shell(suite.ctx, tc.req)
+			resp, err := sut.Command.Shell(suite.ctx, tc.req)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1665,7 +1665,7 @@ func (suite *NodePublicTestSuite) TestFileDeploy() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.FileDeploy(suite.ctx, tc.req)
+			resp, err := sut.FileDeploy.Deploy(suite.ctx, tc.req)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1794,7 +1794,7 @@ func (suite *NodePublicTestSuite) TestFileStatus() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.FileStatus(suite.ctx, tc.target, tc.path)
+			resp, err := sut.FileDeploy.Status(suite.ctx, tc.target, tc.path)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -1946,7 +1946,7 @@ func (suite *NodePublicTestSuite) TestFileUndeploy() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Node.FileUndeploy(suite.ctx, tc.req)
+			resp, err := sut.FileDeploy.Undeploy(suite.ctx, tc.req)
 			tc.validateFunc(resp, err)
 		})
 	}

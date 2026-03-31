@@ -16,8 +16,13 @@ pkg/sdk/
     osapi.go       # Client constructor, service wiring
     response.go    # Response[T], Collection[T], error helpers
     errors.go      # Typed error hierarchy
-    node.go        # NodeService methods
+    node.go        # Request types (ExecRequest, ShellRequest, etc.)
     node_types.go  # SDK result types + gen→SDK conversions
+    hostname.go    # HostnameService methods
+    disk.go        # DiskService methods
+    dns.go         # DNSService methods
+    command.go     # CommandService methods
+    cron.go        # CronService methods
     ...            # One file per domain service
   platform/        # Platform detection utilities
 ```

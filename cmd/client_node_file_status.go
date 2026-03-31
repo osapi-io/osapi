@@ -39,7 +39,7 @@ Reports whether the file is in-sync, drifted, or missing.`,
 		host, _ := cmd.Flags().GetString("target")
 		path, _ := cmd.Flags().GetString("path")
 
-		resp, err := sdkClient.Node.FileStatus(ctx, host, path)
+		resp, err := sdkClient.FileDeploy.Status(ctx, host, path)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return
