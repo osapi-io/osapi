@@ -399,3 +399,42 @@ func SysctlMutationCollectionFromDelete(
 ) Collection[SysctlMutationResult] {
 	return sysctlMutationCollectionFromDelete(input)
 }
+
+// NtpStatusCollectionFromGen exposes the private
+// ntpStatusCollectionFromGen for testing.
+func NtpStatusCollectionFromGen(
+	input *gen.NtpCollectionResponse,
+) Collection[NtpStatusResult] {
+	return ntpStatusCollectionFromGen(input)
+}
+
+// NtpMutationCollectionFromCreate exposes the private
+// ntpMutationCollectionFromCreate for testing.
+func NtpMutationCollectionFromCreate(
+	input *gen.NtpCreateResponse,
+) Collection[NtpMutationResult] {
+	return ntpMutationCollectionFromCreate(input)
+}
+
+// NtpMutationCollectionFromUpdate exposes the private
+// ntpMutationCollectionFromUpdate for testing.
+func NtpMutationCollectionFromUpdate(
+	input *gen.NtpUpdateResponse,
+) Collection[NtpMutationResult] {
+	return ntpMutationCollectionFromUpdate(input)
+}
+
+// NtpMutationCollectionFromDelete exposes the private
+// ntpMutationCollectionFromDelete for testing.
+func NtpMutationCollectionFromDelete(
+	input *gen.NtpDeleteResponse,
+) Collection[NtpMutationResult] {
+	return ntpMutationCollectionFromDelete(input)
+}
+
+// ExportDerefStringSlice exposes the private derefStringSlice for testing.
+func ExportDerefStringSlice(
+	s *[]string,
+) []string {
+	return derefStringSlice(s)
+}

@@ -75,6 +75,9 @@ type Client struct {
 	// set, delete).
 	Sysctl *SysctlService
 
+	// NTP provides NTP management operations (get, create, update, delete).
+	NTP *NTPService
+
 	httpClient    *gen.ClientWithResponses
 	baseURL       string
 	logger        *slog.Logger
@@ -143,6 +146,7 @@ func New(
 	c.Docker = &DockerService{client: httpClient}
 	c.Schedule = &ScheduleService{client: httpClient}
 	c.Sysctl = &SysctlService{client: httpClient}
+	c.NTP = &NTPService{client: httpClient}
 
 	return c
 }
