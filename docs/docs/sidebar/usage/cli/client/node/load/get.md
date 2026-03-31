@@ -1,4 +1,4 @@
-# Load
+# Get
 
 Get load averages from the target node:
 

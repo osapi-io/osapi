@@ -1,4 +1,4 @@
-# Uptime
+# Get
 
 Get uptime from the target node:
 

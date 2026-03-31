@@ -1,4 +1,4 @@
-# Disk
+# Get
 
 Get disk usage from the target node:
 

@@ -1,4 +1,4 @@
-# OS
+# Get
 
 Get operating system information from the target node:
 

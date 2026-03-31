@@ -1,4 +1,4 @@
-# Memory
+# Get
 
 Get memory usage from the target node:
 

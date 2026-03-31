@@ -132,17 +132,17 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Sysctl Management',
-              docId: 'sidebar/features/sysctl'
+              docId: 'sidebar/features/sysctl-management'
             },
             {
               type: 'doc',
               label: 'NTP Management',
-              docId: 'sidebar/features/ntp'
+              docId: 'sidebar/features/ntp-management'
             },
             {
               type: 'doc',
               label: 'Timezone Management',
-              docId: 'sidebar/features/timezone'
+              docId: 'sidebar/features/timezone-management'
             },
             {
               type: 'doc',

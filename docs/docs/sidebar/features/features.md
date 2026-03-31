@@ -23,9 +23,9 @@ OSAPI provides a comprehensive set of features for managing Linux systems.
 | 🔐  | [Authentication & RBAC](authentication.md)     | JWT with fine-grained `resource:verb` permissions                                             |
 | 📦  | [Container Management](container-management.md) | Docker lifecycle, exec, and pull through pluggable runtime drivers                             |
 | ⏰  | [Cron Management](cron-management.md)          | Cron drop-in file and periodic script management                                              |
-| 🔧  | [Sysctl Management](sysctl.md)                 | Kernel parameter management via `/etc/sysctl.d/`                                              |
-| 🕐  | [NTP Management](ntp.md)                       | Chrony NTP server configuration and sync status                                               |
-| 🌍  | [Timezone Management](timezone.md)             | System timezone get and set via timedatectl                                                   |
+| 🔧  | [Sysctl Management](sysctl-management.md)      | Kernel parameter management via `/etc/sysctl.d/`                                              |
+| 🕐  | [NTP Management](ntp-management.md)            | Chrony NTP server configuration and sync status                                               |
+| 🌍  | [Timezone Management](timezone-management.md)  | System timezone get and set via timedatectl                                                   |
 | 🔔  | [Notifications](notifications.md)              | Pluggable condition alerts with re-notification                                               |
 | 🔍  | [Distributed Tracing](distributed-tracing.md)  | OpenTelemetry with trace context propagation                                                  |
 
