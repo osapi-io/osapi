@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 2
 ---
 
 # Cron
@@ -79,5 +79,5 @@ resp, err := c.Cron.Delete(ctx, "web-01", "backup-daily")
 
 Cron management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
 On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`. See [Platform Detection](../platform/detection.md) for
+`status: skipped`. See [Platform Detection](../../platform/detection.md) for
 details.

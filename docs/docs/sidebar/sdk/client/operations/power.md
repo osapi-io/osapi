@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Power
 
 The `Power` service provides methods for managing power state on target hosts

@@ -207,37 +207,37 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Status',
-              docId: 'sidebar/sdk/client/status'
+              docId: 'sidebar/sdk/client/node-info/status'
             },
             {
               type: 'doc',
               label: 'Hostname',
-              docId: 'sidebar/sdk/client/hostname'
+              docId: 'sidebar/sdk/client/node-info/hostname'
             },
             {
               type: 'doc',
               label: 'Disk',
-              docId: 'sidebar/sdk/client/disk'
+              docId: 'sidebar/sdk/client/node-info/disk'
             },
             {
               type: 'doc',
               label: 'Memory',
-              docId: 'sidebar/sdk/client/memory'
+              docId: 'sidebar/sdk/client/node-info/memory'
             },
             {
               type: 'doc',
               label: 'Load',
-              docId: 'sidebar/sdk/client/load'
+              docId: 'sidebar/sdk/client/node-info/load'
             },
             {
               type: 'doc',
               label: 'Uptime',
-              docId: 'sidebar/sdk/client/uptime'
+              docId: 'sidebar/sdk/client/node-info/uptime'
             },
             {
               type: 'doc',
               label: 'OS',
-              docId: 'sidebar/sdk/client/os'
+              docId: 'sidebar/sdk/client/node-info/os'
             },
             {
               type: 'html',
@@ -248,12 +248,12 @@ const config: Config = {
             {
               type: 'doc',
               label: 'DNS',
-              docId: 'sidebar/sdk/client/dns'
+              docId: 'sidebar/sdk/client/network/dns'
             },
             {
               type: 'doc',
               label: 'Ping',
-              docId: 'sidebar/sdk/client/ping'
+              docId: 'sidebar/sdk/client/network/ping'
             },
             {
               type: 'html',
@@ -264,17 +264,17 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Sysctl',
-              docId: 'sidebar/sdk/client/sysctl'
+              docId: 'sidebar/sdk/client/system-config/sysctl'
             },
             {
               type: 'doc',
               label: 'NTP',
-              docId: 'sidebar/sdk/client/ntp'
+              docId: 'sidebar/sdk/client/system-config/ntp'
             },
             {
               type: 'doc',
               label: 'Timezone',
-              docId: 'sidebar/sdk/client/timezone'
+              docId: 'sidebar/sdk/client/system-config/timezone'
             },
             {
               type: 'html',
@@ -285,12 +285,12 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Command',
-              docId: 'sidebar/sdk/client/command'
+              docId: 'sidebar/sdk/client/operations/command'
             },
             {
               type: 'doc',
               label: 'Power',
-              docId: 'sidebar/sdk/client/power'
+              docId: 'sidebar/sdk/client/operations/power'
             },
             {
               type: 'html',
@@ -301,12 +301,12 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Docker',
-              docId: 'sidebar/sdk/client/docker'
+              docId: 'sidebar/sdk/client/containers-scheduling/docker'
             },
             {
               type: 'doc',
               label: 'Cron',
-              docId: 'sidebar/sdk/client/cron'
+              docId: 'sidebar/sdk/client/containers-scheduling/cron'
             },
             {
               type: 'html',
@@ -317,12 +317,12 @@ const config: Config = {
             {
               type: 'doc',
               label: 'File',
-              docId: 'sidebar/sdk/client/file'
+              docId: 'sidebar/sdk/client/files/file'
             },
             {
               type: 'doc',
               label: 'FileDeploy',
-              docId: 'sidebar/sdk/client/file_deploy'
+              docId: 'sidebar/sdk/client/files/file_deploy'
             },
             {
               type: 'html',
@@ -333,22 +333,22 @@ const config: Config = {
             {
               type: 'doc',
               label: 'Agent',
-              docId: 'sidebar/sdk/client/agent'
+              docId: 'sidebar/sdk/client/management/agent'
             },
             {
               type: 'doc',
               label: 'Job',
-              docId: 'sidebar/sdk/client/job'
+              docId: 'sidebar/sdk/client/management/job'
             },
             {
               type: 'doc',
               label: 'Health',
-              docId: 'sidebar/sdk/client/health'
+              docId: 'sidebar/sdk/client/management/health'
             },
             {
               type: 'doc',
               label: 'Audit',
-              docId: 'sidebar/sdk/client/audit'
+              docId: 'sidebar/sdk/client/management/audit'
             },
             {
               type: 'html',
