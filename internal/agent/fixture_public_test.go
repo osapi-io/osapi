@@ -49,28 +49,28 @@ import (
 // newTestAgentParams holds all provider dependencies for building a test agent.
 // This mirrors the old agent.New() parameter list, making test migration mechanical.
 type newTestAgentParams struct {
-	appFs           avfs.VFS
-	appConfig       config.Config
-	logger          *slog.Logger
-	jobClient       client.JobClient
-	streamName      string
-	hostProvider    nodeHost.Provider
-	diskProvider    disk.Provider
-	memProvider     mem.Provider
-	loadProvider    load.Provider
-	dnsProvider     dns.Provider
-	pingProvider    ping.Provider
-	netinfoProvider netinfo.Provider
-	commandProvider command.Provider
-	fileProvider    fileProv.Provider
-	dockerProvider  dockerProv.Provider
-	cronProvider    cronProv.Provider
+	appFs            avfs.VFS
+	appConfig        config.Config
+	logger           *slog.Logger
+	jobClient        client.JobClient
+	streamName       string
+	hostProvider     nodeHost.Provider
+	diskProvider     disk.Provider
+	memProvider      mem.Provider
+	loadProvider     load.Provider
+	dnsProvider      dns.Provider
+	pingProvider     ping.Provider
+	netinfoProvider  netinfo.Provider
+	commandProvider  command.Provider
+	fileProvider     fileProv.Provider
+	dockerProvider   dockerProv.Provider
+	cronProvider     cronProv.Provider
 	sysctlProvider   sysctlProv.Provider
 	ntpProvider      ntpProv.Provider
 	timezoneProvider timezoneProv.Provider
 	processProvider  process.Provider
-	registryKV      jetstream.KeyValue
-	factsKV         jetstream.KeyValue
+	registryKV       jetstream.KeyValue
+	factsKV          jetstream.KeyValue
 }
 
 // newTestAgent builds a ProviderRegistry from the supplied providers and

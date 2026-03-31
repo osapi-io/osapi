@@ -59,7 +59,10 @@ func NewDebianProvider(
 func (d *Debian) Get(
 	_ context.Context,
 ) (*Info, error) {
-	tzOutput, err := d.execManager.RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"})
+	tzOutput, err := d.execManager.RunCmd(
+		"timedatectl",
+		[]string{"show", "-p", "Timezone", "--value"},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("timezone: timedatectl show: %w", err)
 	}
@@ -81,7 +84,10 @@ func (d *Debian) Update(
 	_ context.Context,
 	timezone string,
 ) (*UpdateResult, error) {
-	currentOutput, err := d.execManager.RunCmd("timedatectl", []string{"show", "-p", "Timezone", "--value"})
+	currentOutput, err := d.execManager.RunCmd(
+		"timedatectl",
+		[]string{"show", "-p", "Timezone", "--value"},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("timezone: timedatectl show: %w", err)
 	}

@@ -75,7 +75,10 @@ func (suite *NTPPublicTestSuite) TestNtpGet() {
 				suite.Equal(2, resp.Data.Results[0].Stratum)
 				suite.Equal("+0.001s", resp.Data.Results[0].Offset)
 				suite.Equal("pool.ntp.org", resp.Data.Results[0].CurrentSource)
-				suite.Equal([]string{"0.pool.ntp.org", "1.pool.ntp.org"}, resp.Data.Results[0].Servers)
+				suite.Equal(
+					[]string{"0.pool.ntp.org", "1.pool.ntp.org"},
+					resp.Data.Results[0].Servers,
+				)
 			},
 		},
 		{

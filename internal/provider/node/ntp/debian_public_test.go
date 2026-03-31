@@ -511,7 +511,11 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			name: "when successful removes config file",
 			setupFs: func() {
 				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
-				_ = suite.memFs.WriteFile(sourcesFile, []byte("server 0.pool.ntp.org iburst\n"), 0o644)
+				_ = suite.memFs.WriteFile(
+					sourcesFile,
+					[]byte("server 0.pool.ntp.org iburst\n"),
+					0o644,
+				)
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
@@ -565,7 +569,11 @@ func (suite *DebianPublicTestSuite) TestDelete() {
 			name: "when reload fails logs warning but succeeds",
 			setupFs: func() {
 				_ = suite.memFs.MkdirAll(sourcesDir, 0o755)
-				_ = suite.memFs.WriteFile(sourcesFile, []byte("server 0.pool.ntp.org iburst\n"), 0o644)
+				_ = suite.memFs.WriteFile(
+					sourcesFile,
+					[]byte("server 0.pool.ntp.org iburst\n"),
+					0o644,
+				)
 			},
 			setupMock: func() {
 				suite.mockExec.EXPECT().
@@ -660,9 +668,9 @@ func (suite *DebianPublicTestSuite) TestParseTracking() {
 
 func (suite *DebianPublicTestSuite) TestParseSources() {
 	tests := []struct {
-		name string
+		name  string
 		input string
-		want []string
+		want  []string
 	}{
 		{
 			name:  "when valid CSV extracts server names",

@@ -136,6 +136,16 @@ const config: Config = {
             },
             {
               type: 'doc',
+              label: 'NTP Management',
+              docId: 'sidebar/features/ntp'
+            },
+            {
+              type: 'doc',
+              label: 'Timezone Management',
+              docId: 'sidebar/features/timezone'
+            },
+            {
+              type: 'doc',
               label: 'Health Checks',
               docId: 'sidebar/features/health-checks'
             },

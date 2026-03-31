@@ -38,7 +38,7 @@ go test -run TestName -v ./internal/job/...  # Run a single test
 - **`internal/agent/`** - Node agent: consumer/handler/processor pipeline for job execution
 - **`internal/telemetry/tracing/`** - OpenTelemetry tracer initialization, slog trace handler, context propagation\
 - **`internal/telemetry/metrics/`** - Per-component Prometheus metrics server with isolated registries\
-- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
+- **`internal/provider/`** - Operation implementations: `node/{host,disk,mem,load,sysctl,ntp,timezone}`, `network/{dns,ping}`, `scheduled/cron`, `container/docker`, `command`, `file`
 - **`internal/telemetry/process/`** - Agent self-metrics (CPU%, RSS, goroutines) and process condition evaluation for heartbeat
 - **`internal/controller/notify/`** - Pluggable condition notification system: watches registry KV for condition transitions, dispatches via `Notifier` interface (`log` backend)
 - **`internal/config/`** - Viper-based config from `osapi.yaml`
