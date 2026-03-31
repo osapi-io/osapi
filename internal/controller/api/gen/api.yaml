@@ -60,6 +60,9 @@ tags:
   - name: Power_Management_API_power_operations
     x-displayName: Node/Power
     description: Power management operations (reboot, shutdown) on a target node.
+  - name: Process_Management_API_process_operations
+    x-displayName: Node/Process
+    description: Process management operations on a target node.
   - name: Schedule_Management_API_cron_operations
     x-displayName: Node/Schedule/Cron
     description: Cron drop-in file management on a target node.
@@ -2649,6 +2652,150 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error initiating shutdown.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/process:
+    servers: []
+    get:
+      summary: List processes
+      description: |
+        List all running processes on the target node.
+      tags:
+        - Process_Management_API_process_operations
+      operationId: GetNodeProcess
+      security:
+        - BearerAuth:
+            - process:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of processes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing processes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/process/{pid}:
+    servers: []
+    get:
+      summary: Get process by PID
+      description: |
+        Get detailed information about a specific process by PID.
+      tags:
+        - Process_Management_API_process_operations
+      operationId: GetNodeProcessByPid
+      security:
+        - BearerAuth:
+            - process:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/Pid'
+      responses:
+        '200':
+          description: Process detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessGetResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Process not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error getting process.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/process/{pid}/signal:
+    servers: []
+    post:
+      summary: Send signal to process
+      description: |
+        Send a signal to a process by PID on the target node.
+      tags:
+        - Process_Management_API_process_operations
+      operationId: PostNodeProcessSignal
+      security:
+        - BearerAuth:
+            - process:execute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/Pid'
+      requestBody:
+        description: Signal to send to the process.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessSignalRequest'
+      responses:
+        '200':
+          description: Signal sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessSignalResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Process not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error sending signal.
           content:
             application/json:
               schema:
@@ -5636,6 +5783,185 @@ components:
             $ref: '#/components/schemas/PowerResult'
       required:
         - results
+    ProcessSignalRequest:
+      type: object
+      properties:
+        signal:
+          type: string
+          description: Signal name to send to the process.
+          enum:
+            - TERM
+            - KILL
+            - HUP
+            - INT
+            - USR1
+            - USR2
+          example: TERM
+          x-oapi-codegen-extra-tags:
+            validate: required,oneof=TERM KILL HUP INT USR1 USR2
+      required:
+        - signal
+    ProcessInfo:
+      type: object
+      description: Information about a running process.
+      properties:
+        pid:
+          type: integer
+          description: Process identifier.
+          example: 1234
+        name:
+          type: string
+          description: Process name.
+          example: nginx
+        user:
+          type: string
+          description: User running the process.
+          example: www-data
+        state:
+          type: string
+          description: Process state.
+          example: running
+        cpu_percent:
+          type: number
+          format: double
+          description: CPU usage percentage.
+          example: 2.5
+        mem_percent:
+          type: number
+          format: float
+          description: Memory usage percentage.
+          example: 1.2
+        mem_rss:
+          type: integer
+          format: int64
+          description: Resident set size in bytes.
+          example: 12345678
+        command:
+          type: string
+          description: Full command line.
+          example: 'nginx: master process /usr/sbin/nginx'
+        start_time:
+          type: string
+          description: Process start time.
+          example: '2026-01-15T10:30:00Z'
+    ProcessEntry:
+      type: object
+      description: Process list result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        processes:
+          type: array
+          description: List of processes on this agent.
+          items:
+            $ref: '#/components/schemas/ProcessInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    ProcessGetEntry:
+      type: object
+      description: Process get result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        process:
+          $ref: '#/components/schemas/ProcessInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    ProcessSignalResult:
+      type: object
+      description: Result of sending a signal to a process.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        pid:
+          type: integer
+          description: Process identifier.
+        signal:
+          type: string
+          description: Signal that was sent.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    ProcessCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessEntry'
+      required:
+        - results
+    ProcessGetResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessGetEntry'
+      required:
+        - results
+    ProcessSignalResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessSignalResult'
+      required:
+        - results
     CronCreateRequest:
       type: object
       required:
@@ -6159,6 +6485,17 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+    Pid:
+      name: pid
+      in: path
+      required: true
+      description: |
+        Process identifier (PID).
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: integer
+        minimum: 1
     CronName:
       name: name
       in: path
@@ -6234,6 +6571,9 @@ x-tagGroups:
   - name: Power Management API
     tags:
       - Power_Management_API_power_operations
+  - name: Process Management API
+    tags:
+      - Process_Management_API_process_operations
   - name: Schedule Management API
     tags:
       - Schedule_Management_API_cron_operations

@@ -86,6 +86,17 @@ func derefFloat64(
 	return *f
 }
 
+// derefFloat32 safely dereferences a float32 pointer, returning zero for nil.
+func derefFloat32(
+	f *float32,
+) float32 {
+	if f == nil {
+		return 0
+	}
+
+	return *f
+}
+
 // derefBool safely dereferences a bool pointer, returning false for nil.
 func derefBool(
 	b *bool,

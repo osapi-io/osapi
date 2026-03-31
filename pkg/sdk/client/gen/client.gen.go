@@ -251,6 +251,37 @@ const (
 	PowerResultStatusSkipped PowerResultStatus = "skipped"
 )
 
+// Defines values for ProcessEntryStatus.
+const (
+	ProcessEntryStatusFailed  ProcessEntryStatus = "failed"
+	ProcessEntryStatusOk      ProcessEntryStatus = "ok"
+	ProcessEntryStatusSkipped ProcessEntryStatus = "skipped"
+)
+
+// Defines values for ProcessGetEntryStatus.
+const (
+	ProcessGetEntryStatusFailed  ProcessGetEntryStatus = "failed"
+	ProcessGetEntryStatusOk      ProcessGetEntryStatus = "ok"
+	ProcessGetEntryStatusSkipped ProcessGetEntryStatus = "skipped"
+)
+
+// Defines values for ProcessSignalRequestSignal.
+const (
+	HUP  ProcessSignalRequestSignal = "HUP"
+	INT  ProcessSignalRequestSignal = "INT"
+	KILL ProcessSignalRequestSignal = "KILL"
+	TERM ProcessSignalRequestSignal = "TERM"
+	USR1 ProcessSignalRequestSignal = "USR1"
+	USR2 ProcessSignalRequestSignal = "USR2"
+)
+
+// Defines values for ProcessSignalResultStatus.
+const (
+	ProcessSignalResultStatusFailed  ProcessSignalResultStatus = "failed"
+	ProcessSignalResultStatusOk      ProcessSignalResultStatus = "ok"
+	ProcessSignalResultStatusSkipped ProcessSignalResultStatus = "skipped"
+)
+
 // Defines values for SysctlEntryStatus.
 const (
 	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
@@ -294,11 +325,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
-	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
-	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
-	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
-	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
+	Completed      GetJobParamsStatus = "completed"
+	Failed         GetJobParamsStatus = "failed"
+	PartialFailure GetJobParamsStatus = "partial_failure"
+	Processing     GetJobParamsStatus = "processing"
+	Submitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -1902,6 +1933,126 @@ type PowerShutdownResponse struct {
 	Results []PowerResult       `json:"results"`
 }
 
+// ProcessCollectionResponse defines model for ProcessCollectionResponse.
+type ProcessCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ProcessEntry      `json:"results"`
+}
+
+// ProcessEntry Process list result for a single agent.
+type ProcessEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Processes List of processes on this agent.
+	Processes *[]ProcessInfo `json:"processes,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ProcessEntryStatus `json:"status"`
+}
+
+// ProcessEntryStatus The status of the operation for this host.
+type ProcessEntryStatus string
+
+// ProcessGetEntry Process get result for a single agent.
+type ProcessGetEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Process Information about a running process.
+	Process *ProcessInfo `json:"process,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ProcessGetEntryStatus `json:"status"`
+}
+
+// ProcessGetEntryStatus The status of the operation for this host.
+type ProcessGetEntryStatus string
+
+// ProcessGetResponse defines model for ProcessGetResponse.
+type ProcessGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []ProcessGetEntry   `json:"results"`
+}
+
+// ProcessInfo Information about a running process.
+type ProcessInfo struct {
+	// Command Full command line.
+	Command *string `json:"command,omitempty"`
+
+	// CpuPercent CPU usage percentage.
+	CpuPercent *float64 `json:"cpu_percent,omitempty"`
+
+	// MemPercent Memory usage percentage.
+	MemPercent *float32 `json:"mem_percent,omitempty"`
+
+	// MemRss Resident set size in bytes.
+	MemRss *int64 `json:"mem_rss,omitempty"`
+
+	// Name Process name.
+	Name *string `json:"name,omitempty"`
+
+	// Pid Process identifier.
+	Pid *int `json:"pid,omitempty"`
+
+	// StartTime Process start time.
+	StartTime *string `json:"start_time,omitempty"`
+
+	// State Process state.
+	State *string `json:"state,omitempty"`
+
+	// User User running the process.
+	User *string `json:"user,omitempty"`
+}
+
+// ProcessSignalRequest defines model for ProcessSignalRequest.
+type ProcessSignalRequest struct {
+	// Signal Signal name to send to the process.
+	Signal ProcessSignalRequestSignal `json:"signal" validate:"required,oneof=TERM KILL HUP INT USR1 USR2"`
+}
+
+// ProcessSignalRequestSignal Signal name to send to the process.
+type ProcessSignalRequestSignal string
+
+// ProcessSignalResponse defines model for ProcessSignalResponse.
+type ProcessSignalResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
+	Results []ProcessSignalResult `json:"results"`
+}
+
+// ProcessSignalResult Result of sending a signal to a process.
+type ProcessSignalResult struct {
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Pid Process identifier.
+	Pid *int `json:"pid,omitempty"`
+
+	// Signal Signal that was sent.
+	Signal *string `json:"signal,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status ProcessSignalResultStatus `json:"status"`
+}
+
+// ProcessSignalResultStatus The status of the operation for this host.
+type ProcessSignalResultStatus string
+
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
 	// Error Error message when not ready.
@@ -2188,6 +2339,9 @@ type FileName = string
 // Hostname defines model for Hostname.
 type Hostname = string
 
+// Pid defines model for Pid.
+type Pid = int
+
 // SysctlKey defines model for SysctlKey.
 type SysctlKey = string
 
@@ -2318,6 +2472,9 @@ type PostNodePowerRebootJSONRequestBody = PowerRequest
 
 // PostNodePowerShutdownJSONRequestBody defines body for PostNodePowerShutdown for application/json ContentType.
 type PostNodePowerShutdownJSONRequestBody = PowerRequest
+
+// PostNodeProcessSignalJSONRequestBody defines body for PostNodeProcessSignal for application/json ContentType.
+type PostNodeProcessSignalJSONRequestBody = ProcessSignalRequest
 
 // PostNodeScheduleCronJSONRequestBody defines body for PostNodeScheduleCron for application/json ContentType.
 type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
@@ -2587,6 +2744,17 @@ type ClientInterface interface {
 	PostNodePowerShutdownWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNodePowerShutdown(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeProcess request
+	GetNodeProcess(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeProcessByPid request
+	GetNodeProcessByPid(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeProcessSignalWithBody request with any body
+	PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeScheduleCron request
 	GetNodeScheduleCron(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3423,6 +3591,54 @@ func (c *Client) PostNodePowerShutdownWithBody(ctx context.Context, hostname Hos
 
 func (c *Client) PostNodePowerShutdown(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodePowerShutdownRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeProcess(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeProcessRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeProcessByPid(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeProcessByPidRequest(c.Server, hostname, pid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeProcessSignalRequestWithBody(c.Server, hostname, pid, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeProcessSignalRequest(c.Server, hostname, pid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5725,6 +5941,135 @@ func NewPostNodePowerShutdownRequestWithBody(server string, hostname Hostname, c
 	return req, nil
 }
 
+// NewGetNodeProcessRequest generates requests for GetNodeProcess
+func NewGetNodeProcessRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/process", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeProcessByPidRequest generates requests for GetNodeProcessByPid
+func NewGetNodeProcessByPidRequest(server string, hostname Hostname, pid Pid) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pid", runtime.ParamLocationPath, pid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/process/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeProcessSignalRequest calls the generic PostNodeProcessSignal builder with application/json body
+func NewPostNodeProcessSignalRequest(server string, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeProcessSignalRequestWithBody(server, hostname, pid, "application/json", bodyReader)
+}
+
+// NewPostNodeProcessSignalRequestWithBody generates requests for PostNodeProcessSignal with any type of body
+func NewPostNodeProcessSignalRequestWithBody(server string, hostname Hostname, pid Pid, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pid", runtime.ParamLocationPath, pid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/process/%s/signal", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeScheduleCronRequest generates requests for GetNodeScheduleCron
 func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -6524,6 +6869,17 @@ type ClientWithResponsesInterface interface {
 	PostNodePowerShutdownWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error)
 
 	PostNodePowerShutdownWithResponse(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error)
+
+	// GetNodeProcessWithResponse request
+	GetNodeProcessWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeProcessResponse, error)
+
+	// GetNodeProcessByPidWithResponse request
+	GetNodeProcessByPidWithResponse(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*GetNodeProcessByPidResponse, error)
+
+	// PostNodeProcessSignalWithBodyWithResponse request with any body
+	PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
+
+	PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
 
 	// GetNodeScheduleCronWithResponse request
 	GetNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronResponse, error)
@@ -7857,6 +8213,84 @@ func (r PostNodePowerShutdownResponse) StatusCode() int {
 	return 0
 }
 
+type GetNodeProcessResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProcessCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeProcessResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeProcessResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeProcessByPidResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProcessGetResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeProcessByPidResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeProcessByPidResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodeProcessSignalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProcessSignalResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeProcessSignalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeProcessSignalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeScheduleCronResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8791,6 +9225,41 @@ func (c *ClientWithResponses) PostNodePowerShutdownWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParsePostNodePowerShutdownResponse(rsp)
+}
+
+// GetNodeProcessWithResponse request returning *GetNodeProcessResponse
+func (c *ClientWithResponses) GetNodeProcessWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeProcessResponse, error) {
+	rsp, err := c.GetNodeProcess(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeProcessResponse(rsp)
+}
+
+// GetNodeProcessByPidWithResponse request returning *GetNodeProcessByPidResponse
+func (c *ClientWithResponses) GetNodeProcessByPidWithResponse(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*GetNodeProcessByPidResponse, error) {
+	rsp, err := c.GetNodeProcessByPid(ctx, hostname, pid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeProcessByPidResponse(rsp)
+}
+
+// PostNodeProcessSignalWithBodyWithResponse request with arbitrary body returning *PostNodeProcessSignalResponse
+func (c *ClientWithResponses) PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
+	rsp, err := c.PostNodeProcessSignalWithBody(ctx, hostname, pid, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeProcessSignalResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
+	rsp, err := c.PostNodeProcessSignal(ctx, hostname, pid, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeProcessSignalResponse(rsp)
 }
 
 // GetNodeScheduleCronWithResponse request returning *GetNodeScheduleCronResponse
@@ -11603,6 +12072,168 @@ func ParsePostNodePowerShutdownResponse(rsp *http.Response) (*PostNodePowerShutd
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeProcessResponse parses an HTTP response from a GetNodeProcessWithResponse call
+func ParseGetNodeProcessResponse(rsp *http.Response) (*GetNodeProcessResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeProcessResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProcessCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeProcessByPidResponse parses an HTTP response from a GetNodeProcessByPidWithResponse call
+func ParseGetNodeProcessByPidResponse(rsp *http.Response) (*GetNodeProcessByPidResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeProcessByPidResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProcessGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeProcessSignalResponse parses an HTTP response from a PostNodeProcessSignalWithResponse call
+func ParsePostNodeProcessSignalResponse(rsp *http.Response) (*PostNodeProcessSignalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeProcessSignalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProcessSignalResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
