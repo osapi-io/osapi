@@ -38,7 +38,7 @@ var clientNodeTimezoneUpdateCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		tz, _ := cmd.Flags().GetString("timezone")
 
-		resp, err := sdkClient.Timezone.TimezoneUpdate(ctx, host, client.TimezoneUpdateOpts{
+		resp, err := sdkClient.Timezone.Update(ctx, host, client.TimezoneUpdateOpts{
 			Timezone: tz,
 		})
 		if err != nil {

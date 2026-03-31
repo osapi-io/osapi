@@ -213,7 +213,7 @@ func (suite *NTPPublicTestSuite) TestNtpGet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.NTP.NtpGet(suite.ctx, "_any")
+			resp, err := sut.NTP.Get(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -382,7 +382,7 @@ func (suite *NTPPublicTestSuite) TestNtpCreate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.NTP.NtpCreate(suite.ctx, "_any", tc.opts)
+			resp, err := sut.NTP.Create(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -617,7 +617,7 @@ func (suite *NTPPublicTestSuite) TestNtpUpdate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.NTP.NtpUpdate(suite.ctx, "_any", tc.opts)
+			resp, err := sut.NTP.Update(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -765,7 +765,7 @@ func (suite *NTPPublicTestSuite) TestNtpDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.NTP.NtpDelete(suite.ctx, "_any")
+			resp, err := sut.NTP.Delete(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}

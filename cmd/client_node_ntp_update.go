@@ -38,7 +38,7 @@ var clientNodeNtpUpdateCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 
-		resp, err := sdkClient.NTP.NtpUpdate(ctx, host, client.NtpUpdateOpts{
+		resp, err := sdkClient.NTP.Update(ctx, host, client.NtpUpdateOpts{
 			Servers: servers,
 		})
 		if err != nil {

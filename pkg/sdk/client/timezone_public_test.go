@@ -207,7 +207,7 @@ func (suite *TimezonePublicTestSuite) TestTimezoneGet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Timezone.TimezoneGet(suite.ctx, "_any")
+			resp, err := sut.Timezone.Get(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -421,7 +421,7 @@ func (suite *TimezonePublicTestSuite) TestTimezoneUpdate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Timezone.TimezoneUpdate(suite.ctx, "_any", tc.opts)
+			resp, err := sut.Timezone.Update(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}

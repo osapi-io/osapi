@@ -32,8 +32,8 @@ type TimezoneService struct {
 	client *gen.ClientWithResponses
 }
 
-// TimezoneGet retrieves the system timezone from the target host.
-func (s *TimezoneService) TimezoneGet(
+// Get retrieves the system timezone from the target host.
+func (s *TimezoneService) Get(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[TimezoneResult]], error) {
@@ -61,8 +61,8 @@ func (s *TimezoneService) TimezoneGet(
 	return NewResponse(timezoneCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// TimezoneUpdate sets the system timezone on the target host.
-func (s *TimezoneService) TimezoneUpdate(
+// Update sets the system timezone on the target host.
+func (s *TimezoneService) Update(
 	ctx context.Context,
 	hostname string,
 	opts TimezoneUpdateOpts,

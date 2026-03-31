@@ -39,7 +39,7 @@ var clientNodeSysctlUpdateCmd = &cobra.Command{
 		key, _ := cmd.Flags().GetString("key")
 		value, _ := cmd.Flags().GetString("value")
 
-		resp, err := sdkClient.Sysctl.SysctlUpdate(ctx, host, key, client.SysctlUpdateOpts{
+		resp, err := sdkClient.Sysctl.Update(ctx, host, key, client.SysctlUpdateOpts{
 			Value: value,
 		})
 		if err != nil {

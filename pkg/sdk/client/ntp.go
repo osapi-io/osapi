@@ -32,8 +32,8 @@ type NTPService struct {
 	client *gen.ClientWithResponses
 }
 
-// NtpGet retrieves NTP status from the target host.
-func (s *NTPService) NtpGet(
+// Get retrieves NTP status from the target host.
+func (s *NTPService) Get(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[NtpStatusResult]], error) {
@@ -61,8 +61,8 @@ func (s *NTPService) NtpGet(
 	return NewResponse(ntpStatusCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
-// NtpCreate creates NTP configuration on the target host.
-func (s *NTPService) NtpCreate(
+// Create creates NTP configuration on the target host.
+func (s *NTPService) Create(
 	ctx context.Context,
 	hostname string,
 	opts NtpCreateOpts,
@@ -96,8 +96,8 @@ func (s *NTPService) NtpCreate(
 	return NewResponse(ntpMutationCollectionFromCreate(resp.JSON200), resp.Body), nil
 }
 
-// NtpUpdate updates NTP configuration on the target host.
-func (s *NTPService) NtpUpdate(
+// Update updates NTP configuration on the target host.
+func (s *NTPService) Update(
 	ctx context.Context,
 	hostname string,
 	opts NtpUpdateOpts,
@@ -132,8 +132,8 @@ func (s *NTPService) NtpUpdate(
 	return NewResponse(ntpMutationCollectionFromUpdate(resp.JSON200), resp.Body), nil
 }
 
-// NtpDelete removes NTP configuration from the target host.
-func (s *NTPService) NtpDelete(
+// Delete removes NTP configuration from the target host.
+func (s *NTPService) Delete(
 	ctx context.Context,
 	hostname string,
 ) (*Response[Collection[NtpMutationResult]], error) {

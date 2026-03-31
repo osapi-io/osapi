@@ -5,15 +5,15 @@ sidebar_position: 11
 # Timezone Service
 
 The `TimezoneService` provides methods for managing the system timezone on
-target hosts via `timedatectl`. Access via `client.Timezone.TimezoneGet()`,
-`client.Timezone.TimezoneUpdate()`.
+target hosts via `timedatectl`. Access via `client.Timezone.Get()`,
+`client.Timezone.Update()`.
 
 ## Methods
 
 | Method                                | Description         |
 | ------------------------------------- | ------------------- |
-| `TimezoneGet(ctx, hostname)`          | Get system timezone |
-| `TimezoneUpdate(ctx, hostname, opts)` | Set system timezone |
+| `Get(ctx, hostname)`          | Get system timezone |
+| `Update(ctx, hostname, opts)` | Set system timezone |
 
 ## Request Types
 
@@ -29,13 +29,13 @@ import "github.com/retr0h/osapi/pkg/sdk/client"
 c := client.New("http://localhost:8080", token)
 
 // Get the current timezone
-resp, err := c.Timezone.TimezoneGet(ctx, "web-01")
+resp, err := c.Timezone.Get(ctx, "web-01")
 for _, r := range resp.Data.Results {
     fmt.Printf("timezone=%s offset=%s\n", r.Timezone, r.UTCOffset)
 }
 
 // Update the timezone
-resp, err := c.Timezone.TimezoneUpdate(ctx, "web-01", client.TimezoneUpdateOpts{
+resp, err := c.Timezone.Update(ctx, "web-01", client.TimezoneUpdateOpts{
     Timezone: "America/New_York",
 })
 for _, r := range resp.Data.Results {

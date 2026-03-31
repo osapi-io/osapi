@@ -36,7 +36,7 @@ var clientNodeTimezoneGetCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
-		resp, err := sdkClient.Timezone.TimezoneGet(ctx, host)
+		resp, err := sdkClient.Timezone.Get(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

@@ -38,7 +38,7 @@ var clientNodeNtpCreateCmd = &cobra.Command{
 		host, _ := cmd.Flags().GetString("target")
 		servers, _ := cmd.Flags().GetStringSlice("servers")
 
-		resp, err := sdkClient.NTP.NtpCreate(ctx, host, client.NtpCreateOpts{
+		resp, err := sdkClient.NTP.Create(ctx, host, client.NtpCreateOpts{
 			Servers: servers,
 		})
 		if err != nil {

@@ -36,7 +36,7 @@ var clientNodeNtpDeleteCmd = &cobra.Command{
 		ctx := cmd.Context()
 		host, _ := cmd.Flags().GetString("target")
 
-		resp, err := sdkClient.NTP.NtpDelete(ctx, host)
+		resp, err := sdkClient.NTP.Delete(ctx, host)
 		if err != nil {
 			cli.HandleError(err, logger)
 			return

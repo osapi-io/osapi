@@ -5,17 +5,17 @@ sidebar_position: 10
 # NTP Service
 
 The `NTPService` provides methods for managing NTP configuration on target hosts
-via chrony drop-in files. Access via `client.NTP.NtpGet()`,
-`client.NTP.NtpCreate()`, etc.
+via chrony drop-in files. Access via `client.NTP.Get()`,
+`client.NTP.Create()`, etc.
 
 ## Methods
 
 | Method                           | Description                         |
 | -------------------------------- | ----------------------------------- |
-| `NtpGet(ctx, hostname)`          | Get NTP sync status and server list |
-| `NtpCreate(ctx, hostname, opts)` | Create NTP configuration            |
-| `NtpUpdate(ctx, hostname, opts)` | Update NTP configuration            |
-| `NtpDelete(ctx, hostname)`       | Delete NTP configuration            |
+| `Get(ctx, hostname)`          | Get NTP sync status and server list |
+| `Create(ctx, hostname, opts)` | Create NTP configuration            |
+| `Update(ctx, hostname, opts)` | Update NTP configuration            |
+| `Delete(ctx, hostname)`       | Delete NTP configuration            |
 
 ## Request Types
 
@@ -32,24 +32,24 @@ import "github.com/retr0h/osapi/pkg/sdk/client"
 c := client.New("http://localhost:8080", token)
 
 // Get NTP status and configured servers
-resp, err := c.NTP.NtpGet(ctx, "web-01")
+resp, err := c.NTP.Get(ctx, "web-01")
 for _, r := range resp.Data.Results {
     fmt.Printf("synchronized=%v stratum=%d source=%s\n",
         r.Synchronized, r.Stratum, r.CurrentSource)
 }
 
 // Create NTP configuration
-resp, err := c.NTP.NtpCreate(ctx, "web-01", client.NtpCreateOpts{
+resp, err := c.NTP.Create(ctx, "web-01", client.NtpCreateOpts{
     Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"},
 })
 
 // Update NTP servers
-resp, err := c.NTP.NtpUpdate(ctx, "web-01", client.NtpUpdateOpts{
+resp, err := c.NTP.Update(ctx, "web-01", client.NtpUpdateOpts{
     Servers: []string{"ntp.example.com"},
 })
 
 // Delete NTP configuration
-resp, err := c.NTP.NtpDelete(ctx, "web-01")
+resp, err := c.NTP.Delete(ctx, "web-01")
 ```
 
 ## Example

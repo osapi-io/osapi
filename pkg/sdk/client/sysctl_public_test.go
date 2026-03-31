@@ -209,7 +209,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlList(suite.ctx, "_any")
+			resp, err := sut.Sysctl.List(suite.ctx, "_any")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -360,7 +360,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlGet(suite.ctx, "_any", "net.ipv4.ip_forward")
+			resp, err := sut.Sysctl.Get(suite.ctx, "_any", "net.ipv4.ip_forward")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -536,7 +536,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlCreate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlCreate(suite.ctx, "_any", tc.opts)
+			resp, err := sut.Sysctl.Create(suite.ctx, "_any", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -772,7 +772,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlUpdate(suite.ctx, "_any", "net.ipv4.ip_forward", tc.opts)
+			resp, err := sut.Sysctl.Update(suite.ctx, "_any", "net.ipv4.ip_forward", tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -921,7 +921,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.SysctlDelete(suite.ctx, "_any", "net.ipv4.ip_forward")
+			resp, err := sut.Sysctl.Delete(suite.ctx, "_any", "net.ipv4.ip_forward")
 			tc.validateFunc(resp, err)
 		})
 	}
