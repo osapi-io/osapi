@@ -52,6 +52,7 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | -------------------------------- | ----------------------------------- |
 | [Command](operations/command.md) | Command execution (exec, shell)     |
 | [Power](operations/power.md)     | Power management (reboot, shutdown) |
+| [Process](operations/process.md) | Process management (list, get, signal) |
 
 ### Containers & Scheduling
 
