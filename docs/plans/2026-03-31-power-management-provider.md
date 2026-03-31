@@ -1,12 +1,20 @@
 # Power Management Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add power management (reboot/shutdown) as action operations with a minimum 5-second implicit delay for agent lifecycle completion.
+**Goal:** Add power management (reboot/shutdown) as action operations with a
+minimum 5-second implicit delay for agent lifecycle completion.
 
-**Architecture:** Direct provider at `provider/node/power/` with two action methods (Reboot, Shutdown). Integrates into the node processor. API has two POST endpoints under `/node/{hostname}/power/`. SDK exposes `client.Power.Reboot()` and `client.Power.Shutdown()`. Permission is `power:execute` (admin only).
+**Architecture:** Direct provider at `provider/node/power/` with two action
+methods (Reboot, Shutdown). Integrates into the node processor. API has two POST
+endpoints under `/node/{hostname}/power/`. SDK exposes `client.Power.Reboot()`
+and `client.Power.Shutdown()`. Permission is `power:execute` (admin only).
 
-**Tech Stack:** Go 1.25, Echo, oapi-codegen (strict-server), gomock, testify/suite
+**Tech Stack:** Go 1.25, Echo, oapi-codegen (strict-server), gomock,
+testify/suite
 
 **Coverage baseline:** 99.9% — must remain at or above this.
 
@@ -15,6 +23,7 @@
 ## Task 1: SDK Constants (Operations + Permissions)
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `pkg/sdk/client/permissions.go`
 - Modify: `internal/job/types.go`
@@ -52,7 +61,8 @@ const (
 
 - [ ] **Step 4: Re-export permission in internal/authtoken/permissions.go**
 
-Add constant, add to `AllPermissions`, add to `DefaultRolePermissions` for `RoleAdmin` ONLY (not write or read — power is destructive).
+Add constant, add to `AllPermissions`, add to `DefaultRolePermissions` for
+`RoleAdmin` ONLY (not write or read — power is destructive).
 
 - [ ] **Step 5: Verify and commit**
 
@@ -66,6 +76,7 @@ git commit -m "feat(power): add operation and permission constants"
 ## Task 2: Provider Interface + Platform Stubs
 
 **Files:**
+
 - Create: `internal/provider/node/power/types.go`
 - Create: `internal/provider/node/power/darwin.go`
 - Create: `internal/provider/node/power/linux.go`
@@ -118,15 +129,17 @@ git commit -m "feat(power): add provider interface and platform stubs"
 ## Task 3: Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/power/debian.go`
 - Create: `internal/provider/node/power/debian_public_test.go`
 - Create: `internal/provider/node/power/darwin_public_test.go`
 - Create: `internal/provider/node/power/linux_public_test.go`
 
 The Debian provider:
+
 - Enforces minimum 5-second delay: `actualDelay := max(userDelay, 5)`
-- Runs shutdown command in background so the provider returns before
-  the system goes down
+- Runs shutdown command in background so the provider returns before the system
+  goes down
 - Reboot: `shutdown -r +N` or `sleep N && shutdown -r now &`
 - Shutdown: `shutdown -h +N` or `sleep N && shutdown -h now &`
 - Logs the message before executing if provided
@@ -138,6 +151,7 @@ Verify all methods return `ErrUnsupported`.
 - [ ] **Step 2: Write Debian tests**
 
 Test cases for Reboot and Shutdown:
+
 - success with default delay (5 seconds)
 - success with user delay > 5
 - success with user delay < 5 (clamped to 5)
@@ -172,6 +186,7 @@ git commit -m "feat(power): implement Debian power provider with tests"
 ## Task 4: Agent Processor + Wiring
 
 **Files:**
+
 - Create: `internal/agent/processor_power.go`
 - Create: `internal/agent/processor_power_public_test.go`
 - Modify: `internal/agent/processor.go`
@@ -179,19 +194,18 @@ git commit -m "feat(power): implement Debian power provider with tests"
 
 - [ ] **Step 1: Create processor with tests**
 
-Two sub-operations: `power.reboot` and `power.shutdown`. Both
-unmarshal `power.Opts` from `jobRequest.Data` (data may be nil
-for default opts).
+Two sub-operations: `power.reboot` and `power.shutdown`. Both unmarshal
+`power.Opts` from `jobRequest.Data` (data may be nil for default opts).
 
 - [ ] **Step 2: Add to node processor**
 
-Add `powerProvider power.Provider` parameter to
-`NewNodeProcessor`. Add `case "power":` dispatch.
+Add `powerProvider power.Provider` parameter to `NewNodeProcessor`. Add
+`case "power":` dispatch.
 
 - [ ] **Step 3: Wire in agent_setup.go**
 
-Create `createPowerProvider` function. Add to `NewNodeProcessor`
-call and `registry.Register` providers list.
+Create `createPowerProvider` function. Add to `NewNodeProcessor` call and
+`registry.Register` providers list.
 
 - [ ] **Step 4: Fix existing tests and verify**
 
@@ -205,6 +219,7 @@ git commit -m "feat(power): add agent processor and wiring"
 ## Task 5: OpenAPI Spec + API Handlers
 
 **Files:**
+
 - Create: `internal/controller/api/node/power/gen/api.yaml`
 - Create: `internal/controller/api/node/power/gen/cfg.yaml`
 - Create: `internal/controller/api/node/power/gen/generate.go`
@@ -220,27 +235,29 @@ git commit -m "feat(power): add agent processor and wiring"
 - [ ] **Step 1: Create OpenAPI spec**
 
 Two POST paths:
-- `POST /node/{hostname}/power/reboot` — `PostNodePowerReboot`,
-  security: `power:execute`
-- `POST /node/{hostname}/power/shutdown` — `PostNodePowerShutdown`,
-  security: `power:execute`
+
+- `POST /node/{hostname}/power/reboot` — `PostNodePowerReboot`, security:
+  `power:execute`
+- `POST /node/{hostname}/power/shutdown` — `PostNodePowerShutdown`, security:
+  `power:execute`
 
 Request body (shared, optional):
+
 - `PowerRequest` — delay (integer, min 0), message (string)
 
 Response schemas:
-- `PowerResult` — hostname (req), status (req, enum
-  ok/failed/skipped), action, delay, changed, error
-- `PowerRebootResponse` / `PowerShutdownResponse` — job_id +
-  results array
+
+- `PowerResult` — hostname (req), status (req, enum ok/failed/skipped), action,
+  delay, changed, error
+- `PowerRebootResponse` / `PowerShutdownResponse` — job_id + results array
 
 - [ ] **Step 2: Generate code and create handler struct**
 
 - [ ] **Step 3: Implement both handlers with broadcast support**
 
 Category `"node"`, operations `job.OperationPowerReboot` and
-`job.OperationPowerShutdown`. Use `JobClient.Modify` (these are
-state-changing actions).
+`job.OperationPowerShutdown`. Use `JobClient.Modify` (these are state-changing
+actions).
 
 - [ ] **Step 4: Create handler.go (self-registration)**
 
@@ -259,6 +276,7 @@ git commit -m "feat(power): add OpenAPI spec, API handlers, and server wiring"
 ## Task 6: SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/power.go`
 - Create: `pkg/sdk/client/power_types.go`
 - Create: `pkg/sdk/client/power_public_test.go`
@@ -291,9 +309,8 @@ type PowerService struct {
 }
 ```
 
-Methods: `Reboot(ctx, hostname, opts)` and
-`Shutdown(ctx, hostname, opts)`. Both return
-`*Response[Collection[PowerResult]]`.
+Methods: `Reboot(ctx, hostname, opts)` and `Shutdown(ctx, hostname, opts)`. Both
+return `*Response[Collection[PowerResult]]`.
 
 - [ ] **Step 3: Wire into osapi.go, write tests**
 
@@ -311,6 +328,7 @@ git commit -m "feat(power): add SDK service with tests"
 ## Task 7: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_power.go`
 - Create: `cmd/client_node_power_reboot.go`
 - Create: `cmd/client_node_power_shutdown.go`
@@ -330,9 +348,9 @@ func init() {
 
 - [ ] **Step 2: Create reboot command**
 
-Flags: `--delay` (int, optional), `--message` (string, optional).
-Call `sdkClient.Power.Reboot(ctx, host, opts)`.
-Mutation table output with ACTION and DELAY columns.
+Flags: `--delay` (int, optional), `--message` (string, optional). Call
+`sdkClient.Power.Reboot(ctx, host, opts)`. Mutation table output with ACTION and
+DELAY columns.
 
 - [ ] **Step 3: Create shutdown command**
 
@@ -350,6 +368,7 @@ git commit -m "feat(power): add CLI commands"
 ## Task 8: Docs + Example + Integration Test
 
 **Files:**
+
 - Create: `examples/sdk/client/power.go`
 - Create: `test/integration/power_test.go`
 - Create: `docs/docs/sidebar/features/power-management.md`
@@ -370,14 +389,13 @@ Demonstrate `client.Power.Reboot()` with delay and message.
 
 - [ ] **Step 2: Create integration test**
 
-`PowerSmokeSuite` — read-only test only (don't actually reboot
-in CI). Test that the endpoint responds (even if skipped on
-macOS).
+`PowerSmokeSuite` — read-only test only (don't actually reboot in CI). Test that
+the endpoint responds (even if skipped on macOS).
 
 - [ ] **Step 3: Create feature page**
 
-`power-management.md` — what it does, how the delay works,
-CLI examples, permissions (admin only), platforms.
+`power-management.md` — what it does, how the delay works, CLI examples,
+permissions (admin only), platforms.
 
 - [ ] **Step 4: Create CLI doc pages**
 
@@ -389,9 +407,9 @@ Title: `# Power`. Methods: `Reboot`, `Shutdown`.
 
 - [ ] **Step 6: Update all shared docs**
 
-Features table, authentication permissions, configuration
-roles table, API guidelines endpoints, architecture feature
-link, docusaurus dropdowns (Features + SDK).
+Features table, authentication permissions, configuration roles table, API
+guidelines endpoints, architecture feature link, docusaurus dropdowns
+(Features + SDK).
 
 - [ ] **Step 7: Regenerate and verify**
 
