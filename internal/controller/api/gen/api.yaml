@@ -57,6 +57,9 @@ tags:
   - name: NTP_Management_API_ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
+  - name: Power_Management_API_power_operations
+    x-displayName: Node/Power
+    description: Power management operations (reboot, shutdown) on a target node.
   - name: Schedule_Management_API_cron_operations
     x-displayName: Node/Schedule/Cron
     description: Cron drop-in file management on a target node.
@@ -2540,6 +2543,112 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting NTP configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/power/reboot:
+    servers: []
+    post:
+      summary: Reboot node
+      description: >
+        Reboot the target node. An optional delay (in seconds) and message can
+        be provided.
+      tags:
+        - Power_Management_API_power_operations
+      operationId: PostNodePowerReboot
+      security:
+        - BearerAuth:
+            - power:execute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Optional reboot parameters.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerRequest'
+      responses:
+        '200':
+          description: Reboot initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerRebootResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error initiating reboot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/power/shutdown:
+    servers: []
+    post:
+      summary: Shutdown node
+      description: >
+        Shutdown the target node. An optional delay (in seconds) and message can
+        be provided.
+      tags:
+        - Power_Management_API_power_operations
+      operationId: PostNodePowerShutdown
+      security:
+        - BearerAuth:
+            - power:execute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: Optional shutdown parameters.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerRequest'
+      responses:
+        '200':
+          description: Shutdown initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerShutdownResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error initiating shutdown.
           content:
             application/json:
               schema:
@@ -5454,6 +5563,79 @@ components:
             $ref: '#/components/schemas/NtpMutationResult'
       required:
         - results
+    PowerRequest:
+      type: object
+      properties:
+        delay:
+          type: integer
+          minimum: 0
+          description: |
+            Delay in seconds before the operation is executed.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+        message:
+          type: string
+          description: |
+            Optional message to broadcast before the operation.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+    PowerResult:
+      type: object
+      description: Result of a power operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        action:
+          type: string
+          description: The power action performed (reboot, shutdown).
+        delay:
+          type: integer
+          description: The delay in seconds before the operation executes.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    PowerRebootResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PowerResult'
+      required:
+        - results
+    PowerShutdownResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PowerResult'
+      required:
+        - results
     CronCreateRequest:
       type: object
       required:
@@ -6049,6 +6231,9 @@ x-tagGroups:
   - name: NTP Management API
     tags:
       - NTP_Management_API_ntp_operations
+  - name: Power Management API
+    tags:
+      - Power_Management_API_power_operations
   - name: Schedule Management API
     tags:
       - Schedule_Management_API_cron_operations
