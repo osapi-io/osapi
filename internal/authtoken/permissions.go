@@ -51,6 +51,7 @@ const (
 	PermNtpWrite       = client.PermNtpWrite
 	PermTimezoneRead   = client.PermTimezoneRead
 	PermTimezoneWrite  = client.PermTimezoneWrite
+	PermPowerExecute   = client.PermPowerExecute
 )
 
 // AllPermissions is the full set of known permissions.
@@ -79,6 +80,7 @@ var AllPermissions = []Permission{
 	PermNtpWrite,
 	PermTimezoneRead,
 	PermTimezoneWrite,
+	PermPowerExecute,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -108,6 +110,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermNtpWrite,
 		PermTimezoneRead,
 		PermTimezoneWrite,
+		PermPowerExecute,
 	},
 	client.RoleWrite: {
 		PermAgentRead,

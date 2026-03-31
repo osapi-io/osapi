@@ -52,6 +52,7 @@ import (
 	hostnameAPI "github.com/retr0h/osapi/internal/controller/api/node/hostname"
 	networkAPI "github.com/retr0h/osapi/internal/controller/api/node/network"
 	ntpAPI "github.com/retr0h/osapi/internal/controller/api/node/ntp"
+	powerAPI "github.com/retr0h/osapi/internal/controller/api/node/power"
 	scheduleAPI "github.com/retr0h/osapi/internal/controller/api/node/schedule"
 	sysctlAPI "github.com/retr0h/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/retr0h/osapi/internal/controller/api/node/timezone"
@@ -721,6 +722,7 @@ func registerControllerHandlers(
 	handlers = append(handlers, scheduleAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, sysctlAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(log, jc, signingKey, customRoles)...)
+	handlers = append(handlers, powerAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, timezoneAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, networkAPI.Handler(log, jc, signingKey, customRoles)...)
 	handlers = append(handlers, commandAPI.Handler(log, jc, signingKey, customRoles)...)

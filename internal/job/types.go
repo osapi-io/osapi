@@ -177,6 +177,12 @@ const (
 	OperationTimezoneUpdate = client.OpTimezoneUpdate
 )
 
+// Power operations.
+const (
+	OperationPowerReboot   = client.OpPowerReboot
+	OperationPowerShutdown = client.OpPowerShutdown
+)
+
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
 	// Type specifies the type of operation using hierarchical format

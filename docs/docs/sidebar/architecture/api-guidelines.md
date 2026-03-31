@@ -51,6 +51,8 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/sysctl/{key}`                | Sysctl   |
 | `/node/{hostname}/ntp`                         | NTP      |
 | `/node/{hostname}/timezone`                    | Timezone |
+| `/node/{hostname}/power/reboot`                | Power    |
+| `/node/{hostname}/power/shutdown`              | Power    |
 
 6. **Path Parameters Over Query Parameters**
 

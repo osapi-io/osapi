@@ -44,6 +44,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
+	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
@@ -189,6 +190,9 @@ func setupAgent(
 	// --- Timezone provider ---
 	timezoneProvider := createTimezoneProvider(log, execManager)
 
+	// --- Power provider ---
+	powerProvider := createPowerProvider(log, execManager)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -202,6 +206,7 @@ func setupAgent(
 			sysctlProvider,
 			ntpProvider,
 			timezoneProvider,
+			powerProvider,
 			appConfig,
 			log,
 		),
@@ -212,6 +217,7 @@ func setupAgent(
 		sysctlProvider,
 		ntpProvider,
 		timezoneProvider,
+		powerProvider,
 	)
 
 	registry.Register("network",
@@ -388,6 +394,25 @@ func createTimezoneProvider(
 		return timezoneProv.NewDarwinProvider()
 	default:
 		return timezoneProv.NewLinuxProvider()
+	}
+}
+
+// createPowerProvider creates a platform-specific power provider. On Debian, the
+// power provider manages system reboot and shutdown via systemctl. On other
+// platforms, all operations return ErrUnsupported.
+func createPowerProvider(
+	log *slog.Logger,
+	execManager exec.Manager,
+) powerProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		return powerProv.NewDebianProvider(log, execManager)
+	case "darwin":
+		return powerProv.NewDarwinProvider()
+	default:
+		return powerProv.NewLinuxProvider()
 	}
 }
 

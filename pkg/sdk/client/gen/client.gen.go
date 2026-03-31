@@ -244,6 +244,13 @@ const (
 	PingResponseStatusSkipped PingResponseStatus = "skipped"
 )
 
+// Defines values for PowerResultStatus.
+const (
+	PowerResultStatusFailed  PowerResultStatus = "failed"
+	PowerResultStatusOk      PowerResultStatus = "ok"
+	PowerResultStatusSkipped PowerResultStatus = "skipped"
+)
+
 // Defines values for SysctlEntryStatus.
 const (
 	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
@@ -287,11 +294,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	Completed      GetJobParamsStatus = "completed"
-	Failed         GetJobParamsStatus = "failed"
-	PartialFailure GetJobParamsStatus = "partial_failure"
-	Processing     GetJobParamsStatus = "processing"
-	Submitted      GetJobParamsStatus = "submitted"
+	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
+	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
+	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
+	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
+	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -1848,6 +1855,53 @@ type PingResponse struct {
 // PingResponseStatus The status of the operation for this host.
 type PingResponseStatus string
 
+// PowerRebootResponse defines model for PowerRebootResponse.
+type PowerRebootResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PowerResult       `json:"results"`
+}
+
+// PowerRequest defines model for PowerRequest.
+type PowerRequest struct {
+	// Delay Delay in seconds before the operation is executed.
+	Delay *int `json:"delay,omitempty" validate:"omitempty,min=0"`
+
+	// Message Optional message to broadcast before the operation.
+	Message *string `json:"message,omitempty" validate:"omitempty"`
+}
+
+// PowerResult Result of a power operation for one host.
+type PowerResult struct {
+	// Action The power action performed (reboot, shutdown).
+	Action *string `json:"action,omitempty"`
+
+	// Changed Whether the operation modified system state.
+	Changed *bool `json:"changed,omitempty"`
+
+	// Delay The delay in seconds before the operation executes.
+	Delay *int `json:"delay,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that processed this operation.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status PowerResultStatus `json:"status"`
+}
+
+// PowerResultStatus The status of the operation for this host.
+type PowerResultStatus string
+
+// PowerShutdownResponse defines model for PowerShutdownResponse.
+type PowerShutdownResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []PowerResult       `json:"results"`
+}
+
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
 	// Error Error message when not ready.
@@ -2259,6 +2313,12 @@ type PostNodeNtpJSONRequestBody = NtpCreateRequest
 // PutNodeNtpJSONRequestBody defines body for PutNodeNtp for application/json ContentType.
 type PutNodeNtpJSONRequestBody = NtpUpdateRequest
 
+// PostNodePowerRebootJSONRequestBody defines body for PostNodePowerReboot for application/json ContentType.
+type PostNodePowerRebootJSONRequestBody = PowerRequest
+
+// PostNodePowerShutdownJSONRequestBody defines body for PostNodePowerShutdown for application/json ContentType.
+type PostNodePowerShutdownJSONRequestBody = PowerRequest
+
 // PostNodeScheduleCronJSONRequestBody defines body for PostNodeScheduleCron for application/json ContentType.
 type PostNodeScheduleCronJSONRequestBody = CronCreateRequest
 
@@ -2517,6 +2577,16 @@ type ClientInterface interface {
 
 	// GetNodeOS request
 	GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodePowerRebootWithBody request with any body
+	PostNodePowerRebootWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodePowerReboot(ctx context.Context, hostname Hostname, body PostNodePowerRebootJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodePowerShutdownWithBody request with any body
+	PostNodePowerShutdownWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodePowerShutdown(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeScheduleCron request
 	GetNodeScheduleCron(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3305,6 +3375,54 @@ func (c *Client) PutNodeNtp(ctx context.Context, hostname Hostname, body PutNode
 
 func (c *Client) GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeOSRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePowerRebootWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePowerRebootRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePowerReboot(ctx context.Context, hostname Hostname, body PostNodePowerRebootJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePowerRebootRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePowerShutdownWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePowerShutdownRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodePowerShutdown(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodePowerShutdownRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -5513,6 +5631,100 @@ func NewGetNodeOSRequest(server string, hostname Hostname) (*http.Request, error
 	return req, nil
 }
 
+// NewPostNodePowerRebootRequest calls the generic PostNodePowerReboot builder with application/json body
+func NewPostNodePowerRebootRequest(server string, hostname Hostname, body PostNodePowerRebootJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodePowerRebootRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodePowerRebootRequestWithBody generates requests for PostNodePowerReboot with any type of body
+func NewPostNodePowerRebootRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/power/reboot", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostNodePowerShutdownRequest calls the generic PostNodePowerShutdown builder with application/json body
+func NewPostNodePowerShutdownRequest(server string, hostname Hostname, body PostNodePowerShutdownJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodePowerShutdownRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodePowerShutdownRequestWithBody generates requests for PostNodePowerShutdown with any type of body
+func NewPostNodePowerShutdownRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/power/shutdown", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeScheduleCronRequest generates requests for GetNodeScheduleCron
 func NewGetNodeScheduleCronRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -6302,6 +6514,16 @@ type ClientWithResponsesInterface interface {
 
 	// GetNodeOSWithResponse request
 	GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error)
+
+	// PostNodePowerRebootWithBodyWithResponse request with any body
+	PostNodePowerRebootWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerRebootResponse, error)
+
+	PostNodePowerRebootWithResponse(ctx context.Context, hostname Hostname, body PostNodePowerRebootJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePowerRebootResponse, error)
+
+	// PostNodePowerShutdownWithBodyWithResponse request with any body
+	PostNodePowerShutdownWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error)
+
+	PostNodePowerShutdownWithResponse(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error)
 
 	// GetNodeScheduleCronWithResponse request
 	GetNodeScheduleCronWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleCronResponse, error)
@@ -7583,6 +7805,58 @@ func (r GetNodeOSResponse) StatusCode() int {
 	return 0
 }
 
+type PostNodePowerRebootResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PowerRebootResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodePowerRebootResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodePowerRebootResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostNodePowerShutdownResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PowerShutdownResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodePowerShutdownResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodePowerShutdownResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetNodeScheduleCronResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8483,6 +8757,40 @@ func (c *ClientWithResponses) GetNodeOSWithResponse(ctx context.Context, hostnam
 		return nil, err
 	}
 	return ParseGetNodeOSResponse(rsp)
+}
+
+// PostNodePowerRebootWithBodyWithResponse request with arbitrary body returning *PostNodePowerRebootResponse
+func (c *ClientWithResponses) PostNodePowerRebootWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerRebootResponse, error) {
+	rsp, err := c.PostNodePowerRebootWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePowerRebootResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodePowerRebootWithResponse(ctx context.Context, hostname Hostname, body PostNodePowerRebootJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePowerRebootResponse, error) {
+	rsp, err := c.PostNodePowerReboot(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePowerRebootResponse(rsp)
+}
+
+// PostNodePowerShutdownWithBodyWithResponse request with arbitrary body returning *PostNodePowerShutdownResponse
+func (c *ClientWithResponses) PostNodePowerShutdownWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error) {
+	rsp, err := c.PostNodePowerShutdownWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePowerShutdownResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodePowerShutdownWithResponse(ctx context.Context, hostname Hostname, body PostNodePowerShutdownJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodePowerShutdownResponse, error) {
+	rsp, err := c.PostNodePowerShutdown(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodePowerShutdownResponse(rsp)
 }
 
 // GetNodeScheduleCronWithResponse request returning *GetNodeScheduleCronResponse
@@ -11162,6 +11470,114 @@ func ParseGetNodeOSResponse(rsp *http.Response) (*GetNodeOSResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest OSInfoCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodePowerRebootResponse parses an HTTP response from a PostNodePowerRebootWithResponse call
+func ParsePostNodePowerRebootResponse(rsp *http.Response) (*PostNodePowerRebootResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodePowerRebootResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PowerRebootResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodePowerShutdownResponse parses an HTTP response from a PostNodePowerShutdownWithResponse call
+func ParsePostNodePowerShutdownResponse(rsp *http.Response) (*PostNodePowerShutdownResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodePowerShutdownResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PowerShutdownResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

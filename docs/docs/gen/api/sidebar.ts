@@ -482,6 +482,28 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Power",
+      link: {
+        type: "doc",
+        id: "gen/api/power-management-api-power-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-power-reboot",
+          label: "Reboot node",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-power-shutdown",
+          label: "Shutdown node",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Schedule/Cron",
       link: {
         type: "doc",

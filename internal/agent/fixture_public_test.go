@@ -40,6 +40,7 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/load"
 	"github.com/retr0h/osapi/internal/provider/node/mem"
 	ntpProv "github.com/retr0h/osapi/internal/provider/node/ntp"
+	powerProv "github.com/retr0h/osapi/internal/provider/node/power"
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
@@ -68,6 +69,7 @@ type newTestAgentParams struct {
 	sysctlProvider   sysctlProv.Provider
 	ntpProvider      ntpProv.Provider
 	timezoneProvider timezoneProv.Provider
+	powerProvider    powerProv.Provider
 	processProvider  process.Provider
 	registryKV       jetstream.KeyValue
 	factsKV          jetstream.KeyValue
@@ -98,6 +100,7 @@ func newTestAgent(p newTestAgentParams) *agent.Agent {
 			p.sysctlProvider,
 			p.ntpProvider,
 			p.timezoneProvider,
+			p.powerProvider,
 			p.appConfig,
 			logger,
 		),

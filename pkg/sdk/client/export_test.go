@@ -448,6 +448,22 @@ func ExportTimezoneMutationCollectionFromUpdate(
 	return timezoneMutationCollectionFromUpdate(input)
 }
 
+// PowerCollectionFromReboot exposes the private
+// powerCollectionFromReboot for testing.
+func PowerCollectionFromReboot(
+	input *gen.PowerRebootResponse,
+) Collection[PowerResult] {
+	return powerCollectionFromReboot(input)
+}
+
+// PowerCollectionFromShutdown exposes the private
+// powerCollectionFromShutdown for testing.
+func PowerCollectionFromShutdown(
+	input *gen.PowerShutdownResponse,
+) Collection[PowerResult] {
+	return powerCollectionFromShutdown(input)
+}
+
 // ExportDerefStringSlice exposes the private derefStringSlice for testing.
 func ExportDerefStringSlice(
 	s *[]string,

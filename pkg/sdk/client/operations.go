@@ -113,6 +113,12 @@ const (
 	OpTimezoneUpdate JobOperation = "node.timezone.update"
 )
 
+// Power operations.
+const (
+	OpPowerReboot   JobOperation = "node.power.reboot"
+	OpPowerShutdown JobOperation = "node.power.shutdown"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).
