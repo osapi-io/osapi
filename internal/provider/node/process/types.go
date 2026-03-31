@@ -21,7 +21,12 @@
 // Package process provides process management operations.
 package process
 
-import "context"
+import (
+	"context"
+	"syscall"
+
+	gopsutil "github.com/shirou/gopsutil/v4/process"
+)
 
 // Provider implements process management operations.
 type Provider interface {
@@ -31,6 +36,38 @@ type Provider interface {
 	Get(ctx context.Context, pid int) (*Info, error)
 	// Signal sends a signal to a process by PID.
 	Signal(ctx context.Context, pid int, signal string) (*SignalResult, error)
+}
+
+// ProcessQuerier provides methods to query a single process.
+// *gopsutil.Process satisfies this interface.
+type ProcessQuerier interface {
+	Name() (string, error)
+	Username() (string, error)
+	Status() ([]string, error)
+	CPUPercent() (float64, error)
+	MemoryPercent() (float32, error)
+	MemoryInfo() (*gopsutil.MemoryInfoStat, error)
+	Cmdline() (string, error)
+	CreateTime() (int64, error)
+}
+
+// ProcessItem pairs a PID with a ProcessQuerier. PID is exposed
+// separately because gopsutil.Process.Pid is a struct field, which
+// interfaces cannot express.
+type ProcessItem struct {
+	PID     int32
+	Querier ProcessQuerier
+}
+
+// ProcessLister provides methods to list and look up processes.
+type ProcessLister interface {
+	Processes() ([]ProcessItem, error)
+	NewProcess(pid int32) (ProcessQuerier, error)
+}
+
+// ProcessSignaler sends signals to processes.
+type ProcessSignaler interface {
+	Kill(pid int, sig syscall.Signal) error
 }
 
 // Info represents a running process.

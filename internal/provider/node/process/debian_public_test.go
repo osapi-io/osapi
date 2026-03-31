@@ -28,29 +28,36 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	gopsutil "github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/retr0h/osapi/internal/provider/node/process"
+	"github.com/retr0h/osapi/internal/provider/node/process/mocks"
 )
 
 type DebianPublicTestSuite struct {
 	suite.Suite
 
-	logger   *slog.Logger
-	provider *process.Debian
+	ctrl         *gomock.Controller
+	mockLister   *mocks.MockProcessLister
+	mockSignaler *mocks.MockProcessSignaler
+	provider     *process.Debian
 }
 
 func (suite *DebianPublicTestSuite) SetupTest() {
-	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	suite.provider = process.NewDebianProvider(suite.logger)
+	suite.ctrl = gomock.NewController(suite.T())
+	suite.mockLister = mocks.NewMockProcessLister(suite.ctrl)
+	suite.mockSignaler = mocks.NewMockProcessSignaler(suite.ctrl)
+	suite.provider = process.NewDebianProvider(
+		slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		suite.mockLister,
+		suite.mockSignaler,
+	)
 }
 
-func (suite *DebianPublicTestSuite) TearDownSubTest() {
-	process.ResetListProcesses()
-	process.ResetGetProcess()
-	process.ResetKillProcess()
-	process.ResetGatherInfoFromP()
+func (suite *DebianPublicTestSuite) TearDownTest() {
+	suite.ctrl.Finish()
 }
 
 func (suite *DebianPublicTestSuite) TestList() {
@@ -64,25 +71,30 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when successful returns process list",
 			setupMock: func() {
-				process.SetListProcesses(func() ([]*gopsutil.Process, error) {
-					return []*gopsutil.Process{
-						{Pid: 1},
-						{Pid: 2},
-					}, nil
-				})
-				process.SetGatherInfoFromP(func(p *gopsutil.Process) (*process.Info, error) {
-					return &process.Info{
-						PID:        int(p.Pid),
-						Name:       "test-proc",
-						User:       "root",
-						State:      "running",
-						CPUPercent: 1.5,
-						MemPercent: 2.3,
-						MemRSS:     1024,
-						Command:    "/usr/bin/test",
-						StartTime:  "2026-01-01T00:00:00Z",
-					}, nil
-				})
+				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1.EXPECT().Name().Return("test-proc", nil)
+				q1.EXPECT().Username().Return("root", nil)
+				q1.EXPECT().Status().Return([]string{"running"}, nil)
+				q1.EXPECT().CPUPercent().Return(1.5, nil)
+				q1.EXPECT().MemoryPercent().Return(float32(2.3), nil)
+				q1.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{RSS: 1024}, nil)
+				q1.EXPECT().Cmdline().Return("/usr/bin/test", nil)
+				q1.EXPECT().CreateTime().Return(int64(1735689600000), nil)
+
+				q2 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q2.EXPECT().Name().Return("other-proc", nil)
+				q2.EXPECT().Username().Return("user", nil)
+				q2.EXPECT().Status().Return([]string{"sleeping"}, nil)
+				q2.EXPECT().CPUPercent().Return(0.5, nil)
+				q2.EXPECT().MemoryPercent().Return(float32(1.0), nil)
+				q2.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{RSS: 2048}, nil)
+				q2.EXPECT().Cmdline().Return("/usr/bin/other", nil)
+				q2.EXPECT().CreateTime().Return(int64(1735689600000), nil)
+
+				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+					{PID: 1, Querier: q1},
+					{PID: 2, Querier: q2},
+				}, nil)
 			},
 			validateFunc: func(result []process.Info) {
 				suite.Len(result, 2)
@@ -94,16 +106,14 @@ func (suite *DebianPublicTestSuite) TestList() {
 				suite.InDelta(2.3, result[0].MemPercent, 0.01)
 				suite.Equal(int64(1024), result[0].MemRSS)
 				suite.Equal("/usr/bin/test", result[0].Command)
-				suite.Equal("2026-01-01T00:00:00Z", result[0].StartTime)
 				suite.Equal(2, result[1].PID)
+				suite.Equal("other-proc", result[1].Name)
 			},
 		},
 		{
 			name: "when listProcesses errors returns error",
 			setupMock: func() {
-				process.SetListProcesses(func() ([]*gopsutil.Process, error) {
-					return nil, errors.New("cannot read /proc")
-				})
+				suite.mockLister.EXPECT().Processes().Return(nil, errors.New("cannot read /proc"))
 			},
 			wantErr:    true,
 			wantErrMsg: "process: list: cannot read /proc",
@@ -111,25 +121,34 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when gather info errors skips process",
 			setupMock: func() {
-				process.SetListProcesses(func() ([]*gopsutil.Process, error) {
-					return []*gopsutil.Process{
-						{Pid: 1},
-						{Pid: 2},
-						{Pid: 3},
-					}, nil
-				})
-				callCount := 0
-				process.SetGatherInfoFromP(func(p *gopsutil.Process) (*process.Info, error) {
-					callCount++
-					if p.Pid == 2 {
-						return nil, errors.New("permission denied")
-					}
+				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1.EXPECT().Name().Return("ok-proc", nil)
+				q1.EXPECT().Username().Return("root", nil)
+				q1.EXPECT().Status().Return([]string{"running"}, nil)
+				q1.EXPECT().CPUPercent().Return(0.0, nil)
+				q1.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q1.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{}, nil)
+				q1.EXPECT().Cmdline().Return("", nil)
+				q1.EXPECT().CreateTime().Return(int64(0), nil)
 
-					return &process.Info{
-						PID:  int(p.Pid),
-						Name: "ok-proc",
-					}, nil
-				})
+				q2 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q2.EXPECT().Name().Return("", errors.New("permission denied"))
+
+				q3 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q3.EXPECT().Name().Return("ok-proc", nil)
+				q3.EXPECT().Username().Return("root", nil)
+				q3.EXPECT().Status().Return([]string{"running"}, nil)
+				q3.EXPECT().CPUPercent().Return(0.0, nil)
+				q3.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q3.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{}, nil)
+				q3.EXPECT().Cmdline().Return("", nil)
+				q3.EXPECT().CreateTime().Return(int64(0), nil)
+
+				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+					{PID: 1, Querier: q1},
+					{PID: 2, Querier: q2},
+					{PID: 3, Querier: q3},
+				}, nil)
 			},
 			validateFunc: func(result []process.Info) {
 				suite.Len(result, 2)
@@ -140,17 +159,59 @@ func (suite *DebianPublicTestSuite) TestList() {
 		{
 			name: "when all processes error returns empty list",
 			setupMock: func() {
-				process.SetListProcesses(func() ([]*gopsutil.Process, error) {
-					return []*gopsutil.Process{
-						{Pid: 1},
-					}, nil
-				})
-				process.SetGatherInfoFromP(func(_ *gopsutil.Process) (*process.Info, error) {
-					return nil, errors.New("permission denied")
-				})
+				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1.EXPECT().Name().Return("", errors.New("permission denied"))
+
+				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+					{PID: 1, Querier: q1},
+				}, nil)
 			},
 			validateFunc: func(result []process.Info) {
 				suite.Empty(result)
+			},
+		},
+		{
+			name: "when status is empty returns empty state",
+			setupMock: func() {
+				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1.EXPECT().Name().Return("proc", nil)
+				q1.EXPECT().Username().Return("root", nil)
+				q1.EXPECT().Status().Return([]string{}, nil)
+				q1.EXPECT().CPUPercent().Return(0.0, nil)
+				q1.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q1.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{}, nil)
+				q1.EXPECT().Cmdline().Return("", nil)
+				q1.EXPECT().CreateTime().Return(int64(0), nil)
+
+				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+					{PID: 1, Querier: q1},
+				}, nil)
+			},
+			validateFunc: func(result []process.Info) {
+				suite.Len(result, 1)
+				suite.Equal("", result[0].State)
+			},
+		},
+		{
+			name: "when MemoryInfo returns nil uses zero RSS",
+			setupMock: func() {
+				q1 := mocks.NewMockProcessQuerier(suite.ctrl)
+				q1.EXPECT().Name().Return("proc", nil)
+				q1.EXPECT().Username().Return("root", nil)
+				q1.EXPECT().Status().Return([]string{"running"}, nil)
+				q1.EXPECT().CPUPercent().Return(0.0, nil)
+				q1.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q1.EXPECT().MemoryInfo().Return(nil, nil)
+				q1.EXPECT().Cmdline().Return("", nil)
+				q1.EXPECT().CreateTime().Return(int64(0), nil)
+
+				suite.mockLister.EXPECT().Processes().Return([]process.ProcessItem{
+					{PID: 1, Querier: q1},
+				}, nil)
+			},
+			validateFunc: func(result []process.Info) {
+				suite.Len(result, 1)
+				suite.Equal(int64(0), result[0].MemRSS)
 			},
 		},
 	}
@@ -188,22 +249,17 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when successful returns process info",
 			pid:  42,
 			setupMock: func() {
-				process.SetGetProcess(func(pid int32) (*gopsutil.Process, error) {
-					return &gopsutil.Process{Pid: pid}, nil
-				})
-				process.SetGatherInfoFromP(func(p *gopsutil.Process) (*process.Info, error) {
-					return &process.Info{
-						PID:        int(p.Pid),
-						Name:       "test-proc",
-						User:       "root",
-						State:      "sleeping",
-						CPUPercent: 0.5,
-						MemPercent: 1.2,
-						MemRSS:     2048,
-						Command:    "/usr/bin/test --flag",
-						StartTime:  "2026-01-01T00:00:00Z",
-					}, nil
-				})
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("test-proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"sleeping"}, nil)
+				q.EXPECT().CPUPercent().Return(0.5, nil)
+				q.EXPECT().MemoryPercent().Return(float32(1.2), nil)
+				q.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{RSS: 2048}, nil)
+				q.EXPECT().Cmdline().Return("/usr/bin/test --flag", nil)
+				q.EXPECT().CreateTime().Return(int64(1735689600000), nil)
+
+				suite.mockLister.EXPECT().NewProcess(int32(42)).Return(q, nil)
 			},
 			validateFunc: func(result *process.Info) {
 				suite.Equal(42, result.PID)
@@ -214,16 +270,13 @@ func (suite *DebianPublicTestSuite) TestGet() {
 				suite.InDelta(1.2, result.MemPercent, 0.01)
 				suite.Equal(int64(2048), result.MemRSS)
 				suite.Equal("/usr/bin/test --flag", result.Command)
-				suite.Equal("2026-01-01T00:00:00Z", result.StartTime)
 			},
 		},
 		{
 			name: "when pid not found returns error",
 			pid:  99999,
 			setupMock: func() {
-				process.SetGetProcess(func(_ int32) (*gopsutil.Process, error) {
-					return nil, errors.New("process not found")
-				})
+				suite.mockLister.EXPECT().NewProcess(int32(99999)).Return(nil, errors.New("process not found"))
 			},
 			wantErr:    true,
 			wantErrMsg: "process: get: process not found",
@@ -232,12 +285,10 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			name: "when gather info errors returns error",
 			pid:  42,
 			setupMock: func() {
-				process.SetGetProcess(func(pid int32) (*gopsutil.Process, error) {
-					return &gopsutil.Process{Pid: pid}, nil
-				})
-				process.SetGatherInfoFromP(func(_ *gopsutil.Process) (*process.Info, error) {
-					return nil, errors.New("permission denied")
-				})
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("", errors.New("permission denied"))
+
+				suite.mockLister.EXPECT().NewProcess(int32(42)).Return(q, nil)
 			},
 			wantErr:    true,
 			wantErrMsg: "process: get: permission denied",
@@ -280,9 +331,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    42,
 			signal: "TERM",
 			setupMock: func() {
-				process.SetKillProcess(func(_ int, _ syscall.Signal) error {
-					return nil
-				})
+				suite.mockSignaler.EXPECT().Kill(42, syscall.SIGTERM).Return(nil)
 			},
 			validateFunc: func(result *process.SignalResult) {
 				suite.Equal(42, result.PID)
@@ -295,11 +344,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    42,
 			signal: "KILL",
 			setupMock: func() {
-				process.SetKillProcess(func(_ int, sig syscall.Signal) error {
-					suite.Equal(syscall.SIGKILL, sig)
-
-					return nil
-				})
+				suite.mockSignaler.EXPECT().Kill(42, syscall.SIGKILL).Return(nil)
 			},
 			validateFunc: func(result *process.SignalResult) {
 				suite.Equal(42, result.PID)
@@ -320,9 +365,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    99999,
 			signal: "TERM",
 			setupMock: func() {
-				process.SetKillProcess(func(_ int, _ syscall.Signal) error {
-					return syscall.ESRCH
-				})
+				suite.mockSignaler.EXPECT().Kill(99999, syscall.SIGTERM).Return(syscall.ESRCH)
 			},
 			wantErr:    true,
 			wantErrMsg: "process: signal: process not found",
@@ -332,9 +375,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    1,
 			signal: "TERM",
 			setupMock: func() {
-				process.SetKillProcess(func(_ int, _ syscall.Signal) error {
-					return syscall.EPERM
-				})
+				suite.mockSignaler.EXPECT().Kill(1, syscall.SIGTERM).Return(syscall.EPERM)
 			},
 			wantErr:    true,
 			wantErrMsg: "process: signal: permission denied",
@@ -344,9 +385,7 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 			pid:    42,
 			signal: "HUP",
 			setupMock: func() {
-				process.SetKillProcess(func(_ int, _ syscall.Signal) error {
-					return errors.New("unexpected error")
-				})
+				suite.mockSignaler.EXPECT().Kill(42, syscall.SIGHUP).Return(errors.New("unexpected error"))
 			},
 			wantErr:    true,
 			wantErrMsg: "process: signal: unexpected error",
@@ -374,15 +413,133 @@ func (suite *DebianPublicTestSuite) TestSignal() {
 	}
 }
 
+func (suite *DebianPublicTestSuite) TestGatherInfoErrors() {
+	tests := []struct {
+		name      string
+		setupMock func() *mocks.MockProcessQuerier
+		wantErr   string
+	}{
+		{
+			name: "when Username errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("", errors.New("user error"))
+
+				return q
+			},
+			wantErr: "user error",
+		},
+		{
+			name: "when Status errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return(nil, errors.New("status error"))
+
+				return q
+			},
+			wantErr: "status error",
+		},
+		{
+			name: "when CPUPercent errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"running"}, nil)
+				q.EXPECT().CPUPercent().Return(0.0, errors.New("cpu error"))
+
+				return q
+			},
+			wantErr: "cpu error",
+		},
+		{
+			name: "when MemoryPercent errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"running"}, nil)
+				q.EXPECT().CPUPercent().Return(0.0, nil)
+				q.EXPECT().MemoryPercent().Return(float32(0.0), errors.New("mem percent error"))
+
+				return q
+			},
+			wantErr: "mem percent error",
+		},
+		{
+			name: "when MemoryInfo errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"running"}, nil)
+				q.EXPECT().CPUPercent().Return(0.0, nil)
+				q.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q.EXPECT().MemoryInfo().Return(nil, errors.New("mem info error"))
+
+				return q
+			},
+			wantErr: "mem info error",
+		},
+		{
+			name: "when Cmdline errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"running"}, nil)
+				q.EXPECT().CPUPercent().Return(0.0, nil)
+				q.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{}, nil)
+				q.EXPECT().Cmdline().Return("", errors.New("cmdline error"))
+
+				return q
+			},
+			wantErr: "cmdline error",
+		},
+		{
+			name: "when CreateTime errors returns error",
+			setupMock: func() *mocks.MockProcessQuerier {
+				q := mocks.NewMockProcessQuerier(suite.ctrl)
+				q.EXPECT().Name().Return("proc", nil)
+				q.EXPECT().Username().Return("root", nil)
+				q.EXPECT().Status().Return([]string{"running"}, nil)
+				q.EXPECT().CPUPercent().Return(0.0, nil)
+				q.EXPECT().MemoryPercent().Return(float32(0.0), nil)
+				q.EXPECT().MemoryInfo().Return(&gopsutil.MemoryInfoStat{}, nil)
+				q.EXPECT().Cmdline().Return("cmd", nil)
+				q.EXPECT().CreateTime().Return(int64(0), errors.New("create time error"))
+
+				return q
+			},
+			wantErr: "create time error",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			q := tc.setupMock()
+
+			suite.mockLister.EXPECT().NewProcess(int32(1)).Return(q, nil)
+
+			_, err := suite.provider.Get(context.Background(), 1)
+
+			suite.Error(err)
+			suite.Contains(err.Error(), tc.wantErr)
+		})
+	}
+}
+
 // TestDefaultOSFunctions exercises the real OS-interaction wrappers
 // against the current test process to ensure coverage of gopsutil calls.
 func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
-	// Use real functions (not mocked).
-	process.ResetListProcesses()
-	process.ResetGetProcess()
-	process.ResetGatherInfoFromP()
-
 	pid := os.Getpid()
+
+	lister := process.NewGopsutilLister()
+	signaler := process.NewSyscallSignaler()
 
 	tests := []struct {
 		name         string
@@ -392,7 +549,7 @@ func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
 		{
 			name: "when listing with real OS returns current process",
 			fn: func() error {
-				provider := process.NewDebianProvider(slog.Default())
+				provider := process.NewDebianProvider(slog.Default(), lister, signaler)
 				results, err := provider.List(context.Background())
 				if err != nil {
 					return err
@@ -415,7 +572,7 @@ func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
 		{
 			name: "when getting with real OS returns current process info",
 			fn: func() error {
-				provider := process.NewDebianProvider(slog.Default())
+				provider := process.NewDebianProvider(slog.Default(), lister, signaler)
 				info, err := provider.Get(context.Background(), pid)
 				if err != nil {
 					return err
@@ -429,11 +586,10 @@ func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
 			},
 		},
 		{
-			name: "when defaultKillProcess with signal 0 checks process exists",
+			name: "when Kill with signal 0 checks process exists",
 			fn: func() error {
-				// Signal 0 doesn't kill — it checks if the process exists.
-				// This exercises the real defaultKillProcess wrapper.
-				err := process.DefaultKillProcess(pid, syscall.Signal(0))
+				// Signal 0 doesn't kill -- it checks if the process exists.
+				err := signaler.Kill(pid, syscall.Signal(0))
 				suite.NoError(err)
 
 				return nil

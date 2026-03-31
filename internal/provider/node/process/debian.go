@@ -42,33 +42,165 @@ var allowedSignals = map[string]syscall.Signal{
 	"USR2": syscall.SIGUSR2,
 }
 
-// Injectable functions for testing.
-var (
-	listProcesses   = defaultListProcesses
-	getProcess      = defaultGetProcess
-	killProcess     = defaultKillProcess
-	gatherInfoFromP = defaultGatherInfoFromP
-)
+// gopsutilLister wraps gopsutil calls to satisfy ProcessLister.
+type gopsutilLister struct{}
 
-func defaultListProcesses() ([]*gopsutil.Process, error) {
-	return gopsutil.Processes()
+// Processes returns all running processes as ProcessItem instances.
+func (g *gopsutilLister) Processes() ([]ProcessItem, error) {
+	procs, err := gopsutil.Processes()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]ProcessItem, len(procs))
+	for i, p := range procs {
+		result[i] = ProcessItem{
+			PID:     p.Pid,
+			Querier: p,
+		}
+	}
+
+	return result, nil
 }
 
-func defaultGetProcess(
+// NewProcess returns a ProcessQuerier for the given PID.
+func (g *gopsutilLister) NewProcess(
 	pid int32,
-) (*gopsutil.Process, error) {
+) (ProcessQuerier, error) {
 	return gopsutil.NewProcess(pid)
 }
 
-func defaultKillProcess(
+// syscallSignaler wraps syscall.Kill to satisfy ProcessSignaler.
+type syscallSignaler struct{}
+
+// Kill sends a signal to a process.
+func (s *syscallSignaler) Kill(
 	pid int,
 	sig syscall.Signal,
 ) error {
 	return syscall.Kill(pid, sig)
 }
 
-func defaultGatherInfoFromP(
-	p *gopsutil.Process,
+// NewGopsutilLister returns the real gopsutil-backed ProcessLister.
+func NewGopsutilLister() ProcessLister {
+	return &gopsutilLister{}
+}
+
+// NewSyscallSignaler returns the real syscall-backed ProcessSignaler.
+func NewSyscallSignaler() ProcessSignaler {
+	return &syscallSignaler{}
+}
+
+// Compile-time checks.
+var (
+	_ Provider             = (*Debian)(nil)
+	_ provider.FactsSetter = (*Debian)(nil)
+)
+
+// Debian implements the Provider interface for Debian-family systems.
+type Debian struct {
+	provider.FactsAware
+	logger   *slog.Logger
+	lister   ProcessLister
+	signaler ProcessSignaler
+}
+
+// NewDebianProvider factory to create a new Debian instance.
+func NewDebianProvider(
+	logger *slog.Logger,
+	lister ProcessLister,
+	signaler ProcessSignaler,
+) *Debian {
+	return &Debian{
+		logger:   logger.With(slog.String("subsystem", "provider.process")),
+		lister:   lister,
+		signaler: signaler,
+	}
+}
+
+// List returns all running processes.
+func (d *Debian) List(
+	_ context.Context,
+) ([]Info, error) {
+	procs, err := d.lister.Processes()
+	if err != nil {
+		return nil, fmt.Errorf("process: list: %w", err)
+	}
+
+	var result []Info
+
+	for _, item := range procs {
+		info, err := gatherInfo(item.PID, item.Querier)
+		if err != nil {
+			d.logger.Debug(
+				"skipping process",
+				slog.Int("pid", int(item.PID)),
+				slog.String("error", err.Error()),
+			)
+
+			continue
+		}
+
+		result = append(result, *info)
+	}
+
+	return result, nil
+}
+
+// Get returns details for a specific process by PID.
+func (d *Debian) Get(
+	_ context.Context,
+	pid int,
+) (*Info, error) {
+	p, err := d.lister.NewProcess(int32(pid))
+	if err != nil {
+		return nil, fmt.Errorf("process: get: %w", err)
+	}
+
+	info, err := gatherInfo(int32(pid), p)
+	if err != nil {
+		return nil, fmt.Errorf("process: get: %w", err)
+	}
+
+	return info, nil
+}
+
+// Signal sends a signal to a process by PID.
+func (d *Debian) Signal(
+	_ context.Context,
+	pid int,
+	signal string,
+) (*SignalResult, error) {
+	sig, ok := allowedSignals[signal]
+	if !ok {
+		return nil, fmt.Errorf("process: signal: invalid signal %q", signal)
+	}
+
+	if err := d.signaler.Kill(pid, sig); err != nil {
+		if err == syscall.ESRCH {
+			return nil, fmt.Errorf("process: signal: process not found")
+		}
+
+		if err == syscall.EPERM {
+			return nil, fmt.Errorf("process: signal: permission denied")
+		}
+
+		return nil, fmt.Errorf("process: signal: %w", err)
+	}
+
+	return &SignalResult{
+		PID:     pid,
+		Signal:  signal,
+		Changed: true,
+	}, nil
+}
+
+// gatherInfo extracts process information from a ProcessQuerier.
+// PID is passed separately because gopsutil exposes it as a struct
+// field rather than a method.
+func gatherInfo(
+	pid int32,
+	p ProcessQuerier,
 ) (*Info, error) {
 	name, err := p.Name()
 	if err != nil {
@@ -124,7 +256,7 @@ func defaultGatherInfoFromP(
 	startTime := time.UnixMilli(createTime).UTC().Format(time.RFC3339)
 
 	return &Info{
-		PID:        int(p.Pid),
+		PID:        int(pid),
 		Name:       name,
 		User:       user,
 		State:      state,
@@ -133,103 +265,5 @@ func defaultGatherInfoFromP(
 		MemRSS:     memRSS,
 		Command:    cmdline,
 		StartTime:  startTime,
-	}, nil
-}
-
-// Compile-time checks.
-var (
-	_ Provider             = (*Debian)(nil)
-	_ provider.FactsSetter = (*Debian)(nil)
-)
-
-// Debian implements the Provider interface for Debian-family systems.
-type Debian struct {
-	provider.FactsAware
-	logger *slog.Logger
-}
-
-// NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider(
-	logger *slog.Logger,
-) *Debian {
-	return &Debian{
-		logger: logger.With(slog.String("subsystem", "provider.process")),
-	}
-}
-
-// List returns all running processes.
-func (d *Debian) List(
-	_ context.Context,
-) ([]Info, error) {
-	procs, err := listProcesses()
-	if err != nil {
-		return nil, fmt.Errorf("process: list: %w", err)
-	}
-
-	var result []Info
-
-	for _, p := range procs {
-		info, err := gatherInfoFromP(p)
-		if err != nil {
-			d.logger.Debug(
-				"skipping process",
-				slog.Int("pid", int(p.Pid)),
-				slog.String("error", err.Error()),
-			)
-
-			continue
-		}
-
-		result = append(result, *info)
-	}
-
-	return result, nil
-}
-
-// Get returns details for a specific process by PID.
-func (d *Debian) Get(
-	_ context.Context,
-	pid int,
-) (*Info, error) {
-	p, err := getProcess(int32(pid))
-	if err != nil {
-		return nil, fmt.Errorf("process: get: %w", err)
-	}
-
-	info, err := gatherInfoFromP(p)
-	if err != nil {
-		return nil, fmt.Errorf("process: get: %w", err)
-	}
-
-	return info, nil
-}
-
-// Signal sends a signal to a process by PID.
-func (d *Debian) Signal(
-	_ context.Context,
-	pid int,
-	signal string,
-) (*SignalResult, error) {
-	sig, ok := allowedSignals[signal]
-	if !ok {
-		return nil, fmt.Errorf("process: signal: invalid signal %q", signal)
-	}
-
-	if err := killProcess(pid, sig); err != nil {
-		if err == syscall.ESRCH {
-			return nil, fmt.Errorf("process: signal: process not found")
-		}
-
-		if err == syscall.EPERM {
-			return nil, fmt.Errorf("process: signal: permission denied")
-		}
-
-		return nil, fmt.Errorf("process: signal: %w", err)
-	}
-
-	return &SignalResult{
-		PID:     pid,
-		Signal:  signal,
-		Changed: true,
 	}, nil
 }

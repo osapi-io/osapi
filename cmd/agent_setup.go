@@ -451,7 +451,11 @@ func createProcessProvider(
 			log.Info("running in container, process operations disabled")
 			return processProv.NewLinuxProvider()
 		}
-		return processProv.NewDebianProvider(log)
+		return processProv.NewDebianProvider(
+			log,
+			processProv.NewGopsutilLister(),
+			processProv.NewSyscallSignaler(),
+		)
 	case "darwin":
 		return processProv.NewDarwinProvider()
 	default:
