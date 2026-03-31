@@ -56,6 +56,11 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/process`                     | Process  |
 | `/node/{hostname}/process/{pid}`               | Process  |
 | `/node/{hostname}/process/{pid}/signal`        | Process  |
+| `/node/{hostname}/user`                        | User     |
+| `/node/{hostname}/user/{name}`                 | User     |
+| `/node/{hostname}/user/{name}/password`        | User     |
+| `/node/{hostname}/group`                       | Group    |
+| `/node/{hostname}/group/{name}`                | Group    |
 
 6. **Path Parameters Over Query Parameters**
 
