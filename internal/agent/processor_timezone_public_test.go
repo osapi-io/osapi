@@ -113,6 +113,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 				timezoneProvider,
 				nil, nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -190,6 +191,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 				nil, nil, nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil,
+				nil,
 				nil,
 				config.Config{},
 				slog.Default(),
@@ -284,6 +286,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 				nil, nil, nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil,
+				nil,
 				nil,
 				config.Config{},
 				slog.Default(),
