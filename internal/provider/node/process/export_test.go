@@ -73,3 +73,7 @@ func SetGatherInfoFromP(
 func ResetGatherInfoFromP() {
 	gatherInfoFromP = defaultGatherInfoFromP
 }
+
+// DefaultKillProcess exposes the real killProcess function for testing.
+// Use with signal 0 to check process existence without side effects.
+var DefaultKillProcess = defaultKillProcess

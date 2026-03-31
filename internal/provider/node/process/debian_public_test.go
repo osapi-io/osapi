@@ -428,6 +428,17 @@ func (suite *DebianPublicTestSuite) TestDefaultOSFunctions() {
 				return nil
 			},
 		},
+		{
+			name: "when defaultKillProcess with signal 0 checks process exists",
+			fn: func() error {
+				// Signal 0 doesn't kill — it checks if the process exists.
+				// This exercises the real defaultKillProcess wrapper.
+				err := process.DefaultKillProcess(pid, syscall.Signal(0))
+				suite.NoError(err)
+
+				return nil
+			},
+		},
 	}
 
 	for _, tc := range tests {
