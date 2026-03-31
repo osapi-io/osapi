@@ -110,7 +110,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			name:         "when no results returns empty",
 			results:      []cli.ResultRow{},
 			fieldHeaders: nil,
-			wantHeaders:  []string{"HOSTNAME"},
+			wantHeaders:  nil,
 			wantRows:     [][]string{},
 		},
 		{
@@ -166,14 +166,14 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
 			},
 		},
 		{
-			name: "when no field headers works with hostname only",
+			name: "when single host hides hostname column",
 			results: []cli.ResultRow{
-				{Hostname: "web-01"},
+				{Hostname: "web-01", Fields: []string{"val1"}},
 			},
-			fieldHeaders: nil,
-			wantHeaders:  []string{"HOSTNAME"},
+			fieldHeaders: []string{"DATA"},
+			wantHeaders:  []string{"DATA"},
 			wantRows: [][]string{
-				{"web-01"},
+				{"val1"},
 			},
 		},
 		{
@@ -301,7 +301,7 @@ func (suite *UIPublicTestSuite) TestBuildMutationTable() {
 			name:         "when no results returns empty",
 			results:      []cli.MutationResultRow{},
 			fieldHeaders: nil,
-			wantHeaders:  []string{"HOSTNAME", "STATUS", "CHANGED", "ERROR"},
+			wantHeaders:  []string{"STATUS", "CHANGED", "ERROR"},
 			wantRows:     [][]string{},
 		},
 		{
@@ -331,36 +331,40 @@ func (suite *UIPublicTestSuite) TestBuildMutationTable() {
 			},
 		},
 		{
-			name: "when field headers provided appends extra columns",
+			name: "when single host hides hostname column",
 			results: []cli.MutationResultRow{
 				{Hostname: "web-01", Status: "ok", Fields: []string{"extra"}},
 			},
 			fieldHeaders: []string{"DETAIL"},
-			wantHeaders:  []string{"HOSTNAME", "STATUS", "CHANGED", "ERROR", "DETAIL"},
+			wantHeaders:  []string{"STATUS", "CHANGED", "ERROR", "DETAIL"},
 			wantRows: [][]string{
-				{"web-01", "ok", "", "", "extra"},
+				{"ok", "", "", "extra"},
 			},
 		},
 		{
 			name: "when changed is true shows true",
 			results: []cli.MutationResultRow{
 				{Hostname: "web-01", Status: "ok", Changed: boolPtr(true)},
+				{Hostname: "web-02", Status: "ok", Changed: boolPtr(true)},
 			},
 			fieldHeaders: nil,
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "CHANGED", "ERROR"},
 			wantRows: [][]string{
 				{"web-01", "ok", "true", ""},
+				{"web-02", "ok", "true", ""},
 			},
 		},
 		{
 			name: "when changed is false shows false",
 			results: []cli.MutationResultRow{
 				{Hostname: "web-01", Status: "ok", Changed: boolPtr(false)},
+				{Hostname: "web-02", Status: "ok", Changed: boolPtr(false)},
 			},
 			fieldHeaders: nil,
 			wantHeaders:  []string{"HOSTNAME", "STATUS", "CHANGED", "ERROR"},
 			wantRows: [][]string{
 				{"web-01", "ok", "false", ""},
+				{"web-02", "ok", "false", ""},
 			},
 		},
 	}

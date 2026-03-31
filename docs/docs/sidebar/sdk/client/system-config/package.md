@@ -9,14 +9,14 @@ hosts. Access via `client.Package.List()`, `client.Package.Install()`, etc.
 
 ## Methods
 
-| Method                        | Description                     |
-| ----------------------------- | ------------------------------- |
-| `List(ctx, hostname)`         | List all installed packages     |
-| `Get(ctx, hostname, name)`    | Get a package by name           |
-| `Install(ctx, hostname, name)`| Install a package               |
-| `Remove(ctx, hostname, name)` | Remove a package                |
-| `Update(ctx, hostname)`       | Refresh package sources         |
-| `ListUpdates(ctx, hostname)`  | List available package updates  |
+| Method                         | Description                    |
+| ------------------------------ | ------------------------------ |
+| `List(ctx, hostname)`          | List all installed packages    |
+| `Get(ctx, hostname, name)`     | Get a package by name          |
+| `Install(ctx, hostname, name)` | Install a package              |
+| `Remove(ctx, hostname, name)`  | Remove a package               |
+| `Update(ctx, hostname)`        | Refresh package sources        |
+| `ListUpdates(ctx, hostname)`   | List available package updates |
 
 ## Usage
 

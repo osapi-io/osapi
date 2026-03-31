@@ -53,17 +53,19 @@ var clientNodeDiskGetCmd = &cobra.Command{
 			fmt.Println()
 		}
 
+		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			if r.Error != "" {
-				fmt.Println()
-				cli.PrintKV("Hostname", r.Hostname, "Error", r.Error)
+				e := r.Error
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Error:    &e,
+				})
+
 				continue
 			}
 
-			fmt.Println()
-			cli.PrintKV("Hostname", r.Hostname)
-
-			diskRows := make([][]string, 0, len(r.Disks))
 			for _, disk := range r.Disks {
 				usage := ""
 				if disk.Total > 0 {
@@ -71,23 +73,24 @@ var clientNodeDiskGetCmd = &cobra.Command{
 					usage = fmt.Sprintf("%.0f%%", pct)
 				}
 
-				diskRows = append(diskRows, []string{
-					disk.Name,
-					cli.FormatBytes(disk.Total),
-					cli.FormatBytes(disk.Used),
-					cli.FormatBytes(disk.Free),
-					usage,
+				results = append(results, cli.ResultRow{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Fields: []string{
+						disk.Name,
+						cli.FormatBytes(disk.Total),
+						cli.FormatBytes(disk.Used),
+						cli.FormatBytes(disk.Free),
+						usage,
+					},
 				})
 			}
-
-			sections := []cli.Section{
-				{
-					Headers: []string{"MOUNT", "TOTAL", "USED", "FREE", "USAGE"},
-					Rows:    diskRows,
-				},
-			}
-			cli.PrintCompactTable(sections)
 		}
+		headers, rows := cli.BuildBroadcastTable(
+			results,
+			[]string{"MOUNT", "TOTAL", "USED", "FREE", "USAGE"},
+		)
+		cli.PrintCompactTable([]cli.Section{{Headers: headers, Rows: rows}})
 	},
 }
 

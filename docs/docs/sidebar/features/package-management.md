@@ -18,9 +18,9 @@ package commands directly.
 
 ### List and Get
 
-The list operation queries the local package database for all installed packages.
-Each entry includes the package name, version, status, and installed size. The
-get operation fetches a single package by name.
+The list operation queries the local package database for all installed
+packages. Each entry includes the package name, version, status, and installed
+size. The get operation fetches a single package by name.
 
 ### Install
 
