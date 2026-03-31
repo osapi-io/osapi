@@ -5,10 +5,9 @@ sidebar_position: 11
 # NTP Management
 
 OSAPI manages NTP (Network Time Protocol) configuration on target hosts via
-chrony. Configuration is written as a drop-in file under
-`/etc/chrony/conf.d/` and chrony is reloaded to apply changes immediately.
-The file-state KV bucket tracks the SHA-256 of the deployed file so updates
-are idempotent.
+chrony. Configuration is written as a drop-in file under `/etc/chrony/conf.d/`
+and chrony is reloaded to apply changes immediately. The file-state KV bucket
+tracks the SHA-256 of the deployed file so updates are idempotent.
 
 ## How It Works
 
@@ -43,12 +42,12 @@ distribution default.
 
 ## Operations
 
-| Operation | Description                                               |
-| --------- | --------------------------------------------------------- |
-| Get       | Get NTP sync status, stratum, offset, and server list     |
-| Create    | Deploy the drop-in file (fails if already managed)        |
-| Update    | Replace the drop-in file (fails if not managed)           |
-| Delete    | Remove the drop-in file and reload chrony                 |
+| Operation | Description                                           |
+| --------- | ----------------------------------------------------- |
+| Get       | Get NTP sync status, stratum, offset, and server list |
+| Create    | Deploy the drop-in file (fails if already managed)    |
+| Update    | Replace the drop-in file (fails if not managed)       |
+| Delete    | Remove the drop-in file and reload chrony             |
 
 ## CLI Usage
 
@@ -80,8 +79,8 @@ All NTP operations support broadcast targeting. Use `--target _all` to apply
 configuration across every registered agent, or use a label selector like
 `--target group:web` to target a subset.
 
-Responses always include per-host results. The get response includes sync
-status fields per host:
+Responses always include per-host results. The get response includes sync status
+fields per host:
 
 ```
   Job ID: 550e8400-e29b-41d4-a716-446655440000
@@ -95,10 +94,10 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Idempotent Updates
 
-Both create and update compare the new server list against the SHA-256 stored
-in the file-state KV. If the configuration is unchanged, the response returns
-`changed: false` and no filesystem write or chrony reload occurs. It is safe
-to run these operations repeatedly.
+Both create and update compare the new server list against the SHA-256 stored in
+the file-state KV. If the configuration is unchanged, the response returns
+`changed: false` and no filesystem write or chrony reload occurs. It is safe to
+run these operations repeatedly.
 
 ## Supported Platforms
 

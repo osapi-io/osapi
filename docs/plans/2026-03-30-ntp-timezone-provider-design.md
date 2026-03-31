@@ -2,20 +2,19 @@
 
 ## Overview
 
-Add NTP server management and timezone configuration to OSAPI. Two
-separate providers under `provider/node/`, two separate API packages
-under `api/node/`. NTP manages chrony server configuration via
-drop-in files. Timezone reads and sets the system timezone via
-timedatectl.
+Add NTP server management and timezone configuration to OSAPI. Two separate
+providers under `provider/node/`, two separate API packages under `api/node/`.
+NTP manages chrony server configuration via drop-in files. Timezone reads and
+sets the system timezone via timedatectl.
 
 ## NTP Provider
 
 ### Architecture
 
-Direct provider at `internal/provider/node/ntp/`. Manages a chrony
-drop-in config file at `/etc/chrony/sources.d/osapi-ntp.sources`. Reads
-sync status and configured sources via `chronyc` commands. Applies
-changes via `chronyc reload sources`.
+Direct provider at `internal/provider/node/ntp/`. Manages a chrony drop-in
+config file at `/etc/chrony/sources.d/osapi-ntp.sources`. Reads sync status and
+configured sources via `chronyc` commands. Applies changes via
+`chronyc reload sources`.
 
 - **Category**: `node`
 - **Path prefix**: `/node/{hostname}/ntp`
@@ -69,6 +68,7 @@ type DeleteResult struct {
 **Config file**: `/etc/chrony/sources.d/osapi-ntp.sources`
 
 Content format (one server per line):
+
 ```
 server 0.pool.ntp.org iburst
 server 1.pool.ntp.org iburst
@@ -77,71 +77,76 @@ server time.google.com iburst
 
 **Operations:**
 
-- **Get**: Parse `chronyc tracking` for sync state (synchronized,
-  stratum, offset, current source). Parse `chronyc sources` for
-  configured server list. Always succeeds — returns current state
-  regardless of whether osapi manages the config.
-- **Create**: Write the drop-in file with the server list. Fail if
-  the osapi drop-in already exists. Run `chronyc reload sources`.
-- **Update**: Overwrite the drop-in file. Fail if the osapi drop-in
-  does not exist. Idempotent — compare content, skip write if
-  unchanged (`Changed: false`). Run `chronyc reload sources` if
-  changed.
+- **Get**: Parse `chronyc tracking` for sync state (synchronized, stratum,
+  offset, current source). Parse `chronyc sources` for configured server list.
+  Always succeeds — returns current state regardless of whether osapi manages
+  the config.
+- **Create**: Write the drop-in file with the server list. Fail if the osapi
+  drop-in already exists. Run `chronyc reload sources`.
+- **Update**: Overwrite the drop-in file. Fail if the osapi drop-in does not
+  exist. Idempotent — compare content, skip write if unchanged
+  (`Changed: false`). Run `chronyc reload sources` if changed.
 - **Delete**: Remove the drop-in file. Fail if not found. Run
   `chronyc reload sources` to revert to default sources.
 
-**Idempotency**: SHA-based comparison of generated file content,
-same approach as sysctl provider.
+**Idempotency**: SHA-based comparison of generated file content, same approach
+as sysctl provider.
 
 ### Container Behavior
 
-No `DebianDocker` variant needed. NTP is a host-level concern —
-containers inherit the host's time. If the agent runs in a
-container, chronyc is unlikely to be available and operations
-return the standard error.
+No `DebianDocker` variant needed. NTP is a host-level concern — containers
+inherit the host's time. If the agent runs in a container, chronyc is unlikely
+to be available and operations return the standard error.
 
 ### API Endpoints
 
-| Method   | Path                    | Permission  | Description                |
-| -------- | ----------------------- | ----------- | -------------------------- |
-| `GET`    | `/node/{hostname}/ntp`  | `ntp:read`  | Get sync status + servers  |
-| `POST`   | `/node/{hostname}/ntp`  | `ntp:write` | Create managed NTP config  |
-| `PUT`    | `/node/{hostname}/ntp`  | `ntp:write` | Update server list         |
-| `DELETE` | `/node/{hostname}/ntp`  | `ntp:write` | Remove managed config      |
+| Method   | Path                   | Permission  | Description               |
+| -------- | ---------------------- | ----------- | ------------------------- |
+| `GET`    | `/node/{hostname}/ntp` | `ntp:read`  | Get sync status + servers |
+| `POST`   | `/node/{hostname}/ntp` | `ntp:write` | Create managed NTP config |
+| `PUT`    | `/node/{hostname}/ntp` | `ntp:write` | Update server list        |
+| `DELETE` | `/node/{hostname}/ntp` | `ntp:write` | Remove managed config     |
 
 All endpoints support broadcast targeting.
 
 ### Response Shape
 
 GET response:
+
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "synchronized": true,
-    "stratum": 2,
-    "offset": "+0.003s",
-    "current_source": "0.pool.ntp.org",
-    "servers": ["0.pool.ntp.org", "1.pool.ntp.org"]
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "synchronized": true,
+      "stratum": 2,
+      "offset": "+0.003s",
+      "current_source": "0.pool.ntp.org",
+      "servers": ["0.pool.ntp.org", "1.pool.ntp.org"]
+    }
+  ]
 }
 ```
 
 POST/PUT/DELETE response:
+
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "changed": true
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "changed": true
+    }
+  ]
 }
 ```
 
 POST/PUT request body:
+
 ```json
 {
   "servers": ["0.pool.ntp.org", "1.pool.ntp.org", "time.google.com"]
@@ -154,9 +159,8 @@ POST/PUT request body:
 
 ### Architecture
 
-Direct provider at `internal/provider/node/timezone/`. Reads and
-sets the system timezone via `timedatectl`. No config files — this
-is a direct system call.
+Direct provider at `internal/provider/node/timezone/`. Reads and sets the system
+timezone via `timedatectl`. No config files — this is a direct system call.
 
 - **Category**: `node`
 - **Path prefix**: `/node/{hostname}/timezone`
@@ -172,8 +176,8 @@ type Provider interface {
 }
 ```
 
-No Create or Delete — timezone always exists on the system. Only
-GET (read) and PUT (update).
+No Create or Delete — timezone always exists on the system. Only GET (read) and
+PUT (update).
 
 ### Data Types
 
@@ -192,44 +196,47 @@ type UpdateResult struct {
 
 ### Debian Implementation
 
-- **Get**: Run `timedatectl show -p Timezone --value` for timezone
-  name. Run `date +%:z` or parse timedatectl output for UTC offset.
-- **Update**: Run `timedatectl set-timezone <tz>`. Idempotent —
-  read current timezone first, skip if already set
-  (`Changed: false`). Validate timezone name against
-  `/usr/share/zoneinfo/` or `timedatectl list-timezones`.
+- **Get**: Run `timedatectl show -p Timezone --value` for timezone name. Run
+  `date +%:z` or parse timedatectl output for UTC offset.
+- **Update**: Run `timedatectl set-timezone <tz>`. Idempotent — read current
+  timezone first, skip if already set (`Changed: false`). Validate timezone name
+  against `/usr/share/zoneinfo/` or `timedatectl list-timezones`.
 
 ### Container Behavior
 
-No `DebianDocker` variant needed. Containers inherit the host
-timezone. If the agent runs in a container, `timedatectl` may not
-be available — operations return the standard error.
+No `DebianDocker` variant needed. Containers inherit the host timezone. If the
+agent runs in a container, `timedatectl` may not be available — operations
+return the standard error.
 
 ### API Endpoints
 
-| Method | Path                          | Permission       | Description       |
-| ------ | ----------------------------- | ---------------- | ----------------- |
-| `GET`  | `/node/{hostname}/timezone`   | `timezone:read`  | Get timezone      |
-| `PUT`  | `/node/{hostname}/timezone`   | `timezone:write` | Set timezone      |
+| Method | Path                        | Permission       | Description  |
+| ------ | --------------------------- | ---------------- | ------------ |
+| `GET`  | `/node/{hostname}/timezone` | `timezone:read`  | Get timezone |
+| `PUT`  | `/node/{hostname}/timezone` | `timezone:write` | Set timezone |
 
 All endpoints support broadcast targeting.
 
 ### Response Shape
 
 GET response:
+
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "timezone": "America/New_York",
-    "utc_offset": "-04:00"
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "timezone": "America/New_York",
+      "utc_offset": "-04:00"
+    }
+  ]
 }
 ```
 
 PUT request body:
+
 ```json
 {
   "timezone": "America/New_York"
@@ -237,15 +244,18 @@ PUT request body:
 ```
 
 PUT response:
+
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "timezone": "America/New_York",
-    "changed": true
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "timezone": "America/New_York",
+      "changed": true
+    }
+  ]
 }
 ```
 
@@ -253,10 +263,10 @@ PUT response:
 
 ## Platform Implementations
 
-| Provider | Debian         | Darwin         | Linux          |
-| -------- | -------------- | -------------- | -------------- |
-| NTP      | chronyc        | ErrUnsupported | ErrUnsupported |
-| Timezone | timedatectl    | ErrUnsupported | ErrUnsupported |
+| Provider | Debian      | Darwin         | Linux          |
+| -------- | ----------- | -------------- | -------------- |
+| NTP      | chronyc     | ErrUnsupported | ErrUnsupported |
+| Timezone | timedatectl | ErrUnsupported | ErrUnsupported |
 
 ---
 

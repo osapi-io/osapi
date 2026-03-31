@@ -1,8 +1,8 @@
 # Update
 
 Update NTP configuration on a target host. The server list is rewritten to
-`/etc/chrony/conf.d/osapi-ntp.conf` and chrony is reloaded immediately. Fails
-if NTP configuration is not currently managed -- use `create` first:
+`/etc/chrony/conf.d/osapi-ntp.conf` and chrony is reloaded immediately. Fails if
+NTP configuration is not currently managed -- use `create` first:
 
 ```bash
 $ osapi client node ntp update --target web-01 \
@@ -14,8 +14,8 @@ $ osapi client node ntp update --target web-01 \
   web-01    ok      true
 ```
 
-If the server list is already identical, `changed: false` is returned and
-the file is not rewritten:
+If the server list is already identical, `changed: false` is returned and the
+file is not rewritten:
 
 ```bash
 $ osapi client node ntp update --target web-01 \

@@ -1,12 +1,20 @@
 # NTP + Timezone Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add NTP server management (chrony) and timezone configuration (timedatectl) as node providers with full API/CLI/SDK support.
+**Goal:** Add NTP server management (chrony) and timezone configuration
+(timedatectl) as node providers with full API/CLI/SDK support.
 
-**Architecture:** Two independent direct providers under `provider/node/`. NTP manages `/etc/chrony/sources.d/osapi.sources` and reads status via `chronyc`. Timezone reads/sets via `timedatectl`. Both integrate into the node processor, each with its own API package under `api/node/`, SDK service, and CLI commands.
+**Architecture:** Two independent direct providers under `provider/node/`. NTP
+manages `/etc/chrony/sources.d/osapi.sources` and reads status via `chronyc`.
+Timezone reads/sets via `timedatectl`. Both integrate into the node processor,
+each with its own API package under `api/node/`, SDK service, and CLI commands.
 
-**Tech Stack:** Go 1.25, Echo, oapi-codegen (strict-server), NATS JetStream, gomock, testify/suite, avfs
+**Tech Stack:** Go 1.25, Echo, oapi-codegen (strict-server), NATS JetStream,
+gomock, testify/suite, avfs
 
 **Coverage baseline:** 99.9% — must remain at or above this.
 
@@ -132,6 +140,7 @@ CLAUDE.md                             — Update provider list
 ## Task 1: SDK Constants (Operations + Permissions)
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `pkg/sdk/client/permissions.go`
 - Modify: `internal/job/types.go`
@@ -191,6 +200,7 @@ const (
 - [ ] **Step 4: Re-export permissions in internal/authtoken/permissions.go**
 
 Add constants, add to `AllPermissions`, add to `DefaultRolePermissions`:
+
 - `RoleAdmin`: add all four
 - `RoleWrite`: add all four
 - `RoleRead`: add `PermNtpRead` and `PermTimezoneRead` only
@@ -212,6 +222,7 @@ git commit -m "feat(ntp,timezone): add operation and permission constants"
 ## Task 2: NTP Provider Interface + Platform Stubs
 
 **Files:**
+
 - Create: `internal/provider/node/ntp/types.go`
 - Create: `internal/provider/node/ntp/darwin.go`
 - Create: `internal/provider/node/ntp/linux.go`
@@ -272,7 +283,8 @@ type DeleteResult struct {
 
 - [ ] **Step 2: Create darwin.go and linux.go**
 
-Both return `fmt.Errorf("ntp: %w", provider.ErrUnsupported)` for all methods. Follow the sysctl stub pattern exactly. Add license headers.
+Both return `fmt.Errorf("ntp: %w", provider.ErrUnsupported)` for all methods.
+Follow the sysctl stub pattern exactly. Add license headers.
 
 - [ ] **Step 3: Create mocks/generate.go**
 
@@ -301,6 +313,7 @@ git commit -m "feat(ntp): add provider interface and platform stubs"
 ## Task 3: NTP Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/ntp/debian.go`
 - Create: `internal/provider/node/ntp/export_test.go`
 - Create: `internal/provider/node/ntp/debian_public_test.go`
@@ -308,6 +321,7 @@ git commit -m "feat(ntp): add provider interface and platform stubs"
 - Create: `internal/provider/node/ntp/linux_public_test.go`
 
 The Debian NTP provider:
+
 - Writes `/etc/chrony/sources.d/osapi.sources` with server entries
 - Reads status via `chronyc tracking` (parse output for sync state)
 - Reads sources via `chronyc sources` (parse output for server list)
@@ -316,18 +330,21 @@ The Debian NTP provider:
 
 - [ ] **Step 1: Write tests for Darwin and Linux stubs**
 
-Follow the sysctl pattern: one suite per platform, verify all methods return `ErrUnsupported`.
+Follow the sysctl pattern: one suite per platform, verify all methods return
+`ErrUnsupported`.
 
 - [ ] **Step 2: Write failing tests for Debian provider**
 
 Suite: `DebianPublicTestSuite` with mocks for `exec.Manager` and `avfs.VFS`.
 
 **TestGet:**
+
 - success (parse chronyc tracking + sources output)
 - chronyc tracking error
 - chronyc sources error
 
 **TestCreate:**
+
 - success (file doesn't exist, writes it, runs reload)
 - already exists error
 - write error (failfs)
@@ -335,12 +352,14 @@ Suite: `DebianPublicTestSuite` with mocks for `exec.Manager` and `avfs.VFS`.
 - idempotent (same content, Changed: false)
 
 **TestUpdate:**
+
 - success (file exists, overwrites, runs reload)
 - not managed error (file doesn't exist)
 - write error (failfs)
 - idempotent (same content, Changed: false)
 
 **TestDelete:**
+
 - success (file exists, removes it, runs reload)
 - not found error
 - remove error (failfs)
@@ -374,18 +393,26 @@ func NewDebianProvider(
 ```
 
 Key implementation details:
+
 - Config file path: `/etc/chrony/sources.d/osapi.sources`
 - Config content format: `server <addr> iburst\n` per server
-- **Get**: run `chronyc tracking` and parse output for `Leap status`, `Stratum`, `System time` (offset), `Reference ID`. Run `chronyc sources` and parse for server addresses. Return Status struct.
-- **Create**: check if osapi.sources exists → error if yes. Write file. Run `chronyc reload sources`.
-- **Update**: check if osapi.sources exists → error if no. Compare SHA of new content → skip if same. Write file. Run `chronyc reload sources`.
-- **Delete**: check if exists → error if no. Remove file. Run `chronyc reload sources`.
+- **Get**: run `chronyc tracking` and parse output for `Leap status`, `Stratum`,
+  `System time` (offset), `Reference ID`. Run `chronyc sources` and parse for
+  server addresses. Return Status struct.
+- **Create**: check if osapi.sources exists → error if yes. Write file. Run
+  `chronyc reload sources`.
+- **Update**: check if osapi.sources exists → error if no. Compare SHA of new
+  content → skip if same. Write file. Run `chronyc reload sources`.
+- **Delete**: check if exists → error if no. Remove file. Run
+  `chronyc reload sources`.
 
-Read `internal/provider/node/sysctl/debian.go` as the reference for the file write + idempotency pattern.
+Read `internal/provider/node/sysctl/debian.go` as the reference for the file
+write + idempotency pattern.
 
 - [ ] **Step 4: Create export_test.go**
 
-Expose any unexported variables needed for testing (e.g., `marshalJSON` or chronyc command path overrides).
+Expose any unexported variables needed for testing (e.g., `marshalJSON` or
+chronyc command path overrides).
 
 - [ ] **Step 5: Verify all tests pass with 100% coverage**
 
@@ -406,6 +433,7 @@ git commit -m "feat(ntp): implement Debian chrony provider with tests"
 ## Task 4: NTP Agent Processor + Wiring
 
 **Files:**
+
 - Create: `internal/agent/processor_ntp.go`
 - Create: `internal/agent/processor_ntp_public_test.go`
 - Modify: `internal/agent/processor.go` — add ntp provider param + case
@@ -413,7 +441,8 @@ git commit -m "feat(ntp): implement Debian chrony provider with tests"
 
 - [ ] **Step 1: Write processor tests**
 
-Test all operations: ntp.get, ntp.create, ntp.update, ntp.delete, unsupported, nil provider. Follow `processor_sysctl_public_test.go` pattern.
+Test all operations: ntp.get, ntp.create, ntp.update, ntp.delete, unsupported,
+nil provider. Follow `processor_sysctl_public_test.go` pattern.
 
 - [ ] **Step 2: Implement processor_ntp.go**
 
@@ -427,17 +456,21 @@ func processNtpOperation(
 }
 ```
 
-Sub-operations: get (no data), create (unmarshal Config), update (unmarshal Config), delete (no data).
+Sub-operations: get (no data), create (unmarshal Config), update (unmarshal
+Config), delete (no data).
 
 - [ ] **Step 3: Add to node processor**
 
-In `processor.go`, add `ntpProvider ntp.Provider` parameter to `NewNodeProcessor` and add `case "ntp":`.
+In `processor.go`, add `ntpProvider ntp.Provider` parameter to
+`NewNodeProcessor` and add `case "ntp":`.
 
 - [ ] **Step 4: Wire in agent_setup.go**
 
-Create `createNtpProvider` function. Add provider to `NewNodeProcessor` call and `registry.Register` providers list.
+Create `createNtpProvider` function. Add provider to `NewNodeProcessor` call and
+`registry.Register` providers list.
 
-NTP provider needs: logger, fs (avfs.VFS), execManager. No KV needed — it manages files directly like sysctl.
+NTP provider needs: logger, fs (avfs.VFS), execManager. No KV needed — it
+manages files directly like sysctl.
 
 - [ ] **Step 5: Fix existing tests**
 
@@ -461,6 +494,7 @@ git commit -m "feat(ntp): add agent processor and wiring"
 ## Task 5: NTP OpenAPI Spec + API Handlers
 
 **Files:**
+
 - Create: `internal/controller/api/node/ntp/gen/api.yaml`
 - Create: `internal/controller/api/node/ntp/gen/cfg.yaml`
 - Create: `internal/controller/api/node/ntp/gen/generate.go`
@@ -477,15 +511,20 @@ git commit -m "feat(ntp): add agent processor and wiring"
 - [ ] **Step 1: Create OpenAPI spec**
 
 Paths:
+
 - `GET /node/{hostname}/ntp` — operationId: `GetNodeNtp`, security: `ntp:read`
-- `POST /node/{hostname}/ntp` — operationId: `PostNodeNtp`, security: `ntp:write`
+- `POST /node/{hostname}/ntp` — operationId: `PostNodeNtp`, security:
+  `ntp:write`
 - `PUT /node/{hostname}/ntp` — operationId: `PutNodeNtp`, security: `ntp:write`
-- `DELETE /node/{hostname}/ntp` — operationId: `DeleteNodeNtp`, security: `ntp:write`
+- `DELETE /node/{hostname}/ntp` — operationId: `DeleteNodeNtp`, security:
+  `ntp:write`
 
 Schemas:
+
 - `NtpCreateRequest` — required: servers (array of strings)
 - `NtpUpdateRequest` — required: servers (array of strings)
-- `NtpStatusEntry` — hostname (req), status (req, enum ok/failed/skipped), synchronized, stratum, offset, current_source, servers, error
+- `NtpStatusEntry` — hostname (req), status (req, enum ok/failed/skipped),
+  synchronized, stratum, offset, current_source, servers, error
 - `NtpMutationResult` — hostname (req), status (req), changed, error
 - Collection responses wrapping results + job_id
 
@@ -499,7 +538,8 @@ Follow sysctl pattern. Handler struct has JobClient + logger.
 
 - [ ] **Step 4: Implement all handlers with broadcast support**
 
-Follow sysctl handler pattern exactly. Category is `"node"`. Operations are `job.OperationNtpGet`, etc.
+Follow sysctl handler pattern exactly. Category is `"node"`. Operations are
+`job.OperationNtpGet`, etc.
 
 - [ ] **Step 5: Create handler.go (self-registration)**
 
@@ -507,7 +547,8 @@ Follow sysctl handler.go pattern.
 
 - [ ] **Step 6: Write tests for all handlers**
 
-Each handler needs: success, broadcast, skipped, error, not-found (for update/delete), validation (for create/update). Include RBAC HTTP tests.
+Each handler needs: success, broadcast, skipped, error, not-found (for
+update/delete), validation (for create/update). Include RBAC HTTP tests.
 
 - [ ] **Step 7: Wire in controller_setup.go**
 
@@ -534,6 +575,7 @@ git commit -m "feat(ntp): add OpenAPI spec, API handlers, and server wiring"
 ## Task 6: NTP SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/ntp.go`
 - Create: `pkg/sdk/client/ntp_types.go`
 - Create: `pkg/sdk/client/ntp_public_test.go`
@@ -575,7 +617,8 @@ Add gen→SDK conversion functions.
 
 - [ ] **Step 2: Create SDK service**
 
-Methods: `NtpGet`, `NtpCreate`, `NtpUpdate`, `NtpDelete`. Follow sysctl service pattern.
+Methods: `NtpGet`, `NtpCreate`, `NtpUpdate`, `NtpDelete`. Follow sysctl service
+pattern.
 
 - [ ] **Step 3: Wire into osapi.go**
 
@@ -601,6 +644,7 @@ git commit -m "feat(ntp): add SDK service with tests"
 ## Task 7: NTP CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_ntp.go`
 - Create: `cmd/client_node_ntp_get.go`
 - Create: `cmd/client_node_ntp_create.go`
@@ -622,20 +666,19 @@ func init() {
 
 - [ ] **Step 2: Create get command**
 
-No extra flags. Call `sdkClient.Ntp.NtpGet(ctx, host)`.
-Table fields: SYNCHRONIZED, STRATUM, OFFSET, SOURCE, SERVERS.
-Format `Servers` as comma-separated string.
+No extra flags. Call `sdkClient.Ntp.NtpGet(ctx, host)`. Table fields:
+SYNCHRONIZED, STRATUM, OFFSET, SOURCE, SERVERS. Format `Servers` as
+comma-separated string.
 
 - [ ] **Step 3: Create create command**
 
-Flags: `--servers` (required, string slice).
-Call `sdkClient.Ntp.NtpCreate(ctx, host, opts)`.
-Mutation table output.
+Flags: `--servers` (required, string slice). Call
+`sdkClient.Ntp.NtpCreate(ctx, host, opts)`. Mutation table output.
 
 - [ ] **Step 4: Create update command**
 
-Flags: `--servers` (required, string slice).
-Call `sdkClient.Ntp.NtpUpdate(ctx, host, opts)`.
+Flags: `--servers` (required, string slice). Call
+`sdkClient.Ntp.NtpUpdate(ctx, host, opts)`.
 
 - [ ] **Step 5: Create delete command**
 
@@ -655,6 +698,7 @@ git commit -m "feat(ntp): add CLI commands"
 ## Task 8: NTP Docs + Example + Integration Test
 
 **Files:**
+
 - Create: `examples/sdk/client/ntp.go`
 - Create: `test/integration/ntp_test.go`
 - Create: `docs/docs/sidebar/features/ntp.md`
@@ -697,6 +741,7 @@ git commit -m "feat(ntp): add docs, SDK example, and integration tests"
 ## Task 9: Timezone Provider Interface + Platform Stubs
 
 **Files:**
+
 - Create: `internal/provider/node/timezone/types.go`
 - Create: `internal/provider/node/timezone/darwin.go`
 - Create: `internal/provider/node/timezone/linux.go`
@@ -750,6 +795,7 @@ git commit -m "feat(timezone): add provider interface and platform stubs"
 ## Task 10: Timezone Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/timezone/debian.go`
 - Create: `internal/provider/node/timezone/debian_public_test.go`
 - Create: `internal/provider/node/timezone/darwin_public_test.go`
@@ -760,10 +806,12 @@ git commit -m "feat(timezone): add provider interface and platform stubs"
 - [ ] **Step 2: Write Debian tests**
 
 **TestGet:**
+
 - success (parse timedatectl output)
 - timedatectl error
 
 **TestUpdate:**
+
 - success (different timezone, runs timedatectl set-timezone)
 - idempotent (same timezone, Changed: false)
 - timedatectl error
@@ -784,8 +832,10 @@ func NewDebianProvider(
 ) *Debian
 ```
 
-- **Get**: run `timedatectl show -p Timezone --value` for name, `date +%:z` for UTC offset.
-- **Update**: read current timezone first (for idempotency), run `timedatectl set-timezone <tz>` if different.
+- **Get**: run `timedatectl show -p Timezone --value` for name, `date +%:z` for
+  UTC offset.
+- **Update**: read current timezone first (for idempotency), run
+  `timedatectl set-timezone <tz>` if different.
 
 No file management needed — timedatectl handles everything.
 
@@ -801,6 +851,7 @@ git commit -m "feat(timezone): implement Debian timedatectl provider with tests"
 ## Task 11: Timezone Agent Processor + Wiring
 
 **Files:**
+
 - Create: `internal/agent/processor_timezone.go`
 - Create: `internal/agent/processor_timezone_public_test.go`
 - Modify: `internal/agent/processor.go`
@@ -812,11 +863,13 @@ Operations: timezone.get, timezone.update, unsupported, nil provider.
 
 - [ ] **Step 2: Implement processor_timezone.go**
 
-Two sub-operations: get (no data), update (unmarshal `{"timezone": "..."}` from Data).
+Two sub-operations: get (no data), update (unmarshal `{"timezone": "..."}` from
+Data).
 
 - [ ] **Step 3: Add to node processor and agent_setup**
 
-Add `timezoneProvider timezone.Provider` to `NewNodeProcessor`. Add `case "timezone":`.
+Add `timezoneProvider timezone.Provider` to `NewNodeProcessor`. Add
+`case "timezone":`.
 
 Create `createTimezoneProvider` in agent_setup.go. Needs: logger, execManager.
 
@@ -832,6 +885,7 @@ git commit -m "feat(timezone): add agent processor and wiring"
 ## Task 12: Timezone OpenAPI Spec + API Handlers
 
 **Files:**
+
 - Create: `internal/controller/api/node/timezone/gen/...`
 - Create: `internal/controller/api/node/timezone/*.go`
 - Modify: `cmd/controller_setup.go`
@@ -839,19 +893,23 @@ git commit -m "feat(timezone): add agent processor and wiring"
 - [ ] **Step 1: Create OpenAPI spec**
 
 Paths:
+
 - `GET /node/{hostname}/timezone` — `GetNodeTimezone`, security: `timezone:read`
-- `PUT /node/{hostname}/timezone` — `PutNodeTimezone`, security: `timezone:write`
+- `PUT /node/{hostname}/timezone` — `PutNodeTimezone`, security:
+  `timezone:write`
 
 Schemas:
+
 - `TimezoneUpdateRequest` — required: timezone (string, validate: required)
 - `TimezoneEntry` — hostname (req), status (req), timezone, utc_offset, error
-- `TimezoneMutationResult` — hostname (req), status (req), timezone, changed, error
+- `TimezoneMutationResult` — hostname (req), status (req), timezone, changed,
+  error
 - Collection responses
 
 - [ ] **Step 2: Create handlers + handler.go + tests**
 
-Follow NTP handler pattern. Two handlers: get and update.
-Include RBAC HTTP tests.
+Follow NTP handler pattern. Two handlers: get and update. Include RBAC HTTP
+tests.
 
 - [ ] **Step 3: Wire in controller_setup.go**
 
@@ -867,6 +925,7 @@ git commit -m "feat(timezone): add OpenAPI spec, API handlers, and server wiring
 ## Task 13: Timezone SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/timezone.go`
 - Create: `pkg/sdk/client/timezone_types.go`
 - Create: `pkg/sdk/client/timezone_public_test.go`
@@ -875,8 +934,8 @@ git commit -m "feat(timezone): add OpenAPI spec, API handlers, and server wiring
 
 - [ ] **Step 1: Create types, service, wire, test**
 
-Two methods: `TimezoneGet`, `TimezoneUpdate`.
-`TimezoneUpdateOpts` has one field: `Timezone string`.
+Two methods: `TimezoneGet`, `TimezoneUpdate`. `TimezoneUpdateOpts` has one
+field: `Timezone string`.
 
 - [ ] **Step 2: Verify and commit**
 
@@ -890,6 +949,7 @@ git commit -m "feat(timezone): add SDK service with tests"
 ## Task 14: Timezone CLI + Docs
 
 **Files:**
+
 - Create: `cmd/client_node_timezone.go`
 - Create: `cmd/client_node_timezone_get.go`
 - Create: `cmd/client_node_timezone_update.go`
@@ -901,8 +961,7 @@ git commit -m "feat(timezone): add SDK service with tests"
 
 - [ ] **Step 1: Create CLI commands**
 
-Get: table fields TIMEZONE, UTC_OFFSET.
-Update: flags `--timezone` (required).
+Get: table fields TIMEZONE, UTC_OFFSET. Update: flags `--timezone` (required).
 
 - [ ] **Step 2: Create SDK example, integration test, docs**
 
@@ -918,6 +977,7 @@ git commit -m "feat(timezone): add CLI commands, docs, and integration tests"
 ## Task 15: Shared Docs + Regeneration + Final Verification
 
 **Files:**
+
 - Modify: `docs/docusaurus.config.ts`
 - Modify: `docs/docs/sidebar/usage/configuration.md`
 - Modify: `docs/docs/sidebar/features/authentication.md`
@@ -928,6 +988,7 @@ git commit -m "feat(timezone): add CLI commands, docs, and integration tests"
 - [ ] **Step 1: Update shared docs**
 
 Add NTP and timezone to:
+
 - Features navbar dropdown
 - Permissions/roles tables in configuration.md and authentication.md
 - Endpoint table in api-guidelines.md

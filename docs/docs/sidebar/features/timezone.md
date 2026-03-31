@@ -19,20 +19,20 @@ operation compares the current timezone against the requested value and calls
 ### Get
 
 Runs `timedatectl show -p Timezone --value` to read the IANA timezone name
-(e.g., `America/New_York`) and `date +%:z` to read the current UTC offset
-(e.g., `-05:00`).
+(e.g., `America/New_York`) and `date +%:z` to read the current UTC offset (e.g.,
+`-05:00`).
 
 ### Update
 
 Compares the current timezone against the requested value. If they match,
-returns `changed: false`. Otherwise, runs
-`timedatectl set-timezone <timezone>` and returns `changed: true`.
+returns `changed: false`. Otherwise, runs `timedatectl set-timezone <timezone>`
+and returns `changed: true`.
 
 ## Operations
 
-| Operation | Description                                                 |
-| --------- | ----------------------------------------------------------- |
-| Get       | Get the current timezone name and UTC offset                |
+| Operation | Description                                                   |
+| --------- | ------------------------------------------------------------- |
+| Get       | Get the current timezone name and UTC offset                  |
 | Update    | Set the timezone (idempotent, returns changed: false if same) |
 
 ## CLI Usage
@@ -73,8 +73,8 @@ Skipped and failed hosts appear with their error in the output.
 ## Idempotent Updates
 
 The update operation compares the requested timezone against the current value.
-If they match, the response returns `changed: false` and no system call is
-made. It is safe to run this operation repeatedly.
+If they match, the response returns `changed: false` and no system call is made.
+It is safe to run this operation repeatedly.
 
 ## Supported Platforms
 

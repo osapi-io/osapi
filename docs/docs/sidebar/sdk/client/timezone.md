@@ -10,16 +10,16 @@ target hosts via `timedatectl`. Access via `client.Timezone.TimezoneGet()`,
 
 ## Methods
 
-| Method                                 | Description            |
-| -------------------------------------- | ---------------------- |
-| `TimezoneGet(ctx, hostname)`           | Get system timezone    |
-| `TimezoneUpdate(ctx, hostname, opts)`  | Set system timezone    |
+| Method                                | Description         |
+| ------------------------------------- | ------------------- |
+| `TimezoneGet(ctx, hostname)`          | Get system timezone |
+| `TimezoneUpdate(ctx, hostname, opts)` | Set system timezone |
 
 ## Request Types
 
-| Type                 | Fields               |
-| -------------------- | -------------------- |
-| `TimezoneUpdateOpts` | Timezone (required)  |
+| Type                 | Fields              |
+| -------------------- | ------------------- |
+| `TimezoneUpdateOpts` | Timezone (required) |
 
 ## Usage
 
@@ -47,20 +47,20 @@ for _, r := range resp.Data.Results {
 
 ### TimezoneResult
 
-| Field     | Type   | Description                    |
-| --------- | ------ | ------------------------------ |
-| Hostname  | string | Agent hostname                 |
-| Status    | string | ok, failed, or skipped         |
-| Timezone  | string | IANA timezone name             |
-| UTCOffset | string | UTC offset (e.g., "-05:00")    |
+| Field     | Type   | Description                      |
+| --------- | ------ | -------------------------------- |
+| Hostname  | string | Agent hostname                   |
+| Status    | string | ok, failed, or skipped           |
+| Timezone  | string | IANA timezone name               |
+| UTCOffset | string | UTC offset (e.g., "-05:00")      |
 | Error     | string | Error message (empty on success) |
 
 ### TimezoneMutationResult
 
-| Field    | Type   | Description                    |
-| -------- | ------ | ------------------------------ |
-| Hostname | string | Agent hostname                 |
-| Status   | string | ok, failed, or skipped         |
-| Timezone | string | Timezone that was set          |
-| Changed  | bool   | Whether state was modified     |
+| Field    | Type   | Description                      |
+| -------- | ------ | -------------------------------- |
+| Hostname | string | Agent hostname                   |
+| Status   | string | ok, failed, or skipped           |
+| Timezone | string | Timezone that was set            |
+| Changed  | bool   | Whether state was modified       |
 | Error    | string | Error message (empty on success) |

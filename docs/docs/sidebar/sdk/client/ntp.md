@@ -4,25 +4,25 @@ sidebar_position: 10
 
 # NTP Service
 
-The `NTPService` provides methods for managing NTP configuration on target
-hosts via chrony drop-in files. Access via `client.NTP.NtpGet()`,
+The `NTPService` provides methods for managing NTP configuration on target hosts
+via chrony drop-in files. Access via `client.NTP.NtpGet()`,
 `client.NTP.NtpCreate()`, etc.
 
 ## Methods
 
-| Method                             | Description                        |
-| ---------------------------------- | ---------------------------------- |
-| `NtpGet(ctx, hostname)`            | Get NTP sync status and server list |
-| `NtpCreate(ctx, hostname, opts)`   | Create NTP configuration           |
-| `NtpUpdate(ctx, hostname, opts)`   | Update NTP configuration           |
-| `NtpDelete(ctx, hostname)`         | Delete NTP configuration           |
+| Method                           | Description                         |
+| -------------------------------- | ----------------------------------- |
+| `NtpGet(ctx, hostname)`          | Get NTP sync status and server list |
+| `NtpCreate(ctx, hostname, opts)` | Create NTP configuration            |
+| `NtpUpdate(ctx, hostname, opts)` | Update NTP configuration            |
+| `NtpDelete(ctx, hostname)`       | Delete NTP configuration            |
 
 ## Request Types
 
-| Type            | Fields                    |
-| --------------- | ------------------------- |
-| `NtpCreateOpts` | Servers (required)        |
-| `NtpUpdateOpts` | Servers (required)        |
+| Type            | Fields             |
+| --------------- | ------------------ |
+| `NtpCreateOpts` | Servers (required) |
+| `NtpUpdateOpts` | Servers (required) |
 
 ## Usage
 
@@ -63,6 +63,6 @@ resp, err := c.NTP.NtpDelete(ctx, "web-01")
 | Get                    | `ntp:read`  |
 | Create, Update, Delete | `ntp:write` |
 
-NTP management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
+NTP management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
+On unsupported platforms (Darwin, generic Linux), operations return
 `status: skipped`.

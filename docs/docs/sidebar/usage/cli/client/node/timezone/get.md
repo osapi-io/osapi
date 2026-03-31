@@ -10,10 +10,10 @@ osapi client node timezone get [flags]
 
 ## Flags
 
-| Flag       | Type   | Default | Description                            |
-| ---------- | ------ | ------- | -------------------------------------- |
+| Flag       | Type   | Default | Description                                |
+| ---------- | ------ | ------- | ------------------------------------------ |
 | `--target` | string | `_any`  | Target hostname, `_all`, or label selector |
-| `--json`   | bool   | `false` | Output raw JSON response               |
+| `--json`   | bool   | `false` | Output raw JSON response                   |
 
 ## Examples
 

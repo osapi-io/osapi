@@ -1,9 +1,8 @@
 # Create
 
 Create NTP configuration on a target host. The server list is written to
-`/etc/chrony/conf.d/osapi-ntp.conf` and chrony is reloaded immediately. Fails
-if NTP configuration is already managed -- use `update` to change the server
-list:
+`/etc/chrony/conf.d/osapi-ntp.conf` and chrony is reloaded immediately. Fails if
+NTP configuration is already managed -- use `update` to change the server list:
 
 ```bash
 $ osapi client node ntp create --target web-01 \
