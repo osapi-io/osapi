@@ -236,12 +236,16 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackage() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`[{"name":"curl","version":"7.68.0","status":"installed"}]`),
+								Data: json.RawMessage(
+									`[{"name":"curl","version":"7.68.0","status":"installed"}]`,
+								),
 							},
 							"server2": {
 								Hostname: "server2",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`[{"name":"wget","version":"1.20","status":"installed"}]`),
+								Data: json.RawMessage(
+									`[{"name":"wget","version":"1.20","status":"installed"}]`,
+								),
 							},
 						},
 						nil,
@@ -274,7 +278,9 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackage() {
 							"server1": {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
-								Data:     json.RawMessage(`[{"name":"curl","version":"7.68.0","status":"installed"}]`),
+								Data: json.RawMessage(
+									`[{"name":"curl","version":"7.68.0","status":"installed"}]`,
+								),
 							},
 							"server2": {
 								Status:   job.StatusFailed,

@@ -346,7 +346,9 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByNameValidationHTTP() {
 						map[string]string{"name": "curl"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"name":"curl","version":"7.68.0","status":"installed"}`),
+						Data: json.RawMessage(
+							`{"name":"curl","version":"7.68.0","status":"installed"}`,
+						),
 					}, nil)
 				return mock
 			},
@@ -446,7 +448,9 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByNameRBACHTTP() {
 						map[string]string{"name": "curl"}).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
-						Data:     json.RawMessage(`{"name":"curl","version":"7.68.0","status":"installed"}`),
+						Data: json.RawMessage(
+							`{"name":"curl","version":"7.68.0","status":"installed"}`,
+						),
 					}, nil)
 				return mock
 			},

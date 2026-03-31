@@ -273,7 +273,9 @@ func (s *ProcessorPackagePublicTestSuite) TestProcessPackageGet() {
 			},
 			setupMock: func() apt.Provider {
 				m := aptMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Get(gomock.Any(), "nonexistent").Return(nil, errors.New("package not found"))
+				m.EXPECT().
+					Get(gomock.Any(), "nonexistent").
+					Return(nil, errors.New("package not found"))
 				return m
 			},
 			expectError: true,
