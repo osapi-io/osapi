@@ -2,24 +2,23 @@
 
 ## Overview
 
-Add SSH authorized key management to OSAPI. List, add, and remove
-SSH public keys in a user's `~/.ssh/authorized_keys` file. Extends
-the existing user provider — no new provider package or
-permissions. Manages any key regardless of who added it.
+Add SSH authorized key management to OSAPI. List, add, and remove SSH public
+keys in a user's `~/.ssh/authorized_keys` file. Extends the existing user
+provider — no new provider package or permissions. Manages any key regardless of
+who added it.
 
 ## Architecture
 
-Extends the existing user provider at
-`internal/provider/node/user/`.
+Extends the existing user provider at `internal/provider/node/user/`.
 
 - **Category**: `node`
 - **Path prefix**: `/node/{hostname}/user/{name}/ssh-key`
 - **Permissions**: `user:read` (list), `user:write` (add, remove)
 - **Provider type**: direct-write (avfs.VFS)
 
-No state tracking, no file.Deployer. The provider reads and
-writes `authorized_keys` directly. The orchestrator is
-responsible for desired-state management.
+No state tracking, no file.Deployer. The provider reads and writes
+`authorized_keys` directly. The orchestrator is responsible for desired-state
+management.
 
 ## Provider Interface Additions
 
@@ -47,22 +46,19 @@ type SSHKeyResult struct {
 
 ## Debian Implementation
 
-The provider resolves the user's home directory from
-`/etc/passwd` (already parsed by the user provider), then
-operates on `~/.ssh/authorized_keys`.
+The provider resolves the user's home directory from `/etc/passwd` (already
+parsed by the user provider), then operates on `~/.ssh/authorized_keys`.
 
-- **ListKeys**: Read `authorized_keys`, parse each non-empty,
-  non-comment line into type + base64 key + comment. Compute
-  SHA256 fingerprint from decoded key bytes. Return all entries.
-- **AddKey**: Check if key already exists by fingerprint. If
-  present, return `changed: false`. Otherwise append the raw
-  public key line. Create `~/.ssh/` (mode `0700`) and
-  `authorized_keys` (mode `0600`) if they don't exist. Set
-  ownership to the target user via `exec.Manager`
-  (`chown user:user`).
-- **RemoveKey**: Read file, filter out the line matching the
-  fingerprint, rewrite file. Return `changed: false` if
-  fingerprint not found. Return error if file doesn't exist.
+- **ListKeys**: Read `authorized_keys`, parse each non-empty, non-comment line
+  into type + base64 key + comment. Compute SHA256 fingerprint from decoded key
+  bytes. Return all entries.
+- **AddKey**: Check if key already exists by fingerprint. If present, return
+  `changed: false`. Otherwise append the raw public key line. Create `~/.ssh/`
+  (mode `0700`) and `authorized_keys` (mode `0600`) if they don't exist. Set
+  ownership to the target user via `exec.Manager` (`chown user:user`).
+- **RemoveKey**: Read file, filter out the line matching the fingerprint,
+  rewrite file. Return `changed: false` if fingerprint not found. Return error
+  if file doesn't exist.
 
 ## Platform Implementations
 
@@ -94,25 +90,26 @@ All endpoints support broadcast targeting.
 }
 ```
 
-The full public key line as it would appear in
-`authorized_keys`.
+The full public key line as it would appear in `authorized_keys`.
 
 ### Response Shape (List)
 
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "keys": [
-      {
-        "type": "ssh-ed25519",
-        "fingerprint": "SHA256:abc123...",
-        "comment": "john@laptop"
-      }
-    ]
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "keys": [
+        {
+          "type": "ssh-ed25519",
+          "fingerprint": "SHA256:abc123...",
+          "comment": "john@laptop"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -121,11 +118,13 @@ The full public key line as it would appear in
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "changed": true
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "changed": true
+    }
+  ]
 }
 ```
 
@@ -137,8 +136,7 @@ client.User.AddKey(ctx, host, username, opts)
 client.User.RemoveKey(ctx, host, username, fingerprint)
 ```
 
-`SSHKeyAddOpts` struct with `Key` field (the full public key
-string).
+`SSHKeyAddOpts` struct with `Key` field (the full public key string).
 
 ## CLI
 

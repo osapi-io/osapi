@@ -8,16 +8,16 @@ User account management on target hosts.
 
 ## Methods
 
-| Method                                          | Description                    |
-| ----------------------------------------------- | ------------------------------ |
-| `List(ctx, hostname)`                           | List all user accounts         |
-| `Get(ctx, hostname, name)`                      | Get a user by name             |
-| `Create(ctx, hostname, opts)`                   | Create a user account          |
-| `Update(ctx, hostname, name, opts)`             | Update a user account          |
-| `Delete(ctx, hostname, name)`                   | Delete a user account          |
-| `ChangePassword(ctx, hostname, name, password)` | Change a user's password       |
-| `ListKeys(ctx, hostname, name)`                 | List SSH authorized keys       |
-| `AddKey(ctx, hostname, name, opts)`             | Add an SSH authorized key      |
+| Method                                          | Description                      |
+| ----------------------------------------------- | -------------------------------- |
+| `List(ctx, hostname)`                           | List all user accounts           |
+| `Get(ctx, hostname, name)`                      | Get a user by name               |
+| `Create(ctx, hostname, opts)`                   | Create a user account            |
+| `Update(ctx, hostname, name, opts)`             | Update a user account            |
+| `Delete(ctx, hostname, name)`                   | Delete a user account            |
+| `ChangePassword(ctx, hostname, name, password)` | Change a user's password         |
+| `ListKeys(ctx, hostname, name)`                 | List SSH authorized keys         |
+| `AddKey(ctx, hostname, name, opts)`             | Add an SSH authorized key        |
 | `RemoveKey(ctx, hostname, name, fingerprint)`   | Remove an SSH key by fingerprint |
 
 ## Usage
@@ -84,34 +84,34 @@ for a complete working example.
 
 ### `SSHKeyInfoResult`
 
-| Field      | Type          | Description                    |
-| ---------- | ------------- | ------------------------------ |
-| `Hostname` | `string`      | Target hostname                |
-| `Status`   | `string`      | Operation status               |
-| `Keys`     | `[]SSHKeyInfo`| List of authorized keys        |
-| `Error`    | `string`      | Error message (if any)         |
+| Field      | Type           | Description             |
+| ---------- | -------------- | ----------------------- |
+| `Hostname` | `string`       | Target hostname         |
+| `Status`   | `string`       | Operation status        |
+| `Keys`     | `[]SSHKeyInfo` | List of authorized keys |
+| `Error`    | `string`       | Error message (if any)  |
 
 ### `SSHKeyInfo`
 
-| Field         | Type     | Description                     |
-| ------------- | -------- | ------------------------------- |
-| `Type`        | `string` | Key type (e.g., `ssh-ed25519`)  |
-| `Fingerprint` | `string` | SHA256 fingerprint              |
-| `Comment`     | `string` | Key comment                     |
+| Field         | Type     | Description                    |
+| ------------- | -------- | ------------------------------ |
+| `Type`        | `string` | Key type (e.g., `ssh-ed25519`) |
+| `Fingerprint` | `string` | SHA256 fingerprint             |
+| `Comment`     | `string` | Key comment                    |
 
 ### `SSHKeyMutationResult`
 
-| Field      | Type     | Description                    |
-| ---------- | -------- | ------------------------------ |
-| `Hostname` | `string` | Target hostname                |
-| `Status`   | `string` | Operation status               |
+| Field      | Type     | Description                         |
+| ---------- | -------- | ----------------------------------- |
+| `Hostname` | `string` | Target hostname                     |
+| `Status`   | `string` | Operation status                    |
 | `Changed`  | `bool`   | Whether the operation changed state |
-| `Error`    | `string` | Error message (if any)         |
+| `Error`    | `string` | Error message (if any)              |
 
 ### `SSHKeyAddOpts`
 
-| Field | Type     | Description                                           |
-| ----- | -------- | ----------------------------------------------------- |
+| Field | Type     | Description                                            |
+| ----- | -------- | ------------------------------------------------------ |
 | `Key` | `string` | Full SSH public key line (e.g., `ssh-ed25519 AAAA...`) |
 
 ## Permissions

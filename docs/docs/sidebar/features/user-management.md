@@ -38,9 +38,9 @@ SSH key operations manage the `~/.ssh/authorized_keys` file for a given user:
   duplicate keys are not added)
 - **RemoveKey** -- remove a key by its SHA256 fingerprint
 
-The provider reads and writes the user's `~/.ssh/authorized_keys` file
-directly. It creates the `~/.ssh` directory and `authorized_keys` file with
-correct permissions (`700` and `600`) if they do not exist.
+The provider reads and writes the user's `~/.ssh/authorized_keys` file directly.
+It creates the `~/.ssh` directory and `authorized_keys` file with correct
+permissions (`700` and `600`) if they do not exist.
 
 ### Groups
 

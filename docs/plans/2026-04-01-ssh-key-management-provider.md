@@ -2,22 +2,21 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add SSH authorized key management to OSAPI — list, add,
-and remove SSH public keys in a user's `~/.ssh/authorized_keys`
-file by extending the existing user provider.
+**Goal:** Add SSH authorized key management to OSAPI — list, add, and remove SSH
+public keys in a user's `~/.ssh/authorized_keys` file by extending the existing
+user provider.
 
-**Architecture:** Extends `internal/provider/node/user/` with three
-new methods (ListKeys, AddKey, RemoveKey). New SSH key endpoints
-added to the existing user OpenAPI spec. Operations dispatched via
-a new `sshKey` case in the node processor. Reuses existing
-`user:read`/`user:write` permissions. No new provider package,
-agent category, or permissions needed.
+**Architecture:** Extends `internal/provider/node/user/` with three new methods
+(ListKeys, AddKey, RemoveKey). New SSH key endpoints added to the existing user
+OpenAPI spec. Operations dispatched via a new `sshKey` case in the node
+processor. Reuses existing `user:read`/`user:write` permissions. No new provider
+package, agent category, or permissions needed.
 
-**Tech Stack:** Go, avfs.VFS, crypto/sha256 for fingerprints,
-encoding/base64 for key decoding, oapi-codegen strict-server
+**Tech Stack:** Go, avfs.VFS, crypto/sha256 for fingerprints, encoding/base64
+for key decoding, oapi-codegen strict-server
 
 ---
 
@@ -25,97 +24,72 @@ encoding/base64 for key decoding, oapi-codegen strict-server
 
 ### Provider Layer
 
-- Modify: `internal/provider/node/user/types.go` — add SSHKey,
-  SSHKeyResult types + 3 methods to Provider interface
+- Modify: `internal/provider/node/user/types.go` — add SSHKey, SSHKeyResult
+  types + 3 methods to Provider interface
 - Create: `internal/provider/node/user/debian_ssh_key.go` — Debian
   implementation (list/add/remove authorized_keys)
-- Modify: `internal/provider/node/user/darwin.go` — add 3 stub
-  methods
-- Modify: `internal/provider/node/user/linux.go` — add 3 stub
-  methods
+- Modify: `internal/provider/node/user/darwin.go` — add 3 stub methods
+- Modify: `internal/provider/node/user/linux.go` — add 3 stub methods
 - Test: `internal/provider/node/user/debian_ssh_key_public_test.go`
-- Modify: `internal/provider/node/user/darwin_public_test.go` — add
-  stub tests
-- Modify: `internal/provider/node/user/linux_public_test.go` — add
-  stub tests
+- Modify: `internal/provider/node/user/darwin_public_test.go` — add stub tests
+- Modify: `internal/provider/node/user/linux_public_test.go` — add stub tests
 
 ### Agent Layer
 
-- Create: `internal/agent/processor_ssh_key.go` — SSH key operation
-  dispatcher
-- Modify: `internal/agent/processor.go` — add `sshKey` case to
-  NewNodeProcessor
+- Create: `internal/agent/processor_ssh_key.go` — SSH key operation dispatcher
+- Modify: `internal/agent/processor.go` — add `sshKey` case to NewNodeProcessor
 - Test: `internal/agent/processor_ssh_key_public_test.go`
 
 ### Operations
 
-- Modify: `pkg/sdk/client/operations.go` — add SSH key operation
-  constants
+- Modify: `pkg/sdk/client/operations.go` — add SSH key operation constants
 - Modify: `internal/job/types.go` — add SSH key operation aliases
 
 ### API Layer
 
-- Modify: `internal/controller/api/node/user/gen/api.yaml` — add
-  3 ssh-key endpoints + schemas
-- Create:
-  `internal/controller/api/node/user/ssh_key_list_get.go` — list
+- Modify: `internal/controller/api/node/user/gen/api.yaml` — add 3 ssh-key
+  endpoints + schemas
+- Create: `internal/controller/api/node/user/ssh_key_list_get.go` — list handler
+- Create: `internal/controller/api/node/user/ssh_key_add_post.go` — add handler
+- Create: `internal/controller/api/node/user/ssh_key_remove_delete.go` — remove
   handler
-- Create:
-  `internal/controller/api/node/user/ssh_key_add_post.go` — add
-  handler
-- Create:
-  `internal/controller/api/node/user/ssh_key_remove_delete.go` —
-  remove handler
-- Test:
-  `internal/controller/api/node/user/ssh_key_list_get_public_test.go`
-- Test:
-  `internal/controller/api/node/user/ssh_key_add_post_public_test.go`
-- Test:
-  `internal/controller/api/node/user/ssh_key_remove_delete_public_test.go`
+- Test: `internal/controller/api/node/user/ssh_key_list_get_public_test.go`
+- Test: `internal/controller/api/node/user/ssh_key_add_post_public_test.go`
+- Test: `internal/controller/api/node/user/ssh_key_remove_delete_public_test.go`
 
 ### SDK Layer
 
-- Modify: `pkg/sdk/client/user.go` — add ListKeys, AddKey,
-  RemoveKey methods
-- Modify: `pkg/sdk/client/user_types.go` — add SSHKey result
-  types + conversions
+- Modify: `pkg/sdk/client/user.go` — add ListKeys, AddKey, RemoveKey methods
+- Modify: `pkg/sdk/client/user_types.go` — add SSHKey result types + conversions
 - Modify: `pkg/sdk/client/user_public_test.go` — add tests
-- Modify: `pkg/sdk/client/user_types_public_test.go` — add
-  conversion tests
+- Modify: `pkg/sdk/client/user_types_public_test.go` — add conversion tests
 
 ### CLI Layer
 
 - Create: `cmd/client_node_user_ssh_key.go` — parent command
-- Create: `cmd/client_node_user_ssh_key_list.go` — list
-  subcommand
+- Create: `cmd/client_node_user_ssh_key_list.go` — list subcommand
 - Create: `cmd/client_node_user_ssh_key_add.go` — add subcommand
-- Create: `cmd/client_node_user_ssh_key_remove.go` — remove
-  subcommand
+- Create: `cmd/client_node_user_ssh_key_remove.go` — remove subcommand
 
 ### Documentation
 
-- Modify: `docs/docs/sidebar/features/user-management.md` — add
-  SSH key section
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/user/ssh-key.md` — CLI
+- Modify: `docs/docs/sidebar/features/user-management.md` — add SSH key section
+- Create: `docs/docs/sidebar/usage/cli/client/node/user/ssh-key.md` — CLI
   landing
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-list.md`
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-add.md`
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-remove.md`
-- Modify: `docs/docs/sidebar/sdk/client/management/user.md` — add
-  SSH key methods
+- Create: `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-list.md`
+- Create: `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-add.md`
+- Create: `docs/docs/sidebar/usage/cli/client/node/user/ssh-key-remove.md`
+- Modify: `docs/docs/sidebar/sdk/client/management/user.md` — add SSH key
+  methods
 - Modify: `examples/sdk/client/user.go` — add SSH key demo
-- Modify: `docs/docs/sidebar/architecture/api-guidelines.md` — add
-  endpoints
+- Modify: `docs/docs/sidebar/architecture/api-guidelines.md` — add endpoints
 
 ---
 
 ### Task 1: Provider Types and Stubs
 
 **Files:**
+
 - Modify: `internal/provider/node/user/types.go`
 - Modify: `internal/provider/node/user/darwin.go`
 - Modify: `internal/provider/node/user/linux.go`
@@ -187,9 +161,8 @@ func (d *Darwin) RemoveKey(
 
 - [ ] **Step 3: Add stub tests**
 
-Add test cases to the existing test tables in
-`darwin_public_test.go` and `linux_public_test.go` for
-ListKeys, AddKey, and RemoveKey all returning
+Add test cases to the existing test tables in `darwin_public_test.go` and
+`linux_public_test.go` for ListKeys, AddKey, and RemoveKey all returning
 ErrUnsupported.
 
 - [ ] **Step 4: Regenerate mocks**
@@ -198,8 +171,8 @@ Run: `go generate ./internal/provider/node/user/mocks/...`
 
 - [ ] **Step 5: Run tests**
 
-Run: `go test -v ./internal/provider/node/user/...`
-Expected: all pass, new stub tests included
+Run: `go test -v ./internal/provider/node/user/...` Expected: all pass, new stub
+tests included
 
 - [ ] **Step 6: Commit**
 
@@ -213,23 +186,26 @@ git commit -m "feat(user): add SSH key types and platform stubs"
 ### Task 2: Debian SSH Key Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/user/debian_ssh_key.go`
 - Test: `internal/provider/node/user/debian_ssh_key_public_test.go`
 
 - [ ] **Step 1: Write tests**
 
-Create `debian_ssh_key_public_test.go` with testify/suite.
-Use `memfs.New()` for filesystem and gomock for exec.Manager.
+Create `debian_ssh_key_public_test.go` with testify/suite. Use `memfs.New()` for
+filesystem and gomock for exec.Manager.
 
 Set up a memfs with `/etc/passwd` containing:
+
 ```
 root:x:0:0:root:/root:/bin/bash
 john:x:1000:1000:John:/home/john:/bin/bash
 ```
 
 **TestListKeys** — table-driven:
+
 - success (authorized_keys with 2 keys, verify type + fingerprint
-  + comment)
+  - comment)
 - user not found in /etc/passwd → error
 - no authorized_keys file → empty list, no error
 - empty authorized_keys → empty list
@@ -237,6 +213,7 @@ john:x:1000:1000:John:/home/john:/bin/bash
 - malformed key line skipped (logged as debug)
 
 **TestAddKey** — table-driven:
+
 - success (creates .ssh dir + file, appends key)
 - key already exists (same fingerprint) → changed: false
 - user not found → error
@@ -245,6 +222,7 @@ john:x:1000:1000:John:/home/john:/bin/bash
 - appends to existing file
 
 **TestRemoveKey** — table-driven:
+
 - success (rewrites file without matching key)
 - fingerprint not found → changed: false
 - user not found → error
@@ -520,8 +498,8 @@ func fingerprintFromLine(
 }
 ```
 
-**IMPORTANT**: The SSHKey type needs a `RawLine` field to store
-the full public key string for AddKey. Update the types:
+**IMPORTANT**: The SSHKey type needs a `RawLine` field to store the full public
+key string for AddKey. Update the types:
 
 ```go
 type SSHKey struct {
@@ -532,16 +510,14 @@ type SSHKey struct {
 }
 ```
 
-The API handler populates `RawLine` from the POST body's `key`
-field. The provider uses `RawLine` to append to
-`authorized_keys`. ListKeys does NOT populate `RawLine` (we
-don't expose raw key data in list responses — just type,
+The API handler populates `RawLine` from the POST body's `key` field. The
+provider uses `RawLine` to append to `authorized_keys`. ListKeys does NOT
+populate `RawLine` (we don't expose raw key data in list responses — just type,
 fingerprint, comment).
 
 - [ ] **Step 3: Run tests**
 
-Run: `go test -v ./internal/provider/node/user/...`
-Expected: all pass
+Run: `go test -v ./internal/provider/node/user/...` Expected: all pass
 
 - [ ] **Step 4: Verify 100% coverage on new file**
 
@@ -566,6 +542,7 @@ git commit -m "feat(user): add SSH key management to debian provider"
 ### Task 3: Operations and Agent Processor
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `internal/job/types.go`
 - Create: `internal/agent/processor_ssh_key.go`
@@ -598,26 +575,30 @@ const (
 
 - [ ] **Step 2: Write processor tests**
 
-Create `internal/agent/processor_ssh_key_public_test.go`.
-The processor dispatches to the existing `userProvider` (same
-as user/group operations). Test via `NewNodeProcessor`.
+Create `internal/agent/processor_ssh_key_public_test.go`. The processor
+dispatches to the existing `userProvider` (same as user/group operations). Test
+via `NewNodeProcessor`.
 
 **TestProcessSSHKeyOperation** — dispatch-level table:
+
 - nil user provider → error
 - invalid operation format
 - unsupported sub-operation
 
 **TestProcessSSHKeyList** — table-driven:
+
 - success (returns keys)
 - unmarshal error (invalid JSON)
 - provider error
 
 **TestProcessSSHKeyAdd** — table-driven:
+
 - success
 - unmarshal error
 - provider error
 
 **TestProcessSSHKeyRemove** — table-driven:
+
 - success
 - unmarshal error
 - provider error
@@ -665,14 +646,12 @@ func processSshKeyOperation(
 }
 ```
 
-Each sub-handler unmarshals username (and key data for add,
-fingerprint for remove) from `jobRequest.Data`, calls the
-provider, and marshals the result.
+Each sub-handler unmarshals username (and key data for add, fingerprint for
+remove) from `jobRequest.Data`, calls the provider, and marshals the result.
 
 - [ ] **Step 4: Wire into node processor**
 
-In `internal/agent/processor.go`, add case to the
-`NewNodeProcessor` switch:
+In `internal/agent/processor.go`, add case to the `NewNodeProcessor` switch:
 
 ```go
 		case "sshKey":
@@ -707,202 +686,202 @@ git commit -m "feat(user): add SSH key operations and agent processor"
 ### Task 4: OpenAPI Spec Update and Code Generation
 
 **Files:**
+
 - Modify: `internal/controller/api/node/user/gen/api.yaml`
 
 - [ ] **Step 1: Add endpoints to existing user OpenAPI spec**
 
-Add to `internal/controller/api/node/user/gen/api.yaml` after
-the password endpoint section:
+Add to `internal/controller/api/node/user/gen/api.yaml` after the password
+endpoint section:
 
 ```yaml
-  # -- SSH Key management ------------------------------------------------
+# -- SSH Key management ------------------------------------------------
 
-  /node/{hostname}/user/{name}/ssh-key:
-    get:
-      summary: List SSH authorized keys
-      description: >
-        List SSH authorized keys for a user on the target node.
-      tags:
-        - user_operations
-      operationId: GetNodeUserSshKey
-      security:
-        - BearerAuth:
-            - user:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      responses:
-        '200':
-          description: List of SSH authorized keys.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SSHKeyCollectionResponse'
-        '401': ...
-        '403': ...
-        '500': ...
-
-    post:
-      summary: Add SSH authorized key
-      description: >
-        Add an SSH authorized key for a user on the target node.
-      tags:
-        - user_operations
-      operationId: PostNodeUserSshKey
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      requestBody:
-        required: true
+/node/{hostname}/user/{name}/ssh-key:
+  get:
+    summary: List SSH authorized keys
+    description: >
+      List SSH authorized keys for a user on the target node.
+    tags:
+      - user_operations
+    operationId: GetNodeUserSshKey
+    security:
+      - BearerAuth:
+          - user:read
+    parameters:
+      - $ref: '#/components/parameters/Hostname'
+      - $ref: '#/components/parameters/UserName'
+    responses:
+      '200':
+        description: List of SSH authorized keys.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SSHKeyAddRequest'
-      responses:
-        '200':
-          description: Key added.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SSHKeyMutationResponse'
-        '400': ...
-        '401': ...
-        '403': ...
-        '500': ...
+              $ref: '#/components/schemas/SSHKeyCollectionResponse'
+      '401': ...
+      '403': ...
+      '500': ...
 
-  /node/{hostname}/user/{name}/ssh-key/{fingerprint}:
-    delete:
-      summary: Remove SSH authorized key
-      description: >
-        Remove an SSH authorized key by fingerprint.
-      tags:
-        - user_operations
-      operationId: DeleteNodeUserSshKey
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-        - $ref: '#/components/parameters/SSHKeyFingerprint'
-      responses:
-        '200':
-          description: Key removed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SSHKeyMutationResponse'
-        '401': ...
-        '403': ...
-        '500': ...
+  post:
+    summary: Add SSH authorized key
+    description: >
+      Add an SSH authorized key for a user on the target node.
+    tags:
+      - user_operations
+    operationId: PostNodeUserSshKey
+    security:
+      - BearerAuth:
+          - user:write
+    parameters:
+      - $ref: '#/components/parameters/Hostname'
+      - $ref: '#/components/parameters/UserName'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SSHKeyAddRequest'
+    responses:
+      '200':
+        description: Key added.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSHKeyMutationResponse'
+      '400': ...
+      '401': ...
+      '403': ...
+      '500': ...
+
+/node/{hostname}/user/{name}/ssh-key/{fingerprint}:
+  delete:
+    summary: Remove SSH authorized key
+    description: >
+      Remove an SSH authorized key by fingerprint.
+    tags:
+      - user_operations
+    operationId: DeleteNodeUserSshKey
+    security:
+      - BearerAuth:
+          - user:write
+    parameters:
+      - $ref: '#/components/parameters/Hostname'
+      - $ref: '#/components/parameters/UserName'
+      - $ref: '#/components/parameters/SSHKeyFingerprint'
+    responses:
+      '200':
+        description: Key removed.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSHKeyMutationResponse'
+      '401': ...
+      '403': ...
+      '500': ...
 ```
 
 Add schemas:
 
 ```yaml
-    SSHKeyAddRequest:
-      type: object
-      required:
-        - key
-      properties:
-        key:
-          type: string
-          description: >
-            Full SSH public key line (e.g.,
-            "ssh-ed25519 AAAA... user@host").
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
+SSHKeyAddRequest:
+  type: object
+  required:
+    - key
+  properties:
+    key:
+      type: string
+      description: >
+        Full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
 
-    SSHKeyInfo:
-      type: object
-      properties:
-        type:
-          type: string
-          example: "ssh-ed25519"
-        fingerprint:
-          type: string
-          example: "SHA256:abc123..."
-        comment:
-          type: string
-          example: "john@laptop"
+SSHKeyInfo:
+  type: object
+  properties:
+    type:
+      type: string
+      example: 'ssh-ed25519'
+    fingerprint:
+      type: string
+      example: 'SHA256:abc123...'
+    comment:
+      type: string
+      example: 'john@laptop'
 
-    SSHKeyEntry:
-      type: object
-      properties:
-        hostname:
-          type: string
-        status:
-          type: string
-          enum: [ok, failed, skipped]
-        keys:
-          type: array
-          items:
-            $ref: '#/components/schemas/SSHKeyInfo'
-        error:
-          type: string
-      required:
-        - hostname
-        - status
+SSHKeyEntry:
+  type: object
+  properties:
+    hostname:
+      type: string
+    status:
+      type: string
+      enum: [ok, failed, skipped]
+    keys:
+      type: array
+      items:
+        $ref: '#/components/schemas/SSHKeyInfo'
+    error:
+      type: string
+  required:
+    - hostname
+    - status
 
-    SSHKeyMutationEntry:
-      type: object
-      properties:
-        hostname:
-          type: string
-        status:
-          type: string
-          enum: [ok, failed, skipped]
-        changed:
-          type: boolean
-        error:
-          type: string
-      required:
-        - hostname
-        - status
+SSHKeyMutationEntry:
+  type: object
+  properties:
+    hostname:
+      type: string
+    status:
+      type: string
+      enum: [ok, failed, skipped]
+    changed:
+      type: boolean
+    error:
+      type: string
+  required:
+    - hostname
+    - status
 
-    SSHKeyCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SSHKeyEntry'
-      required:
-        - results
+SSHKeyCollectionResponse:
+  type: object
+  properties:
+    job_id:
+      type: string
+      format: uuid
+    results:
+      type: array
+      items:
+        $ref: '#/components/schemas/SSHKeyEntry'
+  required:
+    - results
 
-    SSHKeyMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SSHKeyMutationEntry'
-      required:
-        - results
+SSHKeyMutationResponse:
+  type: object
+  properties:
+    job_id:
+      type: string
+      format: uuid
+    results:
+      type: array
+      items:
+        $ref: '#/components/schemas/SSHKeyMutationEntry'
+  required:
+    - results
 ```
 
 Add parameter:
 
 ```yaml
-    SSHKeyFingerprint:
-      name: fingerprint
-      in: path
-      required: true
-      description: SSH key SHA256 fingerprint.
-      x-oapi-codegen-extra-tags:
-        validate: required,min=1
-      schema:
-        type: string
-        minLength: 1
+SSHKeyFingerprint:
+  name: fingerprint
+  in: path
+  required: true
+  description: SSH key SHA256 fingerprint.
+  x-oapi-codegen-extra-tags:
+    validate: required,min=1
+  schema:
+    type: string
+    minLength: 1
 ```
 
 - [ ] **Step 2: Generate code and rebuild**
@@ -927,6 +906,7 @@ git commit -m "feat(user): add SSH key endpoints to OpenAPI spec"
 ### Task 5: API Handler Implementation
 
 **Files:**
+
 - Create: `internal/controller/api/node/user/ssh_key_list_get.go`
 - Create: `internal/controller/api/node/user/ssh_key_add_post.go`
 - Create: `internal/controller/api/node/user/ssh_key_remove_delete.go`
@@ -934,29 +914,30 @@ git commit -m "feat(user): add SSH key endpoints to OpenAPI spec"
 
 - [ ] **Step 1: Implement list handler**
 
-`GetNodeUserSshKey` method on the existing `User` handler
-struct:
+`GetNodeUserSshKey` method on the existing `User` handler struct:
+
 - Validate hostname
 - username from `request.Name`
-- Query with category `"node"`, operation
-  `job.OperationSSHKeyList`, data `{"username": username}`
-- Parse response: unmarshal `[]userProv.SSHKey`, convert to
-  `[]gen.SSHKeyInfo`
+- Query with category `"node"`, operation `job.OperationSSHKeyList`, data
+  `{"username": username}`
+- Parse response: unmarshal `[]userProv.SSHKey`, convert to `[]gen.SSHKeyInfo`
 - Broadcast support
 
 - [ ] **Step 2: Implement add handler**
 
 `PostNodeUserSshKey`:
+
 - Validate hostname, body (`key` field)
 - Parse the raw key line to extract type, fingerprint, comment
 - Build `userProv.SSHKey{Type, Fingerprint, Comment, RawLine}`
-- Modify with `job.OperationSSHKeyAdd`, data includes
-  `username` + the SSHKey struct
+- Modify with `job.OperationSSHKeyAdd`, data includes `username` + the SSHKey
+  struct
 - Parse mutation response
 
 - [ ] **Step 3: Implement remove handler**
 
 `DeleteNodeUserSshKey`:
+
 - Validate hostname
 - fingerprint from `request.Fingerprint`
 - Modify with `job.OperationSSHKeyRemove`, data
@@ -965,9 +946,9 @@ struct:
 
 - [ ] **Step 4: Write tests**
 
-Each handler test file needs: success, skipped, broadcast,
-validation error, job error, HTTP wiring, RBAC (401/403/200).
-One suite method per handler, all scenarios as table rows.
+Each handler test file needs: success, skipped, broadcast, validation error, job
+error, HTTP wiring, RBAC (401/403/200). One suite method per handler, all
+scenarios as table rows.
 
 - [ ] **Step 5: Run tests and verify coverage**
 
@@ -991,6 +972,7 @@ git commit -m "feat(user): add SSH key API handlers with broadcast support"
 ### Task 6: SDK Service Extension
 
 **Files:**
+
 - Modify: `pkg/sdk/client/user.go`
 - Modify: `pkg/sdk/client/user_types.go`
 - Modify: `pkg/sdk/client/user_public_test.go`
@@ -1062,10 +1044,9 @@ go generate ./pkg/sdk/client/gen/...
 
 - [ ] **Step 4: Write tests**
 
-Add tests to existing test files (or create new
-`user_ssh_key_public_test.go` / `user_ssh_key_types_public_test.go`
-if the existing files are already large). Follow existing
-patterns with httptest.Server.
+Add tests to existing test files (or create new `user_ssh_key_public_test.go` /
+`user_ssh_key_types_public_test.go` if the existing files are already large).
+Follow existing patterns with httptest.Server.
 
 - [ ] **Step 5: Verify 100% coverage**
 
@@ -1088,6 +1069,7 @@ git commit -m "feat(user): add SSH key SDK methods with tests"
 ### Task 7: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_user_ssh_key.go`
 - Create: `cmd/client_node_user_ssh_key_list.go`
 - Create: `cmd/client_node_user_ssh_key_add.go`
@@ -1112,20 +1094,22 @@ Wait — check whether `clientNodeUserCmd` exists. Look at
 - [ ] **Step 2: Create list subcommand**
 
 Flags: `--name` (username, required)
+
 - Calls `sdkClient.User.ListKeys(ctx, host, name)`
 - Table headers: `TYPE`, `FINGERPRINT`, `COMMENT`
 - Uses `BuildBroadcastTable`
 
 - [ ] **Step 3: Create add subcommand**
 
-Flags: `--name` (required), `--key` (required, full public
-key line)
+Flags: `--name` (required), `--key` (required, full public key line)
+
 - Calls `sdkClient.User.AddKey(ctx, host, name, opts)`
 - Uses `BuildMutationTable` with headers `CHANGED`
 
 - [ ] **Step 4: Create remove subcommand**
 
 Flags: `--name` (required), `--fingerprint` (required)
+
 - Calls `sdkClient.User.RemoveKey(ctx, host, name, fp)`
 - Uses `BuildMutationTable`
 
@@ -1147,6 +1131,7 @@ git commit -m "feat(user): add SSH key CLI commands"
 ### Task 8: Documentation
 
 **Files:**
+
 - Modify: `docs/docs/sidebar/features/user-management.md`
 - Create: CLI doc pages for ssh-key commands
 - Modify: `docs/docs/sidebar/sdk/client/management/user.md`
@@ -1157,6 +1142,7 @@ git commit -m "feat(user): add SSH key CLI commands"
 
 Add SSH Key Management section to
 `docs/docs/sidebar/features/user-management.md`:
+
 - How It Works (list, add, remove)
 - Add to Operations table
 - Add CLI examples for ssh-key subcommands
@@ -1169,8 +1155,8 @@ Create landing page + list.md, add.md, remove.md under
 
 - [ ] **Step 3: Update SDK doc**
 
-Add ListKeys, AddKey, RemoveKey to the user SDK doc page
-with code examples and result type tables.
+Add ListKeys, AddKey, RemoveKey to the user SDK doc page with code examples and
+result type tables.
 
 - [ ] **Step 4: Update SDK example**
 
@@ -1179,6 +1165,7 @@ Add SSH key demo to `examples/sdk/client/user.go`.
 - [ ] **Step 5: Update api-guidelines**
 
 Add endpoint rows:
+
 ```
 | `/node/{hostname}/user/{name}/ssh-key`                | User |
 | `/node/{hostname}/user/{name}/ssh-key/{fingerprint}`  | User |
@@ -1196,13 +1183,14 @@ git commit -m "docs: add SSH key management to user docs and SDK example"
 ### Task 9: Integration Test and Final Verification
 
 **Files:**
-- Modify or create: `test/integration/user_test.go` (add SSH
-  key tests)
+
+- Modify or create: `test/integration/user_test.go` (add SSH key tests)
 
 - [ ] **Step 1: Add integration test**
 
-Add SSH key list test to the existing user integration test
-file (or create new if it doesn't exist). Test:
+Add SSH key list test to the existing user integration test file (or create new
+if it doesn't exist). Test:
+
 - `osapi client node user ssh-key list --target _any --name root --json`
 
 - [ ] **Step 2: Run full suite**
