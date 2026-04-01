@@ -28,9 +28,9 @@ certificates include the `object` reference used to deploy them.
 
 Deploys a new custom CA certificate to the host. The PEM content must first be
 uploaded to the Object Store. The agent writes the file to
-`/usr/local/share/ca-certificates/{name}.crt` and runs
-`update-ca-certificates` to rebuild the system trust store. Fails if a
-certificate with the same name already exists -- use `update` to replace it.
+`/usr/local/share/ca-certificates/{name}.crt` and runs `update-ca-certificates`
+to rebuild the system trust store. Fails if a certificate with the same name
+already exists -- use `update` to replace it.
 
 ### Update
 
@@ -43,17 +43,17 @@ first.
 ### Delete
 
 Removes a custom CA certificate from the host. The agent deletes the file from
-`/usr/local/share/ca-certificates/` and runs `update-ca-certificates` to
-rebuild the trust store without the removed certificate.
+`/usr/local/share/ca-certificates/` and runs `update-ca-certificates` to rebuild
+the trust store without the removed certificate.
 
 ## Operations
 
-| Operation | Description                                  |
-| --------- | -------------------------------------------- |
-| List      | List all CA certificates (system and custom)  |
+| Operation | Description                                      |
+| --------- | ------------------------------------------------ |
+| List      | List all CA certificates (system and custom)     |
 | Create    | Deploy a custom CA certificate from Object Store |
-| Update    | Redeploy a custom CA certificate             |
-| Delete    | Remove a custom CA certificate               |
+| Update    | Redeploy a custom CA certificate                 |
+| Delete    | Remove a custom CA certificate                   |
 
 ## CLI Usage
 
@@ -111,9 +111,8 @@ Skipped and failed hosts appear with their error in the output.
 | Linux     | Skipped |
 
 On unsupported platforms, certificate operations return `status: skipped`
-instead of failing. See
-[Platform Detection](../sdk/platform/detection.md) for details on OS family
-detection.
+instead of failing. See [Platform Detection](../sdk/platform/detection.md) for
+details on OS family detection.
 
 ## Container Behavior
 

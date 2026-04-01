@@ -1,8 +1,8 @@
 # Delete
 
 Delete a custom CA certificate from a target host. The certificate file is
-removed from `/usr/local/share/ca-certificates/` and `update-ca-certificates`
-is run to rebuild the trust store:
+removed from `/usr/local/share/ca-certificates/` and `update-ca-certificates` is
+run to rebuild the trust store:
 
 ```bash
 $ osapi client node certificate delete --target web-01 \

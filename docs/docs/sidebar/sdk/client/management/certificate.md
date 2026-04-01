@@ -9,19 +9,19 @@ files from the Object Store and installed into the system trust store.
 
 ## Methods
 
-| Method                              | Description                       |
-| ----------------------------------- | --------------------------------- |
-| `List(ctx, hostname)`               | List all CA certificates          |
-| `Create(ctx, hostname, opts)`       | Deploy a custom CA certificate    |
-| `Update(ctx, hostname, name, opts)` | Redeploy a custom CA certificate  |
-| `Delete(ctx, hostname, name)`       | Remove a custom CA certificate    |
+| Method                              | Description                      |
+| ----------------------------------- | -------------------------------- |
+| `List(ctx, hostname)`               | List all CA certificates         |
+| `Create(ctx, hostname, opts)`       | Deploy a custom CA certificate   |
+| `Update(ctx, hostname, name, opts)` | Redeploy a custom CA certificate |
+| `Delete(ctx, hostname, name)`       | Remove a custom CA certificate   |
 
 ## Request Types
 
-| Type                    | Fields                               |
-| ----------------------- | ------------------------------------ |
-| `CertificateCreateOpts` | Name (required), Object (required)   |
-| `CertificateUpdateOpts` | Object (required)                    |
+| Type                    | Fields                             |
+| ----------------------- | ---------------------------------- |
+| `CertificateCreateOpts` | Name (required), Object (required) |
+| `CertificateUpdateOpts` | Object (required)                  |
 
 ## Usage
 
@@ -68,6 +68,6 @@ for a complete working example.
 | List                   | `certificate:read`  |
 | Create, Update, Delete | `certificate:write` |
 
-Certificate management is supported on the Debian OS family (Ubuntu,
-Debian, Raspbian). On unsupported platforms (Darwin, generic Linux),
-operations return `status: skipped`.
+Certificate management is supported on the Debian OS family (Ubuntu, Debian,
+Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
+`status: skipped`.

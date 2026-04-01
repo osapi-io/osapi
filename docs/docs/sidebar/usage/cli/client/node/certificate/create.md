@@ -29,8 +29,8 @@ $ osapi client node certificate create --target _all \
   web-02    internal-ca  true
 ```
 
-When some hosts are skipped (e.g., macOS agents), STATUS and ERROR
-columns are added:
+When some hosts are skipped (e.g., macOS agents), STATUS and ERROR columns are
+added:
 
 ```bash
 $ osapi client node certificate create --target _all \
