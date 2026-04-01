@@ -102,7 +102,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`{"name":"curl","version":"7.68.0","status":"installed","description":"command line tool"}`,
+							`{"name":"curl","version":"7.68.0","status":"installed","description":"command line tool","size":1024}`,
 						),
 					}, nil)
 			},
@@ -114,8 +114,11 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 				s.Equal("agent1", r.Results[0].Hostname)
 				s.Require().NotNil(r.Results[0].Packages)
 				s.Require().Len(*r.Results[0].Packages, 1)
-				s.Equal("curl", *(*r.Results[0].Packages)[0].Name)
-				s.Equal("7.68.0", *(*r.Results[0].Packages)[0].Version)
+				pkg := (*r.Results[0].Packages)[0]
+				s.Equal("curl", *pkg.Name)
+				s.Equal("7.68.0", *pkg.Version)
+				s.Require().NotNil(pkg.Size)
+				s.Equal(int64(1024), *pkg.Size)
 			},
 		},
 		{
@@ -256,7 +259,7 @@ func (s *PackageGetPublicTestSuite) TestGetNodePackageByName() {
 								Hostname: "server1",
 								Status:   job.StatusCompleted,
 								Data: json.RawMessage(
-									`{"name":"curl","version":"7.68.0","status":"installed"}`,
+									`{"name":"curl","version":"7.68.0","status":"installed","description":"curl","size":2048}`,
 								),
 							},
 							"server2": {

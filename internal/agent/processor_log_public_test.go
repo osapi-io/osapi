@@ -340,6 +340,91 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnit() {
 	}
 }
 
+func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnmarshalError() {
+	m := logMocks.NewMockProvider(s.mockCtrl)
+	processor := s.newProcessor(m)
+
+	result, err := processor(job.Request{
+		Type:      job.TypeQuery,
+		Category:  "node",
+		Operation: "log.query",
+		Data:      json.RawMessage(`invalid json`),
+	})
+
+	s.Error(err)
+	s.Contains(err.Error(), "unmarshal log query data")
+	s.Nil(result)
+}
+
+func (s *ProcessorLogPublicTestSuite) TestProcessLogSources() {
+	tests := []struct {
+		name        string
+		jobRequest  job.Request
+		setupMock   func() log.Provider
+		expectError bool
+		errorMsg    string
+		validate    func(json.RawMessage)
+	}{
+		{
+			name: "sources success",
+			jobRequest: job.Request{
+				Type:      job.TypeQuery,
+				Category:  "node",
+				Operation: "log.sources",
+			},
+			setupMock: func() log.Provider {
+				m := logMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().
+					ListSources(gomock.Any()).
+					Return([]string{"nginx", "sshd", "systemd"}, nil)
+				return m
+			},
+			validate: func(result json.RawMessage) {
+				var sources []string
+				err := json.Unmarshal(result, &sources)
+				s.NoError(err)
+				s.Equal([]string{"nginx", "sshd", "systemd"}, sources)
+			},
+		},
+		{
+			name: "sources provider error",
+			jobRequest: job.Request{
+				Type:      job.TypeQuery,
+				Category:  "node",
+				Operation: "log.sources",
+			},
+			setupMock: func() log.Provider {
+				m := logMocks.NewMockProvider(s.mockCtrl)
+				m.EXPECT().
+					ListSources(gomock.Any()).
+					Return(nil, errors.New("journalctl failed"))
+				return m
+			},
+			expectError: true,
+			errorMsg:    "journalctl failed",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			processor := s.newProcessor(tt.setupMock())
+			result, err := processor(tt.jobRequest)
+
+			if tt.expectError {
+				s.Error(err)
+				s.Contains(err.Error(), tt.errorMsg)
+				s.Nil(result)
+			} else {
+				s.NoError(err)
+				s.NotNil(result)
+				if tt.validate != nil {
+					tt.validate(result)
+				}
+			}
+		})
+	}
+}
+
 func TestProcessorLogPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ProcessorLogPublicTestSuite))
 }
