@@ -52,7 +52,13 @@ func (s *Certificate) GetNodeCertificateCa(
 		return s.getNodeCertificateCaBroadcast(ctx, hostname)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "certificate", job.OperationCertificateCAList, nil)
+	jobID, resp, err := s.JobClient.Query(
+		ctx,
+		hostname,
+		"certificate",
+		job.OperationCertificateCAList,
+		nil,
+	)
 	if err != nil {
 		errMsg := err.Error()
 		return gen.GetNodeCertificateCa500JSONResponse{Error: &errMsg}, nil

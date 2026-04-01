@@ -55,7 +55,9 @@ func main() {
 
 	// Upload a CA certificate PEM to the Object Store.
 	fmt.Println("=== Uploading CA certificate PEM ===")
-	pem := strings.NewReader("-----BEGIN CERTIFICATE-----\nMIIBkTCB...\n-----END CERTIFICATE-----\n")
+	pem := strings.NewReader(
+		"-----BEGIN CERTIFICATE-----\nMIIBkTCB...\n-----END CERTIFICATE-----\n",
+	)
 	uploadResp, err := c.File.Upload(ctx, "internal-ca", "raw", pem)
 	if err != nil {
 		log.Fatalf("upload failed: %v", err)

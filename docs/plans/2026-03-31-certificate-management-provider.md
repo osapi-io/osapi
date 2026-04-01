@@ -2,22 +2,21 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
-> superpowers:executing-plans to implement this plan task-by-task.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add CA certificate management to OSAPI — deploy custom CA
-certificates to the system trust store via `file.Deployer`, list
-system + custom CAs, update and remove custom CAs.
+**Goal:** Add CA certificate management to OSAPI — deploy custom CA certificates
+to the system trust store via `file.Deployer`, list system + custom CAs, update
+and remove custom CAs.
 
-**Architecture:** Meta provider at
-`internal/provider/node/certificate/` using `file.Deployer` for
-SHA-tracked deployment and `exec.Manager` for
-`update-ca-certificates`. Registered as its own agent category
-(`certificate`) following the cron/schedule pattern. Four API
-endpoints under `/node/{hostname}/certificate/ca`.
+**Architecture:** Meta provider at `internal/provider/node/certificate/` using
+`file.Deployer` for SHA-tracked deployment and `exec.Manager` for
+`update-ca-certificates`. Registered as its own agent category (`certificate`)
+following the cron/schedule pattern. Four API endpoints under
+`/node/{hostname}/certificate/ca`.
 
-**Tech Stack:** Go, file.Deployer, exec.Manager,
-update-ca-certificates, oapi-codegen strict-server
+**Tech Stack:** Go, file.Deployer, exec.Manager, update-ca-certificates,
+oapi-codegen strict-server
 
 ---
 
@@ -25,18 +24,16 @@ update-ca-certificates, oapi-codegen strict-server
 
 ### Provider Layer
 
-- Create: `internal/provider/node/certificate/types.go` — Provider
-  interface + domain types
-- Create: `internal/provider/node/certificate/debian.go` — Debian
-  implementation with file.Deployer
-- Create: `internal/provider/node/certificate/debian_list.go` —
-  List implementation (walks system + custom CA dirs)
-- Create: `internal/provider/node/certificate/darwin.go` — macOS
-  stub
-- Create: `internal/provider/node/certificate/linux.go` — generic
-  Linux stub
-- Create: `internal/provider/node/certificate/mocks/generate.go` —
-  mockgen directive
+- Create: `internal/provider/node/certificate/types.go` — Provider interface +
+  domain types
+- Create: `internal/provider/node/certificate/debian.go` — Debian implementation
+  with file.Deployer
+- Create: `internal/provider/node/certificate/debian_list.go` — List
+  implementation (walks system + custom CA dirs)
+- Create: `internal/provider/node/certificate/darwin.go` — macOS stub
+- Create: `internal/provider/node/certificate/linux.go` — generic Linux stub
+- Create: `internal/provider/node/certificate/mocks/generate.go` — mockgen
+  directive
 - Test: `internal/provider/node/certificate/debian_public_test.go`
 - Test: `internal/provider/node/certificate/debian_list_public_test.go`
 - Test: `internal/provider/node/certificate/darwin_public_test.go`
@@ -44,69 +41,54 @@ update-ca-certificates, oapi-codegen strict-server
 
 ### Agent Layer
 
-- Create: `internal/agent/processor_certificate.go` — certificate
-  operation dispatcher
-- Modify: `cmd/agent_setup.go` — create certificate provider
-  factory, register as own category
+- Create: `internal/agent/processor_certificate.go` — certificate operation
+  dispatcher
+- Modify: `cmd/agent_setup.go` — create certificate provider factory, register
+  as own category
 - Test: `internal/agent/processor_certificate_public_test.go`
 
 ### API Layer
 
-- Create: `internal/controller/api/node/certificate/gen/api.yaml` —
-  OpenAPI spec
-- Create: `internal/controller/api/node/certificate/gen/cfg.yaml` —
-  oapi-codegen config
-- Create: `internal/controller/api/node/certificate/gen/generate.go`
-  — go:generate
-- Create: `internal/controller/api/node/certificate/types.go` —
-  handler struct
-- Create: `internal/controller/api/node/certificate/certificate.go`
-  — New(), compile-time check
+- Create: `internal/controller/api/node/certificate/gen/api.yaml` — OpenAPI spec
+- Create: `internal/controller/api/node/certificate/gen/cfg.yaml` — oapi-codegen
+  config
+- Create: `internal/controller/api/node/certificate/gen/generate.go` —
+  go:generate
+- Create: `internal/controller/api/node/certificate/types.go` — handler struct
+- Create: `internal/controller/api/node/certificate/certificate.go` — New(),
+  compile-time check
 - Create: `internal/controller/api/node/certificate/validate.go` —
   validateHostname
-- Create:
-  `internal/controller/api/node/certificate/ca_list_get.go` — list
+- Create: `internal/controller/api/node/certificate/ca_list_get.go` — list
   handler
-- Create:
-  `internal/controller/api/node/certificate/ca_create_post.go` —
-  create handler
-- Create:
-  `internal/controller/api/node/certificate/ca_update_put.go` —
-  update handler
-- Create:
-  `internal/controller/api/node/certificate/ca_delete.go` — delete
+- Create: `internal/controller/api/node/certificate/ca_create_post.go` — create
   handler
-- Create:
-  `internal/controller/api/node/certificate/handler.go` — Handler()
+- Create: `internal/controller/api/node/certificate/ca_update_put.go` — update
+  handler
+- Create: `internal/controller/api/node/certificate/ca_delete.go` — delete
+  handler
+- Create: `internal/controller/api/node/certificate/handler.go` — Handler()
   registration
 - Modify: `cmd/controller_setup.go` — register certificate handler
-- Test:
-  `internal/controller/api/node/certificate/ca_list_get_public_test.go`
-- Test:
-  `internal/controller/api/node/certificate/ca_create_post_public_test.go`
-- Test:
-  `internal/controller/api/node/certificate/ca_update_put_public_test.go`
-- Test:
-  `internal/controller/api/node/certificate/ca_delete_public_test.go`
-- Test:
-  `internal/controller/api/node/certificate/handler_public_test.go`
+- Test: `internal/controller/api/node/certificate/ca_list_get_public_test.go`
+- Test: `internal/controller/api/node/certificate/ca_create_post_public_test.go`
+- Test: `internal/controller/api/node/certificate/ca_update_put_public_test.go`
+- Test: `internal/controller/api/node/certificate/ca_delete_public_test.go`
+- Test: `internal/controller/api/node/certificate/handler_public_test.go`
 
 ### Operations & Permissions
 
-- Modify: `pkg/sdk/client/operations.go` — add certificate
-  operation constants
-- Modify: `internal/job/types.go` — add certificate operation
-  aliases
-- Modify: `pkg/sdk/client/permissions.go` — add
-  `PermCertificateRead`, `PermCertificateWrite`
+- Modify: `pkg/sdk/client/operations.go` — add certificate operation constants
+- Modify: `internal/job/types.go` — add certificate operation aliases
+- Modify: `pkg/sdk/client/permissions.go` — add `PermCertificateRead`,
+  `PermCertificateWrite`
 - Modify: `internal/authtoken/permissions.go` — add to all roles
 
 ### SDK Layer
 
-- Create: `pkg/sdk/client/certificate.go` — CertificateService
-  methods
+- Create: `pkg/sdk/client/certificate.go` — CertificateService methods
 - Create: `pkg/sdk/client/certificate_types.go` — SDK result types
-  + conversions
+  - conversions
 - Modify: `pkg/sdk/client/osapi.go` — add Certificate field
 - Test: `pkg/sdk/client/certificate_public_test.go`
 - Test: `pkg/sdk/client/certificate_types_public_test.go`
@@ -115,45 +97,29 @@ update-ca-certificates, oapi-codegen strict-server
 
 - Create: `cmd/client_node_certificate.go` — parent command
 - Create: `cmd/client_node_certificate_list.go` — list subcommand
-- Create: `cmd/client_node_certificate_create.go` — create
-  subcommand
-- Create: `cmd/client_node_certificate_update.go` — update
-  subcommand
-- Create: `cmd/client_node_certificate_delete.go` — delete
-  subcommand
+- Create: `cmd/client_node_certificate_create.go` — create subcommand
+- Create: `cmd/client_node_certificate_update.go` — update subcommand
+- Create: `cmd/client_node_certificate_delete.go` — delete subcommand
 
 ### Documentation
 
-- Create:
-  `docs/docs/sidebar/features/certificate-management.md` — feature
-  page
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/certificate/certificate.md`
-  — CLI landing
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/certificate/list.md`
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/certificate/create.md`
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/certificate/update.md`
-- Create:
-  `docs/docs/sidebar/usage/cli/client/node/certificate/delete.md`
-- Create:
-  `docs/docs/sidebar/sdk/client/management/certificate.md` — SDK
-  doc
+- Create: `docs/docs/sidebar/features/certificate-management.md` — feature page
+- Create: `docs/docs/sidebar/usage/cli/client/node/certificate/certificate.md` —
+  CLI landing
+- Create: `docs/docs/sidebar/usage/cli/client/node/certificate/list.md`
+- Create: `docs/docs/sidebar/usage/cli/client/node/certificate/create.md`
+- Create: `docs/docs/sidebar/usage/cli/client/node/certificate/update.md`
+- Create: `docs/docs/sidebar/usage/cli/client/node/certificate/delete.md`
+- Create: `docs/docs/sidebar/sdk/client/management/certificate.md` — SDK doc
 - Create: `examples/sdk/client/certificate.go` — SDK example
 - Modify: `docs/docs/sidebar/features/features.md` — add cert row
-- Modify: `docs/docs/sidebar/features/authentication.md` — add
-  permissions to role tables
-- Modify: `docs/docs/sidebar/usage/configuration.md` — add
-  permissions
-- Modify: `docs/docs/sidebar/architecture/architecture.md` — add
-  feature link
-- Modify: `docs/docs/sidebar/architecture/api-guidelines.md` — add
-  endpoints
+- Modify: `docs/docs/sidebar/features/authentication.md` — add permissions to
+  role tables
+- Modify: `docs/docs/sidebar/usage/configuration.md` — add permissions
+- Modify: `docs/docs/sidebar/architecture/architecture.md` — add feature link
+- Modify: `docs/docs/sidebar/architecture/api-guidelines.md` — add endpoints
 - Modify: `docs/docusaurus.config.ts` — add to dropdowns
-- Modify: `docs/docs/sidebar/sdk/client/client.md` — add service
-  to table
+- Modify: `docs/docs/sidebar/sdk/client/client.md` — add service to table
 
 ### Integration Test
 
@@ -164,6 +130,7 @@ update-ca-certificates, oapi-codegen strict-server
 ### Task 1: Provider Interface and Types
 
 **Files:**
+
 - Create: `internal/provider/node/certificate/types.go`
 
 - [ ] **Step 1: Create provider interface and types**
@@ -233,6 +200,7 @@ git commit -m "feat(certificate): add provider interface and types"
 ### Task 2: Platform Stubs (Darwin + Linux)
 
 **Files:**
+
 - Create: `internal/provider/node/certificate/darwin.go`
 - Create: `internal/provider/node/certificate/linux.go`
 - Test: `internal/provider/node/certificate/darwin_public_test.go`
@@ -240,11 +208,11 @@ git commit -m "feat(certificate): add provider interface and types"
 
 - [ ] **Step 1: Write stub tests**
 
-Create `darwin_public_test.go` and `linux_public_test.go` with
-testify/suite. Test all four methods (List, Create, Update,
-Delete) return `provider.ErrUnsupported`. Follow the pattern in
-`internal/provider/node/log/darwin_public_test.go` — one suite
-method per provider method, all in a single table.
+Create `darwin_public_test.go` and `linux_public_test.go` with testify/suite.
+Test all four methods (List, Create, Update, Delete) return
+`provider.ErrUnsupported`. Follow the pattern in
+`internal/provider/node/log/darwin_public_test.go` — one suite method per
+provider method, all in a single table.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -253,6 +221,7 @@ Run: `go test -v ./internal/provider/node/certificate/...`
 - [ ] **Step 3: Implement stubs**
 
 Create `darwin.go`:
+
 ```go
 type Darwin struct{}
 
@@ -280,20 +249,20 @@ git commit -m "feat(certificate): add darwin and linux provider stubs"
 ### Task 3: Debian Provider Implementation
 
 **Files:**
+
 - Create: `internal/provider/node/certificate/debian.go`
 - Create: `internal/provider/node/certificate/debian_list.go`
 - Create: `internal/provider/node/certificate/mocks/generate.go`
 - Test: `internal/provider/node/certificate/debian_public_test.go`
-- Test:
-  `internal/provider/node/certificate/debian_list_public_test.go`
+- Test: `internal/provider/node/certificate/debian_list_public_test.go`
 
 This is a meta provider following the cron pattern. Read
-`internal/provider/scheduled/cron/debian.go` as the primary
-reference.
+`internal/provider/scheduled/cron/debian.go` as the primary reference.
 
 - [ ] **Step 1: Create mock generator**
 
 Create `internal/provider/node/certificate/mocks/generate.go`:
+
 ```go
 package mocks
 
@@ -304,54 +273,59 @@ Run: `go generate ./internal/provider/node/certificate/mocks/...`
 
 - [ ] **Step 2: Write Debian provider tests**
 
-Create `debian_public_test.go` with testify/suite and gomock.
-The Debian struct needs:
+Create `debian_public_test.go` with testify/suite and gomock. The Debian struct
+needs:
+
 - `provider.FactsAware` embedded
 - `logger *slog.Logger`
 - `fs avfs.VFS` (for listing system CAs)
 - `fileDeployer file.Deployer` (mocked)
 - `stateKV jetstream.KeyValue` (mocked)
-- `execManager exec.Manager` (mocked, for
-  `update-ca-certificates`)
+- `execManager exec.Manager` (mocked, for `update-ca-certificates`)
 - `hostname string`
 
 **TestCreate** — table-driven with cases:
+
 - success: mock fileDeployer.Deploy with path
-  `/usr/local/share/ca-certificates/osapi-mycert.crt`, mode
-  `0644`, returns `Changed: true`. Mock execManager.RunCmd for
-  `update-ca-certificates`. Verify result.
-- already exists: mock fs.Stat on the path returns nil (file
-  exists). Verify error "already exists".
+  `/usr/local/share/ca-certificates/osapi-mycert.crt`, mode `0644`, returns
+  `Changed: true`. Mock execManager.RunCmd for `update-ca-certificates`. Verify
+  result.
+- already exists: mock fs.Stat on the path returns nil (file exists). Verify
+  error "already exists".
 - deploy error: mock fileDeployer.Deploy returns error.
 - update-ca-certificates error: deploy succeeds, RunCmd fails.
 - invalid name (empty): verify error.
 - invalid name (special chars): verify error.
 
 **TestUpdate** — table-driven:
-- success: mock fs.Stat finds file, mock fileDeployer.Deploy
-  returns `Changed: true`, mock RunCmd succeeds.
+
+- success: mock fs.Stat finds file, mock fileDeployer.Deploy returns
+  `Changed: true`, mock RunCmd succeeds.
 - not found: mock fs.Stat returns error. Verify "does not exist".
 - deploy error.
 - update with same content: Deploy returns `Changed: false`, skip
   `update-ca-certificates`.
 
 **TestDelete** — table-driven:
-- success: mock fs.Stat finds file, mock fileDeployer.Undeploy
-  returns `Changed: true`, mock RunCmd succeeds.
+
+- success: mock fs.Stat finds file, mock fileDeployer.Undeploy returns
+  `Changed: true`, mock RunCmd succeeds.
 - not found: returns `Changed: false`, no error.
 - undeploy error.
 
 - [ ] **Step 3: Write List tests**
 
-Create `debian_list_public_test.go` with testify/suite. Use
-`memfs.New()` for filesystem. Set up:
+Create `debian_list_public_test.go` with testify/suite. Use `memfs.New()` for
+filesystem. Set up:
+
 - `/usr/share/ca-certificates/mozilla/DigiCert.crt` (system)
-- `/usr/local/share/ca-certificates/osapi-mycert.crt` (custom,
-  with matching file state KV entry)
-- `/usr/local/share/ca-certificates/manual.crt` (not managed —
-  no file state entry)
+- `/usr/local/share/ca-certificates/osapi-mycert.crt` (custom, with matching
+  file state KV entry)
+- `/usr/local/share/ca-certificates/manual.crt` (not managed — no file state
+  entry)
 
 **TestList** — table-driven:
+
 - success with system + custom certs
 - empty directories
 - fs.ReadDir error on system dir
@@ -722,8 +696,8 @@ func (d *Debian) listCustomCAs(
 }
 ```
 
-Note: `debian_list.go` needs `"fmt"` in its imports for the
-`List` method error wrapping.
+Note: `debian_list.go` needs `"fmt"` in its imports for the `List` method error
+wrapping.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
@@ -732,6 +706,7 @@ Run: `go test -v ./internal/provider/node/certificate/...`
 - [ ] **Step 7: Verify 100% coverage**
 
 Run:
+
 ```bash
 go test -coverprofile=/tmp/cert_prov.cov \
   ./internal/provider/node/certificate/... && \
@@ -753,6 +728,7 @@ git commit -m "feat(certificate): add meta provider with file.Deployer"
 ### Task 4: Operations, Permissions, and Agent Wiring
 
 **Files:**
+
 - Modify: `pkg/sdk/client/operations.go`
 - Modify: `internal/job/types.go`
 - Modify: `pkg/sdk/client/permissions.go`
@@ -797,6 +773,7 @@ In `pkg/sdk/client/permissions.go`, add:
 ```
 
 In `internal/authtoken/permissions.go`:
+
 - Add constants `PermCertificateRead`, `PermCertificateWrite`
 - Add both to `AllPermissions`
 - Add `PermCertificateRead`, `PermCertificateWrite` to admin role
@@ -805,38 +782,43 @@ In `internal/authtoken/permissions.go`:
 
 - [ ] **Step 3: Write processor tests**
 
-Create `internal/agent/processor_certificate_public_test.go`.
-Follow the `processor_schedule_public_test.go` pattern — the
-certificate provider gets its own `NewCertificateProcessor`.
+Create `internal/agent/processor_certificate_public_test.go`. Follow the
+`processor_schedule_public_test.go` pattern — the certificate provider gets its
+own `NewCertificateProcessor`.
 
 **TestProcessCertificateOperation** — dispatch-level:
+
 - nil provider returns error
 - invalid operation format
 - unsupported sub-operation
 
 **TestProcessCertificateCAList** — table-driven:
+
 - success
 - provider error
 
 **TestProcessCertificateCACreate** — table-driven:
+
 - success
 - unmarshal error
 - provider error
 
 **TestProcessCertificateCAUpdate** — table-driven:
+
 - success
 - unmarshal error
 - provider error
 
 **TestProcessCertificateCADelete** — table-driven:
+
 - success
 - unmarshal error
 - provider error
 
 - [ ] **Step 4: Implement processor**
 
-Create `internal/agent/processor_certificate.go`. Follow
-`processor_schedule.go` pattern:
+Create `internal/agent/processor_certificate.go`. Follow `processor_schedule.go`
+pattern:
 
 ```go
 func NewCertificateProcessor(
@@ -864,22 +846,24 @@ func NewCertificateProcessor(
 }
 ```
 
-`processCertificateCAOperation` splits on `.` to get sub-op
-(`list`, `create`, `update`, `delete`) and dispatches.
+`processCertificateCAOperation` splits on `.` to get sub-op (`list`, `create`,
+`update`, `delete`) and dispatches.
 
 - [ ] **Step 5: Wire in agent_setup.go**
 
 Add import:
+
 ```go
 certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
 ```
 
-Add factory function `createCertificateProvider` — on Debian,
-needs `fileProvider`, `fileStateKV`, `execManager`, `hostname`.
-If `fileProvider == nil`, log warning and return Linux stub. No
-container check. Darwin/Linux return stubs.
+Add factory function `createCertificateProvider` — on Debian, needs
+`fileProvider`, `fileStateKV`, `execManager`, `hostname`. If
+`fileProvider == nil`, log warning and return Linux stub. No container check.
+Darwin/Linux return stubs.
 
 Register as its own category:
+
 ```go
 registry.Register("certificate",
 	agent.NewCertificateProcessor(certProvider, log),
@@ -920,20 +904,20 @@ git commit -m "feat(certificate): add operations, permissions, and agent wiring"
 ### Task 5: OpenAPI Spec and Code Generation
 
 **Files:**
+
 - Create: `internal/controller/api/node/certificate/gen/api.yaml`
 - Create: `internal/controller/api/node/certificate/gen/cfg.yaml`
-- Create:
-  `internal/controller/api/node/certificate/gen/generate.go`
+- Create: `internal/controller/api/node/certificate/gen/generate.go`
 
 - [ ] **Step 1: Create OpenAPI spec**
 
-Read `internal/controller/api/node/schedule/gen/api.yaml` as the
-reference. Create `api.yaml` with:
+Read `internal/controller/api/node/schedule/gen/api.yaml` as the reference.
+Create `api.yaml` with:
 
 - Tag: `certificate_operations`, displayName `Node/Certificate`
 - Paths:
-  - `GET /node/{hostname}/certificate/ca` (operationId:
-    `GetNodeCertificateCa`, security: `certificate:read`)
+  - `GET /node/{hostname}/certificate/ca` (operationId: `GetNodeCertificateCa`,
+    security: `certificate:read`)
   - `POST /node/{hostname}/certificate/ca` (operationId:
     `PostNodeCertificateCa`, security: `certificate:write`)
   - `PUT /node/{hostname}/certificate/ca/{name}` (operationId:
@@ -941,29 +925,27 @@ reference. Create `api.yaml` with:
   - `DELETE /node/{hostname}/certificate/ca/{name}` (operationId:
     `DeleteNodeCertificateCa`, security: `certificate:write`)
 - Parameters: Hostname (path), CertName (path, `name`)
-- Request body for POST: `CertificateCACreateRequest` with
-  `name` (required, validate: required,min=1) and `object`
-  (required, validate: required,min=1)
-- Request body for PUT: `CertificateCAUpdateRequest` with
-  `object` (required, validate: required,min=1). Name comes from
-  path.
+- Request body for POST: `CertificateCACreateRequest` with `name` (required,
+  validate: required,min=1) and `object` (required, validate: required,min=1)
+- Request body for PUT: `CertificateCAUpdateRequest` with `object` (required,
+  validate: required,min=1). Name comes from path.
 - Schemas:
-  - `CertificateCAInfo` — name (string), source (string enum
-    system/custom), object (string)
-  - `CertificateCAEntry` — hostname, status (ok/failed/skipped),
-    certificates (array of CertificateCAInfo), error
-  - `CertificateCACollectionResponse` — job_id, results (array
-    of CertificateCAEntry)
-  - `CertificateCAMutationEntry` — hostname, status, name,
-    changed (boolean), error
+  - `CertificateCAInfo` — name (string), source (string enum system/custom),
+    object (string)
+  - `CertificateCAEntry` — hostname, status (ok/failed/skipped), certificates
+    (array of CertificateCAInfo), error
+  - `CertificateCACollectionResponse` — job_id, results (array of
+    CertificateCAEntry)
+  - `CertificateCAMutationEntry` — hostname, status, name, changed (boolean),
+    error
   - `CertificateCAMutationResponse` — job_id, results (array of
     CertificateCAMutationEntry)
-- Responses: 200, 400 (for POST/PUT), 401, 403, 404 (for
-  PUT/DELETE), 500
+- Responses: 200, 400 (for POST/PUT), 401, 403, 404 (for PUT/DELETE), 500
 
 - [ ] **Step 2: Create cfg.yaml and generate.go**
 
 `cfg.yaml`:
+
 ```yaml
 package: gen
 output: certificate.gen.go
@@ -978,6 +960,7 @@ output-options:
 ```
 
 `generate.go`:
+
 ```go
 package gen
 //go:generate go tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen -config cfg.yaml api.yaml
@@ -1003,19 +986,19 @@ git commit -m "feat(certificate): add OpenAPI spec and generated code"
 ### Task 6: API Handler Implementation
 
 **Files:**
-- Create all handler files under
-  `internal/controller/api/node/certificate/`
+
+- Create all handler files under `internal/controller/api/node/certificate/`
 - Modify: `cmd/controller_setup.go`
 - Test: all `*_public_test.go` files
 
 - [ ] **Step 1: Create handler scaffolding**
 
-Create `types.go`, `certificate.go`, `validate.go`, `handler.go`
-following the same pattern as
-`internal/controller/api/node/schedule/`. The handler struct is
+Create `types.go`, `certificate.go`, `validate.go`, `handler.go` following the
+same pattern as `internal/controller/api/node/schedule/`. The handler struct is
 `Certificate` with `JobClient` and `logger`.
 
 Compile-time check:
+
 ```go
 var _ gen.StrictServerInterface = (*Certificate)(nil)
 ```
@@ -1025,22 +1008,24 @@ Subsystem: `"api.certificate"`.
 - [ ] **Step 2: Implement list handler**
 
 Create `ca_list_get.go` — `GetNodeCertificateCa` method.
+
 - Validate hostname
-- If broadcast: `QueryBroadcast` with category `"certificate"`
-  and `job.OperationCertificateCAList`
+- If broadcast: `QueryBroadcast` with category `"certificate"` and
+  `job.OperationCertificateCAList`
 - Single target: `Query` with same
-- Parse response: unmarshal `[]certProv.Entry` from resp.Data,
-  convert to `[]gen.CertificateCAInfo`
+- Parse response: unmarshal `[]certProv.Entry` from resp.Data, convert to
+  `[]gen.CertificateCAInfo`
 - Return `gen.GetNodeCertificateCa200JSONResponse`
 
 - [ ] **Step 3: Implement create handler**
 
 Create `ca_create_post.go` — `PostNodeCertificateCa` method.
+
 - Validate hostname
 - Validate request body
 - Build entry from request body (name + object)
-- If broadcast: `ModifyBroadcast` with category `"certificate"`
-  and `job.OperationCertificateCACreate`
+- If broadcast: `ModifyBroadcast` with category `"certificate"` and
+  `job.OperationCertificateCACreate`
 - Single target: `Modify` with same
 - Parse mutation response (name, changed)
 - Handle 400 (validation), 401, 403, 500
@@ -1048,6 +1033,7 @@ Create `ca_create_post.go` — `PostNodeCertificateCa` method.
 - [ ] **Step 4: Implement update handler**
 
 Create `ca_update_put.go` — `PutNodeCertificateCa` method.
+
 - Validate hostname
 - Name from path param `request.Name`
 - Object from request body
@@ -1058,6 +1044,7 @@ Create `ca_update_put.go` — `PutNodeCertificateCa` method.
 - [ ] **Step 5: Implement delete handler**
 
 Create `ca_delete.go` — `DeleteNodeCertificateCa` method.
+
 - Validate hostname
 - Name from path param
 - `Modify` with `job.OperationCertificateCADelete` and
@@ -1066,21 +1053,23 @@ Create `ca_delete.go` — `DeleteNodeCertificateCa` method.
 - [ ] **Step 6: Write handler tests**
 
 Create test files for all four handlers. Follow the pattern in
-`internal/controller/api/node/schedule/cron_create_public_test.go`
-and similar. Each test file needs:
-- Table-driven tests with success, error, skipped, broadcast
-  cases
+`internal/controller/api/node/schedule/cron_create_public_test.go` and similar.
+Each test file needs:
+
+- Table-driven tests with success, error, skipped, broadcast cases
 - HTTP wiring tests (`TestXxxHTTP`)
 - RBAC tests (`TestXxxRBACHTTP`) — 401, 403, 200
 
 - [ ] **Step 7: Register in controller_setup.go**
 
 Add import:
+
 ```go
 certAPI "github.com/retr0h/osapi/internal/controller/api/node/certificate"
 ```
 
 Add:
+
 ```go
 handlers = append(handlers,
     certAPI.Handler(log, jc, signingKey, customRoles)...)
@@ -1110,6 +1099,7 @@ git commit -m "feat(certificate): add API handlers with broadcast support"
 ### Task 7: SDK Service
 
 **Files:**
+
 - Create: `pkg/sdk/client/certificate.go`
 - Create: `pkg/sdk/client/certificate_types.go`
 - Modify: `pkg/sdk/client/osapi.go`
@@ -1119,11 +1109,11 @@ git commit -m "feat(certificate): add API handlers with broadcast support"
 - [ ] **Step 1: Implement types**
 
 Create `certificate_types.go` with:
-- `CertificateCAResult` — Hostname, Status, Certificates
-  ([]CertificateCA), Error
+
+- `CertificateCAResult` — Hostname, Status, Certificates ([]CertificateCA),
+  Error
 - `CertificateCA` — Name, Source, Object
-- `CertificateCAMutationResult` — Hostname, Status, Name,
-  Changed, Error
+- `CertificateCAMutationResult` — Hostname, Status, Name, Changed, Error
 - `CertificateCreateOpts` — Name, Object
 - `CertificateUpdateOpts` — Object
 - Conversion functions from gen types
@@ -1131,8 +1121,8 @@ Create `certificate_types.go` with:
 - [ ] **Step 2: Implement service**
 
 Create `certificate.go` with `CertificateService`:
-- `List(ctx, hostname)` →
-  `*Response[Collection[CertificateCAResult]]`
+
+- `List(ctx, hostname)` → `*Response[Collection[CertificateCAResult]]`
 - `Create(ctx, hostname, opts CertificateCreateOpts)` →
   `*Response[Collection[CertificateCAMutationResult]]`
 - `Update(ctx, hostname, name, opts CertificateUpdateOpts)` →
@@ -1140,13 +1130,13 @@ Create `certificate.go` with `CertificateService`:
 - `Delete(ctx, hostname, name)` →
   `*Response[Collection[CertificateCAMutationResult]]`
 
-Each method: build gen params/body, call generated client,
-checkError, nil guard, convert, return.
+Each method: build gen params/body, call generated client, checkError, nil
+guard, convert, return.
 
 - [ ] **Step 3: Wire in osapi.go**
 
-Add `Certificate *CertificateService` to Client struct and
-initialize in `New()`.
+Add `Certificate *CertificateService` to Client struct and initialize in
+`New()`.
 
 - [ ] **Step 4: Regenerate SDK client**
 
@@ -1156,9 +1146,8 @@ go generate ./pkg/sdk/client/gen/...
 
 - [ ] **Step 5: Write tests**
 
-`certificate_public_test.go` — httptest.Server tests for all 4
-methods, covering 200, 400, 401, 403, 404, 500, nil body,
-transport error.
+`certificate_public_test.go` — httptest.Server tests for all 4 methods, covering
+200, 400, 401, 403, 404, 500, nil body, transport error.
 
 `certificate_types_public_test.go` — conversion function tests.
 
@@ -1187,6 +1176,7 @@ git commit -m "feat(certificate): add SDK service with tests"
 ### Task 8: CLI Commands
 
 **Files:**
+
 - Create: `cmd/client_node_certificate.go`
 - Create: `cmd/client_node_certificate_list.go`
 - Create: `cmd/client_node_certificate_create.go`
@@ -1209,6 +1199,7 @@ func init() {
 - [ ] **Step 2: Create list subcommand**
 
 `client_node_certificate_list.go`:
+
 - Calls `sdkClient.Certificate.List(ctx, host)`
 - Table headers: `NAME`, `SOURCE`
 - Uses `BuildBroadcastTable`
@@ -1216,6 +1207,7 @@ func init() {
 - [ ] **Step 3: Create create subcommand**
 
 `client_node_certificate_create.go`:
+
 - Flags: `--name` (required), `--object` (required)
 - Calls `sdkClient.Certificate.Create(ctx, host, opts)`
 - Uses `BuildMutationTable` with headers `NAME`, `CHANGED`
@@ -1223,6 +1215,7 @@ func init() {
 - [ ] **Step 4: Create update subcommand**
 
 `client_node_certificate_update.go`:
+
 - Flags: `--name` (required), `--object` (required)
 - Calls `sdkClient.Certificate.Update(ctx, host, name, opts)`
 - Uses `BuildMutationTable`
@@ -1230,6 +1223,7 @@ func init() {
 - [ ] **Step 5: Create delete subcommand**
 
 `client_node_certificate_delete.go`:
+
 - Flags: `--name` (required)
 - Calls `sdkClient.Certificate.Delete(ctx, host, name)`
 - Uses `BuildMutationTable`
@@ -1252,31 +1246,33 @@ git commit -m "feat(certificate): add CLI commands for CA cert management"
 ### Task 9: Documentation and SDK Example
 
 **Files:**
+
 - Create all doc files listed in File Structure
 - Modify all cross-reference files
 
 - [ ] **Step 1: Create feature page**
 
 `docs/docs/sidebar/features/certificate-management.md`:
+
 - How It Works (List, Create, Update, Delete)
 - Operations table (4 operations)
 - CLI Usage examples
 - Broadcast Support
-- Supported Platforms (Debian: Full, Darwin: Skipped, Linux:
-  Skipped)
+- Supported Platforms (Debian: Full, Darwin: Skipped, Linux: Skipped)
 - No container restriction
-- Permissions: `certificate:read` (list),
-  `certificate:write` (create, update, delete)
+- Permissions: `certificate:read` (list), `certificate:write` (create, update,
+  delete)
 - Related links
 
 - [ ] **Step 2: Create CLI doc pages**
 
-Landing page + list.md, create.md, update.md, delete.md with
-usage, flags, and output examples.
+Landing page + list.md, create.md, update.md, delete.md with usage, flags, and
+output examples.
 
 - [ ] **Step 3: Create SDK doc page**
 
 `docs/docs/sidebar/sdk/client/management/certificate.md`:
+
 - Methods table (List, Create, Update, Delete)
 - Request/result types
 - Usage examples
@@ -1284,14 +1280,14 @@ usage, flags, and output examples.
 
 - [ ] **Step 4: Create SDK example**
 
-`examples/sdk/client/certificate.go` — demonstrate List, Create,
-Delete with cleanup-first pattern. Under ~100 lines.
+`examples/sdk/client/certificate.go` — demonstrate List, Create, Delete with
+cleanup-first pattern. Under ~100 lines.
 
 - [ ] **Step 5: Update cross-references**
 
 - `features/features.md` — add row
-- `features/authentication.md` — add `certificate:read`,
-  `certificate:write` to role tables
+- `features/authentication.md` — add `certificate:read`, `certificate:write` to
+  role tables
 - `usage/configuration.md` — add permissions
 - `architecture/architecture.md` — add feature link
 - `architecture/api-guidelines.md` — add 4 endpoint rows
@@ -1310,16 +1306,17 @@ git commit -m "docs: add certificate management feature docs, SDK example, and c
 ### Task 10: Integration Test
 
 **Files:**
+
 - Create: `test/integration/certificate_test.go`
 
 - [ ] **Step 1: Write integration test**
 
 `//go:build integration` tag. Test:
-- `osapi client node certificate list --target _any --json` —
-  verify JSON with results array containing system certs
-- Optionally test create/delete if
-  `OSAPI_INTEGRATION_WRITES=1` is set (guarded by
-  `skipWrite`)
+
+- `osapi client node certificate list --target _any --json` — verify JSON with
+  results array containing system certs
+- Optionally test create/delete if `OSAPI_INTEGRATION_WRITES=1` is set (guarded
+  by `skipWrite`)
 
 - [ ] **Step 2: Commit**
 

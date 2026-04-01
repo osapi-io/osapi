@@ -32,16 +32,15 @@ import (
 func (d *Debian) List(
 	ctx context.Context,
 ) ([]Entry, error) {
-	var result []Entry
-
 	systemCAs, err := d.listSystemCAs()
 	if err != nil {
 		return nil, fmt.Errorf("list certificates: %w", err)
 	}
 
-	result = append(result, systemCAs...)
-
 	customCAs := d.listCustomCAs(ctx)
+
+	result := make([]Entry, 0, len(systemCAs)+len(customCAs))
+	result = append(result, systemCAs...)
 	result = append(result, customCAs...)
 
 	return result, nil

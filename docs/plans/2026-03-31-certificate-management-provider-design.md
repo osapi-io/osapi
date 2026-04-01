@@ -2,11 +2,10 @@
 
 ## Overview
 
-Add CA certificate management to OSAPI. Deploy custom CA
-certificates to the system trust store alongside default system
-CAs, and remove them. Uses `file.Deployer` for SHA-tracked
-deployment and `update-ca-certificates` to rebuild the trust
-bundle. Read-only listing of both system and custom CAs.
+Add CA certificate management to OSAPI. Deploy custom CA certificates to the
+system trust store alongside default system CAs, and remove them. Uses
+`file.Deployer` for SHA-tracked deployment and `update-ca-certificates` to
+rebuild the trust bundle. Read-only listing of both system and custom CAs.
 
 ## Architecture
 
@@ -56,48 +55,43 @@ type DeleteResult struct {
 ## Debian Implementation
 
 Custom CA certs are deployed to
-`/usr/local/share/ca-certificates/osapi-{name}.crt` via
-`file.Deployer`. After every create, update, or delete, the
-provider runs `update-ca-certificates` to rebuild the system
-trust bundle.
+`/usr/local/share/ca-certificates/osapi-{name}.crt` via `file.Deployer`. After
+every create, update, or delete, the provider runs `update-ca-certificates` to
+rebuild the system trust bundle.
 
-- **List**: Walk `/usr/share/ca-certificates/` for system CAs
-  (strip path prefix and `.crt` extension for name). Query file
-  state KV for entries with `osapi-` prefix for custom CAs.
-  Return both with `source` field.
+- **List**: Walk `/usr/share/ca-certificates/` for system CAs (strip path prefix
+  and `.crt` extension for name). Query file state KV for entries with `osapi-`
+  prefix for custom CAs. Return both with `source` field.
 - **Create**: Deploy PEM from Object Store to
-  `/usr/local/share/ca-certificates/osapi-{name}.crt` via
-  `file.Deployer` with mode `0644`. Store metadata
-  `{"source": "custom"}` in FileState. Run
+  `/usr/local/share/ca-certificates/osapi-{name}.crt` via `file.Deployer` with
+  mode `0644`. Store metadata `{"source": "custom"}` in FileState. Run
   `update-ca-certificates`.
-- **Update**: Same as create but for an existing entry. The
-  `file.Deployer` compares SHA — if content unchanged, returns
-  `changed: false` and skips `update-ca-certificates`.
-- **Delete**: Undeploy via `file.Deployer`, run
+- **Update**: Same as create but for an existing entry. The `file.Deployer`
+  compares SHA — if content unchanged, returns `changed: false` and skips
   `update-ca-certificates`.
+- **Delete**: Undeploy via `file.Deployer`, run `update-ca-certificates`.
 
 ## Platform Implementations
 
-| Platform | Implementation                        |
-| -------- | ------------------------------------- |
+| Platform | Implementation                         |
+| -------- | -------------------------------------- |
 | Debian   | file.Deployer + update-ca-certificates |
-| Darwin   | ErrUnsupported                        |
-| Linux    | ErrUnsupported                        |
+| Darwin   | ErrUnsupported                         |
+| Linux    | ErrUnsupported                         |
 
 ## Container Behavior
 
-No container check — CA cert management works in Docker
-containers. `update-ca-certificates` is available and the trust
-store is writable.
+No container check — CA cert management works in Docker containers.
+`update-ca-certificates` is available and the trust store is writable.
 
 ## API Endpoints
 
-| Method   | Path                                       | Permission          | Description            |
-| -------- | ------------------------------------------ | ------------------- | ---------------------- |
-| `GET`    | `/node/{hostname}/certificate/ca`          | `certificate:read`  | List CA certs          |
-| `POST`   | `/node/{hostname}/certificate/ca`          | `certificate:write` | Add custom CA cert     |
-| `PUT`    | `/node/{hostname}/certificate/ca/{name}`   | `certificate:write` | Update custom CA cert  |
-| `DELETE` | `/node/{hostname}/certificate/ca/{name}`   | `certificate:write` | Remove custom CA cert  |
+| Method   | Path                                     | Permission          | Description           |
+| -------- | ---------------------------------------- | ------------------- | --------------------- |
+| `GET`    | `/node/{hostname}/certificate/ca`        | `certificate:read`  | List CA certs         |
+| `POST`   | `/node/{hostname}/certificate/ca`        | `certificate:write` | Add custom CA cert    |
+| `PUT`    | `/node/{hostname}/certificate/ca/{name}` | `certificate:write` | Update custom CA cert |
+| `DELETE` | `/node/{hostname}/certificate/ca/{name}` | `certificate:write` | Remove custom CA cert |
 
 All endpoints support broadcast targeting.
 
@@ -110,23 +104,24 @@ All endpoints support broadcast targeting.
 }
 ```
 
-`object` references an existing Object Store upload containing
-the PEM-encoded CA certificate. For PUT, `name` comes from the
-path parameter.
+`object` references an existing Object Store upload containing the PEM-encoded
+CA certificate. For PUT, `name` comes from the path parameter.
 
 ### Response Shape (List)
 
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "certificates": [
-      {"name": "DigiCert_Global_Root_G2", "source": "system"},
-      {"name": "internal-corp-ca", "source": "custom"}
-    ]
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "certificates": [
+        { "name": "DigiCert_Global_Root_G2", "source": "system" },
+        { "name": "internal-corp-ca", "source": "custom" }
+      ]
+    }
+  ]
 }
 ```
 
@@ -135,12 +130,14 @@ path parameter.
 ```json
 {
   "job_id": "...",
-  "results": [{
-    "hostname": "web-01",
-    "status": "ok",
-    "name": "internal-corp-ca",
-    "changed": true
-  }]
+  "results": [
+    {
+      "hostname": "web-01",
+      "status": "ok",
+      "name": "internal-corp-ca",
+      "changed": true
+    }
+  ]
 }
 ```
 
@@ -153,12 +150,12 @@ client.Certificate.Update(ctx, host, name, opts)
 client.Certificate.Delete(ctx, host, name)
 ```
 
-`CertificateCreateOpts` / `CertificateUpdateOpts` with `Name`
-and `Object` fields.
+`CertificateCreateOpts` / `CertificateUpdateOpts` with `Name` and `Object`
+fields.
 
 ## Permissions
 
-- `certificate:read` — list CA certificates. Added to admin,
-  write, and read roles.
-- `certificate:write` — create, update, delete custom CA
-  certificates. Added to admin and write roles.
+- `certificate:read` — list CA certificates. Added to admin, write, and read
+  roles.
+- `certificate:write` — create, update, delete custom CA certificates. Added to
+  admin and write roles.
