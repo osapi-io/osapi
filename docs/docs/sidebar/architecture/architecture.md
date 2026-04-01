@@ -162,8 +162,8 @@ configure them — see the Features section:
 - [Power Management](../features/power-management.md) — reboot and shutdown
 - [Process Management](../features/process-management.md) — list, inspect, and
   signal processes
-- [User & Group Management](../features/user-management.md) — local user account
-  and group management
+- [User & Group Management](../features/user-management.md) — local user
+  account, group, and SSH key management
 - [Package Management](../features/package-management.md) — system package
   management
 - [Log Management](../features/log-management.md) — systemd journal query by

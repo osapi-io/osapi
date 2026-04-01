@@ -8,8 +8,8 @@ $ osapi client node user update --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME     CHANGED
-  deploy   true
+  STATUS  CHANGED  ERROR  NAME
+  ok      true            deploy
 ```
 
 Lock or unlock an account:
@@ -21,6 +21,20 @@ $ osapi client node user update --target web-01 --name deploy --unlock
 
 The `--lock` and `--unlock` flags are mutually exclusive. At least one of
 `--shell`, `--home`, `--groups`, `--lock`, or `--unlock` must be specified.
+
+Broadcast to all hosts:
+
+```bash
+$ osapi client node user update --target _all \
+    --name deploy --shell /bin/zsh
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS  CHANGED  ERROR                 NAME
+  web-01    ok      true                            deploy
+  web-02    ok      true                            deploy
+  mac-01    skipped false    unsupported platform
+```
 
 ## Flags
 

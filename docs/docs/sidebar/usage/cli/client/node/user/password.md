@@ -8,12 +8,26 @@ $ osapi client node user password --target web-01 \
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME     CHANGED
-  deploy   true
+  STATUS  CHANGED  ERROR  NAME
+  ok      true            deploy
 ```
 
 The password is sent as plaintext and hashed by the agent using the system's
 default hashing algorithm.
+
+Broadcast to all hosts:
+
+```bash
+$ osapi client node user password --target _all \
+    --name deploy --password 'newpass123'
+
+  Job ID: 550e8400-e29b-41d4-a716-446655440000
+
+  HOSTNAME  STATUS  CHANGED  ERROR                 NAME
+  web-01    ok      true                            deploy
+  web-02    ok      true                            deploy
+  mac-01    skipped false    unsupported platform
+```
 
 ## Flags
 

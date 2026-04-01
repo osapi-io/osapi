@@ -7,8 +7,8 @@ $ osapi client node package install --target web-01 --name nginx
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  NAME    CHANGED
-  nginx   true
+  STATUS  CHANGED  ERROR  NAME
+  ok      true            nginx
 ```
 
 Broadcast to all hosts at once:
@@ -18,26 +18,10 @@ $ osapi client node package install --target _all --name htop
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  web-01
-  NAME   CHANGED
-  htop   true
-
-  web-02
-  NAME   CHANGED
-  htop   true
-```
-
-When some hosts are skipped (e.g., macOS agents), HOSTNAME, STATUS, and ERROR
-columns appear alongside data columns:
-
-```bash
-$ osapi client node package install --target _all --name htop
-
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  STATUS   ERROR                 NAME   CHANGED
-  web-01    ok                              htop   true
-  mac-01    skipped  unsupported platform
+  HOSTNAME  STATUS   CHANGED  ERROR                 NAME
+  web-01    ok       true                            htop
+  web-02    ok       true                            htop
+  mac-01    skipped  false    unsupported platform
 ```
 
 ## JSON Output
@@ -46,7 +30,8 @@ Use `--json` to get the full API response:
 
 ```bash
 $ osapi client node package install --target web-01 --name nginx --json
-{"results":[{"hostname":"web-01","name":"nginx","changed":true,"status":"ok"}],"job_id":"..."}
+{"results":[{"hostname":"web-01","name":"nginx","changed":true,
+"status":"ok"}],"job_id":"..."}
 ```
 
 ## Flags
