@@ -23,49 +23,120 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"strings"
 )
 
-// Start starts a systemd service.
-// Stub: will be implemented in a future task.
+// Start starts a systemd service. If the service is already active, it
+// returns Changed: false without taking action.
 func (d *Debian) Start(
-	_ context.Context,
-	_ string,
+	ctx context.Context,
+	name string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: start: not yet implemented")
+	if err := validateName(name); err != nil {
+		return nil, fmt.Errorf("service: start: %w", err)
+	}
+
+	d.logger.Debug("executing service.Start", slog.String("name", name))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", name})
+	if strings.TrimSpace(output) == "active" {
+		return &ActionResult{Name: name, Changed: false}, nil
+	}
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"start", name}); err != nil {
+		return nil, fmt.Errorf("service: start: %w", err)
+	}
+
+	return &ActionResult{Name: name, Changed: true}, nil
 }
 
-// Stop stops a systemd service.
-// Stub: will be implemented in a future task.
+// Stop stops a systemd service. If the service is already inactive, it
+// returns Changed: false without taking action.
 func (d *Debian) Stop(
-	_ context.Context,
-	_ string,
+	ctx context.Context,
+	name string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: stop: not yet implemented")
+	if err := validateName(name); err != nil {
+		return nil, fmt.Errorf("service: stop: %w", err)
+	}
+
+	d.logger.Debug("executing service.Stop", slog.String("name", name))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-active", name})
+	if strings.TrimSpace(output) != "active" {
+		return &ActionResult{Name: name, Changed: false}, nil
+	}
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"stop", name}); err != nil {
+		return nil, fmt.Errorf("service: stop: %w", err)
+	}
+
+	return &ActionResult{Name: name, Changed: true}, nil
 }
 
-// Restart restarts a systemd service.
-// Stub: will be implemented in a future task.
+// Restart restarts a systemd service. Always returns Changed: true on success.
 func (d *Debian) Restart(
 	_ context.Context,
-	_ string,
+	name string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: restart: not yet implemented")
+	if err := validateName(name); err != nil {
+		return nil, fmt.Errorf("service: restart: %w", err)
+	}
+
+	d.logger.Debug("executing service.Restart", slog.String("name", name))
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"restart", name}); err != nil {
+		return nil, fmt.Errorf("service: restart: %w", err)
+	}
+
+	return &ActionResult{Name: name, Changed: true}, nil
 }
 
-// Enable enables a systemd service.
-// Stub: will be implemented in a future task.
+// Enable enables a systemd service. If the service is already enabled, it
+// returns Changed: false without taking action.
 func (d *Debian) Enable(
-	_ context.Context,
-	_ string,
+	ctx context.Context,
+	name string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: enable: not yet implemented")
+	if err := validateName(name); err != nil {
+		return nil, fmt.Errorf("service: enable: %w", err)
+	}
+
+	d.logger.Debug("executing service.Enable", slog.String("name", name))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", name})
+	if strings.TrimSpace(output) == "enabled" {
+		return &ActionResult{Name: name, Changed: false}, nil
+	}
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"enable", name}); err != nil {
+		return nil, fmt.Errorf("service: enable: %w", err)
+	}
+
+	return &ActionResult{Name: name, Changed: true}, nil
 }
 
-// Disable disables a systemd service.
-// Stub: will be implemented in a future task.
+// Disable disables a systemd service. If the service is already disabled, it
+// returns Changed: false without taking action.
 func (d *Debian) Disable(
-	_ context.Context,
-	_ string,
+	ctx context.Context,
+	name string,
 ) (*ActionResult, error) {
-	return nil, fmt.Errorf("service: disable: not yet implemented")
+	if err := validateName(name); err != nil {
+		return nil, fmt.Errorf("service: disable: %w", err)
+	}
+
+	d.logger.Debug("executing service.Disable", slog.String("name", name))
+
+	output, _ := d.execManager.RunCmd("systemctl", []string{"is-enabled", name})
+	if strings.TrimSpace(output) != "enabled" {
+		return &ActionResult{Name: name, Changed: false}, nil
+	}
+
+	if _, err := d.execManager.RunCmd("systemctl", []string{"disable", name}); err != nil {
+		return nil, fmt.Errorf("service: disable: %w", err)
+	}
+
+	return &ActionResult{Name: name, Changed: true}, nil
 }
