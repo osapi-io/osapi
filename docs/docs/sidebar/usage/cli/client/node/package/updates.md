@@ -1,7 +1,6 @@
 # Updates
 
-List packages that have newer versions available in the configured
-repositories:
+List packages that have newer versions available in the configured repositories:
 
 ```bash
 $ osapi client node package updates --target web-01

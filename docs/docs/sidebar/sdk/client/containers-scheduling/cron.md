@@ -19,11 +19,11 @@ hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
 
 ## Request Types
 
-| Type             | Fields                                                                      |
-| ---------------- | --------------------------------------------------------------------------- |
-| `CronCreateOpts` | Name, Object, Schedule\*, Interval\*, User, ContentType, Vars              |
-|                  | (\* Schedule and Interval are mutually exclusive; one required)             |
-| `CronUpdateOpts` | Object, Schedule, User, ContentType, Vars (all optional)                    |
+| Type             | Fields                                                          |
+| ---------------- | --------------------------------------------------------------- |
+| `CronCreateOpts` | Name, Object, Schedule\*, Interval\*, User, ContentType, Vars   |
+|                  | (\* Schedule and Interval are mutually exclusive; one required) |
+| `CronUpdateOpts` | Object, Schedule, User, ContentType, Vars (all optional)        |
 
 ## Usage
 
