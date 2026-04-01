@@ -28,8 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientNodeUserSshKeyListCmd represents the user ssh-key list command.
-var clientNodeUserSshKeyListCmd = &cobra.Command{
+// clientNodeUserSSHKeyListCmd represents the user ssh-key list command.
+var clientNodeUserSSHKeyListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List SSH authorized keys",
 	Run: func(cmd *cobra.Command, _ []string) {
@@ -89,10 +89,10 @@ var clientNodeUserSshKeyListCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeUserSshKeyCmd.AddCommand(clientNodeUserSshKeyListCmd)
+	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyListCmd)
 
-	clientNodeUserSshKeyListCmd.PersistentFlags().
+	clientNodeUserSSHKeyListCmd.PersistentFlags().
 		String("name", "", "Username to list SSH keys for (required)")
 
-	_ = clientNodeUserSshKeyListCmd.MarkPersistentFlagRequired("name")
+	_ = clientNodeUserSSHKeyListCmd.MarkPersistentFlagRequired("name")
 }

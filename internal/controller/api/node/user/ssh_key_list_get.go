@@ -32,13 +32,13 @@ import (
 	userProv "github.com/retr0h/osapi/internal/provider/node/user"
 )
 
-// GetNodeUserSshKey lists SSH authorized keys for a user on a target node.
-func (u *User) GetNodeUserSshKey(
+// GetNodeUserSSHKey lists SSH authorized keys for a user on a target node.
+func (u *User) GetNodeUserSSHKey(
 	ctx context.Context,
-	request gen.GetNodeUserSshKeyRequestObject,
-) (gen.GetNodeUserSshKeyResponseObject, error) {
+	request gen.GetNodeUserSSHKeyRequestObject,
+) (gen.GetNodeUserSSHKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -55,7 +55,7 @@ func (u *User) GetNodeUserSshKey(
 	}
 
 	if job.IsBroadcastTarget(hostname) {
-		return u.getNodeUserSshKeyBroadcast(ctx, hostname, data)
+		return u.getNodeUserSSHKeyBroadcast(ctx, hostname, data)
 	}
 
 	jobID, resp, err := u.JobClient.Query(
@@ -67,13 +67,13 @@ func (u *User) GetNodeUserSshKey(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		e := resp.Error
 		jobUUID := uuid.MustParse(jobID)
-		return gen.GetNodeUserSshKey200JSONResponse{
+		return gen.GetNodeUserSSHKey200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.SSHKeyEntry{
 				{
@@ -88,18 +88,18 @@ func (u *User) GetNodeUserSshKey(
 	results := sshKeyInfoListFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.GetNodeUserSshKey200JSONResponse{
+	return gen.GetNodeUserSSHKey200JSONResponse{
 		JobId:   &jobUUID,
 		Results: results,
 	}, nil
 }
 
-// getNodeUserSshKeyBroadcast handles broadcast targets for SSH key list.
-func (u *User) getNodeUserSshKeyBroadcast(
+// getNodeUserSSHKeyBroadcast handles broadcast targets for SSH key list.
+func (u *User) getNodeUserSSHKeyBroadcast(
 	ctx context.Context,
 	target string,
 	data map[string]string,
-) (gen.GetNodeUserSshKeyResponseObject, error) {
+) (gen.GetNodeUserSSHKeyResponseObject, error) {
 	jobID, responses, err := u.JobClient.QueryBroadcast(
 		ctx,
 		target,
@@ -109,7 +109,7 @@ func (u *User) getNodeUserSshKeyBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	allResults := make([]gen.SSHKeyEntry, 0)
@@ -136,7 +136,7 @@ func (u *User) getNodeUserSshKeyBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.GetNodeUserSshKey200JSONResponse{
+	return gen.GetNodeUserSSHKey200JSONResponse{
 		JobId:   &jobUUID,
 		Results: allResults,
 	}, nil

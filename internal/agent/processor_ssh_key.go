@@ -31,8 +31,8 @@ import (
 	"github.com/retr0h/osapi/internal/provider/node/user"
 )
 
-// processSshKeyOperation dispatches SSH key sub-operations.
-func processSshKeyOperation(
+// processSSHKeyOperation dispatches SSH key sub-operations.
+func processSSHKeyOperation(
 	userProvider user.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
@@ -52,18 +52,18 @@ func processSshKeyOperation(
 
 	switch subOp {
 	case "list":
-		return processSshKeyList(ctx, userProvider, logger, jobRequest)
+		return processSSHKeyList(ctx, userProvider, logger, jobRequest)
 	case "add":
-		return processSshKeyAdd(ctx, userProvider, logger, jobRequest)
+		return processSSHKeyAdd(ctx, userProvider, logger, jobRequest)
 	case "remove":
-		return processSshKeyRemove(ctx, userProvider, logger, jobRequest)
+		return processSSHKeyRemove(ctx, userProvider, logger, jobRequest)
 	default:
 		return nil, fmt.Errorf("unsupported sshKey operation: %s", jobRequest.Operation)
 	}
 }
 
-// processSshKeyList lists SSH keys for a user.
-func processSshKeyList(
+// processSSHKeyList lists SSH keys for a user.
+func processSSHKeyList(
 	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,
@@ -88,15 +88,15 @@ func processSshKeyList(
 	return json.Marshal(keys)
 }
 
-// processSshKeyAdd adds an SSH key for a user.
-func processSshKeyAdd(
+// processSSHKeyAdd adds an SSH key for a user.
+func processSSHKeyAdd(
 	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,
 	jobRequest job.Request,
 ) (json.RawMessage, error) {
 	var data struct {
-		Username string   `json:"username"`
+		Username string      `json:"username"`
 		Key      user.SSHKey `json:"key"`
 	}
 	if err := json.Unmarshal(jobRequest.Data, &data); err != nil {
@@ -115,8 +115,8 @@ func processSshKeyAdd(
 	return json.Marshal(result)
 }
 
-// processSshKeyRemove removes an SSH key for a user.
-func processSshKeyRemove(
+// processSSHKeyRemove removes an SSH key for a user.
+func processSSHKeyRemove(
 	ctx context.Context,
 	userProvider user.Provider,
 	logger *slog.Logger,

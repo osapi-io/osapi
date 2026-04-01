@@ -97,7 +97,7 @@ func (suite *DebianSSHKeyPublicTestSuite) writePasswd(content string) {
 }
 
 func (suite *DebianSSHKeyPublicTestSuite) writeAuthorizedKeys(
-	username string,
+	_ string,
 	homeDir string,
 	content string,
 ) {
@@ -318,7 +318,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestListKeys() {
 		{
 			name:     "when passwd has comments and malformed lines",
 			username: "testuser",
-			passwd: "# comment\n\nshort:line\ntestuser:x:1000:1000:Test:/home/testuser:/bin/bash\n",
+			passwd:   "# comment\n\nshort:line\ntestuser:x:1000:1000:Test:/home/testuser:/bin/bash\n",
 			setupFS: func() {
 				suite.writeAuthorizedKeys(
 					"testuser",
@@ -826,7 +826,7 @@ func (suite *DebianSSHKeyPublicTestSuite) TestRemoveKey() {
 				openFileCalls := 0
 
 				suite.provider = suite.newFailFSProvider(baseFs,
-					func(_ avfs.VFSBase, fn avfs.FnVFS, fp *failfs.FailParam) error {
+					func(_ avfs.VFSBase, fn avfs.FnVFS, _ *failfs.FailParam) error {
 						// WriteFile uses OpenFile internally.
 						// The first OpenFile is from ReadFile, the second is
 						// from WriteFile (the rewrite). Fail the second.

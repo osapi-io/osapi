@@ -28,8 +28,8 @@ import (
 	"github.com/retr0h/osapi/internal/cli"
 )
 
-// clientNodeUserSshKeyRemoveCmd represents the user ssh-key remove command.
-var clientNodeUserSshKeyRemoveCmd = &cobra.Command{
+// clientNodeUserSSHKeyRemoveCmd represents the user ssh-key remove command.
+var clientNodeUserSSHKeyRemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove an SSH authorized key",
 	Run: func(cmd *cobra.Command, _ []string) {
@@ -75,13 +75,13 @@ var clientNodeUserSshKeyRemoveCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeUserSshKeyCmd.AddCommand(clientNodeUserSshKeyRemoveCmd)
+	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyRemoveCmd)
 
-	clientNodeUserSshKeyRemoveCmd.PersistentFlags().
+	clientNodeUserSSHKeyRemoveCmd.PersistentFlags().
 		String("name", "", "Username to remove SSH key from (required)")
-	clientNodeUserSshKeyRemoveCmd.PersistentFlags().
+	clientNodeUserSSHKeyRemoveCmd.PersistentFlags().
 		String("fingerprint", "", "Fingerprint of the SSH key to remove (required)")
 
-	_ = clientNodeUserSshKeyRemoveCmd.MarkPersistentFlagRequired("name")
-	_ = clientNodeUserSshKeyRemoveCmd.MarkPersistentFlagRequired("fingerprint")
+	_ = clientNodeUserSSHKeyRemoveCmd.MarkPersistentFlagRequired("name")
+	_ = clientNodeUserSSHKeyRemoveCmd.MarkPersistentFlagRequired("fingerprint")
 }

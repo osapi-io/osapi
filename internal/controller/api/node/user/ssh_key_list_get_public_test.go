@@ -77,16 +77,16 @@ func (s *SSHKeyListGetPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
+func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKey() {
 	tests := []struct {
 		name         string
-		request      gen.GetNodeUserSshKeyRequestObject
+		request      gen.GetNodeUserSSHKeyRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.GetNodeUserSshKeyResponseObject)
+		validateFunc func(resp gen.GetNodeUserSSHKeyResponseObject)
 	}{
 		{
 			name: "success with keys",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 			},
@@ -106,8 +106,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -120,7 +120,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "success with key without comment",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 			},
@@ -140,8 +140,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Require().NotNil(r.Results[0].Keys)
@@ -152,7 +152,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "success with nil response data",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 			},
@@ -170,8 +170,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						Data:     nil,
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Require().Len(r.Results, 1)
@@ -179,7 +179,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "when job skipped",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 			},
@@ -198,8 +198,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						Error:    "ssh key: operation not supported on this OS family",
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal(gen.SSHKeyEntryStatusSkipped, r.Results[0].Status)
@@ -208,7 +208,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "job client error",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 			},
@@ -223,20 +223,20 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.GetNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.GetNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "",
 				Name:     "testuser",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -244,7 +244,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "broadcast target _all",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 			},
@@ -271,8 +271,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 1)
@@ -280,7 +280,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		},
 		{
 			name: "broadcast includes failed and skipped",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 			},
@@ -317,15 +317,15 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 						nil,
 					)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.GetNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.GetNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 3)
 			},
 		},
 		{
 			name: "broadcast job client error",
-			request: gen.GetNodeUserSshKeyRequestObject{
+			request: gen.GetNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 			},
@@ -340,8 +340,8 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.GetNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.GetNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.GetNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -351,14 +351,14 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKey() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.GetNodeUserSshKey(s.ctx, tt.request)
+			resp, err := s.handler.GetNodeUserSSHKey(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKeyValidationHTTP() {
+func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -424,7 +424,7 @@ func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKeyValidationHTTP() {
 
 const rbacSSHKeyListTestSigningKey = "test-signing-key-for-rbac-ssh-key-list"
 
-func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSshKeyRBACHTTP() {
+func (s *SSHKeyListGetPublicTestSuite) TestGetNodeUserSSHKeyRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {

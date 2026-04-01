@@ -33,17 +33,17 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-// PostNodeUserSshKey adds an SSH authorized key for a user on a target node.
-func (u *User) PostNodeUserSshKey(
+// PostNodeUserSSHKey adds an SSH authorized key for a user on a target node.
+func (u *User) PostNodeUserSSHKey(
 	ctx context.Context,
-	request gen.PostNodeUserSshKeyRequestObject,
-) (gen.PostNodeUserSshKeyResponseObject, error) {
+	request gen.PostNodeUserSSHKeyRequestObject,
+) (gen.PostNodeUserSSHKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.PostNodeUserSshKey400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
 	if errMsg, ok := validation.Struct(request.Body); !ok {
-		return gen.PostNodeUserSshKey400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -61,7 +61,7 @@ func (u *User) PostNodeUserSshKey(
 	}
 
 	if job.IsBroadcastTarget(hostname) {
-		return u.postNodeUserSshKeyBroadcast(ctx, hostname, data)
+		return u.postNodeUserSSHKeyBroadcast(ctx, hostname, data)
 	}
 
 	jobID, resp, err := u.JobClient.Modify(
@@ -73,13 +73,13 @@ func (u *User) PostNodeUserSshKey(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.PostNodeUserSshKey200JSONResponse{
+		return gen.PostNodeUserSSHKey200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.SSHKeyMutationEntry{
 				{
@@ -100,7 +100,7 @@ func (u *User) PostNodeUserSshKey(
 	changed := resp.Changed
 	agentHostname := resp.Hostname
 
-	return gen.PostNodeUserSshKey200JSONResponse{
+	return gen.PostNodeUserSSHKey200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.SSHKeyMutationEntry{
 			{
@@ -112,12 +112,12 @@ func (u *User) PostNodeUserSshKey(
 	}, nil
 }
 
-// postNodeUserSshKeyBroadcast handles broadcast targets for SSH key add.
-func (u *User) postNodeUserSshKeyBroadcast(
+// postNodeUserSSHKeyBroadcast handles broadcast targets for SSH key add.
+func (u *User) postNodeUserSSHKeyBroadcast(
 	ctx context.Context,
 	target string,
 	data map[string]string,
-) (gen.PostNodeUserSshKeyResponseObject, error) {
+) (gen.PostNodeUserSSHKeyResponseObject, error) {
 	jobID, responses, err := u.JobClient.ModifyBroadcast(
 		ctx,
 		target,
@@ -127,7 +127,7 @@ func (u *User) postNodeUserSshKeyBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var apiResponses []gen.SSHKeyMutationEntry
@@ -153,7 +153,7 @@ func (u *User) postNodeUserSshKeyBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.PostNodeUserSshKey200JSONResponse{
+	return gen.PostNodeUserSSHKey200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

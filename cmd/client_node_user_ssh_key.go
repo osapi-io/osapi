@@ -24,12 +24,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// clientNodeUserSshKeyCmd represents the user ssh-key command.
-var clientNodeUserSshKeyCmd = &cobra.Command{
+// clientNodeUserSSHKeyCmd represents the user ssh-key command.
+var clientNodeUserSSHKeyCmd = &cobra.Command{
 	Use:   "ssh-key",
 	Short: "Manage SSH authorized keys",
 }
 
 func init() {
-	clientNodeUserCmd.AddCommand(clientNodeUserSshKeyCmd)
+	clientNodeUserCmd.AddCommand(clientNodeUserSSHKeyCmd)
 }

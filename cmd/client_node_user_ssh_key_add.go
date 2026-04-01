@@ -29,8 +29,8 @@ import (
 	"github.com/retr0h/osapi/pkg/sdk/client"
 )
 
-// clientNodeUserSshKeyAddCmd represents the user ssh-key add command.
-var clientNodeUserSshKeyAddCmd = &cobra.Command{
+// clientNodeUserSSHKeyAddCmd represents the user ssh-key add command.
+var clientNodeUserSSHKeyAddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add an SSH authorized key",
 	Run: func(cmd *cobra.Command, _ []string) {
@@ -76,13 +76,13 @@ var clientNodeUserSshKeyAddCmd = &cobra.Command{
 }
 
 func init() {
-	clientNodeUserSshKeyCmd.AddCommand(clientNodeUserSshKeyAddCmd)
+	clientNodeUserSSHKeyCmd.AddCommand(clientNodeUserSSHKeyAddCmd)
 
-	clientNodeUserSshKeyAddCmd.PersistentFlags().
+	clientNodeUserSSHKeyAddCmd.PersistentFlags().
 		String("name", "", "Username to add SSH key for (required)")
-	clientNodeUserSshKeyAddCmd.PersistentFlags().
+	clientNodeUserSSHKeyAddCmd.PersistentFlags().
 		String("key", "", "Full SSH public key line (required)")
 
-	_ = clientNodeUserSshKeyAddCmd.MarkPersistentFlagRequired("name")
-	_ = clientNodeUserSshKeyAddCmd.MarkPersistentFlagRequired("key")
+	_ = clientNodeUserSSHKeyAddCmd.MarkPersistentFlagRequired("name")
+	_ = clientNodeUserSSHKeyAddCmd.MarkPersistentFlagRequired("key")
 }

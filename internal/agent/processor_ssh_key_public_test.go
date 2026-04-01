@@ -36,21 +36,21 @@ import (
 	userMocks "github.com/retr0h/osapi/internal/provider/node/user/mocks"
 )
 
-type ProcessorSshKeyPublicTestSuite struct {
+type ProcessorSSHKeyPublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl *gomock.Controller
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) SetupTest() {
+func (s *ProcessorSSHKeyPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) TearDownTest() {
+func (s *ProcessorSSHKeyPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) newProcessor(
+func (s *ProcessorSSHKeyPublicTestSuite) newProcessor(
 	userProvider user.Provider,
 ) agent.ProcessorFunc {
 	return agent.NewNodeProcessor(
@@ -65,7 +65,7 @@ func (s *ProcessorSshKeyPublicTestSuite) newProcessor(
 	)
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyOperation() {
+func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyOperation() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
@@ -137,7 +137,7 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyOperation() {
 	}
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyList() {
+func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyList() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
@@ -204,7 +204,9 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyList() {
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().ListKeys(gomock.Any(), "missing").Return(nil, errors.New("user not found"))
+				m.EXPECT().
+					ListKeys(gomock.Any(), "missing").
+					Return(nil, errors.New("user not found"))
 				return m
 			},
 			expectError: true,
@@ -232,7 +234,7 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyList() {
 	}
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyAdd() {
+func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyAdd() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
@@ -244,8 +246,8 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyAdd() {
 		{
 			name: "successful ssh key add",
 			jobRequest: job.Request{
-				Type:     job.TypeModify,
-				Category: "node",
+				Type:      job.TypeModify,
+				Category:  "node",
 				Operation: "sshKey.add",
 				Data: json.RawMessage(
 					`{"username":"john","key":{"type":"ssh-ed25519","fingerprint":"SHA256:abc123","comment":"john@laptop","raw_line":"ssh-ed25519 AAAA... john@laptop"}}`,
@@ -287,8 +289,8 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyAdd() {
 		{
 			name: "ssh key add provider error",
 			jobRequest: job.Request{
-				Type:     job.TypeModify,
-				Category: "node",
+				Type:      job.TypeModify,
+				Category:  "node",
 				Operation: "sshKey.add",
 				Data: json.RawMessage(
 					`{"username":"john","key":{"type":"ssh-ed25519","fingerprint":"SHA256:abc123","raw_line":"ssh-ed25519 AAAA..."}}`,
@@ -326,7 +328,7 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyAdd() {
 	}
 }
 
-func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyRemove() {
+func (s *ProcessorSSHKeyPublicTestSuite) TestProcessSSHKeyRemove() {
 	tests := []struct {
 		name        string
 		jobRequest  job.Request
@@ -345,9 +347,11 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyRemove() {
 			},
 			setupMock: func() user.Provider {
 				m := userMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().RemoveKey(gomock.Any(), "john", "SHA256:abc123").Return(&user.SSHKeyResult{
-					Changed: true,
-				}, nil)
+				m.EXPECT().
+					RemoveKey(gomock.Any(), "john", "SHA256:abc123").
+					Return(&user.SSHKeyResult{
+						Changed: true,
+					}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
@@ -411,6 +415,6 @@ func (s *ProcessorSshKeyPublicTestSuite) TestProcessSshKeyRemove() {
 	}
 }
 
-func TestProcessorSshKeyPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(ProcessorSshKeyPublicTestSuite))
+func TestProcessorSSHKeyPublicTestSuite(t *testing.T) {
+	suite.Run(t, new(ProcessorSSHKeyPublicTestSuite))
 }

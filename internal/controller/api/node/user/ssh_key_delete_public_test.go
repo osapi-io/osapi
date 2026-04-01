@@ -76,16 +76,16 @@ func (s *SSHKeyDeletePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
+func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKey() {
 	tests := []struct {
 		name         string
-		request      gen.DeleteNodeUserSshKeyRequestObject
+		request      gen.DeleteNodeUserSSHKeyRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.DeleteNodeUserSshKeyResponseObject)
+		validateFunc func(resp gen.DeleteNodeUserSSHKeyResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "server1",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -107,8 +107,8 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 						Changed:  boolPtr(true),
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal(gen.SSHKeyMutationEntryStatusOk, r.Results[0].Status)
@@ -118,7 +118,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 		},
 		{
 			name: "when job skipped",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "server1",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -138,15 +138,15 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 						Error:    "unsupported",
 					}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Equal(gen.SSHKeyMutationEntryStatusSkipped, r.Results[0].Status)
 			},
 		},
 		{
 			name: "job client error",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "server1",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -162,21 +162,21 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.DeleteNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.DeleteNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -184,7 +184,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 		},
 		{
 			name: "broadcast target _all",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "_all",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -207,15 +207,15 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 							},
 						}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 1)
 			},
 		},
 		{
 			name: "broadcast with failed and skipped agents",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "_all",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -248,8 +248,8 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 							},
 						}, nil)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.DeleteNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.DeleteNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 3)
 
@@ -266,7 +266,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 		},
 		{
 			name: "broadcast job client error",
-			request: gen.DeleteNodeUserSshKeyRequestObject{
+			request: gen.DeleteNodeUserSSHKeyRequestObject{
 				Hostname:    "_all",
 				Name:        "testuser",
 				Fingerprint: "SHA256:abc123",
@@ -282,8 +282,8 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.DeleteNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.DeleteNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.DeleteNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.DeleteNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -292,14 +292,14 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKey() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			resp, err := s.handler.DeleteNodeUserSshKey(s.ctx, tt.request)
+			resp, err := s.handler.DeleteNodeUserSSHKey(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKeyValidationHTTP() {
+func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyValidationHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -368,7 +368,7 @@ func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKeyValidationHTTP() {
 
 const rbacSSHKeyDeleteTestSigningKey = "test-signing-key-for-rbac-ssh-key-delete"
 
-func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSshKeyRBACHTTP() {
+func (s *SSHKeyDeletePublicTestSuite) TestDeleteNodeUserSSHKeyRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {

@@ -243,7 +243,7 @@ func (s *UserService) ListKeys(
 	hostname string,
 	username string,
 ) (*Response[Collection[SSHKeyInfoResult]], error) {
-	resp, err := s.client.GetNodeUserSshKeyWithResponse(ctx, hostname, username)
+	resp, err := s.client.GetNodeUserSSHKeyWithResponse(ctx, hostname, username)
 	if err != nil {
 		return nil, fmt.Errorf("user list keys: %w", err)
 	}
@@ -278,7 +278,7 @@ func (s *UserService) AddKey(
 		Key: opts.Key,
 	}
 
-	resp, err := s.client.PostNodeUserSshKeyWithResponse(ctx, hostname, username, body)
+	resp, err := s.client.PostNodeUserSSHKeyWithResponse(ctx, hostname, username, body)
 	if err != nil {
 		return nil, fmt.Errorf("user add key: %w", err)
 	}
@@ -311,7 +311,7 @@ func (s *UserService) RemoveKey(
 	username string,
 	fingerprint string,
 ) (*Response[Collection[SSHKeyMutationResult]], error) {
-	resp, err := s.client.DeleteNodeUserSshKeyWithResponse(
+	resp, err := s.client.DeleteNodeUserSSHKeyWithResponse(
 		ctx, hostname, username, fingerprint,
 	)
 	if err != nil {

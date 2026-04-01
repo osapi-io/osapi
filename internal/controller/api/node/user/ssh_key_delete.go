@@ -30,14 +30,14 @@ import (
 	"github.com/retr0h/osapi/internal/job"
 )
 
-// DeleteNodeUserSshKey removes an SSH authorized key by fingerprint for a user
+// DeleteNodeUserSSHKey removes an SSH authorized key by fingerprint for a user
 // on a target node.
-func (u *User) DeleteNodeUserSshKey(
+func (u *User) DeleteNodeUserSSHKey(
 	ctx context.Context,
-	request gen.DeleteNodeUserSshKeyRequestObject,
-) (gen.DeleteNodeUserSshKeyResponseObject, error) {
+	request gen.DeleteNodeUserSSHKeyRequestObject,
+) (gen.DeleteNodeUserSSHKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
@@ -57,7 +57,7 @@ func (u *User) DeleteNodeUserSshKey(
 	}
 
 	if job.IsBroadcastTarget(hostname) {
-		return u.deleteNodeUserSshKeyBroadcast(ctx, hostname, data)
+		return u.deleteNodeUserSSHKeyBroadcast(ctx, hostname, data)
 	}
 
 	jobID, resp, err := u.JobClient.Modify(
@@ -69,13 +69,13 @@ func (u *User) DeleteNodeUserSshKey(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		jobUUID := uuid.MustParse(jobID)
 		e := resp.Error
-		return gen.DeleteNodeUserSshKey200JSONResponse{
+		return gen.DeleteNodeUserSSHKey200JSONResponse{
 			JobId: &jobUUID,
 			Results: []gen.SSHKeyMutationEntry{
 				{
@@ -91,7 +91,7 @@ func (u *User) DeleteNodeUserSshKey(
 	changed := resp.Changed
 	agentHostname := resp.Hostname
 
-	return gen.DeleteNodeUserSshKey200JSONResponse{
+	return gen.DeleteNodeUserSSHKey200JSONResponse{
 		JobId: &jobUUID,
 		Results: []gen.SSHKeyMutationEntry{
 			{
@@ -103,12 +103,12 @@ func (u *User) DeleteNodeUserSshKey(
 	}, nil
 }
 
-// deleteNodeUserSshKeyBroadcast handles broadcast targets for SSH key remove.
-func (u *User) deleteNodeUserSshKeyBroadcast(
+// deleteNodeUserSSHKeyBroadcast handles broadcast targets for SSH key remove.
+func (u *User) deleteNodeUserSSHKeyBroadcast(
 	ctx context.Context,
 	target string,
 	data map[string]string,
-) (gen.DeleteNodeUserSshKeyResponseObject, error) {
+) (gen.DeleteNodeUserSSHKeyResponseObject, error) {
 	jobID, responses, err := u.JobClient.ModifyBroadcast(
 		ctx,
 		target,
@@ -118,7 +118,7 @@ func (u *User) deleteNodeUserSshKeyBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
 	}
 
 	var apiResponses []gen.SSHKeyMutationEntry
@@ -144,7 +144,7 @@ func (u *User) deleteNodeUserSshKeyBroadcast(
 
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.DeleteNodeUserSshKey200JSONResponse{
+	return gen.DeleteNodeUserSSHKey200JSONResponse{
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil

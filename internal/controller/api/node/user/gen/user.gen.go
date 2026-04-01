@@ -368,8 +368,8 @@ type PutNodeUserJSONRequestBody = UserUpdateRequest
 // PostNodeUserPasswordJSONRequestBody defines body for PostNodeUserPassword for application/json ContentType.
 type PostNodeUserPasswordJSONRequestBody = UserPasswordRequest
 
-// PostNodeUserSshKeyJSONRequestBody defines body for PostNodeUserSshKey for application/json ContentType.
-type PostNodeUserSshKeyJSONRequestBody = SSHKeyAddRequest
+// PostNodeUserSSHKeyJSONRequestBody defines body for PostNodeUserSSHKey for application/json ContentType.
+type PostNodeUserSSHKeyJSONRequestBody = SSHKeyAddRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -408,13 +408,13 @@ type ServerInterface interface {
 	PostNodeUserPassword(ctx echo.Context, hostname Hostname, name UserName) error
 	// List SSH authorized keys
 	// (GET /node/{hostname}/user/{name}/ssh-key)
-	GetNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error
+	GetNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error
 	// Add SSH authorized key
 	// (POST /node/{hostname}/user/{name}/ssh-key)
-	PostNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error
+	PostNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error
 	// Remove SSH authorized key
 	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
-	DeleteNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error
+	DeleteNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -676,8 +676,8 @@ func (w *ServerInterfaceWrapper) PostNodeUserPassword(ctx echo.Context) error {
 	return err
 }
 
-// GetNodeUserSshKey converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeUserSshKey(ctx echo.Context) error {
+// GetNodeUserSSHKey converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeUserSSHKey(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -698,12 +698,12 @@ func (w *ServerInterfaceWrapper) GetNodeUserSshKey(ctx echo.Context) error {
 	ctx.Set(BearerAuthScopes, []string{"user:read"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeUserSshKey(ctx, hostname, name)
+	err = w.Handler.GetNodeUserSSHKey(ctx, hostname, name)
 	return err
 }
 
-// PostNodeUserSshKey converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeUserSshKey(ctx echo.Context) error {
+// PostNodeUserSSHKey converts echo context to params.
+func (w *ServerInterfaceWrapper) PostNodeUserSSHKey(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -724,12 +724,12 @@ func (w *ServerInterfaceWrapper) PostNodeUserSshKey(ctx echo.Context) error {
 	ctx.Set(BearerAuthScopes, []string{"user:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeUserSshKey(ctx, hostname, name)
+	err = w.Handler.PostNodeUserSSHKey(ctx, hostname, name)
 	return err
 }
 
-// DeleteNodeUserSshKey converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteNodeUserSshKey(ctx echo.Context) error {
+// DeleteNodeUserSSHKey converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNodeUserSSHKey(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "hostname" -------------
 	var hostname Hostname
@@ -758,7 +758,7 @@ func (w *ServerInterfaceWrapper) DeleteNodeUserSshKey(ctx echo.Context) error {
 	ctx.Set(BearerAuthScopes, []string{"user:write"})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteNodeUserSshKey(ctx, hostname, name, fingerprint)
+	err = w.Handler.DeleteNodeUserSSHKey(ctx, hostname, name, fingerprint)
 	return err
 }
 
@@ -801,9 +801,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/node/:hostname/user/:name", wrapper.GetNodeUserByName)
 	router.PUT(baseURL+"/node/:hostname/user/:name", wrapper.PutNodeUser)
 	router.POST(baseURL+"/node/:hostname/user/:name/password", wrapper.PostNodeUserPassword)
-	router.GET(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSshKey)
-	router.POST(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSshKey)
-	router.DELETE(baseURL+"/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSshKey)
+	router.GET(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSSHKey)
+	router.POST(baseURL+"/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSSHKey)
+	router.DELETE(baseURL+"/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSSHKey)
 
 }
 
@@ -1411,146 +1411,146 @@ func (response PostNodeUserPassword500JSONResponse) VisitPostNodeUserPasswordRes
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeUserSshKeyRequestObject struct {
+type GetNodeUserSSHKeyRequestObject struct {
 	Hostname Hostname `json:"hostname"`
 	Name     UserName `json:"name"`
 }
 
-type GetNodeUserSshKeyResponseObject interface {
-	VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error
+type GetNodeUserSSHKeyResponseObject interface {
+	VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error
 }
 
-type GetNodeUserSshKey200JSONResponse SSHKeyCollectionResponse
+type GetNodeUserSSHKey200JSONResponse SSHKeyCollectionResponse
 
-func (response GetNodeUserSshKey200JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response GetNodeUserSSHKey200JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+type GetNodeUserSSHKey401JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeUserSshKey401JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response GetNodeUserSSHKey401JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+type GetNodeUserSSHKey403JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeUserSshKey403JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response GetNodeUserSSHKey403JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+type GetNodeUserSSHKey500JSONResponse externalRef0.ErrorResponse
 
-func (response GetNodeUserSshKey500JSONResponse) VisitGetNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response GetNodeUserSSHKey500JSONResponse) VisitGetNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PostNodeUserSshKeyRequestObject struct {
+type PostNodeUserSSHKeyRequestObject struct {
 	Hostname Hostname `json:"hostname"`
 	Name     UserName `json:"name"`
-	Body     *PostNodeUserSshKeyJSONRequestBody
+	Body     *PostNodeUserSSHKeyJSONRequestBody
 }
 
-type PostNodeUserSshKeyResponseObject interface {
-	VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error
+type PostNodeUserSSHKeyResponseObject interface {
+	VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error
 }
 
-type PostNodeUserSshKey200JSONResponse SSHKeyMutationResponse
+type PostNodeUserSSHKey200JSONResponse SSHKeyMutationResponse
 
-func (response PostNodeUserSshKey200JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response PostNodeUserSSHKey200JSONResponse) VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PostNodeUserSshKey400JSONResponse externalRef0.ErrorResponse
+type PostNodeUserSSHKey400JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeUserSshKey400JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response PostNodeUserSSHKey400JSONResponse) VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PostNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+type PostNodeUserSSHKey401JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeUserSshKey401JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response PostNodeUserSSHKey401JSONResponse) VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PostNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+type PostNodeUserSSHKey403JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeUserSshKey403JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response PostNodeUserSSHKey403JSONResponse) VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PostNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+type PostNodeUserSSHKey500JSONResponse externalRef0.ErrorResponse
 
-func (response PostNodeUserSshKey500JSONResponse) VisitPostNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response PostNodeUserSSHKey500JSONResponse) VisitPostNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeUserSshKeyRequestObject struct {
+type DeleteNodeUserSSHKeyRequestObject struct {
 	Hostname    Hostname          `json:"hostname"`
 	Name        UserName          `json:"name"`
 	Fingerprint SSHKeyFingerprint `json:"fingerprint"`
 }
 
-type DeleteNodeUserSshKeyResponseObject interface {
-	VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error
+type DeleteNodeUserSSHKeyResponseObject interface {
+	VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error
 }
 
-type DeleteNodeUserSshKey200JSONResponse SSHKeyMutationResponse
+type DeleteNodeUserSSHKey200JSONResponse SSHKeyMutationResponse
 
-func (response DeleteNodeUserSshKey200JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response DeleteNodeUserSSHKey200JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeUserSshKey401JSONResponse externalRef0.ErrorResponse
+type DeleteNodeUserSSHKey401JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeUserSshKey401JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response DeleteNodeUserSSHKey401JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeUserSshKey403JSONResponse externalRef0.ErrorResponse
+type DeleteNodeUserSSHKey403JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeUserSshKey403JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response DeleteNodeUserSSHKey403JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteNodeUserSshKey500JSONResponse externalRef0.ErrorResponse
+type DeleteNodeUserSSHKey500JSONResponse externalRef0.ErrorResponse
 
-func (response DeleteNodeUserSshKey500JSONResponse) VisitDeleteNodeUserSshKeyResponse(w http.ResponseWriter) error {
+func (response DeleteNodeUserSSHKey500JSONResponse) VisitDeleteNodeUserSSHKeyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1594,13 +1594,13 @@ type StrictServerInterface interface {
 	PostNodeUserPassword(ctx context.Context, request PostNodeUserPasswordRequestObject) (PostNodeUserPasswordResponseObject, error)
 	// List SSH authorized keys
 	// (GET /node/{hostname}/user/{name}/ssh-key)
-	GetNodeUserSshKey(ctx context.Context, request GetNodeUserSshKeyRequestObject) (GetNodeUserSshKeyResponseObject, error)
+	GetNodeUserSSHKey(ctx context.Context, request GetNodeUserSSHKeyRequestObject) (GetNodeUserSSHKeyResponseObject, error)
 	// Add SSH authorized key
 	// (POST /node/{hostname}/user/{name}/ssh-key)
-	PostNodeUserSshKey(ctx context.Context, request PostNodeUserSshKeyRequestObject) (PostNodeUserSshKeyResponseObject, error)
+	PostNodeUserSSHKey(ctx context.Context, request PostNodeUserSSHKeyRequestObject) (PostNodeUserSSHKeyResponseObject, error)
 	// Remove SSH authorized key
 	// (DELETE /node/{hostname}/user/{name}/ssh-key/{fingerprint})
-	DeleteNodeUserSshKey(ctx context.Context, request DeleteNodeUserSshKeyRequestObject) (DeleteNodeUserSshKeyResponseObject, error)
+	DeleteNodeUserSSHKey(ctx context.Context, request DeleteNodeUserSSHKeyRequestObject) (DeleteNodeUserSSHKeyResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -1927,85 +1927,85 @@ func (sh *strictHandler) PostNodeUserPassword(ctx echo.Context, hostname Hostnam
 	return nil
 }
 
-// GetNodeUserSshKey operation middleware
-func (sh *strictHandler) GetNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error {
-	var request GetNodeUserSshKeyRequestObject
+// GetNodeUserSSHKey operation middleware
+func (sh *strictHandler) GetNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error {
+	var request GetNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeUserSshKey(ctx.Request().Context(), request.(GetNodeUserSshKeyRequestObject))
+		return sh.ssi.GetNodeUserSSHKey(ctx.Request().Context(), request.(GetNodeUserSSHKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeUserSshKey")
+		handler = middleware(handler, "GetNodeUserSSHKey")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetNodeUserSshKeyResponseObject); ok {
-		return validResponse.VisitGetNodeUserSshKeyResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetNodeUserSSHKeyResponseObject); ok {
+		return validResponse.VisitGetNodeUserSSHKeyResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// PostNodeUserSshKey operation middleware
-func (sh *strictHandler) PostNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName) error {
-	var request PostNodeUserSshKeyRequestObject
+// PostNodeUserSSHKey operation middleware
+func (sh *strictHandler) PostNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName) error {
+	var request PostNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 
-	var body PostNodeUserSshKeyJSONRequestBody
+	var body PostNodeUserSSHKeyJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
 		return err
 	}
 	request.Body = &body
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeUserSshKey(ctx.Request().Context(), request.(PostNodeUserSshKeyRequestObject))
+		return sh.ssi.PostNodeUserSSHKey(ctx.Request().Context(), request.(PostNodeUserSSHKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeUserSshKey")
+		handler = middleware(handler, "PostNodeUserSSHKey")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(PostNodeUserSshKeyResponseObject); ok {
-		return validResponse.VisitPostNodeUserSshKeyResponse(ctx.Response())
+	} else if validResponse, ok := response.(PostNodeUserSSHKeyResponseObject); ok {
+		return validResponse.VisitPostNodeUserSSHKeyResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
 	return nil
 }
 
-// DeleteNodeUserSshKey operation middleware
-func (sh *strictHandler) DeleteNodeUserSshKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error {
-	var request DeleteNodeUserSshKeyRequestObject
+// DeleteNodeUserSSHKey operation middleware
+func (sh *strictHandler) DeleteNodeUserSSHKey(ctx echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error {
+	var request DeleteNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname
 	request.Name = name
 	request.Fingerprint = fingerprint
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteNodeUserSshKey(ctx.Request().Context(), request.(DeleteNodeUserSshKeyRequestObject))
+		return sh.ssi.DeleteNodeUserSSHKey(ctx.Request().Context(), request.(DeleteNodeUserSSHKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteNodeUserSshKey")
+		handler = middleware(handler, "DeleteNodeUserSSHKey")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(DeleteNodeUserSshKeyResponseObject); ok {
-		return validResponse.VisitDeleteNodeUserSshKeyResponse(ctx.Response())
+	} else if validResponse, ok := response.(DeleteNodeUserSSHKeyResponseObject); ok {
+		return validResponse.VisitDeleteNodeUserSSHKeyResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

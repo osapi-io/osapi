@@ -4300,7 +4300,7 @@ paths:
         List SSH authorized keys for a user on the target node.
       tags:
         - User_and_Group_Management_API_user_operations
-      operationId: GetNodeUserSshKey
+      operationId: GetNodeUserSSHKey
       security:
         - BearerAuth:
             - user:read
@@ -4338,7 +4338,7 @@ paths:
         Add an SSH authorized key for a user on the target node.
       tags:
         - User_and_Group_Management_API_user_operations
-      operationId: PostNodeUserSshKey
+      operationId: PostNodeUserSSHKey
       security:
         - BearerAuth:
             - user:write
@@ -4392,7 +4392,7 @@ paths:
         node.
       tags:
         - User_and_Group_Management_API_user_operations
-      operationId: DeleteNodeUserSshKey
+      operationId: DeleteNodeUserSSHKey
       security:
         - BearerAuth:
             - user:write

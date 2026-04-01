@@ -78,16 +78,16 @@ func (s *SSHKeyCreatePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
+func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKey() {
 	tests := []struct {
 		name         string
-		request      gen.PostNodeUserSshKeyRequestObject
+		request      gen.PostNodeUserSSHKeyRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.PostNodeUserSshKeyResponseObject)
+		validateFunc func(resp gen.PostNodeUserSSHKeyResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -112,8 +112,8 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 						Data:     json.RawMessage(`{"changed":true}`),
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.PostNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.PostNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal(gen.SSHKeyMutationEntryStatusOk, r.Results[0].Status)
@@ -123,7 +123,7 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 		},
 		{
 			name: "validation error empty key",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -131,14 +131,14 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.PostNodeUserSshKey400JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.PostNodeUserSSHKey400JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -146,14 +146,14 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 				},
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.PostNodeUserSshKey400JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.PostNodeUserSSHKey400JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -175,15 +175,15 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 						Error:    "unsupported",
 					}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.PostNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.PostNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Equal(gen.SSHKeyMutationEntryStatusSkipped, r.Results[0].Status)
 			},
 		},
 		{
 			name: "job client error",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "server1",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -201,14 +201,14 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.PostNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.PostNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "broadcast target _all",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -234,15 +234,15 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 							},
 						}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.PostNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.PostNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 1)
 			},
 		},
 		{
 			name: "broadcast with failed and skipped agents",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -278,8 +278,8 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 							},
 						}, nil)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				r, ok := resp.(gen.PostNodeUserSshKey200JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				r, ok := resp.(gen.PostNodeUserSSHKey200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 3)
 
@@ -296,7 +296,7 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 		},
 		{
 			name: "broadcast job client error",
-			request: gen.PostNodeUserSshKeyRequestObject{
+			request: gen.PostNodeUserSSHKeyRequestObject{
 				Hostname: "_all",
 				Name:     "testuser",
 				Body: &gen.SSHKeyAddRequest{
@@ -314,8 +314,8 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.PostNodeUserSshKeyResponseObject) {
-				_, ok := resp.(gen.PostNodeUserSshKey500JSONResponse)
+			validateFunc: func(resp gen.PostNodeUserSSHKeyResponseObject) {
+				_, ok := resp.(gen.PostNodeUserSSHKey500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -324,14 +324,14 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKey() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			resp, err := s.handler.PostNodeUserSshKey(s.ctx, tt.request)
+			resp, err := s.handler.PostNodeUserSSHKey(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKeyValidationHTTP() {
+func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKeyValidationHTTP() {
 	tests := []struct {
 		name     string
 		body     string
@@ -389,7 +389,7 @@ func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKeyValidationHTTP() {
 
 const rbacSSHKeyCreateTestSigningKey = "test-signing-key-for-rbac-ssh-key-create"
 
-func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSshKeyRBACHTTP() {
+func (s *SSHKeyCreatePublicTestSuite) TestPostNodeUserSSHKeyRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
