@@ -48,6 +48,9 @@ tags:
   - name: Hostname_Management_API_hostname_operations
     x-displayName: Node/Hostname
     description: Hostname operations on a target node.
+  - name: Log_Management_API_log_operations
+    x-displayName: Node/Log
+    description: Log viewing operations on a target node.
   - name: Network_Management_API_network_operations
     x-displayName: Node/Network
     description: Network operations on a target node.
@@ -2195,6 +2198,181 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error updating hostname.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/log:
+    servers: []
+    get:
+      summary: Get system log entries
+      description: |
+        Retrieve log entries from the target node's system journal.
+      tags:
+        - Log_Management_API_log_operations
+      operationId: GetNodeLog
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: lines
+          in: query
+          required: false
+          description: |
+            Maximum number of log lines to return.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=10000
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 10000
+        - name: since
+          in: query
+          required: false
+          description: >
+            Return log entries since this time. Accepts systemd time
+            specifications (e.g., "1h", "2026-01-01 00:00:00").
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          description: >
+            Filter by log priority level (e.g., "err", "warning", "info",
+            "debug").
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Log entries from the target node.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving log entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/log/source:
+    servers: []
+    get:
+      summary: List log sources
+      description: >
+        List unique syslog identifiers (log sources) available in the journal on
+        the target node.
+      tags:
+        - Log_Management_API_log_operations
+      operationId: GetNodeLogSource
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of log sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSourceCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing log sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/log/unit/{name}:
+    servers: []
+    get:
+      summary: Get log entries for a systemd unit
+      description: |
+        Retrieve log entries for a specific systemd unit on the target node.
+      tags:
+        - Log_Management_API_log_operations
+      operationId: GetNodeLogUnit
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UnitName'
+        - name: lines
+          in: query
+          required: false
+          description: |
+            Maximum number of log lines to return.
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=10000
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 10000
+        - name: since
+          in: query
+          required: false
+          description: >
+            Return log entries since this time. Accepts systemd time
+            specifications (e.g., "1h", "2026-01-01 00:00:00").
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          description: >
+            Filter by log priority level (e.g., "err", "warning", "info",
+            "debug").
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Log entries for the specified unit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error retrieving unit log entries.
           content:
             application/json:
               schema:
@@ -6192,6 +6370,112 @@ components:
             $ref: '#/components/schemas/HostnameUpdateResultItem'
       required:
         - results
+    LogEntryInfo:
+      type: object
+      description: A single log entry from the system journal.
+      properties:
+        timestamp:
+          type: string
+          description: Log entry timestamp.
+          example: '2026-01-15T10:30:00Z'
+        unit:
+          type: string
+          description: Systemd unit that produced this entry.
+          example: nginx.service
+        priority:
+          type: string
+          description: Log priority level.
+          example: info
+        message:
+          type: string
+          description: Log message text.
+          example: Server started successfully
+        pid:
+          type: integer
+          description: Process identifier that produced this entry.
+          example: 1234
+        hostname:
+          type: string
+          description: Hostname of the system that produced this entry.
+          example: web-01
+    LogResultEntry:
+      type: object
+      description: Log result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        entries:
+          type: array
+          description: Log entries from this agent.
+          items:
+            $ref: '#/components/schemas/LogEntryInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    LogSourceEntry:
+      type: object
+      description: Log source result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        sources:
+          type: array
+          description: Unique syslog identifiers on this agent.
+          items:
+            type: string
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    LogSourceCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogSourceEntry'
+      required:
+        - results
+    LogCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogResultEntry'
+      required:
+        - results
     PingResponse:
       type: object
       properties:
@@ -7730,6 +8014,17 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+    UnitName:
+      name: name
+      in: path
+      required: true
+      description: |
+        Systemd unit name (e.g., "nginx.service", "sshd.service").
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
     PackageName:
       name: name
       in: path
@@ -7839,6 +8134,9 @@ x-tagGroups:
   - name: Hostname Management API
     tags:
       - Hostname_Management_API_hostname_operations
+  - name: Log Management API
+    tags:
+      - Log_Management_API_log_operations
   - name: Network Management API
     tags:
       - Network_Management_API_network_operations

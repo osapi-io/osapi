@@ -115,6 +115,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlOperation() {
 				nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -193,6 +194,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlList() {
 				nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil, nil,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -287,6 +289,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlGet() {
 				nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil, nil,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -389,6 +392,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlCreate() {
 				nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -488,6 +492,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlUpdate() {
 				nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -579,6 +584,7 @@ func (s *ProcessorSysctlPublicTestSuite) TestProcessSysctlDelete() {
 				nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil, nil,
+				nil,
 				nil,
 				nil,
 				nil,

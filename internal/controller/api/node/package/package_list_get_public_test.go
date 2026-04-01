@@ -102,7 +102,7 @@ func (s *PackageListGetPublicTestSuite) TestGetNodePackage() {
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
 						Data: json.RawMessage(
-							`[{"name":"curl","version":"7.68.0","status":"installed","description":"command line tool for transferring data"}]`,
+							`[{"name":"curl","version":"7.68.0","status":"installed","description":"command line tool for transferring data","size":512}]`,
 						),
 					}, nil)
 			},

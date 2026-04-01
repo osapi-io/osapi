@@ -653,3 +653,17 @@ func ExportUpdateInfosFromGen(
 ) []UpdateInfo {
 	return updateInfosFromGen(input)
 }
+
+// LogCollectionFromGen exposes the private logCollectionFromGen for testing.
+func LogCollectionFromGen(
+	input *gen.LogCollectionResponse,
+) Collection[LogEntryResult] {
+	return logCollectionFromGen(input)
+}
+
+// LogEntryInfoFromGen exposes the private logEntryInfoFromGen for testing.
+func LogEntryInfoFromGen(
+	input gen.LogEntryInfo,
+) LogEntry {
+	return logEntryInfoFromGen(input)
+}

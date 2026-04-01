@@ -58,6 +58,7 @@ const (
 	PermUserWrite      = client.PermUserWrite
 	PermPackageRead    = client.PermPackageRead
 	PermPackageWrite   = client.PermPackageWrite
+	PermLogRead        = client.PermLogRead
 )
 
 // AllPermissions is the full set of known permissions.
@@ -93,6 +94,7 @@ var AllPermissions = []Permission{
 	PermUserWrite,
 	PermPackageRead,
 	PermPackageWrite,
+	PermLogRead,
 }
 
 // DefaultRolePermissions maps built-in role names to their granted permissions.
@@ -129,6 +131,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermUserWrite,
 		PermPackageRead,
 		PermPackageWrite,
+		PermLogRead,
 	},
 	client.RoleWrite: {
 		PermAgentRead,
@@ -156,6 +159,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermUserWrite,
 		PermPackageRead,
 		PermPackageWrite,
+		PermLogRead,
 	},
 	client.RoleRead: {
 		PermAgentRead,
@@ -172,6 +176,7 @@ var DefaultRolePermissions = map[string][]Permission{
 		PermProcessRead,
 		PermUserRead,
 		PermPackageRead,
+		PermLogRead,
 	},
 }
 

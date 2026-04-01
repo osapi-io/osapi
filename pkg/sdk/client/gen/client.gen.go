@@ -202,6 +202,20 @@ const (
 	LoadResultItemStatusSkipped LoadResultItemStatus = "skipped"
 )
 
+// Defines values for LogResultEntryStatus.
+const (
+	LogResultEntryStatusFailed  LogResultEntryStatus = "failed"
+	LogResultEntryStatusOk      LogResultEntryStatus = "ok"
+	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
+)
+
+// Defines values for LogSourceEntryStatus.
+const (
+	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
+	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
+	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
+)
+
 // Defines values for MemoryResultItemStatus.
 const (
 	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
@@ -1728,6 +1742,77 @@ type LoadResultItem struct {
 // LoadResultItemStatus The status of the operation for this host.
 type LoadResultItemStatus string
 
+// LogCollectionResponse defines model for LogCollectionResponse.
+type LogCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []LogResultEntry    `json:"results"`
+}
+
+// LogEntryInfo A single log entry from the system journal.
+type LogEntryInfo struct {
+	// Hostname Hostname of the system that produced this entry.
+	Hostname *string `json:"hostname,omitempty"`
+
+	// Message Log message text.
+	Message *string `json:"message,omitempty"`
+
+	// Pid Process identifier that produced this entry.
+	Pid *int `json:"pid,omitempty"`
+
+	// Priority Log priority level.
+	Priority *string `json:"priority,omitempty"`
+
+	// Timestamp Log entry timestamp.
+	Timestamp *string `json:"timestamp,omitempty"`
+
+	// Unit Systemd unit that produced this entry.
+	Unit *string `json:"unit,omitempty"`
+}
+
+// LogResultEntry Log result for a single agent.
+type LogResultEntry struct {
+	// Entries Log entries from this agent.
+	Entries *[]LogEntryInfo `json:"entries,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status LogResultEntryStatus `json:"status"`
+}
+
+// LogResultEntryStatus The status of the operation for this host.
+type LogResultEntryStatus string
+
+// LogSourceCollectionResponse defines model for LogSourceCollectionResponse.
+type LogSourceCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []LogSourceEntry    `json:"results"`
+}
+
+// LogSourceEntry Log source result for a single agent.
+type LogSourceEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Sources Unique syslog identifiers on this agent.
+	Sources *[]string `json:"sources,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status LogSourceEntryStatus `json:"status"`
+}
+
+// LogSourceEntryStatus The status of the operation for this host.
+type LogSourceEntryStatus string
+
 // MemoryCollectionResponse defines model for MemoryCollectionResponse.
 type MemoryCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2722,6 +2807,9 @@ type Pid = int
 // SysctlKey defines model for SysctlKey.
 type SysctlKey = string
 
+// UnitName defines model for UnitName.
+type UnitName = string
+
 // UserName defines model for UserName.
 type UserName = string
 
@@ -2791,6 +2879,30 @@ type DeleteNodeContainerDockerImageParams struct {
 type DeleteNodeContainerDockerByIDParams struct {
 	// Force Force removal of a running container.
 	Force *bool `form:"force,omitempty" json:"force,omitempty" validate:"omitempty"`
+}
+
+// GetNodeLogParams defines parameters for GetNodeLog.
+type GetNodeLogParams struct {
+	// Lines Maximum number of log lines to return.
+	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
+
+	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
+	Since *string `form:"since,omitempty" json:"since,omitempty"`
+
+	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
+}
+
+// GetNodeLogUnitParams defines parameters for GetNodeLogUnit.
+type GetNodeLogUnitParams struct {
+	// Lines Maximum number of log lines to return.
+	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
+
+	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
+	Since *string `form:"since,omitempty" json:"since,omitempty"`
+
+	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
+	Priority *string `form:"priority,omitempty" json:"priority,omitempty"`
 }
 
 // PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
@@ -3116,6 +3228,15 @@ type ClientInterface interface {
 
 	// GetNodeLoad request
 	GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeLog request
+	GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeLogSource request
+	GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeLogUnit request
+	GetNodeLogUnit(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeMemory request
 	GetNodeMemory(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3932,6 +4053,42 @@ func (c *Client) PutNodeHostname(ctx context.Context, hostname Hostname, body Pu
 
 func (c *Client) GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeLoadRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeLogRequest(c.Server, hostname, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeLogSourceRequest(c.Server, hostname)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeLogUnit(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeLogUnitRequest(c.Server, hostname, name, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6436,6 +6593,223 @@ func NewGetNodeLoadRequest(server string, hostname Hostname) (*http.Request, err
 	return req, nil
 }
 
+// NewGetNodeLogRequest generates requests for GetNodeLog
+func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/log", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Lines != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "lines", runtime.ParamLocationQuery, *params.Lines); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Since != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "since", runtime.ParamLocationQuery, *params.Since); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Priority != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "priority", runtime.ParamLocationQuery, *params.Priority); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeLogSourceRequest generates requests for GetNodeLogSource
+func NewGetNodeLogSourceRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/log/source", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeLogUnitRequest generates requests for GetNodeLogUnit
+func NewGetNodeLogUnitRequest(server string, hostname Hostname, name UnitName, params *GetNodeLogUnitParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "name", runtime.ParamLocationPath, name)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/log/unit/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Lines != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "lines", runtime.ParamLocationQuery, *params.Lines); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Since != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "since", runtime.ParamLocationQuery, *params.Since); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Priority != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "priority", runtime.ParamLocationQuery, *params.Priority); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetNodeMemoryRequest generates requests for GetNodeMemory
 func NewGetNodeMemoryRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
@@ -8300,6 +8674,15 @@ type ClientWithResponsesInterface interface {
 	// GetNodeLoadWithResponse request
 	GetNodeLoadWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLoadResponse, error)
 
+	// GetNodeLogWithResponse request
+	GetNodeLogWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*GetNodeLogResponse, error)
+
+	// GetNodeLogSourceWithResponse request
+	GetNodeLogSourceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLogSourceResponse, error)
+
+	// GetNodeLogUnitWithResponse request
+	GetNodeLogUnitWithResponse(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*GetNodeLogUnitResponse, error)
+
 	// GetNodeMemoryWithResponse request
 	GetNodeMemoryWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeMemoryResponse, error)
 
@@ -9570,6 +9953,81 @@ func (r GetNodeLoadResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetNodeLoadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeLogResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LogCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeLogResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeLogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeLogSourceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LogSourceCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeLogSourceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeLogSourceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeLogUnitResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LogCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeLogUnitResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeLogUnitResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11098,6 +11556,33 @@ func (c *ClientWithResponses) GetNodeLoadWithResponse(ctx context.Context, hostn
 		return nil, err
 	}
 	return ParseGetNodeLoadResponse(rsp)
+}
+
+// GetNodeLogWithResponse request returning *GetNodeLogResponse
+func (c *ClientWithResponses) GetNodeLogWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*GetNodeLogResponse, error) {
+	rsp, err := c.GetNodeLog(ctx, hostname, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeLogResponse(rsp)
+}
+
+// GetNodeLogSourceWithResponse request returning *GetNodeLogSourceResponse
+func (c *ClientWithResponses) GetNodeLogSourceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLogSourceResponse, error) {
+	rsp, err := c.GetNodeLogSource(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeLogSourceResponse(rsp)
+}
+
+// GetNodeLogUnitWithResponse request returning *GetNodeLogUnitResponse
+func (c *ClientWithResponses) GetNodeLogUnitWithResponse(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*GetNodeLogUnitResponse, error) {
+	rsp, err := c.GetNodeLogUnit(ctx, hostname, name, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeLogUnitResponse(rsp)
 }
 
 // GetNodeMemoryWithResponse request returning *GetNodeMemoryResponse
@@ -13894,6 +14379,147 @@ func ParseGetNodeLoadResponse(rsp *http.Response) (*GetNodeLoadResponse, error) 
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeLogResponse parses an HTTP response from a GetNodeLogWithResponse call
+func ParseGetNodeLogResponse(rsp *http.Response) (*GetNodeLogResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeLogResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeLogSourceResponse parses an HTTP response from a GetNodeLogSourceWithResponse call
+func ParseGetNodeLogSourceResponse(rsp *http.Response) (*GetNodeLogSourceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeLogSourceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogSourceCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeLogUnitResponse parses an HTTP response from a GetNodeLogUnitWithResponse call
+func ParseGetNodeLogUnitResponse(rsp *http.Response) (*GetNodeLogUnitResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeLogUnitResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse

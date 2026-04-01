@@ -115,6 +115,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 				nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -241,6 +242,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 				nil,
 				nil,
 				nil,
+				nil,
 				config.Config{},
 				slog.Default(),
 			)
@@ -364,6 +366,7 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 				nil, nil, nil, nil,
 				nil, nil, nil,
 				tt.setupMock(),
+				nil,
 				nil,
 				nil,
 				nil,

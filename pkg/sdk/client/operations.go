@@ -155,6 +155,13 @@ const (
 	OpPackageListUpdates JobOperation = "node.package.listUpdates"
 )
 
+// Log operations.
+const (
+	OpLogQuery     JobOperation = "node.log.query"
+	OpLogQueryUnit JobOperation = "node.log.queryUnit"
+	OpLogSources   JobOperation = "node.log.sources"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

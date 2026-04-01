@@ -188,6 +188,11 @@ const config: Config = {
               type: 'doc',
               label: 'Package Management',
               docId: 'sidebar/features/package-management'
+            },
+            {
+              type: 'doc',
+              label: 'Log Management',
+              docId: 'sidebar/features/log-management'
             }
           ]
         },
@@ -316,6 +321,11 @@ const config: Config = {
               type: 'doc',
               label: 'Process',
               docId: 'sidebar/sdk/client/operations/process'
+            },
+            {
+              type: 'doc',
+              label: 'Log',
+              docId: 'sidebar/sdk/client/operations/log'
             },
             {
               type: 'html',
