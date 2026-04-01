@@ -336,6 +336,142 @@ paths:
               schema:
                 $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
 
+  # -- SSH Key management ------------------------------------------------
+
+  /node/{hostname}/user/{name}/ssh-key:
+    get:
+      summary: List SSH authorized keys
+      description: >
+        List SSH authorized keys for a user on the target node.
+      tags:
+        - user_operations
+      operationId: GetNodeUserSSHKey
+      security:
+        - BearerAuth:
+            - user:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      responses:
+        '200':
+          description: List of SSH authorized keys.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSHKeyCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing SSH keys.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Add SSH authorized key
+      description: >
+        Add an SSH authorized key for a user on the target node.
+      tags:
+        - user_operations
+      operationId: PostNodeUserSSHKey
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      requestBody:
+        description: SSH public key to add.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSHKeyAddRequest'
+      responses:
+        '200':
+          description: Key added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSHKeyMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error adding SSH key.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  /node/{hostname}/user/{name}/ssh-key/{fingerprint}:
+    delete:
+      summary: Remove SSH authorized key
+      description: >
+        Remove an SSH authorized key by fingerprint for a user on the
+        target node.
+      tags:
+        - user_operations
+      operationId: DeleteNodeUserSSHKey
+      security:
+        - BearerAuth:
+            - user:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+        - $ref: '#/components/parameters/SSHKeyFingerprint'
+      responses:
+        '200':
+          description: Key removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSHKeyMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error removing SSH key.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
   # -- Group collection ----------------------------------------------------
 
   /node/{hostname}/group:
@@ -629,6 +765,21 @@ components:
         type: string
         minLength: 1
 
+    SSHKeyFingerprint:
+      name: fingerprint
+      in: path
+      required: true
+      description: >
+        SSH key SHA256 fingerprint (e.g., SHA256:abc123...).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+
   securitySchemes:
     BearerAuth:
       type: http
@@ -834,6 +985,112 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserMutationResult'
+      required:
+        - results
+
+    # -- SSH Key schemas --
+
+    SSHKeyAddRequest:
+      type: object
+      required:
+        - key
+      properties:
+        key:
+          type: string
+          description: >
+            Full SSH public key line (e.g.,
+            "ssh-ed25519 AAAA... user@host").
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+
+    SSHKeyInfo:
+      type: object
+      description: An SSH authorized key entry.
+      properties:
+        type:
+          type: string
+          description: Key type (e.g., ssh-rsa, ssh-ed25519).
+          example: "ssh-ed25519"
+        fingerprint:
+          type: string
+          description: SHA256 fingerprint of the key.
+          example: "SHA256:abc123..."
+        comment:
+          type: string
+          description: Key comment (typically user@host).
+          example: "john@laptop"
+
+    SSHKeyEntry:
+      type: object
+      description: SSH key list result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        keys:
+          type: array
+          description: SSH authorized keys on this agent.
+          items:
+            $ref: '#/components/schemas/SSHKeyInfo'
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    SSHKeyMutationEntry:
+      type: object
+      description: SSH key mutation result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    SSHKeyCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SSHKeyEntry'
+      required:
+        - results
+
+    SSHKeyMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SSHKeyMutationEntry'
       required:
         - results
 

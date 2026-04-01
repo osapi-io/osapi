@@ -28,6 +28,20 @@ User operations manage local accounts:
 - **Password** -- change a user's password (plaintext input, hashed by the
   agent)
 
+### SSH Keys
+
+SSH key operations manage the `~/.ssh/authorized_keys` file for a given user:
+
+- **ListKeys** -- enumerate all authorized keys with type, fingerprint, and
+  comment
+- **AddKey** -- append a public key to the authorized_keys file (idempotent --
+  duplicate keys are not added)
+- **RemoveKey** -- remove a key by its SHA256 fingerprint
+
+The provider reads and writes the user's `~/.ssh/authorized_keys` file directly.
+It creates the `~/.ssh` directory and `authorized_keys` file with correct
+permissions (`700` and `600`) if they do not exist.
+
 ### Groups
 
 Group operations manage local groups:
@@ -62,6 +76,21 @@ $ osapi client node user password --target web-01 \
 
 # Delete a user
 $ osapi client node user delete --target web-01 --name deploy
+```
+
+### SSH Keys
+
+```bash
+# List SSH keys for a user
+$ osapi client node user ssh-key list --target web-01 --name deploy
+
+# Add an SSH key
+$ osapi client node user ssh-key add --target web-01 \
+    --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
+
+# Remove an SSH key by fingerprint
+$ osapi client node user ssh-key remove --target web-01 \
+    --name deploy --fingerprint 'SHA256:abc123...'
 ```
 
 ### Groups
@@ -99,12 +128,14 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-| Operation       | Permission   |
-| --------------- | ------------ |
-| User list/get   | `user:read`  |
-| User mutations  | `user:write` |
-| Group list/get  | `user:read`  |
-| Group mutations | `user:write` |
+| Operation          | Permission   |
+| ------------------ | ------------ |
+| User list/get      | `user:read`  |
+| User mutations     | `user:write` |
+| SSH key list       | `user:read`  |
+| SSH key add/remove | `user:write` |
+| Group list/get     | `user:read`  |
+| Group mutations    | `user:write` |
 
 ## Platform Support
 
@@ -120,6 +151,7 @@ message.
 ## Further Reading
 
 - [CLI Reference -- User](../usage/cli/client/node/user/user.md)
+- [CLI Reference -- SSH Key](../usage/cli/client/node/user/ssh-key.md)
 - [CLI Reference -- Group](../usage/cli/client/node/group/group.md)
 - [SDK -- User](../sdk/client/management/user.md)
 - [SDK -- Group](../sdk/client/management/group.md)

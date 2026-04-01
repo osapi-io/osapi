@@ -209,6 +209,13 @@ const (
 	OperationGroupDelete = client.OpGroupDelete
 )
 
+// SSH Key operations.
+const (
+	OperationSSHKeyList   = client.OpSSHKeyList
+	OperationSSHKeyAdd    = client.OpSSHKeyAdd
+	OperationSSHKeyRemove = client.OpSSHKeyRemove
+)
+
 // Package operations.
 const (
 	OperationPackageList        = client.OpPackageList

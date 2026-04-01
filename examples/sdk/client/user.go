@@ -18,8 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates user account management: list, get, and create
-// user accounts on managed hosts using the OSAPI SDK.
+// Package main demonstrates user account management: list, get, create
+// user accounts, and manage SSH authorized keys on managed hosts using
+// the OSAPI SDK.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run user.go
 package main
@@ -97,6 +98,41 @@ func main() {
 		for _, r := range createResp.Data.Results {
 			fmt.Printf("  %s: name=%s changed=%v error=%s\n",
 				r.Hostname, r.Name, r.Changed, r.Error)
+		}
+	}
+
+	// List SSH authorized keys for root.
+	fmt.Println("\n=== Listing SSH keys for root ===")
+	keysResp, err := c.User.ListKeys(ctx, target, "root")
+	if err != nil {
+		log.Fatalf("list keys failed: %v", err)
+	}
+	for _, r := range keysResp.Data.Results {
+		if r.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
+			continue
+		}
+		if len(r.Keys) == 0 {
+			fmt.Printf("  %s: no authorized keys\n", r.Hostname)
+			continue
+		}
+		for _, k := range r.Keys {
+			fmt.Printf("  %s: type=%s fingerprint=%s comment=%s\n",
+				r.Hostname, k.Type, k.Fingerprint, k.Comment)
+		}
+	}
+
+	// Add an SSH key (may fail on non-Debian platforms).
+	fmt.Println("\n=== Adding SSH key for testuser ===")
+	addResp, err := c.User.AddKey(ctx, target, "testuser", client.SSHKeyAddOpts{
+		Key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample test@example",
+	})
+	if err != nil {
+		fmt.Printf("add key failed (may be unsupported on this platform): %v\n", err)
+	} else {
+		for _, r := range addResp.Data.Results {
+			fmt.Printf("  %s: changed=%v error=%s\n",
+				r.Hostname, r.Changed, r.Error)
 		}
 	}
 }

@@ -125,3 +125,29 @@ func (l *Linux) DeleteGroup(
 ) (*GroupResult, error) {
 	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
 }
+
+// ListKeys returns ErrUnsupported on generic Linux.
+func (l *Linux) ListKeys(
+	_ context.Context,
+	_ string,
+) ([]SSHKey, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}
+
+// AddKey returns ErrUnsupported on generic Linux.
+func (l *Linux) AddKey(
+	_ context.Context,
+	_ string,
+	_ SSHKey,
+) (*SSHKeyResult, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}
+
+// RemoveKey returns ErrUnsupported on generic Linux.
+func (l *Linux) RemoveKey(
+	_ context.Context,
+	_ string,
+	_ string,
+) (*SSHKeyResult, error) {
+	return nil, fmt.Errorf("user: %w", provider.ErrUnsupported)
+}

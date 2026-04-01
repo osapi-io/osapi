@@ -107,6 +107,8 @@ func NewNodeProcessor(
 			return processUserOperation(userProvider, logger, req)
 		case "group":
 			return processGroupOperation(userProvider, logger, req)
+		case "sshKey":
+			return processSSHKeyOperation(userProvider, logger, req)
 		case "package":
 			return processPackageOperation(packageProvider, logger, req)
 		case "log":
