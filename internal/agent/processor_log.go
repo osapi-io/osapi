@@ -55,6 +55,8 @@ func processLogOperation(
 		return processLogQuery(ctx, logProvider, logger, jobRequest)
 	case "queryUnit":
 		return processLogQueryUnit(ctx, logProvider, logger, jobRequest)
+	case "sources":
+		return processLogSources(ctx, logProvider, logger)
 	default:
 		return nil, fmt.Errorf("unsupported log operation: %s", jobRequest.Operation)
 	}
@@ -77,6 +79,22 @@ func processLogQuery(
 	}
 
 	result, err := logProvider.Query(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(result)
+}
+
+// processLogSources retrieves unique syslog identifiers from the journal.
+func processLogSources(
+	ctx context.Context,
+	logProvider logProv.Provider,
+	logger *slog.Logger,
+) (json.RawMessage, error) {
+	logger.Debug("executing log.ListSources")
+
+	result, err := logProvider.ListSources(ctx)
 	if err != nil {
 		return nil, err
 	}

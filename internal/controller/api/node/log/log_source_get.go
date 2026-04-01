@@ -29,146 +29,126 @@ import (
 
 	"github.com/retr0h/osapi/internal/controller/api/node/log/gen"
 	"github.com/retr0h/osapi/internal/job"
-	logProv "github.com/retr0h/osapi/internal/provider/node/log"
 )
 
-// unitQueryPayload is the JSON payload sent to the agent for unit log queries.
-type unitQueryPayload struct {
-	Unit     string `json:"unit"`
-	Lines    int    `json:"lines,omitempty"`
-	Since    string `json:"since,omitempty"`
-	Priority string `json:"priority,omitempty"`
-}
-
-// GetNodeLogUnit returns log entries for a specific systemd unit from a target node.
-func (s *Log) GetNodeLogUnit(
+// GetNodeLogSource returns unique syslog identifiers from a target node.
+func (s *Log) GetNodeLogSource(
 	ctx context.Context,
-	request gen.GetNodeLogUnitRequestObject,
-) (gen.GetNodeLogUnitResponseObject, error) {
+	request gen.GetNodeLogSourceRequestObject,
+) (gen.GetNodeLogSourceResponseObject, error) {
 	if errMsg, ok := validateHostname(request.Hostname); !ok {
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource500JSONResponse{Error: &errMsg}, nil
 	}
 
 	hostname := request.Hostname
 
-	s.logger.Debug("log unit query",
+	s.logger.Debug("log list sources",
 		slog.String("target", hostname),
-		slog.String("unit", request.Name),
 		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
 	)
 
-	payload := unitQueryPayload{
-		Unit: request.Name,
-	}
-	if request.Params.Lines != nil {
-		payload.Lines = *request.Params.Lines
-	}
-	if request.Params.Since != nil {
-		payload.Since = *request.Params.Since
-	}
-	if request.Params.Priority != nil {
-		payload.Priority = *request.Params.Priority
-	}
-
 	if job.IsBroadcastTarget(hostname) {
-		return s.getNodeLogUnitBroadcast(ctx, hostname, payload)
+		return s.getNodeLogSourceBroadcast(ctx, hostname)
 	}
 
-	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQueryUnit, payload)
+	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogSources, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource500JSONResponse{Error: &errMsg}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
 		e := resp.Error
 		jobUUID := uuid.MustParse(jobID)
-		return gen.GetNodeLogUnit200JSONResponse{
+
+		return gen.GetNodeLogSource200JSONResponse{
 			JobId: &jobUUID,
-			Results: []gen.LogResultEntry{
+			Results: []gen.LogSourceEntry{
 				{
 					Hostname: resp.Hostname,
-					Status:   gen.LogResultEntryStatusSkipped,
+					Status:   gen.LogSourceEntryStatusSkipped,
 					Error:    &e,
 				},
 			},
 		}, nil
 	}
 
-	entries := logEntriesFromUnitResponse(resp)
+	sources := logSourcesFromResponse(resp)
 	jobUUID := uuid.MustParse(jobID)
 
-	return gen.GetNodeLogUnit200JSONResponse{
+	return gen.GetNodeLogSource200JSONResponse{
 		JobId: &jobUUID,
-		Results: []gen.LogResultEntry{
+		Results: []gen.LogSourceEntry{
 			{
 				Hostname: resp.Hostname,
-				Status:   gen.LogResultEntryStatusOk,
-				Entries:  &entries,
+				Status:   gen.LogSourceEntryStatusOk,
+				Sources:  &sources,
 			},
 		},
 	}, nil
 }
 
-// logEntriesFromUnitResponse extracts LogEntryInfo slice from a unit job response.
-func logEntriesFromUnitResponse(
+// logSourcesFromResponse extracts a []string of syslog identifiers from a job
+// response.
+func logSourcesFromResponse(
 	resp *job.Response,
-) []gen.LogEntryInfo {
-	var entries []logProv.Entry
+) []string {
+	var sources []string
 	if resp.Data != nil {
-		_ = json.Unmarshal(resp.Data, &entries)
+		_ = json.Unmarshal(resp.Data, &sources)
 	}
 
-	result := make([]gen.LogEntryInfo, 0, len(entries))
-	for _, e := range entries {
-		result = append(result, logEntryToGen(e))
+	if sources == nil {
+		sources = []string{}
 	}
 
-	return result
+	return sources
 }
 
-// getNodeLogUnitBroadcast handles broadcast targets for unit log query.
-func (s *Log) getNodeLogUnitBroadcast(
+// getNodeLogSourceBroadcast handles broadcast targets for log source listing.
+func (s *Log) getNodeLogSourceBroadcast(
 	ctx context.Context,
 	target string,
-	payload unitQueryPayload,
-) (gen.GetNodeLogUnitResponseObject, error) {
+) (gen.GetNodeLogSourceResponseObject, error) {
 	jobID, responses, err := s.JobClient.QueryBroadcast(
 		ctx,
 		target,
 		"node",
-		job.OperationLogQueryUnit,
-		payload,
+		job.OperationLogSources,
+		nil,
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource500JSONResponse{Error: &errMsg}, nil
 	}
 
-	var items []gen.LogResultEntry
+	var items []gen.LogSourceEntry
 	for host, resp := range responses {
-		item := gen.LogResultEntry{
+		item := gen.LogSourceEntry{
 			Hostname: host,
 		}
+
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.LogResultEntryStatusFailed
+			item.Status = gen.LogSourceEntryStatusFailed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.LogResultEntryStatusSkipped
+			item.Status = gen.LogSourceEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.LogResultEntryStatusOk
-			entries := logEntriesFromUnitResponse(resp)
-			item.Entries = &entries
+			item.Status = gen.LogSourceEntryStatusOk
+			sources := logSourcesFromResponse(resp)
+			item.Sources = &sources
 		}
+
 		items = append(items, item)
 	}
 
 	jobUUID := uuid.MustParse(jobID)
-	return gen.GetNodeLogUnit200JSONResponse{
+
+	return gen.GetNodeLogSource200JSONResponse{
 		JobId:   &jobUUID,
 		Results: items,
 	}, nil

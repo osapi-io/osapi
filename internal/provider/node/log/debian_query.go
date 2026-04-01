@@ -23,6 +23,7 @@ package log
 import (
 	"encoding/json"
 	"log/slog"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -159,6 +160,27 @@ func journalEntryToEntry(
 		PID:       pid,
 		Hostname:  je.Hostname,
 	}
+}
+
+// parseSources parses newline-delimited syslog identifier output from
+// journalctl --field=SYSLOG_IDENTIFIER and returns a sorted, deduplicated
+// list of non-empty identifiers.
+func parseSources(
+	output string,
+) []string {
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	var sources []string
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			sources = append(sources, line)
+		}
+	}
+
+	sort.Strings(sources)
+
+	return sources
 }
 
 // parseTimestamp converts a journald microsecond timestamp string to RFC3339Nano.

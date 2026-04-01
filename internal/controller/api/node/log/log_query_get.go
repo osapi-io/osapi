@@ -32,7 +32,6 @@ import (
 	logProv "github.com/retr0h/osapi/internal/provider/node/log"
 )
 
-
 // GetNodeLog returns system log entries from a target node.
 func (s *Log) GetNodeLog(
 	ctx context.Context,
@@ -78,7 +77,7 @@ func (s *Log) GetNodeLog(
 			Results: []gen.LogResultEntry{
 				{
 					Hostname: resp.Hostname,
-					Status:   gen.Skipped,
+					Status:   gen.LogResultEntryStatusSkipped,
 					Error:    &e,
 				},
 			},
@@ -93,7 +92,7 @@ func (s *Log) GetNodeLog(
 		Results: []gen.LogResultEntry{
 			{
 				Hostname: resp.Hostname,
-				Status:   gen.Ok,
+				Status:   gen.LogResultEntryStatusOk,
 				Entries:  &entries,
 			},
 		},
@@ -176,15 +175,15 @@ func (s *Log) getNodeLogBroadcast(
 		}
 		switch resp.Status {
 		case job.StatusFailed:
-			item.Status = gen.Failed
+			item.Status = gen.LogResultEntryStatusFailed
 			e := resp.Error
 			item.Error = &e
 		case job.StatusSkipped:
-			item.Status = gen.Skipped
+			item.Status = gen.LogResultEntryStatusSkipped
 			e := resp.Error
 			item.Error = &e
 		default:
-			item.Status = gen.Ok
+			item.Status = gen.LogResultEntryStatusOk
 			entries := logEntriesFromResponse(resp)
 			item.Entries = &entries
 		}

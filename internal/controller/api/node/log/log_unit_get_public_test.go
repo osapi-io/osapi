@@ -101,11 +101,44 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
-				s.Equal(gen.Ok, r.Results[0].Status)
+				s.Equal(gen.LogResultEntryStatusOk, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Entries)
 				s.Len(*r.Results[0].Entries, 1)
 				e := (*r.Results[0].Entries)[0]
 				s.Equal("sshd.service", *e.Unit)
+			},
+		},
+		{
+			name: "success with query params",
+			request: gen.GetNodeLogUnitRequestObject{
+				Hostname: "server1",
+				Name:     "nginx.service",
+				Params: gen.GetNodeLogUnitParams{
+					Lines:    intPtr(25),
+					Since:    stringPtr("2026-03-31"),
+					Priority: stringPtr("warning"),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Query(
+						gomock.Any(),
+						"server1",
+						"node",
+						job.OperationLogQueryUnit,
+						gomock.Any(),
+					).
+					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Data:     json.RawMessage(`[]`),
+					}, nil)
+			},
+			validateFunc: func(resp gen.GetNodeLogUnitResponseObject) {
+				r, ok := resp.(gen.GetNodeLogUnit200JSONResponse)
+				s.True(ok)
+				s.Require().Len(r.Results, 1)
+				s.Equal(gen.LogResultEntryStatusOk, r.Results[0].Status)
 			},
 		},
 		{
@@ -198,7 +231,7 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 				r, ok := resp.(gen.GetNodeLogUnit200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal(gen.Skipped, r.Results[0].Status)
+				s.Equal(gen.LogResultEntryStatusSkipped, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("unsupported", *r.Results[0].Error)
 			},

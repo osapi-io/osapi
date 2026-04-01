@@ -42,6 +42,14 @@ type LogEntry struct {
 	Hostname  string `json:"hostname,omitempty"`
 }
 
+// LogSourceResult represents the result of a log sources query for one host.
+type LogSourceResult struct {
+	Hostname string   `json:"hostname"`
+	Status   string   `json:"status"`
+	Sources  []string `json:"sources,omitempty"`
+	Error    string   `json:"error,omitempty"`
+}
+
 // LogQueryOpts contains options for log query operations.
 type LogQueryOpts struct {
 	// Lines is the maximum number of log lines to return.
@@ -101,4 +109,37 @@ func logEntryInfoFromGen(
 		PID:       derefInt(e.Pid),
 		Hostname:  derefString(e.Hostname),
 	}
+}
+
+// logSourceCollectionFromGen converts a gen.LogSourceCollectionResponse to a
+// Collection[LogSourceResult].
+func logSourceCollectionFromGen(
+	g *gen.LogSourceCollectionResponse,
+) Collection[LogSourceResult] {
+	results := make([]LogSourceResult, 0, len(g.Results))
+	for _, r := range g.Results {
+		results = append(results, logSourceResultFromGen(r))
+	}
+
+	return Collection[LogSourceResult]{
+		Results: results,
+		JobID:   jobIDFromGen(g.JobId),
+	}
+}
+
+// logSourceResultFromGen converts a gen.LogSourceEntry to a LogSourceResult.
+func logSourceResultFromGen(
+	r gen.LogSourceEntry,
+) LogSourceResult {
+	result := LogSourceResult{
+		Hostname: r.Hostname,
+		Status:   string(r.Status),
+		Error:    derefString(r.Error),
+	}
+
+	if r.Sources != nil {
+		result.Sources = *r.Sources
+	}
+
+	return result
 }

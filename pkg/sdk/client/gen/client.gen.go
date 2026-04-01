@@ -209,6 +209,13 @@ const (
 	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
 )
 
+// Defines values for LogSourceEntryStatus.
+const (
+	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
+	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
+	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
+)
+
 // Defines values for MemoryResultItemStatus.
 const (
 	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
@@ -381,11 +388,11 @@ const (
 
 // Defines values for GetJobParamsStatus.
 const (
-	Completed      GetJobParamsStatus = "completed"
-	Failed         GetJobParamsStatus = "failed"
-	PartialFailure GetJobParamsStatus = "partial_failure"
-	Processing     GetJobParamsStatus = "processing"
-	Submitted      GetJobParamsStatus = "submitted"
+	GetJobParamsStatusCompleted      GetJobParamsStatus = "completed"
+	GetJobParamsStatusFailed         GetJobParamsStatus = "failed"
+	GetJobParamsStatusPartialFailure GetJobParamsStatus = "partial_failure"
+	GetJobParamsStatusProcessing     GetJobParamsStatus = "processing"
+	GetJobParamsStatusSubmitted      GetJobParamsStatus = "submitted"
 )
 
 // Defines values for GetNodeContainerDockerParamsState.
@@ -1780,6 +1787,31 @@ type LogResultEntry struct {
 
 // LogResultEntryStatus The status of the operation for this host.
 type LogResultEntryStatus string
+
+// LogSourceCollectionResponse defines model for LogSourceCollectionResponse.
+type LogSourceCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []LogSourceEntry    `json:"results"`
+}
+
+// LogSourceEntry Log source result for a single agent.
+type LogSourceEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Sources Unique syslog identifiers on this agent.
+	Sources *[]string `json:"sources,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status LogSourceEntryStatus `json:"status"`
+}
+
+// LogSourceEntryStatus The status of the operation for this host.
+type LogSourceEntryStatus string
 
 // MemoryCollectionResponse defines model for MemoryCollectionResponse.
 type MemoryCollectionResponse struct {
@@ -3200,6 +3232,9 @@ type ClientInterface interface {
 	// GetNodeLog request
 	GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetNodeLogSource request
+	GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetNodeLogUnit request
 	GetNodeLogUnit(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -4030,6 +4065,18 @@ func (c *Client) GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors 
 
 func (c *Client) GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeLogRequest(c.Server, hostname, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeLogSourceRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -6634,6 +6681,40 @@ func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogPa
 	return req, nil
 }
 
+// NewGetNodeLogSourceRequest generates requests for GetNodeLogSource
+func NewGetNodeLogSourceRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostname", runtime.ParamLocationPath, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/node/%s/log/source", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetNodeLogUnitRequest generates requests for GetNodeLogUnit
 func NewGetNodeLogUnitRequest(server string, hostname Hostname, name UnitName, params *GetNodeLogUnitParams) (*http.Request, error) {
 	var err error
@@ -8596,6 +8677,9 @@ type ClientWithResponsesInterface interface {
 	// GetNodeLogWithResponse request
 	GetNodeLogWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*GetNodeLogResponse, error)
 
+	// GetNodeLogSourceWithResponse request
+	GetNodeLogSourceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLogSourceResponse, error)
+
 	// GetNodeLogUnitWithResponse request
 	GetNodeLogUnitWithResponse(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*GetNodeLogUnitResponse, error)
 
@@ -9894,6 +9978,31 @@ func (r GetNodeLogResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetNodeLogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNodeLogSourceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LogSourceCollectionResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeLogSourceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeLogSourceResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11456,6 +11565,15 @@ func (c *ClientWithResponses) GetNodeLogWithResponse(ctx context.Context, hostna
 		return nil, err
 	}
 	return ParseGetNodeLogResponse(rsp)
+}
+
+// GetNodeLogSourceWithResponse request returning *GetNodeLogSourceResponse
+func (c *ClientWithResponses) GetNodeLogSourceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLogSourceResponse, error) {
+	rsp, err := c.GetNodeLogSource(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeLogSourceResponse(rsp)
 }
 
 // GetNodeLogUnitWithResponse request returning *GetNodeLogUnitResponse
@@ -14304,6 +14422,53 @@ func ParseGetNodeLogResponse(rsp *http.Response) (*GetNodeLogResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LogCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeLogSourceResponse parses an HTTP response from a GetNodeLogSourceWithResponse call
+func ParseGetNodeLogSourceResponse(rsp *http.Response) (*GetNodeLogSourceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeLogSourceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogSourceCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

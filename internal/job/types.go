@@ -223,6 +223,7 @@ const (
 const (
 	OperationLogQuery     = client.OpLogQuery
 	OperationLogQueryUnit = client.OpLogQueryUnit
+	OperationLogSources   = client.OpLogSources
 )
 
 // Operation represents an operation in the new hierarchical format

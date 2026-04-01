@@ -52,3 +52,10 @@ func (d *Darwin) QueryUnit(
 ) ([]Entry, error) {
 	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
 }
+
+// ListSources returns ErrUnsupported on Darwin.
+func (d *Darwin) ListSources(
+	_ context.Context,
+) ([]string, error) {
+	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
+}

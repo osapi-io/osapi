@@ -82,6 +82,25 @@ func (suite *DarwinPublicTestSuite) TestQueryUnit() {
 	}
 }
 
+func (suite *DarwinPublicTestSuite) TestListSources() {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns not implemented error",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got, err := suite.provider.ListSources(context.Background())
+
+			suite.Nil(got)
+			suite.ErrorIs(err, provider.ErrUnsupported)
+		})
+	}
+}
+
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestDarwinPublicTestSuite(t *testing.T) {

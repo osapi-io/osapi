@@ -22,9 +22,16 @@ const (
 
 // Defines values for LogResultEntryStatus.
 const (
-	Failed  LogResultEntryStatus = "failed"
-	Ok      LogResultEntryStatus = "ok"
-	Skipped LogResultEntryStatus = "skipped"
+	LogResultEntryStatusFailed  LogResultEntryStatus = "failed"
+	LogResultEntryStatusOk      LogResultEntryStatus = "ok"
+	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
+)
+
+// Defines values for LogSourceEntryStatus.
+const (
+	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
+	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
+	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
 )
 
 // ErrorResponse defines model for ErrorResponse.
@@ -76,6 +83,31 @@ type LogResultEntry struct {
 // LogResultEntryStatus The status of the operation for this host.
 type LogResultEntryStatus string
 
+// LogSourceCollectionResponse defines model for LogSourceCollectionResponse.
+type LogSourceCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	Results []LogSourceEntry    `json:"results"`
+}
+
+// LogSourceEntry Log source result for a single agent.
+type LogSourceEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// Sources Unique syslog identifiers on this agent.
+	Sources *[]string `json:"sources,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status LogSourceEntryStatus `json:"status"`
+}
+
+// LogSourceEntryStatus The status of the operation for this host.
+type LogSourceEntryStatus string
+
 // Hostname defines model for Hostname.
 type Hostname = string
 
@@ -111,6 +143,9 @@ type ServerInterface interface {
 	// Get system log entries
 	// (GET /node/{hostname}/log)
 	GetNodeLog(ctx echo.Context, hostname Hostname, params GetNodeLogParams) error
+	// List log sources
+	// (GET /node/{hostname}/log/source)
+	GetNodeLogSource(ctx echo.Context, hostname Hostname) error
 	// Get log entries for a systemd unit
 	// (GET /node/{hostname}/log/unit/{name})
 	GetNodeLogUnit(ctx echo.Context, hostname Hostname, name UnitName, params GetNodeLogUnitParams) error
@@ -159,6 +194,24 @@ func (w *ServerInterfaceWrapper) GetNodeLog(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetNodeLog(ctx, hostname, params)
+	return err
+}
+
+// GetNodeLogSource converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNodeLogSource(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "hostname" -------------
+	var hostname Hostname
+
+	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"log:read"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNodeLogSource(ctx, hostname)
 	return err
 }
 
@@ -240,6 +293,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/node/:hostname/log", wrapper.GetNodeLog)
+	router.GET(baseURL+"/node/:hostname/log/source", wrapper.GetNodeLogSource)
 	router.GET(baseURL+"/node/:hostname/log/unit/:name", wrapper.GetNodeLogUnit)
 
 }
@@ -283,6 +337,50 @@ func (response GetNodeLog403JSONResponse) VisitGetNodeLogResponse(w http.Respons
 type GetNodeLog500JSONResponse externalRef0.ErrorResponse
 
 func (response GetNodeLog500JSONResponse) VisitGetNodeLogResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSourceRequestObject struct {
+	Hostname Hostname `json:"hostname"`
+}
+
+type GetNodeLogSourceResponseObject interface {
+	VisitGetNodeLogSourceResponse(w http.ResponseWriter) error
+}
+
+type GetNodeLogSource200JSONResponse LogSourceCollectionResponse
+
+func (response GetNodeLogSource200JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSource401JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogSource401JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSource403JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogSource403JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNodeLogSource500JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeLogSource500JSONResponse) VisitGetNodeLogSourceResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -340,6 +438,9 @@ type StrictServerInterface interface {
 	// Get system log entries
 	// (GET /node/{hostname}/log)
 	GetNodeLog(ctx context.Context, request GetNodeLogRequestObject) (GetNodeLogResponseObject, error)
+	// List log sources
+	// (GET /node/{hostname}/log/source)
+	GetNodeLogSource(ctx context.Context, request GetNodeLogSourceRequestObject) (GetNodeLogSourceResponseObject, error)
 	// Get log entries for a systemd unit
 	// (GET /node/{hostname}/log/unit/{name})
 	GetNodeLogUnit(ctx context.Context, request GetNodeLogUnitRequestObject) (GetNodeLogUnitResponseObject, error)
@@ -377,6 +478,31 @@ func (sh *strictHandler) GetNodeLog(ctx echo.Context, hostname Hostname, params 
 		return err
 	} else if validResponse, ok := response.(GetNodeLogResponseObject); ok {
 		return validResponse.VisitGetNodeLogResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNodeLogSource operation middleware
+func (sh *strictHandler) GetNodeLogSource(ctx echo.Context, hostname Hostname) error {
+	var request GetNodeLogSourceRequestObject
+
+	request.Hostname = hostname
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNodeLogSource(ctx.Request().Context(), request.(GetNodeLogSourceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNodeLogSource")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNodeLogSourceResponseObject); ok {
+		return validResponse.VisitGetNodeLogSourceResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

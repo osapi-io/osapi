@@ -44,7 +44,7 @@ import (
 	"github.com/retr0h/osapi/internal/validation"
 )
 
-type LogQueryPublicTestSuite struct {
+type LogSourcePublicTestSuite struct {
 	suite.Suite
 
 	mockCtrl      *gomock.Controller
@@ -55,7 +55,7 @@ type LogQueryPublicTestSuite struct {
 	logger        *slog.Logger
 }
 
-func (s *LogQueryPublicTestSuite) SetupSuite() {
+func (s *LogSourcePublicTestSuite) SetupSuite() {
 	validation.RegisterTargetValidator(func(_ context.Context) ([]validation.AgentTarget, error) {
 		return []validation.AgentTarget{
 			{Hostname: "server1", Labels: map[string]string{"group": "web"}},
@@ -64,7 +64,7 @@ func (s *LogQueryPublicTestSuite) SetupSuite() {
 	})
 }
 
-func (s *LogQueryPublicTestSuite) SetupTest() {
+func (s *LogSourcePublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = jobmocks.NewMockJobClient(s.mockCtrl)
 	s.handler = logAPI.New(slog.Default(), s.mockJobClient)
@@ -73,20 +73,20 @@ func (s *LogQueryPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (s *LogQueryPublicTestSuite) TearDownTest() {
+func (s *LogSourcePublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
-func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
+func (s *LogSourcePublicTestSuite) TestGetNodeLogSource() {
 	tests := []struct {
 		name         string
-		request      gen.GetNodeLogRequestObject
+		request      gen.GetNodeLogSourceRequestObject
 		setupMock    func()
-		validateFunc func(resp gen.GetNodeLogResponseObject)
+		validateFunc func(resp gen.GetNodeLogSourceResponseObject)
 	}{
 		{
 			name: "success",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "server1",
 			},
 			setupMock: func() {
@@ -95,70 +95,33 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
-						Data: json.RawMessage(
-							`[{"timestamp":"2026-01-01T00:00:00Z","unit":"sshd.service","priority":"info","message":"Started OpenSSH server","pid":1234,"hostname":"agent1"}]`,
-						),
+						Data:     json.RawMessage(`["cron","nginx","sshd"]`),
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
-				s.Equal(gen.LogResultEntryStatusOk, r.Results[0].Status)
-				s.Require().NotNil(r.Results[0].Entries)
-				s.Len(*r.Results[0].Entries, 1)
-				e := (*r.Results[0].Entries)[0]
-				s.Equal("2026-01-01T00:00:00Z", *e.Timestamp)
-				s.Equal("Started OpenSSH server", *e.Message)
-			},
-		},
-		{
-			name: "success with query params",
-			request: gen.GetNodeLogRequestObject{
-				Hostname: "server1",
-				Params: gen.GetNodeLogParams{
-					Lines:    intPtr(50),
-					Since:    stringPtr("1 hour ago"),
-					Priority: stringPtr("err"),
-				},
-			},
-			setupMock: func() {
-				s.mockJobClient.EXPECT().
-					Query(
-						gomock.Any(),
-						"server1",
-						"node",
-						job.OperationLogQuery,
-						gomock.Any(),
-					).
-					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID:    "550e8400-e29b-41d4-a716-446655440000",
-						Hostname: "agent1",
-						Data:     json.RawMessage(`[]`),
-					}, nil)
-			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
-				s.True(ok)
-				s.Require().Len(r.Results, 1)
-				s.Equal(gen.LogResultEntryStatusOk, r.Results[0].Status)
+				s.Equal(gen.LogSourceEntryStatusOk, r.Results[0].Status)
+				s.Require().NotNil(r.Results[0].Sources)
+				s.Equal([]string{"cron", "nginx", "sshd"}, *r.Results[0].Sources)
 			},
 		},
 		{
 			name: "validation error empty hostname",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "",
 			},
 			setupMock: func() {},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog500JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource500JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "required")
@@ -166,7 +129,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 		},
 		{
 			name: "success with nil response data",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "server1",
 			},
 			setupMock: func() {
@@ -175,7 +138,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
@@ -184,18 +147,18 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						Data:     nil,
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
 				s.Equal("agent1", r.Results[0].Hostname)
-				s.Require().NotNil(r.Results[0].Entries)
-				s.Empty(*r.Results[0].Entries)
+				s.Require().NotNil(r.Results[0].Sources)
+				s.Empty(*r.Results[0].Sources)
 			},
 		},
 		{
 			name: "job client error",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "server1",
 			},
 			setupMock: func() {
@@ -204,19 +167,19 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				_, ok := resp.(gen.GetNodeLog500JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				_, ok := resp.(gen.GetNodeLogSource500JSONResponse)
 				s.True(ok)
 			},
 		},
 		{
 			name: "when job skipped",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "server1",
 			},
 			setupMock: func() {
@@ -225,7 +188,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"server1",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
@@ -234,18 +197,18 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						Error:    "unsupported",
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
 				s.True(ok)
 				s.Require().Len(r.Results, 1)
-				s.Equal(gen.LogResultEntryStatusSkipped, r.Results[0].Status)
+				s.Equal(gen.LogSourceEntryStatusSkipped, r.Results[0].Status)
 				s.Require().NotNil(r.Results[0].Error)
 				s.Equal("unsupported", *r.Results[0].Error)
 			},
 		},
 		{
 			name: "broadcast success",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "_all",
 			},
 			setupMock: func() {
@@ -254,16 +217,14 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
-							Data: json.RawMessage(
-								`[{"timestamp":"2026-01-01T00:00:00Z","priority":"info","message":"hello"}]`,
-							),
+							Data:     json.RawMessage(`["nginx","sshd"]`),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
@@ -272,8 +233,8 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
 				s.True(ok)
 				s.Require().NotNil(r.JobId)
 				s.Len(r.Results, 2)
@@ -281,7 +242,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 		},
 		{
 			name: "broadcast with failed and skipped hosts",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "_all",
 			},
 			setupMock: func() {
@@ -290,13 +251,13 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("550e8400-e29b-41d4-a716-446655440000", map[string]*job.Response{
 						"server1": {
 							Hostname: "server1",
-							Data:     json.RawMessage(`[]`),
+							Data:     json.RawMessage(`["sshd"]`),
 						},
 						"server2": {
 							Status:   job.StatusFailed,
@@ -310,15 +271,15 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						},
 					}, nil)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				r, ok := resp.(gen.GetNodeLog200JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				r, ok := resp.(gen.GetNodeLogSource200JSONResponse)
 				s.True(ok)
 				s.Len(r.Results, 3)
 			},
 		},
 		{
 			name: "broadcast error collecting responses",
-			request: gen.GetNodeLogRequestObject{
+			request: gen.GetNodeLogSourceRequestObject{
 				Hostname: "_all",
 			},
 			setupMock: func() {
@@ -327,13 +288,13 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 						gomock.Any(),
 						"_all",
 						"node",
-						job.OperationLogQuery,
+						job.OperationLogSources,
 						gomock.Any(),
 					).
 					Return("", nil, assert.AnError)
 			},
-			validateFunc: func(resp gen.GetNodeLogResponseObject) {
-				_, ok := resp.(gen.GetNodeLog500JSONResponse)
+			validateFunc: func(resp gen.GetNodeLogSourceResponseObject) {
+				_, ok := resp.(gen.GetNodeLogSource500JSONResponse)
 				s.True(ok)
 			},
 		},
@@ -343,14 +304,14 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLog() {
 		s.Run(tt.name, func() {
 			tt.setupMock()
 
-			resp, err := s.handler.GetNodeLog(s.ctx, tt.request)
+			resp, err := s.handler.GetNodeLogSource(s.ctx, tt.request)
 			s.NoError(err)
 			tt.validateFunc(resp)
 		})
 	}
 }
 
-func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
+func (s *LogSourcePublicTestSuite) TestGetNodeLogSourceHTTP() {
 	tests := []struct {
 		name         string
 		path         string
@@ -360,11 +321,11 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 	}{
 		{
 			name: "when valid request",
-			path: "/node/server1/log",
+			path: "/node/server1/log/source",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Query(gomock.Any(), "server1", "node", job.OperationLogQuery, gomock.Any()).
+					Query(gomock.Any(), "server1", "node", job.OperationLogSources, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -377,7 +338,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 		},
 		{
 			name: "when target agent not found",
-			path: "/node/nonexistent/log",
+			path: "/node/nonexistent/log/source",
 			setupJobMock: func() *jobmocks.MockJobClient {
 				return jobmocks.NewMockJobClient(s.mockCtrl)
 			},
@@ -409,9 +370,9 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogHTTP() {
 	}
 }
 
-const rbacLogQueryTestSigningKey = "test-signing-key-for-rbac-log-query"
+const rbacLogSourceTestSigningKey = "test-signing-key-for-rbac-log-source"
 
-func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
+func (s *LogSourcePublicTestSuite) TestGetNodeLogSourceRBACHTTP() {
 	tokenManager := authtoken.New(s.logger)
 
 	tests := []struct {
@@ -436,7 +397,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 			name: "when insufficient permissions returns 403",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacLogQueryTestSigningKey,
+					rbacLogSourceTestSigningKey,
 					[]string{"write"},
 					"test-user",
 					[]string{"docker:write"},
@@ -454,7 +415,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 			name: "when valid token with log:read returns 200",
 			setupAuth: func(req *http.Request) {
 				token, err := tokenManager.Generate(
-					rbacLogQueryTestSigningKey,
+					rbacLogSourceTestSigningKey,
 					[]string{"admin"},
 					"test-user",
 					nil,
@@ -465,7 +426,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 			setupJobMock: func() *jobmocks.MockJobClient {
 				mock := jobmocks.NewMockJobClient(s.mockCtrl)
 				mock.EXPECT().
-					Query(gomock.Any(), "server1", "node", job.OperationLogQuery, gomock.Any()).
+					Query(gomock.Any(), "server1", "node", job.OperationLogSources, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
 						JobID:    "550e8400-e29b-41d4-a716-446655440000",
 						Hostname: "agent1",
@@ -486,7 +447,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: rbacLogQueryTestSigningKey,
+							SigningKey: rbacLogSourceTestSigningKey,
 						},
 					},
 				},
@@ -503,7 +464,7 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/node/server1/log",
+				"/node/server1/log/source",
 				nil,
 			)
 			tc.setupAuth(req)
@@ -519,9 +480,6 @@ func (s *LogQueryPublicTestSuite) TestGetNodeLogRBACHTTP() {
 	}
 }
 
-func intPtr(i int) *int          { return &i }
-func stringPtr(s string) *string { return &s }
-
-func TestLogQueryPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(LogQueryPublicTestSuite))
+func TestLogSourcePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(LogSourcePublicTestSuite))
 }

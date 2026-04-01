@@ -88,3 +88,17 @@ func (d *Debian) QueryUnit(
 
 	return parseJournalOutput(output, d.logger), nil
 }
+
+// ListSources returns unique syslog identifiers from the journal.
+func (d *Debian) ListSources(
+	_ context.Context,
+) ([]string, error) {
+	d.logger.Debug("executing log.ListSources")
+
+	output, err := d.execManager.RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"})
+	if err != nil {
+		return nil, fmt.Errorf("log: list sources: %w", err)
+	}
+
+	return parseSources(output), nil
+}

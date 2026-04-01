@@ -2269,6 +2269,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /node/{hostname}/log/source:
+    servers: []
+    get:
+      summary: List log sources
+      description: >
+        List unique syslog identifiers (log sources) available in the journal on
+        the target node.
+      tags:
+        - Log_Management_API_log_operations
+      operationId: GetNodeLogSource
+      security:
+        - BearerAuth:
+            - log:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of log sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSourceCollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing log sources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /node/{hostname}/log/unit/{name}:
     servers: []
     get:
@@ -6383,6 +6423,45 @@ components:
       required:
         - hostname
         - status
+    LogSourceEntry:
+      type: object
+      description: Log source result for a single agent.
+      properties:
+        hostname:
+          type: string
+          description: The hostname of the agent.
+        status:
+          type: string
+          enum:
+            - ok
+            - failed
+            - skipped
+          description: The status of the operation for this host.
+        sources:
+          type: array
+          description: Unique syslog identifiers on this agent.
+          items:
+            type: string
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+    LogSourceCollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogSourceEntry'
+      required:
+        - results
     LogCollectionResponse:
       type: object
       properties:

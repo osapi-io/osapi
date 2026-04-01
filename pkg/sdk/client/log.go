@@ -68,6 +68,36 @@ func (s *LogService) Query(
 	return NewResponse(logCollectionFromGen(resp.JSON200), resp.Body), nil
 }
 
+// Sources returns unique syslog identifiers available in the journal on the
+// target host.
+func (s *LogService) Sources(
+	ctx context.Context,
+	hostname string,
+) (*Response[Collection[LogSourceResult]], error) {
+	resp, err := s.client.GetNodeLogSourceWithResponse(ctx, hostname)
+	if err != nil {
+		return nil, fmt.Errorf("log sources: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return NewResponse(logSourceCollectionFromGen(resp.JSON200), resp.Body), nil
+}
+
 // QueryUnit returns journal log entries for a specific systemd unit on the
 // target host.
 func (s *LogService) QueryUnit(

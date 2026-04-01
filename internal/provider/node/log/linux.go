@@ -52,3 +52,10 @@ func (l *Linux) QueryUnit(
 ) ([]Entry, error) {
 	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
 }
+
+// ListSources returns ErrUnsupported on generic Linux.
+func (l *Linux) ListSources(
+	_ context.Context,
+) ([]string, error) {
+	return nil, fmt.Errorf("log: %w", provider.ErrUnsupported)
+}

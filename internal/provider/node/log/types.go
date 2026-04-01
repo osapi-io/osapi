@@ -31,6 +31,8 @@ type Provider interface {
 	Query(ctx context.Context, opts QueryOpts) ([]Entry, error)
 	// QueryUnit returns journal entries for a specific systemd unit.
 	QueryUnit(ctx context.Context, unit string, opts QueryOpts) ([]Entry, error)
+	// ListSources returns unique syslog identifiers from the journal.
+	ListSources(ctx context.Context) ([]string, error)
 }
 
 // QueryOpts contains optional filters for log queries.

@@ -156,6 +156,32 @@ func (suite *DebianPublicTestSuite) TestQuery() {
 				suite.Equal("nginx", result[0].Unit)
 			},
 		},
+		{
+			name: "when entry has empty timestamp",
+			opts: oslog.QueryOpts{},
+			setupMock: func() {
+				suite.mockManager.EXPECT().
+					RunCmd("journalctl", gomock.Any()).
+					Return(`{"__REALTIME_TIMESTAMP":"","SYSLOG_IDENTIFIER":"test","PRIORITY":"6","MESSAGE":"hello"}`, nil)
+			},
+			validateFunc: func(result []oslog.Entry) {
+				suite.Len(result, 1)
+				suite.Equal("", result[0].Timestamp)
+			},
+		},
+		{
+			name: "when entry has non-numeric timestamp",
+			opts: oslog.QueryOpts{},
+			setupMock: func() {
+				suite.mockManager.EXPECT().
+					RunCmd("journalctl", gomock.Any()).
+					Return(`{"__REALTIME_TIMESTAMP":"not-a-number","SYSLOG_IDENTIFIER":"test","PRIORITY":"6","MESSAGE":"hello"}`, nil)
+			},
+			validateFunc: func(result []oslog.Entry) {
+				suite.Len(result, 1)
+				suite.Equal("not-a-number", result[0].Timestamp)
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -242,6 +268,68 @@ func (suite *DebianPublicTestSuite) TestQueryUnit() {
 			tc.setupMock()
 
 			got, err := suite.provider.QueryUnit(context.Background(), tc.unit, tc.opts)
+
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.wantErrMsg)
+				suite.Nil(got)
+
+				return
+			}
+
+			suite.NoError(err)
+			tc.validateFunc(got)
+		})
+	}
+}
+
+func (suite *DebianPublicTestSuite) TestListSources() {
+	tests := []struct {
+		name         string
+		setupMock    func()
+		wantErr      bool
+		wantErrMsg   string
+		validateFunc func(result []string)
+	}{
+		{
+			name: "when sources returned sorted list",
+			setupMock: func() {
+				suite.mockManager.EXPECT().
+					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					Return("sshd\nnginx\ncron\n", nil)
+			},
+			validateFunc: func(result []string) {
+				suite.Equal([]string{"cron", "nginx", "sshd"}, result)
+			},
+		},
+		{
+			name: "when exec errors returns error",
+			setupMock: func() {
+				suite.mockManager.EXPECT().
+					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					Return("", errors.New("journalctl not found"))
+			},
+			wantErr:    true,
+			wantErrMsg: "log: list sources: journalctl not found",
+		},
+		{
+			name: "when empty output returns nil",
+			setupMock: func() {
+				suite.mockManager.EXPECT().
+					RunCmd("journalctl", []string{"--field=SYSLOG_IDENTIFIER"}).
+					Return("", nil)
+			},
+			validateFunc: func(result []string) {
+				suite.Nil(result)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.setupMock()
+
+			got, err := suite.provider.ListSources(context.Background())
 
 			if tc.wantErr {
 				suite.Error(err)

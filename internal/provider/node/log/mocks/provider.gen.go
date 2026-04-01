@@ -35,6 +35,21 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
+// ListSources mocks base method.
+func (m *MockProvider) ListSources(ctx context.Context) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSources", ctx)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSources indicates an expected call of ListSources.
+func (mr *MockProviderMockRecorder) ListSources(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSources", reflect.TypeOf((*MockProvider)(nil).ListSources), ctx)
+}
+
 // Query mocks base method.
 func (m *MockProvider) Query(ctx context.Context, opts log.QueryOpts) ([]log.Entry, error) {
 	m.ctrl.T.Helper()
