@@ -193,6 +193,11 @@ const config: Config = {
               type: 'doc',
               label: 'Log Management',
               docId: 'sidebar/features/log-management'
+            },
+            {
+              type: 'doc',
+              label: 'Certificate Management',
+              docId: 'sidebar/features/certificate-management'
             }
           ]
         },
@@ -394,6 +399,11 @@ const config: Config = {
               type: 'doc',
               label: 'Group',
               docId: 'sidebar/sdk/client/management/group'
+            },
+            {
+              type: 'doc',
+              label: 'Certificate',
+              docId: 'sidebar/sdk/client/management/certificate'
             },
             {
               type: 'html',

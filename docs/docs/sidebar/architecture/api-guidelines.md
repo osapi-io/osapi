@@ -65,9 +65,11 @@ Sub-resources represent distinct capabilities of the node:
 | `/node/{hostname}/package/{name}`              | Package  |
 | `/node/{hostname}/package/update`              | Package  |
 | `/node/{hostname}/package/updates`             | Package  |
-| `/node/{hostname}/log`                         | Log      |
-| `/node/{hostname}/log/source`                  | Log      |
-| `/node/{hostname}/log/unit/{name}`             | Log      |
+| `/node/{hostname}/log`                         | Log         |
+| `/node/{hostname}/log/source`                  | Log         |
+| `/node/{hostname}/log/unit/{name}`             | Log         |
+| `/node/{hostname}/certificate/ca`              | Certificate |
+| `/node/{hostname}/certificate/ca/{name}`       | Certificate |
 
 6. **Path Parameters Over Query Parameters**
 

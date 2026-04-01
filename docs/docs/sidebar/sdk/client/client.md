@@ -78,8 +78,9 @@ resp, err := client.Hostname.Get(ctx, "_any")
 | [Job](management/job.md)       | Async job queue operations     |
 | [Health](management/health.md) | Health check operations        |
 | [Audit](management/audit.md)   | Audit log operations           |
-| [User](management/user.md)     | User account management        |
-| [Group](management/group.md)   | Group management               |
+| [User](management/user.md)                 | User account management        |
+| [Group](management/group.md)               | Group management               |
+| [Certificate](management/certificate.md)   | CA certificate management      |
 
 ## Client Options
 
