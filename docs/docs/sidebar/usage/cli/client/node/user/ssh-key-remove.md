@@ -12,9 +12,9 @@ $ osapi client node user ssh-key remove --target web-01 \
   true
 ```
 
-The key matching the given SHA256 fingerprint is removed from the
-user's `~/.ssh/authorized_keys` file. Returns `changed: false` if
-the fingerprint is not found.
+The key matching the given SHA256 fingerprint is removed from the user's
+`~/.ssh/authorized_keys` file. Returns `changed: false` if the fingerprint is
+not found.
 
 When targeting all hosts:
 

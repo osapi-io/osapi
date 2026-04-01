@@ -12,12 +12,11 @@ $ osapi client node user ssh-key add --target web-01 \
   true
 ```
 
-The key is appended to the user's `~/.ssh/authorized_keys` file. If
-the file or `~/.ssh` directory does not exist, it is created with
-correct permissions (`700` for the directory, `600` for the file).
+The key is appended to the user's `~/.ssh/authorized_keys` file. If the file or
+`~/.ssh` directory does not exist, it is created with correct permissions (`700`
+for the directory, `600` for the file).
 
-Adding a key that already exists (same fingerprint) returns
-`changed: false`.
+Adding a key that already exists (same fingerprint) returns `changed: false`.
 
 When targeting all hosts:
 

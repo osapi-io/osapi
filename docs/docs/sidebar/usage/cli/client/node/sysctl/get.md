@@ -18,21 +18,26 @@ $ osapi client node sysctl get --target _all --key vm.swappiness
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  KEY           VALUE
-  web-01    vm.swappiness  10
-  web-02    vm.swappiness  10
+  web-01
+  KEY            VALUE
+  vm.swappiness  10
+
+  web-02
+  KEY            VALUE
+  vm.swappiness  10
 ```
 
-When some hosts are skipped, a STATUS column is shown:
+When some hosts are skipped, HOSTNAME, STATUS, and ERROR columns appear
+alongside data columns:
 
 ```bash
 $ osapi client node sysctl get --target _all --key vm.swappiness
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   KEY           VALUE  ERROR
-  web-01    ok       vm.swappiness  10
-  mac-01    skipped                        unsupported platform
+  HOSTNAME  STATUS   ERROR                 KEY            VALUE
+  web-01    ok                              vm.swappiness  10
+  mac-01    skipped  unsupported platform
 ```
 
 ## JSON Output

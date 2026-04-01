@@ -29,8 +29,8 @@ $ osapi client node user ssh-key list --target _all --name deploy
   ssh-rsa      SHA256:ghi789...  deploy-prod
 ```
 
-Hosts with no authorized keys are omitted from the output. Skipped
-hosts (e.g., unsupported platforms) show with their error.
+Hosts with no authorized keys are omitted from the output. Skipped hosts (e.g.,
+unsupported platforms) show with their error.
 
 ## JSON Output
 

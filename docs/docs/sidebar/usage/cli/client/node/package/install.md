@@ -18,22 +18,26 @@ $ osapi client node package install --target _all --name htop
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  NAME   CHANGED
-  web-01    htop   true
-  web-02    htop   true
+  web-01
+  NAME   CHANGED
+  htop   true
+
+  web-02
+  NAME   CHANGED
+  htop   true
 ```
 
-When some hosts are skipped (e.g., macOS agents), STATUS and ERROR columns are
-added:
+When some hosts are skipped (e.g., macOS agents), HOSTNAME, STATUS, and ERROR
+columns appear alongside data columns:
 
 ```bash
 $ osapi client node package install --target _all --name htop
 
   Job ID: 550e8400-e29b-41d4-a716-446655440000
 
-  HOSTNAME  STATUS   NAME   CHANGED  ERROR
-  web-01    ok       htop   true
-  mac-01    skipped                   unsupported platform
+  HOSTNAME  STATUS   ERROR                 NAME   CHANGED
+  web-01    ok                              htop   true
+  mac-01    skipped  unsupported platform
 ```
 
 ## JSON Output
