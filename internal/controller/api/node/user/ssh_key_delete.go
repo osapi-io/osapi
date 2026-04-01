@@ -22,16 +22,130 @@ package user
 
 import (
 	"context"
+	"log/slog"
+
+	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
+	"github.com/retr0h/osapi/internal/job"
 )
 
 // DeleteNodeUserSshKey removes an SSH authorized key by fingerprint for a user
 // on a target node.
 func (u *User) DeleteNodeUserSshKey(
-	_ context.Context,
-	_ gen.DeleteNodeUserSshKeyRequestObject,
+	ctx context.Context,
+	request gen.DeleteNodeUserSshKeyRequestObject,
 ) (gen.DeleteNodeUserSshKeyResponseObject, error) {
-	// TODO(Task 5): implement handler
-	panic("not implemented")
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+	}
+
+	hostname := request.Hostname
+	username := request.Name
+	fingerprint := request.Fingerprint
+
+	u.logger.Debug("ssh key remove",
+		slog.String("target", hostname),
+		slog.String("username", username),
+		slog.String("fingerprint", fingerprint),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
+	)
+
+	data := map[string]string{
+		"username":    username,
+		"fingerprint": fingerprint,
+	}
+
+	if job.IsBroadcastTarget(hostname) {
+		return u.deleteNodeUserSshKeyBroadcast(ctx, hostname, data)
+	}
+
+	jobID, resp, err := u.JobClient.Modify(
+		ctx,
+		hostname,
+		"user",
+		job.OperationSSHKeyRemove,
+		data,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+	}
+
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.DeleteNodeUserSshKey200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.SSHKeyMutationEntry{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.SSHKeyMutationEntryStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	changed := resp.Changed
+	agentHostname := resp.Hostname
+
+	return gen.DeleteNodeUserSshKey200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.SSHKeyMutationEntry{
+			{
+				Hostname: agentHostname,
+				Status:   gen.SSHKeyMutationEntryStatusOk,
+				Changed:  changed,
+			},
+		},
+	}, nil
+}
+
+// deleteNodeUserSshKeyBroadcast handles broadcast targets for SSH key remove.
+func (u *User) deleteNodeUserSshKeyBroadcast(
+	ctx context.Context,
+	target string,
+	data map[string]string,
+) (gen.DeleteNodeUserSshKeyResponseObject, error) {
+	jobID, responses, err := u.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"user",
+		job.OperationSSHKeyRemove,
+		data,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.DeleteNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var apiResponses []gen.SSHKeyMutationEntry
+	for host, resp := range responses {
+		item := gen.SSHKeyMutationEntry{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.SSHKeyMutationEntryStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.SSHKeyMutationEntryStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.SSHKeyMutationEntryStatusOk
+			item.Changed = resp.Changed
+		}
+		apiResponses = append(apiResponses, item)
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+
+	return gen.DeleteNodeUserSshKey200JSONResponse{
+		JobId:   &jobUUID,
+		Results: apiResponses,
+	}, nil
 }

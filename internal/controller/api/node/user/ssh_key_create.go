@@ -22,15 +22,139 @@ package user
 
 import (
 	"context"
+	"encoding/json"
+	"log/slog"
+
+	"github.com/google/uuid"
 
 	"github.com/retr0h/osapi/internal/controller/api/node/user/gen"
+	"github.com/retr0h/osapi/internal/job"
+	userProv "github.com/retr0h/osapi/internal/provider/node/user"
+	"github.com/retr0h/osapi/internal/validation"
 )
 
 // PostNodeUserSshKey adds an SSH authorized key for a user on a target node.
 func (u *User) PostNodeUserSshKey(
-	_ context.Context,
-	_ gen.PostNodeUserSshKeyRequestObject,
+	ctx context.Context,
+	request gen.PostNodeUserSshKeyRequestObject,
 ) (gen.PostNodeUserSshKeyResponseObject, error) {
-	// TODO(Task 5): implement handler
-	panic("not implemented")
+	if errMsg, ok := validateHostname(request.Hostname); !ok {
+		return gen.PostNodeUserSshKey400JSONResponse{Error: &errMsg}, nil
+	}
+
+	if errMsg, ok := validation.Struct(request.Body); !ok {
+		return gen.PostNodeUserSshKey400JSONResponse{Error: &errMsg}, nil
+	}
+
+	hostname := request.Hostname
+	username := request.Name
+
+	u.logger.Debug("ssh key add",
+		slog.String("target", hostname),
+		slog.String("username", username),
+		slog.Bool("broadcast", job.IsBroadcastTarget(hostname)),
+	)
+
+	data := map[string]string{
+		"username": username,
+		"raw_line": request.Body.Key,
+	}
+
+	if job.IsBroadcastTarget(hostname) {
+		return u.postNodeUserSshKeyBroadcast(ctx, hostname, data)
+	}
+
+	jobID, resp, err := u.JobClient.Modify(
+		ctx,
+		hostname,
+		"user",
+		job.OperationSSHKeyAdd,
+		data,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+	}
+
+	if resp.Status == job.StatusSkipped {
+		jobUUID := uuid.MustParse(jobID)
+		e := resp.Error
+		return gen.PostNodeUserSshKey200JSONResponse{
+			JobId: &jobUUID,
+			Results: []gen.SSHKeyMutationEntry{
+				{
+					Hostname: resp.Hostname,
+					Status:   gen.SSHKeyMutationEntryStatusSkipped,
+					Error:    &e,
+				},
+			},
+		}, nil
+	}
+
+	var result userProv.SSHKeyResult
+	if resp.Data != nil {
+		_ = json.Unmarshal(resp.Data, &result)
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+	changed := resp.Changed
+	agentHostname := resp.Hostname
+
+	return gen.PostNodeUserSshKey200JSONResponse{
+		JobId: &jobUUID,
+		Results: []gen.SSHKeyMutationEntry{
+			{
+				Hostname: agentHostname,
+				Status:   gen.SSHKeyMutationEntryStatusOk,
+				Changed:  changed,
+			},
+		},
+	}, nil
+}
+
+// postNodeUserSshKeyBroadcast handles broadcast targets for SSH key add.
+func (u *User) postNodeUserSshKeyBroadcast(
+	ctx context.Context,
+	target string,
+	data map[string]string,
+) (gen.PostNodeUserSshKeyResponseObject, error) {
+	jobID, responses, err := u.JobClient.ModifyBroadcast(
+		ctx,
+		target,
+		"user",
+		job.OperationSSHKeyAdd,
+		data,
+	)
+	if err != nil {
+		errMsg := err.Error()
+		return gen.PostNodeUserSshKey500JSONResponse{Error: &errMsg}, nil
+	}
+
+	var apiResponses []gen.SSHKeyMutationEntry
+	for host, resp := range responses {
+		item := gen.SSHKeyMutationEntry{
+			Hostname: host,
+		}
+		switch resp.Status {
+		case job.StatusFailed:
+			item.Status = gen.SSHKeyMutationEntryStatusFailed
+			e := resp.Error
+			item.Error = &e
+		case job.StatusSkipped:
+			item.Status = gen.SSHKeyMutationEntryStatusSkipped
+			e := resp.Error
+			item.Error = &e
+		default:
+			item.Status = gen.SSHKeyMutationEntryStatusOk
+			item.Changed = resp.Changed
+		}
+		apiResponses = append(apiResponses, item)
+	}
+
+	jobUUID := uuid.MustParse(jobID)
+
+	return gen.PostNodeUserSshKey200JSONResponse{
+		JobId:   &jobUUID,
+		Results: apiResponses,
+	}, nil
 }
