@@ -5,7 +5,8 @@ sidebar_position: 2
 # Cron
 
 The `Cron` service provides methods for managing cron drop-in files on target
-hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
+hosts. Cron entries reference files uploaded to the Object Store — upload the
+script first, then create the cron entry. Access via `client.Cron`.
 
 ## Methods
 
@@ -19,10 +20,12 @@ hosts. Access via `client.Cron.List()`, `client.Cron.Create()`, etc.
 
 ## Request Types
 
-| Type             | Fields                                                        |
-| ---------------- | ------------------------------------------------------------- |
-| `CronCreateOpts` | Name, Schedule\*, Interval\*, Command, User (\* one required) |
-| `CronUpdateOpts` | Schedule, Command, User (all optional)                        |
+| Type             | Fields                                                              |
+| ---------------- | ------------------------------------------------------------------- |
+| `CronCreateOpts` | Name, Object, Schedule\*, Interval\*, User, ContentType, Vars      |
+| `CronUpdateOpts` | Object, Schedule, User, ContentType, Vars (all optional)            |
+
+\* Schedule and Interval are mutually exclusive — set one or the other.
 
 ## Usage
 
@@ -34,26 +37,27 @@ c := client.New("http://localhost:8080", token)
 // List all managed cron entries
 resp, err := c.Cron.List(ctx, "web-01")
 for _, entry := range resp.Data.Results {
-    fmt.Printf("%s: %s %s %s\n",
-        entry.Name, entry.Schedule, entry.User, entry.Command)
+    fmt.Printf("%s: schedule=%s user=%s object=%s\n",
+        entry.Name, entry.Schedule, entry.User, entry.Object)
 }
 
 // Get a specific entry
 resp, err := c.Cron.Get(ctx, "web-01", "backup-daily")
 
 // Create with custom schedule (/etc/cron.d/)
+// The object must be uploaded to the Object Store first.
 resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
     Name:     "backup-daily",
+    Object:   "backup-script",
     Schedule: "0 2 * * *",
-    Command:  "/usr/local/bin/backup.sh",
     User:     "root",
 })
 
 // Create with interval (/etc/cron.daily/)
 resp, err := c.Cron.Create(ctx, "web-01", client.CronCreateOpts{
     Name:     "logrotate",
+    Object:   "logrotate-script",
     Interval: "daily",
-    Command:  "/usr/sbin/logrotate /etc/logrotate.conf",
 })
 
 // Update the schedule
@@ -77,7 +81,7 @@ resp, err := c.Cron.Delete(ctx, "web-01", "backup-daily")
 | List, Get              | `cron:read`  |
 | Create, Update, Delete | `cron:write` |
 
-Cron management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
-On unsupported platforms (Darwin, generic Linux), operations return
+Cron management is supported on the Debian OS family (Ubuntu, Debian,
+Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
 `status: skipped`. See [Platform Detection](../../platform/detection.md) for
 details.
