@@ -1,0 +1,398 @@
+# Copyright (c) 2026 John Dewey
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+---
+openapi: 3.0.0
+info:
+  title: Certificate Management API
+  version: 1.0.0
+tags:
+  - name: certificate_operations
+    x-displayName: Node/Certificate
+    description: CA certificate management on a target node.
+
+paths:
+  # -- CA certificate collection ---------------------------------------------
+
+  /node/{hostname}/certificate/ca:
+    get:
+      summary: List all CA certificates
+      description: >
+        List all CA certificates on the target node.
+      tags:
+        - certificate_operations
+      operationId: GetNodeCertificateCa
+      security:
+        - BearerAuth:
+            - certificate:read
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          description: List of CA certificates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCACollectionResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error listing CA certificates.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a CA certificate
+      description: >
+        Install a new CA certificate on the target node.
+      tags:
+        - certificate_operations
+      operationId: PostNodeCertificateCa
+      security:
+        - BearerAuth:
+            - certificate:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        description: CA certificate creation parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateCACreateRequest'
+      responses:
+        '200':
+          description: CA certificate created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCAMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating CA certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+  # -- CA certificate individual entry ---------------------------------------
+
+  /node/{hostname}/certificate/ca/{name}:
+    put:
+      summary: Update a CA certificate
+      description: >
+        Update an existing CA certificate on the target node.
+      tags:
+        - certificate_operations
+      operationId: PutNodeCertificateCa
+      security:
+        - BearerAuth:
+            - certificate:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CertName'
+      requestBody:
+        description: CA certificate update parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateCAUpdateRequest'
+      responses:
+        '200':
+          description: CA certificate updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCAMutationResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '404':
+          description: CA certificate not found.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error updating CA certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a CA certificate
+      description: >
+        Delete a CA certificate from the target node.
+      tags:
+        - certificate_operations
+      operationId: DeleteNodeCertificateCa
+      security:
+        - BearerAuth:
+            - certificate:write
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CertName'
+      responses:
+        '200':
+          description: CA certificate deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCAMutationResponse'
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+        '500':
+          description: Error deleting CA certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+# -- Reusable components ----------------------------------------------------
+
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      description: >
+        Target agent hostname, reserved routing value (_any, _all),
+        or label selector (key:value).
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in handlers via validateHostname().
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,valid_target
+      schema:
+        type: string
+        minLength: 1
+
+    CertName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Certificate name. Must contain only alphanumeric characters,
+        underscores, and hyphens.
+      # NOTE: x-oapi-codegen-extra-tags on path params do not generate
+      # validate tags in strict-server mode. Validation is handled
+      # manually in the handler.
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1
+      schema:
+        type: string
+        minLength: 1
+        pattern: '^[a-zA-Z0-9_-]+$'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      $ref: '../../../common/gen/api.yaml#/components/schemas/ErrorResponse'
+
+    # -- Request schemas -----------------------------------------------------
+
+    CertificateCACreateRequest:
+      type: object
+      required:
+        - name
+        - object
+      properties:
+        name:
+          type: string
+          description: Certificate name (used as filename).
+          example: "internal-corp-ca"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+        object:
+          type: string
+          description: Object Store reference for the PEM file.
+          example: "corp-ca.pem"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    CertificateCAUpdateRequest:
+      type: object
+      required:
+        - object
+      properties:
+        object:
+          type: string
+          description: Object Store reference for the new PEM file.
+          example: "corp-ca-v2.pem"
+          x-oapi-codegen-extra-tags:
+            validate: "required,min=1"
+
+    # -- Response schemas ----------------------------------------------------
+
+    CertificateCAInfo:
+      type: object
+      description: A CA certificate entry.
+      properties:
+        name:
+          type: string
+          description: Certificate name.
+        source:
+          type: string
+          enum: [system, custom]
+          description: >
+            Where the certificate originated: "system" for
+            distribution-provided, "custom" for user-installed.
+        object:
+          type: string
+          description: Object store name for the deployed content.
+
+    CertificateCAEntry:
+      type: object
+      description: List result for CA certificates on one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that reported this entry.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificateCAInfo'
+          description: List of CA certificates on this host.
+        error:
+          type: string
+          description: Error message if the agent failed to retrieve certificates.
+      required:
+        - hostname
+        - status
+
+    CertificateCAMutationEntry:
+      type: object
+      description: Result of a CA certificate create, update, or delete operation for one host.
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the agent that processed this operation.
+        status:
+          type: string
+          enum: [ok, failed, skipped]
+          description: The status of the operation for this host.
+        name:
+          type: string
+          description: Certificate name.
+        changed:
+          type: boolean
+          description: Whether the operation modified system state.
+        error:
+          type: string
+          description: Error message if the agent failed.
+      required:
+        - hostname
+        - status
+
+    CertificateCACollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificateCAEntry'
+      required:
+        - results
+
+    CertificateCAMutationResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: The job ID used to process this request.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificateCAMutationEntry'
+      required:
+        - results

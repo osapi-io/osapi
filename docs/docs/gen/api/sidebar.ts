@@ -254,6 +254,40 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Certificate",
+      link: {
+        type: "doc",
+        id: "gen/api/certificate-management-api-certificate-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-certificate-ca",
+          label: "List all CA certificates",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-certificate-ca",
+          label: "Create a CA certificate",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-certificate-ca",
+          label: "Update a CA certificate",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-certificate-ca",
+          label: "Delete a CA certificate",
+          className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Command",
       link: {
         type: "doc",
