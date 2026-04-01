@@ -222,7 +222,9 @@ func (s *LogUnitPublicTestSuite) TestGetNodeLogUnit() {
 						"server1": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",
 							Hostname: "server1",
-							Data:     json.RawMessage(`[{"timestamp":"2026-01-01T00:00:00Z","priority":"info","message":"nginx started"}]`),
+							Data: json.RawMessage(
+								`[{"timestamp":"2026-01-01T00:00:00Z","priority":"info","message":"nginx started"}]`,
+							),
 						},
 						"server2": {
 							JobID:    "550e8400-e29b-41d4-a716-446655440000",

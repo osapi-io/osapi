@@ -70,7 +70,11 @@ func (suite *DarwinPublicTestSuite) TestQueryUnit() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := suite.provider.QueryUnit(context.Background(), "nginx.service", oslog.QueryOpts{})
+			got, err := suite.provider.QueryUnit(
+				context.Background(),
+				"nginx.service",
+				oslog.QueryOpts{},
+			)
 
 			suite.Nil(got)
 			suite.ErrorIs(err, provider.ErrUnsupported)

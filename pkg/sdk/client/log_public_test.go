@@ -228,7 +228,7 @@ func (suite *LogPublicTestSuite) TestQueryWithOpts() {
 	}{
 		{
 			name: "when all options are set returns result",
-			handler: func(w http.ResponseWriter, r *http.Request) {
+			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
@@ -415,7 +415,12 @@ func (suite *LogPublicTestSuite) TestQueryUnit() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Log.QueryUnit(suite.ctx, "_any", "nginx.service", client.LogQueryOpts{})
+			resp, err := sut.Log.QueryUnit(
+				suite.ctx,
+				"_any",
+				"nginx.service",
+				client.LogQueryOpts{},
+			)
 			tc.validateFunc(resp, err)
 		})
 	}

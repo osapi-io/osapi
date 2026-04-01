@@ -216,7 +216,9 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQuery() {
 			},
 			setupMock: func() log.Provider {
 				m := logMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().Query(gomock.Any(), gomock.Any()).Return(nil, errors.New("journalctl failed"))
+				m.EXPECT().
+					Query(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("journalctl failed"))
 				return m
 			},
 			expectError: true,
@@ -263,14 +265,16 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnit() {
 			},
 			setupMock: func() log.Provider {
 				m := logMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().QueryUnit(gomock.Any(), "nginx.service", log.QueryOpts{}).Return([]log.Entry{
-					{
-						Timestamp: "2026-01-01T00:00:00Z",
-						Unit:      "nginx.service",
-						Priority:  "info",
-						Message:   "nginx started",
-					},
-				}, nil)
+				m.EXPECT().
+					QueryUnit(gomock.Any(), "nginx.service", log.QueryOpts{}).
+					Return([]log.Entry{
+						{
+							Timestamp: "2026-01-01T00:00:00Z",
+							Unit:      "nginx.service",
+							Priority:  "info",
+							Message:   "nginx started",
+						},
+					}, nil)
 				return m
 			},
 			validate: func(result json.RawMessage) {
@@ -306,7 +310,9 @@ func (s *ProcessorLogPublicTestSuite) TestProcessLogQueryUnit() {
 			},
 			setupMock: func() log.Provider {
 				m := logMocks.NewMockProvider(s.mockCtrl)
-				m.EXPECT().QueryUnit(gomock.Any(), "nginx.service", gomock.Any()).Return(nil, errors.New("unit not found"))
+				m.EXPECT().
+					QueryUnit(gomock.Any(), "nginx.service", gomock.Any()).
+					Return(nil, errors.New("unit not found"))
 				return m
 			},
 			expectError: true,
