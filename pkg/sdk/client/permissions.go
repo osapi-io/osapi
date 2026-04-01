@@ -58,7 +58,9 @@ const (
 	PermUserWrite      Permission = "user:write"
 	PermPackageRead    Permission = "package:read"
 	PermPackageWrite   Permission = "package:write"
-	PermLogRead        Permission = "log:read"
+	PermLogRead            Permission = "log:read"
+	PermCertificateRead  Permission = "certificate:read"
+	PermCertificateWrite Permission = "certificate:write"
 )
 
 // Role represents a built-in RBAC role name.

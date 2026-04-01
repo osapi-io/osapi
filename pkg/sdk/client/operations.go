@@ -162,6 +162,14 @@ const (
 	OpLogSources   JobOperation = "node.log.sources"
 )
 
+// Certificate operations.
+const (
+	OpCertificateCAList   JobOperation = "certificate.ca.list"
+	OpCertificateCACreate JobOperation = "certificate.ca.create"
+	OpCertificateCAUpdate JobOperation = "certificate.ca.update"
+	OpCertificateCADelete JobOperation = "certificate.ca.delete"
+)
+
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).

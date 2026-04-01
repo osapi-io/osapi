@@ -51,6 +51,7 @@ import (
 	sysctlProv "github.com/retr0h/osapi/internal/provider/node/sysctl"
 	timezoneProv "github.com/retr0h/osapi/internal/provider/node/timezone"
 	userProv "github.com/retr0h/osapi/internal/provider/node/user"
+	certProv "github.com/retr0h/osapi/internal/provider/node/certificate"
 	cronProv "github.com/retr0h/osapi/internal/provider/scheduled/cron"
 	"github.com/retr0h/osapi/internal/telemetry/process"
 	"github.com/retr0h/osapi/pkg/sdk/platform"
@@ -209,6 +210,11 @@ func setupAgent(
 	// --- Log provider ---
 	logProvider := createLogProvider(log, execManager)
 
+	// --- Certificate provider ---
+	certificateProvider := createCertificateProvider(
+		log, appFs, fileProvider, fileStateKV, execManager, hostname,
+	)
+
 	// --- Build registry ---
 	registry := agent.NewProviderRegistry()
 
@@ -267,6 +273,11 @@ func setupAgent(
 	registry.Register("schedule",
 		agent.NewScheduleProcessor(cronProvider, log),
 		cronProvider,
+	)
+
+	registry.Register("certificate",
+		agent.NewCertificateProcessor(certificateProvider, log),
+		certificateProvider,
 	)
 
 	a := agent.New(
@@ -563,5 +574,33 @@ func createLogProvider(
 		return logProv.NewDarwinProvider()
 	default:
 		return logProv.NewLinuxProvider()
+	}
+}
+
+// createCertificateProvider creates a platform-specific certificate provider.
+// On Debian, the certificate provider delegates file writes to the file
+// provider for SHA tracking and idempotency. On other platforms, all
+// operations return ErrUnsupported.
+func createCertificateProvider(
+	log *slog.Logger,
+	fs avfs.VFS,
+	fileProvider fileProv.Provider,
+	fileStateKV jetstream.KeyValue,
+	execManager exec.Manager,
+	hostname string,
+) certProv.Provider {
+	plat := platform.Detect()
+
+	switch plat {
+	case "debian":
+		if fileProvider == nil {
+			log.Warn("file provider not available, certificate operations disabled")
+			return certProv.NewLinuxProvider()
+		}
+		return certProv.NewDebianProvider(log, fs, fileProvider, fileStateKV, execManager, hostname)
+	case "darwin":
+		return certProv.NewDarwinProvider()
+	default:
+		return certProv.NewLinuxProvider()
 	}
 }
